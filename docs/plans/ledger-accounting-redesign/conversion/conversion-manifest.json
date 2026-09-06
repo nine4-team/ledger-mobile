@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T04:25:56.819Z",
+    "lastSynchronizedAt": "2026-09-06T05:12:37.240Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28264,12 +28264,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "e82ece6b18b84458f1e5281f7314c20e394677e8b97290fca782400a4c5c2640",
-      "acknowledgedSourceHash": "e82ece6b18b84458f1e5281f7314c20e394677e8b97290fca782400a4c5c2640",
+      "observedSourceHash": "e829d4c9a9147d1c687c53ee2f79f7bcd1a0764e1847851c392189bb3b69c90e",
+      "acknowledgedSourceHash": "e829d4c9a9147d1c687c53ee2f79f7bcd1a0764e1847851c392189bb3b69c90e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; provider observations and subscriptions drain before database close without implementing session ending.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project directory watches, drains before database close without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -33851,12 +33851,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
-      "acknowledgedSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
+      "observedSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
+      "acknowledgedSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions and cancels all observations with the consumer.",
+      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions, and owns a close-aware registry that cancels and joins every outer and nested observation before SQLite closes.",
       "disposition": "redesign",
       "target": {
         "owner": "Client and Project Directory",
@@ -33884,7 +33884,7 @@
       },
       "verification": {
         "tests": [
-          "16 ClientProjectDirectoryPowerSyncQueryTests",
+          "17 ClientProjectDirectoryPowerSyncQueryTests",
           "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"
         ],
         "acceptance": [
@@ -42672,12 +42672,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
-      "acknowledgedSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
+      "observedSourceHash": "b6e7913bf592012a44bb82dc1a44a1fab14146d9824bdc8211fd1228abf9df5a",
+      "acknowledgedSourceHash": "b6e7913bf592012a44bb82dc1a44a1fab14146d9824bdc8211fd1228abf9df5a",
       "metadata": {
         "firebaseCoupled": true
       },
-      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and runtime drainage.",
+      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and explicit directory-watch drainage before database close.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -43159,12 +43159,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
-      "acknowledgedSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
+      "observedSourceHash": "05604da795d86890072a63e655f88ba13e73225395c4fedad653503f53eb431c",
+      "acknowledgedSourceHash": "05604da795d86890072a63e655f88ba13e73225395c4fedad653503f53eb431c",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope and malformed-evidence refusal.",
+      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope, malformed-evidence refusal and explicit directory-watch drainage before every database-close path.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
@@ -43668,12 +43668,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
-      "acknowledgedSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
+      "observedSourceHash": "516c6cbef71e28064f7529e4775b25215294895d5a2db32e827663226cd45aa2",
+      "acknowledgedSourceHash": "516c6cbef71e28064f7529e4775b25215294895d5a2db32e827663226cd45aa2",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
+      "currentBehavior": "Runs 17 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards, consumer cancellation, provider shutdown drainage and rejection of watches after close begins.",
       "disposition": "redesign",
       "target": {
         "owner": "Client and Project Directory",
@@ -43699,7 +43699,7 @@
           "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"
         ],
         "acceptance": [
-          "All 16 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"
+          "All 17 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"
         ]
       },
       "status": "implemented",
@@ -46377,12 +46377,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "78402fac1422a909b067df32837decb7569f503fe31411cf4c2d02da0769e7d2",
-      "acknowledgedSourceHash": "78402fac1422a909b067df32837decb7569f503fe31411cf4c2d02da0769e7d2",
+      "observedSourceHash": "54a6946148e28fb000e3e481c0152372b385fa57edd931ed38074a7bd5169a52",
+      "acknowledgedSourceHash": "54a6946148e28fb000e3e481c0152372b385fa57edd931ed38074a7bd5169a52",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and cancellation drainage.",
+      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and explicit upstream directory cancellation drainage before database close.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",

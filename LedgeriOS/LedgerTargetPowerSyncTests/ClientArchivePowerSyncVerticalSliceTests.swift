@@ -180,11 +180,12 @@ struct ClientArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_client_archive_overlays SET fingerprint = ? WHERE operation_id = ?",
             parameters: [String(repeating: "0", count: 64), command.envelope.operationId.rawValue]
         )
-        var clients = Self.query(database).watchClients(accountId: Self.accountId).makeAsyncIterator()
+        let directoryQuery = Self.query(database)
+        var clients = directoryQuery.watchClients(accountId: Self.accountId).makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedClientRow) {
             _ = try await clients.next()
         }
-        var projects = Self.query(database).watchProjects(accountId: Self.accountId).makeAsyncIterator()
+        var projects = directoryQuery.watchProjects(accountId: Self.accountId).makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedClientRow) {
             _ = try await projects.next()
         }
@@ -201,7 +202,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
                 sql: "UPDATE spike_local_operations SET local_state = ? WHERE id = ?",
                 parameters: [state, command.envelope.operationId.rawValue]
             )
-            var missing = Self.query(database).watchClients(accountId: Self.accountId)
+            var missing = directoryQuery.watchClients(accountId: Self.accountId)
                 .makeAsyncIterator()
             await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedClientRow) {
                 _ = try await missing.next()
@@ -211,6 +212,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
                 return
             }
         }
+        await directoryQuery.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -469,12 +471,13 @@ struct ClientArchivePowerSyncVerticalSliceTests {
                 foreignPrincipal.rawValue, foreign.fingerprint.sha256,
                 original.envelope.operationId.rawValue
             ])
-        var clients = Self.query(actorDatabase).watchClients(accountId: Self.accountId)
+        let directoryQuery = Self.query(actorDatabase)
+        var clients = directoryQuery.watchClients(accountId: Self.accountId)
             .makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedClientRow) {
             _ = try await clients.next()
         }
-        var projects = Self.query(actorDatabase).watchProjects(accountId: Self.accountId)
+        var projects = directoryQuery.watchProjects(accountId: Self.accountId)
             .makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedClientRow) {
             _ = try await projects.next()
@@ -483,6 +486,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
             Issue.record("Expected foreign archive actor to fail Client detail closed")
             return
         }
+        await directoryQuery.cancelAndDrainWatches()
         try await actorDatabase.close(deleteDatabase: true)
         actorFixture.remove()
     }
@@ -1021,13 +1025,19 @@ struct ClientArchivePowerSyncVerticalSliceTests {
     }
 
     private static func firstClientList(_ database: any PowerSyncDatabaseProtocol) async throws -> ClientListSnapshot {
-        var iterator = query(database).watchClients(accountId: accountId).makeAsyncIterator()
-        return try #require(try await iterator.next())
+        let directoryQuery = query(database)
+        var iterator = directoryQuery.watchClients(accountId: accountId).makeAsyncIterator()
+        let snapshot = try #require(try await iterator.next())
+        await directoryQuery.cancelAndDrainWatches()
+        return snapshot
     }
 
     private static func firstProjectList(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectListSnapshot {
-        var iterator = query(database).watchProjects(accountId: accountId).makeAsyncIterator()
-        return try #require(try await iterator.next())
+        let directoryQuery = query(database)
+        var iterator = directoryQuery.watchProjects(accountId: accountId).makeAsyncIterator()
+        let snapshot = try #require(try await iterator.next())
+        await directoryQuery.cancelAndDrainWatches()
+        return snapshot
     }
 
     private static func firstClientDetailUpdate(_ database: any PowerSyncDatabaseProtocol) async throws -> ClientCoreDetailsUpdate {

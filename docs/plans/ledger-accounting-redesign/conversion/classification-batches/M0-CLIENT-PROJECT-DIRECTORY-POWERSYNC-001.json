@@ -15,8 +15,8 @@
   "surfaces": [
     {
       "id": "SWIFT-B23F91245E50",
-      "acknowledgeSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
-      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions and cancels all observations with the consumer.",
+      "acknowledgeSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
+      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions, and owns a close-aware registry that cancels and joins every outer and nested observation before SQLite closes.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
@@ -33,14 +33,14 @@
         "reconciliation": ["Exact authorized authoritative readback clears only the matching owned overlay", "Project allocation optimism remains until aggregate-aware proof"]
       },
       "verification": {
-        "tests": ["16 ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
+        "tests": ["17 ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
         "acceptance": ["Local read, isolation, readiness, restart, cancellation, navigation and aggregate-safe reconciliation cases pass without claiming hosted Sync authorization"]
       }
     },
     {
       "id": "TEST-5AAEE26660C8",
-      "acknowledgeSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
-      "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
+      "acknowledgeSourceHash": "516c6cbef71e28064f7529e4775b25215294895d5a2db32e827663226cd45aa2",
+      "currentBehavior": "Runs 17 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards, consumer cancellation, provider shutdown drainage and rejection of watches after close begins.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
@@ -58,7 +58,7 @@
       },
       "verification": {
         "tests": ["npm run target:powersync:test", "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"],
-        "acceptance": ["All 16 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"]
+        "acceptance": ["All 17 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"]
       }
     }
   ]

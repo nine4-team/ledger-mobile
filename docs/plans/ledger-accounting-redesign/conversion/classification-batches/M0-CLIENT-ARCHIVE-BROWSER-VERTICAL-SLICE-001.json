@@ -68,8 +68,8 @@
     },
     {
       "id": "TEST-3B1F3E444423",
-      "acknowledgeSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
-      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and runtime drainage.",
+      "acknowledgeSourceHash": "b6e7913bf592012a44bb82dc1a44a1fab14146d9824bdc8211fd1228abf9df5a",
+      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and explicit directory-watch drainage before database close.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-003", "A-004"],

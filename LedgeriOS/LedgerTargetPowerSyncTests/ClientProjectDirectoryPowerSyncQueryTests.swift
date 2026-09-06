@@ -75,6 +75,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         let activeProjectId = try ProjectID(validating: "project-active")
         #expect(detail.projectId == activeProjectId)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -92,7 +93,8 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             lifecycle: "active"
         )
 
-        var iterator = Self.query(database, complete: true)
+        let query = Self.query(database, complete: true)
+        var iterator = query
             .watchProjects(accountId: Self.accountId)
             .makeAsyncIterator()
         let snapshot = try #require(try await iterator.next())
@@ -107,6 +109,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         )
         #expect(!presentation.isAuthoritativeEmpty)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -146,7 +149,8 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             lifecycle: "active"
         )
 
-        var iterator = Self.query(database, complete: true)
+        let query = Self.query(database, complete: true)
+        var iterator = query
             .watchProjects(accountId: Self.accountId)
             .makeAsyncIterator()
         let incomplete = try #require(try await iterator.next())
@@ -176,6 +180,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             ) == 1
         )
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -187,7 +192,8 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         try await Self.insertPendingClient(database)
         try await Self.insertPendingProject(database)
 
-        var clientIterator = Self.query(database, complete: true)
+        let query = Self.query(database, complete: true)
+        var clientIterator = query
             .watchClients(accountId: Self.accountId)
             .makeAsyncIterator()
         let clients = try #require(try await clientIterator.next())
@@ -195,7 +201,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(clients.local.quality == .partial)
         #expect(!clients.local.isCompleteForQuery)
 
-        var projectIterator = Self.query(database, complete: true)
+        var projectIterator = query
             .watchProjects(accountId: Self.accountId)
             .makeAsyncIterator()
         let projects = try #require(try await projectIterator.next())
@@ -203,6 +209,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(projects.local.quality == .partial)
         #expect(!projects.local.isCompleteForQuery)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -227,7 +234,8 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             lifecycle: "active"
         )
 
-        var clientIterator = Self.query(database, complete: true)
+        let query = Self.query(database, complete: true)
+        var clientIterator = query
             .watchClients(accountId: Self.accountId)
             .makeAsyncIterator()
         let clients = try #require(try await clientIterator.next())
@@ -235,7 +243,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(clients.local.quality == .partial)
         #expect(try await Self.count("spike_pending_clients", database) == 1)
 
-        var projectIterator = Self.query(database, complete: true)
+        var projectIterator = query
             .watchProjects(accountId: Self.accountId)
             .makeAsyncIterator()
         let projects = try #require(try await projectIterator.next())
@@ -243,6 +251,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(projects.local.quality == .partial)
         #expect(try await Self.count("spike_pending_projects", database) == 1)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -353,6 +362,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         let projects = try #require(try await projectIterator.next())
         #expect(projects.local.rows.map(\.id.rawValue) == ["project-pending"])
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -423,6 +433,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(snapshot.local.quality == .partial)
         #expect(!snapshot.local.isCompleteForQuery)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -478,6 +489,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
 
         clientProof.continuation.finish()
         projectProof.continuation.finish()
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -528,6 +540,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(revoked.local.quality == .partial)
         #expect(!revoked.local.isCompleteForQuery)
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -560,6 +573,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             ) { try $0.getInt64(index: 0) } == 0
         )
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -609,8 +623,9 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             lifecycle: "unknown"
         )
 
+        let query = Self.query(database, complete: true)
         do {
-            for try await _ in Self.query(database, complete: true)
+            for try await _ in query
                 .watchProjects(accountId: Self.accountId) {
                 Issue.record("Malformed Project must not produce a directory snapshot")
             }
@@ -619,6 +634,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
             #expect(failure == .malformedProjectRow)
         }
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -683,6 +699,47 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         fixture.removeDirectory()
     }
 
+    @Test(
+        "Provider shutdown drains active directory watches before database close",
+        .timeLimit(.minutes(1))
+    )
+    func providerShutdownDrainsBeforeDatabaseClose() async throws {
+        let fixture = try DirectoryDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.insertActiveMembership(database)
+        let clientProof = AsyncStream<Bool>.makeStream(
+            bufferingPolicy: .bufferingNewest(1)
+        )
+        let projectProof = AsyncStream<Bool>.makeStream(
+            bufferingPolicy: .bufferingNewest(1)
+        )
+        clientProof.continuation.yield(false)
+        projectProof.continuation.yield(false)
+        let query = ClientProjectDirectoryPowerSyncQuery(
+            database: database,
+            principalId: Self.principalId,
+            accountId: Self.accountId,
+            completenessObservation: { stream, _ in
+                switch stream {
+                case .clients: clientProof.stream
+                case .projects: projectProof.stream
+                }
+            },
+            now: { Self.observedAt }
+        )
+
+        var clientIterator = query.watchClients(accountId: Self.accountId).makeAsyncIterator()
+        var projectIterator = query.watchProjects(accountId: Self.accountId).makeAsyncIterator()
+        _ = try #require(try await clientIterator.next())
+        _ = try #require(try await projectIterator.next())
+
+        await query.cancelAndDrainWatches()
+        var rejectedIterator = query.watchClients(accountId: Self.accountId).makeAsyncIterator()
+        #expect(try await rejectedIterator.next() == nil)
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
     @Test("Cancelling a directory consumer stops further delivery")
     func cancellationStopsDelivery() async throws {
         let fixture = try DirectoryDatabaseFixture()
@@ -716,6 +773,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(await observer.value == 1)
         firstEmission.continuation.finish()
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -788,10 +846,13 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
     private static func firstClientSnapshot(
         _ database: any PowerSyncDatabaseProtocol
     ) async throws -> ClientListSnapshot {
-        var iterator = Self.query(database, complete: true)
+        let query = Self.query(database, complete: true)
+        var iterator = query
             .watchClients(accountId: accountId)
             .makeAsyncIterator()
-        return try #require(try await iterator.next())
+        let snapshot = try #require(try await iterator.next())
+        await query.cancelAndDrainWatches()
+        return snapshot
     }
 
     private static func insertActiveMembership(

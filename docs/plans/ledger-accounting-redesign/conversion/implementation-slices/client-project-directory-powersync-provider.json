@@ -23,7 +23,7 @@
       "section": "Target Redesign Requirements",
       "invariant": "Current Project lists and details remain usable from synchronized local data while exposing incomplete readiness honestly; active and archived Project browsing cannot turn missing relationship evidence into authoritative empty.",
       "decisionIds": ["D-006"],
-      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-002", "DIRPROVIDER-TEST-005", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-009", "DIRPROVIDER-TEST-012", "DIRPROVIDER-TEST-013"]
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-002", "DIRPROVIDER-TEST-005", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-009", "DIRPROVIDER-TEST-012", "DIRPROVIDER-TEST-013", "DIRPROVIDER-TEST-014"]
     },
     {
       "id": "DIRPROVIDER-REQ-003",
@@ -41,7 +41,7 @@
       "section": "Clients, Projects, notes, preferences, and reference data",
       "invariant": "One backend-neutral ClientProjectDirectoryQuerying port supplies exact Account snapshots; the PowerSync adapter, runtime and staging app consume those contracts without leaking provider types into LedgerTargetCore.",
       "decisionIds": [],
-      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-006", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-013"]
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-006", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-013", "DIRPROVIDER-TEST-014"]
     },
     {
       "id": "DIRPROVIDER-REQ-005",
@@ -95,7 +95,8 @@
         "Merge synchronized and exact caller-owned pending-create rows in encrypted PowerSync SQLite, with pending evidence always partial and durable across restart.",
         "Count Project rows before optional Client joining; a missing relationship is incomplete and cannot become authoritative empty.",
         "Authoritative readback may remove exact Client or Project-core optimism only after active-membership visibility and complete owned evidence; Project allocation optimism survives until a later aggregate-aware query proves authoritative allocation readback.",
-        "Cancellation terminates database and completeness observations without later delivery."
+        "Cancellation terminates database and completeness observations without later delivery.",
+        "Provider shutdown atomically refuses later watches, cancels every admitted Client and Project watch, and joins each outer observation plus its nested database and completeness tasks before SQLite closes."
       ],
       "notApplicable": ""
     },
@@ -245,10 +246,19 @@
       "expected": "A fresh isolated local runtime creates/selects/browses Clients and Projects offline, navigates by exact identity without bypassing membership-gated authority precedence, preserves partial truth through restart and exposes no cross-Account or cross-Principal state.",
       "status": "passed",
       "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-014",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift plus ClientArchivePowerSyncVerticalSliceTests.swift, ProjectArchivePowerSyncVerticalSliceTests.swift and TransferDestinationSelectionPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-004"],
+      "expected": "Simultaneous Client and Project watches are cancelled and fully joined before database close; dependent tests retain and drain their directory provider on every close path; watches requested after shutdown begins terminate without touching SQLite.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The local Client/Project directory and browse provider is implemented and its local obligations plus exact implementation CI pass, including Principal/Account- and membership-bound exact details. Final corrected-diff review returned executable GO with no P0-P2 and its sole P3 stale count was corrected. Hosted authenticated Sync authorization remains planned, so the slice is not verified or rehearsed. Existing schema, grants, RLS and Sync definitions remain owned by their current provider slices. O-024/O-025 archive behavior, O-040 Project card/budget presentation, O-042/O-043 text-mutation rules, MCP pagination/search, migration and cutover are excluded. A-003/A-004 remain proposed."
+  "notes": "The local Client/Project directory and browse provider is implemented and its original local obligations plus exact implementation CI pass, including Principal/Account- and membership-bound exact details. A later CI-only timeout exposed a missing provider-owned directory-watch shutdown join. The correction adds explicit outer/nested task ownership, close-time cancellation/drainage and post-close admission refusal; independent review caught and drove correction of two remaining anonymous malformed-row test watches, then returned GO with no P0-P3. Corrected exact-commit CI is pending. Hosted authenticated Sync authorization remains planned, so the slice is not verified or rehearsed. Existing schema, grants, RLS and Sync definitions remain owned by their current provider slices. O-024/O-025 archive behavior, O-040 Project card/budget presentation, O-042/O-043 text-mutation rules, MCP pagination/search, migration and cutover are excluded. A-003/A-004 remain proposed."
 }

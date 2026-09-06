@@ -211,7 +211,8 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             sql: "DELETE FROM spike_project_archive_overlays WHERE operation_id = ?",
             parameters: [retry.envelope.operationId.rawValue]
         )
-        var missingAppliedList = Self.query(database)
+        let directoryQuery = Self.query(database)
+        var missingAppliedList = directoryQuery
             .watchProjects(accountId: Self.accountId).makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedProjectRow) {
             _ = try await missingAppliedList.next()
@@ -219,6 +220,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         let missingAppliedDetail = try await Self.firstProjectDetailUpdate(database)
         guard case .failed = missingAppliedDetail.state else {
             Issue.record("Expected missing applied archive overlay to fail closed")
+            await directoryQuery.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.remove()
             return
@@ -259,18 +261,20 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_projects SET lifecycle = 'active', revision = 7 WHERE id = ?",
             parameters: [Self.projectId.rawValue]
         )
-        var regressedList = Self.query(database)
+        var regressedList = directoryQuery
             .watchProjects(accountId: Self.accountId).makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedProjectRow) {
             _ = try await regressedList.next()
         }
         guard case .failed = (try await Self.firstProjectDetailUpdate(database)).state else {
             Issue.record("Expected regressed authority after archive readback to fail closed")
+            await directoryQuery.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.remove()
             return
         }
 
+        await directoryQuery.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -387,13 +391,15 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_project_archive_overlays SET fingerprint = ? WHERE operation_id = ?",
             parameters: [String(repeating: "0", count: 64), command.envelope.operationId.rawValue]
         )
-        var listIterator = Self.query(database).watchProjects(accountId: Self.accountId).makeAsyncIterator()
+        let directoryQuery = Self.query(database)
+        var listIterator = directoryQuery.watchProjects(accountId: Self.accountId).makeAsyncIterator()
         await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedProjectRow) {
             _ = try await listIterator.next()
         }
         let detailUpdate = try await Self.firstProjectDetailUpdate(database)
         guard case .failed = detailUpdate.state else {
             Issue.record("Expected fail-closed detail evidence")
+            await directoryQuery.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.remove()
             return
@@ -416,7 +422,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
                 sql: "UPDATE spike_local_operations SET \(mutation.column) = ? WHERE id = ?",
                 parameters: [mutation.invalid, command.envelope.operationId.rawValue]
             )
-            var invalidList = Self.query(database)
+            var invalidList = directoryQuery
                 .watchProjects(accountId: Self.accountId).makeAsyncIterator()
             await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedProjectRow) {
                 _ = try await invalidList.next()
@@ -424,6 +430,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             let invalidDetail = try await Self.firstProjectDetailUpdate(database)
             guard case .failed = invalidDetail.state else {
                 Issue.record("Expected command-linkage detail failure for \(mutation.column)")
+                await directoryQuery.cancelAndDrainWatches()
                 try await database.close(deleteDatabase: true)
                 fixture.remove()
                 return
@@ -442,7 +449,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
                 sql: "UPDATE spike_local_operations SET local_state = ? WHERE id = ?",
                 parameters: [missingOverlayState, command.envelope.operationId.rawValue]
             )
-            var missingList = Self.query(database)
+            var missingList = directoryQuery
                 .watchProjects(accountId: Self.accountId).makeAsyncIterator()
             await #expect(throws: ClientProjectDirectoryPowerSyncFailure.malformedProjectRow) {
                 _ = try await missingList.next()
@@ -450,6 +457,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             let missingDetail = try await Self.firstProjectDetailUpdate(database)
             guard case .failed = missingDetail.state else {
                 Issue.record("Expected missing \(missingOverlayState) overlay detail failure")
+                await directoryQuery.cancelAndDrainWatches()
                 try await database.close(deleteDatabase: true)
                 fixture.remove()
                 return
@@ -476,6 +484,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         await #expect(throws: LedgerPowerSyncUploadFailure.pendingOverlayMismatch) {
             try await connector.uploadData(database: database)
         }
+        await directoryQuery.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -727,8 +736,11 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
     }
 
     private static func firstProjectList(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectListSnapshot {
-        var iterator = query(database).watchProjects(accountId: accountId).makeAsyncIterator()
-        return try #require(try await iterator.next())
+        let directoryQuery = query(database)
+        var iterator = directoryQuery.watchProjects(accountId: accountId).makeAsyncIterator()
+        let snapshot = try #require(try await iterator.next())
+        await directoryQuery.cancelAndDrainWatches()
+        return snapshot
     }
 
     private static func firstProjectDetailUpdate(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectCoreDetailsUpdate {

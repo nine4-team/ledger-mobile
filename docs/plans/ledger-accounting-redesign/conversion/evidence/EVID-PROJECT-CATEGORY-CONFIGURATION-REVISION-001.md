@@ -1,7 +1,7 @@
 # EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001 — Dedicated Project Category-Configuration Revision Implementation
 
 - Date: 2026-09-06
-- Class: isolated local implementation / independently reviewed prerequisite
+- Class: isolated local implementation / independently reviewed and exact-CI-backed prerequisite
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the Firebase checkout and released app were not changed
 - Target branch: `codex/supabase-powersync-implementation`
 - Frozen READY baseline: `dec9a5703fc9d723d02f60ff6b1037f2db8e9dd2`
@@ -48,12 +48,25 @@ All findings were corrected. Both reviewers then returned GO with no P0–P3 fin
 - target environment/isolation checker and JavaScript syntax check: passed
 - target MCP tests: 26/26; contract generation, TypeScript and catalog checks: passed
 - deterministic target project generation and both macOS/iOS target staging builds: passed with no generated-project drift
-- immutable exact-implementation commit CI: pending
+- immutable exact-implementation commit CI: all three jobs passed at
+  `ac9fdcd4bb43c979526503862d715de61a9ee4e6` / run `34011514963`, attempt 2
 
 READY commit `dec9a5703fc9d723d02f60ff6b1037f2db8e9dd2` entered Actions run `34006713872`; its conversion job stopped only because generated residual artifacts had not been refreshed. Those artifacts were regenerated before implementation. No executable READY boundary or product decision was changed to make that check pass.
 
+Exact implementation commit
+`ac9fdcd4bb43c979526503862d715de61a9ee4e6` passed every immutable job in
+Actions run `34011514963`, attempt 2. Conversion state and traceability passed,
+the disposable local Supabase job passed schema, RLS, RPC, replay, lint and all
+373 pgTAP assertions, and the isolated target job passed all 566 Swift tests,
+MCP/contracts, environment guards and both staging builds. Attempt 1 had already
+passed the conversion and Supabase jobs but timed out during target-test process
+shutdown. The unchanged exact-commit rerun passed; the directory-watch lifecycle
+defect exposed by that nondeterminism is separately corrected and evidenced by
+`EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001` without changing this slice's
+schema, Sync projection or Project-store implementation.
+
 ## Remaining Gates and Safety Boundary
 
-The slice remains `implemented`, not `verified`, until an exact committed checkpoint passes immutable CI. Real authenticated hosted PowerSync authorization/readback remains deliberately unclaimed; A-003/A-004/A-015 remain proposed and O-026 remains open.
+The slice remains `implemented`, not `verified`, because real authenticated hosted PowerSync authorization/readback remains deliberately unclaimed; A-003/A-004/A-015 remain proposed and O-026 remains open.
 
 No Firebase file or worktree, hosted resource, source export/import, production data, migration run, deployment, release or cutover was touched or authorized.

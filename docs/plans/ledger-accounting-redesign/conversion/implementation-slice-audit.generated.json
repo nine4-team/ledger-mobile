@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T04:25:56.819Z",
+  "generatedFromManifestSync": "2026-09-06T05:12:37.240Z",
   "totals": {
     "slices": 88,
     "claimedTargetSurfaces": 293,
@@ -284,7 +284,7 @@
         "TEST-5AAEE26660C8"
       ],
       "requirementCount": 5,
-      "verificationCount": 13,
+      "verificationCount": 14,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-project-directory-powersync-provider.json"
     },

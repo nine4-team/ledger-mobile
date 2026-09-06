@@ -74,6 +74,7 @@ struct TransferDestinationSelectionPowerSyncQueryTests {
         #expect(snapshot.quality == .ready)
 
         await query.cancelAndDrainWatches()
+        await directory.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -144,6 +145,7 @@ struct TransferDestinationSelectionPowerSyncQueryTests {
         )
         projectProof.continuation.finish()
         await query.cancelAndDrainWatches()
+        await directory.cancelAndDrainWatches()
         try await reopenedDatabase.close(deleteDatabase: false)
 
         let emptyReopenDatabase = try fixture.open()
@@ -186,6 +188,7 @@ struct TransferDestinationSelectionPowerSyncQueryTests {
 
         emptyProjectProof.continuation.finish()
         await emptyQuery.cancelAndDrainWatches()
+        await emptyDirectory.cancelAndDrainWatches()
         try await emptyReopenDatabase.close(deleteDatabase: true)
         fixture.remove()
     }

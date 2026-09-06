@@ -1,7 +1,7 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001 — Client/Project PowerSync Directory Provider
 
-- Status: implemented and exact implementation CI passed; hosted Sync proof pending
-- Date: 2026-09-04
+- Status: implemented; original exact implementation CI passed; lifecycle correction exact CI pending; hosted Sync proof pending
+- Date: 2026-09-06
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
 - Slice: `client-project-directory-powersync-provider`
@@ -36,7 +36,9 @@ row. Local rows remain useful while completeness is stated honestly.
 - Project-core readback may remove the exact Project overlay only after its
   relationship is locally complete. It cannot delete pending category
   allocations without aggregate-aware authoritative allocation evidence.
-- Encrypted restart and cancellation are explicit executable obligations.
+- Encrypted restart, consumer cancellation, provider shutdown drainage, and
+  rejection of watches after shutdown begins are explicit executable
+  obligations.
 
 ## Existing Physical Dependencies
 
@@ -133,3 +135,38 @@ provider slices in 1 minute 52 seconds, and the isolated target environment in
 `DIRPROVIDER-TEST-004` remains planned because it requires real isolated
 authenticated PowerSync streams; that prevents `verified` or `rehearsed`
 status and keeps A-004 proposed.
+
+## Directory Watch Lifecycle Correction
+
+GitHub Actions run `34011514963` attempt 1 passed conversion and local Supabase
+jobs but timed out in the target job after the Client archive suite. Rerunning
+the unchanged exact commit as attempt 2 passed every job, test, and build. Local
+reproduction also passed, identifying a nondeterministic process-lifecycle
+defect rather than a deterministic product failure.
+
+The directory provider previously relied on consumer-stream termination alone
+to cancel unstructured database and completeness tasks. Runtime shutdown could
+therefore reach PowerSync database close while a directory reader still held a
+lease. The correction gives the provider a close-aware registry, rejects watch
+registration after shutdown begins, cancels every admitted outer watch, and
+joins both nested tasks before reporting the watch finished. The account
+workspace runtime now drains this provider before archive stores and SQLite.
+Every direct test consumer retains and drains its provider before closing its
+database.
+
+The first independent correction review found one P1 test-lifecycle defect:
+two malformed Project-archive paths still constructed anonymous directory
+queries and could resume from an expected error before nested teardown joined.
+Both paths now reuse one retained query and await its drain on every later
+early-return or normal close. Re-review returned GO with no P0-P3 findings.
+
+Corrected local verification passes:
+
+- 17 of 17 focused directory tests, including simultaneous active Client and
+  Project watches, provider shutdown, database close, and late-watch refusal;
+- 8 of 8 focused Project archive tests after the review correction;
+- all 567 Swift tests in 90 suites nonparallel;
+- 20 consecutive focused directory-suite runs;
+- conversion source synchronization, target-environment checks, deterministic
+  target generation, both isolated staging builds, and immutable exact-commit
+  CI remain required before this correction is promoted as final evidence.

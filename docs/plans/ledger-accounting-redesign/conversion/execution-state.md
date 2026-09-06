@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 328
+State version: 329
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-REVISION-IMPLEMENTED-LOCAL
+- Checkpoint: DIRECTORY-WATCH-LIFECYCLE-CORRECTION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -96,11 +96,31 @@ without modifying the running Firebase application before hard cutover.
   correction rounds, both returned GO with no P0-P3 findings. Local 33/33
   focused and 373/373 complete pgTAP, 10/10 focused and 566/566 complete Swift,
   strict database lint, MCP/contracts and the exact normalized Sync/config guard
-  and both staging builds pass. Immutable implementation CI remains pending at
-  this checkpoint. Six provider/app leaves remain comment-only under O-026; real
+  and both staging builds pass. Exact implementation
+  `ac9fdcd4bb43c979526503862d715de61a9ee4e6` passed all three jobs in immutable
+  run `34011514963` attempt 2. Attempt 1 timed out during target-test shutdown
+  after green conversion and local-Supabase jobs; the unchanged rerun passed,
+  and the separately owned directory-watch lifecycle defect exposed by the
+  nondeterminism is corrected below. Six provider/app leaves remain comment-only under O-026; real
   hosted Auth/Sync, A-003/A-004/A-015, Firebase, migration, production and
   cutover remain unadvanced;
   `EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001`.
+
+- Corrected Client/Project directory-watch ownership after the first attempt of
+  run `34011514963` exposed a nondeterministic target-test process shutdown. The
+  provider now registers every Client/Project watch before execution, rejects
+  watches after close begins, cancels each admitted outer task, and joins its
+  database and completeness observations before runtime database close. Direct
+  Client archive, Project archive, Transfer destination and directory tests now
+  retain and explicitly drain the shared query. The first independent review
+  found one P1 test-lifecycle hole in two anonymous malformed Project-archive
+  watches; both were corrected to reuse a retained query and drain on every
+  later close path. Re-review returned GO with no P0-P3. Local 17/17 directory,
+  8/8 Project archive and 567/567 complete Swift tests, conversion controls,
+  target-environment checks, MCP/contracts and both staging builds pass.
+  Corrected exact-commit CI remains pending; no SQL/query result/product policy,
+  Firebase, hosted, migration, production or cutover behavior changed;
+  `EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001`.
 
 - Implemented `space-core-details-powersync-provider` from frozen READY
   `9b62bec1403261a7d966c570af981da461d80f12`. Eight claimed leaves now provide

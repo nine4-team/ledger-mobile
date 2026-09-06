@@ -49,8 +49,8 @@
     },
     {
       "id": "TEST-475355568D74",
-      "acknowledgeSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
-      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope and malformed-evidence refusal.",
+      "acknowledgeSourceHash": "05604da795d86890072a63e655f88ba13e73225395c4fedad653503f53eb431c",
+      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope, malformed-evidence refusal and explicit directory-watch drainage before every database-close path.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-003", "A-004"],

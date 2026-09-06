@@ -30,6 +30,7 @@ final class ClientProjectDirectoryPowerSyncQuery:
     private let boundAccountId: AccountID
     private let completenessObservation: CompletenessObservation
     private let now: @Sendable () -> Date
+    private let watchRegistry = ClientProjectDirectoryWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
@@ -58,91 +59,21 @@ final class ClientProjectDirectoryPowerSyncQuery:
         }
 
         return AsyncThrowingStream { continuation in
+            let id = UUID()
+            let handle = ClientProjectDirectoryWatchTaskHandle()
+            let registration = Task { await watchRegistry.register(id: id, handle: handle) }
             let task = Task {
-                do {
-                    var latestRows: [PowerSyncDirectoryClientRow]?
-                    var directoryIsComplete = false
-                    for try await event in clientEvents(accountId: accountId) {
-                        switch event {
-                        case .rows(let rows):
-                            latestRows = rows
-                        case .completeness(let isComplete):
-                            directoryIsComplete = isComplete
-                        }
-                        guard let observedRows = latestRows else { continue }
-                        let scopeIsActive = observedRows.first?.scopeIsActive == true
-                        let materialRows = observedRows.filter { $0.id != nil }
-                        let clients = try materialRows.map {
-                            try $0.clientSummary(expectedPrincipalId: principalId.rawValue)
-                        }
-                        let hasPending = materialRows.contains {
-                            $0.pendingOperationId != nil || $0.archiveOperationId != nil
-                        }
-                        let isComplete = scopeIsActive
-                            && directoryIsComplete
-                            && !hasPending
-                        let quality = Self.quality(
-                            scopeIsActive: scopeIsActive,
-                            hasPending: hasPending,
-                            isComplete: isComplete,
-                            hasLastSyncedAt: database.currentStatus.lastSyncedAt != nil
-                        )
-                        let local = try ListLocalSnapshot(
-                            queryFingerprint: try Self.queryFingerprint(
-                                kind: "clients",
-                                accountId: accountId
-                            ),
-                            rows: clients,
-                            visibleRowCountBeforeFiltering: materialRows.count,
-                            isCompleteForQuery: isComplete,
-                            quality: quality,
-                            localDataVersion: try Self.localDataVersion(
-                                kind: "clients",
-                                accountId: accountId,
-                                scopeIsActive: scopeIsActive,
-                                isComplete: isComplete,
-                                quality: quality,
-                                rows: materialRows
-                            ),
-                            asOf: now()
-                        )
-                        let snapshot = try ClientListSnapshot(
-                            accountId: accountId,
-                            local: local
-                        )
-
-                        for row in materialRows {
-                            guard let id = row.id,
-                                  let operationId = row.reconciliationOperationId else {
-                                continue
-                            }
-                            try await PowerSyncOverlayReconciler.reconcileClient(
-                                database: database,
-                                clientId: id,
-                                accountId: accountId.rawValue,
-                                operationId: operationId
-                            )
-                        }
-                        for row in materialRows {
-                            guard let id = row.id,
-                                  let operationId = row.archiveOperationId else { continue }
-                            try await PowerSyncOverlayReconciler.reconcileClientArchive(
-                                database: database,
-                                clientId: id,
-                                accountId: accountId.rawValue,
-                                operationId: operationId
-                            )
-                        }
-                        continuation.yield(snapshot)
-                    }
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
                     continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
+                    if admitted { await watchRegistry.finished(id: id) }
+                    return
                 }
+                await runClientWatch(accountId: accountId, continuation: continuation)
+                await watchRegistry.finished(id: id)
             }
-            continuation.onTermination = { _ in task.cancel() }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
         }
     }
 
@@ -154,108 +85,26 @@ final class ClientProjectDirectoryPowerSyncQuery:
         }
 
         return AsyncThrowingStream { continuation in
+            let id = UUID()
+            let handle = ClientProjectDirectoryWatchTaskHandle()
+            let registration = Task { await watchRegistry.register(id: id, handle: handle) }
             let task = Task {
-                do {
-                    var latestRows: [PowerSyncDirectoryProjectRow]?
-                    var directoryIsComplete = false
-                    for try await event in projectEvents(accountId: accountId) {
-                        switch event {
-                        case .rows(let rows):
-                            latestRows = rows
-                        case .completeness(let isComplete):
-                            directoryIsComplete = isComplete
-                        }
-                        guard let observedRows = latestRows else { continue }
-                        let scopeIsActive = observedRows.first?.scopeIsActive == true
-                        let materialRows = observedRows.filter { $0.projectId != nil }
-                        let projects = try materialRows.compactMap {
-                            try $0.projectSummary(expectedPrincipalId: principalId.rawValue)
-                        }
-                        let relationshipIsComplete = projects.count == materialRows.count
-                        let hasPending = materialRows.contains { $0.isPending }
-                        let isComplete = scopeIsActive
-                            && directoryIsComplete
-                            && relationshipIsComplete
-                            && !hasPending
-                        let quality = Self.quality(
-                            scopeIsActive: scopeIsActive,
-                            hasPending: hasPending || !relationshipIsComplete,
-                            isComplete: isComplete,
-                            hasLastSyncedAt: database.currentStatus.lastSyncedAt != nil
-                        )
-                        let local = try ListLocalSnapshot(
-                            queryFingerprint: try Self.queryFingerprint(
-                                kind: "projects",
-                                accountId: accountId
-                            ),
-                            rows: projects,
-                            visibleRowCountBeforeFiltering: materialRows.count,
-                            isCompleteForQuery: isComplete,
-                            quality: quality,
-                            localDataVersion: try Self.localDataVersion(
-                                kind: "projects",
-                                accountId: accountId,
-                                scopeIsActive: scopeIsActive,
-                                isComplete: isComplete,
-                                quality: quality,
-                                rows: materialRows
-                            ),
-                            asOf: now()
-                        )
-                        let snapshot = try ProjectListSnapshot(
-                            accountId: accountId,
-                            local: local
-                        )
-
-                        for row in materialRows where row.hasCompleteRelationship {
-                            if let projectId = row.projectId,
-                               let operationId = row.projectReconciliationOperationId {
-                                try await PowerSyncOverlayReconciler.reconcileProjectCore(
-                                    database: database,
-                                    projectId: projectId,
-                                    accountId: accountId.rawValue,
-                                    operationId: operationId
-                                )
-                            }
-                            if let clientId = row.clientId,
-                               let operationId = row.clientReconciliationOperationId {
-                                try await PowerSyncOverlayReconciler.reconcileClient(
-                                    database: database,
-                                    clientId: clientId,
-                                    accountId: accountId.rawValue,
-                                    operationId: operationId
-                                )
-                            }
-                            if let clientId = row.clientId,
-                               let operationId = row.clientArchiveOperationId {
-                                try await PowerSyncOverlayReconciler.reconcileClientArchive(
-                                    database: database,
-                                    clientId: clientId,
-                                    accountId: accountId.rawValue,
-                                    operationId: operationId
-                                )
-                            }
-                            if let projectId = row.projectId,
-                               let archiveOperationId = row.archiveOperationId {
-                                try await PowerSyncOverlayReconciler.reconcileProjectArchive(
-                                    database: database,
-                                    projectId: projectId,
-                                    accountId: accountId.rawValue,
-                                    operationId: archiveOperationId
-                                )
-                            }
-                        }
-                        continuation.yield(snapshot)
-                    }
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
                     continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
+                    if admitted { await watchRegistry.finished(id: id) }
+                    return
                 }
+                await runProjectWatch(accountId: accountId, continuation: continuation)
+                await watchRegistry.finished(id: id)
             }
-            continuation.onTermination = { _ in task.cancel() }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
         }
+    }
+
+    func cancelAndDrainWatches() async {
+        await watchRegistry.cancelAndDrain()
     }
 
     private enum ClientDirectoryEvent: Sendable {
@@ -268,96 +117,276 @@ final class ClientProjectDirectoryPowerSyncQuery:
         case completeness(Bool)
     }
 
-    private func clientEvents(
-        accountId: AccountID
-    ) -> AsyncThrowingStream<ClientDirectoryEvent, Error> {
-        AsyncThrowingStream { continuation in
-            let databaseTask = Task {
-                do {
-                    let updates = try database.watch(
-                        sql: Self.clientDirectorySQL,
-                        parameters: [
-                            accountId.rawValue,
-                            principalId.rawValue,
-                            principalId.rawValue,
-                            accountId.rawValue,
-                            accountId.rawValue,
-                            principalId.rawValue,
-                            principalId.rawValue
-                        ]
-                    ) { cursor in
-                        try PowerSyncDirectoryClientRow(cursor: cursor)
-                    }
-                    for try await rows in updates {
-                        try Task.checkCancellation()
-                        continuation.yield(.rows(rows))
-                    }
-                    continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
+    private func runClientWatch(
+        accountId: AccountID,
+        continuation: AsyncThrowingStream<ClientListSnapshot, Error>.Continuation
+    ) async {
+        let channel = AsyncThrowingStream<ClientDirectoryEvent, Error>.makeStream()
+        let databaseTask = Task {
+            do {
+                let updates = try database.watch(
+                    sql: Self.clientDirectorySQL,
+                    parameters: [
+                        accountId.rawValue,
+                        principalId.rawValue,
+                        principalId.rawValue,
+                        accountId.rawValue,
+                        accountId.rawValue,
+                        principalId.rawValue,
+                        principalId.rawValue
+                    ]
+                ) { cursor in
+                    try PowerSyncDirectoryClientRow(cursor: cursor)
                 }
-            }
-            let completenessTask = Task {
-                for await isComplete in completenessObservation(.clients, accountId) {
-                    guard !Task.isCancelled else { return }
-                    continuation.yield(.completeness(isComplete))
+                for try await rows in updates {
+                    try Task.checkCancellation()
+                    channel.continuation.yield(.rows(rows))
                 }
-            }
-            continuation.onTermination = { _ in
-                databaseTask.cancel()
-                completenessTask.cancel()
+                channel.continuation.finish()
+            } catch is CancellationError {
+                channel.continuation.finish()
+            } catch {
+                channel.continuation.finish(throwing: error)
             }
         }
+        let completenessTask = Task {
+            for await isComplete in completenessObservation(.clients, accountId) {
+                guard !Task.isCancelled else { return }
+                channel.continuation.yield(.completeness(isComplete))
+            }
+        }
+
+        do {
+            var latestRows: [PowerSyncDirectoryClientRow]?
+            var directoryIsComplete = false
+            for try await event in channel.stream {
+                try Task.checkCancellation()
+                switch event {
+                case .rows(let rows):
+                    latestRows = rows
+                case .completeness(let isComplete):
+                    directoryIsComplete = isComplete
+                }
+                guard let observedRows = latestRows else { continue }
+                let scopeIsActive = observedRows.first?.scopeIsActive == true
+                let materialRows = observedRows.filter { $0.id != nil }
+                let clients = try materialRows.map {
+                    try $0.clientSummary(expectedPrincipalId: principalId.rawValue)
+                }
+                let hasPending = materialRows.contains {
+                    $0.pendingOperationId != nil || $0.archiveOperationId != nil
+                }
+                let isComplete = scopeIsActive
+                    && directoryIsComplete
+                    && !hasPending
+                let quality = Self.quality(
+                    scopeIsActive: scopeIsActive,
+                    hasPending: hasPending,
+                    isComplete: isComplete,
+                    hasLastSyncedAt: database.currentStatus.lastSyncedAt != nil
+                )
+                let local = try ListLocalSnapshot(
+                    queryFingerprint: try Self.queryFingerprint(
+                        kind: "clients",
+                        accountId: accountId
+                    ),
+                    rows: clients,
+                    visibleRowCountBeforeFiltering: materialRows.count,
+                    isCompleteForQuery: isComplete,
+                    quality: quality,
+                    localDataVersion: try Self.localDataVersion(
+                        kind: "clients",
+                        accountId: accountId,
+                        scopeIsActive: scopeIsActive,
+                        isComplete: isComplete,
+                        quality: quality,
+                        rows: materialRows
+                    ),
+                    asOf: now()
+                )
+                let snapshot = try ClientListSnapshot(accountId: accountId, local: local)
+
+                for row in materialRows {
+                    guard let id = row.id,
+                          let operationId = row.reconciliationOperationId else { continue }
+                    try await PowerSyncOverlayReconciler.reconcileClient(
+                        database: database,
+                        clientId: id,
+                        accountId: accountId.rawValue,
+                        operationId: operationId
+                    )
+                }
+                for row in materialRows {
+                    guard let id = row.id,
+                          let operationId = row.archiveOperationId else { continue }
+                    try await PowerSyncOverlayReconciler.reconcileClientArchive(
+                        database: database,
+                        clientId: id,
+                        accountId: accountId.rawValue,
+                        operationId: operationId
+                    )
+                }
+                if case .terminated = continuation.yield(snapshot) { break }
+            }
+            continuation.finish()
+        } catch is CancellationError {
+            continuation.finish()
+        } catch {
+            continuation.finish(throwing: error)
+        }
+
+        databaseTask.cancel()
+        completenessTask.cancel()
+        _ = await databaseTask.result
+        _ = await completenessTask.result
+        channel.continuation.finish()
     }
 
-    private func projectEvents(
-        accountId: AccountID
-    ) -> AsyncThrowingStream<ProjectDirectoryEvent, Error> {
-        AsyncThrowingStream { continuation in
-            let databaseTask = Task {
-                do {
-                    let updates = try database.watch(
-                        sql: Self.projectDirectorySQL,
-                        parameters: [
-                            accountId.rawValue,
-                            principalId.rawValue,
-                            principalId.rawValue,
-                            accountId.rawValue,
-                            accountId.rawValue,
-                            principalId.rawValue,
-                            principalId.rawValue,
-                            accountId.rawValue,
-                            accountId.rawValue,
-                            principalId.rawValue,
-                            principalId.rawValue
-                        ]
-                    ) { cursor in
-                        try PowerSyncDirectoryProjectRow(cursor: cursor)
-                    }
-                    for try await rows in updates {
-                        try Task.checkCancellation()
-                        continuation.yield(.rows(rows))
-                    }
-                    continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
+    private func runProjectWatch(
+        accountId: AccountID,
+        continuation: AsyncThrowingStream<ProjectListSnapshot, Error>.Continuation
+    ) async {
+        let channel = AsyncThrowingStream<ProjectDirectoryEvent, Error>.makeStream()
+        let databaseTask = Task {
+            do {
+                let updates = try database.watch(
+                    sql: Self.projectDirectorySQL,
+                    parameters: [
+                        accountId.rawValue,
+                        principalId.rawValue,
+                        principalId.rawValue,
+                        accountId.rawValue,
+                        accountId.rawValue,
+                        principalId.rawValue,
+                        principalId.rawValue,
+                        accountId.rawValue,
+                        accountId.rawValue,
+                        principalId.rawValue,
+                        principalId.rawValue
+                    ]
+                ) { cursor in
+                    try PowerSyncDirectoryProjectRow(cursor: cursor)
                 }
-            }
-            let completenessTask = Task {
-                for await isComplete in completenessObservation(.projects, accountId) {
-                    guard !Task.isCancelled else { return }
-                    continuation.yield(.completeness(isComplete))
+                for try await rows in updates {
+                    try Task.checkCancellation()
+                    channel.continuation.yield(.rows(rows))
                 }
-            }
-            continuation.onTermination = { _ in
-                databaseTask.cancel()
-                completenessTask.cancel()
+                channel.continuation.finish()
+            } catch is CancellationError {
+                channel.continuation.finish()
+            } catch {
+                channel.continuation.finish(throwing: error)
             }
         }
+        let completenessTask = Task {
+            for await isComplete in completenessObservation(.projects, accountId) {
+                guard !Task.isCancelled else { return }
+                channel.continuation.yield(.completeness(isComplete))
+            }
+        }
+
+        do {
+            var latestRows: [PowerSyncDirectoryProjectRow]?
+            var directoryIsComplete = false
+            for try await event in channel.stream {
+                try Task.checkCancellation()
+                switch event {
+                case .rows(let rows):
+                    latestRows = rows
+                case .completeness(let isComplete):
+                    directoryIsComplete = isComplete
+                }
+                guard let observedRows = latestRows else { continue }
+                let scopeIsActive = observedRows.first?.scopeIsActive == true
+                let materialRows = observedRows.filter { $0.projectId != nil }
+                let projects = try materialRows.compactMap {
+                    try $0.projectSummary(expectedPrincipalId: principalId.rawValue)
+                }
+                let relationshipIsComplete = projects.count == materialRows.count
+                let hasPending = materialRows.contains { $0.isPending }
+                let isComplete = scopeIsActive
+                    && directoryIsComplete
+                    && relationshipIsComplete
+                    && !hasPending
+                let quality = Self.quality(
+                    scopeIsActive: scopeIsActive,
+                    hasPending: hasPending || !relationshipIsComplete,
+                    isComplete: isComplete,
+                    hasLastSyncedAt: database.currentStatus.lastSyncedAt != nil
+                )
+                let local = try ListLocalSnapshot(
+                    queryFingerprint: try Self.queryFingerprint(
+                        kind: "projects",
+                        accountId: accountId
+                    ),
+                    rows: projects,
+                    visibleRowCountBeforeFiltering: materialRows.count,
+                    isCompleteForQuery: isComplete,
+                    quality: quality,
+                    localDataVersion: try Self.localDataVersion(
+                        kind: "projects",
+                        accountId: accountId,
+                        scopeIsActive: scopeIsActive,
+                        isComplete: isComplete,
+                        quality: quality,
+                        rows: materialRows
+                    ),
+                    asOf: now()
+                )
+                let snapshot = try ProjectListSnapshot(accountId: accountId, local: local)
+
+                for row in materialRows where row.hasCompleteRelationship {
+                    if let projectId = row.projectId,
+                       let operationId = row.projectReconciliationOperationId {
+                        try await PowerSyncOverlayReconciler.reconcileProjectCore(
+                            database: database,
+                            projectId: projectId,
+                            accountId: accountId.rawValue,
+                            operationId: operationId
+                        )
+                    }
+                    if let clientId = row.clientId,
+                       let operationId = row.clientReconciliationOperationId {
+                        try await PowerSyncOverlayReconciler.reconcileClient(
+                            database: database,
+                            clientId: clientId,
+                            accountId: accountId.rawValue,
+                            operationId: operationId
+                        )
+                    }
+                    if let clientId = row.clientId,
+                       let operationId = row.clientArchiveOperationId {
+                        try await PowerSyncOverlayReconciler.reconcileClientArchive(
+                            database: database,
+                            clientId: clientId,
+                            accountId: accountId.rawValue,
+                            operationId: operationId
+                        )
+                    }
+                    if let projectId = row.projectId,
+                       let archiveOperationId = row.archiveOperationId {
+                        try await PowerSyncOverlayReconciler.reconcileProjectArchive(
+                            database: database,
+                            projectId: projectId,
+                            accountId: accountId.rawValue,
+                            operationId: archiveOperationId
+                        )
+                    }
+                }
+                if case .terminated = continuation.yield(snapshot) { break }
+            }
+            continuation.finish()
+        } catch is CancellationError {
+            continuation.finish()
+        } catch {
+            continuation.finish(throwing: error)
+        }
+
+        databaseTask.cancel()
+        completenessTask.cancel()
+        _ = await databaseTask.result
+        _ = await completenessTask.result
+        channel.continuation.finish()
     }
 
     private static func quality(
@@ -873,6 +902,58 @@ enum PowerSyncOverlayReconciler {
             """,
             parameters: [operationId, accountId, projectId]
         )
+    }
+}
+
+private final class ClientProjectDirectoryWatchTaskHandle: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let shouldCancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if shouldCancel { task.cancel() }
+    }
+
+    func cancel() {
+        let installed = lock.withLock {
+            cancellationRequested = true
+            return task
+        }
+        installed?.cancel()
+    }
+}
+
+private actor ClientProjectDirectoryWatchRegistry {
+    private var handles: [UUID: ClientProjectDirectoryWatchTaskHandle] = [:]
+    private var isClosing = false
+    private var drainWaiters: [CheckedContinuation<Void, Never>] = []
+
+    func register(id: UUID, handle: ClientProjectDirectoryWatchTaskHandle) -> Bool {
+        guard !isClosing else {
+            handle.cancel()
+            return false
+        }
+        handles[id] = handle
+        return true
+    }
+
+    func finished(id: UUID) {
+        handles.removeValue(forKey: id)
+        guard handles.isEmpty else { return }
+        let waiters = drainWaiters
+        drainWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func cancelAndDrain() async {
+        isClosing = true
+        for handle in handles.values { handle.cancel() }
+        guard !handles.isEmpty else { return }
+        await withCheckedContinuation { drainWaiters.append($0) }
     }
 }
 

@@ -106,8 +106,8 @@
     },
     {
       "id": "TEST-AE71DAB919F1",
-      "acknowledgeSourceHash": "78402fac1422a909b067df32837decb7569f503fe31411cf4c2d02da0769e7d2",
-      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and cancellation drainage.",
+      "acknowledgeSourceHash": "54a6946148e28fb000e3e481c0152372b385fa57edd931ed38074a7bd5169a52",
+      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and explicit upstream directory cancellation drainage before database close.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
