@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T18:32:07.862Z",
+  "generatedFromManifestSync": "2026-09-06T18:45:47.216Z",
   "totals": {
     "slices": 94,
     "claimedTargetSurfaces": 316,
@@ -11,8 +11,8 @@
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 15,
-    "verified": 73,
+    "implemented": 13,
+    "verified": 75,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -146,7 +146,7 @@
       "sliceId": "budget-category-reference-powersync-provider",
       "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Budget Category Reference Provider",
       "surfaceIds": [
         "SWIFT-241B51091042",
@@ -483,7 +483,7 @@
       "sliceId": "item-space-clearing-local-durability-provider",
       "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Item Space Clearing Local Durability Provider",
       "surfaceIds": [
         "SWIFT-02B978845267",

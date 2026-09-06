@@ -168,6 +168,11 @@ passed on 2026-09-06: all conversion and traceability controls, the complete
 serial Swift package, generated app/MCP contracts and MCP tests, both macOS and
 iOS Simulator staging builds, disposable Supabase lint plus 374 database
 assertions and the scoped read/RPC probes, and clean-diff validation. The slice
-remains `implemented`; `ITEMSPACECLEARLOCAL-TEST-013` cannot pass and the slice
-cannot become verified until this exact synchronized commit also passes every
-immutable CI job.
+Exact synchronized implementation commit
+`049455223afd3147b596913667f43b3f43d93642` then passed every immutable job
+in run `34052053056`: conversion/traceability, the complete serial Swift suite,
+target/MCP contracts and tests, disposable local Supabase, both staging builds,
+and clean artifacts. This satisfies `ITEMSPACECLEARLOCAL-TEST-013` and promotes
+the bounded local-durability provider to `verified`; it does not advance any
+authoritative apply, projection, hosted, migration, production, or cutover
+claim.

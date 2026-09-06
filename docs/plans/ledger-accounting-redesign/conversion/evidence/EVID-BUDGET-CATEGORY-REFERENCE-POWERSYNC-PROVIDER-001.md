@@ -266,6 +266,10 @@ matrix as one explicit serial loop, retains each query, awaits
 exact bounded failure, one observation, and one source termination. Provider
 source and behavior remain byte-unchanged. `CATPOWER-TEST-010` returns to
 planned until the combined local and immutable implementation gate passes. The
-complete 2026-09-06 local gate now passes the corrected test inside the serial
-Swift package together with conversion controls, MCP, disposable Supabase, and
-both staging builds. Exact synchronized CI remains the sole outstanding proof.
+complete 2026-09-06 local gate passed the corrected test inside the serial Swift
+package together with conversion controls, MCP, disposable Supabase, and both
+staging builds. Exact correction commit
+`049455223afd3147b596913667f43b3f43d93642` then passed every immutable job in
+run `34052053056`, including a normal serial Swift exit and both builds. This
+satisfies `CATPOWER-TEST-010` and re-verifies the provider without changing its
+production behavior or authority.

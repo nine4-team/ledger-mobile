@@ -6,7 +6,7 @@
 > record or the active dossier identifies a specific evidence gap or discrepancy.
 
 Last updated: 2026-09-06
-State version: 357
+State version: 358
 
 ## Objective
 
@@ -18,11 +18,11 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-CI-CANDIDATE
+- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current verified conversion base: `5d3d093710178f5f8da85dbc4c7e706b052c97e4`
-  / immutable workflow run `34047249986`
+- Current verified conversion base: `049455223afd3147b596913667f43b3f43d93642`
+  / immutable workflow run `34052053056`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -123,7 +123,11 @@ without modifying the running Firebase application before hard cutover.
   local implementation gate then passed all conversion controls, complete
   serial Swift and MCP tests, disposable Supabase lint/374 database assertions/
   scoped probes, both staging builds, and clean-diff validation. Exact
-  implementation-commit CI remains pending.
+  implementation commit `049455223afd3147b596913667f43b3f43d93642`
+  then passed every immutable job in run `34052053056`, including normal serial
+  Swift completion and both staging builds. The clearing provider and corrected
+  Budget operational proof are now verified; authoritative apply and hosted
+  Sync remain unadvanced.
 
 - The first post-foundation independent clearing-provider audit returned NO-GO
   for READY. It caught three touchpoint hashes still pinned to the pre-guard

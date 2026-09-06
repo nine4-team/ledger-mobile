@@ -16,7 +16,7 @@
       "acknowledgeSourceHash": "c54e5a4b506ebd85c206dc4ba90b67d61bc17ab4ec223b9f5a94a4081ee3c909",
       "currentBehavior": "Executable Account/Principal-bound encrypted local acceptance store for one canonical Item-to-Space clearing command, including exact replay, six-family OperationID refusal, queued-only observation, and runtime drainage.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {
@@ -34,7 +34,7 @@
       "acknowledgeSourceHash": "d9fe91c6a66e2a1ae61011e0a856f05616d19cb91176d7f3d600bd384b55ee41",
       "currentBehavior": "Executable encrypted local clearing-provider suite covering exact evidence, numeric/time bounds, replay, six-family identity, tamper/no-emission, restart, cancellation, runtime lifecycle, pending-work, and containment proof.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {

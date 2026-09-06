@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T18:32:07.862Z",
+    "lastSynchronizedAt": "2026-09-06T18:45:47.216Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18814,7 +18814,7 @@
           "Atomic acceptance, restart, replay, collision, cancellation, watch, and runtime lifecycle obligations pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
@@ -21997,7 +21997,7 @@
           "Exact local scope, row validation, ordering, readiness, restart and lifecycle behavior pass without final visibility or hosted authority claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
@@ -44465,7 +44465,7 @@
           "All frozen provider and runtime lifecycle obligations pass before status advances"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
@@ -47106,7 +47106,7 @@
           "All frozen dossier obligations pass without hosted resources"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
