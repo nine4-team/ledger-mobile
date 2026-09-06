@@ -14,9 +14,11 @@
 // field's tamper/null/orphan/terminal/result refusal; concurrent same-ID
 // convergence; complete/orphan/malformed collisions against every family in the
 // separately verified centralized OperationID inventory, in both submission
-// directions; exact beforeTransaction, existingRead, commandWrite,
-// operationWrite, beforeCommit, afterCommit, watchConstruction, watchRead, and
-// watchIteration checkpoints; transaction/read/write/watch fault rollback and error mapping;
+// directions; exact beforeTransaction, inventoryConstruction, inventoryRead,
+// afterOwnershipInspection, existingRead, commandWrite, operationWrite,
+// beforeCommit, afterCommit, watchConstruction, watchRead, and watchIteration
+// checkpoints; transaction/guard/read/write/watch fault rollback, bounded error
+// mapping, and CancellationError passthrough at every pre-commit guard boundary;
 // cancellation on both sides of commit; encrypted restart; dedicated watch
 // cancellation/drainage; runtime close/post-close refusal; exactly-one pending-
 // work count; and byte-unchanged ps_crud/upload selection.

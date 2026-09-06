@@ -1,8 +1,8 @@
 # EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001 — Item-to-Space Clearing Local Durability Provider
 
-- Status: corrected comment-only DRAFT; independent re-review and exact READY CI pending
+- Status: comment-only READY after independent GO; exact READY CI pending
 - Date: 2026-09-06
-- Base commit: `04843679c1bffa41aab2efecf2723695dc97fc4a`
+- Base commit: `5d3d093710178f5f8da85dbc4c7e706b052c97e4`
 - Environment: dedicated target worktree and disposable encrypted local databases only
 - Production/Firebase impact: none
 
@@ -41,7 +41,11 @@ The only new executable leaves are the current comment scaffolds:
 - `LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift`;
 - `LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift`.
 
-The dossier freezes every shared touchpoint and exact base hash. Implementation
+The dossier freezes every shared touchpoint and exact base hash. Its bounded
+shared-test boundary also permits only the sixth-family fixture, exhaustive-
+switch, and matrix extensions required in
+`LocalOperationIdentityGuardTests.swift`; existing-family proof may not be
+weakened. Implementation
 may add one localOnly `spike_item_space_clearing_commands` table, one finite
 runtime submission, one dedicated queued-operation watch, close drainage, and
 static containment checks. It must reuse the verified Core command/use case and
@@ -75,7 +79,12 @@ rollback, replay/collision/concurrency, exhaustive tamper/orphan/terminal
 refusal, encrypted restart, cancellation, watch and runtime drainage,
 exactly-one pending-work accounting, zero `ps_crud`/projection/upload changes,
 finite diagnostics, static containment, and separate exact READY/implementation
-CI checkpoints.
+CI checkpoints. The named admission boundary includes `inventoryConstruction`,
+`inventoryRead`, and `afterOwnershipInspection` around the verified shared guard;
+each injected failure and cancellation must roll back and map through the
+clearing provider's bounded contract. The shared guard suite must add the sixth
+family to every exact relation/family set, exhaustive switch, family matrix,
+orphan destination, restart fixture, and provider-completeness assertion.
 
 ## Independent DRAFT Review Corrections
 
@@ -98,16 +107,25 @@ Date-round-trippable success case—sole ownership of runtime and
 pending-work proof by the new clearing test suite, nominal use-case conformance,
 live bootstrap/resource binding, comment-stripped structural checks, removal of
 premature READY wording and false source-coupling metadata, and correction of
-the A-016 lease description. Independent corrected-DRAFT re-review remains
-required before status can advance to READY.
+the A-016 lease description. After the identity foundation passed exact
+implementation commit `5d3d093710178f5f8da85dbc4c7e706b052c97e4` / immutable
+run `34047249986`, the next independent audit returned NO-GO and caught three
+stale shared hashes, omission of the necessarily changed shared guard test
+suite, and missing guard-specific failure/cancellation checkpoints. The
+corrected DRAFT is rebased to that verified checkpoint, includes the bounded
+shared suite extension, and freezes all three guard admission boundaries.
+Independent corrected-DRAFT re-review returned GO with no P0–P3 finding after
+confirming all 14 touchpoint hashes, the verified guard dependency, bounded
+shared-suite extension, exact checkpoint matrix, authority traceability, and
+non-advancement boundary.
 
 ## READY Gate
 
-No executable provider code may replace the comment scaffolds until the shared
-OperationID foundation is verified and independent corrected-DRAFT review audits
-the exact dossier, authority, touched paths, hashes, test matrix, collision
-boundary, and non-advancement clauses and returns GO with no P0–P3 finding. Only
-then may the records say READY. That exact READY commit must pass every immutable
-workflow job. Passing READY does not authorize
+The shared OperationID foundation is verified, and independent corrected-DRAFT
+review audited the exact dossier, authority, touched paths, all 14 hashes, test
+matrix, collision boundary, and non-advancement clauses and returned GO with no
+P0–P3 finding. No executable provider code may replace either comment scaffold
+until this exact synchronized READY commit passes every immutable workflow job.
+Passing READY does not authorize
 hosted resources, production access, source-backend changes, migration, release,
 or cutover.

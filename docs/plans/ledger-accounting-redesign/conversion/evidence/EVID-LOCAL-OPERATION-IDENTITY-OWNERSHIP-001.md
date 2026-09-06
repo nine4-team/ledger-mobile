@@ -1,6 +1,6 @@
 # EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001 — Shared Local OperationID Ownership
 
-- Status: implemented locally; exact implementation CI pending
+- Status: verified
 - Date: 2026-09-06
 - Base commit: `04843679c1bffa41aab2efecf2723695dc97fc4a`
 - Environment: dedicated target worktree and disposable encrypted local databases only
@@ -138,9 +138,26 @@ access:
 - macOS staging build and iOS Simulator staging build; and
 - clean patch validation.
 
-`LOCALOPID-TEST-001` through `-009` and `-011` through `-012` are therefore
-passed. `LOCALOPID-TEST-010` remains planned until the exact implementation
-commit passes every immutable workflow job.
+`LOCALOPID-TEST-001` through `-009` and `-011` through `-012` therefore passed
+locally.
+
+## Immutable Verification
+
+Exact reviewed implementation commit
+`5d3d093710178f5f8da85dbc4c7e706b052c97e4` passed every job in immutable
+workflow run `34047249986` on 2026-09-06:
+
+- conversion state and traceability, including clean generated artifacts;
+- the complete serial target and MCP test suites;
+- isolated target dependency/environment and generated-contract checks;
+- macOS and iOS Simulator staging builds;
+- disposable local Supabase schema, RLS, RPC, replay and clean-shutdown checks;
+  and
+- clean tracked artifacts after every CI lane.
+
+This satisfies `LOCALOPID-TEST-010`; all `LOCALOPID-TEST-001` through `-012`
+are passed. The general GitHub Actions Node-runtime deprecation annotation did
+not fail a job and does not alter implementation evidence.
 
 ## Non-Advancement
 

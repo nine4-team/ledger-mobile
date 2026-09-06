@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T16:59:21.219Z",
+    "lastSynchronizedAt": "2026-09-06T17:22:36.921Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18786,7 +18786,7 @@
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only DRAFT scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command.",
+      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command; executable replacement remains gated on exact READY CI.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Local Durability Provider",
@@ -20622,7 +20622,7 @@
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Implemented centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact immutable implementation CI remains pending.",
+      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "target": {
         "owner": "Shared Local Operation Identity Guard",
@@ -20651,7 +20651,7 @@
           "All current family pairs, orphan sources, concurrency, replay, restart, pinned-PowerSync insert-only representation, and static completeness obligations pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
@@ -44334,7 +44334,7 @@
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact immutable implementation CI remains pending.",
+      "currentBehavior": "Verified encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "target": {
         "owner": "Shared Local Operation Identity Guard",
@@ -44360,7 +44360,7 @@
           "The frozen LOCALOPID test matrix passes without hosted resources"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
@@ -47075,12 +47075,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift"
         }
       ],
-      "observedSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
-      "acknowledgedSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
+      "observedSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
+      "acknowledgedSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only DRAFT scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof.",
+      "currentBehavior": "Comment-only READY scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof; executable replacement remains gated on exact READY CI.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Local Durability Provider",

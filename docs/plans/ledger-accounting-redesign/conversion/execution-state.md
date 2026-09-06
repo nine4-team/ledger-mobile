@@ -6,7 +6,7 @@
 > record or the active dossier identifies a specific evidence gap or discrepancy.
 
 Last updated: 2026-09-06
-State version: 353
+State version: 355
 
 ## Objective
 
@@ -18,12 +18,11 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: LOCAL-OPERATION-IDENTITY-OWNERSHIP-IMPLEMENTED-LOCAL-GATE
+- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-READY-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current verified conversion base: `4d16d68945fb68116db794a15e0d12b258dad1d6`
-  (the reviewed implementation is locally green and awaits its exact immutable
-  implementation-CI checkpoint)
+- Current verified conversion base: `5d3d093710178f5f8da85dbc4c7e706b052c97e4`
+  / immutable workflow run `34047249986`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -99,6 +98,19 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- The first post-foundation independent clearing-provider audit returned NO-GO
+  for READY. It caught three touchpoint hashes still pinned to the pre-guard
+  scaffold, omission of the necessarily changed shared guard test suite, and a
+  failure/cancellation matrix that omitted `inventoryConstruction`,
+  `inventoryRead`, and `afterOwnershipInspection`. The corrected DRAFT is now
+  based on exact verified guard implementation `5d3d0937`, freezes current
+  shared hashes, permits only bounded sixth-family extensions to the exhaustive
+  guard suite, and requires rollback/error/cancellation proof at all three guard
+  boundaries. Final corrected-DRAFT re-review then returned GO with no P0-P3
+  after confirming all 14 hashes and the complete authority/test/non-advancement
+  boundary. The comment-only package is READY pending its exact immutable READY
+  CI; no clearing executable work has begun.
+
 - Exact READY `4d16d68945fb68116db794a15e0d12b258dad1d6` / immutable
   run `34040671631` authorized the shared local OperationID ownership guard.
   The bounded eight-file implementation centralizes every current operation-ID
@@ -111,8 +123,11 @@ without modifying the running Firebase application before hard cutover.
   Independent corrected-diff review returned GO with no P0-P3. Focused 9/9,
   affected 94/94, complete serial Swift and MCP tests, disposable local
   Supabase lint/database/RPC checks, target controls and both staging builds pass
-  locally. Exact implementation commit and immutable CI remain pending; the
-  clearing batch cannot advance until verified promotion.
+  locally. Exact implementation commit
+  `5d3d093710178f5f8da85dbc4c7e706b052c97e4` then passed every immutable
+  workflow job in run `34047249986`, promoting all twelve obligations and the
+  two owned surfaces to verified. The clearing batch may now advance only
+  through its separately reviewed READY gate.
 
 - Independent corrected-DRAFT review of Item-to-Space clearing found that its
   proposed reciprocal assignment lookup still protected only two command
@@ -4534,12 +4549,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Synchronize the locally green `local-operation-identity-ownership-guard`
-implementation evidence and conversion outputs, pass the complete conversion
-control gate, then commit and push the exact reviewed checkpoint. Require every
-immutable workflow job to pass before promoting the dossier to verified. Only
-after that promotion may the Item-to-Space clearing DRAFT register its sixth
-family and advance toward READY.
+Synchronize and locally validate the independently approved comment-only
+`item-space-clearing-local-durability-provider` READY package, then commit, push
+and require immutable READY CI before either clearing scaffold is replaced.
+After that gate passes, implement only the frozen provider/schema/runtime/
+central-guard/test/checker boundary. Register only the sixth family/relation
+centrally and extend the existing exhaustive guard suite without weakening any
+prior-family proof.
 
 Do not add authoritative Item/Space apply, optimistic placement projection,
 user-facing assignment/clearing UI, upload connector, Postgres/RLS/Sync changes,

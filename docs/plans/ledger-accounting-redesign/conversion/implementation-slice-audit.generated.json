@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T16:59:21.219Z",
+  "generatedFromManifestSync": "2026-09-06T17:22:36.921Z",
   "totals": {
     "slices": 94,
     "claimedTargetSurfaces": 316,
@@ -8,11 +8,11 @@
     "implementationAdvancedTargetSurfaces": 239
   },
   "statusCounts": {
-    "draft": 4,
-    "ready": 0,
+    "draft": 3,
+    "ready": 1,
     "in_progress": 3,
-    "implemented": 14,
-    "verified": 73,
+    "implemented": 13,
+    "verified": 74,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -483,7 +483,7 @@
       "sliceId": "item-space-clearing-local-durability-provider",
       "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
       "kind": "product",
-      "status": "draft",
+      "status": "ready",
       "owner": "Item Space Clearing Local Durability Provider",
       "surfaceIds": [
         "SWIFT-02B978845267",
@@ -528,7 +528,7 @@
       "sliceId": "local-operation-identity-ownership-guard",
       "title": "Enforce one fail-closed local OperationID namespace across command families",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Shared Local Operation Identity Guard",
       "surfaceIds": [
         "SWIFT-142941D87D78",

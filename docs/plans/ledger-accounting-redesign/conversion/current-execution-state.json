@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 2,
+  "stateVersion": 4,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -10,40 +10,40 @@
     "version": 2
   },
   "verifiedCheckpoint": {
-    "name": "LOCAL-OPERATION-IDENTITY-OWNERSHIP-READY",
-    "commit": "4d16d68945fb68116db794a15e0d12b258dad1d6",
-    "ciRun": 34040671631,
+    "name": "LOCAL-OPERATION-IDENTITY-OWNERSHIP-VERIFIED",
+    "commit": "5d3d093710178f5f8da85dbc4c7e706b052c97e4",
+    "ciRun": 34047249986,
     "ciStatus": "passed",
-    "meaning": "The reviewed operation-identity guard contract is frozen; executable implementation is not yet verified."
+    "meaning": "The shared five-family local OperationID ownership guard and its complete current-family matrix are verified; a later provider may add one centrally registered family/relation through its own gated slice."
   },
   "activeBatch": {
-    "id": "local-operation-identity-ownership-guard",
-    "status": "ci_verification",
-    "outcome": "Prevent an offline operation identifier from being accepted for a different command family, account, principal, target, or payload across retry and restart.",
+    "id": "item-space-clearing-provider-workflow",
+    "status": "ready",
+    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
     "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
     ],
     "allowedPaths": [
-      "LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift",
-      "LedgeriOS/LedgerTargetPowerSync/ClientCreationPowerSyncStore.swift",
-      "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift",
+      "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift",
+      "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
       "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
-      "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift",
-      "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift",
       "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift",
       "scripts/check-target-environment.mjs"
     ],
     "nextActions": [
-      "Synchronize conversion outputs and pass the complete conversion-control gate.",
-      "Commit and push the exact reviewed implementation checkpoint.",
-      "Require every immutable workflow job to pass and then promote this dossier to verified.",
-      "Advance the Item-to-Space clearing batch only after that promotion."
+      "Synchronize the independently approved comment-only READY package and pass local conversion controls.",
+      "Commit and push the exact READY checkpoint, then require every immutable workflow job to pass.",
+      "Only after exact READY CI, replace the two scaffolds and make the bounded shared schema/runtime/guard/test/checker changes.",
+      "Review the implementation independently, then run one complete local and immutable implementation gate."
     ]
   },
   "followingBatch": {
-    "id": "item-space-clearing-provider-workflow",
-    "status": "blocked_by_active_batch",
-    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
+    "id": "item-space-clearing-provider-implementation",
+    "status": "blocked_by_ready_gate",
+    "outcome": "Replace the two clearing scaffolds and wire their bounded local-only provider/runtime surface after exact READY CI.",
     "dossiers": [
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json",
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json",

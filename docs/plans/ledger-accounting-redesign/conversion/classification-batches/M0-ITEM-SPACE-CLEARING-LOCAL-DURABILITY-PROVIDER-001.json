@@ -14,7 +14,7 @@
     {
       "id": "SWIFT-02B978845267",
       "acknowledgeSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
-      "currentBehavior": "Comment-only DRAFT scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command.",
+      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command; executable replacement remains gated on exact READY CI.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -31,8 +31,8 @@
     },
     {
       "id": "TEST-9E8111F721E6",
-      "acknowledgeSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
-      "currentBehavior": "Comment-only DRAFT scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof.",
+      "acknowledgeSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
+      "currentBehavior": "Comment-only READY scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof; executable replacement remains gated on exact READY CI.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],

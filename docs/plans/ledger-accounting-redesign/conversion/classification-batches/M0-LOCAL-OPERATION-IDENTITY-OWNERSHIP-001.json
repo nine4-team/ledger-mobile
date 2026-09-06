@@ -10,9 +10,9 @@
     {
       "id": "SWIFT-142941D87D78",
       "acknowledgeSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
-      "currentBehavior": "Implemented centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact immutable implementation CI remains pending.",
+      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
       "target": {
@@ -28,9 +28,9 @@
     {
       "id": "TEST-5272CB2301DE",
       "acknowledgeSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
-      "currentBehavior": "Executable encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact immutable implementation CI remains pending.",
+      "currentBehavior": "Verified encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
       "target": {
