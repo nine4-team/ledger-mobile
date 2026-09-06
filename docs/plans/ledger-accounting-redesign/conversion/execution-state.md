@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 330
+State version: 331
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: POWERSYNC-WATCH-LIFECYCLE-CORRECTION-IMPLEMENTED-LOCAL
+- Checkpoint: POWERSYNC-WATCH-LIFECYCLE-CORRECTION-EXACT-CI-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -127,7 +127,11 @@ without modifying the running Firebase application before hard cutover.
   error and assertion-return paths. Final review returned GO with no P0-P3
   after one stale-count correction. Local 62/62 affected and 569/569 complete
   Swift tests, full conversion/query controls, 26 MCP tests and both builds pass.
-  Expanded corrected exact-commit CI remains pending; no SQL/query result/product policy,
+  Exact corrected commit `758afefb6302cc44a4909262e9050ad93ba25dc7`
+  passed all three jobs in immutable run `34014750385`: conversion in 42 seconds,
+  local Supabase in 2 minutes 2 seconds, and the isolated target environment in
+  7 minutes 55 seconds. The complete target tests exited normally before both
+  staging builds, closing the CI-only teardown defect. No SQL/query result/product policy,
   Firebase, hosted, migration, production or cutover behavior changed;
   `EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001`.
 

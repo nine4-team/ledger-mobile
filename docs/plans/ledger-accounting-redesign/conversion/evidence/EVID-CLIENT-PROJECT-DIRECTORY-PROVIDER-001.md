@@ -1,6 +1,6 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001 — Client/Project PowerSync Directory Provider
 
-- Status: implemented; original exact implementation CI passed; expanded lifecycle correction independently reviewed and exact CI pending; hosted Sync proof pending
+- Status: implemented; expanded lifecycle correction independently reviewed and exact CI passed; hosted Sync proof pending
 - Date: 2026-09-06
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -198,6 +198,14 @@ Expanded corrected local verification passes:
   tests;
 - macOS and generic iOS Simulator staging builds.
 
-Immutable exact-commit CI remains required before this correction is promoted
-as final evidence. No SQL, query-result semantics, product policy, Firebase,
-hosted resource, migration, production or cutover behavior changed.
+Exact corrected implementation commit
+`758afefb6302cc44a4909262e9050ad93ba25dc7` passed immutable Actions run
+`34014750385`: conversion traceability completed in 42 seconds, local Supabase
+provider slices in 2 minutes 2 seconds, and the isolated target environment in
+7 minutes 55 seconds. The formerly hanging complete target test process exited
+normally before both macOS and generic iOS Simulator staging builds passed, and
+all three jobs confirmed that verification did not rewrite tracked artifacts.
+
+This promotes the lifecycle correction as exact-commit evidence. No SQL,
+query-result semantics, product policy, Firebase, hosted resource, migration,
+production or cutover behavior changed.
