@@ -49,6 +49,55 @@ const sourceProject = path.join(
   "LedgeriOS.xcodeproj",
   "project.pbxproj",
 );
+const migrationSafetyReadySwiftScaffolds = [
+  path.join(migrationCoreRoot, "FirebaseSourceFixture.swift"),
+  path.join(migrationCoreRoot, "MigrationEnvironmentGuard.swift"),
+  path.join(migrationTestRoot, "FirebaseSourceFixtureTests.swift"),
+  path.join(migrationTestRoot, "MigrationEnvironmentGuardTests.swift"),
+];
+const migrationSafetyReadyFixtureRoot = path.join(
+  migrationTestRoot,
+  "Fixtures/FirebaseSource/v1",
+);
+const migrationSafetyReadyExpectedDirectories = new Set([
+  "auth",
+  "firestore",
+  "storage",
+]);
+const migrationSafetyReadyExpectedFiles = new Set([
+  "auth/identity-metadata.json",
+  "firestore/documents.json",
+  "manifest.json",
+  "storage/object-metadata.json",
+]);
+const migrationSafetyReadyMaximumResourceBytes = 4_096;
+const migrationSafetyReadyResources = new Map([
+  [
+    path.join(migrationTestRoot, "Fixtures/FirebaseSource/v1/manifest.json"),
+    "firebase_source_fixture_manifest",
+  ],
+  [
+    path.join(
+      migrationTestRoot,
+      "Fixtures/FirebaseSource/v1/firestore/documents.json",
+    ),
+    "firestore_documents",
+  ],
+  [
+    path.join(
+      migrationTestRoot,
+      "Fixtures/FirebaseSource/v1/auth/identity-metadata.json",
+    ),
+    "auth_identity_metadata",
+  ],
+  [
+    path.join(
+      migrationTestRoot,
+      "Fixtures/FirebaseSource/v1/storage/object-metadata.json",
+    ),
+    "storage_object_metadata",
+  ],
+]);
 
 const failures = [];
 
@@ -3247,6 +3296,185 @@ for (const filePath of blockedCategoryProviderLeaves) {
       `${relative(filePath)} must remain comment-only until O-026 and a separate READY boundary are resolved.`,
     );
   }
+}
+
+for (const filePath of migrationSafetyReadySwiftScaffolds) {
+  if (!fs.existsSync(filePath)) {
+    fail("target_migration_safety_ready_leaf_missing", relative(filePath));
+    continue;
+  }
+  const source = fs.readFileSync(filePath, "utf8");
+  const substantiveLines = source
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("//"));
+  if (
+    substantiveLines.length !== 0 ||
+    !source.includes("READY") ||
+    !source.includes("SCAFFOLD ONLY")
+  ) {
+    fail(
+      "target_migration_safety_ready_leaf_executable",
+      `${relative(filePath)} must remain an explicit comment-only READY scaffold until its separate READY boundary passes.`,
+    );
+  }
+}
+
+const observedMigrationSafetyDraftDirectories = new Set();
+const observedMigrationSafetyDraftFiles = new Set();
+if (!fs.existsSync(migrationSafetyReadyFixtureRoot)) {
+  fail(
+    "target_migration_safety_ready_fixture_root_missing",
+    relative(migrationSafetyReadyFixtureRoot),
+  );
+} else {
+  const rootStat = fs.lstatSync(migrationSafetyReadyFixtureRoot);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    fail(
+      "target_migration_safety_ready_fixture_root_unsafe",
+      `${relative(migrationSafetyReadyFixtureRoot)} must be one real directory.`,
+    );
+  } else {
+    const realRoot = fs.realpathSync(migrationSafetyReadyFixtureRoot);
+    const inspectFixtureTree = (directory) => {
+      for (const name of fs.readdirSync(directory)) {
+        const entryPath = path.join(directory, name);
+        const logicalPath = path
+          .relative(migrationSafetyReadyFixtureRoot, entryPath)
+          .split(path.sep)
+          .join("/");
+        const stat = fs.lstatSync(entryPath);
+        if (stat.isSymbolicLink()) {
+          fail(
+            "target_migration_safety_ready_fixture_symlink",
+            logicalPath,
+          );
+          continue;
+        }
+        const realEntry = fs.realpathSync(entryPath);
+        const realRelative = path.relative(realRoot, realEntry);
+        if (
+          realRelative === "" ||
+          realRelative === ".." ||
+          realRelative.startsWith(`..${path.sep}`) ||
+          path.isAbsolute(realRelative)
+        ) {
+          fail(
+            "target_migration_safety_ready_fixture_escape",
+            logicalPath,
+          );
+          continue;
+        }
+        if (stat.isDirectory()) {
+          observedMigrationSafetyDraftDirectories.add(logicalPath);
+          inspectFixtureTree(entryPath);
+          continue;
+        }
+        if (!stat.isFile()) {
+          fail(
+            "target_migration_safety_ready_fixture_nonregular",
+            logicalPath,
+          );
+          continue;
+        }
+        if (stat.size > migrationSafetyReadyMaximumResourceBytes) {
+          fail(
+            "target_migration_safety_ready_fixture_oversized",
+            `${logicalPath} is ${stat.size} bytes; READY maximum is ${migrationSafetyReadyMaximumResourceBytes}.`,
+          );
+        }
+        observedMigrationSafetyDraftFiles.add(logicalPath);
+      }
+    };
+    inspectFixtureTree(migrationSafetyReadyFixtureRoot);
+  }
+}
+
+if (
+  JSON.stringify([...observedMigrationSafetyDraftDirectories].sort()) !==
+  JSON.stringify([...migrationSafetyReadyExpectedDirectories].sort())
+) {
+  fail(
+    "target_migration_safety_ready_fixture_directories_unexpected",
+    `expected ${JSON.stringify([...migrationSafetyReadyExpectedDirectories].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftDirectories].sort())}`,
+  );
+}
+if (
+  JSON.stringify([...observedMigrationSafetyDraftFiles].sort()) !==
+  JSON.stringify([...migrationSafetyReadyExpectedFiles].sort())
+) {
+  fail(
+    "target_migration_safety_ready_fixture_files_unexpected",
+    `expected ${JSON.stringify([...migrationSafetyReadyExpectedFiles].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftFiles].sort())}`,
+  );
+}
+
+for (const [filePath, resourceKind] of migrationSafetyReadyResources) {
+  if (!fs.existsSync(filePath)) {
+    fail("target_migration_safety_ready_resource_missing", relative(filePath));
+    continue;
+  }
+  let resource;
+  try {
+    resource = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    fail("target_migration_safety_ready_resource_invalid", relative(filePath));
+    continue;
+  }
+  const exactKeys = [
+    "authorityDisposition",
+    "entries",
+    "resourceKind",
+    "scaffoldOnly",
+    "schemaVersion",
+    "status",
+  ];
+  if (
+    JSON.stringify(Object.keys(resource).sort()) !== JSON.stringify(exactKeys) ||
+    resource.schemaVersion !== 0 ||
+    resource.scaffoldOnly !== true ||
+    resource.status !== "ready_scaffold_only" ||
+    resource.resourceKind !== resourceKind ||
+    resource.authorityDisposition !== "evidence_only" ||
+    !Array.isArray(resource.entries) ||
+    resource.entries.length !== 0
+  ) {
+    fail(
+      "target_migration_safety_ready_resource_executable",
+      `${relative(filePath)} must remain the exact empty schema-version-zero READY resource scaffold until its separate READY boundary passes.`,
+    );
+  }
+}
+
+let dumpedPackage;
+try {
+  dumpedPackage = JSON.parse(
+    execFileSync(
+      "swift",
+      ["package", "--package-path", packageRoot, "dump-package"],
+      { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
+    ),
+  );
+} catch (error) {
+  fail(
+    "target_migration_safety_ready_package_metadata_unavailable",
+    error instanceof Error ? error.message : String(error),
+  );
+}
+const migrationTestTarget = dumpedPackage?.targets?.find(
+  (target) => target.name === "LedgerTargetMigrationCoreTests",
+);
+const migrationTestResources = migrationTestTarget?.resources ?? [];
+const hasExactFixtureCopy =
+  migrationTestTarget?.type === "test" &&
+  migrationTestResources.length === 1 &&
+  migrationTestResources[0]?.path === "Fixtures" &&
+  Object.hasOwn(migrationTestResources[0]?.rule ?? {}, "copy");
+if (!hasExactFixtureCopy) {
+  fail(
+    "target_migration_safety_ready_resources_unregistered",
+    "Parsed SwiftPM metadata must register exactly one copied Fixtures resource on LedgerTargetMigrationCoreTests and nowhere as executable application content.",
+  );
 }
 
 if (!fs.existsSync(sourceProject)) {

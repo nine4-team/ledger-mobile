@@ -1,7 +1,7 @@
 {
   "batchId": "M0-PLATFORM-CONTROL-001",
   "title": "Platform, transport, release, and migration control",
-  "reviewedAt": "2026-09-05",
+  "reviewedAt": "2026-09-06",
   "evidence": [
     "EVID-CAPABILITY-PLATFORM-CONTROL-001",
     "EVID-MIGRATION-RUN-INTEGRITY-001",
@@ -13,7 +13,9 @@
     "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
     "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
     "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+    "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001",
+    "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
   ],
   "surfaces": [
     {
@@ -66,8 +68,8 @@
     {
       "id": "CONFIG-031396750B85",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "fb9b93c681860bab95a6fc18fc2f1962aff9f99da2367d188082fc5569736c9c",
-      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product.",
+      "acknowledgeSourceHash": "418a9f6a70448b8b37442fc573b816e5f8650fcf493801ac0cc99d3005d896be",
+      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product. The migration test target now copies one exact READY-scaffold-only FirebaseSource fixture directory while both new migration-safety Swift leaves remain comment-only.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -77,7 +79,9 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
-        "EVID-TARGET-COMPOSITION-001"
+        "EVID-TARGET-COMPOSITION-001",
+        "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001",
+        "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
       "notes": "Target package graph remains claimed by target-environment-isolation. The new provider target is an isolated local vertical spike and is absent from the Firebase application project; it is not production provisioning or migration authority.",
       "target": {
@@ -119,8 +123,8 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
+      "acknowledgeSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; the two migration-safety source/test pairs remain explicit comment-only READY scaffolds; the four registered test resources remain exact empty schema-version-zero READY markers; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -139,7 +143,9 @@
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
         "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
-        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001",
+        "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001",
+        "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -367,8 +373,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
+      "acknowledgeSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; keeps both migration-safety pairs and all four test resources inert at READY scaffold status; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -382,7 +388,9 @@
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+        "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001",
+        "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "target": {
@@ -3619,6 +3627,106 @@
         "acceptance": [
           "All migration-integrity, restart, interruption, reconciliation, tamper and non-authority obligations pass in the separate LedgerTargetMigrationCore module"
         ]
+      }
+    },
+    {
+      "id": "SWIFT-B4A356C2FE88",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f175d7a6740be5503c21422a702c567b0b19341f1d9fdc68c480ab0afa7bf0e6",
+      "currentBehavior": "Contains only an explicit comment-only READY scaffold for a future provider-free, versioned synthetic Firebase source-fixture contract; it defines no executable declaration and reads no source, file, credential, provider, database, network or production value.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PLATFORM-CONTROL-001", "EVID-M2-PLATFORM-001", "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"],
+      "notes": "READY scaffold only after corrected independent review returned GO with no P0-P3; exact immutable READY CI is still required before executable fixture decoding or validation begins. This is not a Firebase adapter, exporter, production snapshot or migration authority.",
+      "target": {
+        "owner": "Firebase Source Fixture Catalog",
+        "surfaces": ["closed tagged Firebase source-value representation", "canonical synthetic fixture manifest", "MigrationSourceSnapshot fixture identity"],
+        "securityRequirements": ["Accept only the exact reviewed synthetic catalog digests, reject schema-specific prohibited identity/credential/media fields, and bind recorded human privacy review to exact bytes without claiming generic PII detection", "Import or invoke no Firebase SDK, legacy reverse migration, profiler or provider code"],
+        "syncRequirements": ["Canonical fixture evidence must be deterministic across restart without PowerSync, a database, provider or network"]
+      },
+      "migration": {
+        "rule": "After a separate READY gate, represent reviewed source shapes as versioned synthetic test evidence only; perform no export, transform, load, apply or reconciliation execution.",
+        "reconciliation": ["Every accepted fixture component and entity must be bound by exact counts and hashes while malformed or ambiguous source shapes remain named blocker evidence"]
+      },
+      "verification": {
+        "tests": ["FirebaseSourceFixtureTests (planned after READY)"],
+        "acceptance": ["Closed typed-value fidelity, canonical bytes, privacy/path/tamper/size refusal, restart parity and MigrationRunIntegrity compatibility pass without external access"]
+      }
+    },
+    {
+      "id": "TEST-1C328F2AB1C1",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f1b2dae5f2ba5f037dbebd6ba88f46548b8482a0efe04b5a9fc14d2b9aa11728",
+      "currentBehavior": "Contains only an explicit comment-only READY test scaffold describing future deterministic fixture, privacy, tamper, typed-value, malformed-source and non-authority proof; it declares no test and makes no passing claim.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PLATFORM-CONTROL-001", "EVID-M2-PLATFORM-001", "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"],
+      "notes": "The automatic filename heuristic reports Firebase coupling, but the current file is comment-only and the candidate target contract forbids every Firebase SDK/provider import and all external access.",
+      "target": {
+        "owner": "Firebase Source Fixture Catalog",
+        "surfaces": ["canonical fixture and tagged-value tests", "privacy and path refusal tests", "migration-integrity compatibility and reconciliation-count tests"],
+        "securityRequirements": ["Use exact reviewed synthetic catalog digests, schema-specific prohibited-field checks and recorded human byte review; make no claim of exhaustive semantic PII detection"],
+        "syncRequirements": ["Run deterministically without Firebase, PowerSync, filesystem discovery, database, network or hosted resources"]
+      },
+      "migration": {
+        "rule": "After READY, test the provider-free fixture contract only; do not test against a production export or execute a migration.",
+        "reconciliation": ["Exact fixture totals and per-entity hashes account for every synthetic entry while coverage limitations remain explicit"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter FirebaseSourceFixtureTests (planned after READY)"],
+        "acceptance": ["All dossier fixture, restart, rejection, media-metadata, migration compatibility, reconciliation and isolation obligations pass"]
+      }
+    },
+    {
+      "id": "SWIFT-DB6A733FD6DE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0f664046f2b508c489e362b65d7163f0809f26680a37450b2664d71ea5ca3eda",
+      "currentBehavior": "Contains only an explicit comment-only READY scaffold for a future provider-free preflight consistency primitive. The proposed initial tuple is source_fixture, targetLocal, dry_run and no credentials; no executable primitive, trusted policy, provider-ordering enforcement or migration entry point exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PLATFORM-CONTROL-001", "EVID-M2-PLATFORM-001", "EVID-MIGRATION-ENVIRONMENT-GUARD-001"],
+      "notes": "READY scaffold only after corrected independent review returned GO with no P0-P3; exact immutable READY CI is still required before executable validation begins. It must not be confused with the verified evidence-only MigrationRunIntegrity contract or with operational apply authority.",
+      "target": {
+        "owner": "Migration Environment Guard",
+        "surfaces": ["canonical migration preflight request and package-only initial-consistency policy", "stable fail-closed diagnostics", "package-visible private-initializer non-Codable process-local consistency token"],
+        "securityRequirements": ["Refuse production/hosted environments, apply, credentials, implicit resources, environment fallbacks and all-Account scope before yielding a token", "Expose no raw Account, resource, credential, provider, path, URL, payload or production identity; future provider-construction enforcement remains a separate executor/composition slice"],
+        "syncRequirements": ["Validation and deterministic restart evidence require no provider, filesystem payload, database, PowerSync or network"]
+      },
+      "migration": {
+        "rule": "After a separate READY gate, admit only the exact local synthetic dry-run no-credential tuple and perform zero migration work.",
+        "reconciliation": ["The guard may prove exact plan/fixture/target/Account/artifact/contract identity agreement only; it cannot export, transform, load, reconcile or authorize apply"]
+      },
+      "verification": {
+        "tests": ["MigrationEnvironmentGuardTests (planned after READY)"],
+        "acceptance": ["Exact admissible tuple, complete mismatch matrix, provider-free zero-access validation, canonical restart and non-authority checks pass without claiming executor ordering"]
+      }
+    },
+    {
+      "id": "TEST-2634F83E11F3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "cc4b6bc9d92ab16ca41b6a9559f2d3393a1eaec98f040f1ebee457e2617cdaab",
+      "currentBehavior": "Contains only an explicit comment-only READY test scaffold describing future exact-tuple, mismatch, provider-free zero-access, restart, package-token and non-authority proof; it declares no test and makes no passing claim.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PLATFORM-CONTROL-001", "EVID-M2-PLATFORM-001", "EVID-MIGRATION-ENVIRONMENT-GUARD-001"],
+      "notes": "READY test scaffold only; it neither validates nor authorizes a migration environment today.",
+      "target": {
+        "owner": "Migration Environment Guard",
+        "surfaces": ["exact local dry-run admission tests", "single-mismatch and stable-diagnostic tests", "provider-free zero-access and restart tests"],
+        "securityRequirements": ["Prove every production, hosted, credential, default-resource, environment-fallback, all-Account and apply attempt fails without a token; defer actual provider-construction ordering to the sole-executor/composition slice"],
+        "syncRequirements": ["Run offline over immutable values only; no Firebase, Supabase, PowerSync, file, database, callback or network access"]
+      },
+      "migration": {
+        "rule": "After READY, test only provider-free preflight; do not construct providers or execute migration work.",
+        "reconciliation": ["A Cartesian single-mismatch matrix proves exact agreement without recording partial acceptance"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter MigrationEnvironmentGuardTests (planned after READY)"],
+        "acceptance": ["All dossier domain, restart, rejection, provider-free zero-access, reconciliation and operational obligations pass without claiming trusted policy or executor ordering"]
       }
     },
     {

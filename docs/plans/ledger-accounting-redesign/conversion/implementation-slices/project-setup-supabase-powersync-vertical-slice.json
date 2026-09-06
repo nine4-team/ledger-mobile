@@ -23,8 +23,8 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/projects.md",
       "section": "Target Redesign Requirements",
-      "invariant": "One accepted setup creates one stable Account-scoped Project related to one stable same-Account Client and durably records the complete selected category set and exact nullable allocations as one observable operation; description is optional and attachment upload remains separate.",
-      "decisionIds": ["D-006"],
+      "invariant": "One accepted setup creates one stable Account-scoped Project related to one stable same-Account Client and durably records the complete selected category set and exact nullable allocations as one observable operation; description is optional and attachment upload remains separate. The working ordinary-name fixture proves setup mechanics only; the exact cross-runtime Project display-name submission boundary remains governed by O-049 and requires separate final-validation integration before release.",
+      "decisionIds": ["D-006", "O-049"],
       "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-003", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012"]
     },
     {

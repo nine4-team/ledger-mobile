@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 0,
+  "scaffoldOnly": true,
+  "status": "ready_scaffold_only",
+  "resourceKind": "firestore_documents",
+  "authorityDisposition": "evidence_only",
+  "entries": []
+}

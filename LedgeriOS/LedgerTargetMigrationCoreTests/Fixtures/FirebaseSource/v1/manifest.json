@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 0,
+  "scaffoldOnly": true,
+  "status": "ready_scaffold_only",
+  "resourceKind": "firebase_source_fixture_manifest",
+  "authorityDisposition": "evidence_only",
+  "entries": []
+}

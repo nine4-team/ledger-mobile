@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T18:45:47.216Z",
+  "generatedFromManifestSync": "2026-09-06T19:46:28.155Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1006,
-    "targetRelevantSurfaces": 744,
+    "surfaces": 1010,
+    "targetRelevantSurfaces": 748,
     "batches": 45,
     "productScopeSurfaces": 819,
-    "technicalControlSurfaces": 187
+    "technicalControlSurfaces": 191
   },
   "canonicalTargetCoverage": [
     {
@@ -2338,8 +2338,8 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 142,
-      "targetRelevantSurfaceCount": 79,
+      "surfaceCount": 146,
+      "targetRelevantSurfaceCount": 83,
       "authorities": [
         {
           "path": "docs/architecture/redesign/01-system-context-and-principles.md",
@@ -2502,10 +2502,12 @@
         "SWIFT-AAE32021738A",
         "SWIFT-AD26BFE430B2",
         "SWIFT-B2CF26BDA1A8",
+        "SWIFT-B4A356C2FE88",
         "SWIFT-C1EC0E1D9BE6",
         "SWIFT-CBE990F49610",
         "SWIFT-D861839CD17D",
         "SWIFT-D9A560340CA9",
+        "SWIFT-DB6A733FD6DE",
         "SWIFT-E9529E2899CF",
         "SWIFT-F26052171FEB",
         "SWIFT-FE0D03920D59",
@@ -2513,7 +2515,9 @@
         "TEST-0AD8A0619179",
         "TEST-15ECC49577C0",
         "TEST-16A01A0FF3D5",
+        "TEST-1C328F2AB1C1",
         "TEST-1FC8EF92E971",
+        "TEST-2634F83E11F3",
         "TEST-6A6B0926E2EE",
         "TEST-77875A971729",
         "TEST-7D6F49F784FB",

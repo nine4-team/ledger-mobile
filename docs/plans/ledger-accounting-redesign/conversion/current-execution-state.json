@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 8,
+  "stateVersion": 9,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -17,28 +17,29 @@
     "meaning": "The sixth-family Item-to-Space clearing provider and corrected Budget watch-drainage proof passed the complete immutable gate; authoritative clearing apply and hosted Sync remain unimplemented."
   },
   "activeBatch": {
-    "id": "item-space-clearing-provider-workflow",
-    "status": "ci_verification",
-    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow and its separately owned Budget-category test-drainage correction without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
+    "id": "firebase-source-fixture-and-migration-environment-guard",
+    "status": "ready",
+    "outcome": "Freeze and independently review a two-slice local migration-safety batch: deterministic synthetic Firebase source fixtures plus a fail-closed provider-free preflight consistency primitive that initially admits only source_fixture, targetLocal, dry_run and no credentials.",
     "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-powersync-provider.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
     ],
     "allowedPaths": [
-      "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift",
-      "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift",
-      "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift",
-      "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
-      "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
-      "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
-      "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift",
-      "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
+      "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift",
+      "LedgeriOS/LedgerTargetMigrationCore/MigrationEnvironmentGuard.swift",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/FirebaseSourceFixtureTests.swift",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationEnvironmentGuardTests.swift",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/manifest.json",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/firestore/documents.json",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/auth/identity-metadata.json",
+      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/storage/object-metadata.json",
+      "LedgeriOS/Package.swift",
       "scripts/check-target-environment.mjs"
     ],
     "nextActions": [
-      "Synchronize and commit the verified promotion evidence for exact implementation run 34052053056.",
-      "Correct stale central tracker status for the verified identity guard and clearing provider.",
-      "Select and independently review the next unblocked provider-backed workflow package."
+      "Commit and push the independently reviewed comment-only READY boundary and require its exact immutable CI gate to pass.",
+      "Implement both provider-free slices within the frozen boundary using focused tests and mandatory independent migration-safety review.",
+      "Run one complete local batch gate, exact immutable CI, and promote only evidence actually proven."
     ]
   },
   "progress": {
@@ -47,8 +48,8 @@
       "center": 15,
       "high": 18
     },
-    "targetRelevantSurfaces": 744,
-    "mappedOrLaterSurfaces": 554,
+    "targetRelevantSurfaces": 748,
+    "mappedOrLaterSurfaces": 558,
     "implementedOrLaterSurfaces": 241,
     "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
@@ -80,7 +81,8 @@
   "resume": {
     "requiredReads": [
       "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
     ],
     "requiredCommands": [
       "git status --short --branch",

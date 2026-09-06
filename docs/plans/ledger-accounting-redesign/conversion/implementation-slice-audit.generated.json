@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T18:45:47.216Z",
+  "generatedFromManifestSync": "2026-09-06T19:46:28.155Z",
   "totals": {
-    "slices": 94,
-    "claimedTargetSurfaces": 316,
+    "slices": 96,
+    "claimedTargetSurfaces": 320,
     "unclaimedTargetSurfaces": 428,
     "implementationAdvancedTargetSurfaces": 241
   },
   "statusCounts": {
     "draft": 3,
-    "ready": 0,
+    "ready": 2,
     "in_progress": 3,
     "implemented": 13,
     "verified": 75,
@@ -435,6 +435,21 @@
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/exact-money-and-domain-identity.json"
     },
     {
+      "sliceId": "firebase-source-fixture-catalog",
+      "title": "Define versioned synthetic Firebase source fixtures for deterministic migration tests",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Firebase Source Fixture Catalog",
+      "surfaceIds": [
+        "SWIFT-B4A356C2FE88",
+        "TEST-1C328F2AB1C1"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json"
+    },
+    {
       "sliceId": "item-space-assignment-local-durability-provider",
       "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
       "kind": "product",
@@ -538,6 +553,21 @@
       "verificationCount": 12,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+    },
+    {
+      "sliceId": "migration-environment-guard",
+      "title": "Define a provider-free fail-closed migration preflight primitive",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Migration Environment Guard",
+      "surfaceIds": [
+        "SWIFT-DB6A733FD6DE",
+        "TEST-2634F83E11F3"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
     },
     {
       "sliceId": "migration-run-plan-and-journal-integrity",

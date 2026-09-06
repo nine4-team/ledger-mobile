@@ -6,7 +6,7 @@
 > record or the active dossier identifies a specific evidence gap or discrepancy.
 
 Last updated: 2026-09-06
-State version: 358
+State version: 359
 
 ## Objective
 
@@ -18,7 +18,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-VERIFIED
+- Checkpoint: MIGRATION-SAFETY-READY-PENDING-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Current verified conversion base: `049455223afd3147b596913667f43b3f43d93642`
@@ -40,13 +40,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **554 of 744 target-relevant surfaces mapped or
-  later (74.5%)**. Local surface-implementation coverage is **241 of 744
-  implemented or later (32.4%)**. The current reviewed clearing implementation
-  advances one provider-backed mutation workflow and its owned executable
-  surfaces to local implementation; exact synchronized CI is still required
-  before promotion to verified. It adds no hosted-rehearsal or cutover-ready
-  credit.
+- Planning/control coverage is **558 of 748 target-relevant surfaces mapped or
+  later (74.6%)**. Local surface-implementation coverage is **241 of 748
+  implemented or later (32.2%)**. The clearing implementation is already
+  verified at the immutable checkpoint above. The four newly mapped migration-
+  safety source/test surfaces remain nonexecutable DRAFT scaffolds and add no
+  implementation, hosted-rehearsal, or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -98,6 +97,22 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- The active batch is now the two-slice local migration-safety foundation:
+  a versioned synthetic Firebase source-fixture catalog and a provider-free
+  environment guard whose initial admissible tuple is exactly
+  `source_fixture + targetLocal + dry_run + no credentials`. Both source/test
+  pairs remain comment-only READY scaffolds and the four test resources remain
+  empty schema-version-zero markers. Four independent adversarial review rounds
+  corrected authority, digest, bounds, privacy, filesystem, visibility and
+  canonical-evidence defects; final re-review returned GO with no P0-P3. The
+  checker prevents executable behavior before the READY checkpoint passes. The
+  old reverse-direction `migration/` package, `migration/out`,
+  aggregate profilers, credentials, providers, hosted resources, production
+  data and the Firebase application are explicitly excluded. Root review also
+  corrected the Project authority map: O-049 governs Project creation as well
+  as rename, while the existing in-progress creation spike remains scoped to
+  ordinary-name mechanics and cannot claim final cross-runtime validation.
 
 - Exact clearing READY commit
   `72b8274f4258936bb35490e4172e4d7684bb28b9` passed all three immutable

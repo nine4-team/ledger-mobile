@@ -85,7 +85,8 @@ let package = Package(
         .testTarget(
             name: "LedgerTargetMigrationCoreTests",
             dependencies: ["LedgerTargetCore", "LedgerTargetMigrationCore"],
-            path: "LedgerTargetMigrationCoreTests"
+            path: "LedgerTargetMigrationCoreTests",
+            resources: [.copy("Fixtures")]
         ),
         .target(
             name: "LedgerTargetTestSupport",

@@ -3,7 +3,7 @@
 Status: proposed recommendation; product decision not yet approved
 Last reviewed: 2026-09-04
 Owners: Client Identity, Projects, App, MCP, Offline Operations, Migration
-Unlocks: Client create/rename provider implementation and exact cross-runtime validation
+Unlocks: Client create/rename provider implementation, the new-Client Project-setup branch, and exact cross-runtime validation
 Residual register: [generated M2 queue](../conversion/residual-decision-register.generated.md)
 
 Affected blockers: `O-042`, `O-043`
