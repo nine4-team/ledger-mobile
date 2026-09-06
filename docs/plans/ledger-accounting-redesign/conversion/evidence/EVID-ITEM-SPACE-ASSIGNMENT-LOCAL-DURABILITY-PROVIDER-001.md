@@ -196,8 +196,15 @@ P0-P3 finding.
   Item-to-Space suite. That run is non-passing evidence and cannot promote this
   slice.
 - The separately owned Budget-category provider now has an independently
-  reviewed one-file cancellation wake/drain correction. Exact synchronized
-  correction CI must pass before `ITEMSPACELOCAL-TEST-013` advances.
+  reviewed one-file cancellation wake/drain correction committed as
+  `a54719140a305012e3978eb809908ee77a17587a`. Its exact run `34030874960`
+  passed conversion/traceability and disposable local Supabase again, but the
+  serial target-test process timed out at a different provider-free
+  Space-creation test that passes locally in 0.004 seconds. Event-order analysis
+  confirms `--no-parallel` was honored. The second timeout is an unresolved
+  shared-process/lifecycle failure and requires bounded prefix diagnostics, a
+  causal correction, and exact synchronized all-job CI before
+  `ITEMSPACELOCAL-TEST-013` advances.
 
 ## Explicit Non-Advancement
 

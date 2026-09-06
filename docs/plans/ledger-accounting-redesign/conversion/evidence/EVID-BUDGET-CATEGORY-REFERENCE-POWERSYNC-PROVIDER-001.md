@@ -227,3 +227,22 @@ The corrected source hash is
 commit passes all immutable workflow jobs. Until then the current slice state
 is `implemented`, not re-verified. This correction adds no schema, RLS, Sync,
 app UI, MCP, hosted, Firebase, migration, production or cutover behavior.
+
+The separately committed correction
+`a54719140a305012e3978eb809908ee77a17587a` triggered exact Actions run
+`34030874960`. Conversion/traceability and disposable local Supabase passed
+again. The macOS target-test step timed out again, but this time its terminal
+test was the unrelated provider-free Space-creation canonical-restart test,
+which passes locally in 0.004 seconds. Independent event-order analysis confirms
+that both timed-out runs executed suites serially; SwiftPM `--no-parallel` was
+honored. The first run remains valid evidence of the corrected Budget-category
+cancellation defect, while the second is a distinct unresolved shared-process
+failure rather than proof against that correction.
+
+Because the second terminal test performs synchronous codec work, the next
+verification step is bounded execution of that test after its exact preceding
+suite prefix with process/task/thread diagnostics captured before timeout, plus
+an audit that provider/runtime registries and spawned tasks drain at suite
+return. No CI-harness correction or causal explanation is claimed yet. A causal
+correction, independent review and exact synchronized all-job pass remain
+required for `CATPOWER-TEST-010`.
