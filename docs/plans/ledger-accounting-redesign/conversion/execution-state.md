@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 346
+State version: 347
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-READY-CI
+- Checkpoint: BUDGET-CATEGORY-PROVIDER-SHUTDOWN-RELIABILITY-CORRECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current clean conversion base: `762f69e11d6218de635fc46253ecae6e448d59b9`
+- Current committed conversion base: `0e097a35c89336c7a90396e4eda9280222e3ab1a`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -4419,18 +4419,31 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the independently reviewed READY package and require immutable exact-head
-CI for `item-space-assignment-local-durability-provider`, then
-replace only its two comment scaffolds and bounded shared touchpoints. Atomically
-persist one canonical `AssignItemsToSpaceCommand` plus one shared queued local
-operation in the encrypted Principal/Account PowerSync database, expose it only
-through the existing Account runtime lifecycle, and prove restart, replay,
-rollback, scope, cancellation and pending-summary behavior.
+Commit the separately recorded Budget-category provider shutdown reliability
+correction and require immutable exact-head CI. Run `34029102593` already proves
+that conversion/traceability and disposable-local-Supabase jobs pass for the
+Item-to-Space implementation, but its macOS job timed out in the existing
+`Provider shutdown joins row and completeness observers` test. The correction
+must remain owned by `budget-category-reference-powersync-provider`: cancellation
+wakes its idle internal event loop, both upstream observers are awaited before
+registry drainage, two independent reviewers return code GO, and the owning
+surface/dossier/evidence are downgraded to implemented until corrected CI passes.
 
-Do not add authoritative Item/Space apply, optimistic Item projection,
-user-facing assignment UI, upload connector, Postgres/RLS/Sync changes, MCP,
-hosted resources, Firebase, migration, production or cutover behavior. Preserve
-the unresolved O-027/O-037/O-023 and A-003/A-004/A-015 gates.
+After that exact correction run passes, promote both the Budget-category
+reliability correction and `item-space-assignment-local-durability-provider`
+with immutable commit/run evidence. Then create a comment-only READY package
+for `item-space-clearing-local-durability-provider` from that exact base. Two
+independent selection audits agree on the narrow sibling boundary: reuse the
+verified clearing command/use case byte-for-byte, persist one localOnly
+clearing-command row plus one shared queued operation, add no Item/Space/marker
+projection or `ps_crud`, and include explicit cross-command OperationID collision
+proof against assignment evidence. Require independent READY review and exact
+READY CI before executable clearing work.
+
+Do not add authoritative Item/Space apply, optimistic placement projection,
+user-facing assignment/clearing UI, upload connector, Postgres/RLS/Sync changes,
+MCP, hosted resources, Firebase, migration, production or cutover behavior.
+Preserve O-027/O-037/O-023 and A-003/A-004/A-015/A-016.
 
 Continue without waiting on the two M1 evidence blockers:
 

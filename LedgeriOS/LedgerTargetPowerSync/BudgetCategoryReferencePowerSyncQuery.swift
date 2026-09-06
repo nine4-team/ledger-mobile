@@ -189,53 +189,61 @@ final class BudgetCategoryReferencePowerSyncQuery:
             }
         }
 
-        do {
-            var observedState = BudgetCategoryReferenceObservedState()
+        await withTaskCancellationHandler {
+            do {
+                var observedState = BudgetCategoryReferenceObservedState()
 
-            for try await event in eventChannel.stream {
-                try Task.checkCancellation()
-                guard let evidence = observedState.observe(event) else { continue }
-                let observedRows = evidence.rows
-                let completenessIsObserved = evidence.completeness
+                for try await event in eventChannel.stream {
+                    try Task.checkCancellation()
+                    guard let evidence = observedState.observe(event) else { continue }
+                    let observedRows = evidence.rows
+                    let completenessIsObserved = evidence.completeness
 
-                let scopeIsActive = try Self.validateScope(rows: observedRows)
-                let definitions = try observedRows.compactMap {
-                    try $0.definition(boundAccountId: accountId)
-                }
-                let canonicalDefinitions = definitions.sorted(by: Self.canonicalOrder)
-                let isComplete = scopeIsActive && completenessIsObserved
-                let quality = Self.quality(
-                    scopeIsActive: scopeIsActive,
-                    isComplete: isComplete,
-                    hasLastSyncedAt: localReader.hasLastSyncedAt
-                )
-                let local = try ListLocalSnapshot(
-                    queryFingerprint: try Self.queryFingerprint(accountId: accountId),
-                    rows: canonicalDefinitions,
-                    visibleRowCountBeforeFiltering: canonicalDefinitions.count,
-                    isCompleteForQuery: isComplete,
-                    quality: quality,
-                    localDataVersion: try Self.localDataVersion(
-                        accountId: accountId,
+                    let scopeIsActive = try Self.validateScope(rows: observedRows)
+                    let definitions = try observedRows.compactMap {
+                        try $0.definition(boundAccountId: accountId)
+                    }
+                    let canonicalDefinitions = definitions.sorted(by: Self.canonicalOrder)
+                    let isComplete = scopeIsActive && completenessIsObserved
+                    let quality = Self.quality(
                         scopeIsActive: scopeIsActive,
-                        completenessIsObserved: completenessIsObserved,
                         isComplete: isComplete,
+                        hasLastSyncedAt: localReader.hasLastSyncedAt
+                    )
+                    let local = try ListLocalSnapshot(
+                        queryFingerprint: try Self.queryFingerprint(accountId: accountId),
+                        rows: canonicalDefinitions,
+                        visibleRowCountBeforeFiltering: canonicalDefinitions.count,
+                        isCompleteForQuery: isComplete,
                         quality: quality,
-                        rows: canonicalDefinitions
-                    ),
-                    asOf: now()
-                )
-                continuation.yield(
-                    try BudgetCategoryReferenceSnapshot(accountId: accountId, local: local)
-                )
+                        localDataVersion: try Self.localDataVersion(
+                            accountId: accountId,
+                            scopeIsActive: scopeIsActive,
+                            completenessIsObserved: completenessIsObserved,
+                            isComplete: isComplete,
+                            quality: quality,
+                            rows: canonicalDefinitions
+                        ),
+                        asOf: now()
+                    )
+                    continuation.yield(
+                        try BudgetCategoryReferenceSnapshot(accountId: accountId, local: local)
+                    )
+                }
+                continuation.finish()
+            } catch is CancellationError {
+                continuation.finish()
+            } catch let failure as BudgetCategoryReferenceFailure {
+                continuation.finish(throwing: failure)
+            } catch {
+                continuation.finish(throwing: BudgetCategoryReferenceFailure.localReadFailed)
             }
-            continuation.finish()
-        } catch is CancellationError {
-            continuation.finish()
-        } catch let failure as BudgetCategoryReferenceFailure {
-            continuation.finish(throwing: failure)
-        } catch {
-            continuation.finish(throwing: BudgetCategoryReferenceFailure.localReadFailed)
+        } onCancel: {
+            // Cancelling the owner while both upstream streams are idle must
+            // wake the combined event loop so registry drainage can complete.
+            databaseTask.cancel()
+            completenessTask.cancel()
+            eventChannel.continuation.finish()
         }
 
         databaseTask.cancel()

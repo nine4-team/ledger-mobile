@@ -3,7 +3,7 @@
   "sliceId": "budget-category-reference-powersync-provider",
   "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
   "kind": "technical_control",
-  "status": "verified",
+  "status": "implemented",
   "owner": "Budget Category Reference Provider",
   "surfaceIds": ["SWIFT-241B51091042", "TEST-53618161645B"],
   "implementationTouchpoints": [
@@ -94,7 +94,7 @@
       "section": "Implemented Boundary",
       "invariant": "The Account workspace owns exactly one category query and admits every category watch through the same open/closing/closed stream lease: close rejects new watches, cancels and drains the public forwarding task, then invokes the module-internal provider drain that joins its row/completeness observers before either database closes; repeated close retains its existing terminal semantics and no lifecycle API becomes public.",
       "decisionIds": [],
-      "verificationIds": ["CATPOWER-TEST-002", "CATPOWER-TEST-004", "CATPOWER-TEST-005", "CATPOWER-TEST-006", "CATPOWER-TEST-007"]
+      "verificationIds": ["CATPOWER-TEST-002", "CATPOWER-TEST-004", "CATPOWER-TEST-005", "CATPOWER-TEST-006", "CATPOWER-TEST-007", "CATPOWER-TEST-010"]
     }
   ],
   "contracts": {
@@ -247,10 +247,19 @@
       "expected": "A reciprocal matrix independently varies Account/category ID, name, all three kinds, both lifecycles, both system/exclusion booleans, presentation order, revision, canonical row membership, scope sentinel, completeness and quality. Literal outputs remain column-owned; LocalDataVersion changes for each content/readiness axis but not SQL input order alone; QueryFingerprint stays stable across content/readiness for one Account and changes across Accounts.",
       "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "CATPOWER-TEST-010",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["CATPOWER-REQ-007"],
+      "expected": "After failed Item-assignment implementation run 34029102593 exposes an idle combined-event cancellation deadlock, one separately recorded Budget-category reliability-correction checkpoint passes conversion controls, all nonparallel target tests, disposable local Supabase checks, both builds and clean artifacts on its exact synchronized commit.",
+      "status": "planned",
+      "evidence": []
     }
   ],
   "implementationEvidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Verified technical-control provider enabling a later user-visible Project setup slice. O-026 does not block consuming an already-authorized local subset, but it remains fully open for category administration and final category download visibility. A-003/A-004/A-007/A-016 remain proposed or gated and prevent hosted/current-authorization claims, not this honest incomplete-first local projection. Existing schema, RLS, Sync configuration, app UI and MCP remain byte-unchanged. The independent first READY review returned NO-GO over unfrozen shared touchpoints, live membership-loss clearing, incorrect product classification/authority, incomplete reciprocal field-version proof, an unsupported symbol-graph claim and conservative source-token metadata; the corrected READY candidate closed all six and passed immutable CI before executable work. Executable review then found that forwarding-task drainage did not join provider-owned row/completeness observers. The corrected implementation adds a module-internal provider drain and this explicitly revised shared-touchpoint scope; runtime close still uses its single public close operation and exposes no new lifecycle API. Final corrected-diff review returned GO with no remaining P0-P3 finding. Implementation checkpoint 376685f5 did not pass: immutable run 33945825011 timed out in the macOS test process, and local repetition exposed a nondeterministic row/completeness ordering defect. The corrected provider awaits initial evidence from both sources before emitting. An independent correction review required deterministic proof for both arrival orders and pre-snapshot cancellation/drainage; those tests closed the gap, and final re-review returned GO with no remaining P0-P3 finding. Exact corrected implementation commit 9eecacfd0e686b932b1568aa333deaefc0dbdf21 passed all three immutable jobs in Actions run 33947678048, including conversion controls, disposable local Supabase checks, all 419 target tests and both staging builds."
+  "notes": "This technical-control provider remains bounded to already-materialized local category rows; O-026 and A-003/A-004/A-007/A-016 remain unadvanced. Prior READY 8eafd6c9 / run 33943581567 and corrected implementation 9eecacfd / run 33947678048 remain valid historical evidence. Exact Item-assignment implementation run 34029102593 later timed out in the macOS job at the existing `Provider shutdown joins row and completeness observers` test. The log proved a pre-existing idle combined-event cancellation race: registry shutdown could cancel the owner while both upstream streams were open and idle, but cancellation did not wake the internal event loop, so provider drainage never completed. The separately recorded one-file correction adds a cancellation handler that cancels both owned observers and finishes the internal event channel, after which existing cleanup awaits both child results before registry completion. Two independent reviews return code GO with no P0-P3 finding and require this separate checkpoint rather than folding it into Item assignment. Fourteen focused tests, 100 consecutive post-emission shutdown repetitions, 100 consecutive pre-completeness shutdown repetitions, and both normal and nonparallel 606-test suites pass locally. CATPOWER-TEST-010 and exact synchronized correction CI remain pending; the slice is therefore implemented, not currently re-verified. No schema, RLS, Sync, app UI, MCP, hosted, Firebase, migration, production or cutover behavior advances."
 }

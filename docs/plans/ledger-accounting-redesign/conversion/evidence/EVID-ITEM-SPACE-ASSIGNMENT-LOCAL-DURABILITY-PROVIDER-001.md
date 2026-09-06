@@ -1,6 +1,7 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001 — Item-to-Space Local Durability Provider
 
-- Status: implemented locally and independently reviewed; exact implementation CI pending
+- Status: implemented locally and independently reviewed; exact corrected
+  implementation CI pending after a separately owned provider shutdown fix
 - Date: 2026-09-06
 - Base commit: `762f69e11d6218de635fc46253ecae6e448d59b9`
 - Base CI: Actions run `34025105217` passed all three jobs
@@ -187,8 +188,16 @@ P0-P3 finding.
   signing disabled.
 - Conversion ledger synchronization and the remaining repository gates are run
   from the explicit post-review source hashes recorded by this checkpoint.
-- Exact implementation CI: pending until the synchronized implementation
-  commit is pushed.
+- Exact implementation commit:
+  `0e097a35c89336c7a90396e4eda9280222e3ab1a`. Actions run `34029102593`
+  passed conversion/traceability and disposable-local-Supabase jobs, but its
+  macOS job timed out in the existing Budget-category test `Provider shutdown
+  joins row and completeness observers`. The log did not stop in the
+  Item-to-Space suite. That run is non-passing evidence and cannot promote this
+  slice.
+- The separately owned Budget-category provider now has an independently
+  reviewed one-file cancellation wake/drain correction. Exact synchronized
+  correction CI must pass before `ITEMSPACELOCAL-TEST-013` advances.
 
 ## Explicit Non-Advancement
 

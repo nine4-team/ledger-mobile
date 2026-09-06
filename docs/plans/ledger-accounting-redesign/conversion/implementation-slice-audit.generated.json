@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T11:01:57.235Z",
+  "generatedFromManifestSync": "2026-09-06T11:35:53.827Z",
   "totals": {
     "slices": 92,
     "claimedTargetSurfaces": 312,
@@ -11,8 +11,8 @@
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 14,
-    "verified": 72,
+    "implemented": 15,
+    "verified": 71,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -146,14 +146,14 @@
       "sliceId": "budget-category-reference-powersync-provider",
       "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
       "kind": "technical_control",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Budget Category Reference Provider",
       "surfaceIds": [
         "SWIFT-241B51091042",
         "TEST-53618161645B"
       ],
       "requirementCount": 7,
-      "verificationCount": 9,
+      "verificationCount": 10,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-powersync-provider.json"
     },

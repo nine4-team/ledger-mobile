@@ -11,16 +11,16 @@
   "surfaces": [
     {
       "id": "SWIFT-241B51091042",
-      "acknowledgeSourceHash": "95c3d027f1619ae9fef2aec68626e9f0a38903361d74b1afc2d0bf972dcd15ad",
+      "acknowledgeSourceHash": "9a2627996d0541aa3a965a0c0fb57a4c22943af2979107b51508ef1722af826d",
       "currentBehavior": "Executable module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independently reactive completeness, membership-gated authority and no local visibility decision.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Verified locally after the exact READY checkpoint and corrected implementation checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Implementation checkpoint 376685f5 did not pass run 33945825011: the macOS test process timed out, and local repetition exposed nondeterministic row/completeness ordering. The corrected provider waits for evidence from both sources before emitting, and deterministic tests prove both arrival orders plus pre-snapshot cancellation/drainage. Exact corrected implementation 9eecacfd0e686b932b1568aa333deaefc0dbdf21 passed all three jobs in run 33947678048. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
+      "notes": "The previously verified provider remains behaviorally bounded to the already-materialized local subset. Exact Item-assignment implementation run 34029102593 exposed a pre-existing provider shutdown race: after an emitted snapshot, cancellation could leave the combined event loop suspended while its row and completeness sources remained open, so the macOS job timed out at the existing provider-drain test. The one-file reliability correction installs a cancellation handler that cancels both owned observers and finishes the internal event channel before the existing awaited cleanup. Two independent reviews found no P0-P3 code issue. Fourteen focused tests, 100 consecutive post-emission shutdown repetitions, 100 consecutive pre-completeness shutdown repetitions, and both normal and nonparallel 606-test suites pass locally. Exact synchronized correction CI remains pending, so this surface is implemented rather than re-verified. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
       "target": {
         "owner": "Budget Category Reference Provider",
         "surfaces": [
@@ -58,7 +58,7 @@
       "acknowledgeSourceHash": "093db9fb6160df97737d5fa1f527486a8a0c4214f1a19a2e4880394a1889d6be",
       "currentBehavior": "Executable real encrypted local category-provider suite covering deterministic two-source startup ordering, pre-snapshot drainage, same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed rows, restart, cancellation and runtime-close drainage.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",

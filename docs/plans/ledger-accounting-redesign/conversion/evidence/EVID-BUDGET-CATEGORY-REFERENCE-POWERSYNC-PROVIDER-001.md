@@ -1,9 +1,8 @@
 # EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001 — Local Budget-Category Reference Provider
 
-- Status: verified locally at exact corrected implementation commit
-  `9eecacfd0e686b932b1568aa333deaefc0dbdf21`; independently reviewed and
-  immutable CI passed
-- Date: 2026-09-05
+- Status: implemented locally after a separately reviewed reliability
+  correction; exact synchronized correction CI pending
+- Date: 2026-09-06
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
 - Slice: `budget-category-reference-powersync-provider`
@@ -187,3 +186,44 @@ caused conservative Firebase-coupling metadata. This corrected candidate:
 Final independent re-review returned GO with no remaining P0-P3 finding. The
 exact corrected implementation commit and immutable run above satisfy
 `CATPOWER-TEST-007` and promote this bounded local provider slice to verified.
+
+## Post-verification Shutdown Reliability Correction
+
+Exact Item-to-Space assignment implementation commit
+`0e097a35c89336c7a90396e4eda9280222e3ab1a` triggered immutable Actions run
+`34029102593`. Its conversion and disposable-local-Supabase jobs passed, but
+the macOS job timed out after entering the existing `Provider shutdown joins
+row and completeness observers` test. The log identifies the stopped test and
+the 20-minute workflow cancellation; the assignment suite itself was not the
+stopped suite.
+
+That failure exposed a pre-existing cancellation cycle in this provider. Once
+both upstream observers were open and idle, registry shutdown cancelled the
+owner task, but the owner remained suspended awaiting another internal event.
+The code that cancelled and joined the upstream observers ran only after that
+event loop returned, so no component could wake the loop.
+
+The separately bounded correction changes only
+`BudgetCategoryReferencePowerSyncQuery.swift`. A task-cancellation handler now
+cancels both owned observers and finishes the internal event channel, waking
+the idle loop. The unchanged cleanup then cancels idempotently, awaits both
+child results, and only afterward lets the registry mark the watch finished.
+Cancellation remains normal stream completion and database/domain failures
+retain their prior bounded mapping.
+
+Two independent executable reviewers found no P0-P3 issue in the code and
+agreed that it must be recorded under this owning provider slice rather than
+silently folded into Item assignment. Local proof passes:
+
+- 14/14 focused provider tests;
+- 100/100 consecutive post-emission shutdown repetitions;
+- 100/100 consecutive pre-completeness idle-shutdown repetitions;
+- 606/606 Swift tests in 93 suites with normal parallel execution; and
+- 606/606 Swift tests in 93 suites with CI's `--no-parallel` execution.
+
+The corrected source hash is
+`9a2627996d0541aa3a965a0c0fb57a4c22943af2979107b51508ef1722af826d`.
+`CATPOWER-TEST-010` remains planned until an exact synchronized correction
+commit passes all immutable workflow jobs. Until then the current slice state
+is `implemented`, not re-verified. This correction adds no schema, RLS, Sync,
+app UI, MCP, hosted, Firebase, migration, production or cutover behavior.
