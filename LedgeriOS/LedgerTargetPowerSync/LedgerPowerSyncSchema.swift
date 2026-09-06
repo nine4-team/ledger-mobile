@@ -22,6 +22,7 @@ public enum LedgerPowerSyncTable {
     public static let projectArchiveOverlays = "spike_project_archive_overlays"
     public static let clientArchiveCommands = "spike_client_archive_commands"
     public static let clientArchiveOverlays = "spike_client_archive_overlays"
+    public static let itemSpaceAssignmentCommands = "spike_item_space_assignment_commands"
     public static let localOperations = "spike_local_operations"
     public static let pendingWorkObservations = "spike_pending_work_observations"
     public static let operationResults = "spike_operation_results"
@@ -324,6 +325,24 @@ public enum LedgerPowerSyncSchema {
                 .ascending(
                     name: "client_archive_overlay_operation",
                     columns: ["operation_id"]
+                )
+            ],
+            localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.itemSpaceAssignmentCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .text("destination_space_id"),
+                .text("scope_kind"), .text("project_id"),
+                .text("expected_space_revision"), .text("items_json"),
+                .text("fingerprint"), .text("command_json"),
+                .integer("accepted_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "item_space_assignment_command_account",
+                    columns: ["account_id"]
                 )
             ],
             localOnly: true

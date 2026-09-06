@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T10:06:47.449Z",
+    "lastSynchronizedAt": "2026-09-06T11:01:57.235Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2099,10 +2099,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
-      "acknowledgedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "observedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
+      "acknowledgedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
       "metadata": {},
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; pending-status checks are lexical, method/function bounded and exact for adapter, construction and cleanup; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -6664,10 +6664,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
-      "acknowledgedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "observedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
+      "acknowledgedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status adapter/construction/cleanup/copy rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19690,12 +19690,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
-      "acknowledgedSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
+      "observedSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
+      "acknowledgedSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space assignment command.",
+      "currentBehavior": "Executable Account/Principal-bound encrypted local store atomically accepts one canonical Item-to-Space command plus one queued generic operation, validates exact replay and queued-only observation, and drains watches without defining authoritative apply or upload.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Assignment Local Durability Provider",
@@ -19723,7 +19723,7 @@
           "Atomic acceptance, restart, replay, cancellation, watch and runtime lifecycle obligations pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
@@ -21125,12 +21125,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
-      "acknowledgedSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
+      "observedSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
+      "acknowledgedSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, immutable results, and pending-work observation journal.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, the local-only Item-to-Space assignment command evidence table, immutable results, and pending-work observation journal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -25996,12 +25996,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "a38ee0defb0f7b5c142c7df4a994ff440fd1ceff21b6e6bb4e9370a247bade74",
-      "acknowledgedSourceHash": "a38ee0defb0f7b5c142c7df4a994ff440fd1ceff21b6e6bb4e9370a247bade74",
+      "observedSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
+      "acknowledgedSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, one typed Account-bound Space destination watch and non-destructive close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Space destination and Item-assignment operation watches, and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -28644,12 +28644,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "df4d6603052c92d1712df394b785ef6011eb51e38eabe41e70cd83a0decc8646",
-      "acknowledgedSourceHash": "df4d6603052c92d1712df394b785ef6011eb51e38eabe41e70cd83a0decc8646",
+      "observedSourceHash": "997b3ea853810f2e5e5fdb8be82d4dab2436a5bb6696f0cf98b24844f1b4db79",
+      "acknowledgedSourceHash": "997b3ea853810f2e5e5fdb8be82d4dab2436a5bb6696f0cf98b24844f1b4db79",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending or authoritative assignment.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -44424,12 +44424,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceAssignmentPowerSyncStoreTests.swift"
         }
       ],
-      "observedSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
-      "acknowledgedSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
+      "observedSourceHash": "88b383ae02240ea00d1ccaf9a365033dc7afeef2c27353bbd2ee77fa362de451",
+      "acknowledgedSourceHash": "88b383ae02240ea00d1ccaf9a365033dc7afeef2c27353bbd2ee77fa362de451",
       "metadata": {
-        "firebaseCoupled": true
+        "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for exact local durability, replay, restart, lifecycle and containment proof.",
+      "currentBehavior": "Executable isolated suite proves exact local rows/scopes/identity/time, replay/tamper/concurrency/rollback/restart, queued-only observation, pending-work/no-upload behavior, runtime drainage, nominal use-case conformance and live bootstrap binding.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Assignment Local Durability Provider",
@@ -44455,7 +44455,7 @@
           "All frozen dossier obligations pass without hosted resources"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"

@@ -12,10 +12,10 @@
   "surfaces": [
     {
       "id": "SWIFT-09809DBC3BA1",
-      "acknowledgeSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
-      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space assignment command.",
+      "acknowledgeSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
+      "currentBehavior": "Executable Account/Principal-bound encrypted local store atomically accepts one canonical Item-to-Space command plus one queued generic operation, validates exact replay and queued-only observation, and drains watches without defining authoritative apply or upload.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {
@@ -30,10 +30,10 @@
     },
     {
       "id": "TEST-557358553F23",
-      "acknowledgeSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
-      "currentBehavior": "Comment-only READY scaffold for exact local durability, replay, restart, lifecycle and containment proof.",
+      "acknowledgeSourceHash": "88b383ae02240ea00d1ccaf9a365033dc7afeef2c27353bbd2ee77fa362de451",
+      "currentBehavior": "Executable isolated suite proves exact local rows/scopes/identity/time, replay/tamper/concurrency/rollback/restart, queued-only observation, pending-work/no-upload behavior, runtime drainage, nominal use-case conformance and live bootstrap binding.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {

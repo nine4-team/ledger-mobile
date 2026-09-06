@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T10:06:47.449Z",
+  "generatedFromManifestSync": "2026-09-06T11:01:57.235Z",
   "totals": {
     "slices": 92,
     "claimedTargetSurfaces": 312,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 235
+    "implementationAdvancedTargetSurfaces": 237
   },
   "statusCounts": {
     "draft": 3,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
+    "implemented": 14,
     "verified": 72,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -438,7 +438,7 @@
       "sliceId": "item-space-assignment-local-durability-provider",
       "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Item Space Assignment Local Durability Provider",
       "surfaceIds": [
         "SWIFT-09809DBC3BA1",

@@ -1,13 +1,14 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001 — Item-to-Space Local Durability Provider
 
-- Status: READY after two independent GO reviews; executable implementation not started
+- Status: implemented locally and independently reviewed; exact implementation CI pending
 - Date: 2026-09-06
 - Base commit: `762f69e11d6218de635fc46253ecae6e448d59b9`
 - Base CI: Actions run `34025105217` passed all three jobs
 - Environment: dedicated target worktree and disposable encrypted local databases only
 - Production/Firebase impact: none
 - Corrected-DRAFT review: two independent reviewers return GO with no P0-P3 findings
-- Exact READY CI: pending
+- Exact READY commit: `7cc00eacc0ac29b319eed07748e8377b14b28a47`
+- Exact READY CI: Actions run `34026558345` passed all three jobs
 
 ## Selected Boundary
 
@@ -52,9 +53,12 @@ read model.
   client time already accepted by the frozen command contract—including
   negative and fractional-millisecond values—inside exact canonical command and
   envelope JSON; do not add a redundant integer timestamp that narrows command
-  admissibility. Provider-owned acceptance time is truncated toward zero to
-  canonical milliseconds and must be finite, nonnegative, and fit `Int64`
-  before database access.
+  admissibility. For new admission only, provider-owned acceptance time is
+  truncated toward zero to canonical milliseconds and must be finite,
+  nonnegative, fit `Int64`, and round-trip exactly through the public `Date`
+  snapshot representation. It is checked after replay lookup and before either
+  write; exact replay uses persisted acceptance evidence and never consults the
+  fresh clock.
 - Use one `localOnly` command table and the existing `localOperations` table in
   a single transaction. `spike_item_space_assignment_commands` uses operation
   ID as implicit
@@ -125,6 +129,66 @@ concurrent same-ID acceptance, encrypted restart, cancellation boundaries,
 malformed/cross-scope refusal, watch drainage, runtime close, pending-work count,
 unchanged `ps_crud`/upload ordering, static containment, complete local gates and
 immutable READY/implementation CI.
+
+## Executable Outcome
+
+The executable target now provides one Account/Principal-bound
+`ItemSpaceAssignmentPowerSyncStore`. It atomically accepts the unchanged
+canonical command into the exact local-only command table plus the shared
+queued-operation table, revalidates every durable field on replay and watch,
+and exposes submission and a dedicated queued-only observation through the
+close-aware public runtime. `LedgerOfflineClientRuntime` nominally satisfies
+the verified `ItemSpaceAssigning` port, so the existing application use case
+consumes the target runtime without another adapter.
+
+The live bootstrap binds the store to the encrypted structured workspace with
+the selected Account and Principal. Runtime close drains admitted finite work
+and assignment watches before the structured database closes. The generic
+pending-work summary counts one accepted assignment while `ps_crud`, Item and
+Space projections, operation results, and the existing uploader remain
+unchanged.
+
+## Executable Review Corrections
+
+The first executable reviews returned NO-GO and found issues that passing tests
+had not exposed. The corrected implementation and proof now:
+
+- make exact replay independent of the current provider clock;
+- compare exact canonical command bytes instead of decoded `Date` equality;
+- admit only provider milliseconds that round-trip exactly through `Date`, and
+  reject malformed persisted time symmetrically;
+- inject cancellation after both rows are written but before transaction
+  commit, proving complete rollback at the critical boundary;
+- prove an admitted provider watch drains before structured database close;
+- add nominal use-case conformance and exercise the live production bootstrap
+  factory, resource binding, facade, watch, encrypted reopen, pending summary,
+  and zero-`ps_crud` result;
+- accept and observe an opaque non-prefix OperationID and reject foreign
+  Principal or cross-operation observation; and
+- structurally bind the checker to executable `@Test` functions, exact schema
+  and SQL scope, runtime factory/lease/delegation/watch wiring, close order, and
+  comment-stripped containment checks.
+
+Two independent corrected-diff reviews then returned GO with no remaining
+P0-P3 finding.
+
+## Local Verification
+
+- Focused Item-to-Space provider suite: 21/21 passed.
+- Complete Swift target package: 606 tests across 93 suites passed both normally
+  and with CI's `--no-parallel` execution.
+- Target-environment isolation checker: passed.
+- Query-port, logical-authority, source-query reconciliation, capability,
+  extracted-query, M0, generated-contract and MCP gates passed; MCP ran 26 tests.
+- Disposable local Supabase lint passed with no warnings; 374 pgTAP assertions
+  plus the existing destination-read, note-read and Client/Project RPC/RLS/replay
+  exercises passed. The local stack was stopped without backup afterward.
+- Target staging builds succeeded for macOS and generic iOS Simulator with code
+  signing disabled.
+- Conversion ledger synchronization and the remaining repository gates are run
+  from the explicit post-review source hashes recorded by this checkpoint.
+- Exact implementation CI: pending until the synchronized implementation
+  commit is pushed.
 
 ## Explicit Non-Advancement
 

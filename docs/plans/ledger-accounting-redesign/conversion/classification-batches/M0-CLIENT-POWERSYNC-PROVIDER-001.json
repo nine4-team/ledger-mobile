@@ -88,8 +88,8 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, immutable results, and pending-work observation journal.",
+      "acknowledgeSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, the local-only Item-to-Space assignment command evidence table, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
@@ -121,8 +121,8 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "a38ee0defb0f7b5c142c7df4a994ff440fd1ceff21b6e6bb4e9370a247bade74",
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, one typed Account-bound Space destination watch and non-destructive close.",
+      "acknowledgeSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Space destination and Item-assignment operation watches, and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including exact full-receipt local-byte resolution, both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},

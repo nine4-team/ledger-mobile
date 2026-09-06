@@ -21,7 +21,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
     }
 }
 
-public final class LedgerOfflineClientRuntime: Sendable {
+public final class LedgerOfflineClientRuntime: ItemSpaceAssigning, Sendable {
     private let lifecycleOwner: AccountWorkspacePendingWorkRuntime
 
     init(lifecycleOwner: AccountWorkspacePendingWorkRuntime) {
@@ -56,6 +56,12 @@ public final class LedgerOfflineClientRuntime: Sendable {
         try await lifecycleOwner.archiveClient(command)
     }
 
+    public func assignItemsToSpace(
+        _ command: AssignItemsToSpaceCommand
+    ) async throws -> OperationReceipt {
+        try await lifecycleOwner.assignItemsToSpace(command)
+    }
+
     public func watchOperation(
         _ operationId: OperationID
     ) -> AsyncThrowingStream<OperationSnapshot, Error> {
@@ -73,6 +79,18 @@ public final class LedgerOfflineClientRuntime: Sendable {
     ) -> AsyncThrowingStream<OperationSnapshot, Error> {
         trackedStream { id, continuation in
             await self.lifecycleOwner.startClientArchiveOperationWatch(
+                id: id,
+                operationId: operationId,
+                continuation: continuation
+            )
+        }
+    }
+
+    public func watchItemSpaceAssignmentOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startItemSpaceAssignmentOperationWatch(
                 id: id,
                 operationId: operationId,
                 continuation: continuation

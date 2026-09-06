@@ -99,11 +99,23 @@ protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
 
 extension ProjectArchivePowerSyncStore: AccountWorkspaceProjectArchiveStoring {}
 
+protocol AccountWorkspaceItemSpaceAssignmentStoring: ItemSpaceAssigning, Sendable {
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error>
+    func cancelAndDrainWatches() async
+}
+
+extension ItemSpaceAssignmentPowerSyncStore:
+    AccountWorkspaceItemSpaceAssignmentStoring
+{}
+
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
     case archiveProject
     case archiveClient
+    case assignItemsToSpace
     case pendingUploadCount
     case encryptionCipher
     case captureAttachment
@@ -123,6 +135,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case transferDestinations
     case projectArchiveOperation
     case clientArchiveOperation
+    case itemSpaceAssignmentOperation
 }
 
 struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
@@ -209,6 +222,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             PrincipalID,
             @Sendable @escaping () -> Date
         ) -> any AccountWorkspaceProjectArchiveStoring
+    var makeItemSpaceAssignmentStore:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            AccountID,
+            PrincipalID,
+            @Sendable @escaping () -> Date
+        ) -> any AccountWorkspaceItemSpaceAssignmentStoring
     var makeLifecycleOwner:
         @Sendable (
             AccountWorkspaceRuntimeResources
@@ -340,6 +360,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeItemSpaceAssignmentStore: { database, accountId, principalId, now in
+            ItemSpaceAssignmentPowerSyncStore(
+                database: database,
+                accountId: accountId,
+                principalId: principalId,
+                now: now
+            )
+        },
         makeLifecycleOwner: { AccountWorkspacePendingWorkRuntime(resources: $0) },
         finiteOperationCheckpoint: { _ in },
         streamOperationCheckpoint: { _ in },
@@ -371,6 +399,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
     let projectSetupStore: ProjectSetupPowerSyncStore
     let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
+    let itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring
     let clientArchiveStore: ClientArchivePowerSyncStore
     let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
@@ -410,6 +439,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         projectNoteQuery: any AccountWorkspaceProjectNoteQuerying,
         spaceCoreDetailsQuery: any AccountWorkspaceSpaceCoreDetailsQuerying,
         projectArchiveStore: any AccountWorkspaceProjectArchiveStoring,
+        itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring,
         vault: AttachmentLocalByteVault,
         closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
         closeStructuredDatabase: @Sendable @escaping () async throws -> Void,
@@ -438,6 +468,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         )
         projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
         self.projectArchiveStore = projectArchiveStore
+        self.itemSpaceAssignmentStore = itemSpaceAssignmentStore
         clientArchiveStore = ClientArchivePowerSyncStore(
             database: structuredDatabase,
             accountId: accountId,
@@ -541,6 +572,20 @@ actor AccountWorkspacePendingWorkRuntime {
                 throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
             }
             return try await resources.clientArchiveStore.archive(command)
+        }
+    }
+
+    func assignItemsToSpace(
+        _ command: AssignItemsToSpaceCommand
+    ) async throws -> OperationReceipt {
+        try await withFiniteLease(.assignItemsToSpace) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.itemSpaceAssignmentStore.assignItemsToSpace(command)
         }
     }
 
@@ -802,6 +847,22 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startItemSpaceAssignmentOperationWatch(
+        id: UUID,
+        operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .itemSpaceAssignmentOperation,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.itemSpaceAssignmentStore.watchOperation(operationId)
+            }
+        )
+    }
+
     func cancelStream(id: UUID) {
         if let task = streamTasks[id] {
             task.cancel()
@@ -917,6 +978,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.detailsQuery.cancelAndDrainWatches()
         await resources.projectDetailsQuery.cancelAndDrainWatches()
         await resources.directoryQuery.cancelAndDrainWatches()
+        await resources.itemSpaceAssignmentStore.cancelAndDrainWatches()
         await resources.projectArchiveStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()
 
@@ -1151,6 +1213,12 @@ public enum LedgerPowerSyncLocalBootstrap {
                 principalId,
                 dependencies.now
             )
+            let madeItemSpaceAssignmentStore = dependencies.makeItemSpaceAssignmentStore(
+                openedStructured.database,
+                accountId,
+                principalId,
+                dependencies.now
+            )
 
             let madeRuntimeResources = AccountWorkspaceRuntimeResources(
                 structuredDatabase: openedStructured.database,
@@ -1162,6 +1230,7 @@ public enum LedgerPowerSyncLocalBootstrap {
                 projectNoteQuery: madeProjectNoteQuery,
                 spaceCoreDetailsQuery: madeSpaceCoreDetailsQuery,
                 projectArchiveStore: madeProjectArchiveStore,
+                itemSpaceAssignmentStore: madeItemSpaceAssignmentStore,
                 vault: openedVault,
                 closeAttachmentDatabase: openedAttachment.closePreservingData,
                 closeStructuredDatabase: openedStructured.closePreservingData,

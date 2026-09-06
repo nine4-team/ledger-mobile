@@ -520,6 +520,7 @@ if (
   const expectedPublicRuntimeFunctions = [
     "archive",
     "archive",
+    "assignItemsToSpace",
     "captureAttachment",
     "close",
     "createClient",
@@ -532,6 +533,7 @@ if (
     "watchClient",
     "watchClientArchiveOperation",
     "watchClients",
+    "watchItemSpaceAssignmentOperation",
     "watchOperation",
     "watchProject",
     "watchProjectNotes",
@@ -592,6 +594,29 @@ if (
     fail(
       "target_space_destination_watch_signature",
       "The public runtime must expose exactly one Account-bound typed placement-scope destination watch.",
+    );
+  }
+
+  const itemSpaceAssignmentSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+assignItemsToSpace\s*\(\s*_\s+command:\s*AssignItemsToSpaceCommand\s*\)\s*async\s+throws\s*->\s*OperationReceipt\s*\{/g,
+    ),
+  ];
+  if (itemSpaceAssignmentSignatures.length !== 1) {
+    fail(
+      "target_item_space_assignment_submit_signature",
+      "The public runtime must expose exactly one typed Item-to-Space assignment submission.",
+    );
+  }
+  const itemSpaceAssignmentWatchSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+watchItemSpaceAssignmentOperation\s*\(\s*_\s+operationId:\s*OperationID\s*\)\s*->\s*AsyncThrowingStream\s*<\s*OperationSnapshot\s*,\s*Error\s*>\s*\{/g,
+    ),
+  ];
+  if (itemSpaceAssignmentWatchSignatures.length !== 1) {
+    fail(
+      "target_item_space_assignment_watch_signature",
+      "The public runtime must expose exactly one typed assignment-operation watch.",
     );
   }
 
@@ -681,6 +706,7 @@ if (
     "ProjectCoreDetailsPowerSyncQuery",
     "ProjectNotePowerSyncQuery",
     "ProjectArchivePowerSyncStore",
+    "ItemSpaceAssignmentPowerSyncStore",
     "ProjectSetupPowerSyncStore",
     "TransferDestinationSelectionPowerSyncQuery",
   ];
@@ -2255,6 +2281,317 @@ const blockedCategoryProviderLeaves = [
   path.join(targetAppRoot, "ProjectCategoryConfigurationStagingRuntimeAdapter.swift"),
   path.join(targetAppRoot, "ProjectCategoryConfigurationStagingExerciseView.swift"),
 ];
+
+const itemSpaceAssignmentStorePath = path.join(
+  powerSyncRoot,
+  "ItemSpaceAssignmentPowerSyncStore.swift",
+);
+const itemSpaceAssignmentTestsPath = path.join(
+  powerSyncTestRoot,
+  "ItemSpaceAssignmentPowerSyncStoreTests.swift",
+);
+for (const requiredPath of [
+  itemSpaceAssignmentStorePath,
+  itemSpaceAssignmentTestsPath,
+]) {
+  if (!fs.existsSync(requiredPath)) {
+    fail("target_item_space_assignment_local_leaf_missing", relative(requiredPath));
+  }
+}
+if (
+  fs.existsSync(itemSpaceAssignmentStorePath) &&
+  fs.existsSync(itemSpaceAssignmentTestsPath) &&
+  fs.existsSync(powerSyncSchemaPath)
+) {
+  const store = fs.readFileSync(itemSpaceAssignmentStorePath, "utf8");
+  const tests = fs.readFileSync(itemSpaceAssignmentTestsPath, "utf8");
+  const schema = fs.readFileSync(powerSyncSchemaPath, "utf8");
+  const itemSpaceAssignmentRuntime = fs.readFileSync(
+    accountWorkspaceRuntimePath,
+    "utf8",
+  );
+  const itemSpaceAssignmentCoordinator = fs.readFileSync(
+    accountWorkspaceCoordinatorPath,
+    "utf8",
+  );
+  const storeWithoutComments = swiftWithoutComments(store);
+  const schemaWithoutComments = swiftWithoutComments(schema);
+  const testsWithoutComments = swiftWithoutComments(tests);
+  const coordinatorCode = compactSwiftCode(itemSpaceAssignmentCoordinator);
+  const runtimeCode = compactSwiftCode(itemSpaceAssignmentRuntime);
+  if (
+    storeWithoutComments === null ||
+    schemaWithoutComments === null ||
+    testsWithoutComments === null ||
+    coordinatorCode === null ||
+    runtimeCode === null
+  ) {
+    fail(
+      "target_item_space_assignment_lexical_structure_invalid",
+      "Assignment store and runtime sources must have closed comments and string literals.",
+    );
+  }
+  if (
+    !(schemaWithoutComments ?? "").includes(
+      'public static let itemSpaceAssignmentCommands = "spike_item_space_assignment_commands"',
+    )
+  ) {
+    fail(
+      "target_item_space_assignment_local_table_name",
+      "The local command table name must remain exact.",
+    );
+  }
+  const tableStart = (schemaWithoutComments ?? "").indexOf(
+    "Table(\n            name: LedgerPowerSyncTable.itemSpaceAssignmentCommands,",
+  );
+  const tableEnd = tableStart < 0
+    ? -1
+    : (schemaWithoutComments ?? "").indexOf("\n        Table(", tableStart + 1);
+  const tableSection = tableStart < 0 || tableEnd < 0
+    ? ""
+    : (schemaWithoutComments ?? "").slice(tableStart, tableEnd);
+  const actualColumns = [
+    ...tableSection.matchAll(/\.(text|integer)\("([^"]+)"\)/g),
+  ].map((match) => `${match[1]}:${match[2]}`);
+  const expectedColumns = [
+    "text:account_id",
+    "text:actor_principal_id",
+    "text:contract_version",
+    "text:destination_space_id",
+    "text:scope_kind",
+    "text:project_id",
+    "text:expected_space_revision",
+    "text:items_json",
+    "text:fingerprint",
+    "text:command_json",
+    "integer:accepted_at_ms",
+  ];
+  if (JSON.stringify(actualColumns) !== JSON.stringify(expectedColumns)) {
+    fail(
+      "target_item_space_assignment_local_table_columns",
+      actualColumns.join(","),
+    );
+  }
+  for (const required of [
+    'name: "item_space_assignment_command_account"',
+    'columns: ["account_id"]',
+    "localOnly: true",
+  ]) {
+    if (!tableSection.includes(required)) {
+      fail("target_item_space_assignment_local_table_contract", required);
+    }
+  }
+  for (const required of [
+    "actor ItemSpaceAssignmentPowerSyncStore: ItemSpaceAssigning",
+    "ItemSpaceAssignmentPowerSyncStoreFailure",
+    "item_space_assignment_acceptance_time_invalid",
+    "item_space_assignment_local_evidence_malformed",
+    "item_space_assignment_operation_not_found",
+    "item_space_assignment_items_v1",
+    '"project"',
+    '"business_inventory"',
+    '"assign_items_to_space"',
+    "OperationContractFailure.payloadMismatch",
+    "ItemSpaceAssignmentFailure.localAcceptanceFailed",
+    "CancellationError()",
+    "case beforeCommit",
+    "exactDate(milliseconds:",
+    "cancelAndDrainWatches()",
+    "operation.id = ?",
+    "operation.account_id = ?",
+    "operation.actor_principal_id = ?",
+  ]) {
+    if (!(storeWithoutComments ?? "").includes(required)) {
+      fail("target_item_space_assignment_local_store_incomplete", required);
+    }
+  }
+  const referencedTables = new Set(
+    [...(storeWithoutComments ?? "").matchAll(/LedgerPowerSyncTable\.(\w+)/g)]
+      .map((match) => match[1]),
+  );
+  const allowedTables = new Set([
+    "itemSpaceAssignmentCommands",
+    "localOperations",
+    "operationResults",
+  ]);
+  if (
+    [...referencedTables].some((tableName) => !allowedTables.has(tableName)) ||
+    referencedTables.size !== allowedTables.size
+  ) {
+    fail(
+      "target_item_space_assignment_local_projection_escape",
+      [...referencedTables].sort().join(","),
+    );
+  }
+  if (
+    /\bps_crud\b|insertOnly|Supabase|Postgrest|URLSession|Firebase|Firestore/.test(
+      storeWithoutComments ?? "",
+    ) ||
+    /DELETE\s+FROM|UPDATE\s+[^\n]*(?:itemSpaceAssignmentCommands|spike_item_space_assignment_commands)/i.test(
+      storeWithoutComments ?? "",
+    ) ||
+    /\bfunc\s+(?:delete|remove|repair|reset)\w*\s*\(/i.test(
+      storeWithoutComments ?? "",
+    )
+  ) {
+    fail(
+      "target_item_space_assignment_local_scope_escape",
+      relative(itemSpaceAssignmentStorePath),
+    );
+  }
+  if (
+    !itemSpaceAssignmentRuntime.includes(
+      "public final class LedgerOfflineClientRuntime: ItemSpaceAssigning, Sendable",
+    )
+  ) {
+    fail(
+      "target_item_space_assignment_runtime_conformance",
+      "The public runtime must nominally satisfy the verified ItemSpaceAssigning port.",
+    );
+  }
+  const assignmentSubmitBody = swiftFunctionBody(
+    itemSpaceAssignmentCoordinator,
+    "func assignItemsToSpace(",
+  );
+  const assignmentWatchBody = swiftFunctionBody(
+    itemSpaceAssignmentCoordinator,
+    "func startItemSpaceAssignmentOperationWatch(",
+  );
+  const closeBody = swiftFunctionBody(
+    itemSpaceAssignmentCoordinator,
+    "private func performClose() async",
+  );
+  const facadeSubmitBody = swiftFunctionBody(
+    itemSpaceAssignmentRuntime,
+    "public func assignItemsToSpace(",
+  );
+  const facadeWatchBody = swiftFunctionBody(
+    itemSpaceAssignmentRuntime,
+    "public func watchItemSpaceAssignmentOperation(",
+  );
+  const structuralRequirements = [
+    [
+      "live factory",
+      "makeItemSpaceAssignmentStore:{database,accountId,principalId,nowinItemSpaceAssignmentPowerSyncStore(database:database,accountId:accountId,principalId:principalId,now:now)}",
+      coordinatorCode ?? "",
+    ],
+    [
+      "bootstrap binding",
+      "dependencies.makeItemSpaceAssignmentStore(openedStructured.database,accountId,principalId,dependencies.now)",
+      coordinatorCode ?? "",
+    ],
+    [
+      "resource binding",
+      "itemSpaceAssignmentStore:madeItemSpaceAssignmentStore",
+      coordinatorCode ?? "",
+    ],
+    [
+      "finite lease",
+      "withFiniteLease(.assignItemsToSpace)",
+      compactSwiftCode(assignmentSubmitBody ?? "") ?? "",
+    ],
+    [
+      "finite delegation",
+      "resources.itemSpaceAssignmentStore.assignItemsToSpace(command)",
+      compactSwiftCode(assignmentSubmitBody ?? "") ?? "",
+    ],
+    [
+      "watch route",
+      "resources.itemSpaceAssignmentStore.watchOperation(operationId)",
+      compactSwiftCode(assignmentWatchBody ?? "") ?? "",
+    ],
+    [
+      "facade submit route",
+      "lifecycleOwner.assignItemsToSpace(command)",
+      compactSwiftCode(facadeSubmitBody ?? "") ?? "",
+    ],
+    [
+      "facade watch route",
+      "lifecycleOwner.startItemSpaceAssignmentOperationWatch(",
+      compactSwiftCode(facadeWatchBody ?? "") ?? "",
+    ],
+  ];
+  for (const [label, required, source] of structuralRequirements) {
+    if (!source.includes(required)) {
+      fail("target_item_space_assignment_runtime_wiring", label);
+    }
+  }
+  const compactCloseBody = compactSwiftCode(closeBody ?? "") ?? "";
+  const assignmentDrainIndex = compactCloseBody.indexOf(
+    "awaitresources.itemSpaceAssignmentStore.cancelAndDrainWatches()",
+  );
+  const structuredCloseIndex = compactCloseBody.indexOf(
+    "tryawaitresources.closeStructuredDatabase()",
+  );
+  if (
+    assignmentDrainIndex < 0 ||
+    structuredCloseIndex < 0 ||
+    assignmentDrainIndex >= structuredCloseIndex
+  ) {
+    fail(
+      "target_item_space_assignment_runtime_close_order",
+      "Assignment provider drainage must precede structured database close.",
+    );
+  }
+  for (const testFunction of [
+    "exactProjectAndInventoryRows",
+    "numericAndClientTimeBoundaries",
+    "providerTimeBoundaryAndPreDatabaseSentinel",
+    "providerTimeExactRoundTripBoundary",
+    "scopeRefusalBeforeDatabaseAccess",
+    "encryptedRestartRetention",
+    "malformedRestartNeverUpgrades",
+    "exactAndChangedReplay",
+    "commandTamperAndOrphans",
+    "operationTamperAndTerminalEvidence",
+    "concurrentAdmission",
+    "writeFailureMappingAndRollback",
+    "cancellationBoundaries",
+    "queuedOnlyWatchAndDrainage",
+    "watchFailureMappingAndCancellation",
+    "watchRefusalMatrix",
+    "pendingSummaryAndNoUploadWork",
+    "runtimeCloseDrainageAndTerminalRefusal",
+    "runtimeItemSpaceAssignmentUseCaseIntegration",
+    "liveRuntimeItemSpaceAssignmentBinding",
+    "boundedDiagnostics",
+  ]) {
+    const escapedTestFunction = testFunction.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const annotatedTest = new RegExp(
+      `@Test\\s*\\([^\\n]*\\)\\s*func\\s+${escapedTestFunction}\\s*\\(`,
+      "g",
+    );
+    const annotatedMatches = [
+      ...(testsWithoutComments ?? "").matchAll(annotatedTest),
+    ];
+    if (
+      annotatedMatches.length !== 1 ||
+      swiftFunctionBody(tests, `func ${testFunction}(`) === null
+    ) {
+      fail("target_item_space_assignment_executable_test_missing", testFunction);
+    }
+  }
+  for (const requiredTestId of [
+    "ITEMSPACELOCAL-TEST-001",
+    "ITEMSPACELOCAL-TEST-002",
+    "ITEMSPACELOCAL-TEST-003",
+    "ITEMSPACELOCAL-TEST-004",
+    "ITEMSPACELOCAL-TEST-005",
+    "ITEMSPACELOCAL-TEST-006",
+    "ITEMSPACELOCAL-TEST-007",
+    "ITEMSPACELOCAL-TEST-008",
+    "ITEMSPACELOCAL-TEST-009",
+    "ITEMSPACELOCAL-TEST-010",
+    "ITEMSPACELOCAL-TEST-011",
+    "ITEMSPACELOCAL-TEST-012",
+    "ITEMSPACELOCAL-TEST-013",
+  ]) {
+    if (!tests.includes(requiredTestId)) {
+      fail("target_item_space_assignment_local_test_missing", requiredTestId);
+    }
+  }
+}
+
 for (const filePath of blockedCategoryProviderLeaves) {
   if (!fs.existsSync(filePath)) {
     fail("target_project_category_blocked_leaf_missing", relative(filePath));
