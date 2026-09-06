@@ -1,4 +1,11 @@
 # Financial Access Controls
+
+> **Target-state notice (2026-08-30):** Transaction visibility rules must migrate
+> to the Purchase/Return/Transfer taxonomy in
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
+> Fee and Expense visibility must follow their Invoicing source records rather
+> than legacy Transaction types. The existing rules below describe the current
+> schema until that migration.
 Status: partially implemented
 Last updated: 2026-06-08
 Implementation plan: [../plans/financial-access-controls.md](../plans/financial-access-controls.md)

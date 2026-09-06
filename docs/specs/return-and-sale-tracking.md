@@ -1,5 +1,11 @@
 # Return and Sale Tracking
 
+> **Target-state notice (2026-08-30):** The workflow-status and origin rules
+> remain relevant, but project financial effects move from movement Transactions
+> to Item charges/credits under
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md).
+> Treat Transaction-specific mechanics below as current implementation behavior.
+
 ## Overview
 
 This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the origin-aware project-to-inventory flow: items that came from inventory go home through a Return, while project-originated items enter inventory through a Sale-to-Inventory transaction.

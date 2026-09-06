@@ -1,0 +1,2617 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/extract-current-capability-surfaces.mjs",
+  "sourceDigest": "584157a03aaf0aa3c5e93953bf4c6c5642d213fca0f85a2e95fa2c3b0adb176f",
+  "scope": [
+    "LedgeriOS/LedgeriOS/Auth",
+    "LedgeriOS/LedgeriOS/Services",
+    "mcp-server/src"
+  ],
+  "totals": {
+    "surfaces": 88,
+    "swift": 41,
+    "mcp": 47
+  },
+  "byCapability": {
+    "identity_accounts_and_invites": 9,
+    "inventory_movement_and_provenance": 7,
+    "invoicing_collection_and_budget": 6,
+    "items_and_quick_capture": 7,
+    "media_and_attachments": 10,
+    "platform_transport_and_legacy_persistence": 19,
+    "projects_and_clients": 7,
+    "reporting_search_and_cross_domain_queries": 5,
+    "settings_and_reference_data": 8,
+    "spaces_and_review": 5,
+    "transactions_receipts_and_corrections": 5
+  },
+  "limitations": [
+    "Capability assignment is explicit source triage, not an approved target port or table map.",
+    "Signals are lexical evidence and must be reviewed with callers, specs, production shape, and tests in each capability dossier.",
+    "UI/view callers, models, tests, Functions, migration tools, and operational configuration remain separate manifest surfaces linked during dossier review."
+  ],
+  "surfaces": [
+    {
+      "id": "CAPSURF-C9CE3FC9787D",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Auth/AuthManager.swift",
+      "sourceHash": "6f5e341e159ed4087e630e3e1b2d039e6971df93d5d902d94d381541a9e43693",
+      "lineCount": 101,
+      "declaredSurfaceNames": [
+        "AuthManager",
+        "diagnoseError",
+        "signIn",
+        "signInWithGoogle",
+        "signOut",
+        "signUp"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-8E9B2DFCD775",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "sourceHash": "3ba570f95ec98b1cc8b4e9373aff369b2aa4cffe5f97fd32ece973c2b0ff136d",
+      "lineCount": 61,
+      "declaredSurfaceNames": [
+        "AccountMembersService",
+        "listMembershipsForUser",
+        "parseMembers",
+        "repo",
+        "subscribeToMember",
+        "updateAccess"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 2,
+        "mutations": 1,
+        "offlineOrQueue": 9
+      }
+    },
+    {
+      "id": "CAPSURF-D22F0D6F71E4",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountsService.swift",
+      "sourceHash": "1b6d3c75d69d86b03addaf36711658d37d8078a25c72413f86e5892beb140e20",
+      "lineCount": 82,
+      "declaredSurfaceNames": [
+        "AccountServiceError",
+        "AccountsService",
+        "CallableEnvelope",
+        "CreateAccountCallableResult",
+        "callFunction",
+        "createAccount",
+        "functionURL",
+        "getAccount",
+        "subscribeToAccount",
+        "updateAccount"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 1,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-2CE194E495FF",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InviteLinks.swift",
+      "sourceHash": "fcfbd7a1f47bb63ea82612ef809a150f9621c4d4f09120e696b91dc82ec78f5c",
+      "lineCount": 176,
+      "declaredSurfaceNames": [
+        "InviteAcceptanceError",
+        "InviteAcceptanceResult",
+        "InviteAcceptanceService",
+        "InviteCallableEnvelope",
+        "InviteError",
+        "InviteErrorEnvelope",
+        "InviteLinkRouter",
+        "InviteLinks",
+        "InvitePreviewResult",
+        "acceptInvite",
+        "clear",
+        "errorMessage",
+        "functionURL",
+        "handle",
+        "link",
+        "previewInvite",
+        "token"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 3
+      }
+    },
+    {
+      "id": "CAPSURF-FE44BBB4D35B",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InvitesService.swift",
+      "sourceHash": "b6ce7d4ab93bbbb1a9e94baded5b3b0503f318336bbef2e822d9bdb77f0e4995",
+      "lineCount": 52,
+      "declaredSurfaceNames": [
+        "InvitesService",
+        "create",
+        "repo",
+        "revoke",
+        "subscribe"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 2,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-38F4B8D34053",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "sourceHash": "7dc500dc30382c0283f05d568c3d13a2d20caeb8f6911b8706def4d9a2a292e5",
+      "lineCount": 80,
+      "declaredSurfaceNames": [
+        "AccountMembership",
+        "resolveAccountId",
+        "resolveAllAccounts",
+        "verifyToken"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 3,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-4938EA5E6169",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/oauth.ts",
+      "sourceHash": "01163da6a78d624ba2eced87a474514ad97e55cd6c9799be2df931912878ecb7",
+      "lineCount": 635,
+      "declaredSurfaceNames": [
+        "registerOAuthRoutes",
+        "verifyAccessToken"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 6,
+        "mutations": 9,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-B6552C94C033",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/accounts.ts",
+      "sourceHash": "fd8660ca12eb74aff87c1261bcc5bf694c83622ae2b6cadf6974e3ef9f33d613",
+      "lineCount": 94,
+      "declaredSurfaceNames": [
+        "list_accounts",
+        "registerAccountTools",
+        "switch_account"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-3E4E627EC002",
+      "capability": "identity_accounts_and_invites",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/userState.ts",
+      "sourceHash": "77306cc94af30f49e4dfdec2ab50cf6d6889565e79daec9726c330d94b0b38a6",
+      "lineCount": 30,
+      "declaredSurfaceNames": [
+        "getActiveAccountForUid",
+        "setActiveAccountForUid"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 1,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-1DCA8A4ADE51",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InventoryOperationsService.swift",
+      "sourceHash": "8c59381a2a7820b3c9c74c524ca2eac2e487f48465013f99bf72c644fb77f52f",
+      "lineCount": 1575,
+      "declaredSurfaceNames": [
+        "InventoryItemOrigin",
+        "InventoryOperationError",
+        "InventoryOperationsService",
+        "InventorySpaceScope",
+        "ReturnToProjectItemProvenance",
+        "ReturnToProjectProvenance",
+        "appendReturnedPaidItemCredits",
+        "cameFromInventory",
+        "computeBatchTotals",
+        "computeProjectOriginAcquisitionTotals",
+        "inventoryEntrySnapshotFields",
+        "inventoryLabel",
+        "moveToInventory",
+        "originsByItemId",
+        "projectPriceForMovement",
+        "projectPriceLine",
+        "realCategoryId",
+        "reassignToProject",
+        "requireItemIds",
+        "returnProjectId",
+        "returnToInventory",
+        "returnToProject",
+        "returnToProjectLine",
+        "returnToProjectProvenance",
+        "returnToTransaction",
+        "sellItemsFromProjectToProject",
+        "sellToInventory",
+        "sellToProject",
+        "sourceCategoryGroups",
+        "splitByOrigin",
+        "todayDateString",
+        "validatedDestinationSpaceIds"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 1,
+        "mutations": 44,
+        "offlineOrQueue": 3
+      }
+    },
+    {
+      "id": "CAPSURF-089405BED5D8",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "sourceHash": "d36b38b67b3f9da264abcf821c229d3e36d69876f7afa07aab9e124b4239c8eb",
+      "lineCount": 66,
+      "declaredSurfaceNames": [
+        "LineageEdge",
+        "LineageEdgesService",
+        "collection",
+        "createEdge",
+        "edges"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 3,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-F5D411967411",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "sourceHash": "b5f177f3f57dfe8c411d319ca4dcfa337d2f0c60327968b683144a080407cb2a",
+      "lineCount": 2392,
+      "declaredSurfaceNames": [
+        "computeProjectOriginAcquisitionTotals",
+        "computeProjectToInventoryTotals",
+        "registerInventoryOperationTools",
+        "resolveReturnToProjectProvenance",
+        "return_items",
+        "return_items_from_inventory_to_project",
+        "sell_items_from_inventory_to_project",
+        "sell_items_from_project_to_inventory",
+        "sell_items_from_project_to_project"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 60,
+        "mutations": 37,
+        "offlineOrQueue": 4
+      }
+    },
+    {
+      "id": "CAPSURF-A34D9491FE4F",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "sourceHash": "a1f7d910cc999f079805810748c1b81ec31cb7b70471425fd475c8b4d80b475e",
+      "lineCount": 111,
+      "declaredSurfaceNames": [
+        "get_item_history",
+        "get_project_movements",
+        "registerLineageTools"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 9,
+        "mutations": 3,
+        "offlineOrQueue": 16
+      }
+    },
+    {
+      "id": "CAPSURF-D14DD1E83CFE",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "sourceHash": "e64c01d0b55e243e5d55e6aa9162a37fac31c43f7bfaf4bea9d0284a50f7bdaf",
+      "lineCount": 240,
+      "declaredSurfaceNames": [
+        "correct_inventory_purchase_to_project_reimbursement",
+        "list_inventory_purchase_intents",
+        "registerPurchaseIntentTools",
+        "update_inventory_purchase_intent"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 15,
+        "mutations": 7,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-4305DCB6FD6B",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/inventory.ts",
+      "sourceHash": "f1575de6865ec1e2df3141e5d9b656bbd6aeabd8ac86b89c0ab5c289a42dd979",
+      "lineCount": 35,
+      "declaredSurfaceNames": [
+        "DEFAULT_INVENTORY_LABEL",
+        "inventoryLabelForAccountName",
+        "isInventorySource",
+        "resolveInventoryLabel",
+        "usesProjectPriceForAudit"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 1,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-4B5868CBF5DC",
+      "capability": "inventory_movement_and_provenance",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/item-pricing.ts",
+      "sourceHash": "bc3dd79888656fb3715763092c2d08507590bb2581df58a5e19bdbc23eb804c2",
+      "lineCount": 68,
+      "declaredSurfaceNames": [
+        "applyItemPriceFloorToCreate",
+        "applyItemPriceFloorToUpdate",
+        "effectiveProjectPriceCents",
+        "normalizedProjectPriceCents"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-C25AEA49443F",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/BudgetProgressService.swift",
+      "sourceHash": "e45d6fdda22b06f8ed13a38f39302eb3022eb6274febe2ee9d731267b2bf0919",
+      "lineCount": 70,
+      "declaredSurfaceNames": [
+        "BudgetProgressService",
+        "buildBudgetProgress",
+        "normalizeSpendAmount"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 1
+      }
+    },
+    {
+      "id": "CAPSURF-0B430AAF3B6E",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InvoiceService.swift",
+      "sourceHash": "ac2721fe80eb09f62b9ee258fc28b1817b1b19ac7ff1efe08a49756f2b1bf474",
+      "lineCount": 464,
+      "declaredSurfaceNames": [
+        "InvoiceService",
+        "InvoiceServiceError",
+        "appendReturnedPaidItemCreditInvoices",
+        "cancelInvoice",
+        "createInvoice",
+        "encodeLine",
+        "ensureSystemCategory",
+        "getInvoice",
+        "invoicesPath",
+        "markCollected",
+        "markPaid",
+        "markSent",
+        "membership",
+        "repo",
+        "subscribeToInvoice",
+        "subscribeToInvoices",
+        "todayString",
+        "updateSelections",
+        "voidInvoicePayment"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 4,
+        "reads": 1,
+        "mutations": 17,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-8818DB7D6FFB",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/InvoiceServiceProtocol.swift",
+      "sourceHash": "5358aa157e8e7997d91132fef315fdb51a5f3f2f99503e1ecacba7947b09c0fd",
+      "lineCount": 98,
+      "declaredSurfaceNames": [
+        "InvoiceServiceProtocol",
+        "cancelInvoice",
+        "createInvoice",
+        "getInvoice",
+        "markCollected",
+        "markPaid",
+        "markSent",
+        "subscribeToInvoice",
+        "subscribeToInvoices",
+        "updateSelections",
+        "voidInvoicePayment"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-CA75CFB7F29D",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/budget.ts",
+      "sourceHash": "2a8c4c8738d5a44afcc0edcff034202e2848caf22ceb63bfa938a24b533b7476",
+      "lineCount": 129,
+      "declaredSurfaceNames": [
+        "enable_category_for_project",
+        "get_project_budget_categories",
+        "list_budget_categories",
+        "registerBudgetTools",
+        "update_project_budget_allocation"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 8,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-7E2A27F3F12F",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "sourceHash": "1404be7a1705aaf64cbbb4ab06af395c3768cfc9f3cb69116ed9de5bc3a941f4",
+      "lineCount": 777,
+      "declaredSurfaceNames": [
+        "add_invoice_line",
+        "apply_contract_setup",
+        "billable_pool",
+        "create_invoice",
+        "get_invoice",
+        "list_invoices",
+        "mark_invoice_collected",
+        "mark_invoice_lines_collected",
+        "mark_invoice_sent",
+        "registerInvoiceTools",
+        "update_invoice_line",
+        "void_invoice"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 21,
+        "mutations": 21,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-1710A9547AEB",
+      "capability": "invoicing_collection_and_budget",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/budget.ts",
+      "sourceHash": "cc25e91e60d43c47631c0d3885ddc61d723e4ec9da1bb098a5f1f35183fc185b",
+      "lineCount": 85,
+      "declaredSurfaceNames": [
+        "ResolvedCategoryType",
+        "categoryPillLabel",
+        "normalizeSpendAmount",
+        "resolveCategoryType"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-C593225376EB",
+      "capability": "items_and_quick_capture",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ItemsService.swift",
+      "sourceHash": "17a217e2b8b96eadbaed484149bcb556916d46f52b6ba8ca30aca634b6e0f6f0",
+      "lineCount": 502,
+      "declaredSurfaceNames": [
+        "ItemAssociationError",
+        "ItemsService",
+        "SpacePhotoAnnotations",
+        "clearTransaction",
+        "createItem",
+        "createItemsForTransaction",
+        "deleteItem",
+        "deleteItems",
+        "existingTransactionIds",
+        "getItem",
+        "photoAnnotationCleanupUpdates",
+        "realCategoryId",
+        "repo",
+        "setTransaction",
+        "subscribeToItem",
+        "subscribeToItems",
+        "updateItem",
+        "updateItems",
+        "validateCategory"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 6,
+        "reads": 4,
+        "mutations": 16,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-07FE72314E4C",
+      "capability": "items_and_quick_capture",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ItemTagExtractionService.swift",
+      "sourceHash": "81f64052ef015fff7beb400098474f7654fcd505c62692b2cb08dc3c906c450d",
+      "lineCount": 273,
+      "declaredSurfaceNames": [
+        "EngineRoute",
+        "ImageExtractionPayload",
+        "ImageProfile",
+        "ItemTagExtractionService",
+        "barcodeTextRegions",
+        "configuredTextRequest",
+        "croppedUpscaledImage",
+        "engineRoute",
+        "expandedRegion",
+        "expandedTagRegion",
+        "extract",
+        "extractFullImage",
+        "isPotentialLabelText",
+        "normalizedImage",
+        "pixelRect",
+        "potentialLabelRegions",
+        "recognizeFocusedRegions",
+        "recognizeImage",
+        "recognizeText",
+        "textObservations",
+        "upscale"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 7
+      }
+    },
+    {
+      "id": "CAPSURF-47AEDE21C63C",
+      "capability": "items_and_quick_capture",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/ItemsServiceProtocol.swift",
+      "sourceHash": "a5cb625b53d278973a740e7d465154be267e34b4a7086962da6a1db98560c4b3",
+      "lineCount": 20,
+      "declaredSurfaceNames": [
+        "ItemsServiceProtocol",
+        "createItem",
+        "createItemsForTransaction",
+        "deleteItem",
+        "deleteItems",
+        "getItem",
+        "subscribeToItem",
+        "subscribeToItems",
+        "updateItem",
+        "updateItems"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-BB61FBAE2B1D",
+      "capability": "items_and_quick_capture",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/ProtoItemsServiceProtocol.swift",
+      "sourceHash": "7867a2d5a33320e315619dfe89e6d556f4b5e630f897a698555f24f453e26ff5",
+      "lineCount": 16,
+      "declaredSurfaceNames": [
+        "ProtoItemsServiceProtocol",
+        "convertProtoItem",
+        "createProtoItem",
+        "deleteProtoItem",
+        "markProtoItemInReview",
+        "newProtoItemId",
+        "subscribeToActiveProtoItems",
+        "subscribeToProtoItem",
+        "subscribeToProtoItems",
+        "subscribeToProtoItemsForTransaction",
+        "updateProtoItem"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 4,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-8B52C90F1043",
+      "capability": "items_and_quick_capture",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift",
+      "sourceHash": "323ad0945af92aae1a0d0104d010e44aa3d2f95bf28dcccbdbe973353d42095c",
+      "lineCount": 161,
+      "declaredSurfaceNames": [
+        "ProtoItemsService",
+        "collection",
+        "convertProtoItem",
+        "createProtoItem",
+        "defaultCaptureContext",
+        "deleteProtoItem",
+        "extraFields",
+        "markProtoItemInReview",
+        "newProtoItemId",
+        "normalizedPhotos",
+        "photoUploadMetadata",
+        "repo",
+        "subscribeToActiveProtoItems",
+        "subscribeToProtoItem",
+        "subscribeToProtoItems",
+        "subscribeToProtoItemsForTransaction",
+        "updateProtoItem"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 10,
+        "reads": 0,
+        "mutations": 6,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-82DC4C25B1B8",
+      "capability": "items_and_quick_capture",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "sourceHash": "c500c14448d98ee3132cbdb134a9d743591bc4d65aa5847b25ad8cd349e630ec",
+      "lineCount": 1359,
+      "declaredSurfaceNames": [
+        "LinkageStatus",
+        "attach_item_image",
+        "bulk_create_items",
+        "bulk_update_items",
+        "bulk_update_items_by_id",
+        "checkCreateInvariant",
+        "checkTransactionLinkageOnCreate",
+        "checkTransactionLinkageOnUpdate",
+        "checkUpdateInvariant",
+        "create_item",
+        "delete_item",
+        "delete_item_image",
+        "detach_item_image",
+        "get_item",
+        "list_items",
+        "registerItemTools",
+        "reorder_item_images",
+        "search_items",
+        "set_primary_item_image",
+        "update_item"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 27,
+        "mutations": 28,
+        "offlineOrQueue": 25
+      }
+    },
+    {
+      "id": "CAPSURF-B1238289755F",
+      "capability": "items_and_quick_capture",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "sourceHash": "7d5dcc7ea29a52f952a67a9b57f486793baf5e7f317fa7b927bc25f365459367",
+      "lineCount": 942,
+      "declaredSurfaceNames": [
+        "audit_legacy_quick_draft_transaction_candidates",
+        "create_quick_draft_item",
+        "delete_quick_draft_item",
+        "documentedPromotionMergeOverrides",
+        "get_quick_draft_item",
+        "list_quick_draft_items",
+        "mark_quick_draft_item_in_review",
+        "mergePromotedAttachments",
+        "promote_quick_draft_item",
+        "registerQuickDraftItemTools",
+        "search_quick_draft_items",
+        "update_quick_draft_item"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 15,
+        "mutations": 15,
+        "offlineOrQueue": 1
+      }
+    },
+    {
+      "id": "CAPSURF-06586B87FCA4",
+      "capability": "media_and_attachments",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ImageCache.swift",
+      "sourceHash": "e36d8e90c8a984d7649f8830aa13ce6a0017cf4cca9e3bd605d622de36082ea3",
+      "lineCount": 113,
+      "declaredSurfaceNames": [
+        "ImageCache",
+        "PlatformImageDecoder",
+        "PreparedPlatformImage",
+        "cacheCost",
+        "decode",
+        "image",
+        "store"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 17
+      }
+    },
+    {
+      "id": "CAPSURF-A6162BC6046B",
+      "capability": "media_and_attachments",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ImageThumbnailGenerator.swift",
+      "sourceHash": "b4dedfec0d78f8a9b4672baf1d684f985c1f75da0adeaabec7e98d1762c2ab0e",
+      "lineCount": 102,
+      "declaredSurfaceNames": [
+        "ImageThumbnailGenerator",
+        "ThumbnailSize",
+        "generateThumbnailData",
+        "thumbnailPath",
+        "thumbnailPaths"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-6EB56A9100C3",
+      "capability": "media_and_attachments",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/MediaService.swift",
+      "sourceHash": "34ccb11699adde6069e8d95b8e49f0ea42b34441af9cbb696cf1f57db78a9750",
+      "lineCount": 124,
+      "declaredSurfaceNames": [
+        "FirebaseStorageUploader",
+        "MediaService",
+        "StorageUploading",
+        "delete",
+        "deleteImage",
+        "putData",
+        "uploadData",
+        "uploadImage",
+        "uploadPath",
+        "uploadThumbnails"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 4,
+        "offlineOrQueue": 1
+      }
+    },
+    {
+      "id": "CAPSURF-8A935E590458",
+      "capability": "media_and_attachments",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift",
+      "sourceHash": "6f9c45446c35741416f43bbe7706ef535833b049d98c6edcf7dc91ab32a3b1d7",
+      "lineCount": 383,
+      "declaredSurfaceNames": [
+        "MediaUploadQueue",
+        "UpdateType",
+        "UploadMetadata",
+        "decode",
+        "deleteUploadedObjects",
+        "destinationExists",
+        "encode",
+        "enqueue",
+        "ensureDirectory",
+        "loadEntries",
+        "localImageURL",
+        "pendingUploadIds",
+        "processEntry",
+        "processQueue",
+        "recordFailure",
+        "refreshCounts",
+        "removeFailedUpload",
+        "removeFiles",
+        "retryFailed",
+        "retryFailedUpload",
+        "saveMetadata",
+        "uploadThumbnails",
+        "writeBackURL"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 2,
+        "mutations": 3,
+        "offlineOrQueue": 35
+      }
+    },
+    {
+      "id": "CAPSURF-6AF81DAE53D0",
+      "capability": "media_and_attachments",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/StorageURLResolver.swift",
+      "sourceHash": "3e265143b0edf61b1d4685e4fc1088b6af6fd35ef058f37560ff3e79c3b54930",
+      "lineCount": 39,
+      "declaredSurfaceNames": [
+        "StorageURLResolver",
+        "resolve"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 8
+      }
+    },
+    {
+      "id": "CAPSURF-D4D2CD9DBB10",
+      "capability": "media_and_attachments",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/storage.ts",
+      "sourceHash": "799461d53d57c1a2199766e4d100c009515c4f55760890a2414fdcb9986dfbb5",
+      "lineCount": 101,
+      "declaredSurfaceNames": [
+        "BUCKET_NAME",
+        "copyStorageObject",
+        "deleteFromStorage",
+        "storageDownloadUrl",
+        "storagePathFromUrl",
+        "uploadToStorage",
+        "uploadVerifiedToStorage"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-E72071DBC337",
+      "capability": "media_and_attachments",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/attachment-primary.ts",
+      "sourceHash": "3713873a9d22bcc3dbd4a03b730f99d2bd0a474f3bd3a22aa51bd0f08f27cd2e",
+      "lineCount": 14,
+      "declaredSurfaceNames": [
+        "normalizePrimaryAttachments"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-3330B6FD5A68",
+      "capability": "media_and_attachments",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/item-image-storage.ts",
+      "sourceHash": "aabdda2d236453f53845086d516b390afdc8758de3961f69e88ef6c0e5f52235",
+      "lineCount": 121,
+      "declaredSurfaceNames": [
+        "CopiedItemImages",
+        "ItemImageStorageOps",
+        "cleanupCopiedItemImages",
+        "copyAttachmentsToItemNamespace"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-BB34B27B541A",
+      "capability": "media_and_attachments",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/item-images.ts",
+      "sourceHash": "36d1b8667de0ceb952914a42f0d11c3e477c5d418c30c6e952a4e718332aeea6",
+      "lineCount": 163,
+      "declaredSurfaceNames": [
+        "ItemImageOperationResult",
+        "attachmentNamespaceWarnings",
+        "attachmentStorageUrls",
+        "imageOperationResult",
+        "insertAttachment",
+        "isPathOwnedByItem",
+        "itemStorageNamespace",
+        "orderedWithPrimary",
+        "partitionAttachmentStorageObjects",
+        "removeAttachment",
+        "reorderAttachments"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 1,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-D7B37EA0483A",
+      "capability": "media_and_attachments",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/thumbnail.ts",
+      "sourceHash": "0a09f913149176f1fd7526706f4d1ac6db0cd34fa95cfce62e4d7d8881215935",
+      "lineCount": 53,
+      "declaredSurfaceNames": [
+        "ThumbnailResult",
+        "generateThumbnails",
+        "thumbnailPath"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-2208AFCA9830",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirebaseEmulatorConfig.swift",
+      "sourceHash": "206b968d6b69ccc497679731899df28a7adf803a0a05d2bf6f14a47b73854d2a",
+      "lineCount": 45,
+      "declaredSurfaceNames": [
+        "FirebaseEmulatorConfig",
+        "configureIfEnabled"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 2
+      }
+    },
+    {
+      "id": "CAPSURF-9489B0032700",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "sourceHash": "22199f42e189856c857b0f9f4a4207c96ff99b650c5398336162655b82f8e529",
+      "lineCount": 441,
+      "declaredSurfaceNames": [
+        "FirestoreDecodedListenerRegistration",
+        "FirestoreDocumentDecoder",
+        "FirestoreIncrementalSnapshotState",
+        "FirestoreListenerGate",
+        "FirestoreRepository",
+        "FirestoreSnapshotChange",
+        "FirestoreSnapshotDecodeQueue",
+        "FirestoreSnapshotReduction",
+        "FirestoreUncheckedSendable",
+        "apply",
+        "async",
+        "cancel",
+        "create",
+        "decode",
+        "delete",
+        "diagnosticKind",
+        "get",
+        "incrementalChanges",
+        "list",
+        "newDocumentId",
+        "remove",
+        "snapshotFlags",
+        "subscribe",
+        "update",
+        "writeMerged"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 6,
+        "reads": 3,
+        "mutations": 8,
+        "offlineOrQueue": 20
+      }
+    },
+    {
+      "id": "CAPSURF-6E5F6EAFF883",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift",
+      "sourceHash": "4a2452cb3b30a8f4fb8704da7ce0d48d93d718ecb3a42bbe87bc448c574c43ad",
+      "lineCount": 84,
+      "declaredSurfaceNames": [
+        "BatchWriting",
+        "FirestoreBatchWriter",
+        "commit",
+        "deleteDocument",
+        "documentExists",
+        "setData",
+        "setDataAutoId",
+        "stringField",
+        "updateData"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 2,
+        "mutations": 9,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-AAE32021738A",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/RepositoryProtocol.swift",
+      "sourceHash": "ecf8e8bdfdd712ca47b505a4f478a57a1d538251b36ad1b5b1142c910c19d3fe",
+      "lineCount": 16,
+      "declaredSurfaceNames": [
+        "Repository",
+        "create",
+        "delete",
+        "get",
+        "list",
+        "subscribe",
+        "update"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 3,
+        "reads": 0,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-C52F1FD8A983",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/config.ts",
+      "sourceHash": "21b090b9bd5e1219c30ae577294c06b4c1ad18e219bf20224b57e3cee07e9b6f",
+      "lineCount": 8,
+      "declaredSurfaceNames": [
+        "ACCOUNT_ID",
+        "USER_UID"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-33934129DB02",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/context.ts",
+      "sourceHash": "055ff66fd27a422406dc680d8c9c00873cac361f80077640e07ff06eaf2be2bb",
+      "lineCount": 52,
+      "declaredSurfaceNames": [
+        "RequestContext",
+        "getAccountId",
+        "getActiveAccountId",
+        "getUid",
+        "requestContext",
+        "setActiveAccountId"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-A379AECA88FB",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/firebase.ts",
+      "sourceHash": "1537fd6e424d7b9aeb580b612977d7c4c6c0401235665dece18e70f8d978912c",
+      "lineCount": 45,
+      "declaredSurfaceNames": [
+        "initFirebase"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-C6CA65EAAF8D",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/http.ts",
+      "sourceHash": "247270aa950cdfbf6b9eed15757242ae89de7b73329747e6e705edc014c2c7ff",
+      "lineCount": 154,
+      "declaredSurfaceNames": [],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 4,
+        "mutations": 2,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-E8F7ED71D93A",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/index.ts",
+      "sourceHash": "3cbb9ecd40170575856baf31520b0f256c46116e880c1bf50cad8d9d31092977",
+      "lineCount": 23,
+      "declaredSurfaceNames": [],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-A2B6F691FF2E",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/server.ts",
+      "sourceHash": "625eb94811929c12ce27c4b006d07dfaa7def9252a712fe2dc20fc45ef64b32b",
+      "lineCount": 81,
+      "declaredSurfaceNames": [
+        "SERVER_INSTRUCTIONS",
+        "SERVER_VERSION",
+        "createLedgerServer"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 1
+      }
+    },
+    {
+      "id": "CAPSURF-2CAC62C341EE",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/schema.ts",
+      "sourceHash": "9fd1c08c6e24a2ca43f171fbc0de877f3d28f7b52b994321883abc45a441ee20",
+      "lineCount": 232,
+      "declaredSurfaceNames": [
+        "describe_schema",
+        "registerSchemaTools",
+        "schema"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 2
+      }
+    },
+    {
+      "id": "CAPSURF-E0D43AB307CC",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/server-info.ts",
+      "sourceHash": "1d8fc0ae3566c1be087b49330b316707a2e9aadce3ce4070857afda00f405384",
+      "lineCount": 86,
+      "declaredSurfaceNames": [
+        "SERVER_DEPRECATIONS",
+        "SERVER_FEATURES",
+        "SERVER_VERSION",
+        "registerServerInfoTools",
+        "server-info",
+        "server_info"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-B4E6A5972565",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/types.ts",
+      "sourceHash": "83ee594b3b2faf3fd35fb7ed44eb8d638b37ab53bbf2745830ca5ec45aa8a951",
+      "lineCount": 341,
+      "declaredSurfaceNames": [
+        "AttachmentRef",
+        "BudgetCategory",
+        "BudgetCategoryMetadata",
+        "BudgetSummaryCategory",
+        "Checklist",
+        "ChecklistItem",
+        "Discount",
+        "FeeInstallment",
+        "ImageCheckmark",
+        "Invoice",
+        "InvoiceLine",
+        "InvoiceLineSign",
+        "InvoiceLineSourceType",
+        "Item",
+        "LineageEdge",
+        "Project",
+        "ProjectBudgetCategory",
+        "ProjectBudgetSummary",
+        "ProjectNote",
+        "ProtoItem",
+        "ProtoItemAssignmentHint",
+        "ProtoItemCaptureContext",
+        "ProtoItemExtraction",
+        "ProtoItemStatus",
+        "Space",
+        "Transaction"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-00414EA2B411",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/enums.ts",
+      "sourceHash": "84d9313578b8e0c5835c1c67e02e922f52e4b35a89fa76341c3e41705ef74ddf",
+      "lineCount": 204,
+      "declaredSurfaceNames": [
+        "CategoryType",
+        "ENUMS",
+        "EnumSpec",
+        "IngestionStatus",
+        "InventorySaleDirection",
+        "InvoiceStatus",
+        "ItemStatus",
+        "MovementKind",
+        "NormalizedTransactionType",
+        "QuickDraftAssignmentHint",
+        "QuickDraftCaptureContext",
+        "QuickDraftItemStatus",
+        "ReimbursementType",
+        "SystemTransactionType",
+        "TransactionStatus",
+        "TransactionType",
+        "WritableTransactionType",
+        "categoryTypes",
+        "ingestionStatuses",
+        "inventorySaleDirections",
+        "invoiceStatuses",
+        "isReturnTransactionType",
+        "itemStatuses",
+        "legacyTransactionTypes",
+        "movementKinds",
+        "normalizeTransactionType",
+        "quickDraftAssignmentHints",
+        "quickDraftCaptureContexts",
+        "quickDraftItemStatuses",
+        "reimbursementTypes",
+        "systemTransactionTypes",
+        "transactionStatuses",
+        "transactionTypes",
+        "writableTransactionTypes"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-DAB760104CEE",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/errors.ts",
+      "sourceHash": "119d9c76c6521384f14425d3266ebd4192407f3ddb18780de89634a1a1c60bd6",
+      "lineCount": 94,
+      "declaredSurfaceNames": [
+        "ErrorCode",
+        "ToolErrorInput",
+        "ToolErrorResponse",
+        "notFound",
+        "requireNonEmptyNote",
+        "toolError",
+        "validation"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 6
+      }
+    },
+    {
+      "id": "CAPSURF-9569EFF075EE",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/format.ts",
+      "sourceHash": "10d015c584f0fe8175e58b3a6b8db8275eed4c3a60042109c9895fabb477e7b6",
+      "lineCount": 24,
+      "declaredSurfaceNames": [
+        "formatCents",
+        "formatDate"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-69B08099B8DF",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/projections.ts",
+      "sourceHash": "be53a9d84b4f448b63be4185bcc8248bc2b08973e8c2c724cd9cab08b81ebfa9",
+      "lineCount": 214,
+      "declaredSurfaceNames": [
+        "CappedResponse",
+        "ProjectionMode",
+        "ProjectionModeValue",
+        "RESPONSE_SIZE_HARD_CEILING_BYTES",
+        "RESPONSE_SIZE_LIMIT_BYTES",
+        "ResponseLimitArg",
+        "asToolResponse",
+        "capResponse",
+        "invoiceSummary",
+        "itemSummary",
+        "pickFields",
+        "projectSummary",
+        "quickDraftItemSummary",
+        "transactionSummary"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-11444B9842C5",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/query.ts",
+      "sourceHash": "42bb7010bb442105135751773acf95fbf9d6fbf2ca1048d7fe6cc1f05ce02220",
+      "lineCount": 73,
+      "declaredSurfaceNames": [
+        "accountCollection",
+        "accountPath",
+        "getDoc",
+        "getDocs",
+        "queryDocs",
+        "subcollection"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 7,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-5E757BAB490F",
+      "capability": "platform_transport_and_legacy_persistence",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/telemetry.ts",
+      "sourceHash": "4a4453e514479bab42d4a3ca57a93c3b25224ce385d9a8ea914f89ef30c872a9",
+      "lineCount": 99,
+      "declaredSurfaceNames": [
+        "ToolCallLog",
+        "withTelemetry"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-A3AB0F29E150",
+      "capability": "projects_and_clients",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectNotesService.swift",
+      "sourceHash": "afd573eba8917c6185890fb98ff0a3b1d7cf6366efef4b6d472d5315b93bf41c",
+      "lineCount": 43,
+      "declaredSurfaceNames": [
+        "ProjectNotesService",
+        "addProjectNote",
+        "deleteProjectNote",
+        "repo",
+        "subscribeToProjectNotes",
+        "updateProjectNote"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-E1A771F6A409",
+      "capability": "projects_and_clients",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectService.swift",
+      "sourceHash": "40ea1f4de37aad88ef70c926dec9b41800d0586a8ea4cd565a7b4217f0928d65",
+      "lineCount": 39,
+      "declaredSurfaceNames": [
+        "ProjectService",
+        "createProject",
+        "deleteProject",
+        "getProject",
+        "repo",
+        "subscribeToProject",
+        "subscribeToProjects",
+        "updateProject"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 4,
+        "reads": 1,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-5B59D74F6B13",
+      "capability": "projects_and_clients",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/ProjectNotesServiceProtocol.swift",
+      "sourceHash": "87ef82c148f9a3113605ef8a1cfe6039fdc6918e6e4f4ebc356fcb1781c652bc",
+      "lineCount": 9,
+      "declaredSurfaceNames": [
+        "ProjectNotesServiceProtocol",
+        "addProjectNote",
+        "deleteProjectNote",
+        "subscribeToProjectNotes",
+        "updateProjectNote"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 1,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-27CA6EAC7092",
+      "capability": "projects_and_clients",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/ProjectServiceProtocol.swift",
+      "sourceHash": "b973460be04c8f08373f6815e48dbed7332309d98da838cf66daaf2fbbc09ebc",
+      "lineCount": 11,
+      "declaredSurfaceNames": [
+        "ProjectServiceProtocol",
+        "createProject",
+        "deleteProject",
+        "getProject",
+        "subscribeToProject",
+        "subscribeToProjects",
+        "updateProject"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-7774C2CE6D09",
+      "capability": "projects_and_clients",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/project-notes.ts",
+      "sourceHash": "3af3b9a85cde6678d1bbc195c3202e173b1ae44c717187111ad25b844ec3289c",
+      "lineCount": 73,
+      "declaredSurfaceNames": [
+        "add_project_note",
+        "list_project_notes",
+        "registerProjectNoteTools",
+        "search_project_notes"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 3,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-8FC7F6247E2F",
+      "capability": "projects_and_clients",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "sourceHash": "9c36798b417be1571d10e06ed297f3fb2a9b8e3fd703ce576c5f02488077c48d",
+      "lineCount": 240,
+      "declaredSurfaceNames": [
+        "archive_project",
+        "create_project",
+        "get_project",
+        "get_project_budget",
+        "list_projects",
+        "registerProjectTools",
+        "update_project"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 13,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-ADD33B4FDA16",
+      "capability": "projects_and_clients",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/notes.ts",
+      "sourceHash": "245633d750e436ad9fe35ab6db5702e0868d8265672f2fc181473df103b16762",
+      "lineCount": 124,
+      "declaredSurfaceNames": [
+        "appendDurableAiAuditLine",
+        "appendOrReviseAiAuditLine",
+        "tagNotesAsAi",
+        "todayString"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-14F6F6559251",
+      "capability": "reporting_search_and_cross_domain_queries",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/resources/index.ts",
+      "sourceHash": "7730512729db61c94bfd6e82c0f5238a9835916bd1f87b377da8e7c5af03d373",
+      "lineCount": 157,
+      "declaredSurfaceNames": [
+        "all-projects",
+        "budget-categories",
+        "inventory-summary",
+        "project-budget",
+        "project-detail",
+        "registerResources"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 12,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-917C20FEDA6A",
+      "capability": "reporting_search_and_cross_domain_queries",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "sourceHash": "80c72e19bd80e97da4667c1dffa049bf013df9049159383a3a13ba28ca2a11e6",
+      "lineCount": 251,
+      "declaredSurfaceNames": [
+        "budget_variance_report",
+        "inventory_summary",
+        "items_needing_attention",
+        "project_health",
+        "registerAnalyticsTools",
+        "spending_by_vendor"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 15,
+        "mutations": 2,
+        "offlineOrQueue": 4
+      }
+    },
+    {
+      "id": "CAPSURF-B4D4B0CAEF8C",
+      "capability": "reporting_search_and_cross_domain_queries",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/bulk-getters.ts",
+      "sourceHash": "eb4c3821b55d08fb1a4af754e5302822a9fa515a30e075cd00c2dafbaf7ab599",
+      "lineCount": 139,
+      "declaredSurfaceNames": [
+        "get_items",
+        "get_projects",
+        "get_transactions",
+        "registerBulkGetterTools"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 4,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-4A73B044281F",
+      "capability": "reporting_search_and_cross_domain_queries",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "sourceHash": "665525a014015069436ab6807c69fea77b55055c16dcc9b81c276135894cf1e0",
+      "lineCount": 406,
+      "declaredSurfaceNames": [
+        "create_transaction_with_items",
+        "reconcile_transaction",
+        "registerCompositeTools",
+        "triage_inbox"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 7,
+        "mutations": 4,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-6B3872A8E6FB",
+      "capability": "reporting_search_and_cross_domain_queries",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/search.ts",
+      "sourceHash": "4fe40d361cef314f7946b8fecdb36b2ccff39aacc6fe4591bd1f59915e3ba926",
+      "lineCount": 125,
+      "declaredSurfaceNames": [
+        "amountMatch",
+        "itemMatches",
+        "normalizedSKU",
+        "quickDraftItemMatches",
+        "textMatch",
+        "transactionMatches"
+      ],
+      "coupling": {
+        "firebase": false,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-850F643150CE",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountPresetsService.swift",
+      "sourceHash": "b3fef3b82f3af9227522c6877c244170a48e323d0055974b41261f6fadaa6ef3",
+      "lineCount": 10,
+      "declaredSurfaceNames": [
+        "AccountPresetsService",
+        "initializeDefaults"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-AFBB07058144",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/BudgetCategoriesService.swift",
+      "sourceHash": "9255a1885508c3d7d2a89e24d8a7fca915c82bfd9fbe101d45436e096aa985d9",
+      "lineCount": 25,
+      "declaredSurfaceNames": [
+        "BudgetCategoriesService",
+        "createBudgetCategory",
+        "deleteBudgetCategory",
+        "repo",
+        "subscribeToBudgetCategories",
+        "updateBudgetCategory"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-BAFED6656104",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectBudgetCategoriesService.swift",
+      "sourceHash": "8a7ad86378075ada40cadc84e152caca087453f0ae78d02d0fc1ff0252ac4249",
+      "lineCount": 257,
+      "declaredSurfaceNames": [
+        "FeeInstallmentsService",
+        "FeeInstallmentsServiceError",
+        "ProjectBudgetCategoriesService",
+        "collectionPath",
+        "collectionRef",
+        "createFeeInstallment",
+        "deleteFeeInstallment",
+        "deleteProjectBudgetCategory",
+        "fieldsForWrite",
+        "repo",
+        "setProjectBudgetCategory",
+        "subscribeToFeeInstallments",
+        "subscribeToProjectBudgetCategories",
+        "updateFeeInstallment",
+        "validate"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 4,
+        "reads": 0,
+        "mutations": 5,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-093E5E4F8D20",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift",
+      "sourceHash": "02fbcdfba4f185bfe392440c1d5b79173ef893ff468e554b6ff865223c566851",
+      "lineCount": 66,
+      "declaredSurfaceNames": [
+        "ProjectPreferencesService",
+        "subscribeToAllProjectPreferences",
+        "subscribeToProjectPreferences",
+        "updatePinnedCategories"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 4,
+        "reads": 0,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-9CF3A4F84903",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/BudgetServiceProtocols.swift",
+      "sourceHash": "10569e9d7197712d0ed725a1fbc3960a72d7663264105ad713df7d8da8155089",
+      "lineCount": 69,
+      "declaredSurfaceNames": [
+        "AccountMembersServiceProtocol",
+        "AccountsServiceProtocol",
+        "BudgetCategoriesServiceProtocol",
+        "FeeInstallmentsServiceProtocol",
+        "ProjectBudgetCategoriesServiceProtocol",
+        "createAccount",
+        "createBudgetCategory",
+        "createFeeInstallment",
+        "deleteBudgetCategory",
+        "deleteFeeInstallment",
+        "deleteProjectBudgetCategory",
+        "getAccount",
+        "listMembershipsForUser",
+        "setProjectBudgetCategory",
+        "subscribeToAccount",
+        "subscribeToBudgetCategories",
+        "subscribeToFeeInstallments",
+        "subscribeToMember",
+        "subscribeToProjectBudgetCategories",
+        "updateAccess",
+        "updateAccount",
+        "updateBudgetCategory",
+        "updateFeeInstallment"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 5,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-2E174120940E",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/SettingsServiceProtocols.swift",
+      "sourceHash": "dc1dd5cf63552b017c9773778b7d1c08267fa15b9ef9f70a2a06848a223d5fa2",
+      "lineCount": 42,
+      "declaredSurfaceNames": [
+        "AccountPresetsServiceProtocol",
+        "InvitesServiceProtocol",
+        "SpaceTemplatesServiceProtocol",
+        "VendorDefaultsServiceProtocol",
+        "addVendorIfMissing",
+        "create",
+        "createFromSpace",
+        "delete",
+        "initializeDefaults",
+        "revoke",
+        "save",
+        "subscribe",
+        "update"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 3,
+        "reads": 0,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-4637466F7F73",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/SpaceTemplatesService.swift",
+      "sourceHash": "75590df8307714e6d945a0064126c43f2fa24a7e5db443061368a5f7f4e28613",
+      "lineCount": 34,
+      "declaredSurfaceNames": [
+        "SpaceTemplatesService",
+        "create",
+        "createFromSpace",
+        "delete",
+        "repo",
+        "subscribe",
+        "update"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 5,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-17BB6ABA1400",
+      "capability": "settings_and_reference_data",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift",
+      "sourceHash": "8854a169c1bde16af4ae76e157d911147859efbae8c0bae86f03126effbad316",
+      "lineCount": 84,
+      "declaredSurfaceNames": [
+        "VendorDefaultsService",
+        "addVendorIfMissing",
+        "cleanedVendorName",
+        "displayVendorOptions",
+        "documentRef",
+        "initializeDefaults",
+        "normalizedVendorName",
+        "save",
+        "subscribe"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 2,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-3D6443DA0A90",
+      "capability": "spaces_and_review",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/SpacesServiceProtocol.swift",
+      "sourceHash": "14712a8b06f6ffc197fb3dbe02eceda470dbea5e2cc3a5988f346b54e6d9dda6",
+      "lineCount": 11,
+      "declaredSurfaceNames": [
+        "SpacesServiceProtocol",
+        "createSpace",
+        "deleteSpace",
+        "getSpace",
+        "subscribeToSpace",
+        "subscribeToSpaces",
+        "updateSpace"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-C11974860D78",
+      "capability": "spaces_and_review",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/SpaceReviewNotesService.swift",
+      "sourceHash": "6df4598a8e5f6494b389eba1f765aa9b8775a7faa7db30caed8218bc529bd5b3",
+      "lineCount": 41,
+      "declaredSurfaceNames": [
+        "SpaceReviewNotesService",
+        "add",
+        "delete",
+        "repo",
+        "subscribe",
+        "update"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 5,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-8494F171316C",
+      "capability": "spaces_and_review",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/SpacesService.swift",
+      "sourceHash": "ebab43c680f9d4ace39927a3caa14f803ec4b51b29205071442ca28ee58dbdde",
+      "lineCount": 49,
+      "declaredSurfaceNames": [
+        "SpacesService",
+        "createSpace",
+        "deleteSpace",
+        "getSpace",
+        "repo",
+        "subscribeToSpace",
+        "subscribeToSpaces",
+        "updateSpace"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 6,
+        "reads": 1,
+        "mutations": 3,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-D391DC704D1F",
+      "capability": "spaces_and_review",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "sourceHash": "610d0dd2f61367e17a86d435b053fca2d359d217915280009c0b19816fdf3fdc",
+      "lineCount": 307,
+      "declaredSurfaceNames": [
+        "attach_space_image",
+        "create_space",
+        "detach_space_image",
+        "get_space",
+        "list_spaces",
+        "registerSpaceTools",
+        "update_space"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 12,
+        "mutations": 5,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-155A4AB80AC9",
+      "capability": "spaces_and_review",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/space-assignments.ts",
+      "sourceHash": "182ae4444ebd297d07c301392e29e52284596e73980d1626e2c6e2f65a2d03a1",
+      "lineCount": 164,
+      "declaredSurfaceNames": [
+        "DestinationSpaceAssignment",
+        "DetachedSpaceAssignment",
+        "SpaceAssignmentIssue",
+        "SpaceCache",
+        "detachedSpaceAssignment",
+        "validateDestinationSpaceAssignments",
+        "validateItemSpaceTransition"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 3,
+        "mutations": 2,
+        "offlineOrQueue": 15
+      }
+    },
+    {
+      "id": "CAPSURF-57FFA664E36B",
+      "capability": "transactions_receipts_and_corrections",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/TransactionsServiceProtocol.swift",
+      "sourceHash": "0134ba4e997271376cd6de3162cab4fe6f329997009570e62353a22db3a4449b",
+      "lineCount": 11,
+      "declaredSurfaceNames": [
+        "TransactionsServiceProtocol",
+        "createTransaction",
+        "deleteTransaction",
+        "getTransaction",
+        "subscribeToTransaction",
+        "subscribeToTransactions",
+        "updateTransaction"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 2,
+        "reads": 0,
+        "mutations": 0,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-1178D1E9F474",
+      "capability": "transactions_receipts_and_corrections",
+      "subsystem": "swift",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/TransactionsService.swift",
+      "sourceHash": "cba2841cbfeef51b58409beeae23cc8afb171060d04a048e1a72c4640e373e26",
+      "lineCount": 272,
+      "declaredSurfaceNames": [
+        "TransactionDeletionError",
+        "TransactionDeletionNotice",
+        "TransactionsService",
+        "createTransaction",
+        "deleteTransaction",
+        "deletionNotice",
+        "extraFields",
+        "failureNotice",
+        "getTransaction",
+        "isRealCategory",
+        "moveToInventoryCorrectionFields",
+        "newTransactionId",
+        "normalizedAttachments",
+        "repo",
+        "subscribeToTransaction",
+        "subscribeToTransactions",
+        "updateTransaction",
+        "validateCategory"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 6,
+        "reads": 2,
+        "mutations": 12,
+        "offlineOrQueue": 0
+      }
+    },
+    {
+      "id": "CAPSURF-DFECB1787DB7",
+      "capability": "transactions_receipts_and_corrections",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "sourceHash": "645c14e73a6b7db877c308dc99343d41d46c0ca013ac5ffd0032c33aad1bf670",
+      "lineCount": 772,
+      "declaredSurfaceNames": [
+        "correct_transaction_and_its_items",
+        "registerTransactionItemCorrectionTools"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": false
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 7,
+        "mutations": 8,
+        "offlineOrQueue": 2
+      }
+    },
+    {
+      "id": "CAPSURF-868A3F35EBC3",
+      "capability": "transactions_receipts_and_corrections",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "sourceHash": "6e22d7f8af6c012f5ba59ac47766146ca9f5c52fc831c4225b64cfd4419b8ca1",
+      "lineCount": 1381,
+      "declaredSurfaceNames": [
+        "attach_transaction_file",
+        "bulk_update_transactions",
+        "cancel_transaction",
+        "create_transaction",
+        "delete_transaction",
+        "delete_transactions",
+        "detach_transaction_file",
+        "get_transaction",
+        "list_transactions",
+        "registerTransactionTools",
+        "search_transactions",
+        "update_transaction"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": true,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 20,
+        "mutations": 24,
+        "offlineOrQueue": 9
+      }
+    },
+    {
+      "id": "CAPSURF-B5A85B82D135",
+      "capability": "transactions_receipts_and_corrections",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "sourceHash": "a6e6458b6a71165c845d70d1864e6a17bb64635072d384aecf85aad29ec03de4",
+      "lineCount": 390,
+      "declaredSurfaceNames": [
+        "DeletionBlocker",
+        "MAX_TRANSACTION_DELETION_BATCH_SIZE",
+        "TransactionDeletionChecks",
+        "TransactionDeletionPreflight",
+        "publicDeletionPreflight",
+        "readTransactionDeletionPreflight",
+        "readTransactionDeletionPreflights"
+      ],
+      "coupling": {
+        "firebase": true,
+        "network": false,
+        "media": true
+      },
+      "signals": {
+        "observations": 0,
+        "reads": 6,
+        "mutations": 1,
+        "offlineOrQueue": 0
+      }
+    }
+  ]
+}

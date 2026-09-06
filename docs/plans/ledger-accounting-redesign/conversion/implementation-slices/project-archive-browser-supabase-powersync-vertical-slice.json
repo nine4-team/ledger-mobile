@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-archive-browser-supabase-powersync-vertical-slice",
+  "title": "Archive one active Project offline through the isolated Project browser",
+  "kind": "product",
+  "status": "implemented",
+  "owner": "Project Archive Browser Vertical Slice",
+  "surfaceIds": [
+    "CONFIG-20D251EF21F6",
+    "CONFIG-78696A3C79AA",
+    "CONFIG-CAB6A5DAD1C0",
+    "SWIFT-0753297CA29A",
+    "SWIFT-4F36B1F525D0",
+    "SWIFT-53B8C9C37D3F",
+    "SWIFT-D58BDD1F45EE",
+    "TEST-475355568D74",
+    "TEST-EAAB5CD74000"
+  ],
+  "requirements": [
+    {
+      "id": "PARCHIVEBROWSER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One explicit confirmation bound to the currently selected active Project and its observed revision archives that Project: cancel makes no call; changed selection, lifecycle or revision invalidates stale confirmation; accepted local evidence moves the stable Project from Active to Archived immediately, including offline.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-001", "PARCHIVEBROWSER-TEST-002", "PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-013"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Archiving",
+      "invariant": "Archive preserves every Project relationship and all transactions, Items, Spaces and budget allocations; the target mutation changes only Project lifecycle, revision and server update time plus immutable operation evidence, and it never deletes or mutates Client, category, note, attachment/media, Invoice or accounting/history data.",
+      "decisionIds": ["O-023", "O-024", "O-025"],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-001", "PARCHIVEBROWSER-TEST-002", "PARCHIVEBROWSER-TEST-003", "PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-007", "PARCHIVEBROWSER-TEST-011", "PARCHIVEBROWSER-TEST-013"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Archive is a distinct history-preserving command, not restore/unarchive, delete, rename, details edit, Client reassignment or media mutation; O-024/O-025 and O-023 remain unselected because those behaviors are absent.",
+      "decisionIds": ["O-023", "O-024", "O-025"],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-001", "PARCHIVEBROWSER-TEST-002", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-010"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-USE-CASE-001.md",
+      "section": "Frozen Boundary",
+      "invariant": "The verified ProjectArchiveIntent, ProjectArchiveUseCase, ArchiveProjectCommand, expected-revision precondition, fingerprint, one-call dispatch, receipt validation, cancellation and stable failures remain sole semantic owners; this slice composes them without a lifecycle Boolean or alternate operation contract.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-001", "PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-010"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Without network, acceptance atomically records the immutable operation, insert-only archive command and separate local-only lifecycle overlay in the encrypted Principal/Account database; immediate directory/detail evidence remains explicitly partial and survives close/reopen until rejection or qualifying authoritative readback.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-007", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-009", "PARCHIVEBROWSER-TEST-013"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Complex Offline Optimism",
+      "invariant": "Pending Project creation precedes archive FIFO. Transient upload failure retains exact work; durable rejection removes only its archive overlay; applied optimism remains until matching applied evidence plus authoritative archived readback at projected revision or newer authority permits cleanup, and stale readback never clears or resurrects optimism.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-003", "PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-007", "PARCHIVEBROWSER-TEST-009", "PARCHIVEBROWSER-TEST-013"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Conflict Policy",
+      "invariant": "The entire UInt64 expected revision remains exact command evidence without floating-point coercion. It must match the locked active Project revision; out-of-signed-range values cannot match physical rows, signed-bigint maximum cannot increment, and concurrent same-revision commands produce exactly one apply and one durable conflict. Rejection recovery requires refreshed current active evidence and an explicit new-OperationID retry; exact same-ID replay remains idempotent.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-001", "PARCHIVEBROWSER-TEST-002", "PARCHIVEBROWSER-TEST-003", "PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-007", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-011"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Command Authorization",
+      "invariant": "The trusted handler authenticates first, verifies exact actor, active Account membership and Project-management capability before subject/result disclosure, locks one Account/Project row, validates command/replay/lifecycle/revision, mutates only the allowed Project columns, and writes one immutable terminal result. Direct Project/result writes and unauthorized or cross-Account reads fail closed.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-002", "PARCHIVEBROWSER-TEST-003", "PARCHIVEBROWSER-TEST-004", "PARCHIVEBROWSER-TEST-005", "PARCHIVEBROWSER-TEST-011", "PARCHIVEBROWSER-TEST-012", "PARCHIVEBROWSER-TEST-013"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001.md",
+      "section": "Required Executable Proof",
+      "invariant": "Archive submission derives from one exact current selected active Project detail presentation and its locally observed revision. Represented partial/stale or cached content remains usable offline; waiting, absence, unavailable, uncached failure, archived, mismatched or stale-selection evidence makes zero calls. Existing atomic segments, order, readiness, false-empty truth, selection generation and directory/detail drainage remain unchanged.",
+      "decisionIds": [],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-006", "PARCHIVEBROWSER-TEST-007", "PARCHIVEBROWSER-TEST-008", "PARCHIVEBROWSER-TEST-009", "PARCHIVEBROWSER-TEST-010"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-REQ-010",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Work is confined to nine reserved leaves and exact frozen shared touchpoints in the isolated target worktree. When implementation adds runnable `.sql` CONFIG-CAB6A5DAD1C0, non-runnable `.sql.ready` CONFIG-062839A9903C must remain physically present as an inert retired marker with replacement evidence; the new identity must be registered by the authorized discovery-control touchpoint, discovered/classified/claimed, every test-owner path moved, and exactly one runnable pgTAP leaf plus the unchanged run-all command retained. It adds no restore/delete/rename/reassign/media mutation, new Project/child schema authority, new Sync stream, target MCP behavior, Auth choice, source transform, migration, hosted resource, Firebase change, production access, release or cutover authority; A-003/A-004 stay proposed.",
+      "decisionIds": ["D-026", "D-027", "A-003", "A-004", "A-007", "A-015", "A-016", "O-023", "O-024", "O-025"],
+      "verificationIds": ["PARCHIVEBROWSER-TEST-005", "PARCHIVEBROWSER-TEST-010", "PARCHIVEBROWSER-TEST-011", "PARCHIVEBROWSER-TEST-012", "PARCHIVEBROWSER-TEST-013"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse the verified Project archive operation/use case unchanged; provider and app types do not cross into LedgerTargetCore.",
+        "project-archive-v1 binds exact Operation, Account, actor, Project, finite capture time, one same-Project UInt64 expected revision and SHA-256 fingerprint and contains no lifecycle Boolean or unrelated field.",
+        "The Core-only browser archive model first captures an exact Project/revision confirmation, revalidates it before dispatch, invalidates changed evidence, admits no cancelled confirmation, owns one stable ambiguous-retry submission identity and exposes bounded local operation truth without treating local evidence as authorization."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Reuse spike_projects and immutable spike_operation_results, extending only the operation-result command/result/error vocabulary required for archive_project; create no second Project or child authority.",
+        "Physical Project revision remains positive signed bigint. Full UInt64 command evidence stays exact decimal/canonical JSON; values above signed maximum cannot match and signed maximum cannot increment.",
+        "The handler mutation set is only Project lifecycle active-to-archived, revision increment, server updated time and immutable terminal result. All other Project fields and every related row are preserved."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [
+        "One private search-path-pinned handler authorizes before OperationID/Project disclosure, validates canonical bytes/fingerprint and exact revision, then locks one exact Account/Project row in deterministic result/Project lock order.",
+        "Exact replay returns the immutable result; changed/cross-command reuse cannot rebind. Missing, inactive, stale/future/out-of-range/exhausted revision and permanent validation cases yield bounded durable outcomes only after non-enumerating scope authorization.",
+        "One valid apply changes only lifecycle, revision and update time atomically with its result; same-revision concurrency yields one apply and one conflict, with no external I/O or child/relationship mutation."
+      ],
+      "notApplicable": ""
+    },
+    "dataApiGrants": {
+      "items": [
+        "Expose one explicit security-invoker Project-archive RPC with authenticated execution only; anon/authenticated receive no direct Project or operation-result write privilege.",
+        "Private SECURITY DEFINER execution is revoked from PUBLIC/anon, performs explicit auth-first checks and has no app service-role path."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Reuse active-membership Account-scoped Project/result SELECT policies. An active Project manager may archive; a restricted same-Account member retains existing authorized reads but cannot call archive or directly write.",
+        "Revoked, anonymous, actor-mismatched and cross-Account callers cannot enumerate or mutate Project/result rows. No direct Project UPDATE policy is added.",
+        "Membership/capability/Project/result predicates use indexed exact scope paths and stable auth evaluation is hoisted where applicable."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Reuse existing Account-scoped Project and immutable operation-result streams unchanged; archive command/overlay rows never enter download streams as authority.",
+        "Existing directory/detail queries merge one exact archive overlay without changing provider order, readiness, source exhaustiveness, relationship completeness or authorization semantics.",
+        "Real authenticated Sync authorization/eviction remains required before A-004 advances."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Add one local-only pending Project archive overlay and one insert-only archive command. Acceptance commits operation/command/overlay atomically in encrypted Account storage without updating synchronized rows.",
+        "Pending creation then archive dispatches FIFO; exact replay resolves before current-effective-revision validation; invalid/stale/already-archived bases create no rows. Directory/detail immediately project the archived lifecycle as partial across encrypted restart.",
+        "Transient failure retains work. Durable rejection removes only the exact overlay and exposes refreshed active evidence; applied optimism awaits exact archived or newer authoritative readback; stale readback cannot clear or resurrect it.",
+        "Archive operation observation, browser observations and runtime shutdown obey race-safe cancellation/join/drain and no post-stop/old-generation mutation."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Archive preserves attachment references and bytes but owns no upload, detach, delete, retention or media mutation; O-023 remains open."
+    },
+    "appMcp": {
+      "items": [
+        "Extend only the isolated Project browser with an archive confirmation driven by current typed selection/detail evidence, exact cancellation/stale-confirmation refusal, one stable submission identity, exact operation-state labels and bounded archive diagnostic.",
+        "Immediate accepted optimism moves the stable-ID row Active to Archived while preserving upstream order and honest partial/readiness/false-empty state. Rejection restores current active evidence and permits only explicit refreshed-revision/new-ID retry.",
+        "Freeze source-level accessibility identifiers target-project-archive-action, target-project-archive-confirm, target-project-archive-cancel, target-project-archive-state, target-project-archive-diagnostic and target-project-archive-retry. Existing Project browsing identifiers remain unchanged.",
+        "The source archive_project MCP surface remains target_mapped across separate ArchiveProject/RestoreProject responsibilities. This browser slice adds no target MCP module or tool and does not permit independent archive semantics."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase snapshot/import/mapping/reconciliation. Future source Project/child import must preserve lifecycle and every relationship/history record separately."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Expose only stable bounded archive/application/provider codes, local operation state and synthetic test correlation; never log identities, names, command JSON, endpoint, token or key.",
+        "A later connected rehearsal measures upload retry/conflict/readback latency; permanent authorization loss for queued work remains a shared connected-phase gate."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The READY package contains only comment scaffolds, deterministic project membership and synchronized controls. After an exact independently reviewed green READY commit, retain `.sql.ready` CONFIG-062839A9903C physically as an inert retired marker with replacement evidence while runnable `.sql` CONFIG-CAB6A5DAD1C0 is registered, created, discovered, classified and claimed in the same synchronized implementation checkpoint. Exactly one runnable pgTAP leaf exists and the run-all command stays unchanged.",
+        "The implementation remains spike-prefixed/local-only in the isolated target app. Rollback is source reversion/disposal of synthetic local target data; Firebase and production remain untouched.",
+        "Restore, delete, rename, reassignment, media mutation, new child schemas, target MCP, hosted resources, migration, release and cutover are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PARCHIVEBROWSER-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveOperationTests.swift and LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PARCHIVEBROWSER-REQ-001", "PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-003", "PARCHIVEBROWSER-REQ-004", "PARCHIVEBROWSER-REQ-007"],
+      "expected": "Existing verified tests preserve exact archive-only identity, full UInt64 revision, fingerprint, receipt/cancellation/failure behavior and exclusion of restore/delete/reassignment/child/accounting inputs.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-001", "EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-002",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/project_archive_vertical_slice.test.sql",
+      "covers": ["PARCHIVEBROWSER-REQ-001", "PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-003", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-008"],
+      "expected": "A clean local reset proves exact active-to-archived mutation, revision/time behavior, signed boundaries and byte-identical preservation of every other Project field plus all represented Client/category/allocation/related evidence.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-003",
+      "kind": "handler_idempotency",
+      "owner": "supabase/tests/project_archive_vertical_slice.test.sql and scripts/test-local-project-archive-rpc.mjs",
+      "covers": ["PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-006", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-008"],
+      "expected": "Exact and lost-response replay return one immutable result; changed/cross-command reuse cannot rebind; parallel same-revision commands yield exactly one apply and one durable conflict without deadlock.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-004",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/project_archive_vertical_slice.test.sql and scripts/test-local-project-archive-rpc.mjs",
+      "covers": ["PARCHIVEBROWSER-REQ-008"],
+      "expected": "An authenticated active Project manager can archive one exact same-Account active Project and read its authorized Project and terminal-result rows.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-005",
+      "kind": "rls_negative",
+      "owner": "supabase/tests/project_archive_vertical_slice.test.sql and scripts/test-local-project-archive-rpc.mjs",
+      "covers": ["PARCHIVEBROWSER-REQ-008", "PARCHIVEBROWSER-REQ-010"],
+      "expected": "Restricted, revoked, anonymous, actor-mismatched and cross-Account callers cannot archive or directly mutate/enumerate unauthorized Project/results; authorization occurs before operation/subject disclosure.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-006",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift",
+      "covers": ["PARCHIVEBROWSER-REQ-001", "PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-004", "PARCHIVEBROWSER-REQ-005", "PARCHIVEBROWSER-REQ-006", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-009"],
+      "expected": "Atomic encrypted acceptance/replay/restart preserves exact command/overlay bytes; pending create precedes archive FIFO; directory/detail immediately show the same stable Project archived and partial without false empty/ready authority.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-007",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift",
+      "covers": ["PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-005", "PARCHIVEBROWSER-REQ-006", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-009"],
+      "expected": "Transient failure retains work; malformed linkage/results fail closed; durable rejection removes only exact optimism and restores refreshed active evidence; new-ID/current-revision retry succeeds; applied waits for exact archived/newer authority; stale readback and late evidence cannot clear or resurrect it.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-008",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift and scripts/check-target-environment.mjs",
+      "covers": ["PARCHIVEBROWSER-REQ-001", "PARCHIVEBROWSER-REQ-003", "PARCHIVEBROWSER-REQ-004", "PARCHIVEBROWSER-REQ-005", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-009"],
+      "expected": "Current active detail evidence derives an exact confirmation; cancel makes zero calls; changed selection/lifecycle/revision invalidates confirmation; all admissible unchanged offline states dispatch, all invalid/archived/stale-selection states make zero calls, simultaneous confirm makes one call, ambiguous retry is byte-identical, all six local states render, and conflict recovery requires refreshed evidence/new ID. Existing target MCP remains byte-unchanged and unregistered.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-009",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift and LedgerTarget runtime tests",
+      "covers": ["PARCHIVEBROWSER-REQ-005", "PARCHIVEBROWSER-REQ-006", "PARCHIVEBROWSER-REQ-009"],
+      "expected": "Operation observation terminates correctly before/after evidence; selection change, stop/restart and runtime close cancel/join all archive/browser streams, reject post-stop/noncooperative old-generation values and drain before database close.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-010",
+      "kind": "end_to_end",
+      "owner": "scripts/check-target-environment.mjs, scripts/supabase-conversion-ledger.mjs, focused Swift tests and both LedgerTarget staging builds",
+      "covers": ["PARCHIVEBROWSER-REQ-003", "PARCHIVEBROWSER-REQ-004", "PARCHIVEBROWSER-REQ-009", "PARCHIVEBROWSER-REQ-010"],
+      "expected": "Core-only model, thin adapter and exact source-level accessibility literals compile; existing Project order/readiness/selection/detail and both normal/failed cleanup paths remain; inline provider policy, target MCP, Firebase and excluded mutations are absent. The `.sql.ready` identity remains physically present as an inert retired marker with replacement evidence exactly when the runnable `.sql` identity is registered/classified/claimed, all owner paths move, exactly one runnable pgTAP leaf exists, and package.json retains run-all discovery. No interactive accessibility claim is made without UI tests.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-011",
+      "kind": "advisor",
+      "owner": "Supabase Postgres security, indexing, locking, numeric-precision and mutation-set review",
+      "covers": ["PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-007", "PARCHIVEBROWSER-REQ-008", "PARCHIVEBROWSER-REQ-010"],
+      "expected": "Review confirms least privilege, auth-first private handler, indexed exact scope/lock paths, deterministic lock order, bounded transaction, exact revision parsing/no wrap and no Project-related row mutation beyond the frozen set.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-012",
+      "kind": "sync_authorization",
+      "owner": "Future isolated authenticated PowerSync Project archive rehearsal",
+      "covers": ["PARCHIVEBROWSER-REQ-008", "PARCHIVEBROWSER-REQ-010"],
+      "expected": "A real scoped session receives only authorized Project/result rows; revocation removes future entitlement and unauthorized rows are absent locally while queued-work disposition follows separately approved policy.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PARCHIVEBROWSER-TEST-013",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PARCHIVEBROWSER-REQ-001", "PARCHIVEBROWSER-REQ-002", "PARCHIVEBROWSER-REQ-005", "PARCHIVEBROWSER-REQ-006", "PARCHIVEBROWSER-REQ-008", "PARCHIVEBROWSER-REQ-010"],
+      "expected": "The exact independently reviewed READY commit remains recorded, and the implementation checkpoint retains the inert marker while registering its runnable replacement; conversion, local Supabase, target/MCP, all Swift tests and both staging builds pass without hosted, Firebase, production or cutover behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Implemented locally from exact green READY commit 089dc562 and immutable Actions run 33961281661. Nine executable leaves now provide the browser confirmation/application flow, thin adapter, encrypted atomic PowerSync operation/command/overlay behavior, FIFO upload and exact reconciliation, scoped-user RPC, auth-first Postgres handler, 81-assertion pgTAP suite and disposable Data API verification. Runnable CONFIG-CAB6A5DAD1C0 is registered/discovered/classified/claimed; CONFIG-062839A9903C remains physically present, byte-identical and retired as its inert READY marker, and every test owner now names the runnable `.sql` leaf while package.json stays byte-unchanged. Root and independent executable review closed identity-enumeration, replay-binding, clock-regression, overlay-validation, selection/retry and observer-drainage defects; final review returned GO with no P0-P3. All 28 focused ProjectArchive tests and all 473 Swift tests in 80 suites pass; local pgTAP passes 123/123 overall and 81/81 for archive, database lint reports zero, the Data API runner and target checker pass, and both staging builds pass. Exact implementation commit 939d745319794936daf66832d5fec77f30b20762 passed all three immutable jobs in Actions run 33966132401. PARCHIVEBROWSER-TEST-012 remains planned for real isolated authenticated PowerSync authorization. O-023/O-024/O-025 stay excluded; A-003/A-004/A-007/A-015/A-016 remain unadvanced. No restore/delete/rename/reassign/media/target MCP/hosted/Firebase/migration/production/cutover behavior or authority is claimed."
+}

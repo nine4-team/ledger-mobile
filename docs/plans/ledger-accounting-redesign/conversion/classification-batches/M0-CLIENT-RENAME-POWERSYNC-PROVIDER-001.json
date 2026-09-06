@@ -1,0 +1,232 @@
+{
+  "batchId": "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001",
+  "title": "Target Client rename Supabase and PowerSync provider slice",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-CLIENT-RENAME-PROVIDER-001",
+    "EVID-CLIENT-RENAME-001",
+    "EVID-CLIENT-RENAME-USE-CASE-001",
+    "EVID-CLIENT-CORE-DETAILS-001",
+    "EVID-PROJECT-CORE-DETAILS-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-OPERATION-CORE-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-5ABC145B2FAF",
+      "acknowledgeSourceHash": "e2c09d388dc6c734c08351da3153476ccfcbd46e1a02e0c842de02b059603db1",
+      "currentBehavior": "Contains only the reviewed DRAFT contract for an encrypted PowerSync Client-rename store; it has no executable type, SQL, local mutation, upload or reconciliation behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-004"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only DRAFT scaffold. Existing shared provider files retain their current primary slices and are not duplicated here.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Offline Client rename acceptance and overlay reconciliation"],
+        "securityRequirements": ["Exact Account, actor, Operation, Client, contract, fingerprint and expected revision remain bound", "Only a command enters the upload queue; rename optimism remains local-only"],
+        "syncRequirements": ["Separate command and overlay records support pending-create FIFO, chained offline renames and exact authoritative readback cleanup"]
+      },
+      "migration": {
+        "rule": "Create no Firebase adapter or dual-write path; use only the isolated target database.",
+        "reconciliation": ["Applied optimism remains until exact or newer authoritative Client readback; rejection removes only the matching overlay"]
+      },
+      "verification": {
+        "tests": ["ClientRenamePowerSyncVerticalSliceTests"],
+        "acceptance": ["Implementation replaces this comment-only scaffold only after READY review and proves atomic encrypted restart/replay/chaining/reconciliation"]
+      }
+    },
+    {
+      "id": "SWIFT-5CB20A965406",
+      "acknowledgeSourceHash": "13255b9fdf010ea5b7ca3a39be692561e44eb3aef5046a1c56841c07ebb378a4",
+      "currentBehavior": "Contains only the reviewed DRAFT contract for a scoped-user Supabase Client-rename RPC adapter; it performs no network request.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only DRAFT scaffold; no endpoint or credential is embedded.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Swift Supabase Client rename RPC adapter"],
+        "securityRequirements": ["Only injected scoped-user authorization and a publishable key may be sent", "Exact terminal identity and fingerprint validation precede queue completion"],
+        "syncRequirements": ["Canonical command JSON travels as text so UInt64 revision evidence is never coerced through an imprecise numeric type"]
+      },
+      "migration": {
+        "rule": "Use only from a validated isolated target environment and authenticated target session.",
+        "reconciliation": ["Swift, MCP and Postgres consume byte-identical client-rename-v1 command evidence"]
+      },
+      "verification": {
+        "tests": ["ClientRenamePowerSyncVerticalSliceTests", "scripts/test-local-client-rename-rpc.mjs"],
+        "acceptance": ["Malformed credentials or mismatched results fail before local completion and no service-role path exists"]
+      }
+    },
+    {
+      "id": "SWIFT-6816C6E0F96A",
+      "acknowledgeSourceHash": "04171cd86ba08792967a334589d966812d62ac69d09fac3e668a2fbcb62a2186",
+      "currentBehavior": "Contains only the reviewed DRAFT boundary for an isolated staging Client-rename exercise; it defines no SwiftUI or runtime wiring.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only DRAFT scaffold. It cannot affect the Firebase app or claim production-quality Client-management UI.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Isolated target staging Client rename exercise"],
+        "securityRequirements": ["The permanent no-hosted-services boundary remains visible and no production identifier or credential is accepted"],
+        "syncRequirements": ["The exercise renders immediate partial Client and Project display from one optimistic rename and preserves Project revision"]
+      },
+      "migration": {
+        "rule": "No source application screen, Firebase service or production target is modified.",
+        "reconciliation": ["A current Project projection resolves the renamed Client display through stable ClientID without copying identity"]
+      },
+      "verification": {
+        "tests": ["ClientRenamePowerSyncVerticalSliceTests", "target staging builds"],
+        "acceptance": ["The isolated shell can exercise the use case after implementation without weakening environment isolation"]
+      }
+    },
+    {
+      "id": "TEST-77ABFEE573E1",
+      "acknowledgeSourceHash": "5373b887b621042e955748fa132f1a6f03375c52580651e1de18dc4762fe0520",
+      "currentBehavior": "Contains only the reviewed DRAFT test inventory for encrypted Client rename acceptance, restart, replay, ordering, precision, failure, reconciliation and authorization; it runs no tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only DRAFT scaffold using no hosted provider or production data.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Client rename PowerSync vertical-slice test suite"],
+        "securityRequirements": ["Negative scope, credential, malformed transaction/result and unauthorized-local-row cases are mandatory"],
+        "syncRequirements": ["Restart, pending-create FIFO, chained rename, stale readback, rejection cleanup and authoritative supersession are mandatory"]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": ["Swift canonical bytes and hash match MCP/Postgres fixtures across precision boundaries"]
+      },
+      "verification": {
+        "tests": ["npm run target:powersync:test"],
+        "acceptance": ["Every planned case becomes executable before the provider slice advances beyond ready"]
+      }
+    },
+    {
+      "id": "MCPMOD-A23569C60118",
+      "acknowledgeSourceHash": "a2446da3a66b962eac540374d6a79f7c2ba300010cfb48e3cbdacc4846fee1a1",
+      "currentBehavior": "Contains only the reviewed DRAFT contract for a gated target Client-rename MCP module; it registers no tool and calls no backend.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only target MCP scaffold with no Firebase import or privileged credential.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["rename_client target MCP tool", "Precision-safe canonical Client rename encoder", "Scoped Supabase Client rename RPC adapter"],
+        "securityRequirements": ["Account and Principal derive only from authenticated MCP context", "The module cannot accept or send a service-role key"],
+        "syncRequirements": ["Decimal-string input is emitted as the exact unquoted UInt64 JSON integer and sent as canonical command text"]
+      },
+      "migration": {
+        "rule": "Do not alter or register the Firebase MCP implementation before explicit cutover.",
+        "reconciliation": ["App and MCP create byte-identical command evidence and validate the same immutable result"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetMCP/tests/clientRename.test.ts", "scripts/test-local-client-rename-rpc.mjs"],
+        "acceptance": ["Context rebinding, numeric precision loss, malformed input and result mismatch fail before success"]
+      }
+    },
+    {
+      "id": "MCPMOD-EFFAAFBBD1AD",
+      "acknowledgeSourceHash": "1213872f6c49a36d853bf2ee1322e10c3591b1ad0b2f70001ed55d9c3f92c155",
+      "currentBehavior": "Contains only the reviewed DRAFT test inventory for Client-rename MCP scope, exact UInt64 bytes, transport/result validation and privacy-safe telemetry; it runs no tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Comment-only synthetic target MCP test scaffold.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Target MCP Client rename contract tests"],
+        "securityRequirements": ["Tests prove authenticated-context ownership, cross-Account refusal and absence of privileged credentials or private payload telemetry"],
+        "syncRequirements": ["Boundary fixtures cover 0, JavaScript safe-integer edges, signed-bigint maximum and UInt64 maximum without Number conversion"]
+      },
+      "migration": {
+        "rule": "Use only synthetic target identities and fake/local HTTP boundaries.",
+        "reconciliation": ["Every terminal result field is checked against the exact originating command"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP test", "npm --prefix LedgerTargetMCP run check"],
+        "acceptance": ["All planned Client rename MCP cases pass deterministically before status advancement"]
+      }
+    },
+    {
+      "id": "CONFIG-EC93D3BAC0C4",
+      "acknowledgeSourceHash": "c82b363d7bf4f06bae01f5d1dcd7033f383de139a10fec430cc70cb2ab8e0090",
+      "currentBehavior": "Contains only a comment-only reviewed draft boundary for the local Client-rename Postgres migration; it creates or mutates no schema object.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Automatically discovered and hash-enforced draft scaffold; executable DDL is forbidden until product authority and a later READY checkpoint exist.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Trusted Postgres Client rename handler and public scoped RPC"],
+        "securityRequirements": ["No direct Client update grant", "Private definer execution is revoked from PUBLIC and anon and performs explicit auth-first scope checks"],
+        "syncRequirements": ["One immutable operation result drives local reconciliation"]
+      },
+      "migration": {
+        "rule": "Use only the disposable local target database; read or transform no Firebase data.",
+        "reconciliation": ["Schema and result semantics remain blocked until O-042/O-043 are approved"]
+      },
+      "verification": {
+        "tests": ["supabase/tests/client_rename_vertical_slice.test.sql", "scripts/test-local-client-rename-rpc.mjs"],
+        "acceptance": ["A later executable migration passes reset, lint, pgTAP, Data API, concurrency and security review"]
+      }
+    },
+    {
+      "id": "CONFIG-3193C7F8A5F9",
+      "acknowledgeSourceHash": "7a894a5aea85405a7f86bf0f2ace5f0abf48e83743ac3cf5f250f26e3eda7715",
+      "currentBehavior": "Contains one disclosed pgTAP placeholder solely to keep the repository runner valid; it asserts no Client-rename behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Automatically discovered and hash-enforced draft test scaffold.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Client rename Postgres invariant, replay, concurrency and RLS tests"],
+        "securityRequirements": ["Prove restricted write denial while preserving authorized same-Account read visibility", "Prove revoked, anonymous and cross-Account non-enumeration"],
+        "syncRequirements": ["Validate the authoritative result and revision evidence consumed by local reconciliation"]
+      },
+      "migration": {
+        "rule": "Use synthetic local fixtures only.",
+        "reconciliation": ["No executable behavior is asserted before O-042/O-043 and READY review"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test"],
+        "acceptance": ["Every planned database and security case becomes executable before implementation status advances"]
+      }
+    },
+    {
+      "id": "CONFIG-B3D8C4F9F504",
+      "acknowledgeSourceHash": "bb4eb534d3941a1fa95433959e1196e404dd567212464aa2277c2436a2b15b0e",
+      "currentBehavior": "Contains only a comment-only reviewed draft boundary for a disposable local Client-rename Data API test; it makes no request.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-042", "O-043", "A-003"],
+      "evidence": ["EVID-CLIENT-RENAME-PROVIDER-001"],
+      "notes": "Automatically discovered and hash-enforced draft runner scaffold; hosted endpoints and service-role clients are prohibited.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": ["Scoped-user local Data API Client rename verification"],
+        "securityRequirements": ["Use synthetic user tokens and publishable local credentials only", "Prove actor, scope and capability enforcement without private-payload logging"],
+        "syncRequirements": ["Exercise exact canonical command text and terminal result binding"]
+      },
+      "migration": {
+        "rule": "Call only the disposable local Supabase stack.",
+        "reconciliation": ["No network behavior exists at this draft checkpoint"]
+      },
+      "verification": {
+        "tests": ["node scripts/test-local-client-rename-rpc.mjs"],
+        "acceptance": ["A later executable runner proves apply, replay, concurrency and positive and negative scoped access"]
+      }
+    }
+  ]
+}

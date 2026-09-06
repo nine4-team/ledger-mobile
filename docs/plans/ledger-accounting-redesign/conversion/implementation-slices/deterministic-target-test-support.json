@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "deterministic-target-test-support",
+  "title": "Provide deterministic provider-free reference adapters for target use-case tests",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Deterministic Target Test Support",
+  "surfaceIds": [
+    "SWIFT-8AB5414F20CE",
+    "TEST-77875A971729"
+  ],
+  "requirements": [
+    {
+      "id": "TESTSUPPORT-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Target use-case tests have deterministic in-memory and failure reference adapters in a target-only module while the released Firebase application remains unchanged and the target application contains no Firebase data adapter.",
+      "decisionIds": [],
+      "verificationIds": ["TESTSUPPORT-TEST-001", "TESTSUPPORT-TEST-002", "TESTSUPPORT-TEST-003", "TESTSUPPORT-TEST-004"]
+    },
+    {
+      "id": "TESTSUPPORT-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Pure domain tests",
+      "invariant": "A validated synthetic test context supplies fixed environment, Principal, Account, clock, identifiers and revisions without process-global time, randomness, Firebase, Supabase or PowerSync modules.",
+      "decisionIds": [],
+      "verificationIds": ["TESTSUPPORT-TEST-001", "TESTSUPPORT-TEST-002", "TESTSUPPORT-TEST-003", "TESTSUPPORT-TEST-004"]
+    },
+    {
+      "id": "TESTSUPPORT-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Application use-case tests",
+      "invariant": "Finite immutable scripts drive the shared operation-query and sync-health ports through local receipt, authoritative result, retry, rejection, required-update, maintenance and Account-context outcomes with explicit exhaustion and no external state.",
+      "decisionIds": [],
+      "verificationIds": ["TESTSUPPORT-TEST-001", "TESTSUPPORT-TEST-002", "TESTSUPPORT-TEST-003", "TESTSUPPORT-TEST-004"]
+    },
+    {
+      "id": "TESTSUPPORT-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Adapter contract tests",
+      "invariant": "The in-memory reference adapters conform to the same backend-neutral Ledger ports that later local and cloud target adapters must satisfy; Firebase export fixtures remain migration evidence and never become application adapters.",
+      "decisionIds": [],
+      "verificationIds": ["TESTSUPPORT-TEST-001", "TESTSUPPORT-TEST-002", "TESTSUPPORT-TEST-003", "TESTSUPPORT-TEST-004"]
+    },
+    {
+      "id": "TESTSUPPORT-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Dependency Rule",
+      "invariant": "The separate test-support module depends inward only on LedgerTargetCore, is linked by neither application, and exposes only Ledger and standard Swift types with no provider, database, file or transport import.",
+      "decisionIds": [],
+      "verificationIds": ["TESTSUPPORT-TEST-001", "TESTSUPPORT-TEST-003", "TESTSUPPORT-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "DeterministicTargetTestContext binds one validated non-production TargetEnvironmentManifest, synthetic PrincipalID, synthetic AccountID, bounded ScenarioID, stable seed and integer epoch-millisecond base time before any fixture or adapter exists.",
+        "DeterministicTargetValueSource derives domain-separated fixed timestamps, IDs and monotonic revisions by stable key/index and exposes finite schedules with explicit exhaustion; it never reads a process clock, UUID generator, randomness, filesystem, network or mutable global.",
+        "ScriptedOperationQueryAdapter and ScriptedSyncHealthAdapter conform to OperationQuerying and SyncHealthProviding and expose finite immutable Account-scoped success/failure scripts with stable safe errors and no provider-shaped values.",
+        "DeterministicTargetScenario validates complete context and scripts, normalizes equivalent input order, emits bounded canonical evidence and reconstructs only through the same validation boundary."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This reference test-support slice creates no Postgres table, relationship, constraint, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative command handler, transaction, lock or server-side idempotency implementation runs; scripts only return already-typed reference outcomes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No schema, relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "There are no server rows or API roles. Account isolation is structural fixture validation, not a substitute for later RLS tests."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "Scripted SyncHealthSnapshot values exercise the port contract without defining or starting a PowerSync Stream, bucket, local table or upload queue."
+    },
+    "localOffline": {
+      "items": [
+        "A scenario encodes to bounded canonical bytes and reconstructs offline with exactly the same context, deterministic value schedules and adapter outcomes; equivalent input order produces identical evidence.",
+        "Production/unsafe environment binding, nonfixture identity, cross-Account access, duplicate or conflicting keys, invalid or nonmonotonic schedules, script exhaustion, noncanonical bytes, digest tamper and oversized evidence fail atomically with stable safe codes.",
+        "Reference adapters distinguish cached/local observations from queued and authoritative outcomes, preserve online-versus-synchronized truth, and can model retry, permanent rejection, required update, maintenance and Account switch without network or database state."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment metadata, bytes, path, URL, upload script or retention behavior exists; media fault adapters require their own gated slice."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This slice supplies shared reference port adapters only. It does not wire concrete app or MCP entry points, claim transport parity, or replace current Swift/MCP helper surfaces."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase export fixture, source transform, target load or production-derived record is used. Domain-specific and migration fixture catalogs remain later slices."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "The module emits no telemetry, metric, alert or runbook action; stable test refusal codes remain local test values only."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The module and self-tests are additive target-only Swift package targets that depend only on LedgerTargetCore, are absent from both application project graphs, contact no hosted service and change no Firebase source or behavior.",
+        "The module is test authority only: it cannot activate a feature, choose a provider, approve a product rule, prove local database or physical-device fidelity, deploy, migrate, release or authorize cutover.",
+        "TEST-6A6B0926E2EE and FILE-F29942C1A7F4 remain target_mapped until domain-specific semantic fixtures and concrete app/MCP/local/cloud adapter suites cover their broader outcomes."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TESTSUPPORT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
+      "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
+      "expected": "Validated synthetic context and deterministic value schedules are exact and stable, and the reference operation-query/sync-health adapters emit the configured typed outcomes through the shared LedgerTargetCore ports.",
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
+    },
+    {
+      "id": "TESTSUPPORT-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
+      "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004"],
+      "expected": "Canonical scenario evidence reconstructs offline after restart and emits the identical fixed clock, IDs, revisions, operation snapshots, health snapshots and stable failures independent of input ordering.",
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
+    },
+    {
+      "id": "TESTSUPPORT-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
+      "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
+      "expected": "Production or unsafe binding, credential/provider material, nonfixture or cross-Account identity, duplicate/conflicting/nonmonotonic scripts, exhaustion, noncanonical bytes, digest tamper and oversized evidence fail with stable safe codes and no partial advancement.",
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
+    },
+    {
+      "id": "TESTSUPPORT-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, package graph/provider/source-contamination guards, the complete target package suite, both target builds and clean artifacts while neither application links the test-support module.",
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 technical-control foundation only. All four obligations pass locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286. Verification stops before domain-specific product fixtures, current app/MCP helper replacement, local database or PowerSync behavior, provider SDKs, hosted staging, migration fixtures, physical offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, production access or cutover authority."
+}

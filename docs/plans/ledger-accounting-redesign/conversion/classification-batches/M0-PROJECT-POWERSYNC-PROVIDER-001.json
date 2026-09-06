@@ -1,0 +1,256 @@
+{
+  "batchId": "M0-PROJECT-POWERSYNC-PROVIDER-001",
+  "title": "Target Project setup Supabase and PowerSync provider slice",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-PROJECT-SETUP-001",
+    "EVID-PROJECT-SETUP-USE-CASE-001",
+    "EVID-CLIENT-CREATION-001",
+    "EVID-CONTRACT-CATALOG-001",
+    "EVID-TARGET-ENVIRONMENT-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+  ],
+  "surfaces": [
+    {
+      "id": "CONFIG-C1B257780C7C",
+      "acknowledgeSourceHash": "e3da858f16caee3dd6a7f6e0c686ed3f7662006f078712ac1d348de29afb68c4",
+      "currentBehavior": "Extends the isolated spike schema with Project-management capabilities, visibility-classified budget categories, Projects and exact nullable per-Project allocations; exposes one idempotent trusted Project-setup RPC with explicit grants, RLS, authorization, identity locking and durable applied/rejected results.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "notes": "All relations remain spike_-prefixed in disposable local Supabase. O-026 is represented only as a provisional stronger policy and is not promoted to product authority.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Project/category/allocation Postgres schema", "Trusted Project-setup command handler", "Project/category/allocation RLS"],
+        "securityRequirements": ["Direct writes are denied", "The handler re-derives authenticated Principal, membership, Project and budget-management capability", "Financial categories and their allocations fail closed for principals without full visibility"],
+        "syncRequirements": ["One exact Project operation creates its optional Client, Project, complete allocation set and immutable terminal result atomically"]
+      },
+      "migration": {
+        "rule": "This is local target-spike DDL, not final import DDL or production deployment authority.",
+        "reconciliation": ["Exact replay creates no duplicate identity or allocation; changed replay cannot rebind the OperationID"]
+      },
+      "verification": {
+        "tests": ["supabase/tests/project_setup_vertical_slice.test.sql", "scripts/test-local-project-creation-rpc.mjs"],
+        "acceptance": ["Local database and Data API tests prove atomic setup, exact replay, least privilege, category visibility and tenant isolation"]
+      }
+    },
+    {
+      "id": "CONFIG-09CEA78268BF",
+      "acknowledgeSourceHash": "0cd482632e8da8f5ac1cd35f8e5b6bec8cde9a0fc390ac85a04350514655fcdd",
+      "currentBehavior": "Runs 22 pgTAP assertions for both Client-selection branches, exact replay/rebinding refusal, byte-preserved names, nullable/zero/mixed-currency allocations, invalid discriminators/categories, direct-write denial, capability/financial visibility and cross-Account isolation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "notes": "Synthetic local database test only.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Project setup Postgres invariant and authorization tests"],
+        "securityRequirements": ["Tests execute with synthetic authenticated identities and assert negative RLS and Data API cases"],
+        "syncRequirements": ["Handler results match the app/MCP operation contract"]
+      },
+      "migration": {
+        "rule": "Use no production-derived rows or credentials.",
+        "reconciliation": ["Every accepted operation has exactly one Project and one complete selected allocation set"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test:db"],
+        "acceptance": ["All 22 Project assertions pass together with the Client suite from a clean reset"]
+      }
+    },
+    {
+      "id": "CONFIG-E1332AB9A867",
+      "acknowledgeSourceHash": "20c96b1435bd3b73b7307eb62fff4c2e4e5daad891d933f4bf66414fda3eed68",
+      "currentBehavior": "Calls the local Supabase Data API with short-lived synthetic user JWTs and verifies Project apply/replay/readback, complete allocations, cross-Account hiding, restricted-member denial and direct-write denial.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "notes": "Reads local CLI status without printing keys and contacts no hosted endpoint.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Local Project setup Data API integration test"],
+        "securityRequirements": ["Only local synthetic user tokens and the local publishable key are used"],
+        "syncRequirements": ["REST result and row shapes match the typed app/MCP contracts"]
+      },
+      "migration": {
+        "rule": "Run only against the disposable local Supabase stack.",
+        "reconciliation": ["API readback observes one Project, its selected Client and exact allocation set after replay"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test:rpc"],
+        "acceptance": ["Local Project REST apply/replay/RLS/direct-write checks pass"]
+      }
+    },
+    {
+      "id": "SWIFT-5D88C2B47970",
+      "acknowledgeSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, projected category-configuration revision text 1 and the complete Client/Project/allocation overlay; exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"],
+      "notes": "The concrete store is module-internal and lifecycle-owned. All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Offline Project setup operation adapter"],
+        "securityRequirements": ["Typed command scope, actor, contract, identities and fingerprint cannot be omitted"],
+        "syncRequirements": ["The whole optimistic aggregate and one command are committed or rolled back together"]
+      },
+      "migration": {
+        "rule": "Create no Firebase write adapter and no dual-write path.",
+        "reconciliation": ["Restart restores the exact aggregate until rejection or authoritative readback removes its overlays"]
+      },
+      "verification": {
+        "tests": ["ProjectPowerSyncVerticalSliceTests"],
+        "acceptance": ["New/existing Client, zero-category, nullable/zero/mixed-currency and restart cases remain atomic"]
+      }
+    },
+    {
+      "id": "SWIFT-56CB8BCDD85C",
+      "acknowledgeSourceHash": "a98a77029573fcc731314aa7e2fe8a19684462a6a0a0ba2dbb4005cf0dc44c93",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement, and the provider owns, cancels and joins every admitted database watch while refusing watches after shutdown.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "The concrete query is module-internal and lifecycle-owned. It currently owns Project core details only; budget-segment and history queries remain separate slices.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["PowerSync Project core-details query adapter", "Optimistic Project aggregate reconciliation"],
+        "securityRequirements": ["Every lookup binds exact Account and Project identity"],
+        "syncRequirements": ["Pending evidence is partial; authoritative core rows remove only linked core overlays, while allocation optimism waits for allocation-aware proof"]
+      },
+      "migration": {
+        "rule": "Read target local rows only and never a Firebase cache.",
+        "reconciliation": ["Evicting an authoritative row cannot resurrect a previously reconciled optimistic Project"]
+      },
+      "verification": {
+        "tests": ["ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
+        "acceptance": ["Authoritative core readback renders once, removes exact Project/new-Client core overlays and retains pending allocations"]
+      }
+    },
+    {
+      "id": "SWIFT-7FCF476FF67C",
+      "acknowledgeSourceHash": "9486a3f6cbef6e935809e13f165ca46b3d0cf07df9c0ddd50c0d65cb1a958c29",
+      "currentBehavior": "Posts the typed Project command to Supabase with an injected scoped user token and publishable key, preserves Int64 Money precision and nullable values, decodes the terminal result and validates exact Operation, Account, fingerprint and Project identity.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "notes": "No service-role or hosted credential is embedded.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Swift Supabase Project setup RPC adapter"],
+        "securityRequirements": ["Only injected user authorization and a public publishable key are sent"],
+        "syncRequirements": ["Result identity/fingerprint mismatch fails before queue completion"]
+      },
+      "migration": {
+        "rule": "Use only with a validated isolated target environment and target session.",
+        "reconciliation": ["Swift, MCP and REST tests share the same RPC field/result contract"]
+      },
+      "verification": {
+        "tests": ["ProjectPowerSyncVerticalSliceTests.projectRPCBoundary", "scripts/test-local-project-creation-rpc.mjs"],
+        "acceptance": ["Typed request/result boundaries preserve full Money precision and exact nullable fields"]
+      }
+    },
+    {
+      "id": "TEST-3F2CAFC760D5",
+      "acknowledgeSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
+      "currentBehavior": "Runs eleven target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, Int64 RPC precision, and joined Project-detail provider shutdown with late-watch refusal.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"],
+      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only; provider teardown is proven before database close.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Project setup PowerSync vertical-slice test suite"],
+        "securityRequirements": ["Tests assert encrypted persistence, scoped credentials and malformed/rebound refusal"],
+        "syncRequirements": ["Tests assert one command transaction, aggregate cleanup on rejection, allocation retention after core-only readback and Client/Project FIFO behavior"]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only commands and disposable databases.",
+        "reconciliation": ["Swift canonical bytes/hash match the target MCP fixture exactly"]
+      },
+      "verification": {
+        "tests": ["npm run target:powersync:test"],
+        "acceptance": ["All eleven Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability, joined provider shutdown and core-only reconciliation retaining all three pending allocations"]
+      }
+    },
+    {
+      "id": "MCPMOD-C5E2CD8754AB",
+      "acknowledgeSourceHash": "f4c2a76f9502a7f0a1a4bbc2996d9829f215cc91aaf8293f047c3a1d534a7fb2",
+      "currentBehavior": "Provides shared target MCP canonical-JSON, identifier, context-scope and immutable terminal-result validation used by Client and Project command tools.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Target-only transport support with no Firebase imports or privileged credential.",
+      "target": {
+        "owner": "Target MCP Contracts",
+        "surfaces": ["Shared canonical command support", "Shared scoped terminal-result validator"],
+        "securityRequirements": ["Account and Principal are derived from authenticated tool context"],
+        "syncRequirements": ["Every target command uses deterministic JSON and exact terminal identity checks"]
+      },
+      "migration": {
+        "rule": "Activate only in the target MCP composition.",
+        "reconciliation": ["Client and Project tools share one validated transport contract without backend leakage into domain code"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP run check", "npm --prefix LedgerTargetMCP test"],
+        "acceptance": ["Strict compilation and both tool suites pass"]
+      }
+    },
+    {
+      "id": "MCPMOD-E9B4396B90B9",
+      "acknowledgeSourceHash": "eb89eeaedc632b3a38b3d1b1d7cb3fce2e00983ef2a99be9746697bd95175dff",
+      "currentBehavior": "Defines the gated target create_project MCP command, canonical Project envelope/fingerprint, context-scoped Supabase RPC adapter and exact applied/rejected result validation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "The tool is target-only and not registered in a deployed server.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["create_project target MCP tool", "Canonical Project command encoder", "Scoped Supabase Project RPC adapter"],
+        "securityRequirements": ["Account and Principal scope come from authenticated context and no service-role key is accepted"],
+        "syncRequirements": ["MCP and Swift encode byte-identical project-create-v1 envelopes and validate the same result identity"]
+      },
+      "migration": {
+        "rule": "Do not alter or import the Firebase MCP implementation before explicit cutover.",
+        "reconciliation": ["App and MCP fixtures produce the same canonical envelope and SHA-256 fingerprint"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP run check", "npm --prefix LedgerTargetMCP test", "npm run target:supabase:test:rpc"],
+        "acceptance": ["Malformed input never calls the backend; scoped requests use no privileged credential; mismatched results fail closed"]
+      }
+    },
+    {
+      "id": "MCPMOD-3C6E07498EC9",
+      "acknowledgeSourceHash": "2a072fb0083739d958034be737a18da215adbc92fc3393b0bb961342b56bac0a",
+      "currentBehavior": "Runs five deterministic target MCP Project tests for canonical Swift parity, context-owned scope, malformed allocation/input refusal, exact terminal-result refusal and scoped HTTP behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Synthetic fakes/local-only tests; no hosted provider access.",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": ["Target MCP Project command tests", "Cross-runtime fingerprint fixture"],
+        "securityRequirements": ["Tests prove context scope and absence of service-role credentials"],
+        "syncRequirements": ["Canonical command and terminal result remain byte/field compatible with Swift and Postgres"]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only identities.",
+        "reconciliation": ["Every result field used for completion is checked against the exact command"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP test"],
+        "acceptance": ["All five Project MCP tests pass deterministically"]
+      }
+    }
+  ]
+}

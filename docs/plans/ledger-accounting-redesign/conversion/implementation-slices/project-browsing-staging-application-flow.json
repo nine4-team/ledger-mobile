@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-browsing-staging-application-flow",
+  "title": "Browse locally represented Projects and preserve exact Project detail truth",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Browsing Staging Application Flow",
+  "surfaceIds": [
+    "SWIFT-CAB085E24751",
+    "TEST-5C7E5E715EAE",
+    "SWIFT-AA91CE0C3FAB",
+    "SWIFT-07427FF0DA84"
+  ],
+  "requirements": [
+    {
+      "id": "PBROWSEAPP-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Current Project lists and details remain usable from represented synchronized local data and expose readiness whenever required Project evidence is incomplete. The application flow adds no sorting, search, card, tab, budget, media, route, or mutation semantics.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-001", "PBROWSEAPP-TEST-002", "PBROWSEAPP-TEST-005", "PBROWSEAPP-TEST-008"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Project selection and detail identity use represented stable ProjectID and ClientID in one Account. Project and Client display names remain exact presentation text and never become relationship or selection authority.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PBROWSEAPP-TEST-001", "PBROWSEAPP-TEST-004", "PBROWSEAPP-TEST-005"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "One backend-neutral application model atomically projects active and archived rows from each validated directory snapshot, preserves upstream order and exact lifecycle semantics, exposes represented partial/stale rows, and labels empty as authoritative only when the verified projection proves it.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-001", "PBROWSEAPP-TEST-002", "PBROWSEAPP-TEST-003"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "A represented Project can produce a detail request only through ProjectDirectoryPresentationSnapshot.selection(projectId:) followed by detailRequest(validating:) against the same current snapshot. Directory refresh never silently rebinds or reissues the request.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-004", "PBROWSEAPP-TEST-006"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "The selected detail continuously preserves every verified ProjectDetailHeaderPresentation state: waiting readiness, found ready/partial/stale content, incomplete, authoritative absence, unavailable, retryable cached or uncached, and required-update cached or uncached.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-005", "PBROWSEAPP-TEST-006"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Directory and detail streams are continuously reactive and lifecycle-owned. Rapid reselection, restart, pre- or post-first-value failure, unexpected normal termination, spontaneous cancellation, and explicit stop cannot allow stale or post-stop evidence to mutate current state. Every source termination is observed, stop cancels and joins both still-active observations, and both normal and failed staging cleanup paths await application-model drainage before runtime close.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-003", "PBROWSEAPP-TEST-005", "PBROWSEAPP-TEST-006", "PBROWSEAPP-TEST-007", "PBROWSEAPP-TEST-011", "PBROWSEAPP-TEST-012"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "LedgerTargetAppModel depends only on LedgerTargetCore. A thin target-app adapter alone may import LedgerTargetPowerSync and forward the Account-bound Project directory and exact detail watches; no provider type, raw database, SQL, credential, visibility policy, or generic backend field crosses into the application model.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSEAPP-TEST-004", "PBROWSEAPP-TEST-007", "PBROWSEAPP-TEST-008", "PBROWSEAPP-TEST-009", "PBROWSEAPP-TEST-012"]
+    },
+    {
+      "id": "PBROWSEAPP-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Executable work is limited to the four claimed leaves and frozen staging-shell, generated Xcode project, environment-check, and conversion-control touchpoints. It adds no schema, handler, Data API grant, RLS, Sync Stream, MCP, media, migration, hosted resource, production access, Firebase change, release, or cutover authority.",
+      "decisionIds": ["D-026", "D-027", "A-003", "A-004", "A-007", "A-015", "A-016", "O-023", "O-024", "O-025", "O-040", "O-042", "O-043"],
+      "verificationIds": ["PBROWSEAPP-TEST-007", "PBROWSEAPP-TEST-008", "PBROWSEAPP-TEST-009", "PBROWSEAPP-TEST-010", "PBROWSEAPP-TEST-012"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse ProjectDirectoryPresentationSnapshot, ProjectBrowsingSelection, ProjectCoreDetailsRequest, ProjectCoreDetailsUpdate, ProjectDetailHeaderPresentation, and their verified projectors without alternate identity, lifecycle, ordering, readiness, completeness, absence, or failure meanings.",
+        "The application model owns reactive directory/detail presentation, current evidence-bound selection, bounded diagnostics, and observation lifecycle only."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "Existing isolated Client/Project schema remains unchanged and is owned by the Client/Project provider slices."},
+    "serverHandlers": {"items": [], "notApplicable": "Read-only application composition needs no trusted handler or RPC."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, function, or grant changes."},
+    "rlsPolicies": {"items": [], "notApplicable": "No policy changes; locally represented rows are not re-authorized by the application model."},
+    "syncStreams": {"items": [], "notApplicable": "The slice consumes existing local streams and claims no hosted completeness, final visibility, or Sync configuration."},
+    "localOffline": {
+      "items": [
+        "Render represented directory and detail evidence without network while preserving exact readiness, completeness, false-empty, cached-failure, unavailable, and required-update truth.",
+        "Rapid reselection and explicit stop cancel and drain obsolete observations; generation isolation prevents late evidence from mutating current state.",
+        "Cross-Account, malformed, mismatched, thrown, cancelled, or unexpectedly completed sources fail closed with bounded non-secret diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Project hero media and attachment presentation are excluded."},
+    "appMcp": {
+      "items": [
+        "Implement a Core-only LedgerTargetAppModel application flow, a thin LedgerTargetPowerSync runtime adapter in the staging app, and a SwiftUI view driven only by typed model state.",
+        "Replace the staging shell's inline Project projection, stable-ID selection, detail observation, and associated state while preserving runtime bootstrap and Project Setup/Client creation behavior.",
+        "Expose stable source-level accessibility identifiers for directory status, active/archived counts, every segment-plus-Project row button, selected Project/Client text, detail state/readiness, and separate directory/detail diagnostics. MCP remains unchanged."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase snapshot, import, mapping, or reconciliation."},
+    "observabilityRunbooks": {
+      "items": ["Expose bounded directory/detail diagnostic codes and exact local state labels without logging Project/Client names, IDs, provider payloads, SQL, endpoints, or credentials."],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": ["The flow remains in the isolated target staging app. Rollback is source reversion/local staging database disposal; Firebase and production remain unchanged."],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PBROWSEAPP-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-001", "PBROWSEAPP-REQ-002", "PBROWSEAPP-REQ-003"],
+      "expected": "One directory emission atomically produces active and archived rows with exact upstream order, duplicate-name stable identity, Project lifecycle segmentation, and active-Project visibility when its Client is archived.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.atomicDirectoryProjection"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-001", "PBROWSEAPP-REQ-003"],
+      "expected": "Ready, partial, stale, incomplete, source-nonexhaustive, and authoritative-empty directory evidence remain distinct for both segments; initial loading is never presented as empty.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.honestDirectoryReadinessAndEmptyMeaning"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-003", "PBROWSEAPP-REQ-006"],
+      "expected": "Cross-Account or malformed directory evidence and deterministic pre/post-first-snapshot throw, spontaneous cancellation, or unexpected normal completion clear prior rows/status, invoke the directory-source termination hook exactly once, and expose only bounded diagnostics without false empty or retained authority.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.directoryTerminationFailsClosed", "ProjectBrowsingStagingExerciseTests.crossAccountDirectoryFailsClosed"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-002", "PBROWSEAPP-REQ-004", "PBROWSEAPP-REQ-007"],
+      "expected": "Selection derives one exact captured ProjectCoreDetailsRequest only from the represented current segment snapshot. Missing, opposite-segment, cross-Account, or previously captured selection evidence rejected by a refreshed snapshot dispatches no detail watch; a new explicit selection captured from the current snapshot may dispatch one.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.exactSelectionAndRequestDispatch", "ProjectBrowsingStagingExerciseTests.capturedSelectionRejectedAfterRefresh"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-001", "PBROWSEAPP-REQ-002", "PBROWSEAPP-REQ-005", "PBROWSEAPP-REQ-006"],
+      "expected": "A table-driven detail stream preserves every waiting readiness variant; found ready, partial, and stale content; every incomplete variant; authoritative absence; unavailable; retryable cached and uncached; and required-update cached and uncached state, plus multiple reactive updates without stopping after first content.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.completeDetailStateMatrix"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-004", "PBROWSEAPP-REQ-005", "PBROWSEAPP-REQ-006"],
+      "expected": "Rapid A-to-B selection cancels and drains A before observing B; late A events and directory refresh cannot mutate or silently rebind B, while a subsequent explicit selection uses current evidence.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.rapidReselectionAndGenerationIsolation"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-007",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift",
+      "covers": ["PBROWSEAPP-REQ-006", "PBROWSEAPP-REQ-007", "PBROWSEAPP-REQ-008"],
+      "expected": "Stopping before first evidence and while both directory and detail observations remain active completes within bounded time, cancels and joins both observations, receives both source-termination callbacks, prevents post-stop mutation, and preserves restart generation isolation.",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.stopDrainageAndRestartIsolation", "ProjectBrowsingStagingExerciseTests.restartRejectsNoncooperativeOldDetailValue"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-008",
+      "kind": "end_to_end",
+      "owner": "scripts/check-target-environment.mjs and LedgerTarget staging builds",
+      "covers": ["PBROWSEAPP-REQ-001", "PBROWSEAPP-REQ-007", "PBROWSEAPP-REQ-008"],
+      "expected": "The AppModel imports only Core, the app adapter alone imports PowerSync, inline Project projection/detail ownership is absent, required source-level accessibility identifiers are present, and both staging destinations compile. No interactive accessibility claim is made without UI tests.",
+      "status": "passed",
+      "evidence": ["npm run target:environment:check", "npm run target:staging:build:macos", "npm run target:staging:build:ios"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-009",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PBROWSEAPP-REQ-007", "PBROWSEAPP-REQ-008"],
+      "expected": "The exact reviewed READY commit changes only comment scaffolds and synchronized control/evidence artifacts, passes all three immutable jobs, and leaves executable application/provider/schema/MCP/Firebase behavior unchanged.",
+      "status": "passed",
+      "evidence": ["commit 9087403111d5a77f9577f9552347f86513e6b7a5", "GitHub Actions run 33953298649: all three immutable jobs passed"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-012",
+      "kind": "app_mcp_contract",
+      "owner": "scripts/check-target-environment.mjs",
+      "covers": ["PBROWSEAPP-REQ-006", "PBROWSEAPP-REQ-007", "PBROWSEAPP-REQ-008"],
+      "expected": "Exact source checks enforce Core-only AppModel imports, PowerSync containment in the app adapter, removal of inline staging ownership, all frozen accessibility literals/patterns, drain-before-runtime-close ordering, and no MCP or provider-boundary expansion.",
+      "status": "passed",
+      "evidence": ["npm run target:environment:check", "npm run target:contracts:check", "npm run target:mcp:test"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-010",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PBROWSEAPP-REQ-008"],
+      "expected": "The later exact synchronized implementation checkpoint passes conversion controls, focused and complete nonparallel Swift tests, isolated local Supabase regressions, repeatable target generation, both staging builds, clean artifacts, and independent executable review before verified promotion.",
+      "status": "passed",
+      "evidence": ["commit 547af4d70f007c5bafabc1548084fd0e441a7270", "GitHub Actions run 33954955566: conversion control 41s, local Supabase 1m36s, isolated target environment 5m56s; all passed"]
+    },
+    {
+      "id": "PBROWSEAPP-TEST-011",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift and LedgerTarget staging lifecycle source checks",
+      "covers": ["PBROWSEAPP-REQ-006", "PBROWSEAPP-REQ-008"],
+      "expected": "Deterministic pre/post-first-detail throw, spontaneous cancellation, and unexpected normal completion fail closed, invoke the detail-source termination hook exactly once, and permit no late mutation. Both normal stop and failed-start cleanup await application-model cancellation and drainage before invoking LedgerOfflineClientRuntime.close().",
+      "status": "passed",
+      "evidence": ["ProjectBrowsingStagingExerciseTests.detailTerminationFailsClosed", "ProjectBrowsingStagingExerciseTests.directoryTerminationDrainsActiveDetail", "scripts/check-target-environment.mjs cleanup-order assertions"]
+    }
+  ],
+  "implementationEvidence": [
+    "Exact READY commit 9087403111d5a77f9577f9552347f86513e6b7a5 passed all three immutable jobs in GitHub Actions run 33953298649.",
+    "Thirteen focused ProjectBrowsingStagingExercise tests and the complete 441-test/76-suite nonparallel Swift package pass locally.",
+    "Target environment, target contracts, target MCP tests, disposable local Supabase pgTAP/RPC regressions, macOS staging build, iOS Simulator staging build, and git diff checks pass locally.",
+    "Independent executable review found one P1 false-empty UI defect and two P2 proof gaps across two correction rounds; all were corrected. Final actual-diff re-review returned GO with no P0-P3 findings.",
+    "Implementation hashes: AppModel b5f8a92f92ef3347086257d3951cd674d1367b9f10e7ba36f29b183ab61f4c7d; tests ccf2b062c6e6c96f3c45aef2a3bfb2a873ca783c8f0a47f1c71c3c9519a7eb41; adapter f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f; view 6e05906efccea572bbc772fe5efa9a82df06289b65ad4841d085fae3a5d6ffca; shell fd18a09b2d45dd6114fc9fd5a0bdc1e155e66984f22a658e832d9dab34b6a31a; environment guard 760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9.",
+    "Exact synchronized implementation commit 547af4d70f007c5bafabc1548084fd0e441a7270 passed all three immutable jobs in GitHub Actions run 33954955566; PBROWSEAPP-TEST-010 passed."
+  ],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified on exact READY commit 90874031 / immutable run 33953298649 and exact synchronized implementation commit 547af4d7 / immutable run 33954955566. The Core-only model, thin adapter and typed staging view replace only inline Project directory/detail ownership. Root review added active-detail drainage and newer-detail-name semantics. Independent executable review caught false numeric-zero display before represented evidence, missing reciprocal source-exhaustiveness proof, and missing noncooperative late-detail restart proof; every issue was corrected and final re-review returned GO with no P0-P3. Package.swift, LedgerTargetProject.yml, Project directory/detail contracts and LedgerOfflineClientRuntime remain byte-unchanged. No schema, RLS, Sync, MCP, Firebase, migration, hosted, production or cutover authority advanced."
+}

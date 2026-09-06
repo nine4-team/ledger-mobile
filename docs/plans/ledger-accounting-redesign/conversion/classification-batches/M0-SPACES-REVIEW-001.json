@@ -1,0 +1,2639 @@
+{
+  "batchId": "M0-SPACES-REVIEW-001",
+  "title": "Spaces, review, and work queues",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-SPACES-REVIEW-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FILE-42005FEF8FD8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes legacy needsReview fields from Firebase Transactions.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Keep as source migration history; target review uses explicit draft/import/integrity states."
+    },
+    {
+      "id": "MCPMOD-155A4AB80AC9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Validates and applies Item Space assignment through Firebase batch helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve same-scope validation in one typed idempotent operation. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "AssignItemsToSpaceCommand",
+          "ClearItemSpaceCommand",
+          "ExpectedItemRevisions",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-D391DC704D1F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements Firebase Space list/get/create/update tools and generic fields.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-026/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-24DFA89A8F44",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Spaces by current Firebase scope.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Return authorized stable pages with archive state and readiness. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "ListSpacesQuery",
+          "SpaceListSnapshot",
+          "stable scope/order cursor"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-2B45E68B60F7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Gets one raw Firebase Space document.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Use named visibility-safe Space detail projection. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "GetSpaceQuery",
+          "SpaceWorkspaceSnapshot",
+          "readiness/version metadata"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7211ECCE184C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates a Firebase Space from caller fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Validate scope, stable ID, template and offline/idempotent semantics. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "CreateSpaceCommand",
+          "stable Space/checklist IDs",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7259894A6F1C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Updates generic Firebase Space fields.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-279736869F7E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models Firestore Space plus embedded checklists whose missing IDs randomize and whose custom keys omit timestamps.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Use stable IDs/revisions/timestamps and separate placement/archive evidence. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceID",
+          "SpaceSnapshot",
+          "SpaceChecklistID",
+          "SpaceChecklistSnapshot"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-901849ED8462",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models Firestore review notes and URL-keyed visual references with client-authored actor/time.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Reference stable attachment IDs and server-derived actor/time. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Review Evidence",
+        "surfaces": [
+          "SpaceReviewNoteID",
+          "SpaceReviewNoteSnapshot",
+          "AttachmentID visual references",
+          "trusted actor/time fields"
+        ],
+        "securityRequirements": [
+          "Review visibility follows Space scope; actor/time are server authority and media references use authorized stable AttachmentIDs rather than URLs"
+        ],
+        "syncRequirements": [
+          "Space stream carries stable review-note/marker/reference metadata and readiness; attachment bytes follow the separate local-first media lifecycle"
+        ]
+      },
+      "migration": {
+        "rule": "Map source review notes to stable IDs, trusted actor/time evidence and stable attachment references; preserve source URL correlation for migration only and quarantine invalid markers/missing parents.",
+        "reconciliation": [
+          "Every review note, marker and visual reference maps once with parent/actor/time/content/AttachmentID correlation or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Review-note read/model, actor spoofing, marker bounds, attachment authorization/local display and migration correlation tests"
+        ],
+        "acceptance": [
+          "Authorized review evidence is stable and attributable offline without client-forged audit fields or permanent URL identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3615734A053E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs pure Space name/form validation.",
+      "disposition": "replace",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Target responsibility is verified through the canonical SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator was copied. Exact target implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a passed immutable Actions run 33746648677. The current Firebase source file remains unchanged.",
+      "target": {
+        "owner": "Direct Space Creation Use Case",
+        "surfaces": [
+          "SpaceCreationFormInput.validatedIntent",
+          "SpaceDisplayName canonical validation",
+          "SpaceCreationNotes canonical normalization"
+        ],
+        "securityRequirements": [
+          "Required-field validation produces typed intent only and never grants current membership or Space-create authorization"
+        ],
+        "syncRequirements": [
+          "Validation is provider-free and network-independent but carries no physical form-draft durability or synchronization claim"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the app-only helper in the target with canonical domain conversion; do not import Firebase DTOs or source UI state.",
+        "reconciliation": [
+          "Target tests preserve the required-name and outer-whitespace behavior while removing duplicate validation ownership"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "One canonical target validator covers submitted direct Space name/notes without modifying the current source helper"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-43F5DBD4F7F3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Filters/sorts current Space lists and derives display state.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain deterministic list UX over local snapshots including archived-reference handling. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceListSnapshot",
+          "SpaceSummarySnapshot",
+          "SpaceReadinessState"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5BB6D8BE3292",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes Space checklist progress, template-role availability, and detail summaries.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-026/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-C821F5F10EAE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Buckets legacy incomplete Transactions into unassigned/Inventory/Project review lists.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-3D6443DA0A90",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firebase ListenerRegistration, generic field dictionaries, hard delete, and scope listeners for Spaces.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-8494F171316C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements Firestore Space CRUD/listeners, generic updates, attachment normalization, and hard delete.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-C11974860D78",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs Firestore review-note CRUD with client-authored fields and URL-shaped visual snapshots.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-454F9189FDCF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays an in-memory legacy incomplete-Transaction review queue from account arrays.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-56B8DD0FBD70",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates Project or Inventory Spaces and presents incomplete template selection.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve fast offline creation and implement real template application. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "CreateSpaceCommand presentation",
+          "ReferenceDataSnapshot template selection",
+          "OperationReceipt state"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8E04DCE88D68",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides an obsolete placeholder for the Project Spaces tab.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Target uses the real local Space workspace."
+    },
+    {
+      "id": "SWIFT-912A031F137B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Inventory Spaces, creates them, and navigates from current context arrays.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve UX with readiness, stable ordering and typed operations. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceQuerying Inventory scope",
+          "SpaceListSnapshot",
+          "CreateSpace intent"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BC0B886FC610",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Project Spaces, creates them, and navigates from current Project context.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve UX with authorized local snapshots. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceQuerying Project scope",
+          "SpaceListSnapshot",
+          "CreateSpace intent"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-DDFAC91775DA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds a large Firebase-listener Space detail that also composes Item media, movement, status, relation, delete, note and checklist actions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-037",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023/O-037/A-015 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-57F289B15D4B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents Set/Clear Space selection for Item actions.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve picker UX over eligible local Space summaries. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "SpaceAssignmentCapabilitySnapshot",
+          "AssignItemsToSpaceCommand",
+          "ClearItemSpaceCommand"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5A16999D5F3A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Space picker rows and selection state.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Keep pure presentation with archived/ineligible states supplied by query model."
+    },
+    {
+      "id": "SWIFT-9F4789704808",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits Space details through generic service fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "The verified target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 / immutable Actions run 33750834849. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, dirty/no-op policy, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "SpaceDetailsUpdateFormInput and validated intent",
+          "SpaceDetailsUpdateUseCase",
+          "UpdateSpaceDetailsCommand",
+          "ExpectedSpaceRevision",
+          "OperationReceipt",
+          "future Space details editor composition"
+        ],
+        "securityRequirements": [
+          "Typed local input binds exact Account, Space and expected revision but grants no current authorization; the authoritative handler later revalidates membership and revision"
+        ],
+        "syncRequirements": [
+          "The use case emits one complete revision-aware operation through a narrow port; physical durability, optimistic projection and synchronized visibility remain separate target responsibilities"
+        ]
+      },
+      "migration": {
+        "rule": "Map only save-intent normalization/dispatch to the target use case now; retain the full source surface as target_mapped until initial state, transient UI, dismissal and app composition are replaced. Decode no Firebase Space DTO here.",
+        "reconciliation": [
+          "Target-only tests prove canonical submitted values and exact revision command assembly; later UI and migration evidence must close the remaining source responsibilities"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests",
+          "later Space details editor composition and interaction tests"
+        ],
+        "acceptance": [
+          "The target application can validate and dispatch one complete revision-aware details replacement, while the source UI surface remains unverified until its observable edit flow is composed"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-C3BE14BFCDE5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders Space card identity, progress, image, counts, and navigation affordance.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain presentation over stable Space summary values."
+    },
+    {
+      "id": "SWIFT-B5661A312D65",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits embedded checklist arrays and returns the whole replacement value.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve editing UX with stable IDs/revision conflict handling. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "ReviseSpaceChecklistsCommand",
+          "stable checklist IDs/revision",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-EF8BEC4E8BE5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Picks, marks, views, and edits URL-keyed Space review-note photo references.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "TEST-3885FE2E9453",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Space filtering/sorting/list calculations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain sorting fixtures and add archived-reference/readiness cases. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Contract Tests",
+        "surfaces": [
+          "SpaceListProjectionTests",
+          "archive/order/readiness fixtures",
+          "scope variants"
+        ],
+        "securityRequirements": [
+          "Fixtures cover Project/Inventory, standard/restricted/cross-account identities and template/reference capability separation"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local Space snapshots/readiness and durable operation outcomes across offline restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/listener/random-ID fixtures with stable semantic Space/checklist/assignment/readiness and source migration variants.",
+        "reconciliation": [
+          "Fixture catalog covers each Space scope, archive/list order, checklist revision, assignment and migration anomaly with expected hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Space list/detail/presentation, checklist progress, assignment, archive capability, offline and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests preserve intended Space workflows while rejecting generic CRUD, random checklist identity and silent partial updates"
+        ]
+      }
+    },
+    {
+      "id": "TEST-68DF2A480C92",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current Firebase Space CRUD integration behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Replace with app/MCP command, RLS, Sync, offline, conflict and migration integration tests. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Integration Tests",
+        "surfaces": [
+          "SpaceTargetIntegrationSuite",
+          "local/cloud-staging adapters",
+          "source import fixtures"
+        ],
+        "securityRequirements": [
+          "Harness uses isolated synthetic Accounts/Principals and target RLS/Sync policies; production and Firebase-emulator endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls encrypted local DB, Space streams, offline restart, command replay and authoritative outcomes"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase Space CRUD integration with target typed query/operation/security/offline contracts and immutable source-import fixtures.",
+        "reconciliation": [
+          "Fixture Space/checklist/assignment/review IDs and hashes reconcile across local adapter, staging target and source transform"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/cloud-staging Space adapter, RLS/Sync, restart/replay/fault, migration and environment-refusal self-tests"
+        ],
+        "acceptance": [
+          "Integration evidence proves the target Space slice without using or modifying production Firebase"
+        ]
+      }
+    },
+    {
+      "id": "TEST-8BFDF8C22B0C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests checklist progress and current Space detail calculations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve pure progress tests and add revision/capability/archive cases. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Contract Tests",
+        "surfaces": [
+          "SpaceWorkspaceSnapshotTests",
+          "checklist progress/detail fixtures",
+          "readiness assertions"
+        ],
+        "securityRequirements": [
+          "Fixtures cover Project/Inventory, standard/restricted/cross-account identities and template/reference capability separation"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local Space snapshots/readiness and durable operation outcomes across offline restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/listener/random-ID fixtures with stable semantic Space/checklist/assignment/readiness and source migration variants.",
+        "reconciliation": [
+          "Fixture catalog covers each Space scope, archive/list order, checklist revision, assignment and migration anomaly with expected hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Space list/detail/presentation, checklist progress, assignment, archive capability, offline and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests preserve intended Space workflows while rejecting generic CRUD, random checklist identity and silent partial updates"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E97A8051035C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests review-note Space validation, marker bounds, photo filtering, and Firestore update fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "TEST-EBA9C48BC4EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Space form validation.",
+      "disposition": "replace",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Target replacement tests verify the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure, transport normalization and structured-concurrency cancellation behavior at exact target implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677; current Firebase tests remain unchanged as source evidence.",
+      "target": {
+        "owner": "Direct Space Creation Use Case Tests",
+        "surfaces": [
+          "required Space name target fixtures",
+          "outer-whitespace and blank-notes fixtures",
+          "validation-before-port-call fixtures"
+        ],
+        "securityRequirements": [
+          "Synthetic fixtures expose only stable validation failures and no credentials, provider payloads or production identity"
+        ],
+        "syncRequirements": [
+          "Tests prove network-independent validation only, not physical draft persistence or authenticated Sync"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase form state, model or export.",
+        "reconciliation": [
+          "Existing required-name cases map to canonical target conversion with no duplicate validator"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused target tests supersede the source helper's conversion responsibility while source tests stay untouched"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F61D38406022",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1512b0809cd1b32c65c9db28fd72d7fa3a95bb65fe233f69d1469ecae43e374c",
+      "currentBehavior": "Defines the implemented provider-free boundary for direct stable-ID Space creation in one Project or Business Inventory scope with canonical name/notes, exact operation binding, restart/refusal validation and a narrow operation port.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CREATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one direct CreateSpace intent with stable identity, exact Project-or-Business-Inventory scope, canonical name/notes, shared operation binding/receipt validation and a narrow port. It cannot create checklists, apply/save templates, attach media, assign Items, set review/completion/lifecycle state, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "target": {
+        "owner": "Space Creation Operation Contracts",
+        "surfaces": [
+          "SpaceCreationScope",
+          "SpaceDisplayName",
+          "SpaceCreationNotes",
+          "SpaceCreationDraft",
+          "CreateSpacePayload",
+          "CreateSpaceCommand",
+          "SpaceCreating",
+          "SpaceCreationFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable SpaceID and canonical ProjectID-or-Business-Inventory scope; it carries no caller-authored path, copied scope name or authorization claim",
+          "Construction and restart reject changed scope, actor, contract, Space/scope/name/notes payload, preconditions, subject or fingerprint; local value validity never substitutes for later trusted membership and Project/create authorization"
+        ],
+        "syncRequirements": [
+          "The direct-create intent reuses the shared operation fingerprint/receipt/replay lifecycle and zero expected-revision preconditions for one caller-generated stable Space identity",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, authoritative row insertion, optimistic Space visibility or synchronized list readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only direct Space-create intent and decode no Firebase Space document, route sentinel, generic update dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space Account/Project-or-Inventory scope, name/notes and source correlation while separately reconciling checklists, attachments, assignments, review, lifecycle and timestamps"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCreationOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory direct-create scope, normalized name/notes, zero preconditions, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F46861BCC21A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "72de7d9a3db2c8ae5b507e37b44c8348f786e0ad28471c0faecd98d7c49b450d",
+      "currentBehavior": "Defines deterministic provider-free tests for direct Space Project/Inventory scope, canonical name/notes, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CREATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove direct Project/Inventory Space-create identity, normalized name/notes, zero preconditions, restart/replay/refusal and absence of checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Creation Operation Contracts",
+        "surfaces": [
+          "SpaceCreationOperationTests",
+          "Project and Business Inventory scope fixtures",
+          "canonical Space name and notes fixtures",
+          "canonical command restart/replay fixtures",
+          "scope/payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation, Space and Project identities and prove no path/template/attachment/Item/review/accounting field can rebind creation identity or authority",
+          "Negative tests expose only stable bounded codes and no name/notes text, source paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local create-operation receipt from physical persistence, authoritative row state and synchronized Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent Project/Inventory creation evidence round-trips byte-identically while changed Account/actor/contract/Space/scope/name/notes/preconditions/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCreationOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral direct Space-create boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "TEST-9A22BFF16437",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "9340c1bbd40347661b1514c7072a75d46b99f066261ddf5ec65b4f76f738e5d8",
+      "currentBehavior": "Defines deterministic provider-free tests for complete canonical ordered Space checklist replacement, stable nested identities, progress, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-REVISION-001"
+      ],
+      "notes": "Target-only Phase 1 verified tests. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
+      "target": {
+        "owner": "Space Checklist Revision Operation Contracts",
+        "surfaces": [
+          "SpaceChecklistRevisionOperationTests",
+          "complete ordered checklist replacement fixtures",
+          "stable nested identity and explicit order fixtures",
+          "checked-state and empty collection fixtures",
+          "canonical restart/replay/refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Principal, Operation, Space, checklist and checklist-item identities and prove no scope/details/template/media/Item/review/Space-completion/lifecycle/accounting field can rebind checklist authority",
+          "Negative tests expose only stable bounded codes and no checklist text, source paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish a deterministic local operation receipt from physical persistence, authoritative checklist state and synchronized Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space/checklist array/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent complete hierarchy evidence round-trips byte-identically while duplicate nested identity/order and changed Account/actor/contract/Space/hierarchy/revision/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral checklist revision boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-EDFA6A1EF8C3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "3bf0031d1ec90f369482d09dab740900a279911e36eab3c5b6980cc5dc78284f",
+      "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical name-and-optional-notes pair with exact operation binding, restart/refusal validation and a narrow operation port.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-001"
+      ],
+      "notes": "Target-only Phase 1 verified surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. The implementation defines one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "target": {
+        "owner": "Space Details Update Operation Contracts",
+        "surfaces": [
+          "ExpectedSpaceRevision",
+          "SpaceDetailsUpdateDraft",
+          "UpdateSpaceDetailsPayload",
+          "UpdateSpaceDetailsCommand",
+          "SpaceDetailsUpdating",
+          "SpaceDetailsUpdateFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable SpaceID and expected Space revision while carrying no caller-authored scope, path, authorization claim or unrelated Space field",
+          "Construction and restart reject changed Account, actor, contract, Space/name/notes payload, revision precondition, subject or fingerprint; local value validity never substitutes for later trusted membership, Space existence/revision and update authorization"
+        ],
+        "syncRequirements": [
+          "The complete details-replacement intent reuses the shared operation fingerprint/receipt/replay lifecycle and exactly one same-Space expected-revision precondition",
+          "A deterministic reference port proves only provider-free acceptance/conflict semantics, not physical durability, authoritative row update, optimistic Space visibility or synchronized detail readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Space-details intent and decode no Firebase generic field dictionary, Space document, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space identity/scope, canonical mutable name/notes, revision/audit and source correlation while separately reconciling checklists, attachments, assignments, review and lifecycle"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove complete normalized name/notes replacement, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-EB8803C0864A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "11862dcb6771efc7ba0f9c61d7001d41426e50e9d1b2b06252f5768ddbc5bb8a",
+      "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical ordered checklist hierarchy with stable nested identities, checked-state progress, exact operation binding, restart/refusal validation and a narrow operation port.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-REVISION-001"
+      ],
+      "notes": "Target-only Phase 1 verified surface. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. The bounded implementation defines one ReviseSpaceChecklists intent with stable Space/checklist/item identities, complete canonical ordered hierarchy replacement, exact expected Space revision, shared operation binding/receipt validation and a narrow port. It cannot change scope/details, apply/save templates, attach media, assign Items, create review evidence, set Space completion/lifecycle or mutate accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
+      "target": {
+        "owner": "Space Checklist Revision Operation Contracts",
+        "surfaces": [
+          "SpaceChecklistID",
+          "SpaceChecklistItemID",
+          "SpaceChecklistName",
+          "SpaceChecklistItemText",
+          "SpaceChecklistItemState",
+          "SpaceChecklistState",
+          "SpaceChecklistCollection",
+          "SpaceChecklistRevisionDraft",
+          "ReviseSpaceChecklistsPayload",
+          "ReviseSpaceChecklistsCommand",
+          "SpaceChecklistRevising",
+          "SpaceChecklistRevisionFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable SpaceID and expected Space revision while carrying no caller-authored scope, path, authorization claim or unrelated Space field",
+          "Construction and restart reject duplicate nested identity/order and changed Account, actor, contract, Space/hierarchy/revision/precondition/subject/fingerprint; local value validity never substitutes for later trusted membership, Space existence/revision and checklist authorization"
+        ],
+        "syncRequirements": [
+          "The complete checklist replacement reuses the shared operation fingerprint/receipt/replay lifecycle and exactly one same-Space expected-revision precondition",
+          "A deterministic reference port proves only provider-free acceptance/conflict semantics, not physical durability, authoritative row update, optimistic Space visibility or synchronized checklist readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Space-checklist intent and decode no Firebase embedded checklist array, Space document, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve or deterministically map stable nested IDs, explicit order, canonical text, checked state, Space revision/audit and source correlation while quarantining duplicate or undecodable evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove complete canonical ordered hierarchy replacement, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E8832A105D5C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1c453a32feba17ec47de517145369c0e29709dc99a05aa0262205202cf66ef9b",
+      "currentBehavior": "Defines deterministic provider-free tests for complete canonical Space detail replacement, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-001"
+      ],
+      "notes": "Verified target-only test surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Details Update Operation Contracts",
+        "surfaces": [
+          "SpaceDetailsUpdateOperationTests",
+          "complete Space name and notes fixtures",
+          "same-Space expected-revision fixtures",
+          "canonical command restart/replay fixtures",
+          "payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Space identities and prove no scope/checklist/template/attachment/Item/review/lifecycle/accounting field can rebind update identity or authority",
+          "Negative tests expose only stable bounded codes and no name/notes text, source paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local update-operation receipt from physical persistence, authoritative row state and synchronized Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent set/clear details evidence round-trips byte-identically while changed Account/actor/contract/Space/name/notes/revision/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Space-details boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4B007A00C393",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7ef831428fc83d66642c460404460e22ee364c8410b384def4b20a5124f529a4",
+      "currentBehavior": "Implements the reviewed provider-free AssignItemsToSpace operation contract with canonical same-scope Item membership, exact Space/Item revisions and deterministic operation evidence.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001"
+      ],
+      "notes": "Verified target-only Phase 1 implementation. One exact same-scope nonempty bulk AssignItemsToSpace intent has stable Space/Item identities, exact revisions, canonical typed preconditions, shared operation binding/receipt validation and a narrow port. Exact ready commit 30f4ab88/run 33670383410 and exact implementation commit c5fdf5c7/run 33672006836 passed; the latter proved four focused/all 176 target tests in 41 suites, graph/contracts, both staging builds and clean artifacts. It cannot clear placement, move Item scope, archive a Space, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037 remains open.",
+      "target": {
+        "owner": "Space Item Assignment Operation Contracts",
+        "surfaces": [
+          "ItemPlacementScope",
+          "ExpectedItemPlacementRevision",
+          "ItemSpaceAssignmentCandidate",
+          "ItemSpaceAssignmentDraft",
+          "AssignItemsToSpacePayload",
+          "AssignItemsToSpaceCommand",
+          "ItemSpaceAssigning",
+          "ItemSpaceAssignmentFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, destination SpaceID/revision/scope and canonical nonempty stable ItemID/revision set while carrying no path, display-name or authorization claim",
+          "Construction and restart reject changed Account, actor, contract, destination, scope, revision, Item set, payload, typed preconditions, subject or fingerprint; a later trusted handler must revalidate current membership and every same-scope row atomically"
+        ],
+        "syncRequirements": [
+          "The assignment intent reuses the shared operation fingerprint/receipt/replay lifecycle and deterministic Space-active/revision/scope plus per-Item revision/scope preconditions",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, optimistic placement, authoritative row updates or synchronized visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Item-to-Space assignment contract and decode no Firebase Item/Space document, generic field dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable same-scope Item/Space placement, revision/audit and source correlation while quarantining missing, archived or cross-scope references according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory destination scope, nonempty canonical Item/revision sets, deterministic preconditions, restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-51D893DD949E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "023122a0906a9b5bf9a485bc629b51d997fcdbebfdcce00ac4a8b9e8ba81fbc1",
+      "currentBehavior": "Implements four deterministic provider-free AssignItemsToSpace contract tests covering exact scope/preconditions, restart canonicalization, tamper refusal and shared operation replay.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001"
+      ],
+      "notes": "Verified target test surface. Four deterministic tests prove Project/Inventory same-scope assignment, stable Space/Item identities, exact revisions and typed preconditions, input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. Exact ready commit 30f4ab88/run 33670383410 and exact implementation commit c5fdf5c7/run 33672006836 passed; the latter proved all 176 target tests in 41 suites, graph/contracts, both staging builds and clean artifacts. They cannot claim physical placement, clear/scope/archive/accounting behavior, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Item Assignment Operation Contracts",
+        "surfaces": [
+          "ItemSpaceAssignmentOperationTests",
+          "Project and Business Inventory placement fixtures",
+          "single and canonical bulk Item/revision fixtures",
+          "typed Space and Item precondition fixtures",
+          "canonical command restart/replay/refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Principal, Operation, Project, Space and Item identities and prove no path/name/provider/accounting field can rebind placement identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local assignment receipt from physical persistence, authoritative placement and synchronized Item/Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item/Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered Item input round-trips to identical canonical evidence while changed scope/revision/identity/payload/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral AssignItemsToSpace boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4C7158974133",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "de8eb6c7a67fb5cc77e2c9fa2c279514908a35c76dd977d3288d42dbdc6d06ec",
+      "currentBehavior": "Implements the reviewed provider-free ClearItemSpaceAssignments operation contract with canonical same-scope mixed-Space Item membership, exact current-placement revisions and deterministic operation evidence.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001"
+      ],
+      "notes": "Target-only verified Phase 1 implementation. One exact same-scope nonempty bulk ClearItemSpaceAssignments intent has stable Item/current-Space identities, exact Item revisions, canonical typed preconditions, shared operation binding/receipt validation, derived marker-closure semantics and a narrow port. Exact implementation commit f5a7ac75 passed immutable Actions run 33677087616 with four focused/all 180 target tests in 42 suites, both staging builds and clean artifacts. It cannot assign a destination, move Item scope, archive a Space, accept or delete media, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023 remain open.",
+      "target": {
+        "owner": "Space Item Clearing Operation Contracts",
+        "surfaces": [
+          "ItemSpaceClearingCandidate",
+          "ItemSpaceClearingDraft",
+          "ClearItemSpaceAssignmentsPayload",
+          "ClearItemSpaceAssignmentsCommand",
+          "ItemSpaceAssignmentClearing",
+          "ItemSpaceClearingFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, immutable scope and canonical nonempty stable ItemID/revision/current-Space set while carrying no path, display-name, marker payload, accounting value or authorization claim",
+          "Construction and restart reject changed Account, actor, contract, scope, revision, current Space, Item set, payload, typed preconditions, subject or fingerprint; a later trusted handler must revalidate current membership, every same-scope row and affected item-linked marker relationship atomically"
+        ],
+        "syncRequirements": [
+          "The clear intent reuses the shared operation fingerprint/receipt/replay lifecycle and deterministic distinct-Space scope plus per-Item revision/scope/current-placement preconditions",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, optimistic placement/marker mutation, authoritative row updates or synchronized visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Item Space-clearing contract and decode no Firebase Item/Space document, embedded photo marker, generic null dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable same-scope Item/Space placement and marker relationships, revision/audit and source correlation while quarantining missing, archived or cross-scope references according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceClearingOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory scope, nonempty canonical Item/revision/current-Space sets including mixed source Spaces, deterministic preconditions, restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-0AB198EB6935",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c1ac404bcc1a220699bc15d1f53661f4514b0c27faa33bd48a15449d79b73f91",
+      "currentBehavior": "Implements four deterministic provider-free ClearItemSpaceAssignments contract tests covering exact mixed-Space scope/preconditions, restart canonicalization, tamper refusal and shared operation replay.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001"
+      ],
+      "notes": "Verified target test surface. Four deterministic tests prove Project/Inventory same-scope clearing, stable Item/current-Space identities, exact revisions and typed preconditions, mixed-Space/input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. Exact implementation commit f5a7ac75 passed immutable Actions run 33677087616 with all 180 target tests in 42 suites, both staging builds and clean artifacts. They cannot claim physical placement/marker mutation, destination/scope/archive/accounting behavior, attachment deletion, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Item Clearing Operation Contracts",
+        "surfaces": [
+          "ItemSpaceClearingOperationTests",
+          "Project and Business Inventory clearing fixtures",
+          "single and mixed-Space bulk Item/revision/current-Space fixtures",
+          "typed scope and current-placement precondition fixtures",
+          "canonical command restart/replay/refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Principal, Operation, Project, Space and Item identities and prove no path/name/provider/accounting/marker field can rebind placement identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values, attachment URLs/bytes or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local clear receipt from physical persistence, marker mutation, authoritative placement and synchronized Item/Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item/Space/marker/generic null/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered Item input round-trips to identical canonical evidence while changed scope/revision/current-Space/identity/payload/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceClearingOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral ClearItemSpaceAssignments boundary without claiming server, marker, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-164554FA1456",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "4ce6ea0cbdb263fe3d31bc811e448bc3486c7faa5ecaf7460f91822904da6121",
+      "currentBehavior": "Defines the provider-free exact Account/Project-or-Business-Inventory assignment-destination request, active Space ID/name/revision rows, validated canonical local directory, bounded failures, and narrow query port.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
+      ],
+      "notes": "Target-only Phase 1 verified surface. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 passed integration-agent line review, independent adversarial review, four focused and all 184 target tests before integration; exact checkpoint b0ffef836cc82f6011b802a5cb5f6a6ade05680a passed immutable Actions run 33682239349 with both CI jobs, both staging builds and clean artifacts. It defines one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
+      "target": {
+        "owner": "Space Assignment Destination Read Contracts",
+        "surfaces": [
+          "SpaceAssignmentDestinationRequest",
+          "SpaceAssignmentDestinationSnapshot",
+          "SpaceAssignmentDestinationDirectorySnapshot",
+          "SpaceAssignmentDestinationQuerying",
+          "SpaceAssignmentDestinationFailure"
+        ],
+        "securityRequirements": [
+          "Every request and row binds one exact AccountID and immutable Project-or-Business-Inventory scope; cross-Account, cross-scope, inactive, duplicate and hidden-count evidence fails without enumerating other rows",
+          "Cached local destination rows and revisions are selection/conflict evidence only; current membership and destination eligibility are re-authorized by the trusted assignment handler"
+        ],
+        "syncRequirements": [
+          "The directory preserves deterministic active Space ID/name/revision order plus authoritative-empty, partial, stale and failed local truth across structured restart",
+          "A deterministic reference port proves only exact scoped streaming and refusal semantics, not physical local persistence, Sync download authorization or synchronized placement"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Space assignment-destination read contract and decode no Firebase Space document, AccountContext array, route value, listener snapshot, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable active same-scope Space identity/name/revision and source correlation while quarantining missing, archived, cross-Account or cross-scope rows according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests"
+        ],
+        "acceptance": [
+          "Synthetic Project/Inventory directories prove exact active same-scope rows, duplicate-name deterministic order, readiness/restart and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-A3D73145E3EC",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d41afcc7cb1ecab6a369401d84f98ae7255d57fae87da0c7a260b3144eac1573",
+      "currentBehavior": "Implements four deterministic provider-free tests for exact active assignment destinations, canonical restart/readiness, bounded rejection, and exact-request query-port behavior.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
+      ],
+      "notes": "Target-only Phase 1 verified tests. Four deterministic tests pass for exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. Integration-agent and independent adversarial reviews found no P0-P2 defect; the review's P3 documentation ambiguity was corrected without claiming content-integrity proof. Exact checkpoint b0ffef836cc82f6011b802a5cb5f6a6ade05680a passed immutable Actions run 33682239349 with all 184 tests in 43 suites, both builds and clean artifacts. These tests cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Assignment Destination Read Contracts",
+        "surfaces": [
+          "SpaceAssignmentDestinationDataTests",
+          "Project and Business Inventory eligible-destination fixtures",
+          "active duplicate-name Space identity/revision/order fixtures",
+          "ready, authoritative-empty, partial, stale and failed local fixtures",
+          "canonical directory restart and exact-scope port-refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project and Space identities and prove no Account-wide array, path/name/provider/accounting/media field can rebind query identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values, attachment metadata or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic local destination evidence from physical persistence, authenticated Sync visibility, current authorization and authoritative assignment"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space DTO, AccountContext array, route state, listener callback, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered input canonicalizes identically; malformed, rebound, or internally inconsistent Account/scope/lifecycle/identity/count/readiness/fingerprint evidence fails atomically, while legitimate later revisions and readiness updates remain valid snapshots"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral eligible-Space directory boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-02BF0EA3C433",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
+      "currentBehavior": "Defines the implemented provider-free request, validated core Space snapshot, explicit local readiness/absence evidence, bounded update/failure states and narrow exact-request query port.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CORE-DETAILS-001"
+      ],
+      "notes": "Verified provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests, complete local gates and immutable Actions run 33695588031 on exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "target": {
+        "owner": "Space Core Details Read Contracts",
+        "surfaces": [
+          "SpaceCoreDetailsRequest",
+          "SpaceCoreDetailsSnapshot",
+          "SpaceCoreDetailsLocalSnapshot",
+          "SpaceCoreDetailsUpdate",
+          "SpaceCoreDetailsQuerying",
+          "SpaceCoreDetailsFailure"
+        ],
+        "securityRequirements": [
+          "Every request and returned row binds one exact AccountID and SpaceID; cross-Account, rebound, malformed and incomplete-as-authoritative evidence fails without revealing whether another scoped Space exists",
+          "Cached scope, lifecycle, revision, timestamps and checklist state are local evidence only; current membership and authorization remain server responsibilities"
+        ],
+        "syncRequirements": [
+          "Canonical local state distinguishes authoritative absence from incomplete absence and preserves ready, partial, stale, unavailable, retryable and required-update truth across restart",
+          "A provider-free reference port proves exact request/update/cancellation semantics only, not physical persistence, authenticated PowerSync download or hosted behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Space detail values and decode no Firebase Space document, nullable project path, embedded randomized checklist ID, URL, listener snapshot, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space/checklist identities, immutable scope, normalized content, lifecycle/revision/timestamps and source correlation or quarantine invalid evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
+        ]
+      }
+    },
+    {
+      "id": "TEST-377B0FDAF4D4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "25f7013ca31f9d3c3599e7752cf8dd90fdfe601475e1c7181e6b2ed7a0aedd75",
+      "currentBehavior": "Tests the implemented provider-free single-Space core-details contract across Project/Inventory scope, lifecycle, checklist/count evidence, offline readiness/absence/restart, exact request binding, bounded failure, cancellation and encoded exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CORE-DETAILS-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
+      ],
+      "notes": "Verified tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "target": {
+        "owner": "Space Core Details Read Contracts",
+        "surfaces": [
+          "SpaceCoreDetailsDataTests",
+          "Project and Business Inventory Space fixtures",
+          "active and archived lifecycle fixtures",
+          "empty and populated canonical checklist/count fixtures",
+          "readiness, authoritative-absence, restart, refusal and cancellation fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identities/content and require unavailable states and bounded failures to avoid enumerating inaccessible or nonexistent Spaces",
+          "Tests treat local detail evidence as non-authorizing and include no credential, provider payload, URL, attachment or production identifier"
+        ],
+        "syncRequirements": [
+          "All tests run provider-free and distinguish structured contract restart from physical local database durability or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase DTO, listener result, randomized checklist fallback, source export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent canonical input restarts identically while Account/Space/request/scope/time/order/identity/completeness tampering fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A9BCA70B7F9C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
+      "currentBehavior": "Implements provider-free Space checklist update-state projection, raw restart-safe stable-identity editing, canonical evidence fingerprints and semantic-base-revalidated derivation of the verified complete-replacement checklist command.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
+      ],
+      "notes": "Verified at exact integration commit 5a5c67b1319e3fcc41290469f7f39db9d515b284 by immutable Actions run 33739849778 after primary and independent review rejected incomplete verification coverage and exposed a noncanonical explicit-null cache restart defect in earlier candidates.",
+      "target": {
+        "owner": "Space Checklist Editing Presentation",
+        "surfaces": [
+          "SpaceChecklistEditingPresentationState",
+          "SpaceChecklistEditingPreparation",
+          "raw SpaceChecklistEditingDraft",
+          "typed checklist and within-checklist item editing changes",
+          "evidence-validated ReviseSpaceChecklistsCommand derivation"
+        ],
+        "securityRequirements": [
+          "Projection admits only a ready-complete current row or a retryable cached snapshot with quality ready, isCompleteForQuery true and exactly one row; partial/stale/ready-incomplete/empty/absent/unavailable/required-update evidence cannot silently become replace-all input",
+          "Command derivation revalidates the semantic base of exact Account/Space/scope/lifecycle/revision/hierarchy while harmless local refresh metadata may advance; local editability never grants authorization or decides archived-Space action availability"
+        ],
+        "syncRequirements": [
+          "Canonical presentation and raw draft evidence survive structured restart with stable checklist/item IDs, blank intermediate text, checked state, explicit order and exact source version/time/readiness",
+          "Changed semantic base, partial, rebound or tampered evidence fails before command derivation while harmless local version/as-of refresh remains eligible; no physical durability, optimistic projection or synchronized state is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only presentation values and decode no Firebase Space/checklist DTO, randomized legacy identity, source export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic exact evidence reconstructs canonically while every semantic-base/readiness/raw-draft mutation is represented or rejected without merging concurrent edits"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free preparation/edit/command-derivation boundary and permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "TEST-94F32F5E9219",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
+      "currentBehavior": "Provides six focused Space checklist editing presentation tests covering the complete admission matrix, stable raw edits, order-token behavior, exact command forwarding, semantic refresh/conflict, recursive strict restart, fingerprints, diagnostics and scope exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
+      ],
+      "notes": "Verified at exact integration commit 5a5c67b1319e3fcc41290469f7f39db9d515b284 by immutable Actions run 33739849778. The first green candidate was rejected for incomplete assertions; the expanded reciprocal matrix found and now guards the explicit-null failed-cache restart defect.",
+      "target": {
+        "owner": "Space Checklist Editing Presentation Tests",
+        "surfaces": [
+          "update-state/editability/readiness fixtures",
+          "stable nested identity, blank-intermediate and typed edit fixtures",
+          "canonical order/restart/tamper fixtures",
+          "semantic-base command-derivation fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identities/content and prove that local lifecycle/scope/revision evidence is non-authorizing and reveals no hidden rows",
+          "Every mismatch produces bounded diagnostics without provider payload, source path, credential or production identity"
+        ],
+        "syncRequirements": [
+          "Fixtures distinguish structured encode/decode restart from physical local-database durability and authenticated synchronization",
+          "Concurrent hierarchy/revision change is refused atomically rather than locally merged or overwritten; harmless refresh metadata remains eligible"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase checklist array, listener result, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Fixtures cover exact stable-ID/order/check-state preservation and fail-closed rebound/tamper behavior without claiming source migration parity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen provider-free checklist editing presentation boundary"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-517FA18158D9",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea",
+      "currentBehavior": "Freezes the provider-free direct Space creation use-case boundary: caller raw input, canonical typed intent, application-owned operation assembly, one SpaceCreating call and receipt validation.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Verified provider-free form input, canonical intent and application use case at exact commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677. Raw input is revalidated before exactly one port call; caller fields and receipt state are preserved exactly; Swift task cancellation remains concurrency control flow; normalized failures are preserved and unexpected transport errors are bounded. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included.",
+      "target": {
+        "owner": "Direct Space Creation Use Case",
+        "surfaces": [
+          "SpaceCreationFormInput",
+          "DirectSpaceCreationIntent",
+          "DirectSpaceCreationUseCase",
+          "single SpaceCreating invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Typed intent binds exact AccountID, preallocated SpaceID and Project-or-Business-Inventory scope without treating a name, route, template or backend path as identity",
+          "The application use case adds exact caller operation metadata; local validation and a returned receipt never grant current membership, Project-parent Space-create authorization or server commitment"
+        ],
+        "syncRequirements": [
+          "Provider-free assembly invokes the existing operation port exactly once and validates its receipt",
+          "No physical form/operation persistence, optimistic row, authoritative insertion or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only form intent/use-case values and decode no Firebase Space DTO, random legacy ID, route context, template, source export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic Project/Inventory inputs preserve exact caller identity and canonical submitted values through the verified command boundary"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free raw-input-to-validated-receipt application path and permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "TEST-915EC8E0BFC9",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588",
+      "currentBehavior": "Freezes executable proof for raw input/canonical intent, exact scope and command forwarding, one operation-port call, receipt-state/failure normalization, source-validator conversion and exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Verified focused target tests at exact commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677. They prove raw empty/nil/whitespace/padded/long boundaries, same-scope duplicate names, reciprocal exact caller-field forwarding, all receipt states, validation-before-call, structured cancellation, distinct normalized failures, raw transport normalization and exclusions. They claim no transient form restart, physical durability, authorization, provider or Sync evidence.",
+      "target": {
+        "owner": "Direct Space Creation Use Case Tests",
+        "surfaces": [
+          "raw form and canonical intent fixtures",
+          "Project and Business Inventory scope fixtures",
+          "exact command and single-call port fixtures",
+          "validation, exact receipt-state, normalized/unexpected port-failure and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Space, Project, Principal and Operation identities and prove typed local intent cannot authorize creation",
+          "Existing bounded failures reveal no raw form text, identity, route, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves request/receipt choreography only, not physical local persistence or authenticated synchronization",
+          "Exact caller-supplied command fields and no-call-on-validation-failure are verified without an optimistic or authoritative Space row"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase form state, Space/template document, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Current required-name cases and exact Project/Inventory command evidence converge on the canonical target path"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free direct Space creation use case and its permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-306643A5CD0D",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "dd0ce5e0e0c644ba3f95681d892b74441fbffd7ba87621f328786f20b2ada99d",
+      "currentBehavior": "Freezes the provider-free Space details save-intent/use-case boundary without implementing the current SwiftUI modal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "Verified at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 in immutable Actions run 33750834849. Provider-free transient input, canonical intent and application orchestration revalidate raw text before exactly one complete-replacement port call; exact Account/Space/revision and caller operation metadata reach the verified command; receipts are validated; Swift cancellation and normalized failures remain distinct while unexpected transport errors are bounded. No Space read/readiness state or UI, lifecycle, no-op, authorization, provider or migration policy is introduced.",
+      "target": {
+        "owner": "Space Details Update Use Case",
+        "surfaces": [
+          "SpaceDetailsUpdateFormInput",
+          "SpaceDetailsUpdateIntent",
+          "SpaceDetailsUpdateUseCase",
+          "single SpaceDetailsUpdating invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Typed input binds exact AccountID, SpaceID and expected revision without treating text, route, provider path or local read state as identity or authorization",
+          "Application-owned Operation/actor/contract/time fields remain exact and raw provider errors cannot cross the boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free assembly invokes the existing operation port exactly once after validation and validates its receipt",
+          "No form restart, physical operation persistence, optimistic Space projection, authoritative update or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only transient input and application orchestration; decode no Firebase model, callback, route, local snapshot, export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic exact Account/Space/revision values and canonical submitted text reach one verified complete-replacement command"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free save-intent-to-validated-receipt application path and permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "TEST-235F73A8DC9E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "72ee0af6873a76bd8af685e43a72198efd6905bbe188604b0253975c2e3a0698",
+      "currentBehavior": "Freezes executable obligations for Space details raw input, canonical intent, exact complete-replacement command, one port call, receipt/failure/cancellation handling and exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "Verified at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 in immutable Actions run 33750834849. Six focused synthetic tests cover exact raw/canonical boundaries, immutable replacement, same-name distinct Spaces, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, validation-before-call, mismatch, both normalized failure families, raw transport normalization, structured cancellation, diagnostics and encoded-shape exclusions. They do not claim the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior.",
+      "target": {
+        "owner": "Space Details Update Use Case Tests",
+        "surfaces": [
+          "raw form and canonical intent boundary fixtures",
+          "exact Account/Space/revision and duplicate-name fixtures",
+          "reciprocal command and single-call port fixtures",
+          "receipt-state, validation, normalized/raw failure, cancellation and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Space, Principal and Operation identities and prove typed local intent is non-authorizing",
+          "Stable failures reveal no raw form text, identity, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Validation failure causes no port call and exact receipt states are preserved without an optimistic or authoritative Space row"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase form/model/export data or source-to-target migration mapping.",
+        "reconciliation": [
+          "Tests prove the canonical target submission boundary while explicitly leaving the source modal partially unconverted"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the provider-free Space details update use case and its permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-1FDB27E18B95",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
+      "currentBehavior": "Implements provider-free Space checklist edit submission through the verified editing and revision-operation contracts.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-REVISION-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001",
+        "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"
+      ],
+      "notes": "Verified at exact implementation commit 99574328837ff1dfd8924f2eda2e88a635ad5ba7 in immutable Actions run 33788214259 after exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 passed run 33785649411. The use case accepts the existing restart-safe SpaceChecklistEditingDraft plus current SpaceCoreDetailsUpdate, derives one verified ReviseSpaceChecklistsCommand before exactly one SpaceChecklistRevising call, validates its receipt, preserves editing/revision failures and cancellation, and bounds raw transport errors. Root line review, six focused and all 273 target tests in 59 suites, complete local and immutable CI controls, repeatable generation and both staging builds pass. Two independent reviewers found and verified corrections to test-only proof gaps; both returned GO. No SwiftUI, physical persistence, authorization, provider, migration or production behavior.",
+      "target": {
+        "owner": "Space Checklist Revision Use Case",
+        "surfaces": [
+          "SpaceChecklistRevisionUseCase",
+          "single SpaceChecklistRevising.reviseChecklists invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Existing draft/current-update validation binds exact AccountID, SpaceID, semantic base and expected revision without treating display text, route or provider path as authorization",
+          "Caller Operation, actor, contract and capture time remain exact; raw provider errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free orchestration derives the verified complete-replacement command before exactly one port call and validates the returned receipt",
+          "No new local persistence, optimistic projection, authoritative update or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only application orchestration; decode no Firebase embedded checklist array, callback, route, export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic restart-safe draft/current evidence derives one verified checklist replacement without source transformation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free checklist edit-to-validated-receipt application path and permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "TEST-674E6F23E5BE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
+      "currentBehavior": "Implements executable reciprocal Space checklist revision use-case verification.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-REVISION-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001",
+        "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"
+      ],
+      "notes": "Verified at exact implementation commit 99574328837ff1dfd8924f2eda2e88a635ad5ba7 in immutable Actions run 33788214259. Six executable focused tests cover current and retryable-ready cached evidence, nonsemantic refreshes, active/archived Project and Business Inventory transparency, long UTF-8 text without an invented cap, ordered hierarchy/normalization/checked state, empty and zero-item cases, zero/UInt64.max revision on both readiness paths, exact encoded reciprocal field deltas, every receipt state, zero-call validation failures, mismatch, typed/raw/cancellation behavior, all 41 stable diagnostics and nested encoded-shape exclusions. Root focused/all tests, complete local gates and immutable CI pass; two independent final reviews returned GO after correcting test-proof gaps.",
+      "target": {
+        "owner": "Space Checklist Revision Use Case Tests",
+        "surfaces": [
+          "exact draft/current-evidence and command fixtures",
+          "ordered hierarchy, empty collection and zero-item fixtures",
+          "reciprocal metadata and semantic-field fixtures",
+          "receipt-state, zero-call validation, typed/raw failure, cancellation and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Space, checklist, item, Principal and Operation identities and prove local edit evidence is non-authorizing",
+          "Stable failures reveal no raw identity, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Derivation failure makes zero calls and exact receipt states return without an optimistic or authoritative Space row"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase Space/checklist/modal/export data or source-to-target mapping.",
+        "reconciliation": [
+          "Executable tests preserve canonical target dispatch while EditChecklistModal remains target_mapped"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free Space checklist revision use case and exclusions"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-0540BE125F5A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "e8425a84155c07b6ab860a23cf298246b0ab43a45a55fcf931523300e9db24a9",
+      "currentBehavior": "Implements one provider-free Item-to-Space application boundary that validates exact Account/scope local destination evidence, derives the represented Space revision, constructs the verified assignment command, invokes one narrow port and validates its receipt.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
+      ],
+      "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable Actions run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable Actions run 33828908233. The public transient Account/scope/destination/typed-Item intent and one-call application orchestration compose the verified destination-directory and assignment-operation contracts. Expected Space revision derives only from the exact represented row; all six Project/Inventory × ready/partial/stale combinations dispatch. Missing rows never claim authoritative nonexistence. Port-originated application failures are bounded to localAcceptanceFailed rather than leaking an impossible lower-layer type. Seven focused/all 309 tests in 64 suites plus primary and independent corrected-diff reviews pass; immutable implementation CI passed traceability in 11 seconds and isolated target in 6 minutes 32 seconds, including both builds. No clear/archive/media/scope/accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior advances.",
+      "target": {
+        "owner": "Item Space Assignment Use Case",
+        "surfaces": [
+          "ItemSpaceAssignmentUseCaseFailure",
+          "ItemSpaceAssignmentIntent",
+          "ItemSpaceAssignmentUseCase",
+          "exact destination resolution, one ItemSpaceAssigning call, and receipt validation"
+        ],
+        "securityRequirements": [
+          "Transient intent and current local directory must bind the same exact AccountID and Project-or-Business-Inventory scope; SpaceID and typed Item identities cannot be replaced by names, routes, paths, media, or accounting values",
+          "A represented local row supplies conflict evidence only, never authorization; raw port errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free orchestration uses an exact represented active row from ready, partial, or stale local evidence and derives the expected Space revision from that row before one verified assignment call",
+          "An absent row refuses as not represented without treating incomplete local data as authoritative nonexistence; no physical persistence, optimistic placement, authoritative apply, or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define only target transient intent and application orchestration; decode no source Item/Space document, Account-wide array, route state, generic field dictionary, photo marker, export row, or migration disposition.",
+        "reconciliation": [
+          "Synthetic typed Account/scope/Space/Item/revision evidence and operation metadata must reach one verified assignment command while all source app/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceAssignmentUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item-to-Space application path and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-DA67EAC9C2EF",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1c8f9e557cf6f8c059d1040fc7eb7054854c8c8ba4d11457681a4399908106b9",
+      "currentBehavior": "Implements seven provider-free Item-to-Space use-case tests covering exact public intent shape, all represented-row scope/quality combinations, literal command ownership, zero/one-call boundaries, failure containment, diagnostics/topology and exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
+      ],
+      "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable run 33828908233. Seven tests prove ordinary import without @testable, exact public shape, all six Project/Inventory × ready/partial/stale represented-row paths, directory-derived revision, literal reciprocal non-mirrored leaf ownership, zero/one-call failures, three pre-port application failures, all 16 operation failures, cancellation/raw mapping and diagnostics/topology. Exact READY CI plus primary and independent corrected-diff reviews prove the allowlists and preserved dependency/source/provider scope. Independent review first found leakage of a port-originated application failure and incomplete represented-row coverage; corrected tests prove that impossible lower-layer error is bounded and cover all six combinations. Immutable implementation CI passed traceability in 11 seconds and isolated target in 6 minutes 32 seconds, including all 309 tests and both builds. No source, service, provider, or production behavior advances.",
+      "target": {
+        "owner": "Item Space Assignment Use Case Tests",
+        "surfaces": [
+          "exact transient intent fixtures",
+          "ready, partial, stale, missing, cross-Account, and cross-scope destination fixtures",
+          "literal Space/Item/revision and operation-field ownership fixtures",
+          "receipt-state, construction, typed/raw failure, cancellation, diagnostics, topology, and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Space, Item, Principal, and Operation identities and prove typed local evidence is non-authorizing",
+          "Stable failures reveal no raw identity, display value, source path, credential, service payload, or production identifier"
+        ],
+        "syncRequirements": [
+          "The in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Missing or mismatched local evidence and construction failure make zero calls; exact receipt states return without optimistic or authoritative Item/Space state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no source Item/Space DTO, Account-wide array, UI route, generic write, media marker, export/profile, or source-to-target mapping.",
+        "reconciliation": [
+          "Tests must preserve canonical target dispatch while all named source UI/service/model and provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceAssignmentUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item-to-Space use case and exclusions"]
+      }
+    },
+    {
+      "id": "SWIFT-EEAC86485FF6",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "bec36d9ddbf5be470aa224a108138b71e88f8007632b90a0d039bd2f0e1f7709",
+      "currentBehavior": "Implements one provider-free Item Space-clearing application boundary that binds exact typed Account/scope/Item/revision/current-Space conflict evidence, constructs the verified clear command, invokes one narrow port, and validates its receipt.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001",
+        "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
+      ],
+      "notes": "Verified after exact READY commit 8154f8bf0c63576e64ac609b1e1b18d53f60ed32 / immutable Actions run 33831367527 and synchronized implemented checkpoint 8181512d78783d9ae7561475ed0d63c42d1e9b1e / immutable Actions run 33833543735. The latter passed traceability in 11 seconds and isolated target with all 316 tests in 65 suites, generated contracts, both builds and clean artifacts. Earlier executable-only commit f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4 / run 33832447988 passed isolated target but failed traceability solely on unsynchronized READY hashes; that process defect was corrected without changing executable behavior. The public transient Account/scope/typed-Item-revision-current-Space intent and one-call application orchestration compose the verified clearing operation. Caller-supplied scope/current-Space values remain untrusted conflict evidence, construction occurs before the port boundary, receipt validation occurs afterward, all 15 typed failures and cancellation remain exact, and unknown port errors are bounded. It advances no unassigned/no-op policy, read/UI eligibility, destination assignment, archive, attachment/reference/byte deletion, marker mutation, scope movement, accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior.",
+      "target": {
+        "owner": "Item Space Clearing Use Case",
+        "surfaces": [
+          "ItemSpaceClearingIntent",
+          "ItemSpaceClearingUseCase",
+          "exact Account/scope binding, one ItemSpaceAssignmentClearing call, and receipt validation"
+        ],
+        "securityRequirements": [
+          "Transient intent and verified command must bind one exact AccountID, one Project-or-Business-Inventory scope, and typed Item identity/revision/current-Space candidates; names, routes, paths, nullable fields, marker payloads, media and accounting values cannot replace them",
+          "Caller-supplied current-Space and scope values are untrusted conflict evidence only, never proof of actual placement, membership or authorization; raw port errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free orchestration constructs the verified internally consistent clear draft/command before one narrow port call and validates the exact receipt afterward; later trusted handling must revalidate actual scope and current placement",
+          "No physical persistence, optimistic Item placement or marker mutation, authoritative apply, retry/rejection recovery, or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define only target transient clearing intent and application orchestration; decode no source Item/Space document, nullable field patch, AccountContext array, route state, attachment marker, export row, or migration disposition.",
+        "reconciliation": [
+          "Synthetic typed Account/scope/Item/revision/current-Space evidence and operation metadata must reach one verified clear command while all source app/MCP/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item Space-clearing application path and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-CA84B398990C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "fe593aac3cb925f22570a1bb156199297420ae73aaf88e8fbfe45a6bd02ca6cd",
+      "currentBehavior": "Implements seven ordinary-import Item Space-clearing use-case tests covering exact transient intent, Project/Inventory and mixed-Space dispatch, literal command ownership, zero/one-call boundaries, all 15 typed failures, cancellation and unknown-error containment, diagnostics/topology, and exclusions.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001",
+        "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
+      ],
+      "notes": "Verified after exact READY commit 8154f8bf0c63576e64ac609b1e1b18d53f60ed32 / immutable Actions run 33831367527 and synchronized implemented checkpoint 8181512d78783d9ae7561475ed0d63c42d1e9b1e / immutable Actions run 33833543735. Seven focused and all 316 tests in 65 suites pass with warnings as errors; immutable CI also passed generated contracts, both builds, traceability and clean artifacts. Earlier executable-only f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4 / run 33832447988 passed isolated target but failed traceability solely on unsynchronized READY hashes; the synchronized checkpoint corrected that process defect without executable changes. The tests prove ordinary import without @testable, exact three-field public shape, Project/Inventory single and mixed-current-Space dispatch, reordered canonical identity, literal reciprocal non-mirrored leaf ownership, construction zero-call and receipt one-call boundaries, all 15 operation failures plus cancellation/unknown mapping, diagnostics/topology and exact allowlists. READY review missed a P3 free-text preservation-ID typo, SWIFT-4D0D546A02D instead of SWIFT-4D0D546A02D8; the manifest/classification/source status and frozen executable test scaffold used the correct ID, so there was no executable or status impact. No source app, MCP, service, provider, hosted, migration, or production behavior advances.",
+      "target": {
+        "owner": "Item Space Clearing Use Case Tests",
+        "surfaces": [
+          "exact transient clearing intent fixtures",
+          "Project, Business Inventory, single-Item and mixed-current-Space bulk fixtures",
+          "literal Account/scope/Item/revision/current-Space and operation-field ownership fixtures",
+          "receipt-state, construction, typed/raw failure, cancellation, diagnostics, topology, and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Space, Item, Principal, and Operation identities and prove typed local input is non-authorizing",
+          "Stable failures reveal no raw identity, display value, source path, credential, service payload, attachment data, accounting value, or production identifier"
+        ],
+        "syncRequirements": [
+          "The in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Construction failure makes zero calls; stale assigned-looking conflict evidence may dispatch for later authoritative refusal, and exact receipt states return without optimistic or authoritative Item/Space/marker state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no source Item/Space DTO, Account-wide array, UI route, generic null write, media marker, export/profile, or source-to-target mapping.",
+        "reconciliation": [
+          "Tests must preserve canonical target clear dispatch while all named source UI/MCP/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item Space-clearing use case and exclusions"]
+      }
+    },
+    {
+      "id": "SWIFT-0A528DE84879",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "efb63c076e2a41322eaa42f1fc2e6239a10b0106a8e608e8917a85deef911425",
+      "currentBehavior": "Implements the encrypted local Space destination query, exact Project/Inventory on-demand subscription ownership, retained/public epoch freshness baseline, fail-closed row decoding, fresh-read causality, membership retraction, canonical projection, and deterministic cancellation/drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+      ],
+      "notes": "Local target-only implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged. PowerSync 1.16.1 retained subscription epochs are inspected before subscribe so cached metadata cannot manufacture readiness; row/status observers and the sole subscription owner drain before database close. Hosted authenticated Sync proof remains TEST-012.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query",
+        "surfaces": ["SpaceAssignmentDestinationPowerSyncQuery", "exact Account/scope row observation", "typed Project/Inventory subscription and first-sync completeness", "provider unsubscribe, cancellation and drain"],
+        "securityRequirements": ["Treat RLS/Sync as authorization boundaries and local membership/scope filtering as fail-closed projection evidence only; never reveal foreign, archived, malformed or hidden-count rows"],
+        "syncRequirements": ["Own the exact ProjectID- or Inventory-AccountID-parameterized active-membership subscription, start incomplete until that subscription's first sync, preserve partial/stale/empty/failure truth and unsubscribe/drain row and completeness observation before database close"]
+      },
+      "migration": {
+        "rule": "Read only target Space rows; decode no Firebase Space DTO, nullable projectId convention, AccountContext array, route state or source export.",
+        "reconciliation": ["Synthetic provider tests reconcile exact server/local columns to the verified destination row while source migration remains excluded"]
+      },
+      "verification": {
+        "tests": ["Encrypted Project/Inventory scope, canonical order, readiness/startup-order, membership-loss, malformed-row, cancellation, restart and runtime-drain tests"],
+        "acceptance": ["The provider emits only verified active exact-scope directory snapshots and never manufactures completeness or authorization"]
+      }
+    },
+    {
+      "id": "TEST-33BFA84BCBB2",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "4f794045a52b084d65f872e2bbd82f024481b18171052da0ebd4dc3988e3ba03",
+      "currentBehavior": "Exercises exact Project/Inventory identities, encrypted production SQL, retained/public freshness baselines, delayed-row invalidation, membership loss/regain, malformed evidence, canonical ordering, restart, subscription release, cancellation, and runtime drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Fourteen focused provider tests include a real encrypted retained-epoch regression and production-shaped SQL/subscription lifecycle proof. Real hosted authenticated PowerSync remains intentionally unclaimed.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["real encrypted local database fixtures", "six-axis reciprocal row/readiness matrix", "restart, rejection, cancellation and drain fixtures"],
+        "securityRequirements": ["Use synthetic identities only; prove foreign/revoked/malformed evidence yields no mixed snapshot or sensitive diagnostic"],
+        "syncRequirements": ["Prove exact Project/Inventory subscription identity, both row/first-sync startup orders, fresh-completeness reset on restart, local membership loss, canonical ordering, unsubscribe and observer drainage"]
+      },
+      "migration": {
+        "rule": "Seed only target test rows and no source export or migration fixture.",
+        "reconciliation": ["Every literal provider input must own its expected Core output or bounded refusal without mirrored fixture derivation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationPowerSyncQueryTests"],
+        "acceptance": ["Future tests must prove the frozen provider contract over real encrypted local storage without hosted or source claims"]
+      }
+    },
+    {
+      "id": "SWIFT-62E2D7E9B40E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "cb125f85caea55d7c352dfe31bc169a8985c2d1def196fab19ce8027483c1698",
+      "currentBehavior": "Implements the Core-only destination-picker presenter/AppModel with waiting, partial, stale, ready, authoritative-empty and bounded-failure states plus represented stable-Space-ID selection and generation-safe request replacement.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Ready presentation additionally requires isCompleteForQuery, so an incoherent ready-but-incomplete snapshot fails closed. Selection remains presentation-only and defines no Item assignment or retention policy.",
+      "target": {
+        "owner": "Space Assignment Destination Picker AppModel",
+        "surfaces": ["SpaceAssignmentDestinationStagingExercise", "executable waiting/partial/stale/ready/authoritative-empty/failure presenter state", "represented stable SpaceID selection"],
+        "securityRequirements": ["Import only verified Core evidence and never treat local row/readiness/selection as authorization"],
+        "syncRequirements": ["Replace requests generation-safely and ignore late old-scope events without inventing product selection-retention policy"]
+      },
+      "migration": {
+        "rule": "Create target-only presentation state and no source modal/route/Account array migration.",
+        "reconciliation": ["Presentation tests reconcile each verified directory state to one explicit picker state without changing provider data"]
+      },
+      "verification": {
+        "tests": ["Executable six-state presenter fixtures, represented stable-ID selection, request replacement and late-event tests"],
+        "acceptance": ["The model presents the full honest local state machine and cannot dispatch Assign/Clear or Space mutation"]
+      }
+    },
+    {
+      "id": "TEST-0126A06E52D0",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "19a47b978be8e7c5b8ccf96fa1e9f9abfcb4677b9dee022be637bc5d7ae5ea75",
+      "currentBehavior": "Exercises every destination-picker presentation state, ready/completeness coherence, represented-ID selection, request replacement, cancellation, late prior-request rejection, and bounded failures.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Executable Core-only tests prove literal reciprocal state/selection behavior and mutation/MCP exclusions without claiming final production selection retention.",
+      "target": {
+        "owner": "Space Assignment Destination Picker AppModel Tests",
+        "surfaces": ["six-state executable presentation fixtures", "represented stable-ID selection fixtures", "request replacement and cancellation fixtures"],
+        "securityRequirements": ["Synthetic fixtures reveal no production identity and prove selection/readiness never becomes authorization"],
+        "syncRequirements": ["Prove late-event rejection and exact presenter behavior across partial/stale/ready/empty/failure transitions without freezing unspecified selection retention"]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic directory snapshots and no source UI or data fixture.",
+        "reconciliation": ["Literal inputs and expected states remain independently authored for every readiness and selection axis"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationStagingExerciseTests"],
+        "acceptance": ["Future tests must prove honest presenter states and represented stable-ID selection with zero mutation surface without freezing unspecified production retention policy"]
+      }
+    },
+    {
+      "id": "SWIFT-698CCC538675",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "a56c00d0420d50d1831c1bfc919ee888628fa78f619f8ab7f7f43bb1dc5d2f53",
+      "currentBehavior": "Implements the thin target-app adapter from typed ItemPlacementScope to the Account-bound runtime destination stream without caching, filtering, or reinterpreting completeness.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Executable thin composition adapter exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
+      "target": {
+        "owner": "Space Assignment Destination Staging Runtime Adapter",
+        "surfaces": ["typed ItemPlacementScope forwarding", "Account-bound destination stream", "cancellation-preserving adapter"],
+        "securityRequirements": ["Account remains bound by validated runtime; callers cannot inject authorization, provider or database evidence"],
+        "syncRequirements": ["Forward the exact runtime stream and cancellation without caching, filtering or reinterpreting completeness"]
+      },
+      "migration": {
+        "rule": "Add only target app composition; preserve source SetSpaceModal and Firebase service unchanged.",
+        "reconciliation": ["Compile/source controls prove the adapter has no independent data or mutation semantics"]
+      },
+      "verification": {
+        "tests": ["Compiler and source-boundary checks plus AppModel integration tests"],
+        "acceptance": ["The adapter can only open the exact typed-scope read stream and preserves cancellation"]
+      }
+    },
+    {
+      "id": "SWIFT-A1156933E12E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "748a9f1970fb41edc2046a532fb9fae6940b3589fad915c0a6b6c0799556246b",
+      "currentBehavior": "Renders the isolated staging Space destination picker entirely from presenter state and forwards only represented stable-Space-ID selection.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "The thin staging renderer has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP, and does not define final production selection-retention policy.",
+      "target": {
+        "owner": "Space Assignment Destination Staging Picker",
+        "surfaces": ["presenter-driven destination presentation", "canonical destination rows", "represented stable SpaceID picker action"],
+        "securityRequirements": ["Present local quality explicitly and never label cached/readiness evidence as current authorization"],
+        "syncRequirements": ["Render only AppModel state; no view-owned filtering, query, listener or hidden row/count logic"]
+      },
+      "migration": {
+        "rule": "Build an isolated target staging exercise only; do not alter or port the source SetSpaceModal.",
+        "reconciliation": ["Source/build controls preserve every excluded Item/mutation/MCP/production surface"]
+      },
+      "verification": {
+        "tests": ["Executable presenter/AppModel tests, exact source-boundary checks and both target staging builds"],
+        "acceptance": ["The view renders only tested state and forwards represented stable-ID selection without independent filtering, state semantics or mutation affordance; builds are not behavioral rendering proof"]
+      }
+    },
+    {
+      "id": "CONFIG-048B775BE4E4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7b6aba84a97dc513504479677112ab79f842ac1886e53ab47e2bec1b97cc166d",
+      "currentBehavior": "Adds the minimal spike_spaces target relation with exact Project-or-Business-Inventory scope shape, same-Account Project foreign key, canonical lifecycle/revision/name constraints, query-aligned indexes, SELECT-only authenticated grant, and active-membership/active-row RLS.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Additive isolated local schema only. It defines no Space or Item mutation, imports no source data, and grants no hosted schema or migration authority.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query",
+        "surfaces": ["spike_spaces destination read schema", "exact scope and same-Account constraints", "SELECT-only active-member RLS", "query-aligned indexes"],
+        "securityRequirements": ["Authenticated callers receive SELECT only and can enumerate only active rows in Accounts where signed identity has active membership"],
+        "syncRequirements": ["Columns align exactly with the minimal active Space destination Sync Stream projection"]
+      },
+      "migration": {
+        "rule": "Create the target relation additively with synthetic local fixtures only; perform no Firebase export/import or source-data transform.",
+        "reconciliation": ["Runnable pgTAP and Data API tests reconcile constraints, RLS visibility, and write denial"]
+      },
+      "verification": {
+        "tests": ["supabase/tests/space_assignment_destination_picker.test.sql", "scripts/test-local-space-assignment-destination-read.mjs"],
+        "acceptance": ["All 34 Space assertions, local Data API security cases, and zero-error database lint pass"]
+      }
+    },
+    {
+      "id": "CONFIG-DC77B9F609A7",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7b3667e1f173344218f3bba16de9ebc242f704aff678f07804107767749938bb",
+      "currentBehavior": "Runs 34 pgTAP assertions for the Space destination schema, conditional Project scope, same-Account identity, indexes, grants, positive active-member visibility, negative anonymous/revoked/cross-Account/archived visibility, and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Future-tolerant assertions require the frozen columns/invariants without forbidding later authorized schema evolution or mutation objects globally.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["Space destination schema and RLS pgTAP matrix"],
+        "securityRequirements": ["Positive and negative cases execute under synthetic signed identities and prove SELECT-only least privilege"],
+        "syncRequirements": ["Schema and lookup assertions match the exact Project/Inventory read projection"]
+      },
+      "migration": {
+        "rule": "Use transaction-scoped synthetic target rows and roll them back; load no source export.",
+        "reconciliation": ["Every schema/security requirement owns at least one direct assertion"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test"],
+        "acceptance": ["All 34 assertions pass in a clean isolated local Supabase reset"]
+      }
+    },
+    {
+      "id": "CONFIG-5F4C2A8274C3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0bcecd88a17e181e454333dcadfd3b1de74877d465fd1574f8342afa0eec9f13",
+      "currentBehavior": "Runs a localhost-only disposable Supabase Data API matrix proving active same-Account Project/Inventory Space reads plus anonymous, revoked, cross-Account, archived, and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "The runner rejects non-local HTTP endpoints and uses synthetic identities only; it creates no hosted resource and performs no production access.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["local Space destination Data API authorization matrix"],
+        "securityRequirements": ["Fail closed unless the Supabase URL is loopback and prove both row non-enumeration and direct write denial"],
+        "syncRequirements": ["Exercise the same minimal server projection later consumed by exact on-demand Sync Streams"]
+      },
+      "migration": {
+        "rule": "Seed and remove only synthetic local target rows; perform no hosted or source migration action.",
+        "reconciliation": ["Data API results match the pgTAP RLS expectations for each signed role/state"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test:space-destinations"],
+        "acceptance": ["The local positive/negative matrix passes and non-loopback configuration is refused"]
+      }
+    },
+    {
+      "id": "SWIFT-0DCDAFBB4350",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "5546daf4452220b2dca5f8782054ae0b6c95f560a54456f7d204d8355601b676",
+      "currentBehavior": "Implements the provider-free exact-scope Space-list request, canonical local snapshot, active-only directory presentation, checklist progress, explicit unavailable Item count, failed-cache truth and evidence-bound selection into exact Space details.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-LIST-READ-PRESENTATION-001"],
+      "notes": "Verified at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213 after root and independent review rejected the first green candidate for a failed-cache false-empty defect and recursive restart/test-proof gaps. The corrected contract downgrades retryable/required-update cache to stale incomplete presentation evidence, validates nested canonical shapes, and preserves the final search/count/media parity obligations for later slices.",
+      "target": {
+        "owner": "Space List Read and Presentation Contracts",
+        "surfaces": ["SpaceListRequest", "SpaceListSnapshot", "SpaceListPresentation", "SpaceListQuerying", "evidence-bound detail selection"],
+        "securityRequirements": ["Bind Account and exact Project-or-Business-Inventory scope; do not infer visibility from local presence"],
+        "syncRequirements": ["Preserve readiness, quality, source exhaustiveness and explicit non-authoritative empty states"]
+      },
+      "migration": {
+        "rule": "Implement only the isolated provider-free target contract; source Firebase screens remain unchanged.",
+        "reconciliation": ["Contract fixtures cover active source behavior, stable identity/order, checklist progress and named deferred parity"]
+      },
+      "verification": {
+        "tests": ["SpaceDirectoryPresentationTests"],
+        "acceptance": ["Only exact-scope complete evidence can produce an authoritative active Space list or selection"]
+      }
+    },
+    {
+      "id": "TEST-54B6515645F8",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "9b5d278ed8b23fd26c6f7991da443343cc6b791c0974f4879862a256070d165e",
+      "currentBehavior": "Runs six provider-free tests covering exact Account/scope, canonical ordering, active filtering, checklist progress, unavailable Item count, false-empty refusal, recursive restart/tamper, selection/detail continuity, read-port failure and cancellation boundaries.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-LIST-READ-PRESENTATION-001"],
+      "notes": "Verified at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213. Six focused tests pass after two review-and-correction rounds; they independently reconstruct all three fingerprint bases and directly cover failed cached-empty degradation, wrong Account/scope selection validation, rebound cache refusal, strict nested Codable shapes, unexpected failures and cancellation.",
+      "target": {
+        "owner": "Space List Read and Presentation Contract Tests",
+        "surfaces": ["provider-free Space-list contract matrix"],
+        "securityRequirements": ["Exercise Account/scope rebinding and absent/archived selection rejection"],
+        "syncRequirements": ["Exercise ready, partial, stale, unavailable, required-update and authoritative-empty truth"]
+      },
+      "migration": {
+        "rule": "Use synthetic target values only.",
+        "reconciliation": ["Every frozen requirement has reciprocal executable test coverage"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceDirectoryPresentationTests"],
+        "acceptance": ["All exact contract and negative cases pass without a backend dependency"]
+      }
+    },
+    {
+      "id": "SWIFT-F78CAEEBEDC4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
+      "currentBehavior": "Comment-only target scaffold for a PowerSync-backed exact-scope Space browser.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "Will own a browser-specific completeness source; assignment-destination completion cannot authorize browser empty state.",
+      "target": {
+        "owner": "Space Browser PowerSync Provider",
+        "surfaces": ["exact-scope local Space browser query", "space_browser completion lease", "relational checklist-progress reconstruction"],
+        "securityRequirements": ["Reject foreign, mixed-scope, inactive-membership and malformed local evidence without enumeration"],
+        "syncRequirements": ["Require exact current-process browser completion for authoritative empty and drain every observer before close"]
+      },
+      "migration": {
+        "rule": "Read isolated target relations only; no source import or Firebase implementation.",
+        "reconciliation": ["Synthetic Project and Inventory fixtures reconcile canonical rows and completeness independently"]
+      },
+      "verification": {
+        "tests": ["SpaceBrowserPowerSyncProviderTests"],
+        "acceptance": ["Offline list truth remains exact across restart, cancellation, membership loss and close"]
+      }
+    },
+    {
+      "id": "TEST-55014C110C73",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
+      "currentBehavior": "Comment-only encrypted-local and controlled-completeness test scaffold for the Space browser provider.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "Will prove both scopes, deterministic rows, isolation, current-process completeness, restart and drainage.",
+      "target": {
+        "owner": "Space Browser PowerSync Provider Tests",
+        "surfaces": ["encrypted local Space-browser provider matrix"],
+        "securityRequirements": ["Positive and negative exact-scope evidence cases reveal no foreign rows or hidden counts"],
+        "syncRequirements": ["Test causal stream completion separately from row presence and connection state"]
+      },
+      "migration": {
+        "rule": "Use disposable synthetic local target databases only.",
+        "reconciliation": ["Expected rows and readiness match canonical provider-free fixtures"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceBrowserPowerSyncProviderTests"],
+        "acceptance": ["Every browser readiness, rejection, restart and close obligation is executable"]
+      }
+    },
+    {
+      "id": "SWIFT-08DC933EC0F4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
+      "currentBehavior": "Comment-only target AppModel scaffold for Space browser presentation and stable-ID selection.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "Core-only presentation boundary; it adds no search, mutation, Item count or archived-list segment.",
+      "target": {
+        "owner": "Space Browser Staging AppModel",
+        "surfaces": ["active Space browser state", "stable-ID list-to-detail selection", "request replacement and cancellation"],
+        "securityRequirements": ["Render only validated exact-request snapshots and never convert cache state into authorization"],
+        "syncRequirements": ["Preserve every Core readiness state and reject late prior-request events"]
+      },
+      "migration": {
+        "rule": "Add isolated target presentation only.",
+        "reconciliation": ["AppModel output matches Core contract fixtures without provider interpretation"]
+      },
+      "verification": {
+        "tests": ["SpaceBrowserStagingExerciseTests"],
+        "acceptance": ["Presentation and navigation remain bound to represented current Space evidence"]
+      }
+    },
+    {
+      "id": "TEST-A76066CC8EAA",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
+      "currentBehavior": "Comment-only target tests for Space browser staging presentation and list-to-detail continuity.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "Will cover request replacement, cancellation, late-event refusal and every browser readiness state.",
+      "target": {
+        "owner": "Space Browser Staging AppModel Tests",
+        "surfaces": ["Space browser presentation and navigation matrix"],
+        "securityRequirements": ["Reject wrong-Account, wrong-scope, archived, absent and stale selections"],
+        "syncRequirements": ["Prove waiting, partial, stale, ready, empty and bounded-failure presentation"]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory target fixtures only.",
+        "reconciliation": ["Every presenter state derives from one validated Core update"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceBrowserStagingExerciseTests"],
+        "acceptance": ["No late or rebound snapshot can drive visible rows or detail navigation"]
+      }
+    },
+    {
+      "id": "SWIFT-8B0A5006A2CA",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
+      "currentBehavior": "Comment-only target staging composition scaffold for Project/Inventory Space browsing into existing exact-Space detail.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "Thin isolated composition only; it cannot become production navigation or add mutations.",
+      "target": {
+        "owner": "Space Browser Staging Composition",
+        "surfaces": ["typed Project/Inventory browser composition", "existing exact-Space detail handoff"],
+        "securityRequirements": ["Accept only validated runtime-bound Account and typed scope"],
+        "syncRequirements": ["Forward provider/AppModel state without view-owned filtering or readiness inference"]
+      },
+      "migration": {
+        "rule": "Compile only in the isolated target staging application.",
+        "reconciliation": ["Build and source checks prove no Firebase or production route coupling"]
+      },
+      "verification": {
+        "tests": ["isolated staging builds and source-boundary checks"],
+        "acceptance": ["The composition can only browse represented Spaces and open existing stable-ID detail"]
+      }
+    },
+    {
+      "id": "MCPMOD-E3EF7C97DA9C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c67299ad4cfe45b01457d9d7e785add8af2e6447a5901955ec4879e4027e4887",
+      "currentBehavior": "Comment-only target MCP Space-read scaffold documenting a possible bounded core-only projection.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-007", "O-015", "O-023"],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "DRAFT and unregistered. Public list_spaces/get_space replacement remains blocked until authoritative Item-count/detail and media projections exist or product authority approves a narrower diagnostic.",
+      "target": {
+        "owner": "Target MCP Space Read Contracts",
+        "surfaces": ["unregistered space_core_only_v1 design"],
+        "securityRequirements": ["Use injected authenticated request context and emit no raw provider, Item, media, hidden-count or financial data"],
+        "syncRequirements": ["Preserve explicit readiness and non-enumerating absence without strengthening local evidence"]
+      },
+      "migration": {
+        "rule": "Do not register or claim public source-tool parity while dependencies remain open.",
+        "reconciliation": ["Future public replacement must reconcile Item counts, Item rows and media behavior explicitly"]
+      },
+      "verification": {
+        "tests": ["future target MCP contract and parity tests"],
+        "acceptance": ["No fabricated zero count, empty Item list or empty image list can satisfy replacement parity"]
+      }
+    },
+    {
+      "id": "MCPMOD-1B9E357E244B",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "4a72020ef62491a70ab94003a051499649328275d153ceaebf815e44efe76c12",
+      "currentBehavior": "Comment-only target MCP test scaffold for the deferred Space-read contract.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["O-007", "O-015", "O-023"],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001"],
+      "notes": "DRAFT proof surface only; it does not establish registration or public tool parity.",
+      "target": {
+        "owner": "Target MCP Space Read Tests",
+        "surfaces": ["future core-only Space read wire-contract matrix"],
+        "securityRequirements": ["Prove non-enumerating auth/scope failures and absence of restricted fields"],
+        "syncRequirements": ["Round-trip partial, stale, incomplete and authoritative-empty truth exactly"]
+      },
+      "migration": {
+        "rule": "Keep tests comment-only until the blocked MCP contract is separately authorized.",
+        "reconciliation": ["Future tests must distinguish partial diagnostic behavior from full source-tool replacement"]
+      },
+      "verification": {
+        "tests": ["future LedgerTargetMCP Space-read suite"],
+        "acceptance": ["No test claims public parity or registration before Item/media dependencies close"]
+      }
+    }
+  ]
+}

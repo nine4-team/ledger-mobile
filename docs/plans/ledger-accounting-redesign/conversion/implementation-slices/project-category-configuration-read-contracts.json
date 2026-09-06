@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-category-configuration-read-contracts",
+  "title": "Read exact Project category configuration without inventing budget authority",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Category Configuration Read Contracts",
+  "surfaceIds": [
+    "SWIFT-E084EBB4EBFF",
+    "TEST-DB57E9433EB6"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTCATEGORY-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "Later Project budget progress groups canonical paid and unpaid contributions by stable Project category without double counting. This configuration slice preserves category selection/allocation context only and cannot calculate, cache or alter any contribution or spend value.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "For every visible stable category, Project configuration distinguishes no relationship, enabled without allocation, enabled with explicit zero Money and enabled with positive Money. Every supplied allocation is exact non-negative integer-currency Money; absent, null and zero never collapse.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Security and Sync Requirements for Later Target Mapping",
+      "invariant": "The local snapshot contains only category definitions and allocation values already authorized for the Principal in the exact Account and Project. It does not perform authorization or reveal hidden category/allocation rows or counts; incomplete relationship evidence remains explicit rather than becoming no relationship.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "A monotonic Project configuration revision and immutable read evidence prepare later conflict-aware complete-set updates, but this slice exposes no ConfigureProjectCategories command and no shared category Create/Update/Archive/Reorder operation while O-026 remains open.",
+      "decisionIds": [
+        "O-026"
+      ],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Project category configuration is an immutable local read model with exact Account/Project query identity, LocalDataVersion, readiness/quality, visible-row count and as-of evidence. Authorized empty, incomplete, partial and stale local scope remain distinct and reconstruct only through the same validators.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Project-category configuration query port exposes exact Account/Project-scoped local snapshots using domain and standard Swift types only; it contains no generic CRUD, provider listener, authorization implementation or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Project allocation table, RLS policy, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTCATEGORY-TEST-001",
+        "PROJECTCATEGORY-TEST-002",
+        "PROJECTCATEGORY-TEST-003",
+        "PROJECTCATEGORY-TEST-004",
+        "PROJECTCATEGORY-TEST-005"
+      ]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectCategoryConfigurationState has exactly noRelationship, enabledWithoutAllocation, enabledWithAllocation(Money) and relationshipEvidenceIncomplete. Only enabledWithAllocation carries exact non-negative Money; explicit zero remains a carried value.",
+        "ProjectCategoryConfigurationRow binds one verified BudgetCategoryDefinitionSnapshot to one configuration state. Archived/system definitions may remain visible for historical configuration evidence but their existing eligibility values do not grant selection or mutation authority.",
+        "ProjectCategoryConfigurationSnapshot binds one AccountID, ProjectID and configuration revision to the shared validated ListLocalSnapshot contract, refuses duplicate category identity/name/order and treats visibleRowCountBeforeFiltering as the already-authorized visible count only.",
+        "No-relationship is accepted only when relationship evidence is complete; relationshipEvidenceIncomplete is accepted only when it is incomplete. Present enabled evidence may remain visible in partial/stale snapshots without claiming the missing working set.",
+        "ProjectCategoryConfigurationQuerying exposes only watchProjectCategoryConfiguration(accountId:projectId:) local streams; ProjectCategoryConfigurationFailure provides stable safe state/scope/duplicate/readiness/request codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free contract creates no Project-category relation, category table, column, check, unique constraint, index, view or migration; the complete target vertical slice must define those after applicable gates."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No ConfigureProjectCategories or shared category administration command, transaction, lock, idempotency result or server read handler is implemented; O-026 remains open."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Account/Project/value validation and already-authorized subset shape are not authorization. No server rows, membership/financial-visibility predicate, grants or RLS policies exist in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The read port consumes local snapshots but defines no PowerSync Stream, bucket parameter, local table, financial-visibility download rule or provider readiness proof."
+    },
+    "localOffline": {
+      "items": [
+        "Configuration state, rows and snapshots are immutable Codable evidence and reconstruct only through the same category, allocation, Account, Project, identity, order and readiness validators.",
+        "The shared ListLocalSnapshot contract retains query fingerprint, bounded already-authorized rows/count, completeness, ready/partial/stale quality, LocalDataVersion and canonical as-of time across restart.",
+        "Cross-Account categories, duplicate category IDs/names/orders, invalid negative allocation, no-relationship from incomplete evidence and incomplete markers in complete evidence fail atomically without returning a partial configuration snapshot."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Project category configuration contains no image URL, AttachmentPath, byte reference, cache, upload, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared read values and port semantics are defined, but no concrete Swift form/context, MCP TypeScript projection, transport handler, capability registration or entry point is wired in this foundation slice."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase allocation/category/Fee/budget-summary row is transformed and no absent/null/zero variant is repaired. Later migration must admit or quarantine every source configuration explicitly."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside the existing provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "This slice cannot activate Project configuration, authorize financial values, mutate categories/allocations, calculate budgets, provision a database, import source data, deploy, release or cut over."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTCATEGORY-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCategoryConfigurationDataTests.swift",
+      "covers": [
+        "PROJECTCATEGORY-REQ-001",
+        "PROJECTCATEGORY-REQ-002",
+        "PROJECTCATEGORY-REQ-003",
+        "PROJECTCATEGORY-REQ-004",
+        "PROJECTCATEGORY-REQ-005",
+        "PROJECTCATEGORY-REQ-006",
+        "PROJECTCATEGORY-REQ-007"
+      ],
+      "expected": "Valid synthetic visible rows preserve exact Account/Project/category identity, no-relationship/enabled-null/enabled-zero/enabled-positive state, category definition evidence and configuration revision without budget arithmetic, authorization or provider dependencies.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCategoryConfigurationDataTests.swift",
+      "covers": [
+        "PROJECTCATEGORY-REQ-001",
+        "PROJECTCATEGORY-REQ-002",
+        "PROJECTCATEGORY-REQ-003",
+        "PROJECTCATEGORY-REQ-004",
+        "PROJECTCATEGORY-REQ-005",
+        "PROJECTCATEGORY-REQ-006",
+        "PROJECTCATEGORY-REQ-007"
+      ],
+      "expected": "Ready, partial, stale and authoritative-empty authorized snapshots round-trip byte-identically with stable category order, exact relationship-known/incomplete truth, query fingerprint, configuration revision, LocalDataVersion and as-of evidence.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCategoryConfigurationDataTests.swift",
+      "covers": [
+        "PROJECTCATEGORY-REQ-001",
+        "PROJECTCATEGORY-REQ-002",
+        "PROJECTCATEGORY-REQ-003",
+        "PROJECTCATEGORY-REQ-004",
+        "PROJECTCATEGORY-REQ-005",
+        "PROJECTCATEGORY-REQ-006",
+        "PROJECTCATEGORY-REQ-007"
+      ],
+      "expected": "Negative/malformed allocation, cross-Account category, duplicate ID/name/order, hidden-count mismatch, no-relationship from incomplete evidence, incomplete marker in complete evidence and malformed decoded values fail atomically through stable configuration codes.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCategoryConfigurationDataTests.swift",
+      "covers": [
+        "PROJECTCATEGORY-REQ-001",
+        "PROJECTCATEGORY-REQ-002",
+        "PROJECTCATEGORY-REQ-003",
+        "PROJECTCATEGORY-REQ-004",
+        "PROJECTCATEGORY-REQ-005",
+        "PROJECTCATEGORY-REQ-006",
+        "PROJECTCATEGORY-REQ-007"
+      ],
+      "expected": "A deterministic reference port returns only the exact Account/Project snapshot, refuses mismatched Account or Project requests without yielding rows and a failing port yields no false snapshot.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
+    },
+    {
+      "id": "PROJECTCATEGORY-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": [
+        "PROJECTCATEGORY-REQ-001",
+        "PROJECTCATEGORY-REQ-002",
+        "PROJECTCATEGORY-REQ-003",
+        "PROJECTCATEGORY-REQ-004",
+        "PROJECTCATEGORY-REQ-005",
+        "PROJECTCATEGORY-REQ-006",
+        "PROJECTCATEGORY-REQ-007"
+      ],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming budget, server, authorization, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
+    }
+  ],
+  "implementationEvidence": [
+    "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+  ],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 authorized-read contract only. O-026 remains fully open because no category definition/order or Project configuration mutation exists. Financial visibility is modeled as an already-authorized visible subset and is not decided locally. The slice stops before budget contribution calculation, physical durable storage, server/download authorization, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

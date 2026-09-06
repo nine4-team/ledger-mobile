@@ -1,0 +1,766 @@
+{
+  "catalog": {
+    "authorizationPolicies": [
+      {
+        "description": "Derive the Principal from authentication and require active membership in the requested Account.",
+        "id": "account_member"
+      },
+      {
+        "description": "Require a validated target build environment before opening any local infrastructure.",
+        "id": "build_validated_local"
+      },
+      {
+        "description": "Derive the Principal from authentication and require active membership with Client-management capability in the requested Account.",
+        "id": "client_manager"
+      },
+      {
+        "description": "Derive the Principal from authentication; require active Project-management capability, Client-management capability when creating a Client, and Project-budget capability plus category visibility when allocations are present.",
+        "id": "project_setup_manager"
+      },
+      {
+        "description": "Derive the Principal from authentication and require active Account membership plus exact Project visibility, including archived Projects.",
+        "id": "project_reader"
+      },
+      {
+        "description": "Derive the Principal from authentication and require active Account membership with Project-management capability.",
+        "id": "project_archive_manager"
+      },
+      {
+        "description": "Require the active local Principal and Account namespace; this is local scope, not fresh server authorization.",
+        "id": "local_principal_account"
+      },
+      {
+        "description": "Expose only bounded version, capability, deprecation and stable contract metadata with no tenant or persistence data.",
+        "id": "public_contract_metadata"
+      }
+    ],
+    "capabilities": [
+      {
+        "authorizationPolicy": "public_contract_metadata",
+        "availability": "available",
+        "id": "capability_manifest",
+        "telemetryClass": "platform_contract_read",
+        "testOwner": "scripts/generate-target-contracts.mjs",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "public_contract_metadata",
+        "availability": "available",
+        "id": "contract_catalog",
+        "telemetryClass": "platform_contract_read",
+        "testOwner": "scripts/generate-target-contracts.mjs",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "build_validated_local",
+        "availability": "available",
+        "id": "environment_manifest",
+        "telemetryClass": "platform_environment_validation",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "account_member",
+        "availability": "available",
+        "id": "operation_status",
+        "telemetryClass": "operation_status_read",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "local_principal_account",
+        "availability": "available",
+        "id": "sync_health",
+        "telemetryClass": "local_sync_health_read",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "client_manager",
+        "availability": "gated",
+        "id": "client_management",
+        "telemetryClass": "client_creation_write",
+        "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_setup_manager",
+        "availability": "gated",
+        "id": "project_setup",
+        "telemetryClass": "project_setup_write",
+        "testOwner": "LedgerTargetMCP/tests/projectCreation.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_reader",
+        "availability": "gated",
+        "id": "project_note_history",
+        "telemetryClass": "project_note_history_read",
+        "testOwner": "LedgerTargetMCP/tests/projectArchivalReview.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_archive_manager",
+        "availability": "gated",
+        "id": "project_archive",
+        "telemetryClass": "project_archive_write",
+        "testOwner": "LedgerTargetMCP/tests/projectArchivalReview.test.ts",
+        "version": "1"
+      }
+    ],
+    "contracts": [
+      {
+        "authorizationPolicy": "public_contract_metadata",
+        "capability": "capability_manifest",
+        "deprecation": null,
+        "errorCodes": [
+          "client_update_required",
+          "contract_unsupported"
+        ],
+        "id": "get_capabilities",
+        "kind": "query",
+        "resultContract": "CapabilityManifest",
+        "telemetryClass": "platform_contract_read",
+        "testOwner": "scripts/generate-target-contracts.mjs",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "public_contract_metadata",
+        "capability": "contract_catalog",
+        "deprecation": null,
+        "errorCodes": [
+          "client_update_required",
+          "contract_unsupported"
+        ],
+        "id": "get_contract_catalog",
+        "kind": "resource",
+        "resultContract": "VersionedContractCatalog",
+        "telemetryClass": "platform_contract_read",
+        "testOwner": "scripts/generate-target-contracts.mjs",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "local_principal_account",
+        "capability": "sync_health",
+        "deprecation": null,
+        "errorCodes": [
+          "client_update_required",
+          "contract_unsupported"
+        ],
+        "id": "observe_sync_health",
+        "kind": "query",
+        "resultContract": "SyncHealthSnapshot",
+        "telemetryClass": "local_sync_health_read",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/GeneratedContractCatalogTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "build_validated_local",
+        "capability": "environment_manifest",
+        "deprecation": null,
+        "errorCodes": [
+          "client_update_required",
+          "contract_unsupported"
+        ],
+        "id": "validate_environment_manifest",
+        "kind": "operation",
+        "resultContract": "ValidatedLedgerEnvironment",
+        "telemetryClass": "platform_environment_validation",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "account_member",
+        "capability": "operation_status",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "client_update_required",
+          "contract_unsupported",
+          "operation_not_found"
+        ],
+        "id": "watch_operation",
+        "kind": "query",
+        "resultContract": "OperationSnapshot",
+        "telemetryClass": "operation_status_read",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "account_member",
+        "capability": "operation_status",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "client_update_required",
+          "contract_unsupported"
+        ],
+        "id": "watch_unresolved_operations",
+        "kind": "query",
+        "resultContract": "OperationSnapshotList",
+        "telemetryClass": "operation_status_read",
+        "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "client_manager",
+        "capability": "client_management",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "authentication_required",
+          "client_update_required",
+          "contract_unsupported",
+          "client_creation_operation_id_invalid",
+          "client_creation_client_id_invalid",
+          "client_directory_client_name_invalid",
+          "client_creation_created_at_invalid",
+          "client_creation_command_encoding_invalid",
+          "client_creation_identity_conflict",
+          "client_creation_fingerprint_mismatch",
+          "client_creation_server_result_mismatch",
+          "client_creation_request_rejected"
+        ],
+        "id": "create_client",
+        "kind": "operation",
+        "resultContract": "ClientCreationRPCResult",
+        "telemetryClass": "client_creation_write",
+        "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_setup_manager",
+        "capability": "project_setup",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "authentication_required",
+          "client_update_required",
+          "contract_unsupported",
+          "project_setup_operation_id_invalid",
+          "project_setup_project_id_invalid",
+          "project_setup_client_id_invalid",
+          "client_directory_client_name_invalid",
+          "client_directory_project_name_invalid",
+          "project_setup_created_at_invalid",
+          "project_setup_client_selection_invalid",
+          "project_setup_category_identity_invalid",
+          "project_setup_category_identity_duplicate",
+          "project_setup_category_allocation_negative",
+          "project_setup_category_currency_invalid",
+          "project_setup_command_encoding_invalid",
+          "project_setup_payload_invalid",
+          "project_setup_envelope_mismatch",
+          "project_setup_fingerprint_mismatch",
+          "project_setup_identity_conflict",
+          "project_setup_new_client_identity_conflict",
+          "project_setup_client_not_selectable",
+          "project_setup_category_not_selectable",
+          "project_setup_server_result_mismatch",
+          "project_setup_request_rejected",
+          "project_setup_configuration_invalid"
+        ],
+        "id": "create_project",
+        "kind": "operation",
+        "resultContract": "ProjectCreationRPCResult",
+        "telemetryClass": "project_setup_write",
+        "testOwner": "LedgerTargetMCP/tests/projectCreation.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_reader",
+        "capability": "project_note_history",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "authentication_required",
+          "client_update_required",
+          "contract_unsupported",
+          "project_note_project_id_invalid",
+          "project_note_page_size_invalid",
+          "project_note_cursor_invalid",
+          "project_note_cursor_scope_mismatch",
+          "project_note_query_fingerprint_mismatch",
+          "project_note_request_denied",
+          "project_note_request_invalid",
+          "project_note_request_rejected",
+          "project_note_configuration_invalid",
+          "project_note_server_result_mismatch"
+        ],
+        "id": "list_project_notes",
+        "kind": "query",
+        "resultContract": "ProjectNotePageTransportResult",
+        "telemetryClass": "project_note_history_read",
+        "testOwner": "LedgerTargetMCP/tests/projectArchivalReview.test.ts",
+        "version": "1"
+      },
+      {
+        "authorizationPolicy": "project_archive_manager",
+        "capability": "project_archive",
+        "deprecation": null,
+        "errorCodes": [
+          "account_not_authorized",
+          "authentication_required",
+          "client_update_required",
+          "contract_unsupported",
+          "project_archive_operation_id_invalid",
+          "project_archive_project_id_invalid",
+          "project_archive_captured_at_invalid",
+          "project_archive_expected_revision_invalid",
+          "project_archive_command_encoding_invalid",
+          "project_archive_payload_invalid",
+          "project_archive_envelope_mismatch",
+          "project_archive_fingerprint_mismatch",
+          "project_archive_revision_conflict",
+          "project_archive_server_result_mismatch",
+          "project_archive_request_denied",
+          "project_archive_request_invalid",
+          "project_archive_request_rejected",
+          "project_archive_configuration_invalid"
+        ],
+        "id": "archive_project",
+        "kind": "operation",
+        "resultContract": "ProjectArchiveRPCResult",
+        "telemetryClass": "project_archive_write",
+        "testOwner": "LedgerTargetMCP/tests/projectArchivalReview.test.ts",
+        "version": "1"
+      }
+    ],
+    "deprecations": [],
+    "enums": [
+      {
+        "name": "LedgerEnvironmentKind",
+        "values": [
+          "targetLocal",
+          "targetStaging",
+          "targetProduction"
+        ]
+      },
+      {
+        "name": "OperationPhase",
+        "values": [
+          "draft",
+          "queued",
+          "applying",
+          "applied",
+          "rejected",
+          "superseded",
+          "resolved"
+        ]
+      },
+      {
+        "name": "ApplicationErrorCategory",
+        "values": [
+          "validation",
+          "conflict",
+          "authorization",
+          "authentication",
+          "unsupportedContract",
+          "invariant",
+          "transientInfrastructure",
+          "requiredUpdate"
+        ]
+      },
+      {
+        "name": "RetryDisposition",
+        "values": [
+          "never",
+          "automatic",
+          "afterUserCorrection",
+          "afterReauthentication",
+          "afterClientUpdate"
+        ]
+      },
+      {
+        "name": "ConnectivityState",
+        "values": [
+          "offline",
+          "connecting",
+          "online"
+        ]
+      },
+      {
+        "name": "AuthenticationRefreshState",
+        "values": [
+          "unavailable",
+          "refreshing",
+          "current",
+          "stale",
+          "expired",
+          "revoked"
+        ]
+      },
+      {
+        "name": "SubscriptionReadinessState",
+        "values": [
+          "notRequested",
+          "loading",
+          "ready",
+          "stale",
+          "blocked"
+        ]
+      },
+      {
+        "name": "SyncWriteBlock",
+        "values": [
+          "none",
+          "maintenance",
+          "migrationRequired",
+          "clientUpdateRequired",
+          "authorizationExpired",
+          "authorizationRevoked"
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "category": "authorization",
+        "code": "account_not_authorized",
+        "retryDisposition": "afterReauthentication"
+      },
+      {
+        "category": "requiredUpdate",
+        "code": "client_update_required",
+        "retryDisposition": "afterClientUpdate"
+      },
+      {
+        "category": "unsupportedContract",
+        "code": "contract_unsupported",
+        "retryDisposition": "afterClientUpdate"
+      },
+      {
+        "category": "validation",
+        "code": "operation_not_found",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "operation_payload_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "operation_transition_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "authentication",
+        "code": "authentication_required",
+        "retryDisposition": "afterReauthentication"
+      },
+      {
+        "category": "validation",
+        "code": "client_creation_operation_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "client_creation_client_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "client_directory_client_name_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "client_creation_created_at_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "client_creation_command_encoding_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "conflict",
+        "code": "client_creation_identity_conflict",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "invariant",
+        "code": "client_creation_fingerprint_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "client_creation_server_result_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "transientInfrastructure",
+        "code": "client_creation_request_rejected",
+        "retryDisposition": "automatic"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_operation_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_project_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_client_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "client_directory_project_name_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_created_at_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_client_selection_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_category_identity_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_category_identity_duplicate",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_category_allocation_negative",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_category_currency_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "invariant",
+        "code": "project_setup_command_encoding_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_payload_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "invariant",
+        "code": "project_setup_envelope_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_setup_fingerprint_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "conflict",
+        "code": "project_setup_identity_conflict",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "conflict",
+        "code": "project_setup_new_client_identity_conflict",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "validation",
+        "code": "project_setup_client_not_selectable",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "authorization",
+        "code": "project_setup_category_not_selectable",
+        "retryDisposition": "afterReauthentication"
+      },
+      {
+        "category": "invariant",
+        "code": "project_setup_server_result_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "transientInfrastructure",
+        "code": "project_setup_request_rejected",
+        "retryDisposition": "automatic"
+      },
+      {
+        "category": "invariant",
+        "code": "project_setup_configuration_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_note_project_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_note_page_size_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_note_cursor_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_note_cursor_scope_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_note_query_fingerprint_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "transientInfrastructure",
+        "code": "project_note_request_rejected",
+        "retryDisposition": "automatic"
+      },
+      {
+        "category": "authorization",
+        "code": "project_note_request_denied",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_note_request_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_note_configuration_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_note_server_result_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_operation_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_project_id_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_captured_at_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_expected_revision_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_archive_command_encoding_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_payload_invalid",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "invariant",
+        "code": "project_archive_envelope_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_archive_fingerprint_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "conflict",
+        "code": "project_archive_revision_conflict",
+        "retryDisposition": "afterUserCorrection"
+      },
+      {
+        "category": "invariant",
+        "code": "project_archive_server_result_mismatch",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "transientInfrastructure",
+        "code": "project_archive_request_rejected",
+        "retryDisposition": "automatic"
+      },
+      {
+        "category": "authorization",
+        "code": "project_archive_request_denied",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "validation",
+        "code": "project_archive_request_invalid",
+        "retryDisposition": "never"
+      },
+      {
+        "category": "invariant",
+        "code": "project_archive_configuration_invalid",
+        "retryDisposition": "never"
+      }
+    ],
+    "schemaVersion": 1,
+    "telemetryClasses": [
+      {
+        "description": "Record bounded local readiness state and duration without payload or private content.",
+        "id": "local_sync_health_read"
+      },
+      {
+        "description": "Record bounded operation status reads by stable outcome and contract version.",
+        "id": "operation_status_read"
+      },
+      {
+        "description": "Record bounded contract/capability reads by catalog hash and version.",
+        "id": "platform_contract_read"
+      },
+      {
+        "description": "Record stable environment validation outcome codes without rejected resource values.",
+        "id": "platform_environment_validation"
+      },
+      {
+        "description": "Record bounded Client creation outcomes and contract version without Client names, tokens, or command payloads.",
+        "id": "client_creation_write"
+      },
+      {
+        "description": "Record bounded Project setup outcomes and contract version without Project, Client, allocation, token, or command payload content.",
+        "id": "project_setup_write"
+      },
+      {
+        "description": "Record only bounded note-history outcome, page size, completeness, and version without text, identity, cursor, token, or private audit content.",
+        "id": "project_note_history_read"
+      },
+      {
+        "description": "Record only bounded Project archive outcome, phase, error, and version without Project or Operation identity, command envelope, key, or token.",
+        "id": "project_archive_write"
+      }
+    ],
+    "versions": {
+      "catalog": "1",
+      "operation": "1",
+      "query": "1",
+      "schema": "1",
+      "sync": "1"
+    }
+  },
+  "catalogSha256": "0ea995bcdc4c4bf9317227711b5cd3617908308e8b66d694c0ff23e5be8a6b5c"
+}

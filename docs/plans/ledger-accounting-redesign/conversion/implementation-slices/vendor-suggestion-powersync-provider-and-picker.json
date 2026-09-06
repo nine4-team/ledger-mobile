@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "vendor-suggestion-powersync-provider-and-picker",
+  "title": "Read and select Account vendor suggestions from an encrypted offline workspace",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Vendor Suggestion Offline Picker",
+  "surfaceIds": [
+    "CONFIG-456D371094F4",
+    "CONFIG-C35C70C22D3B",
+    "CONFIG-F2A050C625BB",
+    "SWIFT-0CAF55A667DD",
+    "SWIFT-1854C369125A",
+    "SWIFT-7947DB9A7607",
+    "SWIFT-92517AD05CF0",
+    "SWIFT-C73CD63C401A",
+    "TEST-46C1EA676FF3",
+    "TEST-7C2F42BE6C1D",
+    "TEST-A03D922ACD36"
+  ],
+  "requirements": [
+    {
+      "id": "VENDORPOWER-REQ-001",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md",
+      "section": "Implemented Contract",
+      "invariant": "Reuse the verified Account-scoped VendorSuggestionQuerying contract unchanged: stable suggestion identity, preserved control-free display text of at most 200 UTF-8 bytes, normalized comparison key, active or archived lifecycle, unique UInt32 order, the complete zero-through-UInt64-maximum revision range, deterministic order and exact local evidence. Selecting an active suggestion yields only its preserved free-text sourceSnapshot and never Vendor or accounting identity.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORPOWER-TEST-001", "VENDORPOWER-TEST-003", "VENDORPOWER-TEST-004", "VENDORPOWER-TEST-005", "VENDORPOWER-TEST-008", "VENDORPOWER-TEST-009"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Authorization Layers",
+      "invariant": "The exact reader entitlement and archived-row disclosure policy are unresolved. O-026 and O-047 must decide which active Account members may read suggestions and whether archived identities download in the general catalog or only through contextual historical resolution. Any future public relation must use least-privilege grants and trusted authorization; anonymous, revoked, unmapped, ambiguous, expired-token, spoofed-metadata, forged-Account and cross-Account attempts must not disclose rows, and clients receive no direct write privilege.",
+      "decisionIds": ["O-026", "O-047"],
+      "verificationIds": ["VENDORPOWER-TEST-001", "VENDORPOWER-TEST-002", "VENDORPOWER-TEST-003", "VENDORPOWER-TEST-013"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Security and Sync Requirements for Later Target Mapping",
+      "invariant": "A future parameterized PowerSync stream may project only the O-026/O-047-authorized active and contextually required archived suggestion rows after trusted authenticated-Principal authorization. Subscription parameters narrow Account scope but never authorize it. Revision must be transported as canonical unsigned decimal text so zero and values above signed SQLite range are not truncated.",
+      "decisionIds": ["A-003", "A-004", "O-026", "O-047"],
+      "verificationIds": ["VENDORPOWER-TEST-003", "VENDORPOWER-TEST-004", "VENDORPOWER-TEST-005", "VENDORPOWER-TEST-011"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Encrypted cached rows remain useful as partial or stale evidence. Only a current-process completion of the exact Account subscription followed by a causally later full local reread may produce ready or authoritative-empty evidence. Restart, global sync status, a retained subscription epoch or an incomplete empty database cannot manufacture completeness.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["VENDORPOWER-TEST-004", "VENDORPOWER-TEST-005", "VENDORPOWER-TEST-006", "VENDORPOWER-TEST-007"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One module-internal provider implements VendorSuggestionQuerying and owns its exact subscription plus row/status tasks. The Account-workspace facade binds Account implicitly, admits the stream through the existing open/closing/closed lease, rejects late watches, and cancels and joins every provider task before the structured database closes. No database, SQL, SDK subscription or provider object crosses the public facade.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORPOWER-TEST-004", "VENDORPOWER-TEST-006", "VENDORPOWER-TEST-007"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-006",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Receipt Details",
+      "invariant": "Picker composition is unresolved. O-047 must decide reader eligibility, active versus contextual archived availability, whether independent free-text entry/Other remains, how waiting/partial/stale/ready/authoritative-empty/failure appear, and when stable-ID selection clears. Receipt Details establishes only that vendor text remains on the owning record; it does not authorize these application behaviors.",
+      "decisionIds": ["O-047"],
+      "verificationIds": ["VENDORPOWER-TEST-008", "VENDORPOWER-TEST-009", "VENDORPOWER-TEST-010"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md",
+      "section": "Permanent Limits",
+      "invariant": "O-026 remains unresolved for vendor-suggestion creation, default seeding, save-as-suggestion, rename, merge, archive, reactivate, reorder and mutation authorization. O-047 remains unresolved for read entitlement, archived disclosure and picker/free-text behavior. This draft implements no writer, RPC, upload queue, settings control, fixed/excluded option policy, default population or source import and cannot claim current-picker parity.",
+      "decisionIds": ["O-026", "O-047"],
+      "verificationIds": ["VENDORPOWER-TEST-001", "VENDORPOWER-TEST-002", "VENDORPOWER-TEST-003", "VENDORPOWER-TEST-008", "VENDORPOWER-TEST-009", "VENDORPOWER-TEST-010", "VENDORPOWER-TEST-013"]
+    },
+    {
+      "id": "VENDORPOWER-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All work stays spike-prefixed and synthetic in the dedicated target worktree, disposable local Supabase, encrypted local fixtures and isolated staging app. Firebase, hosted resources, source export/import, production data, migration execution, release and cutover remain untouched; A-003/A-004 remain proposed until real authenticated PowerSync proof passes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["VENDORPOWER-TEST-001", "VENDORPOWER-TEST-002", "VENDORPOWER-TEST-003", "VENDORPOWER-TEST-004", "VENDORPOWER-TEST-010", "VENDORPOWER-TEST-011", "VENDORPOWER-TEST-013"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse VendorSuggestionID, VendorSuggestionDisplayValue, VendorSuggestionSnapshot, VendorSuggestionReferenceSnapshot, VendorSuggestionQuerying and their stable failures without a second suggestion/value/readiness model.",
+        "The provider recomputes normalizedComparisonKey through the verified Swift initializer and rejects a stored projected key that disagrees; it never treats lower(display_value) alone as cross-runtime normalization authority."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "After O-026/O-047 approval, add the authorized public.spike_vendor_suggestions projection with stable text ID, exact Account foreign key, display value, stored normalized key, active/archive lifecycle, UInt32-range presentation order and the complete unsigned revision contract plus Account-scoped unique ID/key/order constraints and deterministic read indexes.",
+        "Constrain accepted database text to the verified 200-byte, trimmed, nonempty, control-free boundary and require nonempty stored normalized evidence; canonical cross-runtime parity is proved by shared fixtures rather than locale-dependent database lowercasing."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {"items": [], "notApplicable": "No vendor-suggestion writer, RPC, SECURITY DEFINER helper, default seed or operation result exists."},
+    "dataApiGrants": {
+      "items": ["After O-026/O-047 approval, revoke default public/anon/authenticated privileges, grant only the approved narrow read capability, and test every allowed and denied role/capability plus every denied client write through pgTAP and the disposable local Data API."],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": ["After O-026/O-047 approval, enable and force RLS and implement only the approved reader-role/capability and active-versus-contextual-archive policy. Account membership alone is not authorization, and this DRAFT selects no policy."],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": ["After O-026/O-047 approval, add only the approved non-auto-subscribed exact-Account or contextual stream shape, bind every row and authorization sentinel to the requested scope, project exact approved lifecycle evidence, and cast revision to text. This DRAFT selects neither a full archived catalog nor a contextual archive resolver."],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Add one encrypted local table with account_id, display_value, normalized_comparison_key, lifecycle, presentation_order integer and revision text plus exact Account/order and normalized-key indexes.",
+        "After O-026/O-047 approval, preserve the complete approved authorization/capability sentinel locally; membership may be one required input but is never sufficient authorization. Combine that sentinel with current-process subscription completion plus causally later reread, content-bound LocalDataVersion, stable scope-bound fingerprint, atomic malformed/duplicate/count refusal and provider-owned cancel-and-drain registry.",
+        "Close/reopen preserves only approved cached rows but resets completeness; loss of any approved authorization/capability sentinel clears presented rows immediately and stale completion cannot re-promote them."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Vendor suggestions contain no attachment identity, bytes, URL, cache, upload, retention or deletion behavior."},
+    "appMcp": {
+      "items": [
+        "After O-047 approval, add only its authorized Account/context-bound runtime read, presentation, selection-clearing, free-text/Other and picker behavior. This rejected DRAFT selects none of those outcomes.",
+        "No MCP resource/tool is added because this slice does not introduce an MCP consumer; any later MCP list/read surface requires its own bounded contract and registration review."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase vendors array, hardcoded default, duplicate source string, historical vendor snapshot or production row is decoded or imported. A later migration slice must populate this otherwise-empty target read model."},
+    "observabilityRunbooks": {
+      "items": ["Public failures remain stable and bounded without row text, hidden counts, SQL, paths, credentials or subscription details."],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": ["Rollback is disposal of synthetic local target data. No hosted resource, source import, migration, production feature switch, release or cutover is authorized."],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {"id": "VENDORPOWER-TEST-001", "kind": "database_invariant", "owner": "supabase/tests/vendor_suggestion_reference_read.test.sql", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-002", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "A clean reset proves exact table columns, type/range/text/lifecycle constraints, Account foreign key, Account-scoped identity/normalized-key/order uniqueness, indexes, forced RLS and absence of writer/RPC/default seed.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-002", "kind": "rls_positive", "owner": "supabase/tests/vendor_suggestion_reference_read.test.sql and scripts/test-local-vendor-suggestion-read.mjs", "covers": ["VENDORPOWER-REQ-002", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "Every role/capability approved by O-026/O-047 reads exactly its allowed active and contextual archived suggestion rows without foreign-Account disclosure.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-003", "kind": "sync_authorization", "owner": "powersync/sync-streams.yaml and scripts/check-target-environment.mjs", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-002", "VENDORPOWER-REQ-003", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "After approval, static and generated guards prove the exact authorized scope parameters, Principal/capability sentinel, approved active/contextual-archive lifecycle projection, exact fields/revision cast, no auto-subscribe and no write surface; sentinel loss removes local eligibility.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-004", "kind": "end_to_end", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/VendorSuggestionPowerSyncQueryTests.swift", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-003", "VENDORPOWER-REQ-004", "VENDORPOWER-REQ-005", "VENDORPOWER-REQ-008"], "expected": "Real encrypted local fixtures prove exact authorized lifecycle mapping, zero and UInt64-maximum revision text, both row/completion startup orders, causal post-completion reread, stable fingerprint and content-bound version.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-005", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/VendorSuggestionPowerSyncQueryTests.swift", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-003", "VENDORPOWER-REQ-004"], "expected": "Encrypted close/reopen preserves canonical rows but begins partial/stale until a fresh exact-subscription completion and later reread; authoritative empty requires the same causal sequence.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-006", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/VendorSuggestionPowerSyncQueryTests.swift", "covers": ["VENDORPOWER-REQ-004", "VENDORPOWER-REQ-005"], "expected": "Wrong Account/Principal, missing/revoked scope, malformed fields/normalized key/revision/order, duplicates, database failure, consumer cancellation and shutdown produce no false snapshot and drain rows/status/subscription tasks.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-007", "kind": "end_to_end", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift", "covers": ["VENDORPOWER-REQ-004", "VENDORPOWER-REQ-005"], "expected": "Bootstrap owns exactly one query; public zero-argument watch is lease-tracked; concurrent/post-close starts refuse; close joins forwarding and provider tasks before database close; repeated close stays safe.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-008", "kind": "domain", "owner": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerPresentationTests.swift", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-006", "VENDORPOWER-REQ-007"], "expected": "After O-047 approval, every authorized local-evidence, active/contextual-archive, picker and independent free-text/Other outcome maps explicitly without inventing defaults, saves, or fixed-option policy.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-009", "kind": "end_to_end", "owner": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerAppModelTests.swift", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-006", "VENDORPOWER-REQ-007"], "expected": "After O-047 approval, selection, clearing, lifecycle, scope-loss, restart, watch-replacement and chosen-output behavior match the approved stable-identity/free-text policy; stop and noncooperative late events cannot rebound state.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-010", "kind": "app_mcp_contract", "owner": "Target environment checks and macOS/iOS staging builds", "covers": ["VENDORPOWER-REQ-006", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "The isolated picker compiles through a thin runtime adapter, exposes no mutation or Firebase/provider object, and leaves current source picker/settings surfaces unchanged.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-011", "kind": "sync_authorization", "owner": "Future isolated authenticated PowerSync vendor-suggestion rehearsal", "covers": ["VENDORPOWER-REQ-002", "VENDORPOWER-REQ-003", "VENDORPOWER-REQ-008"], "expected": "Real isolated eligible and ineligible Principals prove the approved active/contextual-archive projection, forged Account parameters, nonmember/cross-Account subscription denial, revocation, reconnect and absence of unauthorized local rows. This obligation blocks verified status until it passes.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-012", "kind": "operational", "owner": ".github/workflows/supabase-conversion-control.yml", "covers": ["VENDORPOWER-REQ-001", "VENDORPOWER-REQ-002", "VENDORPOWER-REQ-003", "VENDORPOWER-REQ-004", "VENDORPOWER-REQ-005", "VENDORPOWER-REQ-006", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "Exact READY and implementation checkpoints pass conversion controls, disposable local Supabase, complete nonparallel Swift/MCP tests, both staging builds and clean artifacts without hosted, Firebase, migration, production or cutover access.", "status": "planned", "evidence": []},
+    {"id": "VENDORPOWER-TEST-013", "kind": "rls_negative", "owner": "supabase/tests/vendor_suggestion_reference_read.test.sql and scripts/test-local-vendor-suggestion-read.mjs", "covers": ["VENDORPOWER-REQ-002", "VENDORPOWER-REQ-007", "VENDORPOWER-REQ-008"], "expected": "Anonymous, inactive, revoked, nonmember, unmapped/ambiguous identity, expired-token, spoofed user-metadata, forged-Account and cross-Account sessions disclose no rows, while anon and authenticated INSERT, UPDATE and DELETE fail for lack of grants and policies.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": ["EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"],
+  "rehearsalEvidence": [],
+  "blockers": ["O-026", "O-047"],
+  "notes": "Independent adversarial review rejected READY before executable work: O-026/O-047 do not yet authorize reader roles, archived-row disclosure or picker/free-text behavior, and the first draft incorrectly strengthened UInt64 revision to positive-only. The corrected draft preserves zero through UInt64.max and records those product blockers. Ten claimed leaves are comment-only; the pgTAP leaf contains one explicit skipped READY plan and no passing assertion. Draft base is 6f1f213cc3d74ad80bb894cabd93a040fc091e37; there is no READY commit. Any future READY must refreeze an exact base and exact changed-path allowlist after product approval. Current Firebase VendorDefaultsService, VendorPickerField and VendorDefaultsView remain unchanged and unclaimed."
+}

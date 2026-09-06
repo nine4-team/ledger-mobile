@@ -1,5 +1,16 @@
 # Data Model Specification
 
+> **Target-state notice (2026-08-30):**
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> and [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md)
+> require additive schema and migration work not yet reflected in the entity
+> tables below. In particular, one mutable `item.transactionId` cannot represent
+> acquisition, current placement, open billing, paid membership, and movement
+> provenance simultaneously. The target also adds account-scoped Client records,
+> required `project.clientId`, and paired Transfer records. This document remains
+> the current persisted model until that migration ships. See
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
+
 This document defines every Firestore entity, its fields, and all cross-entity relationships used by Ledger. It is the canonical reference for how data is shaped, linked, and computed. Platform-agnostic: no language types, no file paths, no component names.
 
 ---
@@ -219,6 +230,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | accountId | string, nullable | FK to Account |
 | projectId | string, nullable | FK to Project. Null means item is in business inventory |
 | transactionId | string, nullable | FK to Transaction. Null is the intentional **No Transaction** correction/work-queue state. When set, it must agree with canonical `transaction.itemIds` ownership. |
+| legacyProtoItemId | string, nullable | **Planned additive compatibility field.** Correlates an Item created from a legacy proto record so retries and migration cannot create duplicates. Old clients may ignore it. |
 | spaceId | string, nullable | FK to Space |
 | budgetCategoryId | string, nullable | FK to BudgetCategory. **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`** — items in business inventory have no category. Set when an item moves into a project (sell-to-project flow) and wiped when an item moves into inventory (return-to-inventory flow). See "Item Scope/Category Invariant" below. |
 | name | string, nullable | Primary display name |
@@ -253,6 +265,12 @@ For every Item:
 
 Items in business inventory (`projectId == null`) have `budgetCategoryId == null`. Items in a project have a `budgetCategoryId`. Both clients (iOS and MCP) enforce this on every write.
 
+The target unified Item wizard preserves this invariant for compatibility.
+Creating an Unaccounted For Item in a project assigns the project's enabled
+Furnishings category immediately, but the Item contributes no spend until it is
+connected to a project Purchase or a billable Item occurrence. Accounting state
+is therefore not inferred from `budgetCategoryId` alone.
+
 Project items may have `transactionId == null` while awaiting a correct transaction. Clearing a transaction preserves the item's category. When linked, item and transaction must share a project and category; association writes update the item, old/new `transaction.itemIds`, and correction lineage atomically. Ordinary transaction category edits cascade to currently owned items. The dedicated uncollected Purchase-from-Inventory reclassification does the same for current movement membership while leaving departed items and downstream transactions untouched. Generated inventory-movement structural identity fields remain immutable; eligible project Purchase totals are server-maintained from sold-item price deltas.
 
 **This replaces** the legacy "items carry their `budgetCategoryId` across scope moves" model. Under the new model, categories belong to projects — when an item moves into inventory, its category is wiped; when an item moves into a project, a category is acquired (resolved at sell time from user input).
@@ -263,13 +281,20 @@ Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-manage
 
 ---
 
-### 4. ProtoItem
+### 4. ProtoItem (Legacy Compatibility)
 
 **Path:** `accounts/{accountId}/protoItems/{protoItemId}`
 
-A persistent capture group for a physical object that is not ready to become a real `Item` yet. Proto items are photo-first intake records used for field capture and later conversion. They do not affect budgets, inventory value, item counts, transactions, invoices, reports, or lineage until converted.
+A legacy persistent capture used by pre-update clients. The new version does not
+create new `ProtoItem` records; it creates real Items through the unified wizard.
+Existing open proto records remain readable and writable by the current
+Firebase app before the hard-cutover source freeze. The target app does not
+runtime-read Firebase proto records. The rehearsed importer transforms each to
+one real target Item or an explicit blocking quarantine result before target
+authority opens.
 
-User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are shown in their owning context first: project drafts in the Project Items tab's Item Quick Drafts section, inventory drafts in inventory context, and transaction-linked drafts in Transaction Detail's Item Quick Drafts section. Needs Review is an additional global cleanup queue, not the only place drafts are visible.
+New user-facing UI uses **Unaccounted For Items**, **Accounted For Items**, and
+**Link**. Do not expose proto/draft/conversion language.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
@@ -277,14 +302,16 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | accountId | string | FK to Account |
 | projectId | string, nullable | FK to Project. Project context for the capture. Null means inventory/unassigned. |
 | intendedProjectId | string, nullable | FK to Project. Destination hint for inventory captures intended for a project. |
-| transactionId | string, nullable | FK to Transaction. The single authoritative transaction the eventual item should initially join. Null until a transaction is selected. |
-| candidateItemId | string, nullable | FK to Item. Possible matching item; not authoritative until converted. |
-| convertedItemId | string, nullable | FK to Item. Set when status becomes `"converted"`. |
-| name | string, nullable | Optional quick capture label. Not a finalized item name until conversion. |
+| transactionId | string, nullable | Legacy/provisional FK to Transaction. In the target Link flow this may identify a selected client-paid project Purchase or inventory acquisition Purchase, but one field cannot represent all target relationships. |
+| spaceId | string, nullable | FK to Space. Physical placement allowed before Link; it does not affect Unaccounted For/Accounted For placement or accounting. |
+| candidateItemId | string, nullable | FK to Item. Provisional possible duplicate/evidence match; never authoritative without explicit reconciliation. |
+| convertedItemId | string, nullable | FK to Item. Internal compatibility link to the authoritative Item identity when status becomes `"converted"`. |
+| name | string, nullable | Optional Quick Add Item name. |
 | status | string | One of: `"open"`, `"in_review"`, `"converted"`. Defaults to `"open"`. |
-| isFromInventory | boolean | User-selected routing marker. `true` means a project draft originated in business inventory and must be matched to its inventory acquisition transaction. Defaults to `false`. |
-| images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image is required for normal capture. |
-| notes | string, nullable | Direct user-authored capture and conversion instructions. These may be entered during initial capture or review and take precedence over inferred metadata and routing markers. |
+| assignmentHint | string | One of `"undecided"`, `"client_paid"`, `"business_paid"`, or `"from_inventory"`. Reversible guidance only. |
+| isFromInventory | boolean | Compatibility mirror for older clients. New clients keep it aligned with `assignmentHint == "from_inventory"`. |
+| photos | array of AttachmentRef | Current legacy field for object, tag, SKU, price, packaging, or supporting photos. Normal capture historically expects a photo unless a non-empty note satisfies the compatibility rule below. |
+| notes | string, nullable | Direct user-authored capture and Link/reconciliation instructions. These may be entered during initial capture or review and take precedence over inferred metadata and routing markers. |
 | extractedText | string, nullable | OCR text from images. Optional; may be added by later automation. |
 | extractedMeta | map, nullable | Optional structured extraction, such as candidate SKU, price, vendor, or confidence values. |
 | createdBy | string, nullable | Firebase Auth UID |
@@ -294,13 +321,26 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | updatedAt | timestamp | |
 | convertedAt | timestamp, nullable | |
 
-**Validation:** A proto item requires at least one image or a non-empty note. The capture flow may collect an optional quick name/label and direct user notes. Metadata such as source, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** marker is allowed during initial project capture and at the card/detail level because it records routing intent only; it does not create item, budget, transaction, sale, or lineage effects.
+**Legacy validation:** A proto capture requires at least one image or a non-empty
+note. Preserve that rule for supported old writers. Provisional
+`assignmentHint` values are non-authoritative compatibility data and never
+create Item, budget, Transaction, charge, Invoice, or provenance effects.
 
-**Transaction association:** `transactionId` is authoritative. Suggested transaction matches remain transient until a human confirms one and writes this field. The legacy `candidateTransactionId` field is deprecated and must not be used as an automatic fallback during promotion.
+**Transaction association:** `transactionId` remains an authoritative selected
+Transaction for current writers, but its meaning is route-dependent and
+insufficient for the target architecture. Suggested matches remain transient
+until a human confirms them. The legacy `candidateTransactionId` field is
+deprecated and must not be used as an automatic Link fallback.
 
-**Conversion:** A proto item is converted by creating a new item, merging with an existing item, or routing through the inventory-to-project flow. A project-scoped draft linked to a project transaction converts directly into that transaction. A project-scoped draft linked to an inventory transaction is converted atomically by creating the item under the acquisition transaction and immediately executing the canonical sale into the draft's project; the final item points at the new project Purchase and lineage preserves the acquisition. Conversion sets `status: "converted"` and `convertedItemId` when an item exists. Unwanted drafts are deleted.
+**Legacy resolution:** Migrating or opening an old proto record creates exactly
+one real Item and stores durable correlation using `convertedItemId` and an
+additive Item back-reference. Link then operates on that Item. Business-paid Link
+creates an open Item charge, not the legacy project movement Purchase.
 
-**Invariant:** unconverted proto items are never queried as items and never included in item, budget, invoice, transaction completeness, or report calculations.
+**Invariant:** unresolved legacy proto records remain excluded from
+authoritative Item, budget, Invoice, Transaction completeness, and report
+calculations until idempotently resolved to one real Item. Do not delete the
+collection, rules, indexes, or Storage paths while supported old clients remain.
 
 ---
 
@@ -647,11 +687,11 @@ Embedded within Checklist.
 | Item | belongs to | Project | N:1 | `item.projectId` | Null means business inventory. See Scope Semantics |
 | Item | belongs to | Space | N:1 | `item.spaceId` | Null means item is not in any space |
 | Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.** Set when an item moves into a project (sell-to-project flow); wiped when an item moves into inventory (return-to-inventory flow). Auto-set from destination transaction on association or reassignment within a project. |
-| ProtoItem | may convert to | Item | 0:1 | `protoItem.convertedItemId` | Set only after the capture is converted into or merged with a real item |
-| ProtoItem | may reference | Project | 0:1 | `protoItem.projectId` | Capture context. Null means inventory/unassigned |
-| ProtoItem | may hint destination | Project | 0:1 | `protoItem.intendedProjectId` | Optional destination hint for inventory captures |
-| ProtoItem | will initially join | Transaction | 0:1 | `protoItem.transactionId` | Single authoritative association. Transaction scope determines direct-project conversion versus atomic inventory-create-and-sell conversion. |
-| ProtoItem | may reference | Item | 0:1 | `protoItem.candidateItemId` | Candidate merge target only; not authoritative until conversion |
+| ProtoItem (legacy) | resolves to | Item | 0:1 | `protoItem.convertedItemId`; planned `item.legacyProtoItemId` | Compatibility-only, idempotent correlation. New-version creation writes the Item directly. |
+| ProtoItem (legacy) | may reference | Project | 0:1 | `protoItem.projectId` | Historical capture context. Null means inventory/unassigned. |
+| ProtoItem (legacy) | may hint destination | Project | 0:1 | `protoItem.intendedProjectId` | Historical destination hint for inventory captures. |
+| ProtoItem (legacy) | may reference | Transaction | 0:1 | `protoItem.transactionId` | Historical route-dependent association. It is insufficient for the target accounting model and must not be reinterpreted without review. |
+| ProtoItem (legacy) | may reference | Item | 0:1 | `protoItem.candidateItemId` | Historical candidate match only; not authoritative until explicit reconciliation. |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |
 | Space | belongs to | Project | N:1 | `space.projectId` | Null means business inventory scope |

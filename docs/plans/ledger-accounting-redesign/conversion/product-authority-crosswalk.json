@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
+  "canonicalTargetSpecs": [
+    "docs/specs/invoice-centered-project-accounting.md",
+    "docs/specs/inventory-item-invoicing-lifecycle.md",
+    "docs/specs/proto-item-capture.md",
+    "docs/specs/client-identity-and-project-transfers.md",
+    "docs/specs/projects.md",
+    "docs/specs/spaces.md",
+    "docs/specs/account-discovery-and-workspace-selection.md",
+    "docs/specs/session-ending-pending-work.md",
+    "docs/specs/budget-management.md",
+    "docs/plans/non-item-receipt-lines/design.md"
+  ],
+  "batches": {
+    "M0-APP-SHELL-PRESENTATION-001": {
+      "scope": "product",
+      "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ATTACHMENT-POWERSYNC-PROVIDER-001": {
+      "scope": "technical_control",
+      "rationale": "The isolated attachment provider slice proves only protected encrypted local byte durability, exact scope binding, restart recovery and fail-closed local queue evidence without choosing product retention/deletion policy or claiming hosted Storage and PowerSync behavior.",
+      "authorities": [
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001": {
+      "scope": "technical_control",
+      "rationale": "The exact-receipt resolver exposes already-accepted protected local bytes only inside an already-open Account runtime, after immutable receipt, queue and ciphertext evidence reverify. It adds no workspace admission, remote read, rendering, upload, retention/deletion, hosted or production authority; A-016 remains the activation gate.",
+      "authorities": [
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-AUTH-001": {
+      "scope": "product",
+      "rationale": "Identity, membership, invite, and MCP principal surfaces support authoritative Client relationships and approved offline/security behavior.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-FUNCTIONS-001": {
+      "scope": "product",
+      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the canonical target specs.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/purchase-handling-and-inventory-intent.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-RULES-001": {
+      "scope": "product",
+      "rationale": "Firestore paths and rules reveal current entity and authorization boundaries, but target tables, RLS, and Sync Streams must enforce the redesigned product model.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-STORAGE-001": {
+      "scope": "product",
+      "rationale": "Media references and upload durability support the unified Item flow and accounting evidence while target object policy remains private and offline durable.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CAPABILITY-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Coverage tooling governs how source and target obligations are tracked; it does not define product behavior.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/README.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-evolution-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The local-only Account discovery adapter must preserve canonical Principal-scoped visibility-safe Account discovery, honest local readiness and explicit non-authorizing selection without inferring Auth, lease, hosted Sync or workspace-activation policy.",
+      "authorities": [
+        { "path": "docs/specs/account-discovery-and-workspace-selection.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001": {
+      "scope": "technical_control",
+      "rationale": "The target Account workspace runtime must preserve validated environment isolation, encrypted restart durability and non-destructive ordinary close before its local evidence can support pending-work or session-ending policy.",
+      "authorities": [
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PENDING-WORK-POWERSYNC-PROVIDER-001": {
+      "scope": "technical_control",
+      "rationale": "The target-local pending-work provider must derive the canonical scoped summary from validated operation and attachment evidence with stable restart-safe observation identity and fail-closed cross-store behavior, without performing synchronization, deletion or signout.",
+      "authorities": [
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001": {
+      "scope": "technical_control",
+      "rationale": "The Account-workspace lifecycle owner composes the already-verified structured pending-work query and separately encrypted attachment durability components into one scope-bound runtime while preserving accepted local evidence across ordinary close; it does not implement session ending, synchronization, deletion or signout.",
+      "authorities": [
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ATTACHMENT-DURABILITY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001": {
+      "scope": "technical_control",
+      "rationale": "This enabling target-local adapter/runtime composition must preserve the verified Account/category read model and honest incomplete-first local evidence while consuming only the already-materialized visible subset. It creates no user-visible Project setup outcome and does not decide O-026 administration or download visibility policy.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-BUDGET-CATEGORY-REFERENCE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-SETUP-APPLICATION-FLOW-001": {
+      "scope": "product",
+      "rationale": "This bounded target application flow turns already-verified existing-Client selection, category-reference, Project-setup form/use-case and local provider contracts into one user-visible offline staging form without deciding new-Client validation, category administration, defaults, hosted authorization or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-EXISTING-CLIENT-SELECTION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-FORM-PRESENTATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-USE-CASE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001": {
+      "scope": "product",
+      "rationale": "This bounded target application flow composes the existing Account-scoped Client directory and exact Client-detail local streams into an honest offline staging browser without deciding directory sorting, related-Project aggregation, cards, routes, raw-name submission, mutation, hosted authorization or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001": {
+      "scope": "product",
+      "rationale": "This bounded target application flow turns the already-verified Project directory-selection/detail-header presentation and Account-bound local provider streams into one honest offline staging browser without deciding sorting, search, cards, budgets, media, routes, workspace activation, mutation, hosted authorization or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-PRESENTATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001": {
+      "scope": "product",
+      "rationale": "The isolated Client and Project directory provider must preserve canonical stable identity and Project-to-Client relationships while proving membership-scoped local visibility, honest independent readiness, offline pending-row usability, reconciliation and target-app navigation without authorizing hosted or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Client provider slice must preserve stable Client identity and shared operation semantics while proving Postgres authorization, encrypted offline durability, Sync upload and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Client rename provider slice must preserve stable Client identity, current-display replacement and frozen-history separation while proving revision-safe Postgres authorization, encrypted offline chaining/reconciliation and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-POWERSYNC-SPIKE-001": {
+      "scope": "product",
+      "rationale": "The isolated Client creation provider slice must preserve stable Client identity and shared operation semantics while proving Postgres authorization, offline durability, Sync upload and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Project setup provider slice must preserve stable Project/Client identity and exact nullable category allocations while proving atomic Postgres authorization, encrypted offline durability, upload/reconciliation and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/budget-management.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CUTOVER-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "The final source freeze, late-writer recovery, and hard cutover are migration controls; they must preserve approved target behavior without implementing it in Firebase.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/production-compatibility-plan.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-IDENTITY-LIFECYCLE-001": {
+      "scope": "product",
+      "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/account-discovery-and-workspace-selection.md", "role": "canonical_target" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-INVENTORY-TRANSACTION-001": {
+      "scope": "product",
+      "rationale": "Inventory, money, provenance, correction, and receipt surfaces are governed by the new story-specific accounting and Item lifecycle specs, not legacy movement Transaction mechanics.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/2026-08-30-correct-transaction-and-its-items.md", "role": "current_product" },
+        { "path": "docs/specs/purchase-handling-and-inventory-intent.md", "role": "current_product" },
+        { "path": "docs/specs/inventory-as-store.md", "role": "current_product" },
+        { "path": "docs/specs/lineage-tracking.md", "role": "current_product" },
+        { "path": "docs/specs/vendor-credits.md", "role": "historical_evidence" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-INVOICING-BUDGET-001": {
+      "scope": "product",
+      "rationale": "Invoice, collection, source membership, Expense/Fee, and budget surfaces are governed by the invoice-centered model and the related Item/receipt lifecycle.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/billing-invoicing.md", "role": "current_product" },
+        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/invoicing-collection-and-budget-authority.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ITEM-CREATION-LINK-001": {
+      "scope": "product",
+      "rationale": "All current Item/proto creation surfaces are reconciled with the one-Item target wizard, accounting Link, occurrence, Invoice, and receipt-line model.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/item-entry-flow.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-MEDIA-LIFECYCLE-001": {
+      "scope": "product",
+      "rationale": "Attachment and offline-byte surfaces preserve media-heavy field workflows for the real-Item target and accounting evidence while changing storage mechanics.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PLATFORM-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
+      "authorities": [
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/README.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001": {
+      "scope": "product",
+      "rationale": "This isolated archive-through-browser slice composes the verified Project archive command/use case and Project browsing evidence into one exact revision-safe offline lifecycle mutation while preserving every relationship and historical record and leaving restore, delete, rename, reassignment and media mutation outside.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-USE-CASE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001": {
+      "scope": "product",
+      "rationale": "This isolated archive-through-browser slice composes verified Client archive command/use-case and Client browsing evidence into one exact revision-safe offline lifecycle mutation that hides the Client from new-Project selection while preserving every Project and historical record. Project Archive supplies implementation-pattern evidence only, and no broader already-archived no-op behavior is inferred.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-ARCHIVE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-ARCHIVE-USE-CASE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-CLIENT-REFERENCE-001": {
+      "scope": "product",
+      "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-RENAME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-RENAME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-QUERY-PROFILE-001": {
+      "scope": "technical_control",
+      "rationale": "Query extraction and production shape profiling prove source behavior and migration completeness; they do not establish target product semantics.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-REPORTING-SEARCH-001": {
+      "scope": "product",
+      "rationale": "Reports, search, exports, and cross-domain projections must consume the redesigned accounting/Item/Client authorities and preserve only approved report/search outcomes.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/reports.md", "role": "current_product" },
+        { "path": "docs/specs/search-results.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-RESIDUAL-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Residual generation ensures every unmapped target surface remains tied to an explicit product, architecture, spike, or production-evidence blocker.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/product-decision-traceability.md", "role": "architecture_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-SPACES-REVIEW-001": {
+      "scope": "product",
+      "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
+      "authorities": [
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-ASSIGNMENT-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-CLEARING-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001": {
+      "scope": "product",
+      "rationale": "The target-local Transfer destination picker derives exact same-Client other-active-Project candidates from the existing authorized local Project directory while preserving readiness and stable identity. It creates no separate backend authority and performs no Transfer mutation.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-selection-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-ARCHIVAL-REVIEW-001": {
+      "scope": "product",
+      "rationale": "The isolated Project archival-review workflow adds a complete exact-Project local note replica with bounded keyset pages, honest offline completeness, active-membership authorization and gated MCP transport, then reuses the existing archive command to prove history preservation across active-to-archived lifecycle change.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-NOTE-READ-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001": {
+      "scope": "technical_control",
+      "rationale": "The isolated prerequisite gives every Project category-configuration set one independent, lossless concurrency generation, while leaving final category download/mutation authorization and the provider/application workflow blocked on O-026.",
+      "authorities": [
+        { "path": "docs/specs/budget-management.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CATEGORY-CONFIGURATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-SPACE-CORE-DETAILS-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Space core-details read workflow reconstructs one exact active or archived Space with immutable scope, name/notes, exact record timestamps and ordered relational checklist hierarchy from an encrypted local replica with honest readiness. It reuses the verified Core contract and existing Space destination foundation without claiming audit provenance or advancing any writer, archive effect, Item, media, template, accounting, MCP, hosted or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-core-details-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated direct Space-create provider slice must preserve stable Account/scope identity and zero accounting effects while proving encrypted offline acceptance, non-enumerating trusted authorization, exact local readback and app/MCP parity. O-044/O-045/O-046 remain explicit product blockers rather than inferred implementation policy.",
+      "authorities": [
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/direct-space-creation-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated provider accepts the already-verified Item-to-Space command into encrypted Account-local durability while preserving exact scope, replay, operation lifecycle and pending-work truth. It grants no server authority, optimistic Item projection, upload, app/MCP, hosted or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001": {
+      "scope": "technical_control",
+      "rationale": "The target-only guard enforces the already-authoritative global OperationID namespace across every current local command family and operation-bearing relation. It changes no product command, accounting rule, server authority, upload shape, hosted resource, migration execution, or production behavior.",
+      "authorities": [
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated provider accepts the already-verified Item-to-Space clearing command into encrypted Account-local durability while preserving exact mixed-Space evidence, Project-or-Account subject, cross-command replay isolation, operation lifecycle, and pending-work truth. It grants no server authority, placement or marker projection, upload, app/MCP, hosted, or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-local-durability-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001": {
+      "scope": "technical_control",
+      "rationale": "This staging-only read surface projects the existing exact Account-scoped pending-work summary as four independent local counts with honest clean, pending, loading and failure truth. It adds no session-ending decision, synchronization, upload, deletion, signout, provider, schema, hosted or production authority.",
+      "authorities": [
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/session-ending-pending-work-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SESSION-ENDING-POLICY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "This rejected Vendor-suggestion provider/picker candidate is retained only as a blocked DRAFT. The provider-free value contract does not authorize any reader population, archived disclosure, picker behavior, default population, or mutation. O-026 and proposed O-047 must be resolved before a future candidate may refreeze an Account subset; suggestion values remain convenience text rather than Vendor or accounting identity.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-browsing-presentation-contracts",
+  "title": "Present Project directory selection and detail-header truth",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Browsing Presentation",
+  "surfaceIds": ["SWIFT-6075C2D24BAD", "SWIFT-FC9E3C33FECA", "TEST-02013D984E64", "TEST-8CB70D14D5BC"],
+  "requirements": [
+    {
+      "id": "PBROWSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project browsing remains usable from synchronized local data and exposes incomplete readiness. Directory core rows carry stable Project identity, current Project display name, stable Client relationship and current Client display name. Active/Archived selection uses Project lifecycle only. Projection preserves exact upstream order and invents no target sorting or search rule.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSE-TEST-001", "PBROWSE-TEST-002", "PBROWSE-TEST-003", "PBROWSE-TEST-004", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Project.clientId is the relationship identity. Client display name is current display only and cannot authorize, identify, filter or merge Projects. Duplicate Project or Client names remain distinct by stable identity.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PBROWSE-TEST-001", "PBROWSE-TEST-003", "PBROWSE-TEST-004", "PBROWSE-TEST-005", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Directory absence is authoritative only when the source is ready, complete and exhaustive. Partial, stale, incomplete or nonexhaustive evidence never proves an empty segment. Represented partial/stale rows remain explicitly usable as local evidence without granting authorization.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSE-TEST-002", "PBROWSE-TEST-003", "PBROWSE-TEST-005", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Selection binds Account, segment, exact ordered projected rows and their Project/Client identity, names and lifecycles, source query fingerprint, source/visible row counts, completeness, quality, local data version and as-of time. Restart is canonical; changed or rebound evidence cannot replay as unchanged. The only request-producing call is ProjectBrowsingSelection.detailRequest(validating: currentSnapshot), which rejects a snapshot/evidence mismatch before deriving the verified ProjectCoreDetailsRequest and never returns a route or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSE-TEST-003", "PBROWSE-TEST-004", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "The detail header consumes the verified ProjectCoreDetailsUpdate and preserves exact local truth. Found ready/partial/stale evidence shows current Project and Client text with readiness; only ready-complete empty is authoritative absence; unavailable is non-enumerating; retryable/required-update cached evidence remains stale and failures stay distinct.",
+      "decisionIds": [],
+      "verificationIds": ["PBROWSE-TEST-005", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly four target-only Swift leaf paths implement and test provider-free presentation while Firebase remains unchanged. Full Project cards, sorting/search, tabs/children, routes, actions, authorization, persistence, app/MCP, provider/schema/RLS/Sync, migration and production behavior do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PBROWSE-TEST-001", "PBROWSE-TEST-002", "PBROWSE-TEST-003", "PBROWSE-TEST-004", "PBROWSE-TEST-005", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    },
+    {
+      "id": "PBROWSE-REQ-007",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "Archiving a Client hides it from new-Project selection without deleting its Projects or history. Existing Projects continue to resolve the exact Client identity and current display evidence; an active Project remains in the active Project segment when its Client is archived.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PBROWSE-TEST-001", "PBROWSE-TEST-003", "PBROWSE-TEST-005", "PBROWSE-TEST-006", "PBROWSE-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectDirectorySegment is exactly active or archived. ProjectDirectoryCoreRow exposes stable Project ID/name, stable Client ID/current name and Project/Client lifecycle; it is not a complete Project Card.",
+        "ProjectDirectoryPresentationProjector accepts only a validated ProjectListSnapshot, filters strictly by Project lifecycle, preserves upstream order, reports source quality/completeness/exhaustiveness and computes a canonical evidence fingerprint over every named source and projected field.",
+        "ProjectBrowsingSelection can be created only for an exact represented row in the projected segment and binds that row to the presentation evidence fingerprint. Its only request-producing call is detailRequest(validating: currentSnapshot); it rejects changed evidence before deriving only ProjectCoreDetailsRequest for the same Account/Project.",
+        "ProjectDetailHeaderPresentationProjector consumes request-validated ProjectCoreDetailsUpdate and exposes exact Project/Client text, readiness, authoritative absence and stable failure without converting unavailable or incomplete evidence into not-found truth."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Project, Client, presentation, selection, table, view, function, index or migration is created or changed."},
+    "serverHandlers": {"items": [], "notApplicable": "No Project query handler, command, mutation, authorization or audit handler exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Already-authorized local evidence is not current authorization. No RLS policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No Sync Stream, local table, download predicate, upload connector or physical synchronized store exists."},
+    "localOffline": {
+      "items": [
+        "Canonical restart preserves directory segment, ordered core rows, Project/Client identity/text/lifecycle, source fingerprint/count/completeness/quality/version/time and the matching selection evidence fingerprint.",
+        "Partial and stale represented rows remain visible with their exact quality; empty evidence is authoritative only when ready, complete and exhaustive."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No hero image, AttachmentID, byte, URL, cache, upload, retention or deletion behavior exists."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI wiring, full Project Card, tab shell, navigation/ScopedRoute, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/clientName value is transformed, backfilled or reconciled."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable bounded failures are contract values only; no telemetry, metric, alert or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and cannot link or modify either application project.",
+        "The slice cannot sort/search Projects, render hero/budget cards, define tabs/children, navigate, mutate, authorize, persist, deploy, release or cut over.",
+        "O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside the boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PBROWSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
+      "expected": "Active/Archived projection filters strictly by Project lifecycle and preserves exact upstream order. An active Project with archived Client stays active with current Client text; an archived Project stays archived; duplicate names remain distinct by stable Project ID. Rows omit hero, budget, action, route and authorization state.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-002",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-003", "PBROWSE-REQ-006"],
+      "expected": "An empty segment is authoritative only from ready, complete, source-exhaustive evidence. Ready-nonexhaustive, ready-incomplete, partial-empty and stale-empty remain incomplete; partial/stale represented rows remain usable with exact quality and no false absence.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
+      "expected": "Canonical restart binds Account, segment, ordered rows and exact Project/Client identity/name/lifecycle, source query fingerprint, source and visible counts, completeness, quality, LocalDataVersion and asOf. Independently changed/reordered/removed fields, nonfinite time, malformed or missing canonical keys and fingerprint tamper fail closed.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-004", "PBROWSE-REQ-006"],
+      "expected": "Selection rejects unprojected ID, opposite-segment Project, wrong Account and rebound/changed evidence. Same-name rows select exact stable identity. ProjectBrowsingSelection.detailRequest(validating: currentSnapshot) rejects any current-snapshot/evidence mismatch before returning only the exact verified ProjectCoreDetailsRequest and no route, Principal or authorization evidence.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
+      "expected": "Request-validated waiting states show no titles; found ready/partial/stale evidence shows exact local Project/Client text and readiness; ready-complete empty alone is authoritative absence. Archived Project and active Project with archived Client remain found. Partial/stale/incomplete empty never becomes absence.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-006",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift",
+      "covers": ["PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
+      "expected": "Unavailable is non-enumerating with no cached titles. Retryable and requiredUpdate stay distinct; valid cached rows display only as stale evidence and no-cache failures are blocked. Mismatched request/cache/update and malformed evidence fail closed. One projected-row selection derives the exact detail request only while validating against the same current snapshot, then produces the matching detail header; changed directory evidence is rejected before request derivation.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    },
+    {
+      "id": "PBROWSE-TEST-007",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts while the worker candidate changes only the four allowlisted leaf paths.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735 after primary every-line and independent adversarial review. Exact ready commit 459a58123ac7241984ddee6d559e33f4bca931d4 passed immutable Actions run 33720134399 and SUBAGENT-WORK-008 changed only the four frozen leaf paths. Initial candidate 964dbabc passed 231 tests but was rejected for a P1 sibling-row selection rebind and P2 ProjectDirectoryPresentationSnapshot naming mismatch. Corrected candidate 73f94525 adds a canonical selection-specific fingerprint over Account, segment, exact row and directory evidence plus direct sibling-rebind refusal, aligns the frozen type name and passed final primary/independent review with no remaining P0-P3. Seven focused and all 231 tests pass; conversion traceability, target isolation/generated contracts, repeatable project generation and both staging builds also pass on the exact integration SHA. This outcome preserves upstream order and covers only directory core rows, evidence-bound selection, exact detail-request derivation and detail-header truth."
+}

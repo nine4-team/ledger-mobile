@@ -1,5 +1,13 @@
 # Correct/Move vs Sell vs Return
 
+> **Target-state notice (2026-08-30):** The user intent and origin-aware price
+> rules in this document remain required. The target accounting containers are
+> defined in
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md):
+> real cross-scope sales/returns create project Item charges or credits plus
+> hidden provenance, not new project movement Transactions. The mechanics below
+> describe current shipped behavior until migration.
+
 ## Overview
 
 When items need to move between transactions, projects, or business inventory, there are three distinct operations with different semantics: **Correct/Move**, **Sell**, and **Return**. Users must understand which they're performing because the financial implications differ.

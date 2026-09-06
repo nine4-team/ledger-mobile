@@ -1,0 +1,65 @@
+{
+  "batchId": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
+  "title": "Target Client and Project PowerSync directory and browse provider",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-001",
+    "EVID-PROJECT-BROWSING-PRESENTATION-001",
+    "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
+    "EVID-CLIENT-CREATION-PROVIDER-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-B23F91245E50",
+      "acknowledgeSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
+      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions, and owns a close-aware registry that cancels and joins every outer and nested observation before SQLite closes.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "The concrete adapter is module-internal and all four streams are lifecycle-owned and drained on close. Real hosted Sync authorization remains required before verification/rehearsal.",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": ["PowerSync ClientProjectDirectoryQuerying adapter", "Account/Principal-bound directory runtime"],
+        "securityRequirements": ["Authoritative rows require active local membership evidence", "Only exact same-Principal pending rows remain visible without membership", "Cross-Account runtime calls fail before persistence"],
+        "syncRequirements": ["Client and Project completion are independent reactive signals", "Missing Project-to-Client joins cannot become authoritative empty", "Cleanup never outruns aggregate evidence"]
+      },
+      "migration": {
+        "rule": "Use only target local rows; read no Firebase cache and create no compatibility adapter.",
+        "reconciliation": ["Exact authorized authoritative readback clears only the matching owned overlay", "Project allocation optimism remains until aggregate-aware proof"]
+      },
+      "verification": {
+        "tests": ["17 ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
+        "acceptance": ["Local read, isolation, readiness, restart, cancellation, navigation and aggregate-safe reconciliation cases pass without claiming hosted Sync authorization"]
+      }
+    },
+    {
+      "id": "TEST-5AAEE26660C8",
+      "acknowledgeSourceHash": "516c6cbef71e28064f7529e4775b25215294895d5a2db32e827663226cd45aa2",
+      "currentBehavior": "Runs 17 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards, consumer cancellation, provider shutdown drainage and rejection of watches after close begins.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now open through the async lifecycle composition with separate attachment/media resources and non-destructive close.",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": ["Client/Project PowerSync directory provider test suite"],
+        "securityRequirements": ["Negative Account, Principal, membership and hidden-authority cases are mandatory"],
+        "syncRequirements": ["Reactive per-directory completion, restart, missing join, cancellation and aggregate-safe readback are mandatory"]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": ["Tests distinguish local SQL scope proof from later hosted Sync authorization proof"]
+      },
+      "verification": {
+        "tests": ["npm run target:powersync:test", "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"],
+        "acceptance": ["All 17 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"]
+      }
+    }
+  ]
+}

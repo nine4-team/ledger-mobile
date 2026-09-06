@@ -1,0 +1,2974 @@
+{
+  "batchId": "M0-APP-SHELL-PRESENTATION-001",
+  "title": "App shell, shared presentation, and test support",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-APP-SHELL-001",
+    "EVID-M2-APP-SHELL-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FILE-6976CCC7CEB3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Captures a source-era MCP Sale Transaction golden response fixture.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Keep as legacy/source characterization or migration evidence; it is not a target contract."
+    },
+    {
+      "id": "SWIFT-01845C0E7003",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in SelectableNoteText.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-031CFF3A66C3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormSelect.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-0BC8C7903DA1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in MultiStepFormSheet.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-0BE5B00969F4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects shared source enums, including authorization values and source-era Sale/Payment-to-Business/legacy Transaction cases.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Domain Contracts",
+        "surfaces": [
+          "TransactionKind (Purchase, Return, Transfer)",
+          "ItemWorkflowStatus",
+          "InvoiceLifecycleStatus",
+          "MembershipRole and FinancialVisibility",
+          "legacy-enum source migration decoder"
+        ],
+        "securityRequirements": [
+          "Role and financial visibility are server-derived authorization inputs, never user-editable claims",
+          "Presentation receives only capability-safe enum values"
+        ],
+        "syncRequirements": [
+          "Versioned enum values are stored in target rows/local projections; unknown contract values fail visibly instead of silently disappearing"
+        ]
+      },
+      "migration": {
+        "rule": "Decode every legacy enum through an explicit source-only mapping; quarantine unknown values and never expose retired Sale/Payment-to-Business/Fee/Expense as target write cases.",
+        "reconciliation": [
+          "Per-enum source value distribution and mapping/quarantine totals",
+          "Zero target writer cases outside approved Purchase/Return/Transfer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Domain enum/version compatibility and unknown-value migration tests",
+          "Target writer rejection tests for retired Transaction kinds"
+        ],
+        "acceptance": [
+          "Target application contracts expose only approved values while every legacy value remains explainable in migration evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-0C38F9CD1A2E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ProgressRing.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-0DC9E061596B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic selection helpers plus raw Item/Transaction amount summation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Presentation and Authorized Projections",
+        "surfaces": [
+          "SelectionState",
+          "SelectedMetricSummary",
+          "typed Money metric input"
+        ],
+        "securityRequirements": [
+          "Calculations receive only already-authorized row IDs and metric values",
+          "The caller names the metric; presentation cannot select financial authority"
+        ],
+        "syncRequirements": [
+          "Ephemeral selection is local-only; selected values come from one readiness-aware local projection version"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no selection state; preserve generic selection behavior and replace raw model summation with typed authorized metric inputs.",
+        "reconciliation": [
+          "Pure selection behavior parity fixtures",
+          "No target selection helper accepts raw Transaction/Item persistence models"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SelectionState unit tests",
+          "Limited-financial-visibility selected-metric tests"
+        ],
+        "acceptance": [
+          "Selection counts and declared totals are deterministic without inventing what the money represents"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-0E4D079D9951",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormSheet.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-105C4E1CB610",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ScrollableTabBar.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-11FEEE32A8EC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits Item details and emits a raw field dictionary with NSNull clear sentinels.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-027",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items",
+        "surfaces": [
+          "EditItemDraft",
+          "UpdateItemDetailsCommand",
+          "ItemOperationState"
+        ],
+        "securityRequirements": [
+          "Server validates Principal capability, Account/Item scope, expected revision and paid/frozen field locks",
+          "The view receives no arbitrary field-write authority"
+        ],
+        "syncRequirements": [
+          "Typed command is durably queued with set/clear/unchanged values and observed through OperationSnapshot plus Item projection"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Item fields through the reviewed Item mapper; do not replay raw dictionaries or NSNull sentinels.",
+        "reconciliation": [
+          "Item field and integer-cent coverage by source ID",
+          "Frozen/paid field-lock exception report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Typed Item edit set/clear/unchanged, revision-conflict and offline-restart contract tests",
+          "Server paid-lock and cross-account negative tests"
+        ],
+        "acceptance": [
+          "Editing preserves allowed details and surfaces queued, applied, rejected and conflicted outcomes without bypassing locks"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-14E848AC021C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in AdaptiveContentWidth.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-18C61B83B5DF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FindOverlayBar.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-1D92D5E568CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in DraggableCard.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-24780407AEC7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in DraggableCardList.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-2919B4B009D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CategoryRow.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-37AC762E6AB9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in StatusPickerModal.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items",
+        "surfaces": [
+          "AvailableItemStatusesSnapshot",
+          "SetItemWorkflowStatusCommand",
+          "ItemOperationState"
+        ],
+        "securityRequirements": [
+          "Server validates Account membership, Item visibility, capability and system-owned status transitions"
+        ],
+        "syncRequirements": [
+          "Available statuses render from local capability state; chosen command is durably queued and reconciled"
+        ]
+      },
+      "migration": {
+        "rule": "Map legacy Item status values explicitly and quarantine unknowns; no UI hard-coded status list establishes target authority.",
+        "reconciliation": [
+          "Legacy-to-target Item status distribution",
+          "System-owned transition rejection coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Item workflow-status eligibility, offline operation and rejection tests"
+        ],
+        "acceptance": [
+          "Only currently valid user-settable statuses are offered and server rejection remains visible"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3DAE3FEE9108",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in LoadingScreen.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-4076F892F380",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormField.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-424CEE01EBA6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FindStateManager.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-43DBE441C46B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ActionMenuCalculations.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-4A13E5D59F63",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in StatusBannerVariant.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-4BC1A6072EF3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in FilterMenu.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Queries",
+        "surfaces": [
+          "ItemListRequest",
+          "ItemListFacetSnapshot",
+          "ItemListPage"
+        ],
+        "securityRequirements": [
+          "Facet values and counts derive only from RLS/Sync-authorized rows and permitted financial fields"
+        ],
+        "syncRequirements": [
+          "Reads named PowerSync local projections with required-stream readiness and stable facet identity"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no ephemeral filter UI state; map legacy source/status/category/relationship/media fields into explicit target facets.",
+        "reconciliation": [
+          "Facet membership/count comparison on migration fixtures",
+          "Limited-access facet non-leakage checks"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Item list facet include/exclude, readiness and limited-visibility query tests"
+        ],
+        "acceptance": [
+          "Filters remain fast offline and never reveal inaccessible values or treat incomplete sync as an empty facet"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4D0D546A02D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Owns Item action-sheet state but also constructs concrete services, sends raw field patches, suppresses errors, clears relationships, and deletes directly.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-013",
+        "O-014",
+        "O-029",
+        "O-032",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Application",
+        "surfaces": [
+          "AvailableItemActionsSnapshot",
+          "typed Item/Space/Transaction/Inventory command ports",
+          "OperationReceipt and OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Every command handler revalidates Principal capability, Account scope, revisions, locks and relationship eligibility",
+          "UI action availability is advisory and grants no write authority"
+        ],
+        "syncRequirements": [
+          "Selected intent is one durable idempotent operation; permanent rejection synchronizes as data and transient failure remains retryable"
+        ]
+      },
+      "migration": {
+        "rule": "Retire generic field/update/delete/link orchestration; migrate source relationships through owning transforms and never replay controller writes.",
+        "reconciliation": [
+          "No redesigned view constructs ItemsService or raw field patches",
+          "Story-specific operation and source-relationship coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Available Item actions matrix and story-specific offline/retry/rejection contract tests",
+          "No raw dictionary/delete/link port architecture test"
+        ],
+        "acceptance": [
+          "Each action produces one named durable outcome and no failure is silently swallowed"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-50F75E5373A1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CardHeader.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-53634D9D7788",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FindMatchHighlight.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-5A68B2705D17",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Discovers/selects/creates current Firebase Accounts and signs out through provider-shaped managers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "AuthorizedAccountListSnapshot",
+          "SelectAccountCommand",
+          "CreateAccountCommand",
+          "WorkspaceActivationState"
+        ],
+        "securityRequirements": [
+          "Principal comes from validated Auth subject; Account list and selection require active membership",
+          "Inaccessible Accounts follow non-enumerating results"
+        ],
+        "syncRequirements": [
+          "Authorized Account summaries may be locally available under the approved offline lease; activation opens one environment/Principal/Account namespace"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source Auth subjects, Account memberships and roles; do not migrate provider sessions or trust last-selected Account as authorization.",
+        "reconciliation": [
+          "Auth-subject/Principal/membership/Account correlation",
+          "No orphan or unauthorized last-selected Account activation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account discovery/select/create, revoke, offline-lease and cross-account negative contract tests"
+        ],
+        "acceptance": [
+          "A signed-in Principal can enter only an authorized Account workspace and sees explicit loading/offline/revoked states"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5E516B0E78F0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in Spacing.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-5F4C0550B87A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CardBadge.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-69164596C247",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ScrollTopFade.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-6CD9675D385C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in SelectorCircle.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-7283A92A1EEC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides obsolete AccountingTabPlaceholder scaffolding beside implemented feature screens.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Remove after the real redesigned destination is present; this scaffolding is not a parity requirement."
+    },
+    {
+      "id": "SWIFT-78DBAE560212",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Groups receipt attachment URLs and starts Item creation from Transaction images.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-019",
+        "O-023",
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items and Attachments",
+        "surfaces": [
+          "AttachmentEvidenceSelectionSnapshot",
+          "CreateItemsFromAttachmentEvidenceCommand",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Only Attachment IDs visible through the parent Transaction/Account may be selected",
+          "Server revalidates parent scope and Item-create capability"
+        ],
+        "syncRequirements": [
+          "Selection resolves encrypted local bytes first; create intent and stable IDs are durably accepted before reporting success"
+        ]
+      },
+      "migration": {
+        "rule": "Map source receipt image paths/URLs to stable Attachment IDs and source Transaction correlation; never retain URL identity.",
+        "reconciliation": [
+          "Every selected source media reference maps to one stable Attachment ID or quarantine reason",
+          "Created Item identity/evidence counts under retry"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline attachment grouping/create, process-death, retry, duplicate and cross-account denial tests"
+        ],
+        "acceptance": [
+          "Users can create distinct Items from locally available evidence offline without losing bytes or duplicating Items"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-7996F5B7646F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in InventoryPinnedCard.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Inventory Queries",
+        "surfaces": [
+          "InventorySummarySnapshot",
+          "InventoryWorkspaceQuerying",
+          "InventoryReadiness"
+        ],
+        "securityRequirements": [
+          "Summary includes only Account-authorized Inventory rows and visibility-safe values"
+        ],
+        "syncRequirements": [
+          "Reads the declared Inventory PowerSync stream and distinguishes incomplete history/readiness from zero inventory"
+        ]
+      },
+      "migration": {
+        "rule": "Rebuild Inventory summary from mapped target placement/acquisition evidence; do not migrate cached card counts.",
+        "reconciliation": [
+          "Inventory Item count and readiness by source ID",
+          "No cached-summary authority drift"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Inventory summary readiness, account-switch and incomplete-history query tests"
+        ],
+        "acceptance": [
+          "The pinned Inventory entry is immediately useful offline and never presents partial data as a confirmed zero"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-7C24251C5824",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FindMatchCalculations.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-7D783BD0967B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides obsolete TransactionsTabPlaceholder scaffolding beside implemented feature screens.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Remove after the real redesigned destination is present; this scaffolding is not a parity requirement."
+    },
+    {
+      "id": "SWIFT-7FD35B52D248",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in NativeListControlBar.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "ListQueryState",
+          "ListReadiness",
+          "typed sort/filter/add intents"
+        ],
+        "securityRequirements": [
+          "Control state can request only named query profiles and already-authorized facets"
+        ],
+        "syncRequirements": [
+          "Ephemeral controls drive stable local queries and render partial/not-synced/error states explicitly"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no control state; preserve interaction/accessibility while removing implicit backend query assumptions.",
+        "reconciliation": [
+          "UI behavior/accessibility snapshots",
+          "No arbitrary fields, SQL or collection paths cross the control boundary"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "iOS/macOS list-control accessibility, readiness and stable-query intent tests"
+        ],
+        "acceptance": [
+          "List controls behave consistently across platforms without owning query authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-812EB6C0ED72",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ProgressBarCalculations.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-8210E6F74339",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ListSelectAllRow.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-83EC5B1CD743",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds the iOS/macOS tab shell and activates Account/Inventory contexts from the view lifecycle.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "A-004",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Application Shell",
+        "surfaces": [
+          "WorkspaceCoordinator",
+          "WorkspaceReadinessSnapshot",
+          "AppRoute",
+          "AccountWorkspaceLifecycle"
+        ],
+        "securityRequirements": [
+          "One validated Principal and Account namespace feeds every destination",
+          "Routes and restored tabs cannot cross environment or Account scope"
+        ],
+        "syncRequirements": [
+          "Coordinator declares required streams once, observes local database/operation/media health and cancels old workspace tasks on switch"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no provider listeners; optionally preserve tab preference only within the same environment/Principal/Account namespace.",
+        "reconciliation": [
+          "One active workspace/subscription set per scope",
+          "No late result or restored route enters a different Account"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Workspace activate/reenter/switch/revoke/background/restart and route-restoration contract tests"
+        ],
+        "acceptance": [
+          "Projects, Review, Search and Settings render from one explicit workspace readiness state with no duplicate listeners"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-865A6CF9C709",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ItemsListMode.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Queries",
+        "surfaces": [
+          "ItemListRequest",
+          "ItemListSection",
+          "ItemAccountingLinkState"
+        ],
+        "securityRequirements": [
+          "Sections derive only from authorized local Item/accounting projections"
+        ],
+        "syncRequirements": [
+          "Section membership is a deterministic local query with explicit required-stream readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Replace legacy list modes with relationship-derived Unaccounted For/Accounted For and named target filters; migrate no UI enum.",
+        "reconciliation": [
+          "Every migrated Item has exactly one target section or quarantine reason"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Item section membership and incomplete-stream tests"
+        ],
+        "acceptance": [
+          "One physical Item appears in the correct section without Space or display filter becoming accounting authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-86B143646854",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ProgressBar.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-8A01FAD53F76",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormPicker.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-8B02CBB9672C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in BrandColors.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-8BB41184F84B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Routes selected Items through source-era transaction association, conflict, Return, reassign, and sale-category logic.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-007",
+        "O-013",
+        "O-014",
+        "O-015",
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items, Inventory, and Transactions Application",
+        "surfaces": [
+          "AvailableItemDestinationActionsSnapshot",
+          "LinkItemAsClientPaidCommand",
+          "Item movement/correction command set",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Handlers revalidate Item scope, destination, Client, revision, relationship and financial eligibility",
+          "UI conflict calculation grants no mutation authority"
+        ],
+        "syncRequirements": [
+          "Eligibility is a versioned local snapshot; selected story becomes one durable idempotent operation with conflict/rejection data"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Item/Transaction relationships into explicit target placement/accounting/provenance; never port transactionId routing as authority.",
+        "reconciliation": [
+          "Each legacy relationship maps to one story classification or quarantine",
+          "No duplicate physical Item under retry"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client-paid Link, movement, correction, conflict, offline retry and concurrent-change contract tests"
+        ],
+        "acceptance": [
+          "Adding an existing Item invokes the correct business story and cannot silently reassign money or placement"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8E23E32C2DC7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in AccountToolbarMenu.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-92844793C8F5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ItemsListControlBar.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Queries",
+        "surfaces": [
+          "ItemListRequest",
+          "ItemListFacetSnapshot",
+          "ItemListReadiness"
+        ],
+        "securityRequirements": [
+          "Only named authorized Item query/filter/sort intents are emitted"
+        ],
+        "syncRequirements": [
+          "Controls read local facet/readiness state and preserve stable ordering under updates"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no UI control state; replace source field filters with target Item query facets.",
+        "reconciliation": [
+          "Target facet/sort behavior on mapped fixture rows"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Item list control/readiness/cursor/accessibility tests"
+        ],
+        "acceptance": [
+          "Item list actions remain responsive offline without exposing raw storage fields"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-94EBE4E04058",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in NavigationRouteResolution.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-9722B88721CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ScopeFilters.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Transactions Queries",
+        "surfaces": [
+          "TransactionListRequest",
+          "TransactionListPage",
+          "TransactionScope"
+        ],
+        "securityRequirements": [
+          "Scope filters are constrained to authorized Account/Project/Inventory visibility"
+        ],
+        "syncRequirements": [
+          "Runs against local target Transaction projections with explicit stream readiness and stable ordering"
+        ]
+      },
+      "migration": {
+        "rule": "Map legacy Transaction scope fields/types explicitly; do not preserve raw source predicate semantics when they contradict Purchase/Return/Transfer.",
+        "reconciliation": [
+          "Per-scope legacy-to-target Transaction membership and quarantine totals"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Project/Inventory/Account Transaction scope, limited-visibility and readiness query tests"
+        ],
+        "acceptance": [
+          "Scope filtering is deterministic offline and never treats a retired Transaction kind as a target write capability"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-99583A2865EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ListSelectionInfo.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-9BB21F63E5CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in StatusBanner.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-9FB2138FC5B4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in InlineOptionPicker.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-A3E38557F13F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects a Project note and writes through current Account/Auth/Project contexts.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "M2 withheld: O-039 must resolve note-text normalization, controls and maximum size before a shared application submission boundary is mapped; picker/prefill/default and archived eligibility, Account switching, save/focus/dismiss/retry UI, optimistic visibility and composition also remain unimplemented. The listed target surfaces are ownership candidates, not approved behavior.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectNoteCreationDraft",
+          "AddProjectNoteCommand",
+          "ProjectNotePage",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Server derives actor identity and validates Account/Project membership",
+          "Notes never trust caller-authored actor names or timestamps"
+        ],
+        "syncRequirements": [
+          "Note command is durably queued offline and rendered with pending/applied/rejected state in Project scope"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source note text, stable source correlation and available actor/time provenance; quarantine unresolved parent scope.",
+        "reconciliation": [
+          "Project note count/text hash/parent/actor provenance coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Project note create/retry/reject/account-switch tests"
+        ],
+        "acceptance": [
+          "A note captured offline remains visible and durable and cannot be attributed to a caller-forged actor"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A548503EA221",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in CategoryPickerList.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Settings and Reference Data Queries",
+        "surfaces": [
+          "BudgetCategoryOptionPage",
+          "ReferenceDataReadiness",
+          "CategorySelectionIntent"
+        ],
+        "securityRequirements": [
+          "Options include only categories visible/usable by the Principal in the selected Account/Project capability"
+        ],
+        "syncRequirements": [
+          "Reads authorized local reference-data stream with archive/system/enablement state and explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source category IDs/order/archive/system metadata to stable target categories; do not migrate picker state.",
+        "reconciliation": [
+          "Category ID/order/archive/type/enablement coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline category options, archive/system exclusion, role visibility and readiness tests"
+        ],
+        "acceptance": [
+          "Pickers offer the exact authorized active options without silently enabling or mutating reference data"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A6340D77013A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Wires shared Item sheets to raw patches and concrete source operation flows.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-013",
+        "O-014",
+        "O-029",
+        "O-032",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Presentation",
+        "surfaces": [
+          "AvailableItemActionsSnapshot",
+          "story-specific Item flow router",
+          "OperationPresentationState"
+        ],
+        "securityRequirements": [
+          "Presentation can launch only named capability intents and receives no service/database authority",
+          "Server revalidation remains mandatory"
+        ],
+        "syncRequirements": [
+          "Sheets render local eligibility and operation queued/applied/rejected/conflicted states"
+        ]
+      },
+      "migration": {
+        "rule": "Retire raw patch/service sheet wiring; preserve only reviewed action presentation and route each intent to its owning command.",
+        "reconciliation": [
+          "No target sheet imports or constructs backend services",
+          "All advertised actions have handler/policy/test owners"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Item action-sheet capability matrix, offline operation-state and rejection UI tests"
+        ],
+        "acceptance": [
+          "Every sheet corresponds to one explicit business story and failures remain actionable"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A72FACEB03D0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in RenameItemModal.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-A9422A32A60C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CollapsibleSection.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-AA317435FD6E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in SortMenu.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "NamedSortOption",
+          "StableSortDescriptor",
+          "ListQueryState"
+        ],
+        "securityRequirements": [
+          "Sort options operate only on fields present in the authorized named projection"
+        ],
+        "syncRequirements": [
+          "Sorting uses deterministic local ordering with stable ID tie-breakers and cursor compatibility"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no sort menu state unless explicitly namespaced; replace source-field sort names with target projection sorts.",
+        "reconciliation": [
+          "Sort-order parity fixtures and stable-tie checks"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline sort, deterministic tie, cursor and accessibility tests"
+        ],
+        "acceptance": [
+          "Sort order remains deterministic as synchronized rows change"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-AABD5ABA3A09",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in PdfTextExtractor.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-AD1684C54B8C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in NotesContent.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-AF8C15D77693",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides obsolete InventoryPlaceholderView scaffolding beside implemented feature screens.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Remove after the real redesigned destination is present; this scaffolding is not a parity requirement."
+    },
+    {
+      "id": "SWIFT-B11D4234CF01",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in Dimensions.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-B19F68E7C8DF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides obsolete ProjectsPlaceholderView scaffolding beside implemented feature screens.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Remove after the real redesigned destination is present; this scaffolding is not a parity requirement."
+    },
+    {
+      "id": "SWIFT-B3D2195B0AED",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Filters, sorts, searches, groups, and totals Items from source-era model fields and display-derived identities.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Queries",
+        "surfaces": [
+          "ItemListRequest",
+          "ItemListPage",
+          "ItemListFacetSnapshot",
+          "ItemDisplayGroup"
+        ],
+        "securityRequirements": [
+          "Queries and facets operate on RLS/Sync-authorized rows and cannot infer hidden financial/category values"
+        ],
+        "syncRequirements": [
+          "Named local query declares required streams, data version, stable order/cursor and partial readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Item fields to target facets; preserve display grouping only as non-identity presentation and never migrate cached totals/groups.",
+        "reconciliation": [
+          "Filter/facet/group membership and stable order on migration fixtures",
+          "Every display group retains distinct physical Item IDs"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Large-project local query/filter/sort/cursor/readiness/limited-access tests",
+          "No display-group identity merge property tests"
+        ],
+        "acceptance": [
+          "Filtering and grouping remain fast offline while physical identity and accounting authority stay intact"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BD714AB9981F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ActionMenuItem.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-BEACA5B78325",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates Item copies by clearing a Firestore ID and composing concrete Item/Transaction service calls.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items",
+        "surfaces": [
+          "CreateItemCopiesCommand",
+          "ItemCopyPolicy",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Server validates source Item visibility, create capability, destination scope and copyable evidence/relationships"
+        ],
+        "syncRequirements": [
+          "New stable Item IDs and one idempotent copy operation are durably accepted before success is shown"
+        ]
+      },
+      "migration": {
+        "rule": "Do not replay source looped creates; preserve existing Items individually and apply copy policy only to new explicit target commands.",
+        "reconciliation": [
+          "Distinct Item IDs, unchanged source name/quantity and approved evidence/relationship coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline copy retry/idempotency, name/quantity, relationship-lock and cross-account tests"
+        ],
+        "acceptance": [
+          "Explicit copies create the requested distinct physical Items once without inheriting frozen accounting accidentally"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BFC504E32AFF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in AppDestination.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-C0ABD9666AE7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Derives Item actions and labels from source-era status, transaction association, Sale/Return, Inventory, and correction assumptions.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-013",
+        "O-014",
+        "O-029",
+        "O-032",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Application",
+        "surfaces": [
+          "AvailableItemActionsSnapshot",
+          "ItemActionCapability",
+          "story-specific Item/Inventory/Transaction/Correction commands"
+        ],
+        "securityRequirements": [
+          "Available actions are computed from authorized snapshots and revalidated by the owning handler"
+        ],
+        "syncRequirements": [
+          "Menu eligibility includes local readiness/revision; chosen intent is a durable operation with visible conflict/rejection"
+        ]
+      },
+      "migration": {
+        "rule": "Retire source-era Sale/direct transaction-link menu semantics; preserve reviewed labels/layout only where they match approved stories.",
+        "reconciliation": [
+          "No target action maps to generic ReturnItems, setTransactionId or raw delete",
+          "Every advertised action maps to one capability owner"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Available Item action matrix across placement/accounting/Invoice/Space/offline states"
+        ],
+        "acceptance": [
+          "Menus distinguish physical movement, money, billing credit, Transfer and correction instead of conflating them"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-C5218B701C6A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in SegmentedControl.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-C63D1A9B5735",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in DocumentPicker.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-C6595DCD62DC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in NavigationRoutes.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-CBD34D72F4FA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormDateField.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-CD75BD4EB9CC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormSheetAction.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-CDADEAA08764",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ListStateControls.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "ListReadiness",
+          "ListEmptyState",
+          "ListFailureState",
+          "RetryQueryIntent"
+        ],
+        "securityRequirements": [
+          "State distinguishes unauthorized/not-found/not-synced without leaking inaccessible existence"
+        ],
+        "syncRequirements": [
+          "Renders loading, locally ready, partial, stale, empty and failed states from the named local query"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient list state; preserve presentation outcome with explicit target readiness semantics.",
+        "reconciliation": [
+          "No-matches versus not-synced state fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "List readiness/empty/error/retry/non-enumeration UI tests"
+        ],
+        "acceptance": [
+          "Users never mistake incomplete synchronization for an authoritative empty list"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-CEABE6DC1587",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CameraCapture.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-CFE74F51AD82",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ErrorRetryView.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-D21A4FBB69CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in SheetStyle.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-D2E27E81511F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ItemConflictSheet.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-013",
+        "O-014",
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items, Inventory, and Transactions Application",
+        "surfaces": [
+          "ItemActionConflictSnapshot",
+          "story-specific resolution commands",
+          "OperationPresentationState"
+        ],
+        "securityRequirements": [
+          "Conflict options include only server-revalidatable capabilities for the selected Principal/Account/items"
+        ],
+        "syncRequirements": [
+          "Conflict carries source revision/readiness; resolution is one durable idempotent operation"
+        ]
+      },
+      "migration": {
+        "rule": "Retire ambiguous Return/Reassign callback semantics; map source relationship conflicts through explicit story classification.",
+        "reconciliation": [
+          "Every legacy conflict fixture maps to an approved story or quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Movement/refund/credit/correction conflict and concurrent-change resolution tests"
+        ],
+        "acceptance": [
+          "Conflict UI states exactly what physical, billing and money effects each choice will have"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D49180285F84",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides useful presentation behavior in ListControlBar.swift while deriving state or actions from source-era domain models.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "ListQueryState",
+          "ListReadiness",
+          "typed add/filter/sort/selection intents"
+        ],
+        "securityRequirements": [
+          "Only named capability/query intents leave the component"
+        ],
+        "syncRequirements": [
+          "Renders local readiness and stable query state; persists no business authority"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no generic control state; preserve reviewed cross-platform interaction only.",
+        "reconciliation": [
+          "Presentation snapshot/accessibility parity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "iOS/macOS control, keyboard, accessibility and readiness tests"
+        ],
+        "acceptance": [
+          "The control remains reusable without carrying backend or domain-write mechanics"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D5CAB6DD5FDC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in DetailRow.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-D7FC2DBAE316",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in TitledCard.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-DC03C1E9F6DE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides obsolete ItemsTabPlaceholder scaffolding beside implemented feature screens.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Remove after the real redesigned destination is present; this scaffolding is not a parity requirement."
+    },
+    {
+      "id": "SWIFT-E0CBA4998B00",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents email/Google authentication while importing Firebase Auth and binding directly to the current Auth manager.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "AuthPresentationSnapshot",
+          "BeginEmailSignIn",
+          "BeginEmailRegistration",
+          "BeginFederatedSignIn",
+          "IdentitySessionProviding"
+        ],
+        "securityRequirements": [
+          "Provider credentials/tokens remain inside the chosen Auth adapter",
+          "Errors are redacted/non-enumerating and no provider user object enters presentation"
+        ],
+        "syncRequirements": [
+          "Authentication may require network; approved offline unlock uses retained Principal/Account state under A-016 and never fabricates server authority"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source Auth subjects to stable Principals; do not migrate plaintext credentials, provider sessions or Firebase SDK objects.",
+        "reconciliation": [
+          "Every active source Auth subject maps to one Principal or quarantine reason",
+          "Duplicate subject/email review"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Auth sign-in/register/federation, token expiry, offline unlock, revoke and redacted-error contract tests"
+        ],
+        "acceptance": [
+          "Authentication provider can change without changing Ledger session semantics or bypassing offline durability policy"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-E3175033D07C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in Typography.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-E793B24EEB18",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CurrencyFormatting.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-E79C69CAF380",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FindableText.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-E8B79C6E043B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ControlAction.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-E90E64B0DA60",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Deduplicates, selects, and groups attachments by remote URL identity.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Attachments and Project Items",
+        "surfaces": [
+          "AttachmentEvidenceSelectionState",
+          "AttachmentID grouping",
+          "CreateItemsFromAttachmentEvidenceCommand"
+        ],
+        "securityRequirements": [
+          "Grouping operates only on authorized stable Attachment IDs from the parent snapshot"
+        ],
+        "syncRequirements": [
+          "Local selection/grouping resolves encrypted local bytes and survives only as part of a durable create operation when submitted"
+        ]
+      },
+      "migration": {
+        "rule": "Replace URL-keyed selection with source-reference-to-AttachmentID correlation; do not migrate ephemeral groups.",
+        "reconciliation": [
+          "No duplicate/missing Attachment IDs after URL/path correlation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable-ID grouping, duplicate URL, expired URL, offline local-byte and account-switch tests"
+        ],
+        "acceptance": [
+          "Grouping identity remains stable when delivery URLs expire or change"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-EB3DBFA37CCD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in InfoCard.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-EBEEA8140082",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in Badge.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-EF13EACEC482",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in Card.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-F4C58B1CF37F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in FormToggle.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-F4D687DCD4F1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable cross-platform Ledger presentation tokens in StatusColors.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-F60172F55754",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in EditNotesModal.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-F667CD548CD8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Item filter facets over source-era status, relationship, media URL, source, and price fields.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Queries",
+        "surfaces": [
+          "ItemListFacet",
+          "ItemListRequest",
+          "NamedItemSort",
+          "ItemListSection"
+        ],
+        "securityRequirements": [
+          "Facet vocabulary cannot request hidden fields or widen authorized local rows"
+        ],
+        "syncRequirements": [
+          "Versioned query vocabulary maps to local projection columns with stable missing-value semantics"
+        ]
+      },
+      "migration": {
+        "rule": "Map source-era filter values to reviewed target facets and retire transactionId/URL/source-text assumptions that are not target authority.",
+        "reconciliation": [
+          "Legacy filter fixture to target facet mapping"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Facet versioning, missing-value, limited-access and unknown-value tests"
+        ],
+        "acceptance": [
+          "Saved/query facet semantics remain deterministic without exposing persistence field names"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F6965594F2E4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in AppButton.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-F7172E042839",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides cross-platform zoom/annotation UI while fetching remote URLs directly through URLSession and a global cache.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Attachments",
+        "surfaces": [
+          "AttachmentDisplaySource",
+          "AttachmentResolving",
+          "ZoomableAttachmentView"
+        ],
+        "securityRequirements": [
+          "Resolver validates Account/parent visibility and returns local bytes or authorized short-lived delivery",
+          "Remote URL is never object identity"
+        ],
+        "syncRequirements": [
+          "Prefer encrypted local bytes; remote fetch is cancellable/fallback and readiness distinguishes unavailable from unauthorized"
+        ]
+      },
+      "migration": {
+        "rule": "Map source URLs/paths to stable Attachment IDs and byte hashes; no permanent URL/cache key becomes target identity.",
+        "reconciliation": [
+          "Attachment reference-to-ID/hash coverage and orphan report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline zoom/annotation, expired URL, local-first, cancellation, revoke and accessibility tests"
+        ],
+        "acceptance": [
+          "Authorized attachments remain viewable offline and URL rotation does not change identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F81A30E4CBC8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists and mutates members/invites, including a Firestore listener opened directly by the view.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016",
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "MemberDirectorySnapshot",
+          "InviteDirectorySnapshot",
+          "InviteMemberCommand",
+          "RevokeInviteCommand",
+          "UpdateMemberAccessCommand"
+        ],
+        "securityRequirements": [
+          "Server derives actor, enforces membership-admin capability, protects last-owner/self-access invariants and filters financial-category visibility",
+          "No view-owned Admin/Firestore listener"
+        ],
+        "syncRequirements": [
+          "Member/invite snapshots use authorized local streams where permitted; mutations are durable typed operations and sensitive revocation requires fresh authority"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source users/invites/roles/financial access/category grants to stable Principal memberships; quarantine orphan or unsafe grants.",
+        "reconciliation": [
+          "Member/Principal/role/access/category-grant/invite counts and orphan report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Member/invite RLS, role escalation, self-lockout, cross-account, revoke, offline/stale-authority and operation tests"
+        ],
+        "acceptance": [
+          "Authorized admins manage members without client-authored privileges, hidden Firestore listeners or swallowed failures"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F8D8A2AD2013",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in CardActionButtons.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "SWIFT-FC9E834DFB67",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable backend-independent presentation or pure local behavior in ActionMenuSheet.swift.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-19253AF594CF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable ProgressBarCalculationTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-2599CE350D13",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable NavigationRouteResolutionTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-337C5611EE4F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era BulkSaleResolutionCalculationTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-007",
+        "O-013",
+        "O-014",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items and Inventory Verification",
+        "surfaces": [
+          "Item movement/Link/Transfer eligibility contract tests",
+          "legacy source fixture suite"
+        ],
+        "securityRequirements": [
+          "Target tests include cross-Account, cross-Client and unauthorized destination denial"
+        ],
+        "syncRequirements": [
+          "Target tests exercise offline eligibility snapshots, durable retry and server conflict revalidation"
+        ]
+      },
+      "migration": {
+        "rule": "Retain old bulk-sale tests as source evidence; replace transactionId/category heuristics with story-specific target fixtures.",
+        "reconciliation": [
+          "Every retired assertion is linked to its replacement or explicit source-only rationale"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Bulk Item Link/movement/Transfer/correction eligibility and retry contract tests"
+        ],
+        "acceptance": [
+          "Replacement tests prove approved stories without reintroducing Sale or raw transaction-link semantics"
+        ]
+      }
+    },
+    {
+      "id": "TEST-3EC2FCFE5F4A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era TransactionCardCalculationTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Transactions Presentation Verification",
+        "surfaces": [
+          "TransactionListRowSnapshot contract tests",
+          "Purchase/Return/Transfer presentation fixtures"
+        ],
+        "securityRequirements": [
+          "Presentation fixtures cover financial visibility and non-enumerating inaccessible rows"
+        ],
+        "syncRequirements": [
+          "Tests cover local readiness/staleness and operation status without source listener timing"
+        ]
+      },
+      "migration": {
+        "rule": "Retain source Sale/payment display assertions as legacy evidence; replace with Purchase/Return/Transfer and migration-label fixtures.",
+        "reconciliation": [
+          "Each legacy Transaction display case maps to target fixture or explicit legacy-history renderer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Purchase/Return/Transfer/canceled/correction/readiness Transaction row tests"
+        ],
+        "acceptance": [
+          "Cards never advertise retired target kinds and legacy history remains explainable"
+        ]
+      }
+    },
+    {
+      "id": "TEST-4FA2FD0EE08C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable CurrencyFormattingTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-545AC1932A62",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era TransactionDisplayCalculationTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Transactions Presentation Verification",
+        "surfaces": [
+          "TransactionDetailSnapshot contract tests",
+          "legacy-history label fixtures"
+        ],
+        "securityRequirements": [
+          "Tests verify visibility-safe source/vendor/category labels by role"
+        ],
+        "syncRequirements": [
+          "Tests cover local snapshot readiness/version rather than raw source model presence"
+        ]
+      },
+      "migration": {
+        "rule": "Retain legacy Sale label examples only for source-history transformation; replace canonical target assertions with Purchase/Return/Transfer.",
+        "reconciliation": [
+          "Legacy type/source/direction label mapping coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target Transaction detail/label/amount/readiness/visibility tests"
+        ],
+        "acceptance": [
+          "Target labels state scope-relative money meaning accurately and never create a Sale write affordance"
+        ]
+      }
+    },
+    {
+      "id": "TEST-54720126C657",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable SelectorCircleLayoutTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-5D923CEA7853",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current context activation and Firebase listener teardown/reuse mechanics.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-004",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Application Shell Verification",
+        "surfaces": [
+          "WorkspaceCoordinator lifecycle contract tests",
+          "PowerSync subscription/readiness tests"
+        ],
+        "securityRequirements": [
+          "Tests assert environment/Principal/Account namespace isolation and revoke cleanup"
+        ],
+        "syncRequirements": [
+          "Covers one subscription set, same-workspace idempotency, switch cancellation, restart and no late-result leakage"
+        ]
+      },
+      "migration": {
+        "rule": "Keep Firestore listener-count tests as source evidence; replace listener mocks with target workspace/local-database/Sync contracts.",
+        "reconciliation": [
+          "Every source listener-lifecycle outcome has a target subscription/readiness replacement or retirement rationale"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Workspace activate/reenter/switch/deactivate/deinit/background/restart fault tests"
+        ],
+        "acceptance": [
+          "Target lifecycle has no duplicate streams, stale Account data or provider listener handles in application code"
+        ]
+      }
+    },
+    {
+      "id": "TEST-6EF1C0BA2957",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable SelectionCalculationTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-74BA6A48F8BC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era TransactionCreationStepResolverTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-028",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Transactions Application Verification",
+        "surfaces": [
+          "AvailableTransactionActionsSnapshot tests",
+          "RecordProjectPurchase/RecordInventoryPurchase/Return/Transfer command validation tests"
+        ],
+        "securityRequirements": [
+          "Tests cover scope ownership, capability, Client and cross-Account destination denial"
+        ],
+        "syncRequirements": [
+          "Tests exercise offline draft/eligibility and server revalidation through durable operations"
+        ]
+      },
+      "migration": {
+        "rule": "Retain source wizard-step cases as UX evidence; replace Payment-to-Business/Sale/source-routing authority with approved typed command fixtures.",
+        "reconciliation": [
+          "Every source Transaction-kind fixture maps to Purchase/Return/Transfer/other target domain or quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Transaction command eligibility, minimum evidence, offline retry and concurrent-change tests"
+        ],
+        "acceptance": [
+          "Creation flows record actual scope-owner money or paired Transfer and expose no retired Transaction write"
+        ]
+      }
+    },
+    {
+      "id": "TEST-771AD9C93BCB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era TransactionNextStepsCalculationTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-028",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Transactions Application Verification",
+        "surfaces": [
+          "TransactionDraftReadinessSnapshot tests",
+          "typed posting-evidence validation tests"
+        ],
+        "securityRequirements": [
+          "Readiness is advisory; handler revalidates authority and required evidence"
+        ],
+        "syncRequirements": [
+          "Tests cover incomplete local evidence, durable attachment availability, offline draft and rejection"
+        ]
+      },
+      "migration": {
+        "rule": "Retain source completeness steps as evidence; replace Sale/return-to-inventory and raw field heuristics with target posting rules.",
+        "reconciliation": [
+          "Legacy complete/incomplete distribution and target mapping fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Purchase/Return/Transfer draft/posting, receipt-line, attachment and operation-state tests"
+        ],
+        "acceptance": [
+          "Readiness accurately explains missing target evidence without defining physical movement as a Transaction"
+        ]
+      }
+    },
+    {
+      "id": "TEST-843F020ACF71",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests reusable ActionMenuCalculationTests.swift behavior without production access.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component."
+    },
+    {
+      "id": "TEST-84999BA9BBBE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era ListFilterSortCalculationTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Query Verification",
+        "surfaces": [
+          "ItemListRequest/Page/Facet contract tests",
+          "large-project local query benchmark"
+        ],
+        "securityRequirements": [
+          "Tests prove hidden rows/fields do not appear in filters, facets, counts or search"
+        ],
+        "syncRequirements": [
+          "Tests cover partial streams, deterministic ordering/cursors and offline local results"
+        ]
+      },
+      "migration": {
+        "rule": "Retain useful pure source fixtures but replace raw transactionId/URL/status/source-price assumptions with target projection fields.",
+        "reconciliation": [
+          "Source fixture facet/group behavior mapped to target semantics",
+          "Distinct physical Item ID preservation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "PowerSync Item list filter/sort/search/facet/readiness/performance/property tests"
+        ],
+        "acceptance": [
+          "Large project lists remain deterministic and useful offline without identity merges or data leakage"
+        ]
+      }
+    },
+    {
+      "id": "TEST-B200C7C263E7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises Firestore document arrays, raw relationship fields, arrayUnion/arrayRemove, and NSNull clears.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001"
+      ],
+      "notes": "Keep as legacy/source characterization or migration evidence; it is not a target contract."
+    },
+    {
+      "id": "TEST-BB924134BF8E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era InventoryContextTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-004",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Inventory Query Verification",
+        "surfaces": [
+          "InventoryWorkspaceQuerying contract tests",
+          "InventoryReadiness and workspace lifecycle tests"
+        ],
+        "securityRequirements": [
+          "Tests cover Account isolation and authorized Inventory visibility"
+        ],
+        "syncRequirements": [
+          "Tests cover required Inventory/provenance streams, same-workspace idempotency, switch/restart and incomplete-history state"
+        ]
+      },
+      "migration": {
+        "rule": "Keep Firebase service-mock context tests as source evidence; replace with local target projection/Sync contracts.",
+        "reconciliation": [
+          "Inventory Item/acquisition/placement/history fixture coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Inventory workspace offline/readiness/account-switch/history-completeness tests"
+        ],
+        "acceptance": [
+          "Inventory state is locally durable, scope-isolated and history-aware without Firestore listeners"
+        ]
+      }
+    },
+    {
+      "id": "TEST-C1A3D3DA5E75",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests source-era ItemMenuBuilderTests.swift behavior that must be replaced by target contracts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-013",
+        "O-014",
+        "O-029",
+        "O-032",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001"
+      ],
+      "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "target": {
+        "owner": "Project Items Application Verification",
+        "surfaces": [
+          "AvailableItemActionsSnapshot contract tests",
+          "story-specific Item action presentation tests"
+        ],
+        "securityRequirements": [
+          "Tests assert unauthorized/frozen/cross-scope actions are absent and handler revalidation still rejects forged commands"
+        ],
+        "syncRequirements": [
+          "Tests cover readiness, stale eligibility, queued/applied/rejected/conflicted operation presentation"
+        ]
+      },
+      "migration": {
+        "rule": "Keep source menu ordering/labels as evidence where approved; replace Sale/direct-link/ambiguous Return assertions with target story capabilities.",
+        "reconciliation": [
+          "Every source action maps to preserve/redesign/retire and one target owner"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Item action capability matrix across placement, billing, paid, Invoice, Space and offline states"
+        ],
+        "acceptance": [
+          "Menus expose only unambiguous available stories and cannot authorize a write by callback presence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-38DC8C755068",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d3396fc6d99060260ab97ba06cf9bc634f35a0754bf31a69004bfccc1625d373",
+      "currentBehavior": "Defines target-only named list query, sort, filter, cursor, readiness, safe-failure, intent, local snapshot, and pure presentation-reducer contracts without a backend dependency.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SHARED-LIST-001"
+      ],
+      "notes": "Target-only shared presentation foundation. Concrete capability profiles and UI components remain in owning feature slices.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "NamedListQueryProfile and ListQueryState",
+          "StableSortDescriptor and opaque query-bound cursor",
+          "ListReadiness, ListEmptyState and ListFailureState",
+          "ListPresentationIntent and ListPresentationReducer"
+        ],
+        "securityRequirements": [
+          "Only registered sort/filter/action IDs cross the boundary and not-found/authorization/authentication collapse before public presentation updates",
+          "Unavailable state clears cached rows and version metadata rather than revealing inaccessible existence"
+        ],
+        "syncRequirements": [
+          "Partial and stale snapshots remain distinct from ready authoritative emptiness",
+          "Query fingerprints reject late snapshots and cursors from a different filter/sort/search state"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient list state; bind target feature projections to the shared contracts without importing source field names, collection paths, listener handles, or generic repositories.",
+        "reconciliation": [
+          "Named profile IDs replace raw source sort/filter fields",
+          "No-matches, authoritative-empty, incomplete, stale, unavailable, and retryable fixtures remain distinguishable"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SharedListQueryPresentationTests domain, restart and rejection suite"
+        ],
+        "acceptance": [
+          "Cached-first list state is deterministic and safe without backend values or network availability"
+        ]
+      }
+    },
+    {
+      "id": "TEST-7E87ABB4166B",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8013f41abebbba025d2392b1d5106d830fa637fdbb10bfdf4c6bfefdb78ff815",
+      "currentBehavior": "Exercises target-only named-query validation, stable cursor binding, restart reconstruction, authoritative-empty versus incomplete/no-match state, safe failure collapse, cached-row preservation, retry intent, and mismatched late-snapshot refusal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SHARED-LIST-001"
+      ],
+      "notes": "Deterministic provider-free target contract evidence; it asserts no current Firebase listener timing or field mechanics.",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "SharedListQueryPresentationTests",
+          "bounded profile/query/cursor fixtures",
+          "offline restart and safe rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove public unavailable state cannot distinguish missing from unauthorized and clears cached inaccessible rows"
+        ],
+        "syncRequirements": [
+          "Tests prove partial empty is not authoritative empty, restart is deterministic, retry preserves safe cached rows, and mismatched query snapshots fail"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target fixtures only; migrate no source test database, snapshot, or transient UI state.",
+        "reconciliation": [
+          "Every shared-list requirement has a reciprocal executable assertion"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SharedListQueryPresentationTests"
+        ],
+        "acceptance": [
+          "All domain, restart and safe-failure fixtures pass without network, provider SDK, credential or hosted resource"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D0BC2109537E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "6df4df33bd4f8458940913fb5f17834d906e7eea369552d569972e21bb8747e3",
+      "currentBehavior": "Defines target-only registered routes, environment/Principal/Account-scoped restoration, deterministic opaque keys, activation-bound resolution requests, non-enumerating failures, explicit not-synced state, safe cached retry, and late-result rejection.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SCOPED-ROUTE-001"
+      ],
+      "notes": "Target-only technical-control surface. It does not activate Auth, a workspace, Sync Streams, hosted resources, or concrete navigation UI.",
+      "target": {
+        "owner": "Scoped Route Resolution",
+        "surfaces": [
+          "workspace-scoped route identity and activation token",
+          "registered route kind and bounded parent scope",
+          "versioned restoration record and deterministic namespaced key",
+          "non-enumerating route resolution state and late-result rejection"
+        ],
+        "securityRequirements": [
+          "Restoration refuses environment, Principal, Account, activation, contract-version, and route-registry mismatches",
+          "Missing, unauthorized, unauthenticated, and revoked causes collapse before public route presentation"
+        ],
+        "syncRequirements": [
+          "Not-yet-synchronized remains distinct from missing or failed",
+          "Resolution updates from an old request or workspace activation cannot enter the active route state"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient navigation stack; restore only validated target route records in the exact active environment, Principal, and Account scope.",
+        "reconciliation": [
+          "Every accepted restoration record resolves through the current route registry and contract version",
+          "Cross-workspace and stale-activation fixtures are rejected without displaying cached inaccessible content"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ScopedRouteResolutionTests domain, restart, scope-isolation and late-result suite"
+        ],
+        "acceptance": [
+          "Cached target routes restore deterministically inside one workspace and fail closed across workspace or authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E106594B9EF3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0eecc6ad75579c0f4c0cb9edeb4b4bd77abb1b5f99f0e3b15a171a6312788c01",
+      "currentBehavior": "Exercises target-only route-registry validation, offline restoration, every workspace-scope mismatch, contract/version refusal, non-enumerating failure collapse, explicit not-synced/cached state, retry state, and late-result rejection without mutation.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SCOPED-ROUTE-001"
+      ],
+      "notes": "Synthetic provider-free test surface; it does not claim concrete iOS/macOS navigation, visual, accessibility, Auth, or Sync evidence.",
+      "target": {
+        "owner": "Scoped Route Resolution",
+        "surfaces": [
+          "ScopedRouteResolutionTests",
+          "route registry and restoration fixtures",
+          "workspace-switch, authorization-collapse and late-update fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove the public state cannot distinguish inaccessible existence and no old-workspace snapshot survives a scope transition"
+        ],
+        "syncRequirements": [
+          "Tests prove not-synced is explicit, cached restoration is network-independent, and mismatched updates fail closed"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target route records only; import no Firebase navigation state, listener handle, document path, or cached view model.",
+        "reconciliation": [
+          "Every scoped-route requirement has reciprocal executable coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ScopedRouteResolutionTests"
+        ],
+        "acceptance": [
+          "All domain, restart and rejection fixtures pass without a network, provider SDK, credential, or hosted resource"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3E0BAFEF6955",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8c38477fadf92bb82a227e7e1bdf1f2e320df9463230148f9dc4358970b41904",
+      "currentBehavior": "Defines target-only typed unchanged/set/clear fields, Account/actor/contract/entity/revision-bound drafts, stable validation results, non-decodable operation bindings recreated through validation, and monotonic provider-free submission presentation over the shared operation lifecycle.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-TYPED-EDIT-001"
+      ],
+      "notes": "Target-only technical-control surface. It does not decide which product fields are editable, implement a command handler, or activate a concrete form.",
+      "target": {
+        "owner": "Typed Edit Draft and Submission",
+        "surfaces": [
+          "typed unchanged/set/clear field intent",
+          "versioned Account/entity/revision-bound edit draft",
+          "stable field-validation result",
+          "operation-envelope submission binding and safe result presentation"
+        ],
+        "securityRequirements": [
+          "Edit binding requires exact Account, subject revision precondition, operation identity, and fingerprint",
+          "Authorization/invariant failures expose stable presentation categories without vendor errors, raw fields, or inaccessible entity detail"
+        ],
+        "syncRequirements": [
+          "Draft and accepted-operation binding survive restart without inferring server commitment",
+          "Mismatched or stale operation receipts/snapshots cannot update another draft submission"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient source form state; feature slices construct typed target drafts and commands rather than importing raw Firebase patch dictionaries or NSNull sentinels.",
+        "reconciliation": [
+          "Unchanged, explicit set, and explicit clear remain distinguishable after target draft encoding",
+          "Every accepted edit submission carries the exact subject revision precondition and operation fingerprint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "TypedEditDraftTests field-intent, restart, operation-binding, and result-presentation suite"
+        ],
+        "acceptance": [
+          "Typed drafts and submission results remain deterministic and scope-safe without dynamic dictionaries, provider SDKs, or network availability"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F9037F34FAF9",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "a79f84c605e01208c8e618713936d6f98430a28f1c14b5ba36bea17ebdb37979",
+      "currentBehavior": "Exercises target-only typed field intent, validation sorting/deduplication, offline draft and queued-envelope reconstruction, exact submission binding, mismatch/stale/nonmonotonic refusal, and stable operation receipt/result presentation.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-TYPED-EDIT-001"
+      ],
+      "notes": "Synthetic provider-free test surface; concrete editor UI, field policies, business validation, and handlers remain in owning feature slices.",
+      "target": {
+        "owner": "Typed Edit Draft and Submission",
+        "surfaces": [
+          "TypedEditDraftTests",
+          "field-intent and validation fixtures",
+          "restart and exact operation-binding fixtures",
+          "queued/retry/applied/rejected/conflict/update presentation fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove Account/revision/operation mismatch refusal and stable non-provider failure presentation"
+        ],
+        "syncRequirements": [
+          "Tests prove restart preservation, local acceptance versus server commitment, retry state, conflict, and stale snapshot refusal"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target drafts and operation records only; import no Firebase patch dictionary, document path, listener, or transient view state.",
+        "reconciliation": [
+          "Every typed-edit requirement has reciprocal executable coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TypedEditDraftTests"
+        ],
+        "acceptance": [
+          "All field, validation, restart, binding, and presentation fixtures pass without a network, provider SDK, credential, or hosted resource"
+        ]
+      }
+    }
+  ]
+}

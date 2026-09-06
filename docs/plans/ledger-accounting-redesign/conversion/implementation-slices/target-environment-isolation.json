@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "target-environment-isolation",
+  "title": "Start the target app only in one validated, isolated environment",
+  "kind": "technical_control",
+  "status": "in_progress",
+  "owner": "Environment and Composition Control",
+  "surfaceIds": [
+    "CONFIG-1FC6F8A5DFA5",
+    "CONFIG-2439DF7AA062",
+    "CONFIG-031396750B85",
+    "CONFIG-2EBA890AF767",
+    "CONFIG-6E140F8E16C0",
+    "CONFIG-634171BE50F3",
+    "CONFIG-77D38BB6819B",
+    "CONFIG-81235587F306",
+    "CONFIG-D94C7653FB36",
+    "FILE-A6E49E3815F4",
+    "MAN-RELEASE-001",
+    "SWIFT-061553E63650",
+    "SWIFT-481A2D09BC68",
+    "TEST-0AD8A0619179",
+    "SWIFT-88C69E26FBA0"
+  ],
+  "requirements": [
+    {
+      "id": "TARGET-ENV-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Environment Topology",
+      "invariant": "The released Firebase system remains the production source until cutover, while every target process belongs to exactly one isolated local, staging, or production Supabase/PowerSync environment and has no Firebase target adapter.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["TARGET-ENV-TEST-001", "TARGET-ENV-TEST-005"]
+    },
+    {
+      "id": "TARGET-ENV-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The target app constructs backend-neutral feature dependencies through one validated target composition boundary, confines Supabase/PowerSync SDK types to the isolated provider/runtime layer, imports no Firestore data adapter, and does not require a change to the running Firebase application.",
+      "decisionIds": ["D-026"],
+      "verificationIds": ["TARGET-ENV-TEST-001", "TARGET-ENV-TEST-005"]
+    },
+    {
+      "id": "TARGET-ENV-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md",
+      "section": "Staging App Isolation",
+      "invariant": "A staging target is compiled with unmistakable staging identity, a distinct local-data namespace, no runtime environment toggle, and fail-closed rejection of every known production source or target identifier before infrastructure opens.",
+      "decisionIds": ["D-027"],
+      "verificationIds": ["TARGET-ENV-TEST-002", "TARGET-ENV-TEST-003", "TARGET-ENV-TEST-004", "TARGET-ENV-TEST-005"]
+    },
+    {
+      "id": "TARGET-ENV-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/README.md",
+      "section": "Core Architecture in One View",
+      "invariant": "UI and application code depend on Ledger contracts and injected ports; vendor SDK types remain at the target composition boundary and never become selectable backend behavior inside a feature.",
+      "decisionIds": [],
+      "verificationIds": ["TARGET-ENV-TEST-001"]
+    },
+    {
+      "id": "TARGET-ENV-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "Target environment schema and configuration validation run before deployment, and deployment or build success never activates production authority.",
+      "decisionIds": ["D-027"],
+      "verificationIds": ["TARGET-ENV-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "LedgerEnvironmentID and LedgerEnvironmentKind are closed values for targetLocal, targetStaging, and targetProduction; Firebase production is source evidence, never a target runtime kind.",
+        "LedgerEnvironmentManifest binds Auth, structured data, PowerSync, Storage, MCP, telemetry, external-route, update-feed, and local-data namespace identifiers plus compatible contract versions.",
+        "ValidatedLedgerEnvironment is created only after completeness, same-environment, allowlist, and known-production-identifier checks succeed.",
+        "Target app composition can be constructed only from a ValidatedLedgerEnvironment; feature/domain code remains backend-neutral and views cannot select between backends.",
+        "EnvironmentValidationFailure is stable, non-secret, and identifies the mismatched component category without echoing credentials or sensitive endpoint material."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This control slice validates client/runtime environment composition. Product-owned target relations are tracked by their own provider slices."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "This control slice owns no command semantics; product-owned handlers are tracked by their own provider slices."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "This control slice owns no Data API grants; product-owned grants are tracked by their own provider slices."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "This control slice owns no row policy; product-owned RLS is tracked by its provider slice."
+    },
+    "syncStreams": {
+      "items": [
+        "PowerSyncEnvironmentDescriptor must match the validated target environment and compatible sync-contract version before an isolated provider runtime opens its local database or connects.",
+        "Known Firebase production and Supabase production identifiers are denied by the staging allowlist, while target production identifiers are accepted only by a production archive profile."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "LocalDataNamespace deterministically separates database, encryption-key, operation-queue, attachment-cache, and keychain state by bundle identity, target environment, principal, and account.",
+        "The validated environment is immutable for the process lifetime and is revalidated before reopening persisted local state after restart.",
+        "A missing, mixed, stale, or production-forbidden manifest fails before local state opens and preserves the previously isolated data without destructive cleanup."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "The manifest validates a Storage environment identifier, but object storage, attachment durability, and media fault behavior are owned by the attachment slice."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This bounded slice owns the target app composition root only; the MCP composition root and shared contract registry are separate mapped technical-control slices."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase data is read or transformed and no target row is written by environment validation."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Environment diagnostics expose only environment kind, public resource identifiers, and contract versions; they never expose tokens, service credentials, signed URLs, or local encryption material.",
+        "A fail-closed startup event records the stable validation code and rejected component category for staging diagnosis.",
+        "The staging app presents a permanent STAGING name/banner derived from compiled configuration rather than mutable user state."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The ordinary LedgeriOS scheme remains the Firebase production app while a distinct target-staging scheme/profile is introduced on the isolated conversion branch.",
+        "There is no in-app runtime switch between Firebase and Supabase/PowerSync, and no Firebase target adapter is added.",
+        "LedgerTargetMigrationCore is a separate provider-free tooling product with reviewed dependency/test edges and is absent from both the target staging and Firebase application graphs.",
+        "A build/deployment manifest records the environment and contract versions without granting production authority; rollback before cutover remains the unchanged Firebase release."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TARGET-ENV-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "covers": ["TARGET-ENV-REQ-001", "TARGET-ENV-REQ-002", "TARGET-ENV-REQ-004"],
+      "expected": "Complete same-environment manifests validate; missing components, mixed environment kinds, forbidden Firebase target kinds, incompatible contract versions, and sensitive diagnostic values are rejected deterministically.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
+    },
+    {
+      "id": "TARGET-ENV-TEST-002",
+      "kind": "sync_authorization",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "covers": ["TARGET-ENV-REQ-003"],
+      "expected": "The target staging profile accepts only its declared PowerSync environment and contract version and refuses every source-production or target-production identifier before constructing the sync client.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
+    },
+    {
+      "id": "TARGET-ENV-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "covers": ["TARGET-ENV-REQ-003"],
+      "expected": "The same environment/principal/account reopens the same protected namespace after restart, while staging, production, different principals, and different accounts never share database, key, queue, media-cache, or keychain namespaces.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
+    },
+    {
+      "id": "TARGET-ENV-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "covers": ["TARGET-ENV-REQ-003"],
+      "expected": "A stale or mismatched persisted manifest is rejected before local state opens, leaves existing isolated bytes intact, and cannot fall back to another environment or Firebase.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
+    },
+    {
+      "id": "TARGET-ENV-TEST-005",
+      "kind": "operational",
+      "owner": "scripts/check-target-environment.mjs and future target application build-configuration tests",
+      "covers": ["TARGET-ENV-REQ-001", "TARGET-ENV-REQ-002", "TARGET-ENV-REQ-003", "TARGET-ENV-REQ-005"],
+      "expected": "CI proves that staging identity is visually distinct, contains no production identifiers or production routes, has no runtime environment toggle, emits only safe diagnostics, confines provider dependencies to the isolated target provider boundary, links no migration-control tooling, and leaves the ordinary Firebase LedgeriOS scheme unchanged.",
+      "status": "planned",
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TARGET-ENVIRONMENT-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "The environment foundation now encloses an isolated local LedgerTargetPowerSync product and the Client provider slice while keeping LedgerTargetCore and the Firebase application free of target-provider dependencies. The public manifest/bootstrap/namespace contracts, package tests, persisted-binding refusal, separate reproducible iOS/macOS staging project, fixed local-spike projection, permanent banner, and graph/import/source-contamination guard have passing local evidence. Immutable CI, actual hosted-resource projection after authorization, and visual/physical-target staging verification remain before the operational obligation can pass. This slice does not provision hosted Supabase/PowerSync resources, choose production Auth, approve A-003/A-004, migrate data, or activate production target authority."
+}

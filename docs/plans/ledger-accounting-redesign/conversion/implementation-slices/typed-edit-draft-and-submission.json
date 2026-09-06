@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "typed-edit-draft-and-submission",
+  "title": "Preserve typed edit intent through durable operation results",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Typed Edit Draft and Submission",
+  "surfaceIds": [
+    "SWIFT-3E0BAFEF6955",
+    "TEST-F9037F34FAF9"
+  ],
+  "requirements": [
+    {
+      "id": "TYPED-EDIT-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "A form owns only typed transient draft state and emits typed edit intent; it does not construct a provider patch, authorize a field, coordinate a multi-record write, infer server commitment, or import a backend SDK.",
+      "decisionIds": [],
+      "verificationIds": ["TYPED-EDIT-TEST-001", "TYPED-EDIT-TEST-003", "TYPED-EDIT-TEST-004", "TYPED-EDIT-TEST-005"]
+    },
+    {
+      "id": "TYPED-EDIT-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "Submitting a validated draft binds stable Account, actor, contract, operation, subject, expected revision, and typed payload values through the shared operation envelope; queued, applied, rejected, conflicted, retryable, and required-update truth remains explicit.",
+      "decisionIds": [],
+      "verificationIds": ["TYPED-EDIT-TEST-002", "TYPED-EDIT-TEST-003", "TYPED-EDIT-TEST-004", "TYPED-EDIT-TEST-005"]
+    },
+    {
+      "id": "TYPED-EDIT-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Preconditions and Concurrency",
+      "invariant": "Every edit submission carries the exact expected subject revision and refuses missing, duplicate-conflicting, wrong-subject, wrong-Account, or stale-operation binding rather than defaulting to last-write-wins.",
+      "decisionIds": [],
+      "verificationIds": ["TYPED-EDIT-TEST-003", "TYPED-EDIT-TEST-004", "TYPED-EDIT-TEST-005"]
+    },
+    {
+      "id": "TYPED-EDIT-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "Edit contracts contain only Ledger and standard Swift values; unchanged/set/clear is explicit, and arbitrary field names, dynamic dictionaries, null sentinels, document paths, SQL, SDK handles, and vendor errors cannot cross the boundary.",
+      "decisionIds": [],
+      "verificationIds": ["TYPED-EDIT-TEST-001", "TYPED-EDIT-TEST-002", "TYPED-EDIT-TEST-003", "TYPED-EDIT-TEST-005"]
+    },
+    {
+      "id": "TYPED-EDIT-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Application use-case tests",
+      "invariant": "Deterministic provider-free fixtures prove draft restart, local receipt versus authoritative result, retry, rejection, conflict, required update, revision binding, and stale result refusal.",
+      "decisionIds": [],
+      "verificationIds": ["TYPED-EDIT-TEST-001", "TYPED-EDIT-TEST-002", "TYPED-EDIT-TEST-003", "TYPED-EDIT-TEST-004", "TYPED-EDIT-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "EditFieldValue<Value> is a closed generic value with unchanged, set(Value), and clear cases; set of an empty/zero value is not clear, and encoding preserves all three cases.",
+        "TypedEditDraft<Payload> binds a stable draft ID, AccountID, subject, expected UInt64 revision, optional local-data version, captured time, and a feature-owned typed payload conforming to TypedEditPayload; no raw field registry or dictionary exists.",
+        "EditDraftValidationIssue uses only a stable optional EditFieldID and EditValidationCode; EditDraftValidation returns unchanged, invalid with deterministic unique issues, or a non-publicly-constructible ValidatedEditDraft.",
+        "EditSubmissionBinding is created only from a validated draft and an OperationEnvelope whose Account matches and whose preconditions contain exactly one matching expectedRevision for the draft subject; it stores the canonical operation fingerprint.",
+        "EditSubmissionPresentation maps the shared OperationReceipt/OperationSnapshot into closed accepted/queued/applying/applied/rejected/conflicted/retryable/reauthenticate/requiredUpdate/superseded/resolved states after exact operation, Account, contract, and fingerprint validation."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "Shared form/draft/presentation values introduce no target relation, view, function, constraint, or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "This slice validates submission binding but executes no business command; feature handlers later revalidate product field policy and invariants."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or function is introduced; authorization remains the feature handler and owning relation policy obligation."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "This slice consumes shared operation results and local versions but defines no PowerSync Stream, subscription, or row visibility policy."
+    },
+    "localOffline": {
+      "items": [
+        "Typed drafts, field intent, validation issues, and queued operation envelopes encode deterministically and reconstruct without a network; the non-decodable submission binding is recreated only by revalidating that draft and envelope, and local validation does not claim server acceptance.",
+        "OperationReceipt means local durable acceptance only; authoritative presentation derives only from a matching OperationSnapshot and retains the shared queued/applying/applied/rejected semantics.",
+        "Wrong operation ID, Account, contract, fingerprint, draft subject revision, and stale/mismatched snapshots fail without replacing current edit-submission state; transient retry and conflict remain explicit."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment identity, byte, object, URL, or durable capture behavior is introduced."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "Draft state is app presentation state. App and MCP later share the feature command payload/handler, while MCP does not consume UI drafts."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase form state, patch dictionary, NSNull sentinel, or transient view state is migrated."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "The shared value/presenter layer emits no telemetry; later feature slices may record stable operation/error categories without draft values."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts are additive target-only Swift code, import no provider SDK, alter no current app project, contact no hosted service, and activate no production behavior.",
+        "Concrete feature drafts and editors opt in later; reverting this foundation before cutover removes only target-only code, tests, and transient target draft values."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TYPED-EDIT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift",
+      "covers": ["TYPED-EDIT-REQ-001", "TYPED-EDIT-REQ-004", "TYPED-EDIT-REQ-005"],
+      "expected": "Unchanged, set(empty/zero/nonempty), and clear remain distinct through application and encoding; typed payload change detection and stable field validation contain no raw patch mechanism.",
+      "status": "passed",
+      "evidence": ["EVID-TYPED-EDIT-001"]
+    },
+    {
+      "id": "TYPED-EDIT-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift",
+      "covers": ["TYPED-EDIT-REQ-002", "TYPED-EDIT-REQ-004", "TYPED-EDIT-REQ-005"],
+      "expected": "Draft, validation, and accepted submission binding reconstruct identically from deterministic local bytes without implying server commitment or losing Account/subject/revision/fingerprint identity.",
+      "status": "passed",
+      "evidence": ["EVID-TYPED-EDIT-001"]
+    },
+    {
+      "id": "TYPED-EDIT-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift",
+      "covers": ["TYPED-EDIT-REQ-001", "TYPED-EDIT-REQ-002", "TYPED-EDIT-REQ-003", "TYPED-EDIT-REQ-004", "TYPED-EDIT-REQ-005"],
+      "expected": "Missing/duplicate/wrong revision preconditions, wrong Account, changed payload fingerprint, wrong operation, and mismatched snapshots fail closed and do not mutate another draft's submission state.",
+      "status": "passed",
+      "evidence": ["EVID-TYPED-EDIT-001"]
+    },
+    {
+      "id": "TYPED-EDIT-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift",
+      "covers": ["TYPED-EDIT-REQ-001", "TYPED-EDIT-REQ-002", "TYPED-EDIT-REQ-003", "TYPED-EDIT-REQ-005"],
+      "expected": "Local receipt, retrying queue, applying, applied, validation rejection, conflict, authorization, reauthentication, required update, superseded, and resolved states map deterministically from the shared lifecycle without vendor errors.",
+      "status": "passed",
+      "evidence": ["EVID-TYPED-EDIT-001"]
+    },
+    {
+      "id": "TYPED-EDIT-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["TYPED-EDIT-REQ-001", "TYPED-EDIT-REQ-002", "TYPED-EDIT-REQ-003", "TYPED-EDIT-REQ-004", "TYPED-EDIT-REQ-005"],
+      "expected": "Immutable pull-request evidence containing the unchanged implementation passes conversion traceability, source-contamination and generated-contract checks, the complete target test suite, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "passed",
+      "evidence": ["EVID-TYPED-EDIT-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TYPED-EDIT-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the app-shell capability dossier. It stops before product field mutability/validation, money parsing or accounting, feature commands/handlers, concrete iOS/macOS forms, accessibility/visual evidence, Auth, local database/Sync/provider adapters, hosted resources, migration, release, or cutover authority."
+}

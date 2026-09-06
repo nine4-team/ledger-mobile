@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-PROJECT-CLIENT-REFERENCE-001",
+  "owner": "Projects, Clients, and Shared Reference Data",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-0BE29F32C9A0",
+    "QUERY-2C1E9DEBF1F7",
+    "QUERY-929FA5F771D6",
+    "QUERY-9E9838748B90",
+    "QUERY-BF0573C89151",
+    "QUERY-C2911BD62303",
+    "QUERY-C59A1027F497",
+    "QUERY-CBD3D04089FF",
+    "QUERY-D8D82B20210E",
+    "QUERY-F1B5D6751738"
+  ],
+  "allowedBlockerIds": [
+    "A-010",
+    "A-016",
+    "O-024",
+    "O-025",
+    "O-026",
+    "O-039",
+    "O-040"
+  ],
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-0BE29F32C9A0",
+      "expectedOccurrenceHash": "558cc1e97ff708607c35e6394e57475b8bfb9f5f29448add53719929bb2ab3cc",
+      "sourceOwnerSurfaceId": "MCPTOOL-D0572E06EB6B",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/projects.ts",
+        "line": 42
+      },
+      "expectedSourceOwnerHash": "5a35e7789ac46081eacdf0040c0bf49b4c5de8d416578481401ff175048c0e97",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-D0572E06EB6B",
+          "targetSurface": "GetProjectQuery",
+          "expectedTargetMappingHash": "68dba1cb44bee63abc2fad5e8754606c2e155f7bf9a4062c8f1e1a9c8929b4d0"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2C1E9DEBF1F7",
+      "expectedOccurrenceHash": "18997e717a103447eeb79f26be9f801582e8c40d1474308fec6d32493eae68f6",
+      "sourceOwnerSurfaceId": "SWIFT-17BB6ABA1400",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift"
+      },
+      "expectedSourceOwnerHash": "1eda4bef2077b6d5499b86025a39933acc532f2a59ea390332656c6fbe55bf81",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-BD89A02A23F2",
+          "taccessId": "TACCESS-256EF1A04BD0",
+          "expectedMappingHash": "345f7754c7809db16e8a08068f44328fe97f4b91d8178ee066317f741a13e19c"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-929FA5F771D6",
+      "expectedOccurrenceHash": "ea99ffcafb619a9e3773527218e1b2052c40b4431af8980bf0e501cc914bf540",
+      "sourceOwnerSurfaceId": "MCPTOOL-FAD77282B988",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/projects.ts",
+        "line": 19
+      },
+      "expectedSourceOwnerHash": "f56d5c6cc96d9a2ecf94cd5d465e5b61eb04a2287547d9662c63158849d0a7d7",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-FAD77282B988",
+          "targetSurface": "ListProjectsQuery",
+          "expectedTargetMappingHash": "bea7bd05b867ec8dc9f556e33c50d5a2c81eb55461fa14b6241d0e105e1c1533"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9E9838748B90",
+      "expectedOccurrenceHash": "00b50ef8d847a307d13f3b7f7a16683fe93b5ef656ea296732bcb6210330bf43",
+      "sourceOwnerSurfaceId": "SWIFT-093E5E4F8D20",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift"
+      },
+      "expectedSourceOwnerHash": "8d8c3ca20cdc246daa79fe4ed8ec6d315a964f70f563e5e32b3fc3bdea982e68",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-87E07EB9A4B3",
+          "taccessId": "TACCESS-5B5B86EF7444",
+          "expectedMappingHash": "a8a04d227f46d1c154f603313e3d218a9a08b8725bb59c329d74c1364926a46c",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BF0573C89151",
+      "expectedOccurrenceHash": "8e0c9a2e1c380b76f2411e45434c094275df0f8286d13398ed9c24f4995b07b8",
+      "sourceOwnerSurfaceId": "MCPTOOL-C77F4C467B22",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/project-notes.ts",
+        "line": 34
+      },
+      "expectedSourceOwnerHash": "40ac9eb6c760b0cdd5ce501c2fe964fdb7272c97dbc891fe193d4afd83891fc3",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-2932CD350E5E",
+          "taccessId": "TACCESS-97F0C3EFF84D",
+          "expectedMappingHash": "aaacb0ccda00ad6e15ec4c8cf52e1c219de8bec8b0a786edc800ddb78471057f"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C2911BD62303",
+      "expectedOccurrenceHash": "ba9bdc61b8158cbf9a9e10be4945d64499a652d56d254dbcabff1eacea668c74",
+      "sourceOwnerSurfaceId": "SWIFT-17BB6ABA1400",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift"
+      },
+      "expectedSourceOwnerHash": "1eda4bef2077b6d5499b86025a39933acc532f2a59ea390332656c6fbe55bf81",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-026"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-026",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C59A1027F497",
+      "expectedOccurrenceHash": "695d2101642e3d3d65a9cb5600ac274fe03f684bd544dffe32216859447ef171",
+      "sourceOwnerSurfaceId": "SWIFT-093E5E4F8D20",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift"
+      },
+      "expectedSourceOwnerHash": "8d8c3ca20cdc246daa79fe4ed8ec6d315a964f70f563e5e32b3fc3bdea982e68",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-87E07EB9A4B3",
+          "taccessId": "TACCESS-5B5B86EF7444",
+          "expectedMappingHash": "a8a04d227f46d1c154f603313e3d218a9a08b8725bb59c329d74c1364926a46c",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CBD3D04089FF",
+      "expectedOccurrenceHash": "06676acad8a534f0f8282b74d691ad77630e6f4218ccf86bd1e82134b677f135",
+      "sourceOwnerSurfaceId": "MCPTOOL-C77F4C467B22",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/project-notes.ts",
+        "line": 34
+      },
+      "expectedSourceOwnerHash": "40ac9eb6c760b0cdd5ce501c2fe964fdb7272c97dbc891fe193d4afd83891fc3",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-2932CD350E5E",
+          "taccessId": "TACCESS-97F0C3EFF84D",
+          "expectedMappingHash": "aaacb0ccda00ad6e15ec4c8cf52e1c219de8bec8b0a786edc800ddb78471057f"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D8D82B20210E",
+      "expectedOccurrenceHash": "7da4ea1dc7b295fb12f89889fd919ee172c8554c14b5aa21a1a27b52ec71bd2b",
+      "sourceOwnerSurfaceId": "SWIFT-17BB6ABA1400",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift"
+      },
+      "expectedSourceOwnerHash": "1eda4bef2077b6d5499b86025a39933acc532f2a59ea390332656c6fbe55bf81",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-026"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-026",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-F1B5D6751738",
+      "expectedOccurrenceHash": "c295c5f5e38efab2d9a9c55ea8c5efe8a749aee7467b3f14ea3438ef33511be0",
+      "sourceOwnerSurfaceId": "MCPTOOL-FAD77282B988",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/projects.ts",
+        "line": 19
+      },
+      "expectedSourceOwnerHash": "f56d5c6cc96d9a2ecf94cd5d465e5b61eb04a2287547d9662c63158849d0a7d7",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-FAD77282B988",
+          "targetSurface": "ListProjectsQuery",
+          "expectedTargetMappingHash": "bea7bd05b867ec8dc9f556e33c50d5a2c81eb55461fa14b6241d0e105e1c1533"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves the human-reviewed READY classification for all ten assigned rows. Immutable CI/promotion is pending; the rows claim classification completeness only, not physical target access or target-domain implementation."
+}

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "direct-space-creation-use-case-contracts",
+  "title": "Validate and dispatch one direct Space creation intent",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Direct Space Creation Use Case",
+  "surfaceIds": ["SWIFT-3615734A053E", "TEST-EBA9C48BC4EE", "SWIFT-517FA18158D9", "TEST-915EC8E0BFC9"],
+  "requirements": [
+    {
+      "id": "SPCREATEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Direct Space creation carries one caller-preallocated stable SpaceID and exactly one immutable Account-scoped SpaceCreationScope: a stable ProjectID or Business Inventory. A copied name, route, nullable scope pair, template or generic backend path cannot define or later change that identity/scope.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-001", "SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Submitted display name is nonblank after outer-whitespace removal. Optional notes use the same outer-whitespace normalization, nil or whitespace-only input means no notes, accepted interior text is preserved, and no unapproved length cap or default is invented. The target reuses one canonical validator rather than retaining a parallel app-only rule.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-001", "SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Edge Cases",
+      "invariant": "Duplicate Space names are valid because stable SpaceID, not display text, is identity. The use case requires no Space-directory snapshot and infers no name uniqueness or authoritative absence; distinct preallocated Space IDs may submit the same canonical display name.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-005"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "Presentation retains caller-supplied transient raw name/notes input and performs only immediate required-field conversion into typed DirectSpaceCreationIntent. It does not add operation identity, actor, contract version, capture time, backend paths, authorization, multi-record coordination or a persistence claim.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-001", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "A separately named DirectSpaceCreationUseCase receives raw SpaceCreationFormInput plus caller-supplied OperationID, actor PrincipalID, operation contract version and finite capture time. It derives the typed intent through the canonical validators, constructs the already-verified SpaceCreationDraft/CreateSpaceCommand, invokes the existing SpaceCreating port exactly once only after validation, validates the matching OperationReceipt before returning it, preserves Swift structured-concurrency cancellation and already-normalized SpaceCreationFailure values, and maps any unexpected transport error to SpaceCreationFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005", "SPCREATEUSE-TEST-006"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-006",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Direct creation owns only Space identity, scope, name and optional notes. Template application/saving, checklists, attachments, Item assignment, archive, review and completion are separate operations.",
+      "decisionIds": [],
+      "verificationIds": ["SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-005"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Two target-only Swift leaves implement and test the provider-free use case while the two current Firebase-app validation surfaces are converted by mapping their target responsibility to canonical domain validation without modifying them. SwiftUI layout/copy/navigation, physical form/operation persistence, optimistic rows, authorization, schema/RLS/Sync, provider, app composition/MCP, migration, hosted resources, production access, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["SPCREATEUSE-TEST-001", "SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005", "SPCREATEUSE-TEST-006"]
+    },
+    {
+      "id": "SPCREATEUSE-REQ-008",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space in Budget Context",
+      "invariant": "Space identity and placement are optional and independent from accounting state. Direct Space creation creates or changes no Transaction, occurrence, Invoice, budget contribution, payer, price or other accounting state.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["SPCREATEUSE-TEST-002", "SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceCreationFormInput carries exact typed Account/Space/scope plus caller-supplied transient raw display-name and notes values. Immutable field replacement preserves every other value and creates no default/blank-state policy.",
+        "validatedIntent converts raw values only through the verified SpaceDisplayName and SpaceCreationNotes types. It emits DirectSpaceCreationIntent with canonical name/notes and exact identity/scope, requires no directory, and performs no operation or authorization work.",
+        "DirectSpaceCreationUseCase is application-layer orchestration: from raw SpaceCreationFormInput it reuses validatedIntent, adds exact caller operation metadata, creates the verified SpaceCreationDraft/CreateSpaceCommand, calls one injected SpaceCreating port only after validation and validates the returned receipt before returning it.",
+        "The use case preserves Swift CancellationError as structured-concurrency control flow and already-normalized SpaceCreationFailure values, while mapping any unexpected transport error to SpaceCreationFailure.localAcceptanceFailed. This does not choose form-cancel UX policy. Infrastructure/provider errors are outside this slice and may not cross the application boundary raw.",
+        "The former SpaceFormValidation source responsibility converges on the canonical SpaceDisplayName conversion and focused target tests rather than introducing a second target validator."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Space, operation, template, checklist, table, view, function, index or migration changes."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative handler, parent lock, idempotency store, audit or server insertion is implemented; the injected port is an application boundary."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local intent and a queued test receipt do not grant current membership or Space-create authorization. No RLS or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, physical local Space/operation table, upload connector or optimistic row exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port, but transient form input and in-memory tests make no physical offline persistence or restart-survival claim."},
+    "storageMedia": {"items": [], "notApplicable": "No attachment identity, byte, capture, upload, reference, URL, retention or deletion behavior exists; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI view/copy/control, navigation/dismissal wiring, production composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space document/form state, random legacy ID, route context, template, source export or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Existing bounded domain/application failures are values only; no telemetry, metric, alert or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation changes only the two provider-free target leaves; the current SpaceFormValidation source files, released Firebase app and both app projects remain unchanged.",
+        "The injected operation port is exercised only by deterministic tests. The slice cannot physically persist, authorize, deploy, show an optimistic/authoritative row, select/apply/save templates, alter related state, release or cut over.",
+        "O-023/O-026/O-037 and A-003/A-004/A-007/A-015/A-016 remain fully open or outside this direct-create use-case boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPCREATEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-007"],
+      "expected": "Caller-supplied raw empty/whitespace/padded name and notes values remain transient form values; immutable replacement changes only the selected field. Validated intent alone trims outer whitespace, preserves interior text, maps empty/whitespace notes to nil and refuses blank canonical name through the existing SpaceDisplayName failure without defaults, length caps, operation metadata or persistence.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCREATEUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
+      "expected": "Project and Business Inventory inputs preserve exact Account/Space/scope identity. Two distinct Space IDs may produce equal canonical names without a directory query. Typed intent exposes no template/checklist/media/Item/lifecycle/review/completion/accounting/authorization or backend field.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCREATEUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
+      "expected": "From raw form through validated intent, application assembly and one deterministic SpaceCreating port call, both scopes produce exactly one verified CreateSpaceCommand with caller-supplied Operation/actor/contract/finite time, stable Space identity, canonical name/notes and zero preconditions, then return the matching receipt with its exact local state unchanged and no accounting side effect.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCREATEUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-007"],
+      "expected": "An exhaustive caller-field matrix proves exact Account, Space, scope, raw-name, raw-notes, Operation, actor, contract and time forwarding at their owning layer without form fingerprints or duplicate validators. Nonfinite time and a mismatched receipt fail; the operation port is not called after form/domain validation failure.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCREATEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
+      "expected": "Blank-name, invalid-time, receipt-mismatch and injected port failures return no receipt and cause no extra call. Swift CancellationError remains structured-concurrency control flow rather than form-cancel UX or a transport failure. Canonical validation/receipt failures and distinct already-normalized SpaceCreationFailure values retain existing stable bounded diagnostics; an unexpected raw transport error is mapped to localAcceptanceFailed rather than crossing the application boundary. No new error includes raw form text, identity, route, credential, provider payload or production path, reflected/encoded command evidence stays within the already-verified direct-create boundary, and no accounting field or effect is introduced.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCREATEUSE-TEST-006",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-007"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaf paths and the current Firebase validation files remain untouched.",
+      "status": "passed",
+      "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified at exact implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677 after exact ready commit b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe passed run 33744781549. Independent implementation review found nonreciprocal caller-field checks, indistinguishable normalized-failure evidence, cross-scope duplicate-name evidence and incomplete empty/nil/long raw-input boundaries. Reviewers initially disagreed about CancellationError: one treated passthrough as outside the ready boundary, while the other identified normalization as violating architecture rule 7. Authority adjudication preserves Swift structured-concurrency cancellation without choosing form-cancel UX and still normalizes unexpected transport errors under rule 8. The corrected implementation validates all raw input before one port call, exactly forwards every caller field, validates the receipt, and passes two independent final reviews with no remaining P0-P3. No form persistence, template application, SwiftUI, provider, migration or production behavior is introduced."
+}

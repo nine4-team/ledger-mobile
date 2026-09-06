@@ -1,0 +1,341 @@
+{
+  "batchId": "M0-BACKEND-AUTH-001",
+  "title": "Firebase Auth, account membership, invites, and MCP OAuth",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-SOURCE-BACKEND-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MAN-AUTH-001",
+      "currentBehavior": "Firebase Auth supplies email/password and Google identities and persistent sessions. Membership documents supply account, role, and financial-access authorization; no active custom-claim authorization was found. Public HTTP Functions verify Firebase bearer tokens. MCP exchanges Firebase identity for its own HMAC OAuth tokens.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: A-007/A-016 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "SWIFT-C9CE3FC9787D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Observes Firebase auth state; signs in/up with email/password, signs in with Google credential exchange, and signs out only from Firebase Auth.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: A-007/A-016 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "SWIFT-D22F0D6F71E4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads/subscribes account roots directly, calls createAccountHttp with a Firebase bearer token, and exposes a direct account update that production Firestore rules deny.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target account mutations must use an authorized command rather than a possibly dead direct-write path. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Account and Membership Operations",
+        "surfaces": [
+          "AccountQuerying",
+          "AccountOperations",
+          "AuthorizedAccountListSnapshot"
+        ],
+        "securityRequirements": [
+          "Account bootstrap/update and membership changes require verified Principal and capability, validate resulting owner/admin/financial state and record server actor/time"
+        ],
+        "syncRequirements": [
+          "Authorized Account/membership/default-reference results enter bootstrap/admin streams through one durable operation result; clients never write role fields directly"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Accounts/members/default definitions to stable target IDs and typed bootstrap/admin operations; preserve source correlation and report denied/orphan/duplicate/default variants.",
+        "reconciliation": [
+          "Account, owner membership, member grants and seeded default IDs/counts/hashes reconcile atomically per source Account"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account bootstrap idempotency/atomicity, owner/admin/financial validation, cross-account denial, default seeding and migration tests"
+        ],
+        "acceptance": [
+          "An Account is created or administered once through trusted operations and cannot be partially bootstrapped or client-edit its authorization"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8E9B2DFCD775",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Subscribes to account members, discovers all user memberships with a cache-first users collection-group query, and lets admins update role and financial-access fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target must make multi-account discovery deterministic and enforce member update permissions server-side/RLS. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "MembershipQuerying",
+          "MembershipOperations",
+          "MemberDirectorySnapshot"
+        ],
+        "securityRequirements": [
+          "One verified issuer/subject resolves to a stable Principal; active Account membership and server-owned role/financial grants authorize every request",
+          "Account discovery is non-enumerating and no caller-selected UID, Account fallback or service credential substitutes for Principal authority"
+        ],
+        "syncRequirements": [
+          "Bootstrap streams contain only authorized Account summaries and the caller's membership/capability snapshot; Auth subjects and secrets are not synchronized"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate Firebase Auth identities and membership paths to stable Principals/auth identities/account memberships, preserve provider/source IDs for audit and quarantine ambiguous or duplicate identity links.",
+        "reconciliation": [
+          "Every source identity/membership maps once with issuer/subject/Principal/Account/role/financial grants or an explicit blocking quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Identity correlation, Account discovery, cross-account/revoked/expired/non-enumerating access, membership grant and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "The same Principal/membership authority governs app and MCP without exposing provider IDs or inferring an Account"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-FE44BBB4D35B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Subscribes to unrevoked/unaccepted invites, creates UUID-token invite documents directly, and revokes by timestamping the invite.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Current backend rules allow any account member, not only admins, to write invites. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Invitations and Membership Admission",
+        "surfaces": [
+          "InviteQuerying",
+          "InviteOperations",
+          "InviteSummarySnapshot"
+        ],
+        "securityRequirements": [
+          "Invite secrets are opaque, one-time, expiring and stored only as digests; preview is rate-limited/non-enumerating and accept binds authenticated Principal/email under capability checks"
+        ],
+        "syncRequirements": [
+          "Only authorized admin invite summaries synchronize; raw secrets/digests/Auth subjects do not. Preview/accept are online typed queries/operations with durable results"
+        ]
+      },
+      "migration": {
+        "rule": "Map source invite lifecycle/proposed grants to stable invite IDs and one-way token digests, preserve source audit/correlation and reject expired/revoked/accepted/duplicate variants deterministically.",
+        "reconciliation": [
+          "Every source invite maps to one lifecycle state and proposed-access hash or quarantine; accepted invites reconcile to exactly one Principal membership"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Secret digest/no-enumeration/rate-limit/expiry/revoke/one-time accept/email binding/cross-account and migration tests"
+        ],
+        "acceptance": [
+          "An invite reveals only approved preview fields and grants membership exactly once after authenticated acceptance"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-2CE194E495FF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds and parses custom-scheme and Firebase Hosting invite URLs, previews invites through a public HTTP endpoint, and accepts them with a Firebase ID-token bearer request.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "User-visible invite URL compatibility may require a redirect/transition period at cutover. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "External Entry Points and Invite Routing",
+        "surfaces": [
+          "StableProductLinkRouter",
+          "InviteLinkEnvelope",
+          "InvitePreviewQuery/AcceptInviteCommand"
+        ],
+        "securityRequirements": [
+          "Only allowlisted HTTPS hosts/routes and validated bounded payloads are accepted; a link never grants membership or contains backend secrets"
+        ],
+        "syncRequirements": [
+          "Link parsing produces a typed local intent; invite preview/accept then use current authenticated online contracts and normal membership Sync"
+        ]
+      },
+      "migration": {
+        "rule": "Map supported source custom/Firebase-hosting URLs to stable provider-independent product routes during the compatibility window; record unsupported/environment-mismatched links explicitly.",
+        "reconciliation": [
+          "Route inventory maps each source/target link form to one typed intent, environment, deprecation outcome and test fixture"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Host/scheme allowlist, environment isolation, malformed/oversized payload, no-authority link and legacy-route compatibility tests"
+        ],
+        "acceptance": [
+          "Changing Auth/hosting does not break product links or let a URL bypass authenticated invite acceptance"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-38F4B8D34053",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Verifies Firebase ID tokens through Admin Auth and resolves account membership with users collection-group queries; one resolver selects the first returned account while another lists all accounts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target must require explicit authorized account selection rather than collection-order selection. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "IdentityTokenVerifying",
+          "PrincipalBoundMCPRequestContext",
+          "AccountQuerying"
+        ],
+        "securityRequirements": [
+          "One verified issuer/subject resolves to a stable Principal; active Account membership and server-owned role/financial grants authorize every request",
+          "Account discovery is non-enumerating and no caller-selected UID, Account fallback or service credential substitutes for Principal authority"
+        ],
+        "syncRequirements": [
+          "Bootstrap streams contain only authorized Account summaries and the caller's membership/capability snapshot; Auth subjects and secrets are not synchronized"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate Firebase Auth identities and membership paths to stable Principals/auth identities/account memberships, preserve provider/source IDs for audit and quarantine ambiguous or duplicate identity links.",
+        "reconciliation": [
+          "Every source identity/membership maps once with issuer/subject/Principal/Account/role/financial grants or an explicit blocking quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Identity correlation, Account discovery, cross-account/revoked/expired/non-enumerating access, membership grant and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "The same Principal/membership authority governs app and MCP without exposing provider IDs or inferring an Account"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-A379AECA88FB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Initializes Firebase Admin Firestore against emulator or production using explicit service-account JSON or application default credentials; Admin access bypasses client rules.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target MCP must invoke the same authorized commands/queries as the app and keep service credentials server-only. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Environment and MCP Composition Control",
+        "surfaces": [
+          "TargetMCPCompositionRoot",
+          "ValidatedLedgerEnvironment",
+          "least-privilege server dependencies"
+        ],
+        "securityRequirements": [
+          "Environment/resource identity is validated before infrastructure opens; server credentials are secret-injected/least-privileged and never replace caller Principal"
+        ],
+        "syncRequirements": [
+          "Validated manifest fixes Auth/data/Sync/Storage/MCP/local-state environment and contract versions; MCP uses authoritative queries/commands rather than a local Sync client"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase project/Admin initialization with validated target environment/MCP composition and migrate no built-in identity, credential path or runtime state.",
+        "reconciliation": [
+          "Deployment manifest resource IDs, contract versions, credential scopes and capability registry match one reviewed environment with no production fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed/missing environment refusal, secret absence, no-static-actor, least-privilege deployment, health and capability registry tests"
+        ],
+        "acceptance": [
+          "The target cannot start against mixed resources or use infrastructure credentials as user authorization"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-4938EA5E6169",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements MCP OAuth/PKCE around Firebase login, stores one-time codes in _mcp_auth_codes, keeps dynamic client registrations in memory, and issues HMAC access/refresh JWTs whose payloads currently omit expiration.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-007"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: A-007 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "CONFIG-9EF72A31126D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bundles the production Firebase iOS project/app configuration used by Firebase Auth, Firestore, Storage, and Google sign-in integration.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Firebase configuration remains for the legacy app until hard cutover; target credentials must be isolated by environment. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Environment and MCP Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifest Auth/data/Storage projection",
+          "platform sign-in callback configuration"
+        ],
+        "securityRequirements": [
+          "Environment/resource identity is validated before infrastructure opens; server credentials are secret-injected/least-privileged and never replace caller Principal"
+        ],
+        "syncRequirements": [
+          "Validated manifest fixes Auth/data/Sync/Storage/MCP/local-state environment and contract versions; MCP uses authoritative queries/commands rather than a local Sync client"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase project/Admin initialization with validated target environment/MCP composition and migrate no built-in identity, credential path or runtime state.",
+        "reconciliation": [
+          "Deployment manifest resource IDs, contract versions, credential scopes and capability registry match one reviewed environment with no production fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed/missing environment refusal, secret absence, no-static-actor, least-privilege deployment, health and capability registry tests"
+        ],
+        "acceptance": [
+          "The target cannot start against mixed resources or use infrastructure credentials as user authorization"
+        ]
+      }
+    }
+  ]
+}

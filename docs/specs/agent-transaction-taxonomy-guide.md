@@ -1,5 +1,16 @@
 # Agent Transaction Taxonomy Guide
 
+> **Migration warning (2026-08-30):** This is the current write guide for
+> shipped clients. The approved target in
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> removes project-side inventory movement Transactions and category-grouped
+> Invoice settlements. The target project enum becomes Purchase, Return, and
+> same-Client Transfer under
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
+> Agents must not simulate the target schema before its trusted writers and
+> migration are shipped, but must not extend the legacy model as new architecture
+> either.
+
 ## Purpose
 
 This is the short version for AI agents and MCP clients. Use this before

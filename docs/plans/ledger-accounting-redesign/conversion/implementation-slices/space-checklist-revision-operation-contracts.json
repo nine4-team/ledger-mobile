@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-checklist-revision-operation-contracts",
+  "title": "Replace one Space's complete ordered checklist hierarchy without changing other Space state",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Space Checklist Revision Operation Contracts",
+  "surfaceIds": ["SWIFT-EB8803C0864A", "TEST-9A22BFF16437"],
+  "requirements": [
+    {
+      "id": "SPACECHECKLIST-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "ReviseSpaceChecklists replaces one Space's complete checklist collection. Checklist names and item text are outer-trimmed and nonblank, accepted interior text is preserved, duplicate names/text remain valid and no unapproved length cap is invented; an empty collection clears all checklists and a checklist with zero items is valid.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "The complete replacement carries stable distinct checklist and checklist-item identities, unique explicit presentation order at each owning scope, every item's checked state and one exact expected Space revision. A stale edit conflicts atomically instead of last-write-wins merge or partial overwrite.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklists",
+      "invariant": "Checklist-item checked values are preserved progress evidence and aggregate progress derives only from item counts. They are not the legacy Space.isComplete reconciliation flag, and empty total progress remains zero-of-zero rather than division or invented completion state.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Checklist revision cannot change Space identity/scope/name/notes, create/apply/save a template, attach media, assign Items, create review evidence, set Space completion/lifecycle, or create/change a Transaction, occurrence, Invoice, budget contribution, payer, price or other accounting state.",
+      "decisionIds": ["O-023", "O-026", "O-032", "O-037"],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "ReviseSpaceChecklists is distinct from Space create/details, template, assignment, archive and review-note operations. It corrects random decoded IDs and last-write-wins embedded-array updates with stable nested IDs, deterministic order and a typed revision conflict.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "ReviseSpaceChecklists is one typed business intent and exposes no arbitrary field map, collection/path/SQL string, CRUD action, server timestamp, scope override, template action, Space completion toggle or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Context-specific operations",
+      "invariant": "One narrow backend-neutral checklist-revision operation accepts the validated command and returns the shared OperationReceipt or stable failure. It carries exactly one same-Space expected-revision precondition; local validation never substitutes for trusted membership, Space existence/revision or checklist-update authorization.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    },
+    {
+      "id": "SPACECHECKLIST-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Space/checklist table or handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECHECKLIST-TEST-001", "SPACECHECKLIST-TEST-002", "SPACECHECKLIST-TEST-003", "SPACECHECKLIST-TEST-004", "SPACECHECKLIST-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceChecklistID and SpaceChecklistItemID are distinct stable typed identities; SpaceChecklistName and SpaceChecklistItemText are canonical outer-trimmed nonblank values with no target length cap.",
+        "SpaceChecklistItemState contains only stable item identity, canonical text, checked state and explicit presentation order. SpaceChecklistState contains only stable checklist identity, canonical name, explicit presentation order and its complete deterministically ordered item collection.",
+        "SpaceChecklistCollection owns the complete deterministically ordered hierarchy, rejects duplicate checklist identity/order and nested duplicate item identity/order, permits an empty collection and permits a checklist with zero items, and derives completed/total progress without a Space completion field.",
+        "SpaceChecklistRevisionDraft binds exact Account/actor/contract/Space/collection/expected revision/finite time. ReviseSpaceChecklistsPayload contains only SpaceID and the complete checklist collection; ReviseSpaceChecklistsCommand derives exactly one Space subject and same-subject expected-revision precondition through the shared operation lifecycle.",
+        "SpaceChecklistRevising is one narrow backend-neutral port returning the shared OperationReceipt. Stable failures cover value/hierarchy validity, bindings, revision preconditions, subject, fingerprint, receipt, local acceptance and malformed evidence."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This Phase 1 contract creates no spaces/checklists/checklist_items table, embedded document, revision/audit column, foreign key, check, index, view or migration."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative ReviseSpaceChecklists handler, membership/Space lookup, revision lock, nested diff/application, idempotency storage, audit timestamp, conflict result or server update exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/actor/Space binding is not authorization. No membership predicate, grant, WITH CHECK policy or cross-tenant database test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local checklist row/projection, optimistic overlay, upload connector or synchronized visibility/readiness claim is defined."},
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, exact same-Space expected-revision precondition, Space subject and fingerprint; decode reconstructs every value and hierarchy invariant and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Space, any checklist/item identity/text/order/checked state, revision subject/value/count, command subject, fingerprint or receipt OperationID fails atomically without rebinding identity or converting the hierarchy into a generic Space update.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic row, authoritative apply or offline-authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "ReviseSpaceChecklists owns no AttachmentID/reference/bytes/retention behavior and cannot add, replace, detach, reorder or delete Space media; O-023 remains open."},
+    "appMcp": {"items": [], "notApplicable": "No checklist editor/toggle UI, current app service, target MCP tool/schema, transport, contract-catalog entry or app/MCP parity is wired."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space document/embedded checklist array, source export or checklist migration is decoded or transformed. Later migration must preserve or deterministically map nested identity/order and quarantine duplicate/undecodable evidence."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot visibly or authoritatively update a checklist, mutate any other Space field, apply/save templates, assign Items, attach media, create review evidence, set Space completion/lifecycle, alter accounting, authorize membership, choose Auth, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-023/O-026/O-032/O-037, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACECHECKLIST-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
+      "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
+      "expected": "Valid synthetic replace and clear inputs produce one typed exact-Space command with canonical complete ordered hierarchy, stable nested identities, checked-state progress and one same-Space revision, containing no scope/details/template/media/Item/review/Space-completion/lifecycle/accounting/generic-write input.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
+    },
+    {
+      "id": "SPACECHECKLIST-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
+      "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-008"],
+      "expected": "Replace and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Space/hierarchy/revision/time/subject/fingerprint evidence and no scope override, backend path, provider, credential or authoritative result claim.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
+    },
+    {
+      "id": "SPACECHECKLIST-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
+      "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
+      "expected": "Blank/noncanonical text, duplicate nested identity/order, invalid time and changed Account/actor/contract/Space/hierarchy/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
+    },
+    {
+      "id": "SPACECHECKLIST-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
+      "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Space/hierarchy/revision is refused, and a failing port returns no success receipt.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
+    },
+    {
+      "id": "SPACECHECKLIST-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 Space-checklist command only. Canonical Space authority and the reviewed capability dossier preserve checklist edit/check/reorder outcomes while replacing random decoded IDs and last-write-wins embedded arrays with one complete revisioned hierarchy intent. O-023/O-026/O-032/O-037 remain fully open because this command carries no media, template, Space-completion/review, assignment/archive or lifecycle concern. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

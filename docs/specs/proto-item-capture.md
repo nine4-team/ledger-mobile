@@ -1,310 +1,350 @@
-# Proto Item Capture
-Status: in progress — project capture and authoritative inventory routing shipped;
-broader inventory capture, review, merge, and automation work remains
-Last updated: 2026-08-19
+# Item Creation and Accounting Link
+
+Status: core product model approved; target Item shape and hard-cutover import pending
+Last updated: 2026-08-31
+Program: [Ledger Accounting Redesign](../plans/ledger-accounting-redesign/README.md)
+Source handoff: [Item Intake and Linking](../plans/ledger-accounting-redesign/item-intake-handoff.md)
+Production safety: [Compatibility and Rollout Plan](../plans/ledger-accounting-redesign/production-compatibility-plan.md)
+
+## Purpose
+
+Ledger needs one understandable way to create a physical Item even when the
+designer does not yet know its receipt, price, payer, Transaction, or billing
+route. The Item can be completed and connected to accounting later without ever
+being presented as a fake draft that must be converted into a real object.
+
+This spec replaces the target product model previously called Quick Draft,
+Proto Item, or Needs Assignment. Existing `protoItems` data and pre-update
+client behavior remain compatibility requirements during rollout.
 
-User-facing name: **Item Quick Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Quick Draft" or "Item Quick Drafts".
+## Product Vocabulary
 
-## Summary
+- **Add Item** opens the one Item-creation wizard.
+- **Quick** describes completing the lightweight first portion of that wizard.
+  It is not a separate entity, writer, or creation pathway.
+- **Unaccounted For Items** are project Items not yet connected to their
+  accounting destination.
+- **Accounted For Items** are connected either to a client-paid project Purchase
+  or to the project's billable Items list.
+- **Link** is the action that establishes that connection.
 
-Proto item capture lets a designer record a physical object quickly before all item details are known. A proto item is a persistent photo group plus lightweight context. It is not a real `Item` yet and does not affect project budgets, inventory value, transactions, invoices, or reports until it is converted.
+Do not expose **proto item**, **draft**, **conversion**, **promotion**, **Needs
+Assignment**, **Assign Item**, **Unlinked Items**, or **Linked Items** as target
+product language.
 
-The goal is to make the field workflow simple: capture the object now, convert the business data later.
+## Unified Item-Creation Wizard
 
-## Problem
+All Item entry points use the same form state, validation model, and final Item
+writer. The product may render it as one expandable screen or two sequential
+steps, but there is no separate Quick Add form that writes a different object.
 
-Designers can usually log transactions later, but item-level detail capture is the painful part. When unloading purchases or installing at a project, the designer may know "this object is for Sandra" or "this came from our inventory" but may not know the receipt, vendor, SKU, purchase price, project price, or transaction line yet.
+### First: familiar minimum Item fields
 
-The current item flow asks for too much too early. It treats item creation as a data-entry task when the real first task is physical capture.
+The fields used by the former proto-item capture experience appear first so the
+flow remains familiar and fast:
 
-## Core Concept
+- photos;
+- name;
+- notes;
+- quantity; and
+- contextual project and optional Space when already known.
 
-A **ProtoItem** is the data model for an item quick draft: a draft capture record for one physical object or one intended line item.
+This first portion defines the minimum savable Item experience. Quantity may
+default to one, and project context may be supplied by the screen that opened
+the wizard. The exact hard-validation rule among name, photo, and note must be
+made consistent before implementation: the shipped full Item form accepts name
+or image, while the proto form accepts image or note. Do not silently require
+all three.
 
-It can contain:
+### Then: optional and accounting details
 
-- one or more photos of the object
-- one or more photos of the tag, price label, SKU, or packaging
-- an optional quick name/label for the capture
-- optional project context
-- optional extracted text/OCR metadata in a later phase
-- conversion state
+The user may continue in the same wizard to add:
 
-It cannot contain:
+- SKU;
+- vendor/source;
+- purchase price;
+- project price;
+- market value;
+- status;
+- payer guidance;
+- acquisition Purchase; and
+- the accounting Link described below.
 
-- budget impact
-- invoice membership
-- sale/return transaction impact
-- canonical item lineage
+Saving after the minimum portion creates the same real Item identity that later
+detail and Link operations update. Continuing through optional details must not
+create a second Item or replace the first Item's ID.
 
-Those belong to real `Item` and `Transaction` records after conversion.
+### Entry contexts
 
-## Capture Principle
+- From a project, the Item starts in that project and may receive a Space.
+- From Business Inventory, the Item starts with `projectId == null`.
+- From a Transaction, the wizard may preselect that Transaction only when its
+  scope and type are eligible; the user still sees the same Item wizard.
+- From images or an MCP capture tool, imported media and extracted fields seed
+  the same wizard/writer rather than creating a separate product object.
 
-At capture time, ask only what the designer already knows.
+## Accounting-State Rule
 
-At review time, ask what the business needs.
+This terminology is project-scoped.
 
-This means capture should not require price, vendor, tax, budget category, SKU, transaction, project price, or final item details. It should prioritize repeated capture speed: optional quick name, photo, tag photo, save, next.
+A project Item is **Accounted For** when at least one authoritative relationship
+exists:
 
-The add flow is photo-first with an optional quick name/label and direct user notes. Project-scoped capture may also expose the lightweight **From Inventory** affordance because it records routing intent without requiring conversion metadata. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
+1. it is attached to the actual client-paid project Purchase that paid for it;
+   or
+2. it has a billable Item charge/credit occurrence in project Invoicing,
+   whether available to invoice, on a live Invoice, or frozen as paid history.
 
-## Entry Points
+Otherwise it is **Unaccounted For**.
 
-Item drafts should be visible where they were captured, not only in a review queue. The Needs Review area is a cross-workflow cleanup workbench, but the project, inventory, or transaction context is the draft's natural home.
+The state is derived from authoritative relationships rather than a mutable
+`isAccountedFor` boolean. Space, status, name completeness, price completeness,
+Invoice selection, and Invoice sent state do not determine it. A paid Item
+remains Accounted For after its active charge leaves the billables queue because
+the frozen occurrence and paid membership still exist.
 
-Across contexts, the **Items** surface is the canonical place for item-like work. If a context has both unfinished captures and real items, the Items surface should expose the same two sub-areas:
+Project Items displays **Unaccounted For Items** first and **Accounted For
+Items** below. Search, Space assignment, media editing, and ordinary physical
+Item details are available in either section.
 
-- **Item Quick Drafts**: unconverted `ProtoItem` records.
-- **Items**: real `Item` records.
+Business Inventory does not use this project accounting projection merely
+because an Item lacks a project Link. Inventory acquisition completeness is a
+separate concern.
 
-This keeps the navigation vocabulary consistent. Users should learn that "Items" contains both drafts and finished items, while "Needs Review" means "work that needs attention."
+## Link Flow
+
+Opening **Link** asks:
 
-### Project Capture
+> Who paid for this Item?
+
+- **Client paid**
+- **Business paid**
+
+There is no **Not sure yet** choice. Closing the flow leaves the Item
+Unaccounted For without side effects. The UI must not label either branch “Sell
+from Business Inventory.”
+
+Space remains optional and may be set before, during, or after Link. The review
+screen states the exact accounting destination and effect before commit.
 
-When the designer is in a project and adds a proto item:
+## Link Routes
+
+### Client paid
 
-- `projectId` is set to the current project.
-- The capture is treated as intended for that project.
+The user chooses the Purchase in the current project that records the client's
+actual payment. Only eligible project Purchases are offered. Transactions from
+another project and Business Inventory are invalid for this branch.
 
-This handles the common workflow: "I am unloading or installing items for this project."
-
-### Inventory Capture
-
-When the designer is in business inventory and adds a proto item:
-
-- `projectId` is null.
-- The capture belongs to business inventory.
-
-This handles: "We bought this, but it will probably go to Sandra later."
-
-### Transaction Capture
-
-Transaction-scoped capture is allowed but should not be the primary flow. If a proto item is captured from a transaction detail screen:
-
-- `transactionId` is set to that transaction as the authoritative association.
-- `projectId` may be inherited from the transaction if present.
-- The proto item still remains separate from real items until converted.
-
-This replaces the narrow ephemeral "create items from images" workflow with persistent capture groups.
-
-## Contextual Visibility
-
-Unconverted item quick drafts should appear in their owning context before the normal item list. This keeps captured objects discoverable in the place the designer expects to find them.
-
-### Project Items
-
-Project-scoped item quick drafts appear in the Project Items tab as an **Item Quick Drafts** collapsible section. Real project items remain in a separate **Items** collapsible section on the same scrolling page.
-
-The Item Quick Drafts section should:
-
-- show only unconverted drafts for the current project
-- show a photo-first draft row/card with up to 3 thumbnails and a small action menu
-- omit status badges, source/date/note fields, and normal item metadata from the contextual row/card
-- keep item quick drafts visually distinct from real items
-- expose a lightweight **From Inventory** control for marking drafts that came from business inventory
-- offer draft actions from the card menu: convert to item, merge with existing item, and delete draft
-
-The **From Inventory** control is a conversion hint, not a completed sale. It records that the draft should later be converted through the inventory-to-project flow. Setting this hint must not require price, budget category, transaction, SKU, or full item metadata, and it must not create budget, transaction, sale, or lineage effects by itself.
-
-Tapping **From Inventory** toggles the hint immediately. Do not show a confirmation dialog, because no financial or destructive action has happened. Instead, show a readable toast near the control the user just tapped. The toast should stay visible for about 4 seconds:
-
-- When turned on: "Marked \"From Inventory\""
-- When turned off: "Removed \"From Inventory\" Marker."
-
-The real Items section should reuse the existing shared item list machinery so search, sort, filter, select, and bulk actions remain scoped to real `Item` records. Its section header and control bar should preserve the sticky behavior used by transaction item sections.
-
-Tapping a draft opens an Item Quick Draft detail screen. The detail screen is the edit surface for the draft:
-
-- inline editable quick name
-- editable media gallery: add photos, remove photos, set primary
-- convert to item
-- merge with existing item
-- From Inventory hint, when project-scoped
-- delete draft
-
-There is no separate "Edit Draft" menu item because opening the detail screen is the edit action.
-
-### Inventory Items
-
-Inventory-scoped item quick drafts should follow the same pattern when inventory gets the full implementation: Inventory Items exposes **Item Quick Drafts** and **Items** collapsible sections rather than hiding drafts only in review.
-
-The section should:
-
-- show unconverted drafts with `projectId == null`
-- surface `intendedProjectId` when present
-- support converting into inventory, assigning/selling to a project, merging with an existing item, or deleting
-
-### Transaction Detail
-
-Transaction Detail remains a single scrolling page. It should not split the transaction into top-level Details and Items tabs.
-
-Item-related content appears as peer collapsible sections in the main transaction scroll:
-
-- **Item Quick Drafts**: unconverted `ProtoItem` records linked to this transaction.
-- **Items**: real `Item` records linked to this transaction.
-- **Returned Items** and **Sold Items**: lineage-derived historical item sections, shown when present.
-
-The sections keep each object type's controls clear. Item Quick Drafts should not be forced into `SharedItemsList`, and real item search/sort/filter/select controls should remain scoped to real Items.
-
-Contextual Item Quick Draft rows/cards are photo-first: up to 3 thumbnails plus an action menu, with no badges or metadata fields. Even if a draft has an optional quick name, conversion details belong in the draft workflow, not in the contextual section row. Project-scoped draft cards may show the lightweight **From Inventory** control because that hint is part of capture, not full item metadata.
-
-The real Items section should preserve the existing collapsible/sticky section behavior: the Items section header and the SharedItemsList control bar pin together while the user scrolls. The add menu can route to:
-
-- Item Quick Draft
-- New Item
-- Add Existing Items
-- Create from Images, when transaction images are available
-
-This keeps creation centered on the user task: "add something item-related to this transaction," while keeping draft management and real item management separate inside the same transaction document.
-
-## Data Rules
-
-### Storage
-
-Proto items live in their own collection:
-
-`accounts/{accountId}/protoItems/{protoItemId}`
-
-They are intentionally separate from `items` so normal item lists, item counts, budgets, invoices, and inventory operations are not polluted by incomplete captures.
-
-### Required Fields
-
-A proto item requires at least one image or a non-empty note. In normal use, at least one image is expected.
-
-### Statuses
-
-| Status | Meaning |
-|---|---|
-| `open` | Captured but not converted |
-| `in_review` | A human or assistant is actively converting it |
-| `converted` | Converted or merged into an item |
-
-Only `open` and `in_review` proto items appear in active review queues.
-
-### Conversion Metadata
-
-Source, destination, SKU, vendor, category, price, and suggested matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. Direct user notes may be captured at any time and must be read before inferred metadata or routing markers. Except for the lightweight **From Inventory** marker, conversion metadata should not be required in the initial photo capture flow.
-
-Conversion hints should be simple and reversible:
-
-| Field | Meaning |
-|---|---|
-| `projectId` | Project the capture is currently associated with. Null means inventory/unassigned. |
-| `intendedProjectId` | Destination project hint for an inventory capture. |
-| `transactionId` | The single authoritative transaction the eventual item should initially join. Null means no transaction has been selected yet. |
-| `isFromInventory` | Boolean routing marker. `true` means this project draft originated in business inventory and must be matched to its inventory acquisition transaction. Defaults to `false`. |
-| `candidateItemId` | Possible matching item. Not authoritative until converted. |
-
-`transactionId` is not a suggestion field. Capturing from Transaction Detail sets it immediately. A transaction suggested later by Ledger remains transient until a human accepts it; acceptance writes `transactionId`. `candidateTransactionId` is deprecated and must not be used as a promotion fallback.
-
-Hints and transaction association never create budget or transaction effects by themselves.
-
-## Conversion
-
-An Item Quick Draft is converted by one of these actions:
-
-### Create New Item
-
-The proto item's photos and context are used to create a new `Item`.
-
-If the proto item is project-scoped, conversion must choose or create a valid project transaction/category before the item becomes budget-impacting. If the proto item is inventory-scoped, the new item is created in inventory with `projectId == null` and `budgetCategoryId == null`.
-
-For a project-scoped quick draft with `transactionId`, conversion resolves the referenced transaction before writing:
-
-- If `transaction.projectId == protoItem.projectId`, create the item directly in that project and link it to the selected project transaction.
-- If `transaction.projectId == null`, use the atomic inventory-transaction-to-project-sale path defined below.
-- If the transaction belongs to another project, block conversion until the association is corrected.
-- If `transactionId` is null, the draft remains unconverted until the user selects or creates the transaction it should join.
-
-The convert flow reuses the normal item creation flow seeded with the draft's quick name and photos. After the item is created, the proto item is marked `converted` with `convertedItemId`.
-
-### Merge with Existing Item
-
-The proto item's photos, notes, and any extracted metadata are attached to an existing `Item`.
-
-This is the preferred flow when receipt/email parsing has already created skeletal items with SKU and price. A reviewer can search or filter by SKU, pick the matching item, and merge the captured photos into it.
-
-### Convert From Inventory To Project
-
-For a project-scoped proto item whose authoritative `transactionId` points to a business-inventory transaction, conversion must route through the existing inventory-to-project mechanism. The transaction scope, not a second transaction field, determines the route.
-
-Before writing, validate that:
-
-- the referenced transaction exists, belongs to the same account, and has `projectId == null`;
-- the draft has a destination `projectId`;
-- the intended/destination budget category is active, non-system, canonically itemized, and already enabled for that project; and
-- the item has the other fields required by the canonical sale operation and its project price can be normalized to a positive value at least as high as purchase price.
-
-Once validation succeeds, perform one atomic operation:
-
-1. create the real item in business inventory under the referenced acquisition transaction with `projectId == null`, `budgetCategoryId == null`, and `transactionId` equal to the acquisition transaction ID;
-2. create the canonical per-batch Purchase-from-inventory transaction in the draft's project using `projectPriceCents`;
-3. move the item into the draft's project/category and replace its `transactionId` with the new project Purchase ID;
-4. remove the item from the acquisition transaction's active `itemIds` membership and preserve the acquisition through a sold lineage edge; and
-5. mark the proto item converted and set `convertedItemId` to the final item.
-
-Do not create the inventory item first and attempt the sale in a later non-atomic step. Apply the canonical item price floor during promotion; only the absence of both positive prices is a missing-price error. Missing required price, category, project, or transaction data must leave the quick draft unconverted rather than stranding a partially converted item in inventory.
-
-The **From Inventory** marker remains useful before a transaction is selected: it tells review that an inventory transaction must be chosen. Once `transactionId` is set, the referenced transaction's scope is authoritative. A project transaction combined with `isFromInventory == true` is a conflict that must be resolved before conversion.
-
-### Delete Draft
-
-If the capture is accidental, duplicate, or not needed, it can be deleted. Deleting a draft removes the proto item and its media.
-
-## Review Queue
-
-Proto items should also appear in the Needs Review area as a first-class review type. Needs Review is the global workbench for finding and converting unconverted drafts across the account; it is not the only place item quick drafts live.
-
-The queue should group by:
-
-1. project captures
-2. inventory captures with intended destination project
-3. unassigned inventory captures
-4. transaction-linked captures
-
-Each row/card should show the image group, capture context, and the next likely action:
-
-- Create item
-- Merge with Existing Item
-- Match receipt/transaction
-- Convert From Inventory
-- Delete draft
-
-## AI And Automation
-
-AI is an accelerator, not a dependency for v1.
-
-The app should be useful with a human reviewer doing the matching manually. Later phases can add:
-
-- on-device OCR for tag/SKU/price text
-- receipt line matching by SKU/date/vendor/amount
-- suggested item names from images
-- suggested merge targets
-- confidence labels
-
-Automated suggestions should never silently convert proto items in v1. A human confirms the create/merge/from-inventory action.
-
-## Relationship To Existing Items
-
-Proto items are not incomplete `Item` documents. They are separate captures that may become or enrich items.
-
-This protects existing invariants:
-
-- inventory items still have `projectId == null` and `budgetCategoryId == null`
-- project items still need a real transaction/category relationship
-- item counts continue to mean real items
-- reports and invoices ignore unconverted captures
-
-## Relationship To Transactions
-
-Proto items may point at one authoritative transaction through `transactionId`, but transactions do not own proto items as embedded children. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
-
-If a proto item converts into a transaction-created item, the resulting `Item` follows normal transaction membership rules. For project drafts linked to inventory transactions, the acquisition transaction is the initial association and the canonical sale replaces the final item's `transactionId`; lineage preserves the original acquisition relationship.
-
-## Open Questions
-
-- Should proto item images be stored using the same attachment uploader and storage path as item images, or under a separate `protoItems` path?
-- Should a proto item support multiple quantities, or should repeated physical objects be captured as separate proto items?
-- What is the exact UX for selecting an existing skeletal item during merge?
-- Should OCR run immediately after capture on-device, or only when the reviewer opens the queue?
+The trusted, idempotent Link operation atomically:
+
+1. validates that the Item still belongs to the project and is Unaccounted For;
+2. validates the selected Purchase's account, project, type, and mutability;
+3. creates the authoritative Item-to-Purchase relationship;
+4. reconciles the Item's project category with Furnishings or the approved
+   target category rule;
+5. preserves Item identity, media, notes, quantity, and Space; and
+6. makes the Item appear as Accounted For.
+
+This branch creates no Invoicing demand because the client already paid.
+
+### Business paid
+
+The user may choose the Business Inventory Purchase that records 1584's vendor
+payment, but that selection is optional. The UI may offer creation of the real
+inventory Purchase as a separate, explicit action. Ledger must never fabricate
+a vendor, amount, or Purchase in the background.
+
+The trusted, idempotent Link operation atomically:
+
+1. validates that the Item still belongs to the project and is Unaccounted For;
+2. associates acquisition evidence with the selected inventory Purchase when
+   one was selected;
+3. creates one positive open Item charge under **Invoicing → Items** at the
+   approved project-price basis;
+4. records hidden acquisition, placement, and sale provenance using the target
+   occurrence model;
+5. attributes the open charge to Furnishings budget progress;
+6. preserves Item identity, media, notes, quantity, and Space; and
+7. makes the Item appear as Accounted For.
+
+No project Transaction is created. Later whole-Invoice collection creates the
+one lump-sum project Purchase and freezes the Item occurrence membership. An
+associated Business Inventory Purchase remains inventory-scoped and is never
+repriced by the project charge.
+
+The target representation for missing acquisition evidence when the user Links
+without selecting an inventory Purchase remains an open schema decision. It
+must be explicit and reconcilable, not invented evidence.
+
+## One Item Identity
+
+The Item in Project Items and the Item represented in Invoicing are one physical
+Item record. The billable Item charge is a separate accounting occurrence with
+its own signed amount, category, Invoice state, and paid-history relationships.
+It references the Item ID; it is not a second “billable Item.”
+
+Receipt parsing, MCP automation, or legacy migration may later reveal duplicate
+evidence for the same object. **Reconcile Existing Item** is a separate audited
+identity/evidence operation, not a normal Link step. It must choose one surviving
+Item ID, merge media/evidence deterministically, redirect only mutable
+relationships, and preserve paid history.
+
+## Target Real-Item Requirements
+
+The new version stops writing new `protoItems`. Its ordinary `items` model must
+therefore safely represent an Unaccounted For project Item.
+
+The target model must allow:
+
+- project placement without a Transaction relationship;
+- an enabled Furnishings `budgetCategoryId` on a project Item even though
+  category alone does not make the Item Accounted For;
+- no billable occurrence yet;
+- optional prices, vendor, SKU, status, and Space;
+- the minimum identifying evidence approved for the wizard;
+- zero budget contribution until an authoritative accounting relationship
+  exists; and
+- later atomic Link without changing Item identity.
+
+The current Swift service already permits a categorized project Item with no
+Transaction, and the UI already has a **No Transaction** correction state. The
+target wizard should reuse that compatible shape: assign the project's enabled
+Furnishings category automatically and leave `transactionId` null until Link.
+The MCP create path currently rejects that shape and must be brought into
+agreement with the app.
+
+The remaining compatibility problem is accounting projection, not Item decode.
+At least one shipped billing summary treats every project Item purchase price as
+spent even when `transactionId` is null. New Unaccounted For writes must
+therefore remain disabled in shared production until old-client arithmetic is
+tolerant or a required-version/authority cutover is active.
+
+The accounting state should be derived. If a cached field is added for query
+performance, it is a repairable projection with server-side verification, not
+the source of truth.
+
+## Legacy Proto-Item Source Migration
+
+The new version retires proto-item creation. Before hard cutover, the existing
+Firebase app and its production structures continue operating unchanged while
+the separate Supabase/PowerSync target is built and tested.
+
+Before the source freeze:
+
+- keep `accounts/{accountId}/protoItems/{protoItemId}` documents intact;
+- keep proto-item Storage paths and attachment cleanup behavior intact;
+- keep Firestore and Storage rules permitting the existing valid old-client
+  operations;
+- keep required composite indexes;
+- keep current Firebase Swift and MCP decoding tolerant of legacy fields and
+  statuses;
+- keep current Firebase MCP tools functional until the hard-cutover window;
+- do not rename or repurpose existing proto fields with incompatible meaning;
+  and
+- do not bulk-delete converted or open proto records.
+
+The target app does **not** dual-read Firebase and contains no proto runtime
+repository. Rehearsals import immutable Firebase export fixtures into isolated
+target staging. At hard cutover, Ledger freezes Firebase writes, imports the
+final delta, and resolves every legacy proto to exactly one target Item or an
+explicit blocking quarantine result before target authority opens.
+
+Resolution stores durable source-to-target correlation. Existing
+`protoItem.convertedItemId` is honored when valid; the target migration journal
+records the source proto ID and surviving Item ID. Retries return the same Item.
+Media copying or path reuse must be explicit so migration cannot duplicate or
+orphan attachments.
+
+Old proto writers are rejected only as part of the rehearsed hard-cutover
+source freeze, after open proto records and pending work are audited and the
+O-022 rejection/recovery procedure is ready. This is operational source control,
+not a Firebase implementation of the redesigned Item model.
+
+## Pre-Cutover and Stale-Client Boundary
+
+The current Firebase app has no Unaccounted For/Accounted For sections, its MCP
+rejects some target Item shapes, and its Billing Summary can count an unlinked
+priced Item incorrectly. Those facts are migration/parity evidence, not a
+reason to add target behavior to Firebase.
+
+Before cutover, target writers operate only in isolated Supabase/PowerSync
+environments and the production Firebase app continues unchanged. At cutover,
+the final source export and target activation are separated by a fail-closed
+Firebase write freeze. O-022 must prove how already-shipped offline clients are
+quiesced, how late source writes are rejected, and how pending/rejected work is
+recovered. The target does not solve this with a Firebase adapter, tolerant v2
+reader, dual write, or an intermediate Firebase redesign release.
+
+## Atomicity and Concurrency
+
+Creation, Link, legacy resolution, and reconciliation are trusted idempotent
+operations. They must fail without partial records when any validation fails.
+
+At commit, validate:
+
+- account and project scope;
+- current Item identity and placement;
+- current accounting state;
+- selected Purchase existence/type/mutability;
+- occurrence uniqueness;
+- category eligibility;
+- price requirements for a Business-paid charge;
+- live Invoice membership; and
+- authority/schema version.
+
+Retries cannot create a second Item, charge, Purchase association, occurrence,
+or media copy. Concurrent Link, deletion, project move, Transfer, Invoice
+collection, and price edit require transaction/precondition tests.
+
+## MCP and Automation
+
+MCP Item creation uses the same minimum-field contract and real Item writer as
+the app. It must not keep creating proto items merely because its old tool is
+named Quick Draft.
+
+During compatibility:
+
+- legacy quick-draft tools remain available to old callers;
+- new tools expose Item creation and Link terminology;
+- target Link is one trusted idempotent command per route;
+- automation may suggest payer, Purchase, duplicate, or details but never Links,
+  migrates, or merges silently; and
+- deployed MCP changes must remain backward compatible until the authority
+  cutover.
+
+## Required Tests
+
+- Minimum-field creation writes one real Unaccounted For Item.
+- Adding optional details through the same wizard preserves Item ID.
+- Space changes never change accounting state.
+- Client-paid Link uses only an eligible current-project Purchase.
+- Business-paid Link with and without a selected inventory Purchase creates one
+  charge and no project Transaction.
+- Link retry is idempotent.
+- Link races with delete, move, Transfer, collection, and price edit fail or
+  serialize safely.
+- Existing open proto record imports to exactly one target Item under retries.
+- Proto migration preserves media, notes, quantity, Space, and correlation.
+- The current Firebase app and MCP remain unchanged and functional before the
+  hard-cutover window.
+- Target-only Item shapes are written only to isolated target environments
+  before cutover; no Firebase client can observe them.
+- Final source freeze rejects late legacy writes according to the tested O-022
+  recovery contract.
+- No Unaccounted For Item contributes to budget, Invoice, Transaction
+  completeness, reports, or exports.
+
+## Open Decisions
+
+1. Is the unified wizard one expandable screen or two steps?
+2. What is the exact minimum hard-validation rule among name, image, and note?
+3. Does the wizard retain a non-authoritative payer hint before Link?
+4. What record represents missing Business Inventory acquisition evidence after
+   Business-paid Link without a selected Purchase?
+5. What exact schema separates acquisition, placement, open occurrence, live
+   Invoice membership, and paid history?
+6. What exact O-022 quiescence/rejection/recovery mechanism protects the final
+   source export from late legacy writes?
+7. What exact bulk-import and quarantine policy resolves every legacy proto,
+   and when is the old source writer frozen?
+8. What is the exact audited duplicate/evidence reconciliation workflow?

@@ -1,0 +1,103 @@
+{
+  "batchId": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+  "title": "Target Account-workspace pending-work and attachment runtime composition",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+    "EVID-SESSION-ENDING-POLICY-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-75CFE285AF37",
+      "acknowledgeSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending or authoritative assignment.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+    "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+    "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+      ],
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace attachment and pending-work lifecycle owner"
+        ],
+        "securityRequirements": [
+          "Bind all storage to one validated environment, Principal and Account before opening it",
+          "Use a media key distinct from the workspace SQLCipher key and expose no key/path/identity material in diagnostics",
+          "No cleanup, deletion, signout or AccountSessionEnding capability exists"
+        ],
+        "syncRequirements": [
+          "Own exactly one pending-work provider observing the runtime's real structured and attachment evidence",
+          "Gate all existing finite operations and list/detail streams before deterministic terminal close and preserve all local evidence across restart"
+        ]
+      },
+      "migration": {
+        "rule": "Compose only isolated target-local stores; read no Firebase cache, pending write, attachment or identity state.",
+        "reconciliation": [
+          "A runtime summary must reconcile exactly to its owned structured-operation and attachment evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "Real-store counts, scope/key isolation, restart, concurrency, close and fail-closed boundaries pass without session-ending behavior"
+        ]
+      }
+    },
+    {
+      "id": "TEST-8D6A15063B2D",
+      "acknowledgeSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
+      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, archive operations, exact Project/Inventory Space destination facade identities, finite-operation and subscription/provider drainage, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+    "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+      ],
+      "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace pending-work runtime composition test suite"
+        ],
+        "securityRequirements": [
+          "Negative environment, Principal, Account, key, path and lifecycle cases are mandatory",
+          "Tests must prove the public runtime exposes no destructive or provider-signout operation"
+        ],
+        "syncRequirements": [
+          "Real encrypted structured and attachment stores, not mocks alone, prove restart and exact summary behavior",
+          "All mutations, watches, reads, capture and summary calls share one close-aware lease gate and cannot manufacture clean or lose accepted evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable synthetic target-local directories and keys only.",
+        "reconciliation": [
+          "Tests distinguish local runtime evidence from hosted synchronization or physical session-ending proof"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "npm run target:powersync:test"
+        ],
+        "acceptance": [
+          "Every frozen composition obligation passes while existing pending-work, attachment and workspace-isolation suites remain green"
+        ]
+      }
+    }
+  ]
+}

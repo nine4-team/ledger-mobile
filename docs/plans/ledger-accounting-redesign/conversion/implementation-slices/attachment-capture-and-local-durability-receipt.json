@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "attachment-capture-and-local-durability-receipt",
+  "title": "Accept attachment capture only with scoped local-durability evidence",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Attachment Local Capture Contracts",
+  "surfaceIds": [
+    "SWIFT-D8174F26DDD5",
+    "TEST-BA04EFCE369C"
+  ],
+  "requirements": [
+    {
+      "id": "ATTACHCAP-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Attachments",
+      "invariant": "A success-shaped local capture receipt binds one stable Attachment ID to exact Account and parent scope plus the byte count and checksum of bytes an adapter reports as durably saved; it is independent of URL/path identity and cannot be created from mismatched capture and persistence evidence.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-002", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    },
+    {
+      "id": "ATTACHCAP-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Data Authority",
+      "invariant": "Attachment bytes awaiting verified upload remain local byte authority and never enter Codable structured receipt/sync evidence; only stable identity, exact scope, byte count, checksum, opaque local-object identity and audit time cross this boundary.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-002", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    },
+    {
+      "id": "ATTACHCAP-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Local Database Lifecycle",
+      "invariant": "Capture and persistence evidence remain bound to the same environment, Principal and Account across canonical restart; cross-environment, cross-Principal or cross-Account evidence is rejected rather than rebound to the active session.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-002", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    },
+    {
+      "id": "ATTACHCAP-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Attachments",
+      "invariant": "A backend-neutral capture port accepts raw local capture input and returns a durable receipt or throws; it exposes no Storage upload primitive and no reference-removal or physical-byte-deletion operation while O-023 remains open.",
+      "decisionIds": ["O-023"],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    },
+    {
+      "id": "ATTACHCAP-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Contract Tests",
+      "invariant": "Deterministic contract tests may prove the receipt and port boundary, restart encoding and fail-closed result shape, but cannot promote the slice to physical local-durability evidence; encrypted filesystem, process/device restart and interruption proof remain required of the later provider adapter and spike.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-002", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    },
+    {
+      "id": "ATTACHCAP-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 attachment contract is executable in the isolated provider-free target package while the Firebase app remains unchanged and no local filesystem adapter, Supabase Storage, PowerSync, schema, migration, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHCAP-TEST-001", "ATTACHCAP-TEST-002", "ATTACHCAP-TEST-003", "ATTACHCAP-TEST-004", "ATTACHCAP-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "LocalAttachmentCapture owns preallocated stable AttachmentID, exact environment/Principal/Account/parent scope, capture time and nonempty raw bytes; raw bytes are Sendable input but never Codable structured evidence.",
+        "AttachmentContentSHA256 and AttachmentLocalObjectID are distinct validated values; AttachmentPersistedLocalObjectEvidence records only exact scope, opaque local-object identity, positive byte count, digest and finite persistence time.",
+        "AttachmentLocalDurabilityReceipt is constructed only by matching capture and persisted evidence, carries a canonical evidence fingerprint, revalidates on decode and contains no filesystem path, object path, bucket, URL, bearer token or raw bytes.",
+        "AttachmentCaptureStoring is the narrow backend-neutral enqueue boundary; AttachmentCaptureReceiptFailure exposes closed stable validation, scope, byte-evidence, fingerprint and malformed-encoding codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 receipt boundary creates no attachment/reference table, object locator, constraint, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No upload, attach-to-parent, retry, verification, derivative, reorder, primary, detach, delete, cleanup or reconciliation handler exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view, function or object endpoint is exposed through Supabase."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Exact local scope matching is not server authorization. No membership predicate, Storage policy, grant or RLS policy exists in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local table, upload connector or readiness claim is defined. The receipt proves only the structured evidence contract future local media metadata must preserve."
+    },
+    "localOffline": {
+      "items": [
+        "The receipt is canonical Codable evidence over environment, Principal, Account, parent, Attachment, opaque local object, byte count, checksum and time; decode reconstructs through the same validators and byte-identical restart is required.",
+        "Cross-environment/Principal/Account/parent/Attachment evidence, changed byte count/checksum, invalid time, malformed identity and changed fingerprint fail atomically without returning a receipt.",
+        "The narrow port permits a deterministic failure adapter to return an error with no success-shaped receipt; actual protected local persistence and physical restart remain unimplemented and unclaimed."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [
+        "Raw capture bytes are nonempty, hashable input only and cannot enter the encoded receipt; the receipt matches an adapter-reported opaque protected-local object by exact size and SHA-256.",
+        "No path/URL/bucket/provider value, upload/verification/derivative behavior, cache cleanup, reference removal or physical deletion is present; O-023 and the allowed content/size/derivative policies remain open.",
+        "Deterministic media-fault tests prove no false-success receipt on a simulated local-store failure while explicitly deferring encryption, disk-full, interruption, process/device restart and private remote rendering to SPIKE-MED-001."
+      ],
+      "notApplicable": ""
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No current capture screen, gallery, parent model, MCP tool/schema, UI state or transport adapter is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase AttachmentRef, URL/path, pending-upload file, Storage object or export is decoded/transformed. Later import must correlate bytes and references rather than manufacture this receipt from URL metadata."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable bounded failures are contract values only; no metric, upload age, disk pressure alert, cleanup action or runbook execution is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not modify either application project or the Firebase checkout.",
+        "The slice cannot claim actual protected persistence, accept a user capture in the app, upload/render media, mutate parent references, deploy, migrate, release or cut over.",
+        "A-003/A-004/A-016, SPIKE-MED-001, O-022/O-023, production reference/object profiling and content/size/derivative policy remain outside this receipt-value boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ATTACHCAP-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
+      "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
+      "expected": "Matching synthetic capture and persisted-object evidence yields one stable path-free receipt whose Attachment identity is independent of opaque local-object identity and whose structured form excludes raw bytes.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
+    },
+    {
+      "id": "ATTACHCAP-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
+      "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
+      "expected": "A representative receipt round-trips byte-identically with exact scope, Attachment/local-object identity, byte count, digest, time and fingerprint while carrying no raw bytes or provider locator.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
+    },
+    {
+      "id": "ATTACHCAP-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
+      "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
+      "expected": "Empty capture, invalid time/identity/digest, cross-scope or changed Attachment/parent/size/checksum evidence, malformed encoding and fingerprint tamper fail atomically with stable bounded codes.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
+    },
+    {
+      "id": "ATTACHCAP-TEST-004",
+      "kind": "media_fault",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
+      "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
+      "expected": "A deterministic failing capture-store adapter returns an error and no receipt while an evidence adapter returns only an exact validated receipt; the test records that it is not physical durability proof.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
+    },
+    {
+      "id": "ATTACHCAP-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming physical media/provider behavior.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-ATTACHMENT-CAPTURE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 attachment receipt/value boundary only. It does not prove actual protected local persistence or any upload/display/provider behavior. O-023 remains fully open because no reference-removal or byte-deletion capability exists."
+}

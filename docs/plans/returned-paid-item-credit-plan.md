@@ -1,9 +1,14 @@
 # Returned Paid Item Credit Plan
 
 Created: 2026-06-29
-Last updated: 2026-06-29
+Last updated: 2026-08-31
 
-Master tracker: [transaction-taxonomy-master-tracker.md](transaction-taxonomy-master-tracker.md)
+> The no-synthetic-Transaction decision remains relevant, but the draft manual
+> credit-line container below describes current implementation and must be
+> adapted to the Item-credit/whole-Invoice target. Current program tracking:
+> [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
+
+Historical June tracker: [transaction-taxonomy-master-tracker.md](transaction-taxonomy-master-tracker.md)
 
 ## Decision
 

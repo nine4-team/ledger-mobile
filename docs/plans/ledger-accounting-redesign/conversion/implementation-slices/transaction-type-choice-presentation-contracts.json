@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "transaction-type-choice-presentation-contracts",
+  "title": "Present canonical Transaction type choices and scope-relative meaning",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Transaction Type Choice Presentation",
+  "surfaceIds": ["SWIFT-F90B7B48C1F6", "TEST-F66BBF1FC092"],
+  "requirements": [
+    {
+      "id": "TXTYPEPRES-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Confirmed Product Direction",
+      "invariant": "Canonical membership is the unordered Project set purchase/return/transfer and Business Inventory set purchase/return. Transfer is invalid in Business Inventory. Membership is not declaration, display, filter, default-selection or UI order.",
+      "decisionIds": ["D-001", "D-003"],
+      "verificationIds": ["TXTYPEPRES-TEST-001", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    },
+    {
+      "id": "TXTYPEPRES-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Target Global Transaction Taxonomy",
+      "invariant": "LedgerTransactionType projects to exactly Purchase, Return or Transfer. Sale, Payment to Business, Fee, Expense, To Inventory, reimbursement, movement and legacy/import-review vocabulary are absent.",
+      "decisionIds": ["D-001"],
+      "verificationIds": ["TXTYPEPRES-TEST-002", "TXTYPEPRES-TEST-003", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    },
+    {
+      "id": "TXTYPEPRES-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Accounting Boundary",
+      "invariant": "TransactionScopeOwnerKind.project projects to the exact owner title Client and businessInventory projects to 1584. Ownership is never inferred from names, identifiers, source strings, payer fields or storage location.",
+      "decisionIds": ["D-002", "D-007"],
+      "verificationIds": ["TXTYPEPRES-TEST-002", "TXTYPEPRES-TEST-003", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    },
+    {
+      "id": "TXTYPEPRES-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Target Global Transaction Taxonomy",
+      "invariant": "Presentation exposes TransactionClassification.economicMeaning unchanged: Purchase is scopeOwnerPaid, Return is scopeOwnerReceivedMoneyBack and Transfer is the one nonCashSameClientReallocation meaning. Transfer source and destination roles project identically; no incoming/outgoing, sign, debit/credit or budget direction is invented.",
+      "decisionIds": ["D-002", "D-003", "D-007"],
+      "verificationIds": ["TXTYPEPRES-TEST-002", "TXTYPEPRES-TEST-003", "TXTYPEPRES-TEST-004", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    },
+    {
+      "id": "TXTYPEPRES-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "TransactionClassification remains the sole validated classification aggregate. Stateless presentation consumes it without recreating type/scope/role validity or economic meaning, persists no presentation value, and after canonical classification restart re-derives an identical descriptor without a port, query, operation, authorization or readiness contract.",
+      "decisionIds": [],
+      "verificationIds": ["TXTYPEPRES-TEST-002", "TXTYPEPRES-TEST-003", "TXTYPEPRES-TEST-004", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    },
+    {
+      "id": "TXTYPEPRES-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only Swift paths implement and test deterministic provider-free presentation while the Firebase application remains unchanged. No Firebase, Supabase, PowerSync, schema, app/MCP, migration, hosted-resource, release, cutover or production behavior advances.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["TXTYPEPRES-TEST-001", "TXTYPEPRES-TEST-002", "TXTYPEPRES-TEST-003", "TXTYPEPRES-TEST-004", "TXTYPEPRES-TEST-005", "TXTYPEPRES-TEST-006", "TXTYPEPRES-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "TransactionTypeChoiceCatalog returns literal Set membership only: Project purchase/return/transfer and Business Inventory purchase/return. Set iteration and CaseIterable declaration order have no UI meaning.",
+        "TransactionTypeChoiceDescriptor contains only LedgerTransactionType, exact type title, TransactionScopeOwnerKind, exact scope-owner title and the existing TransactionEconomicMeaning. It has no public fieldwise initializer and no Codable conformance.",
+        "TransactionTypeChoicePresentationProjector accepts one already-valid TransactionClassification, reads its type, scope.ownerKind and economicMeaning, and deliberately omits role and identifiers so Transfer source/destination descriptors are equal.",
+        "No new production failure type or alternate validity rules exist. Well-formed invalid classification evidence is rejected by the existing TransactionTaxonomyFailure boundary before presentation. Syntactically malformed JSON remains a raw DecodingError; only the test-only consumer normalizes it to rejected invalidEncodedClassification, with no descriptor."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Transaction, scope, presentation, membership, table, enum, constraint, index, view or migration is created or changed."},
+    "serverHandlers": {"items": [], "notApplicable": "No Purchase, Return or Transfer command, eligibility, validation, write, correction or audit handler exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "A valid local classification or choice is not authorization. No membership, financial visibility or write RLS policy/test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local table, download predicate, upload connector, subscription or synchronized readiness contract exists."},
+    "localOffline": {
+      "items": [
+        "Restart canonically encodes only the verified TransactionClassification and re-derives identical presentation after decode; presentation itself has no persisted or transient state.",
+        "The exact canonical encoder key allowlist remains classification type/scope/role and scope ownerKind/accountId plus projectId/clientId when present. Titles, meaning, order, amount, status, source and actions never serialize."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No receipt, AttachmentID, byte, URL, cache, upload, retention or deletion behavior exists."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI menu, filter, layout, accessibility/order/default policy, MCP schema/tool/resource/handler or transport wiring is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No legacy Transaction value is decoded, classified, displayed or transformed. Sale, payment, fee, expense, reimbursement and movement evidence remain migration responsibilities."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Existing bounded taxonomy failures are asserted as contract values only; no telemetry event, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot choose or submit a Transaction, determine amount/sign/source/status/action, authorize a Principal, persist state, activate a feature, deploy, release or cut over.",
+        "O-002/O-011/O-012/O-013/O-014/O-015/O-028/O-029/O-030/O-031/O-032, A-003/A-004/A-015/A-016 and every provider/hosted/migration/production gate remain outside the boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TXTYPEPRES-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-001", "TXTYPEPRES-REQ-006"],
+      "expected": "Set(LedgerTransactionType.allCases) equals the literal purchase/return/transfer set and allCases.count is exactly 3; literal Project catalog membership equals that set and literal Inventory membership equals purchase/return. Inventory excludes Transfer, and array/order equality is explicitly forbidden so declaration and Set iteration order cannot become UI policy.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "All four standalone Project/Inventory Purchase/Return classifications project exact Purchase/Return, Client/1584 and the existing scopeOwnerPaid/scopeOwnerReceivedMoneyBack meanings using the canonical enum types rather than parallel presentation enums.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "Valid project Transfer source and destination classifications with distinct scopes project equal descriptors containing only transfer/Transfer/project/Client/nonCashSameClientReallocation; role, Project identity, direction, amount sign and incoming/outgoing vocabulary are absent.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-004",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "All six valid TransactionClassification shapes—Project and Inventory standalone Purchase/Return plus project transferSource and transferDestination—canonically encode/decode, emit only exact classification/scope key allowlists, preserve byte-identical canonical encoding and re-project identical non-Codable descriptors. Both restored Transfer descriptors are equal; no title, owner title, economic meaning, order or transient state serializes.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-001", "TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "Unknown type/owner/role, malformed scope, incompatible role, Inventory Transfer, and missing/wrong aggregate fields fail through their exact existing TransactionTaxonomyFailure cases before presentation. Syntactically malformed JSON produces DecodingError from OperationContractCodec; the test-only consumer maps that error to rejected invalidEncodedClassification and yields no descriptor. Emitted display-title strings are exactly Purchase/Return/Transfer/Client/1584 and exclude all legacy/directional/amount/status/action terms.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-006",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "covers": ["TXTYPEPRES-REQ-001", "TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "A test-only consumer accepts each already-validated TransactionClassification and composes the catalog/projector without a second port, query or validity aggregate; all five valid owner/type pairs project canonically, both Transfer roles remain equivalent, and rejected taxonomy evidence yields no descriptor.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    },
+    {
+      "id": "TXTYPEPRES-TEST-007",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["TXTYPEPRES-REQ-001", "TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, complete target tests, repeatable project generation, both staging builds and clean artifacts while only the two allowlisted target paths differ in the worker candidate.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified at exact checkpoint fcff5b854b16d289dfcf159b31fcd45a973c7402 by immutable Actions run 33717396519. Candidate sequence 0170ac0a/f38258a5/c22fac22 changed only the two registered paths. Primary every-line and independent review found no implementation defect; independent review rejected the first test candidate for a P3 missing syntactically malformed JSON case, and follow-up review rejected the dossier's false claim that raw parser errors are TransactionTaxonomyFailure. The final tests separately prove raw DecodingError and test-consumer normalization without changing production taxonomy. Six focused and all 224 tests pass with conversion/M0, target isolation/generated-contract controls, repeatable project generation, both staging builds and clean artifacts. Earlier preflight and actual-ready-diff review corrected aggregate, owner vocabulary, order, restart-shape and display-title risks. The slice cannot recreate classification, claim UI/filter ordering, distinguish Transfer roles, classify legacy values, expose amounts/status/actions, or advance app/MCP, provider/schema/RLS/Sync, migration, hosted or production behavior."
+}

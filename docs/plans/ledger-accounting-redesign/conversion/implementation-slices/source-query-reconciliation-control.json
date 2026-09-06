@@ -1,0 +1,638 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "source-query-reconciliation-control",
+  "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Source Query Reconciliation Control",
+  "surfaceIds": [
+    "CONFIG-A8BD153106B8",
+    "CONFIG-40F01696B8A6"
+  ],
+  "requirements": [
+    {
+      "id": "SQUERY-REQ-001",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Reproducible Inventory",
+      "invariant": "The aggregate registry binds the complete source artifact by full SHA-256 and sourceDigest. Every row binds one exact QUERY ID, canonical full-occurrence hash, human-selected exact sourceRef and source owner through a stable projected owner hash; no volatile full-manifest hash is stored.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-002"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Target Mapping Rule",
+      "invariant": "Every QUERY row has a nonempty canonical set of independently authorized outcomes using only verified_target_query_port, approved_future_target_query, approved_target_nonquery_surface, source_only, retired, authority_blocked, or evidence_blocked.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-003",
+        "SQUERY-TEST-004",
+        "SQUERY-TEST-005"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Completeness and Limitations",
+      "invariant": "Registry, all ten batches and this slice share one closed lifecycle. At DRAFT, human review assigns every current QUERY ID to exactly one capability batch and rows may be a subset only while authoring; READY and every later state require exact row equality. No subsystem, path, symbol, operation, expression, or naming heuristic supplies assignment or outcome authority.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "A verified target query outcome binds an exact non-decision-blocked TQUERY, TACCESS, and mappingHash, joins its ownerSurfaceId to the current conversion manifest, and accepts only owner lifecycle verified, rehearsed or cutover_ready; implemented and every earlier, blocked, retired, unknown or missing owner fail closed. A future-query or nonquery outcome binds an exact manifest surface, exact target.surfaces member, and hash of {surfaceId,disposition,target}; status is validated separately as target_mapped, implemented, verified, rehearsed or cutover_ready and blocked/retired is rejected.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-003",
+        "SQUERY-TEST-004"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Authority and Precedence",
+      "invariant": "Source-only reuses the row's exact sourceOwnerSurfaceId/sourceRef and requires source_only disposition plus frozen purpose/gate enums. Current-source compatibility is restricted to two exact registry bindings. Mechanism retirement may follow but never replace a source-only obligation and its gate cannot precede retention. Behavior retirement uses only independently reviewed content-hashed authority. Authority-blocked and evidence-blocked bind exact scope-selected authority/owner evidence; O-021 and A-003/A-004 are forbidden and unresolved evidence cannot coexist with behavior retirement.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-005",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-003 — Supabase Postgres as Target Authority",
+      "invariant": "Postgres physical access remains globally deferred under the exact architecture-decisions.md heading A-003 — Supabase Postgres as Target Authority and is absent from every reconciliation row, outcome, registry batch, and generated artifact.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-004 — PowerSync as Target Local Data Plane",
+      "invariant": "Local physical access remains globally deferred under the exact architecture-decisions.md heading A-004 — PowerSync as Target Local Data Plane and is absent from every reconciliation row, outcome, registry batch, and generated artifact.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Required Work Sequence",
+      "invariant": "Human capability-owner review has assigned all 386 QUERY IDs and supplied all 386 row outcomes. READY means classification completeness only: authority/evidence-blocked outcomes may remain and confer no implementation, migration, production, retirement or cutover authority. Generated unresolved counts remain fail-closed gates for downstream promotion/cutover.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-008",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "The future dependency-free aggregate control fails closed on stale stable/content-hashed bindings, malformed nested schemas/assignments/rows, lifecycle mismatch, invalid authority/coexistence/gate ordering, unexpected directory contents, unsafe paths, nondeterministic output and lifecycle-scope drift before target Swift work begins.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-002",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Pull Request and Checkpoint Evidence",
+      "invariant": "DRAFT, READY, implementation and promotion use exact path allowlists and synchronized evidence without changing source runtime, target query owners, target authority, schema, RLS, Sync, provider, hosted systems or production data.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-010"
+      ]
+    }
+  ],
+  "controlModel": {
+    "batchDirectory": "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches",
+    "exactBatchOrder": [
+      "identity-lifecycle.json",
+      "project-client-reference.json",
+      "inventory-transaction.json",
+      "invoicing-budget.json",
+      "item-creation-link.json",
+      "media-lifecycle.json",
+      "spaces-review.json",
+      "reporting-search.json",
+      "source-migration-audit.json",
+      "platform-control.json"
+    ],
+    "exactBatchMetadata": [
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json","batchId":"SQUERY-IDENTITY-LIFECYCLE-001","owner":"Identity and Account Lifecycle"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json","batchId":"SQUERY-PROJECT-CLIENT-REFERENCE-001","owner":"Projects, Clients, and Shared Reference Data"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json","batchId":"SQUERY-INVENTORY-TRANSACTION-001","owner":"Inventory, Transactions, and Provenance"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json","batchId":"SQUERY-INVOICING-BUDGET-001","owner":"Invoicing, Collection, and Budget"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json","batchId":"SQUERY-ITEM-CREATION-LINK-001","owner":"Item Creation and Accounting Link"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json","batchId":"SQUERY-MEDIA-LIFECYCLE-001","owner":"Media and Attachment Lifecycle"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json","batchId":"SQUERY-SPACES-REVIEW-001","owner":"Spaces, Checklists, and Review"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json","batchId":"SQUERY-REPORTING-SEARCH-001","owner":"Reporting, Search, and Export"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json","batchId":"SQUERY-SOURCE-MIGRATION-AUDIT-001","owner":"Source Migration, Audit, Repair, and Profiling"},
+      {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json","batchId":"SQUERY-PLATFORM-CONTROL-001","owner":"Platform, Backend, and Conversion Control"}
+    ],
+    "onlyExcludedDirectoryEntry": "_template.json",
+    "schemaVersionLiteral": 1,
+    "lifecycleEnums": ["draft", "ready", "implemented", "verified"],
+    "lifecycleRule": "Registry status, all ten non-template batch statuses and slice status are exactly equal and belong to lifecycleEnums; the excluded authoring template remains draft. Draft permits each rows set to be a subset of assignedQueryIds. Ready, implemented and verified require exact equality. Ready means classification-complete only and may contain authority_blocked/evidence_blocked outcomes; it grants no target implementation, source retirement, migration, production or cutover authority.",
+    "registryKeys": ["schemaVersion", "status", "sourceInventory", "targetAuthority", "conversionManifestPath", "batchDirectory", "excludedTemplate", "batches", "blockerAuthorities", "evidenceRequirements", "retirementAuthorities", "currentSourceCompatibilityBindings", "notes"],
+    "sourceInventoryKeys": ["path", "artifactSha256", "sourceDigest", "expectedOccurrences"],
+    "targetAuthorityKeys": ["path", "artifactSha256", "inventoryDigest"],
+    "registryBatchKeys": ["path", "batchId", "owner"],
+    "batchKeys": ["schemaVersion", "batchId", "owner", "status", "assignedQueryIds", "allowedBlockerIds", "allowedEvidenceRequirementIds", "rows", "notes"],
+    "rowKeys": ["queryId", "expectedOccurrenceHash", "sourceOwnerSurfaceId", "sourceRef", "expectedSourceOwnerHash", "outcomes"],
+    "sourceRefKeys": ["path", "line"],
+    "sourceRefRule": "sourceRef is a closed object with repository-relative path and optional positive integer line; it must exactly equal one selected manifest sourceRefs member and its path must equal the occurrence sourcePath.",
+    "registryBatchRule": "Registry batches exactly equal exactBatchMetadata in that order. Each path is batchDirectory plus the matching exactBatchOrder filename; path, batchId and owner exactly equal the loaded batch; paths, batchIds and owners are independently unique. The directory contains exactly these ten regular non-symlink files plus onlyExcludedDirectoryEntry.",
+    "filesystemRule": "Repository root, source/target/manifest inputs, batch directory, every registry batch path, every authority/evidence path and generated artifact/parent are realpath-contained. Required inputs are regular non-symlink files; no path component may traverse a symlink. Generate uses an exclusive unpredictable same-directory temporary regular file with no-follow where available, atomically renames it and cleans only its own temporary file.",
+    "queryIdPattern": "^QUERY-[0-9A-F]{12}$",
+    "queryIdDerivation": "'QUERY-' + uppercase first 12 hexadecimal characters of sha256(UTF8(`${sourcePath}:${line}:${operation}`))",
+    "authoringRule": "rows queryId set is a subset of assignedQueryIds only when the synchronized lifecycle is draft and exactly equals assignedQueryIds at ready, implemented or verified",
+    "queryIdOrder": "assignedQueryIds and rows use ascending QUERY ID byte order; batch order is exactBatchOrder",
+    "assignmentRule": "The ten assignedQueryIds sets are duplicate-free, pairwise disjoint and their union exactly equals the 386 source inventory QUERY IDs at DRAFT and every later lifecycle",
+    "occurrenceHash": "sha256(UTF8('source-query-occurrence-v1\\0' + recursively-canonicalized-minified complete occurrence JSON))",
+    "sourceOwnerRule": "A human selects one exact manifest surface and one exact sourceRefs member whose path equals the occurrence sourcePath; the machine binds that choice and does not infer it",
+    "sourceOwnerHash": "sha256(UTF8('source-query-owner-projection-v1\\0' + canonical({surfaceId,disposition,sourceRef})))",
+    "targetMappingHash": "sha256(UTF8('source-query-target-mapping-v1\\0' + canonical({surfaceId,disposition,target})))",
+    "allowedTargetStatuses": ["target_mapped", "implemented", "verified", "rehearsed", "cutover_ready"],
+    "forbiddenTargetStatuses": ["blocked", "retired"],
+    "allowedTargetDispositions": ["migrate", "preserve", "redesign", "replace"],
+    "outcomeCategoryOrder": ["verified_target_query_port", "approved_future_target_query", "approved_target_nonquery_surface", "source_only", "retired", "authority_blocked", "evidence_blocked"],
+    "outcomeIdentity": {
+      "verified_target_query_port": ["category", "tqueryId", "taccessId"],
+      "approved_future_target_query": ["category", "targetSurfaceId", "targetSurface"],
+      "approved_target_nonquery_surface": ["category", "targetSurfaceId", "targetSurface"],
+      "source_only": ["category", "sourceOwnerSurfaceId", "sourceRef", "purpose", "retentionGate"],
+      "retired": ["category", "scope", "retirementGate"],
+      "authority_blocked_target_query_contract": ["category", "blockedScope", "tqueryId", "taccessId", "expectedMappingHash", "blockerIds"],
+      "authority_blocked_target_nonquery_contract": ["category", "blockedScope", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash", "blockerIds"],
+      "authority_blocked_source_disposition": ["category", "blockedScope", "blockerIds"],
+      "authority_blocked_retirement": ["category", "blockedScope", "blockerIds"],
+      "evidence_blocked": ["category", "blockedScope", "evidenceRequirementIds", "ownerBindings"]
+    },
+    "outcomeKeys": {
+      "verified_target_query_port": ["category", "tqueryId", "taccessId", "expectedMappingHash"],
+      "approved_future_target_query": ["category", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash"],
+      "approved_target_nonquery_surface": ["category", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash"],
+      "source_only": ["category", "sourceOwnerSurfaceId", "sourceRef", "purpose", "retentionGate", "sourceLifecycleAuthorityId", "expectedSourceLifecycleAuthorityHash"],
+      "retired_source_query_mechanism_only": ["category", "scope", "retirementGate", "retirementAuthorityId", "expectedRetirementAuthorityHash"],
+      "retired_source_behavior": ["category", "scope", "retirementGate", "retirementAuthorityId", "expectedRetirementAuthorityHash"],
+      "authority_blocked_target_query_contract": ["category", "blockedScope", "tqueryId", "taccessId", "expectedMappingHash", "blockerIds", "authorityRefs"],
+      "authority_blocked_target_nonquery_contract": ["category", "blockedScope", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash", "blockerIds", "authorityRefs"],
+      "authority_blocked_source_disposition": ["category", "blockedScope", "blockerIds", "authorityRefs"],
+      "authority_blocked_retirement": ["category", "blockedScope", "blockerIds", "authorityRefs"],
+      "evidence_blocked": ["category", "blockedScope", "evidenceRequirementIds", "ownerBindings", "evidenceRefs"]
+    },
+    "canonicalOutcomeRule": "Nonempty outcomes sort by outcomeCategoryOrder then recursively canonicalized minified JSON bytes; identities are unique and arrays retain declared semantic order unless explicitly defined as sorted sets",
+    "sourceOnlyPurposeEnums": ["migration", "audit", "repair", "profiling", "current_source_compatibility"],
+    "sourceOnlyRetentionGateEnums": ["through_migration_rehearsal", "through_verified_cutover_reconciliation", "through_post_cutover_audit_signoff"],
+    "retirementScopeEnums": ["source_query_mechanism_only", "source_behavior"],
+    "retirementGateEnums": ["after_verified_target_cutover", "after_verified_cutover_reconciliation", "after_post_cutover_audit_signoff", "at_verified_target_cutover"],
+    "lifecycleGateOrder": {
+      "through_migration_rehearsal": 10,
+      "after_verified_target_cutover": 30,
+      "through_verified_cutover_reconciliation": 40,
+      "after_verified_cutover_reconciliation": 50,
+      "through_post_cutover_audit_signoff": 60,
+      "after_post_cutover_audit_signoff": 70
+    },
+    "blockedScopeEnums": ["target_query_contract", "target_nonquery_contract", "source_disposition", "retirement"],
+    "evidenceBlockedScopeEnums": ["source_runtime_use", "source_reference_safety"],
+    "blockerAuthorityKeys": ["id", "kind", "path", "section"],
+    "evidenceRequirementKeys": ["id", "kind", "path", "section", "requiredArtifact", "ownerBindings"],
+    "evidenceOwnerBindingKeys": ["surfaceId", "sourceRef", "expectedSourceOwnerHash", "blocker", "expectedBindingHash"],
+    "selectedEvidenceOwnerBindingKeys": ["evidenceRequirementId", "surfaceId", "sourceRef", "expectedSourceOwnerHash", "blocker", "expectedBindingHash"],
+    "evidenceRefKeys": ["id", "kind", "path", "section", "requiredArtifact"],
+    "retirementAuthorityHeadingKeys": ["authorityId", "kind", "path", "section", "contentSha256"],
+    "retirementAuthorityDecisionKeys": ["authorityId", "kind", "decisionId", "path", "section", "contentSha256"],
+    "exactRetirementAuthorityDefinitions": [
+      {"authorityId":"RETIRE-AUTH-001","kind":"canonical_target_heading","path":"docs/specs/account-discovery-and-workspace-selection.md","section":"Explicit Workspace Selection","contentSha256":"835e540742d7bbfcc8a4591152aef85777d848cd7915cc2c5b52d38157fe2177","expectedRetirementAuthorityHash":"c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"},
+      {"authorityId":"RETIRE-AUTH-002","kind":"canonical_target_heading","path":"docs/specs/inventory-item-invoicing-lifecycle.md","section":"Story 10: Correct a Mistake","contentSha256":"ec991c5a0972f0801854e76ea308b046c994623104313131a879855f4224275a","expectedRetirementAuthorityHash":"640913877715fb8628aca33edf4fdfb8b6389951683437876af7399fdef9bf33"},
+      {"authorityId":"RETIRE-AUTH-003","kind":"confirmed_decision","decisionId":"D-025","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Confirmed Decisions","contentSha256":"bc8eb28ff4400c306032513759cde14ac92746d2832d5d5d540353e73395f1db","expectedRetirementAuthorityHash":"64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"},
+      {"authorityId":"RETIRE-AUTH-004","kind":"architecture_decision","decisionId":"A-017","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-017 — Firebase Is a Migration Source Only","contentSha256":"6a181c00df29d12f9d943e934b12713e350d1c87a07b741c8ebcefcd247c9ab7","expectedRetirementAuthorityHash":"ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"}
+    ],
+    "currentSourceCompatibilityBindingKeys": ["queryId", "sourceOwnerSurfaceId", "sourceRef", "expectedSourceOwnerHash", "retentionGate"],
+    "exactCurrentSourceCompatibilityBindings": [
+      {"queryId":"QUERY-241AE9EE0E3F","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"},
+      {"queryId":"QUERY-57FA49B52A1C","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"}
+    ],
+    "blockerAuthorityRule": "blockerIds are byte-sorted unique IDs present in both the batch allowedBlockerIds and registry blockerAuthorities; authorityRefs exactly reproduce corresponding registry entries. O IDs must exist under decision-log.md heading Open Product Decisions; A IDs must exist under their exact architecture-decisions.md heading. O-021, A-003 and A-004 are forbidden.",
+    "evidenceRequirementRule": "evidenceRequirementIds are byte-sorted unique E IDs present in both the batch allowedEvidenceRequirementIds and registry evidenceRequirements. Registry ownerBindings are nonempty, canonical and unique by surfaceId within each requirement. Each binding exactly reproduces one manifest owner/ref/hash tuple plus one exact blocker and re-derives expectedBindingHash as sha256(UTF8('source-query-evidence-owner-binding-v1\\0' + canonical({surfaceId,sourceRef,expectedSourceOwnerHash,blocker}))). The outcome carries exactly one selected ownerBindings entry per evidenceRequirementId, sorted by evidenceRequirementId; each entry adds that E ID to and otherwise exactly reproduces the one registry binding for the row's complete selected owner tuple. evidenceRefs exactly reproduce stable id/kind/path/section/requiredArtifact projections. This explicit same-row binding prevents unrelated evidence laundering without placing E IDs in the product/architecture residual-blocker queue. Referenced requirements are not proof that production was read or evidence exists.",
+    "authorityBlockedBindingRules": {
+      "target_query_contract": "The outcome binds exact tqueryId, taccessId and expectedMappingHash from one target-authority row. blockerIds must be a nonempty subset of the byte-sorted unique union of blockerIds found only in logicalAxes values whose state is decision_blocked and unresolvedAxes entries whose state is decision_blocked; missing/non-array nested blockerIds fail closed and prose is never inspected.",
+      "target_nonquery_contract": "The outcome binds exact targetSurfaceId, targetSurface and expectedTargetMappingHash under the normal target mapping rules. Every blockerId must exist in that exact manifest surface.blockers array.",
+      "source_disposition": "Every blockerId must exist in the exact row-selected source-owner manifest surface.blockers array.",
+      "retirement": "Every blockerId must exist in the exact row-selected source-owner manifest surface.blockers array."
+    },
+    "sourceOnlyAuthorityBinding": {"sourceLifecycleAuthorityId":"RETIRE-AUTH-004","expectedSourceLifecycleAuthorityHash":"ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"},
+    "mechanismRetirementAuthorityBinding": {"retirementAuthorityId":"RETIRE-AUTH-004","expectedRetirementAuthorityHash":"ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"},
+    "behaviorRetirementAuthorityShapes": {
+      "canonical_target_heading": ["authorityId", "kind", "path", "section", "contentSha256"],
+      "confirmed_decision": ["authorityId", "kind", "decisionId", "path", "section", "contentSha256"],
+      "architecture_decision": ["authorityId", "kind", "decisionId", "path", "section", "contentSha256"]
+    },
+    "retirementAuthorityRule": "Registry retirementAuthorities must exactly equal exactRetirementAuthorityDefinitions after removing only expectedRetirementAuthorityHash. Canonical/architecture headings must be a unique literal ATX heading outside fenced code; normalize CRLF to LF, include the heading through immediately before the next same-or-higher ATX heading, canonicalize trailing newlines to one, and derive contentSha256 from UTF8('source-query-retirement-heading-v1\\0' + sectionBytes). A confirmed D decision must be one unique Markdown table row inside the unique Confirmed Decisions section and derive contentSha256 from UTF8('source-query-retirement-decision-v1\\0' + exactRow). Then derive expectedRetirementAuthorityHash as sha256(UTF8('source-query-retirement-authority-v1\\0' + canonical(complete registry authority object))). Every source_behavior outcome carries only the exact authorityId/hash pair. Paths are realpath-safe regular files; arbitrary headings, unregistered decisions, hash drift and owner-manifest self-authorization reject.",
+    "currentSourceCompatibilityRule": "Registry currentSourceCompatibilityBindings must exactly equal exactCurrentSourceCompatibilityBindings. Purpose current_source_compatibility is accepted if and only if {queryId,sourceOwnerSurfaceId,sourceRef,expectedSourceOwnerHash,retentionGate} exactly equals one of those two members, and every registered member must appear in exactly one matching row. The exact QUERY occurrences must remain BatchWriting document_read operations. Jointly adding a registry entry and a row cannot widen this frozen set; the purpose is rejected everywhere else.",
+    "mechanismRetirementRule": "Every source_only outcome exactly carries sourceOnlyAuthorityBinding and every source_query_mechanism_only outcome exactly carries mechanismRetirementAuthorityBinding, both backed by the independently extracted/content-hashed A-017 registry authority. Mechanism retirement requires at least one same-row verified/future/nonquery target replacement or one source_only lifecycle outcome. Source-only is never a replacement: when present, the retirement gate rank must be strictly greater than its retain-through gate rank; when a target replacement is present, the gate must be at least after_verified_target_cutover. If both are present, both constraints apply. through_verified_cutover_reconciliation therefore requires after_verified_cutover_reconciliation or later, and through_post_cutover_audit_signoff requires after_post_cutover_audit_signoff.",
+    "outcomeConflictMatrix": {
+      "kindOrder": ["target_preservation", "source_retention", "mechanism_retirement", "behavior_retirement", "authority_blocked_target", "authority_blocked_source_disposition", "authority_blocked_retirement", "evidence_blocked"],
+      "categoryKinds": {
+        "verified_target_query_port": "target_preservation",
+        "approved_future_target_query": "target_preservation",
+        "approved_target_nonquery_surface": "target_preservation",
+        "source_only": "source_retention",
+        "retired_source_query_mechanism_only": "mechanism_retirement",
+        "retired_source_behavior": "behavior_retirement",
+        "authority_blocked_target_query_contract": "authority_blocked_target",
+        "authority_blocked_target_nonquery_contract": "authority_blocked_target",
+        "authority_blocked_source_disposition": "authority_blocked_source_disposition",
+        "authority_blocked_retirement": "authority_blocked_retirement",
+        "evidence_blocked_source_runtime_use": "evidence_blocked",
+        "evidence_blocked_source_reference_safety": "evidence_blocked"
+      },
+      "matrix": {
+        "target_preservation": {"target_preservation":"allow","source_retention":"allow","mechanism_retirement":"conditional:target_retirement_gate","behavior_retirement":"deny","authority_blocked_target":"conditional:disjoint_target_identity","authority_blocked_source_disposition":"allow","authority_blocked_retirement":"allow","evidence_blocked":"allow"},
+        "source_retention": {"target_preservation":"allow","source_retention":"deny","mechanism_retirement":"conditional:retention_before_retirement","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"deny","authority_blocked_retirement":"allow","evidence_blocked":"allow"},
+        "mechanism_retirement": {"target_preservation":"conditional:target_retirement_gate","source_retention":"conditional:retention_before_retirement","mechanism_retirement":"deny","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"deny","authority_blocked_retirement":"deny","evidence_blocked":"deny"},
+        "behavior_retirement": {"target_preservation":"deny","source_retention":"deny","mechanism_retirement":"deny","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"deny","authority_blocked_retirement":"deny","evidence_blocked":"deny"},
+        "authority_blocked_target": {"target_preservation":"conditional:disjoint_target_identity","source_retention":"allow","mechanism_retirement":"allow","behavior_retirement":"allow","authority_blocked_target":"conditional:disjoint_target_identity","authority_blocked_source_disposition":"allow","authority_blocked_retirement":"allow","evidence_blocked":"allow"},
+        "authority_blocked_source_disposition": {"target_preservation":"allow","source_retention":"deny","mechanism_retirement":"deny","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"deny","authority_blocked_retirement":"allow","evidence_blocked":"allow"},
+        "authority_blocked_retirement": {"target_preservation":"allow","source_retention":"allow","mechanism_retirement":"deny","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"allow","authority_blocked_retirement":"deny","evidence_blocked":"allow"},
+        "evidence_blocked": {"target_preservation":"allow","source_retention":"allow","mechanism_retirement":"deny","behavior_retirement":"deny","authority_blocked_target":"allow","authority_blocked_source_disposition":"allow","authority_blocked_retirement":"allow","evidence_blocked":"conditional:distinct_evidence_scope"}
+      },
+      "predicateRules": {
+        "target_retirement_gate": "The mechanism-retirement gate rank is at least after_verified_target_cutover.",
+        "retention_before_retirement": "The mechanism-retirement gate rank is strictly greater than every same-row source-retention gate rank; source retention does not count as target replacement.",
+        "disjoint_target_identity": "The blocked target identity differs from every preserved target identity; an exact matching target identity is denied.",
+        "distinct_evidence_scope": "Evidence-blocked outcomes have distinct blockedScope values and distinct canonical identities."
+      },
+      "matrixRule": "The validator proves exact kindOrder rows and columns, accepts only allow/deny or conditional:<exact predicateRules key>, and requires byte-identical symmetry across the diagonal. Every unordered pair of normalized row outcomes is evaluated; no prose fallback is permitted.",
+      "cardinalityRules": [
+        "At most one source_retention, one mechanism_retirement and one behavior_retirement outcome per row",
+        "At most one authority_blocked outcome per blockedScope and at most one evidence_blocked outcome per blockedScope",
+        "All canonical outcome identities remain unique"
+      ]
+    },
+    "unresolvedPromotionRule": "Generated output reports exact authority-blocked and evidence-blocked row/outcome counts by batch and scope. READY permits nonzero counts only as a classification-completeness claim. Any later consumer claiming a resolved mapping, migration rehearsal, production activation, source behavior retirement or cutover readiness must reject nonzero applicable unresolved counts; this control never authorizes those actions.",
+    "lifecycleAllowlists": {
+      "draftCompletion": {
+        "baseCommit": "3504b473e16fc40b260652c001fdd6b903b81e40",
+        "paths": [
+          "docs/architecture/redesign/README.md",
+          "docs/architecture/redesign/product-decision-traceability.md",
+          "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/app-shell-shared-presentation-and-test-support.md",
+          "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/reporting-search-and-cross-domain-projections.md",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-BACKEND-FUNCTIONS-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-INVENTORY-TRANSACTION-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-REPORTING-SEARCH-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-M2-DECISION-PACKETS-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/residual-decision-register.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/residual-decision-register.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/_template.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "docs/plans/ledger-accounting-redesign/decision-packets/O-041-vendor-spend-report-semantics.md",
+          "docs/plans/ledger-accounting-redesign/decision-packets/README.md",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
+          "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "scripts/generate-source-query-reconciliation.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs"
+        ]
+      },
+      "ready": {
+        "status": "frozen",
+        "baseCommit": "92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7",
+        "paths": [
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md"
+        ]
+      },
+      "implementation": {
+        "status": "frozen",
+        "baseCommit": "4618c7e5b9fc3a24cd917239bf795aec6117ea5c",
+        "paths": [
+          ".github/workflows/supabase-conversion-control.yml",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-PLATFORM-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-QUERY-PROFILE-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation.generated.json",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
+          "package.json",
+          "scripts/generate-source-query-reconciliation.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs"
+        ]
+      },
+      "promotion": {
+        "status": "frozen",
+        "baseCommit": "1601580655944e02310927a06345bb448679e003",
+        "paths": [
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-SPACES-REVIEW-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-PORT-INVENTORY-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.md",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
+          "scripts/generate-source-query-reconciliation.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs",
+          "scripts/tests/generate-target-query-port-inventory.test.mjs"
+        ]
+      }
+    },
+    "allowlistRule": "Every lifecycle checkpoint compares the exact changed-path set against its frozen byte-sorted unique paths array and exact base commit. DRAFT completion changes only comment scaffolds, reviewed metadata, product-decision documentation and regenerated control artifacts. READY/implementation/promotion remain unavailable while status is unfrozen or paths are empty. No allowlist may include source runtime, target query owner, schema, RLS, Sync, provider, hosted, production, release or Firebase implementation paths.",
+    "implementationBaselineScaffolds": {
+      "generator": {
+        "path": "scripts/generate-source-query-reconciliation.mjs",
+        "sha256": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c"
+      },
+      "tests": {
+        "path": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+        "sha256": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60"
+      },
+      "rule": "At implemented lifecycle, full-history Git evidence must show that both exact paths at implementation.baseCommit have these hashes before replacement; changed-path validation uses NUL-delimited tracked diff plus untracked candidates locally and never follows symlinks."
+    },
+    "physicalDecisionBoundaries": [
+      "docs/architecture/redesign/architecture-decisions.md#A-003 — Supabase Postgres as Target Authority",
+      "docs/architecture/redesign/architecture-decisions.md#A-004 — PowerSync as Target Local Data Plane"
+    ]
+  },
+  "contracts": {
+    "domain": {
+      "items": [],
+      "notApplicable": "This is repository conversion-control metadata, not a product domain contract."
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "A-003 remains globally proposed; this slice defines no Postgres structure or physical access."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "The slice implements no server query, command, job or handler."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "The slice creates no Data API object or grant."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Logical reconciliation evidence is not RLS authorization."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "A-004 remains globally proposed; no Sync Stream or local physical query is assigned."
+    },
+    "localOffline": {
+      "items": [],
+      "notApplicable": "The future checker is deterministic repository tooling and introduces no application-local state."
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No object, attachment, media reference or retention behavior changes."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No app or MCP runtime surface is changed or implemented."
+    },
+    "migrationReconciliation": {
+      "items": [
+        "One aggregate registry binds exact source-query and target-query-authority artifacts plus stable per-row conversion-manifest projections",
+        "Ten capability-sized batches assign all 386 QUERY IDs exactly once at DRAFT and contain exactly one row per assigned QUERY ID at READY",
+        "Each row binds its full source occurrence, human-selected exact source owner/reference and nonempty canonical outcome set",
+        "Generated output expands every reviewed row without translating source physical syntax"
+      ],
+      "notApplicable": ""
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Generated totals by batch, source subsystem and outcome category expose gaps and review drift",
+        "Machine structural results and human semantic review are reported separately"
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "DRAFT contains comment-only scaffolds, an exhaustive human-reviewed ownership partition, all 386 populated rows and no generated reconciliation artifact",
+        "READY, implementation and promotion each use their frozen exact allowlist and immutable CI checkpoint"
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SQUERY-TEST-001",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-001", "SQUERY-REQ-003", "SQUERY-REQ-009"],
+      "expected": "Exact source artifact validation proves the synchronized DRAFT assignedQueryIds sets are disjoint/exhaustive over all 386 IDs; row sets are subsets only while authoring and exactly equal assignments at READY or later with no duplicate, missing or orphan row.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-002",
+      "kind": "migration",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-001", "SQUERY-REQ-009"],
+      "expected": "Full source artifact hash, sourceDigest, canonical full-occurrence hash, exact QUERY derivation from sourcePath/line/operation, selected source-owner ID/ref and canonical {surfaceId,disposition,sourceRef} projection hash mutations all fail closed without a volatile full-manifest hash.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-003",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
+      "expected": "Verified target query outcomes accept only an exact non-decision-blocked TQUERY/TACCESS/mappingHash triple whose owner joins the current manifest at verified, rehearsed or cutover_ready; implemented, earlier, blocked, retired, unknown and missing owners reject.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-004",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
+      "expected": "Future-query and nonquery outcomes accept only an exact manifest surface/member, allowed disposition/status and canonical {surfaceId,disposition,target} mapping hash; status drift is checked separately and does not alter the hash.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-005",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-005"],
+      "expected": "The seven exact outcome schemas plus authority/evidence-blocked scope discriminators reject unknown nested keys/types, invalid identities/order/enums/coexistence, asymmetric/incomplete conflict matrices, unrelated-surface blocker or evidence laundering, missing/content-drifted retirement authority, invalid ordered lifecycle gates/status/disposition, unexpected directory entries and duplicate or noncanonical outcomes.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-006",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-009"],
+      "expected": "Source-only reuses the row owner/ref/hash with source_only disposition; current-source compatibility is exactly the two frozen BatchWriting rows. Authority-blocked binds exact typed authority in batch/registry and the discriminator-selected source owner, TQUERY row or target surface while excluding O-021/A-003/A-004. Evidence-blocked binds typed requirements to the complete selected owner/ref/hash/blocker tuple. Mechanism retirement is strictly after every retention obligation; behavior retirement uses only the four independently extracted, content-hashed authority projections and never owner-manifest self-authorization.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-007",
+      "kind": "operational",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009"],
+      "expected": "Closed schemas reject all per-row physical/index/SQL/RLS/Sync/provider fields, and A-003/A-004 cannot be used as row blockers or outcomes.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-008",
+      "kind": "reconciliation",
+      "owner": "human capability-owner and independent generated-diff review",
+      "covers": ["SQUERY-REQ-008"],
+      "expected": "Two human reviews account for every generated QUERY row and confirm outcome semantics without auto-classification or physical translation.",
+      "status": "passed",
+      "evidence": [
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+      ]
+    },
+    {
+      "id": "SQUERY-TEST-009",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs and human review",
+      "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-008"],
+      "expected": "Human-reviewed batch assignment and classification remain independent of subsystem/path/symbol/expression heuristics; only frozen assignedQueryIds, reviewed rows and exact authority determine ownership/outcomes.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    },
+    {
+      "id": "SQUERY-TEST-010",
+      "kind": "operational",
+      "owner": "conversion control, exact diff review and future Ubuntu CI",
+      "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009", "SQUERY-REQ-010"],
+      "expected": "Exact synchronized lifecycle/allowlists, classification-only READY semantics and unresolved promotion guards, deterministic JSON, read-only check, safe regular non-symlink input/output paths, exact directory contents/CLI arity, unchanged source authority, exact hash-bound lifecycle-neutral target-authority rebinding and conversion-control-before-Swift gating all pass at their authorized lifecycle stage.",
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "VERIFIED lifecycle amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213 and exact 37-path promotion commit ac26010ab720992c2d22d378f78b08e1d1c3760d / immutable run 34067592484. The validator freezes that promotion commit as its historical endpoint so later unrelated batches cannot expand or invalidate the reviewed path set. Historical checkpoints remain complete-DRAFT 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 / run 33871918545, READY 4618c7e5b9fc3a24cd917239bf795aec6117ea5c / run 33872927608, and original implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322. The amendment rebinds only the exact 19-row lifecycle-neutral target authority while preserving all 386 source classifications and 584 outcomes. The 25-test suite joins verified_target_query_port ownership to current manifest truth, accepts only verified/rehearsed/cutover_ready, and rejects every lower, blocked, retired, unknown or missing owner. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. O-041 remains proposed only; 115 authority-blocked and six evidence-blocked outcomes remain unchanged. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
+}

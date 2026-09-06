@@ -1,7 +1,15 @@
 # Item & Expense Entry Flow
-Status: modify
-Last updated: 2026-05-18
+Status: current implementation model — target replacement approved
+Last updated: 2026-08-30
 Implemented: 2026-04-07
+
+> **Target-state notice (2026-08-30):**
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> is authoritative for the redesign. In that target, 1584-paid physical goods
+> enter Business Inventory and later appear as project Item charges; 1584-paid
+> non-itemized project costs become Expenses in Invoicing; and direct
+> client-paid costs remain project Transactions. The one-Transaction-per-category
+> language below is current/historical behavior, not the target model.
 
 ## Summary
 How items and expenses get into a project. Currently there are two overlapping paths for physical items (direct-to-project vs. inventory-first), which creates confusion. This spec replaces them with a single, category-based routing system: the category you select at transaction creation determines whether the flow goes through inventory or goes directly to the project.

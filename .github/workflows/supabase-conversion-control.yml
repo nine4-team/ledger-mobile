@@ -1,0 +1,124 @@
+name: Supabase conversion control
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conversion-control:
+    name: Conversion state and traceability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate conversion control plane
+        run: |
+          npm run target:query-ports:test
+          npm run target:query-ports:check
+          npm run target:query-authority:test
+          npm run target:query-authority:check
+          npm run conversion:check
+          npm run source:query-reconciliation:test
+          npm run source:query-reconciliation:check
+          npm run conversion:capabilities:check
+          npm run conversion:queries:check
+          npm run conversion:residuals:check
+          npm run conversion:gate:m0
+
+      - name: Confirm checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+  target-environment:
+    name: Isolated target environment
+    needs: conversion-control
+    # PowerSync 1.16.1 uses swift-collections BasicContainers APIs that require
+    # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
+    # CI exercises the same supported compiler floor as the target app.
+    runs-on: macos-26
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate target dependency and environment boundaries
+        run: |
+          node --check scripts/check-target-environment.mjs
+          npm run target:environment:check
+
+      - name: Validate generated app and MCP contracts
+        run: |
+          npm --prefix LedgerTargetMCP ci --ignore-scripts
+          npm run target:contracts:check
+          npm run target:mcp:test
+
+      - name: Test isolated target contracts
+        # Swift Testing's `.serialized` trait is suite-local, so independent
+        # PowerSync/SQLCipher integration suites can otherwise open and close
+        # native database runtimes concurrently on the shared CI process.
+        # Runtime-level concurrency remains exercised inside the focused tests.
+        run: swift test --package-path LedgeriOS --no-parallel
+
+      - name: Build target staging for macOS
+        run: npm run target:staging:build:macos
+
+      - name: Build target staging for iOS Simulator
+        run: npm run target:staging:build:ios
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+  local-supabase-provider-slices:
+    name: Local Supabase provider slices
+    needs: conversion-control
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Start isolated local Supabase
+        run: >-
+          npx --yes supabase@2.116.0 start
+          -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Verify Client and Project schema, RLS, RPC, and replay behavior
+        run: |
+          npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning
+          npm run target:supabase:test:db
+          npm run target:supabase:test:space-assignment-destination-read
+          npm run target:supabase:test:project-note-read
+          npm run target:supabase:test:rpc
+
+      - name: Stop isolated local Supabase
+        if: always()
+        run: npx --yes supabase@2.116.0 stop --no-backup
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code

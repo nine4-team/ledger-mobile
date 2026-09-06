@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "status": "verified",
+  "sourceInventory": {
+    "path": "docs/plans/ledger-accounting-redesign/conversion/query-contract.generated.json",
+    "artifactSha256": "2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14",
+    "sourceDigest": "87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4",
+    "expectedOccurrences": 386
+  },
+  "targetAuthority": {
+    "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-crosswalk.generated.json",
+    "artifactSha256": "9effa187e948004a511731239be2ed47ae6f4de393033551c978609a754b0022",
+    "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941"
+  },
+  "conversionManifestPath": "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+  "batchDirectory": "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches",
+  "excludedTemplate": "_template.json",
+  "batches": [
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json","batchId":"SQUERY-IDENTITY-LIFECYCLE-001","owner":"Identity and Account Lifecycle"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json","batchId":"SQUERY-PROJECT-CLIENT-REFERENCE-001","owner":"Projects, Clients, and Shared Reference Data"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json","batchId":"SQUERY-INVENTORY-TRANSACTION-001","owner":"Inventory, Transactions, and Provenance"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json","batchId":"SQUERY-INVOICING-BUDGET-001","owner":"Invoicing, Collection, and Budget"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json","batchId":"SQUERY-ITEM-CREATION-LINK-001","owner":"Item Creation and Accounting Link"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json","batchId":"SQUERY-MEDIA-LIFECYCLE-001","owner":"Media and Attachment Lifecycle"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json","batchId":"SQUERY-SPACES-REVIEW-001","owner":"Spaces, Checklists, and Review"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json","batchId":"SQUERY-REPORTING-SEARCH-001","owner":"Reporting, Search, and Export"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json","batchId":"SQUERY-SOURCE-MIGRATION-AUDIT-001","owner":"Source Migration, Audit, Repair, and Profiling"},
+    {"path":"docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json","batchId":"SQUERY-PLATFORM-CONTROL-001","owner":"Platform, Backend, and Conversion Control"}
+  ],
+  "blockerAuthorities": [
+    {"id":"A-007","kind":"architecture_decision","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-007 — Target Authentication Choice"},
+    {"id":"A-010","kind":"architecture_decision","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-010 — Provider-Independent Principals"},
+    {"id":"A-015","kind":"architecture_decision","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-015 — Complex-Command Optimistic Projection"},
+    {"id":"A-016","kind":"architecture_decision","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-016 — Offline-Access Lease"},
+    {"id":"O-002","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-003","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-004","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-005","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-006","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-007","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-008","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-009","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-010","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-011","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-012","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-013","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-014","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-015","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-016","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-017","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-018","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-019","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-020","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-022","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-023","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-024","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-025","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-026","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-027","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-028","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-029","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-030","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-031","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-032","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-033","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-034","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-035","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-036","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-037","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-038","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-039","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-040","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"},
+    {"id":"O-041","kind":"product_decision","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Open Product Decisions"}
+  ],
+  "evidenceRequirements": [
+    {"id":"E-001","kind":"production_read_profile","path":"docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md","section":"Required Production-Read Confirmation","requiredArtifact":"Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use","ownerBindings":[{"surfaceId":"FUNCTION-2F49CACBCFB6","sourceRef":{"path":"firebase/functions/src/index.ts","line":1033},"expectedSourceOwnerHash":"69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f","blocker":"Production logs/profile should confirm whether externally used","expectedBindingHash":"cf9c76d2e842f3e0bf9bd27cc2dc183c638d5dc3a1116a02079b48c11d630b47"},{"surfaceId":"FUNCTION-FAF99C7D3C5B","sourceRef":{"path":"firebase/functions/src/index.ts","line":81},"expectedSourceOwnerHash":"fa4d1f4beab0e206acb94727947ad619bdb3bbe9b8d8e86c3067d3828a028510","blocker":"Production profile must confirm whether quota/object records exist","expectedBindingHash":"e50433663c5c57ce26264aa1c47ab52260760da65ee3242a8283812289fa0212"}]},
+    {"id":"E-002","kind":"production_read_profile","path":"docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md","section":"Required Production-Read Confirmation","requiredArtifact":"Versioned hashed read-only production reference/object graph covering shared, dangling, missing, retained and zero-reference attachments without downloading object bytes","ownerBindings":[{"surfaceId":"MCPTOOL-35D04B60563F","sourceRef":{"path":"mcp-server/src/tools/items.ts","line":1250},"expectedSourceOwnerHash":"7994cc39fc0866ba161ba3215ec01e0ff44a1b8dccdbc49ea1cc044c7d183854","blocker":"Canonical production reference/object profile","expectedBindingHash":"bda009e9e5b37bcf6054cc0c6b64cc3806012b7c226f9fac0e47660aa94b8a6e"},{"surfaceId":"MCPTOOL-608B84DDBEA5","sourceRef":{"path":"mcp-server/src/tools/items.ts","line":1288},"expectedSourceOwnerHash":"46ed1fb7b08a37e1faa8597173bc800fe41276abe2f8de8b3084a17f9704a6b2","blocker":"Canonical production reference/object profile","expectedBindingHash":"e2360f0d6bd61c7619de6384c0b4b566eec01f31dec16c130b16d88390439f23"}]}
+  ],
+  "retirementAuthorities": [
+    {"authorityId":"RETIRE-AUTH-001","kind":"canonical_target_heading","path":"docs/specs/account-discovery-and-workspace-selection.md","section":"Explicit Workspace Selection","contentSha256":"835e540742d7bbfcc8a4591152aef85777d848cd7915cc2c5b52d38157fe2177"},
+    {"authorityId":"RETIRE-AUTH-002","kind":"canonical_target_heading","path":"docs/specs/inventory-item-invoicing-lifecycle.md","section":"Story 10: Correct a Mistake","contentSha256":"ec991c5a0972f0801854e76ea308b046c994623104313131a879855f4224275a"},
+    {"authorityId":"RETIRE-AUTH-003","kind":"confirmed_decision","decisionId":"D-025","path":"docs/plans/ledger-accounting-redesign/decision-log.md","section":"Confirmed Decisions","contentSha256":"bc8eb28ff4400c306032513759cde14ac92746d2832d5d5d540353e73395f1db"},
+    {"authorityId":"RETIRE-AUTH-004","kind":"architecture_decision","decisionId":"A-017","path":"docs/architecture/redesign/architecture-decisions.md","section":"A-017 — Firebase Is a Migration Source Only","contentSha256":"6a181c00df29d12f9d943e934b12713e350d1c87a07b741c8ebcefcd247c9ab7"}
+  ],
+  "currentSourceCompatibilityBindings": [
+    {"queryId":"QUERY-241AE9EE0E3F","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"},
+    {"queryId":"QUERY-57FA49B52A1C","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"}
+  ],
+  "notes": "IMPLEMENTED aggregate control preserves the exhaustive human-reviewed ownership and all 386 rows / 584 outcomes frozen at READY. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545 and exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed run 33872927608. E-001/E-002 remain required read-only production evidence without claiming it exists or authorizing access; O-041 remains a distinct open business vendor-cash semantics decision; current_source_compatibility remains restricted to the two exact Firebase-only BatchWriting bindings through verified cutover reconciliation. Behavior retirement uses only four independently reviewed, content-hashed authorities. Executable implementation and adversarial review pass locally; immutable implementation CI and VERIFIED promotion remain pending. The control grants no migration, retirement, production or cutover authority and makes no physical/provider/runtime/production claim."
+}

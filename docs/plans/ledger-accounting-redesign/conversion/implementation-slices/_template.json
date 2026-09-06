@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "replace-with-lower-kebab-case-id",
+  "title": "Replace with user or operational outcome",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Replace with one bounded-context owner",
+  "surfaceIds": [],
+  "requirements": [
+    {
+      "id": "SLICE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/replace.md",
+      "section": "Exact Markdown Heading Without Hash Marks",
+      "invariant": "Replace with one observable story or invariant.",
+      "decisionIds": [],
+      "verificationIds": ["SLICE-TEST-001"]
+    }
+  ],
+  "contracts": {
+    "domain": { "items": [], "notApplicable": "" },
+    "postgresSchema": { "items": [], "notApplicable": "" },
+    "serverHandlers": { "items": [], "notApplicable": "" },
+    "dataApiGrants": { "items": [], "notApplicable": "" },
+    "rlsPolicies": { "items": [], "notApplicable": "" },
+    "syncStreams": { "items": [], "notApplicable": "" },
+    "localOffline": { "items": [], "notApplicable": "" },
+    "storageMedia": { "items": [], "notApplicable": "" },
+    "appMcp": { "items": [], "notApplicable": "" },
+    "migrationReconciliation": { "items": [], "notApplicable": "" },
+    "observabilityRunbooks": { "items": [], "notApplicable": "" },
+    "rolloutRollback": { "items": [], "notApplicable": "" }
+  },
+  "verification": [
+    {
+      "id": "SLICE-TEST-001",
+      "kind": "domain",
+      "owner": "Replace with executable test target/path",
+      "covers": ["SLICE-REQ-001"],
+      "expected": "Replace with the outcome that proves the requirement.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Copy this file; files beginning with underscore are ignored by validation."
+}

@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "item-space-clearing-use-case-contracts",
+  "title": "Bind one typed Item placement-clear intent and dispatch the verified clear operation",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Item Space Clearing Use Case",
+  "surfaceIds": ["SWIFT-EEAC86485FF6", "TEST-CA84B398990C"],
+  "requirements": [
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "Clearing intends to replace one Item's optional current Space placement with no Space and remains distinct from destination assignment. Every candidate must carry stable identity, exact revision and caller-supplied current-Space conflict evidence. Nil/no-current-Space intent is structurally unrepresentable and creates no synthetic no-op receipt; stale assigned-looking evidence may dispatch and later conflict.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Bulk Assignment",
+      "invariant": "One explicit nonempty clear may contain candidates naming different current Spaces, but one exact Account and Project-or-Business-Inventory scope binds the complete selection. Exact caller-supplied Item revision/current-Space preconditions support later atomic and idempotent authoritative application; typed local values do not prove actual placement, membership or authorization.",
+      "decisionIds": ["D-019", "D-023", "O-037"],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-005", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Bulk Assignment",
+      "invariant": "Clearing placement changes organizational state only. A later trusted handler derives closure of affected green Item-linked photo-checkmark relationships from authoritative state without deleting photos or bytes. The client submits no attachment reference, marker list, review-note evidence, accounting or provenance value.",
+      "decisionIds": ["D-019", "D-023", "O-023", "O-037"],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ItemSpaceClearingIntent is transient and non-Codable with exactly AccountID, ItemPlacementScope and typed ItemSpaceClearingCandidate values. It owns no destination, nullable field, alternate validator, Item selection/readiness/UI eligibility, route, backend path, media/marker, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ItemSpaceClearingUseCase binds the exact typed Account/scope/candidates through ItemSpaceClearingDraft and ClearItemSpaceAssignmentsCommand construction before invoking ItemSpaceAssignmentClearing.clearItemSpaceAssignments exactly once, then validates and returns the exact receipt and LocalOperationState.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-005", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "The use case preserves CancellationError and every one of the 15 ItemSpaceClearingFailure values thrown by the port. Only an unknown port error maps to localAcceptanceFailed; construction remains outside the port catch and receipt validation remains outside it.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-005", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-CLEARING-001.md",
+      "section": "Implemented Contract",
+      "invariant": "The verified clearing operation remains sole owner of canonical nonempty duplicate-free Item/revision/current-Space input, mixed-current-Space evidence handling, internally consistent exact scope/revision/current-placement preconditions, deterministic ordering, operation envelope, subject, fingerprint, receipt validation and all 15 ItemSpaceClearingFailure values. These are untrusted conflict claims until a trusted handler validates actual state. This use case composes rather than reimplements or extends them.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-005", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "Only the two new target leaves advance. Verified dependencies SWIFT-4C7158974133/TEST-0AB198EB6935 and sibling assignment/use-case/destination leaves SWIFT-4B007A00C393/TEST-51D893DD949E/SWIFT-0540BE125F5A/TEST-DA67EAC9C2EF/SWIFT-164554FA1456/TEST-A3D73145E3EC stay verified and unchanged. Clear-space source surfaces SWIFT-0B434663295C, SWIFT-4C8A8E236450, SWIFT-BDF8928A5FC7, SWIFT-DDFAC91775DA, SWIFT-AB578AEF4330, SWIFT-F3BDD0968C6D, SWIFT-236679C7D427, SWIFT-C593225376EB, TEST-8B555E151D8D, MCPMOD-82DC4C25B1B8 stay characterized; SWIFT-4D0D546A02D8, SWIFT-C0ABD9666AE7, SWIFT-47AEDE21C63C, TEST-6297E07C65AA, TEST-C1A3D3DA5E75, MCPMOD-155A4AB80AC9 stay target_mapped. Each owns broader read, UI, service, marker, persistence, test, or integration behavior.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only executable leaves may change after READY. Archive/O-037, attachment reference or byte deletion/O-023, unassigned/no-op policy, Item read/UI eligibility, marker mutation, physical persistence, optimistic projection, trusted authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, source migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027", "O-023", "O-037"],
+      "verificationIds": ["ITEMSPACECLEARUSE-TEST-001", "ITEMSPACECLEARUSE-TEST-002", "ITEMSPACECLEARUSE-TEST-003", "ITEMSPACECLEARUSE-TEST-004", "ITEMSPACECLEARUSE-TEST-005", "ITEMSPACECLEARUSE-TEST-006", "ITEMSPACECLEARUSE-TEST-007", "ITEMSPACECLEARUSE-TEST-008", "ITEMSPACECLEARUSE-TEST-009", "ITEMSPACECLEARUSE-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ItemSpaceClearingIntent is public, transient and non-Codable with exactly AccountID, ItemPlacementScope and typed ItemSpaceClearingCandidate values.",
+        "The use case reuses the verified ItemSpaceClearingDraft, ClearItemSpaceAssignmentsCommand and ItemSpaceAssignmentClearing port; construction binds the exact Account/scope and canonical caller-supplied conflict candidates before exactly one port call without proving actual placement or authorization.",
+        "Receipt validation follows the port boundary; all 15 operation failures and Swift cancellation remain exact, and only unknown port errors are bounded.",
+        "Nil/no-current-Space intent is structurally unrepresentable, empty selection rejects, no synthetic no-op receipt exists, and stale assigned-looking evidence may dispatch for later authoritative conflict. Mixed assigned/unassigned admission/filtering, Item selection/readiness/UI eligibility, destination assignment, archive, attachment/byte deletion, marker mutation, scope movement, accounting and provenance policy remain outside."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Item, Space, placement, operation, marker, accounting, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted membership/scope/revision/current-placement validation, authorization, marker closure, idempotency store, audit assignment, physical placement clear or authoritative transaction exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation, function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local intent and command validity are not authorization; no Account/Project/Inventory/Item/Space policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Item/Space/operation table, upload connector, optimistic placement/marker mutation or synchronized visibility exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port but adds no physical intent/operation persistence, process/device restart write, optimistic row/marker, retry policy or rejection recovery."},
+    "storageMedia": {"items": [], "notApplicable": "Clear intent submits no attachment, locator, URL, bytes or marker list and defines no derived marker closure, upload, cache, retention or deletion behavior; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No Item selection/read model, Set/Clear Space UI eligibility, loading/empty/error/control behavior, SwiftUI composition, app route, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No source Item.spaceId, Space DTO, AccountContext array, generic null update, route, marker, export row or source-to-target mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded contract failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; the verified clearing operation/tests and every named source app/MCP/service/provider surface remain unchanged.",
+        "The deterministic in-memory clearer cannot physically persist, authorize, synchronize, close or delete markers/media, mutate accounting/provenance, deploy, display, migrate, release or cut over a clear.",
+        "O-023/O-037 and A-003/A-004/A-007/A-015/A-016 remain open or outside because media/archive, provider and production behavior are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "A non-@testable consumer constructs the exact public three-field ItemSpaceClearingIntent. It is compile-time Equatable/Sendable, runtime non-Codable, preserves Project and Business Inventory scope plus boundary Item revision/current-Space values, and exposes no destination, null field, read/UI, media/marker, provider or accounting field.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "Project and Business Inventory input dispatch exactly once. The exact Account and scope bind only their command/draft/envelope/subject/scope-precondition fields, while one Item and mixed-current-Space bulk candidates preserve each literal Item ID, boundary revision and current Space.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "Differently ordered equivalent mixed-current-Space candidate input reaches one identical canonical command/fingerprint after one call. Zero and UInt64.max Item revisions remain exact, stale assigned-looking evidence may dispatch for later authoritative conflict, and no marker/media/accounting value is accepted or derived by the use case.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "Empty or duplicate Item input and positive infinity/negative infinity/NaN capture time fail during draft/command construction with zero calls. Nil/no-current-Space intent is structurally unrepresentable and no synthetic no-op receipt exists; the use case does not claim an Item is actually assigned.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying the verified clear payload and preconditions; a mismatched receipt fails after exactly one call without any physical placement, marker or accounting claim.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project-versus-Inventory scope, every Item ID/revision/current Space, Operation, actor, contract and time against literal baseline and exact changed-leaf expectations. Helpers must not reconstruct expectations through ItemSpaceClearingDraft, ClearItemSpaceAssignmentsCommand or production validation.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-007",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "All 15 ItemSpaceClearingFailure values deliberately thrown by the port remain exact after one call, CancellationError remains structured cancellation, and only an unknown port error maps to localAcceptanceFailed. Construction and receipt failures remain outside the port catch.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "All 15 diagnostic codes remain exact privacy-safe values, and exact intent/nested-command topology exposes only authorized clear draft/envelope/subject/fingerprint plus scope/Item revision/current-Space preconditions—never destination/archive/attachment/marker/scope-movement/accounting/provenance/UI/service/provider/credential/production fields.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-009",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "The READY commit changes only the two comment scaffolds plus named dossier/evidence/control artifacts; the later executable implementation commit changes only the exact two target leaves, and promotion docs are a separate checkpoint. Both preserve verified dependencies SWIFT-4C7158974133/TEST-0AB198EB6935 and siblings SWIFT-4B007A00C393/TEST-51D893DD949E/SWIFT-0540BE125F5A/TEST-DA67EAC9C2EF/SWIFT-164554FA1456/TEST-A3D73145E3EC unchanged. Both preserve characterized clear-space surfaces SWIFT-0B434663295C/SWIFT-4C8A8E236450/SWIFT-BDF8928A5FC7/SWIFT-DDFAC91775DA/SWIFT-AB578AEF4330/SWIFT-F3BDD0968C6D/SWIFT-236679C7D427/SWIFT-C593225376EB/TEST-8B555E151D8D/MCPMOD-82DC4C25B1B8 and target_mapped surfaces SWIFT-4D0D546A02D8/SWIFT-C0ABD9666AE7/SWIFT-47AEDE21C63C/TEST-6297E07C65AA/TEST-C1A3D3DA5E75/MCPMOD-155A4AB80AC9 at those exact statuses, with every other application/provider surface unchanged.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACECLEARUSE-TEST-010",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["ITEMSPACECLEARUSE-REQ-001", "ITEMSPACECLEARUSE-REQ-002", "ITEMSPACECLEARUSE-REQ-003", "ITEMSPACECLEARUSE-REQ-004", "ITEMSPACECLEARUSE-REQ-005", "ITEMSPACECLEARUSE-REQ-006", "ITEMSPACECLEARUSE-REQ-007", "ITEMSPACECLEARUSE-REQ-008", "ITEMSPACECLEARUSE-REQ-009"],
+      "expected": "The exact READY commit passes the complete immutable workflow. Normally the implementation checkpoint includes code plus synchronized dossier/manifest/evidence at implemented status in one commit and passes immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts. For a documented legacy executable-only split, its immutable isolated-target job must pass, then a docs/control-only implemented recovery checkpoint must synchronize the hashes and pass that complete immutable workflow. Only the complete green synchronized implemented checkpoint can authorize a separate docs-only verified promotion.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-ITEM-SPACE-CLEARING-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified after exact READY commit 8154f8bf0c63576e64ac609b1e1b18d53f60ed32 / immutable Actions run 33831367527 and exact synchronized implemented checkpoint 8181512d78783d9ae7561475ed0d63c42d1e9b1e / immutable Actions run 33833543735. A bounded application boundary composes only verified Item Space-clearing operation f5a7ac7598f77859239b66666bc703ee4639c233 / immutable run 33677087616. Exactly two target leaves implement transient typed intent, internally consistent draft/command construction before one clearer call, exact receipt validation afterward, all 15 typed operation failures, cancellation and bounded unknown port errors. Seven focused tests prove ITEMSPACECLEARUSE-TEST-001 through -008; exact READY/implementation/promotion allowlists and preserved status review prove -009. Run 33833543735 passed ITEMSPACECLEARUSE-TEST-010 with traceability in 11 seconds, isolated target all 316 tests in 65 suites, generated contracts, both staging builds and clean artifacts. Earlier executable-only f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4 / run 33832447988 passed isolated target but failed traceability solely because its intentionally separate control checkpoint had not synchronized the two changed leaf hashes; checkpoint 8181512d corrected the process defect without executable changes. Caller input does not prove actual placement, membership or authorization. O-037/O-023 remain outside because archive and attachment reference/byte behavior are excluded. READY review missed a P3 free-text preservation-ID typo: SWIFT-4D0D546A02D was written instead of SWIFT-4D0D546A02D8 in this dossier and its evidence record. The actual manifest/classification/source status and frozen executable test scaffold used SWIFT-4D0D546A02D8, so the typo had no executable or status impact and was corrected at the implemented checkpoint."
+}

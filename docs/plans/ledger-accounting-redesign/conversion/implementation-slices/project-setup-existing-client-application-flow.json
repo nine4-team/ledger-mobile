@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-setup-existing-client-application-flow",
+  "title": "Create a Project for an existing Client from honest local Client and category evidence",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Setup Application Flow",
+  "surfaceIds": [
+    "SWIFT-64E1171C47C5",
+    "TEST-E92B32DB7642",
+    "SWIFT-99B1B3CFBB7A",
+    "SWIFT-1F2F5FE68160"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTSETUPAPP-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "The staging form creates one Project related by stable ClientID to one represented existing active Client, with required Project name, optional canonical description, and the complete selected category set represented as exact nullable allocations. Attachment capture remains separate.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-001", "PROJECTSETUPAPP-TEST-003", "PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-005", "PROJECTSETUPAPP-TEST-007"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Edge Cases",
+      "invariant": "Zero selected categories is valid. No category is selected by default; only represented active non-system categories are offered, and this first application slice sends each selected category with allocation nil without inventing a Project-wide currency, default allocation, or on-the-fly category creation.",
+      "decisionIds": ["O-026", "O-040"],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-001", "PROJECTSETUPAPP-TEST-002", "PROJECTSETUPAPP-TEST-003", "PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-007"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Existing Client selection uses represented stable Client identity rather than copied display text. The new-Client branch remains absent because its shared display-name submission boundary is blocked by O-043; Project setup does not rename, archive, merge, reassign, or correct Clients.",
+      "decisionIds": ["D-006", "O-043"],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-001", "PROJECTSETUPAPP-TEST-003", "PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-007"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "One backend-neutral application model combines independently arriving Client-selection and category-reference snapshots into ProjectSetupFormPreparation, exposes both exact readiness states, admits represented choices under ready, partial, or stale evidence, distinguishes incomplete empty from authoritative empty, and prunes any selection no longer represented.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-001", "PROJECTSETUPAPP-TEST-002", "PROJECTSETUPAPP-TEST-003", "PROJECTSETUPAPP-TEST-005"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "Submission creates a ProjectSetupFormSelection from the current preparation and calls ProjectSetupUseCase exactly once. ProjectID and OperationID are allocated once for that submission and remain stable across an ambiguous retry; the application model never constructs CreateProjectCommand directly and returns the exact validated local OperationReceipt state.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-003", "PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-005", "PROJECTSETUPAPP-TEST-006"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "The UI remains usable from represented local snapshots without network and labels partial, stale, ready, incomplete, and authoritative-empty evidence honestly. Cancellation or bounded failure leaves user input available for retry, stops observations, and cannot mutate model state after stop.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-001", "PROJECTSETUPAPP-TEST-002", "PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-005"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "LedgerTargetAppModel depends only on LedgerTargetCore. A thin target-app adapter alone may import LedgerTargetPowerSync and forward the Account-bound runtime watches and Project setup operation; no provider type, raw database, SQL, credential, visibility policy, or generic backend field crosses into the application model.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-004", "PROJECTSETUPAPP-TEST-006", "PROJECTSETUPAPP-TEST-007", "PROJECTSETUPAPP-TEST-008"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Executable work is limited to the four claimed leaves and frozen package, target-project, staging-shell, generated Xcode project, environment-check, and conversion-discovery touchpoints. It adds no new-Client flow, category administration, budget-pin policy, schema, handler, Data API grant, RLS, Sync Stream, MCP, media, migration, hosted resource, production access, Firebase change, release, or cutover authority.",
+      "decisionIds": ["D-026", "D-027", "A-003", "A-004", "A-007", "A-016", "O-026", "O-040", "O-043"],
+      "verificationIds": ["PROJECTSETUPAPP-TEST-006", "PROJECTSETUPAPP-TEST-007", "PROJECTSETUPAPP-TEST-008", "PROJECTSETUPAPP-TEST-009"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse ProjectExistingClientSelectionSnapshot, BudgetCategoryReferenceSnapshot, ProjectSetupFormPreparation, ProjectSetupFormSelection, NullableCategoryAllocation, ProjectSetupUseCase and OperationReceipt without alternate Client/category/readiness/operation meanings.",
+        "The application model owns transient input, represented selections, bounded diagnostics, stable in-flight identities and receipt presentation only; Core continues to own validation and command construction."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "Existing isolated Project setup schema remains unchanged and owned by project-setup-supabase-powersync-vertical-slice."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted handler or RPC change is needed for this existing-Client application flow."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, function, or grant changes."},
+    "rlsPolicies": {"items": [], "notApplicable": "No policy changes; local represented rows are not re-authorized by the UI."},
+    "syncStreams": {"items": [], "notApplicable": "The slice consumes existing local streams and claims no hosted completeness or final visibility policy."},
+    "localOffline": {
+      "items": [
+        "Combine independent Client and category streams without requiring ready; preserve their exact readiness and false-empty distinctions.",
+        "Stable Project/Operation identities survive ambiguous retry, while a validated queued/applied/rejected receipt is shown exactly and input survives cancellation or bounded failure.",
+        "Stopping the model cancels both observations and prevents later stream events from changing state."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Project attachments and byte durability are separate slices."},
+    "appMcp": {
+      "items": [
+        "Add a backend-neutral LedgerTargetAppModel package product with executable tests, a thin LedgerTargetPowerSync runtime adapter in the staging app, and a SwiftUI form driven only by model state.",
+        "Replace the hardcoded Furnishings toggle and direct CreateProjectCommand construction; show existing Client choices, dynamic configurable categories, exact readiness labels, bounded diagnostics, and local receipt identity/state.",
+        "MCP remains unchanged."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase snapshot, import, mapping, or reconciliation."},
+    "observabilityRunbooks": {
+      "items": ["Expose bounded diagnostic codes and exact local receipt identity/state without logging names, descriptions, category selections, SQL, credentials, or provider payloads."],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": ["The feature remains in the isolated target staging app. Rollback is source reversion/local staging database disposal; Firebase and production remain unchanged."],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTSETUPAPP-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-006"],
+      "expected": "Both stream arrival orders produce the same preparation; subsequent Client/category changes preserve exact canonical rows and readiness without a ready-only gate.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "covers": ["PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-006"],
+      "expected": "Partial, stale, ready, incomplete empty and authoritative empty Client/category snapshots remain distinguishable; configurable rows are active non-system only and zero categories remains submittable.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-005"],
+      "expected": "No Client or category is silently preselected; represented Client/category IDs can be selected under ready, partial, or stale evidence; removed or ineligible choices are pruned before submission; every selected category maps to allocation nil.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-004",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-006", "PROJECTSETUPAPP-REQ-007"],
+      "expected": "Valid input invokes ProjectSetupUseCase through the backend-neutral port exactly once with stable Account/Principal/Client/Project/Operation identity, canonical description and complete nil-allocation set; simultaneous submits produce one call; an ambiguous failure followed by explicit retry reuses the identical ProjectID and OperationID; invalid or changed evidence dispatches nothing.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-006"],
+      "expected": "Queued, applying, applied, rejected, superseded and resolved receipts each retain and expose their exact operation identity/state; typed failures, bounded unknown failure and cancellation retain user input, permit retry, and never report false success.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-006",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/Package.swift and scripts/check-target-environment.mjs",
+      "covers": ["PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
+      "expected": "LedgerTargetAppModel imports only Core, the app adapter alone imports PowerSync, app UI contains no CreateProjectCommand construction, module tests execute through SwiftPM, and Firebase/provider/SQL/backend tokens are rejected from the application model.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-007",
+      "kind": "end_to_end",
+      "owner": "LedgerTargetStaging iOS and macOS builds plus exact source checks",
+      "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
+      "expected": "Both staging destinations compile the dynamic existing-Client/category form with honest readiness and receipt presentation; exact stable accessibility identifiers or labels/status values exist for Project name, existing-Client picker, every category control keyed by stable category identity, submit, Client readiness, category readiness, diagnostic and receipt; the old new-Client toggle, hardcoded Furnishings control, and direct command construction are absent.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-008",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
+      "expected": "The exact READY commit changes only comment scaffolds and synchronized control/evidence artifacts, passes all three immutable jobs, and leaves executable application/provider/schema/MCP/Firebase behavior unchanged.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+    },
+    {
+      "id": "PROJECTSETUPAPP-TEST-009",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PROJECTSETUPAPP-REQ-006", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
+      "expected": "The later exact synchronized implementation checkpoint passes conversion controls, focused and complete nonparallel Swift tests, isolated local Supabase regressions, repeatable target generation, both staging builds, clean artifacts, and independent executable review before verified promotion.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Original READY bc2de1ba / run 33949737440 and implementation 2dc519e6 / run 33951550789 remain valid historical evidence. The lifecycle correction owns and drains every observer/submission across concurrent start/start, stop/stop and stop/start, refuses cancelled noncooperative late success, and makes staging await drainage before runtime close. Two NO-GO reviews drove concrete race and cleanup corrections; final independent re-review is GO with no P0-P3. Fourteen focused tests, 100 exact adversarial repetitions, 44/44 affected tests and all 611 target tests pass locally. Exact corrected commit 261de470 passed all three immutable jobs in run 34035068558, satisfying PROJECTSETUPAPP-TEST-009. O-043 new Client, O-026 administration, O-040 defaults/cards, hosted/Auth/production/Firebase/migration/cutover and A-003/A-004/A-007/A-016 remain open and unadvanced."
+}

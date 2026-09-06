@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-setup-operation-contracts",
+  "title": "Create one Project with authoritative Client identity and exact category setup",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Setup Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-C1C5DFC81448",
+    "TEST-99B322EB971A"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTSETUP-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "A Project setup intent preallocates one stable ProjectID and binds it to one stable ClientID in the same Account; copied Client display text never owns the relationship or authorizes a later Transfer.",
+      "decisionIds": [
+        "D-006"
+      ],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "Project setup explicitly selects an existing Client or supplies a preallocated new Client identity and validated display name; it cannot rename, archive, merge or delete a Client or reassign an existing Project, so O-025 remains open.",
+      "decisionIds": [
+        "D-006",
+        "O-025",
+        "O-043"
+      ],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "The accepted Project intent contains its exact name and optional description plus the complete duplicate-free selected-category set as one payload; a missing category is disabled, a selected null allocation is enabled without a budget, and selected zero Money is explicit zero rather than silently becoming null or vice versa.",
+      "decisionIds": [
+        "D-006"
+      ],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "CreateProject expresses one setup intent through typed Ledger values and exposes no arbitrary field map, collection/path/SQL string, generic CRUD, category-definition mutation, Project correction/lifecycle mutation or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The complete Project setup payload is bound to exactly one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared operation fingerprint and receipt lifecycle; Project setup defines no competing queue, retry, result or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Project creation operation accepts the validated command and returns the shared OperationReceipt or a stable failure; local command validation never substitutes for trusted Account, existing/new Client or selected-category authorization at the later server boundary.",
+      "decisionIds": [
+        "O-026"
+      ],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "Hero media is absent from CreateProject and remains an independently durable attachment receipt whose visible failure cannot invalidate a valid Project; Project reassignment and physical deletion remain absent under O-025 and O-024.",
+      "decisionIds": [
+        "O-023",
+        "O-024",
+        "O-025"
+      ],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-005"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Project/Client/category table, handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": [
+        "PROJECTSETUP-TEST-001",
+        "PROJECTSETUP-TEST-002",
+        "PROJECTSETUP-TEST-003",
+        "PROJECTSETUP-TEST-004",
+        "PROJECTSETUP-TEST-005"
+      ]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectClientSelectionInput distinguishes one existing ClientID from one preallocated new Client payload; both expose one stable relationship ID and only the new case carries a validated Client display name.",
+        "NullableCategoryAllocation binds one stable BudgetCategoryID to typed Money or null. ProjectSetupDraft canonicalizes a complete duplicate-free set by ID while preserving empty, present-null and present-explicit-zero states exactly.",
+        "CreateProjectPayload contains stable Project/Client selection, validated Project display name, exact optional description and the complete category set. CreateProjectCommand binds it to the shared OperationEnvelope, derives the exact Project subject and fingerprint, permits no caller-authored preconditions and revalidates all derived evidence on decode.",
+        "ProjectSetupOperating is the narrow backend-neutral operation port returning the shared OperationReceipt; command receipt validation requires the exact OperationID and exposes no authoritative Project/Client/category row claim.",
+        "ProjectSetupFailure exposes stable bounded time, selection, allocation, binding, precondition, subject, fingerprint, receipt, local-acceptance and malformed-encoding codes while reusing existing display-name and shared operation validators."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates no projects, clients, budget_categories or project_category_allocations table, foreign key, check, uniqueness rule, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative CreateProject handler, existing/new Client lookup/create, category capability check, locking, audit timestamp, idempotency storage, conflict result or server row creation exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor/Client/category binding is not authorization. No membership predicate, category capability, grant, WITH CHECK policy or cross-tenant database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Project/Client/category table, optimistic projection, upload connector or synchronized visibility/readiness claim is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, Project subject and fingerprint; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Equivalent category input order canonicalizes to one command, while duplicate category IDs and changed Account, actor, contract, Project/Client/category payload, subject, preconditions, fingerprint or receipt OperationID fail atomically without rebinding identity or category state.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic Project-row or offline-authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "CreateProject contains no attachment ID, bytes, local object, URL, order or primary-image claim. Hero media remains an independent consumer of the verified attachment-capture receipt and later reference/upload lifecycle."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Project form/picker, current app service, MCP tool/schema, transport, contract-catalog entry or app/MCP parity claim is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No source Project/clientName/category document or media URL is decoded, clustered or transformed. Later import must preserve stable IDs and report every partial Project/category/media source state explicitly."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot create a visible or authoritative Project/Client/category row, authorize membership/category access, mutate reference definitions, choose Auth, attach media, edit/reassign/archive/delete, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-023/O-024/O-025/O-026, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTSETUP-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupOperationTests.swift",
+      "covers": [
+        "PROJECTSETUP-REQ-001",
+        "PROJECTSETUP-REQ-002",
+        "PROJECTSETUP-REQ-003",
+        "PROJECTSETUP-REQ-004",
+        "PROJECTSETUP-REQ-005",
+        "PROJECTSETUP-REQ-006",
+        "PROJECTSETUP-REQ-007",
+        "PROJECTSETUP-REQ-008"
+      ],
+      "expected": "Valid synthetic existing/new Client drafts produce exact-scope typed CreateProject commands; stable IDs, same-name distinction, empty/absent/null/zero category states and optional description remain exact, while no media, lifecycle, correction, provider or generic-write field enters the payload.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupOperationTests.swift",
+      "covers": [
+        "PROJECTSETUP-REQ-001",
+        "PROJECTSETUP-REQ-002",
+        "PROJECTSETUP-REQ-003",
+        "PROJECTSETUP-REQ-004",
+        "PROJECTSETUP-REQ-005",
+        "PROJECTSETUP-REQ-007",
+        "PROJECTSETUP-REQ-008"
+      ],
+      "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/Client/name/description/category/time/subject/fingerprint evidence; equivalent category order canonicalizes identically and no backend/media/path/credential/server-result claim appears.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupOperationTests.swift",
+      "covers": [
+        "PROJECTSETUP-REQ-001",
+        "PROJECTSETUP-REQ-002",
+        "PROJECTSETUP-REQ-003",
+        "PROJECTSETUP-REQ-004",
+        "PROJECTSETUP-REQ-005",
+        "PROJECTSETUP-REQ-006",
+        "PROJECTSETUP-REQ-007",
+        "PROJECTSETUP-REQ-008"
+      ],
+      "expected": "Blank required names, malformed Client selection, duplicate category identity, invalid allocation and changed Account/actor/contract/Project/Client/category/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Project-setup stable diagnostic codes.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupOperationTests.swift",
+      "covers": [
+        "PROJECTSETUP-REQ-001",
+        "PROJECTSETUP-REQ-002",
+        "PROJECTSETUP-REQ-003",
+        "PROJECTSETUP-REQ-004",
+        "PROJECTSETUP-REQ-005",
+        "PROJECTSETUP-REQ-006",
+        "PROJECTSETUP-REQ-008"
+      ],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Project/Client/category payload is refused by the shared lifecycle, and a failing port returns no success receipt.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
+    },
+    {
+      "id": "PROJECTSETUP-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": [
+        "PROJECTSETUP-REQ-001",
+        "PROJECTSETUP-REQ-002",
+        "PROJECTSETUP-REQ-003",
+        "PROJECTSETUP-REQ-004",
+        "PROJECTSETUP-REQ-005",
+        "PROJECTSETUP-REQ-006",
+        "PROJECTSETUP-REQ-007",
+        "PROJECTSETUP-REQ-008"
+      ],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, media, migration or production behavior.",
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
+    }
+  ],
+  "implementationEvidence": [
+    "EVID-PROJECT-SETUP-001"
+  ],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "The verified Project identity/allocation/envelope structure remains reusable. D-006 settles stable Account-scoped Client identity, while O-043 gates only the new-Client display-name submission value consumed by this contract; existing-Client selection is unaffected. O-023/O-024/O-025/O-026 remain fully open because media reference lifecycle, Project deletion, Client correction/reassignment and shared reference-data mutation/authorization are excluded. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

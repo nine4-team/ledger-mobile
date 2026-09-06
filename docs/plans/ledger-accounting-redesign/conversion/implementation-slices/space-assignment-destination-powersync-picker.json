@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-assignment-destination-powersync-picker",
+  "title": "Browse and select active same-scope Space assignment destinations from one encrypted local workspace",
+  "kind": "product",
+  "status": "implemented",
+  "owner": "Space Assignment Destination Picker",
+  "surfaceIds": [
+    "SWIFT-0A528DE84879",
+    "TEST-33BFA84BCBB2",
+    "SWIFT-62E2D7E9B40E",
+    "TEST-0126A06E52D0",
+    "SWIFT-698CCC538675",
+    "SWIFT-A1156933E12E",
+    "CONFIG-048B775BE4E4",
+    "CONFIG-DC77B9F609A7",
+    "CONFIG-5F4C2A8274C3"
+  ],
+  "implementationTouchpoints": [
+    {
+      "surfaceIds": ["CONFIG-048B775BE4E4"],
+      "path": "supabase/migrations/20260905164622_space_assignment_destination_picker.sql",
+      "readySourceHash": "absent-at-ready",
+      "permittedChange": "Create exactly one new isolated schema migration defining the minimal spike_spaces read relation, constraints/indexes, SELECT-only authenticated grant and active-membership Account-scoped RLS policy. Add no Space or Item handler, write grant, command, source-data transform or hosted operation. The new file must be discovered, classified and claimed in the synchronized implementation checkpoint."
+    },
+    {
+      "surfaceIds": ["CONFIG-DC77B9F609A7"],
+      "path": "supabase/tests/space_assignment_destination_picker.test.sql",
+      "readySourceHash": "absent-at-ready",
+      "permittedChange": "Create exactly one runnable pgTAP leaf proving schema invariants, indexed lookup shape, positive and negative SELECT policy behavior, direct-write denial and absence of mutation surfaces. The new file must be discovered, classified and claimed in the synchronized implementation checkpoint."
+    },
+    {
+      "surfaceIds": ["CONFIG-5F4C2A8274C3"],
+      "path": "scripts/test-local-space-assignment-destination-read.mjs",
+      "readySourceHash": "absent-at-ready",
+      "permittedChange": "Create one disposable local Data API runner proving an authenticated active member can read active same-scope rows while anonymous, revoked, cross-Account and archived rows remain non-enumerable and direct writes are denied. It may use only the isolated local Supabase stack and synthetic identities; it must be discovered, classified and claimed in the synchronized implementation checkpoint."
+    },
+    {
+      "surfaceIds": ["FILE-208B7E9D7F47"],
+      "path": "scripts/supabase-conversion-ledger.mjs",
+      "readySourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
+      "permittedChange": "Register only the CLI-generated Space migration, runnable pgTAP leaf and local Space Data API runner for deterministic automatic discovery. Preserve every validation rule, stable-ID formula, existing candidate and output shape."
+    },
+    {
+      "surfaceIds": ["CONFIG-7AE45AD102EA"],
+      "path": "package.json",
+      "readySourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
+      "permittedChange": "Add only one target Supabase read-verification script invoking the isolated Space Data API runner; preserve every existing command and dependency."
+    },
+    {
+      "surfaceIds": ["CONFIG-1FC6F8A5DFA5"],
+      "path": ".github/workflows/supabase-conversion-control.yml",
+      "readySourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
+      "permittedChange": "Invoke only the new isolated Space Data API read test in the existing local-Supabase job after pgTAP, with no credential, hosted, deployment or production change."
+    },
+    {
+      "surfaceIds": ["CONFIG-A8BD153106B8"],
+      "path": "scripts/generate-source-query-reconciliation.mjs",
+      "readySourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
+      "permittedChange": "Re-acknowledge only the exact canonical package.json and byte-exact conversion-workflow integration fingerprints after the two already-authorized Space Data API verification additions. Preserve every source-query baseline, count, schema, lifecycle, mapping, ordering, fail-closed validation and historical implementation checkpoint."
+    },
+    {
+      "surfaceIds": ["CONFIG-428FDE11BBE4"],
+      "path": "powersync/sync-streams.yaml",
+      "readySourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
+      "permittedChange": "Add only two on-demand active-Space read streams: one parameterized by exact stable ProjectID and one parameterized by exact stable AccountID for Business Inventory. Each subscription parameter must narrow a signed active-membership join and select only the minimal destination projection. Preserve every existing stream and add no auto-subscription, command, upload or unrelated row."
+    },
+    {
+      "surfaceIds": ["SWIFT-19D4AA7B766B"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift",
+      "readySourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
+      "permittedChange": "Add only the minimal local Space row table and exact Account/scope lookup index required by this read provider; preserve every existing table, column, index, ownership and mutation path. This local table is synthetic implementation evidence and does not advance A-003 or A-004."
+    },
+    {
+      "surfaceIds": ["SWIFT-75CFE285AF37"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "readySourceHash": "6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6",
+      "permittedChange": "Construct exactly one module-internal Space-assignment destination query whose live completeness producer owns the typed Project-or-Inventory Sync Stream subscription, expose only an Account-bound watch taking typed ItemPlacementScope, route it through the existing close-aware stream lease, and unsubscribe/cancel/join every provider observer before structured database close; preserve all existing runtime behavior and public lifecycle shape."
+    },
+    {
+      "surfaceIds": ["SWIFT-548A8A928FAE"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+      "readySourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
+      "permittedChange": "Add exactly one public Account-bound Space-assignment destination watch taking only typed ItemPlacementScope and forwarding through the existing tracked-stream lifecycle to AccountWorkspacePendingWorkRuntime. Preserve every existing facade method, private ownership boundary, cancellation path and close behavior; expose no database, provider, SQL, subscription, completeness or authorization object."
+    },
+    {
+      "surfaceIds": ["TEST-8D6A15063B2D"],
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "readySourceHash": "cfd89dc204f2dbba8f6467c9df02075d86e463bbb3e53ab2802dbf81a27977cf",
+      "permittedChange": "Add only construction, exact-scope facade, exact Project/Inventory subscription identity, concurrent/post-close refusal, unsubscribe/cancellation/drain and encrypted-restart proof for the Space destination watch; preserve the surface's existing owner and every unrelated fixture."
+    },
+    {
+      "surfaceIds": ["SWIFT-061553E63650"],
+      "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+      "readySourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
+      "permittedChange": "Compose only the isolated Space-assignment destination picker exercise from the existing validated local Account workspace, with explicit synthetic Project-or-Inventory scope; add no production route, Item selection or mutation action."
+    },
+    {
+      "surfaceIds": ["CONFIG-2EBA890AF767"],
+      "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+      "readySourceHash": "51404d6282d659bb452e8ca4d356159554459bd9f3d6b398ff490fb4acf14f8e",
+      "permittedChange": "Regenerate only this standalone target project from the unchanged LedgerTargetProject.yml so the two claimed LedgerTargetApp picker leaves are compiled by LedgerTargetStaging. Accept only deterministic source-membership changes caused by those leaves; preserve the existing staging identity, destinations, package dependencies, build settings and scheme, and do not touch the Firebase source project. This shared generated configuration retains target-environment-isolation as its primary owner and is a build dependency rather than a newly claimed product surface."
+    },
+    {
+      "surfaceIds": ["CONFIG-81235587F306", "FILE-A6E49E3815F4"],
+      "path": "scripts/check-target-environment.mjs",
+      "readySourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "permittedChange": "Add only exact source/build-boundary checks for the six claimed leaves, typed Account/scope runtime facade, non-public provider, represented stable-ID selection, presenter-owned state mapping and absence of Assign/Clear/Space mutation/MCP/hosted wiring; preserve the file's existing primary owner."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SPACEDESTPICKER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "The end-user destination picker observes only active Spaces in one exact Account and exact Project-or-Business-Inventory ItemPlacementScope. It never derives eligibility from an Account-wide array, route state, Item selection or display text, and it performs no assignment or clearing mutation.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "Rows expose exactly stable SpaceID, canonical display name and UInt64 revision, ordered by case-insensitive name, exact name and stable SpaceID. Duplicate display names remain valid, and neither display text nor row position is identity.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-004", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "Waiting for first evidence, incomplete partial, stale, ready nonempty, authoritative empty and bounded read failure are distinct UI states. A represented cached row may be selected offline, but neither represented rows, active local membership nor completeness evidence is current server authorization; zero rows without active scope plus fresh query-specific completeness cannot render authoritative empty.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-004", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md",
+      "section": "Enhanced Pilot Review and Implemented Contract",
+      "invariant": "Reuse SWIFT-164554FA1456 and TEST-A3D73145E3EC unchanged as the sole destination request/row/directory/failure/query contract. This new provider/UI slice consumes that verified authority and does not reinterpret, replace or amend EVID-SPACE-ASSIGNMENT-DESTINATION-001.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-004", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Security, Offline, and Migration",
+      "invariant": "TQUERY-A95F4BE0B9D8 and TACCESS-14FBA8E573D3 remain the exact mapped watchEligibleDestinations authority: authorization, ordering, pagination, readiness, result and scope are all reviewed with unresolvedAxes empty. The proposed project_workspace_or_inventory_by_immutable_scope domain and globally deferred A-003/A-004 physical planes are dependencies, not claims this local READY package advances.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-007", "SPACEDESTPICKER-TEST-008"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One module-internal PowerSync adapter implements SpaceAssignmentDestinationQuerying. The public Account-workspace runtime binds Account implicitly and accepts only ItemPlacementScope; the AppModel and view import Core contracts, not PowerSync, SQL, databases, provider objects or authorization APIs.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007", "SPACEDESTPICKER-TEST-008"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "A minimal local Space projection, active same-Principal Account-membership sentinel and an owned current-process exact-scope Sync Stream subscription drive the encrypted offline watch. Only that subscription's first-sync completion can establish query completeness. Row and completeness startup order is deterministic; cancellation, request replacement and workspace close unsubscribe and join all observers; restart preserves rows but begins incomplete until a new exact subscription completes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-004", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-007", "SPACEDESTPICKER-TEST-008"]
+    },
+    {
+      "id": "SPACEDESTPICKER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Data Authority",
+      "invariant": "The local projection is presentation evidence only. Missing/inactive/cross-Principal membership, cross-Account or cross-scope rows, unknown lifecycle, malformed identity/name/revision, duplicate identity, count mismatch and database failure emit no partial mixed-trust snapshot and reveal only stable bounded diagnostics.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDESTPICKER-TEST-001", "SPACEDESTPICKER-TEST-002", "SPACEDESTPICKER-TEST-003", "SPACEDESTPICKER-TEST-004", "SPACEDESTPICKER-TEST-005", "SPACEDESTPICKER-TEST-006", "SPACEDESTPICKER-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse SpaceAssignmentDestinationRequest, SpaceAssignmentDestinationSnapshot, SpaceAssignmentDestinationDirectorySnapshot, SpaceAssignmentDestinationQuerying and SpaceAssignmentDestinationFailure without adding a second eligibility, readiness, ordering, revision, scope or selection-row model.",
+        "A user may select only a currently represented stable SpaceID. That transient selection is not an Item assignment draft, current-placement claim, authorization grant or mutation receipt; production selection-retention policy is not frozen by this slice."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Add one spike_spaces relation with stable text identity, exact Account, scope_kind constrained to project or business_inventory, nullable project_id constrained present only for Project scope, normalized nonempty display_name, active/archived lifecycle and positive signed-bigint revision. Project scope uses an exact same-Account Project relationship; Business Inventory scope is the owning Account with no synthetic project ID.",
+        "Add the deterministic lookup/index path on Account, scope kind, project identity, lifecycle, lower(display_name), exact display_name and stable Space ID. The provider still canonicalizes and validates results; database collation alone is not final presentation authority.",
+        "The relation is read-only in this slice. No Space/Item command, trigger, handler, optimistic row, assignment, clearing, archive, create or update mutation exists. The schema migration carries no source data and does not advance migration/cutover authority."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No Space read handler and no Create/Update/Archive/Assign/Clear command or authoritative transaction is added."
+    },
+    "dataApiGrants": {
+      "items": [
+        "Revoke all Space-table privileges from PUBLIC, anon and authenticated, then grant authenticated SELECT only. No direct INSERT/UPDATE/DELETE, RPC or SECURITY DEFINER execution path exists for this read slice."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Enable RLS and permit SELECT only when the row lifecycle is active and the authenticated Principal has active membership in the row's exact Account. Same-Account restricted members retain this non-financial active Space-directory read; anonymous, revoked, cross-Account and archived rows are non-enumerable.",
+        "The policy uses the indexed active-membership predicate with stable auth evaluation and cannot accept caller-supplied route or local scope evidence as authorization. Local filtering remains defense-in-depth and presentation shaping, not a substitute for RLS/Sync authorization."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Add two on-demand active-Space streams carrying only stable Space ID, Account, scope kind/project identity, display name, lifecycle and revision. Project scope is parameterized by stable ProjectID; Business Inventory is parameterized by stable AccountID. Each client parameter narrows an authenticated active-membership join. Neither stream downloads unrelated Project Spaces, Item data or archived Spaces or exposes an upload path.",
+        "The provider owns the exact typed-scope subscription, waits for that subscription's first sync before emitting complete, and unsubscribes during request replacement, consumer cancellation and runtime close. Local tests inject a reciprocal subscription source deterministically; a real authenticated Sync authorization/completeness/eviction round-trip remains planned and is required before A-004 or hosted readiness advances.",
+        "Revocation or lifecycle change must remove prior destination entitlement from the synchronized local working set; local membership loss clears prior presentation immediately even before connected eviction proof."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Mirror the server spike_spaces read relation in the local PowerSync schema with stable row identity, exact Account, typed placement-scope kind/identity, display name, lifecycle and revision plus one Account/scope lookup index. Encrypted tests seed synthetic rows; production-shaped rows are owned by the exact Space Sync Stream and no upload path exists.",
+        "Use a sentinel-preserving query over the active exact Principal/Account membership plus exact Account/scope Space rows, then canonicalize through the verified Core directory. Inactive, foreign, malformed and duplicate evidence fails atomically.",
+        "Combine independent row evidence and exact-scope subscription first-sync evidence only after both provide initial evidence. Generic connection or database sync status cannot prove completeness. Active scope plus completed exact subscription may render ready or authoritative empty; otherwise rows remain honest partial/stale evidence.",
+        "The runtime owns one provider, every watch uses its existing close-aware stream lease, and provider/request cancellation unsubscribes and drains row/completeness observers before structured database close. Encrypted restart preserves rows while completeness resets.",
+        "The AppModel switches exact requests generation-safely, exposes tested waiting/partial/stale/ready/authoritative-empty/bounded-failure presentation, and accepts only a represented stable SpaceID as transient selection without inferring hidden rows, current authorization or final production selection-retention policy."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Destination rows carry no attachment reference, object locator, byte, marker, upload, cache, retention or deletion behavior; O-023 remains outside."
+    },
+    "appMcp": {
+      "items": [
+        "A thin target-app runtime adapter opens the Account-bound typed-scope watch; a Core-only observable AppModel and executable presenter state own request lifetime, readiness presentation and represented stable-ID selection.",
+        "The isolated staging view is a thin renderer over the tested presenter state and canonical active destination rows, with no Save, Assign, Clear or Space mutation control. No MCP schema, tool, transport, capability, registration or production app route is added."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space DTO, nullable projectId convention, AccountContext array, source listener, migration fixture, export row, transformation, quarantine or reconciliation behavior is read or changed."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Failures expose stable bounded scope, lifecycle, duplicate, count, time, read and encoding diagnostic codes without row contents, hidden counts, SQL, paths, identities, credentials or provider details.",
+        "Staging labels partial/stale/ready evidence as local only and cannot log or present it as current hosted authorization or Sync coverage."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation is restricted to the six claimed target leaves, the three absent-at-READY physical leaves and every frozen shared touchpoint in implementationTouchpoints on the isolated Supabase branch; source Firebase and production application behavior remain unchanged.",
+        "Rollback is removal of synthetic local staging data and the isolated target implementation. A-003/A-004, hosted resources, migration, release, production access and cutover authority remain unadvanced."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACEDESTPICKER-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceAssignmentDestinationPowerSyncQueryTests.swift",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "A real encrypted local database with active exact membership emits only active exact-Account/exact-scope Project and Business-Inventory rows through the verified request/directory contract, with exact ID/name/revision, duplicate-name acceptance, canonical name/name/ID order and no provider-owned semantic substitute.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceAssignmentDestinationPowerSyncQueryTests.swift",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Both initial row/completeness arrival orders deterministically yield the same evidence; independent changes produce partial/stale/ready/authoritative-empty truth; encrypted close/reopen preserves rows but resets completeness until new current-process evidence; canonical outputs survive restart byte-identically.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-009",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/space_assignment_destination_picker.test.sql",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-008"],
+      "expected": "A clean local reset proves exact Project/Business-Inventory scope constraints, same-Account Project relationship, active/archived lifecycle, positive revision, deterministic lookup index and byte-preserved representable display text, with no Space/Item mutation object or source-data migration.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-010",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/space_assignment_destination_picker.test.sql and scripts/test-local-space-assignment-destination-read.mjs",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Authenticated active owner/admin/employee membership reads active same-Account Space rows across Project and Business Inventory scope through SELECT-only RLS and the disposable local Data API runner, including duplicate display names, without requiring a financial or Space-mutation capability.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-011",
+      "kind": "rls_negative",
+      "owner": "supabase/tests/space_assignment_destination_picker.test.sql and scripts/test-local-space-assignment-destination-read.mjs",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-008"],
+      "expected": "pgTAP plus the disposable local Data API runner prove anonymous, revoked and cross-Account callers and every caller querying archived rows cannot enumerate them; authenticated callers cannot directly insert, update or delete; local scope input cannot broaden server visibility; no handler or RPC exists.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-012",
+      "kind": "sync_authorization",
+      "owner": "Future isolated authenticated Space assignment destination PowerSync rehearsal",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Real ProjectID-parameterized and Inventory-AccountID-parameterized sessions download only active authorized same-scope Space rows, establish completeness only from their own first sync, remove entitlement after membership/lifecycle change, never download unrelated-Project/foreign/archived rows and leave no Item or mutation surface; this remains planned and cannot advance A-004 in READY.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-013",
+      "kind": "advisor",
+      "owner": "Supabase Postgres security, indexing and collation review",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Review confirms least-privilege SELECT-only grants/RLS, indexed membership and Account/scope/order paths, exact conditional Project relationship, no write surface, stable auth evaluation and no assumption that database collation replaces Core canonical ordering.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceAssignmentDestinationPowerSyncQueryTests.swift and LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Cross-Account calls refuse before observation; missing/inactive/cross-Principal membership clears prior rows and cannot yield false empty; cross-scope/inactive/malformed/duplicate/overflow rows and database failure yield no mixed snapshot; exact Project/Inventory subscriptions are owned, unsubscribed and joined on consumer cancellation, request replacement and runtime close with no late emission.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-004",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/SpaceAssignmentDestinationStagingExerciseTests.swift and scripts/check-target-environment.mjs",
+      "covers": ["SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "Executable presenter/AppModel tests cover every waiting/partial/stale/ready/authoritative-empty/failure state, accept selection only by a represented stable SpaceID, ignore late prior-request events, and expose no Item/Assign/Clear/Space mutation or MCP boundary without freezing unspecified production selection-retention policy.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceAssignmentDestinationPowerSyncQueryTests.swift and LedgeriOS/LedgerTargetAppModelTests/SpaceAssignmentDestinationStagingExerciseTests.swift",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "An isolated user can open one typed Project or Inventory destination picker, see honest waiting/partial/stale/ready/empty/failure presentation, browse deterministically ordered active same-scope rows offline and select a represented stable SpaceID without selecting an Item or issuing a mutation.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-006",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetApp/SpaceAssignmentDestinationStagingExerciseView.swift and target staging builds",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-008"],
+      "expected": "The build-only isolated picker compiles as a thin renderer over the presenter states and represented stable-ID action proven in TEST-004; source-boundary checks prove no independent filtering/state semantics, production route, raw editor, Item selection, Assign/Clear action, Space mutation or MCP surface. Compilation is not treated as behavioral rendering proof.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-007",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml, package.json, scripts/supabase-conversion-ledger.mjs and scripts/check-target-environment.mjs",
+      "covers": ["SPACEDESTPICKER-REQ-001", "SPACEDESTPICKER-REQ-002", "SPACEDESTPICKER-REQ-003", "SPACEDESTPICKER-REQ-004", "SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007", "SPACEDESTPICKER-REQ-008"],
+      "expected": "The exact future implementation checkpoint passes conversion controls, focused and complete nonparallel target tests, source/build-boundary checks and both staging builds with clean generated artifacts, no hosted or production access and A-003/A-004 unchanged.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"]
+    },
+    {
+      "id": "SPACEDESTPICKER-TEST-008",
+      "kind": "operational",
+      "owner": "Target query logical-authority crosswalk and READY evidence review",
+      "covers": ["SPACEDESTPICKER-REQ-005", "SPACEDESTPICKER-REQ-006", "SPACEDESTPICKER-REQ-007"],
+      "expected": "TACCESS-14FBA8E573D3/TQUERY-A95F4BE0B9D8 still map to SWIFT-164554FA1456 with all six axes reviewed, unresolvedAxes empty, unpaged local shape and A-003/A-004 proposed; the prior read-contract evidence and source hash remain unchanged.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Implemented from the exact green READY boundary. Nine claimed target surfaces provide additive SELECT-only Postgres/RLS, exact on-demand Project/Inventory Sync Streams, encrypted local PowerSync observation with retained-epoch-safe freshness and deterministic drain, a Core-only presenter/AppModel, thin runtime adapter, and isolated staging picker. Independent database and Swift reviews returned GO after correcting temporal tests, readiness, stale-row causality, subscription lifetime, raw-name preservation and retained PowerSync epoch handling. Exact implementation f89e9bda passed all three immutable jobs in run 33985685659. TEST-001 through -011 and -013 pass; TEST-012 real authenticated hosted PowerSync remains planned. A-003/A-004 remain proposed. No Space or Item mutation, Item selection, MCP, source-data migration, hosted call, production access, Firebase change, release or cutover is authorized."
+}

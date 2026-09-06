@@ -1,0 +1,214 @@
+{
+  "batchId": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
+  "title": "Client archive through the isolated target browser",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+    "EVID-CLIENT-ARCHIVE-001",
+    "EVID-CLIENT-ARCHIVE-USE-CASE-001",
+    "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-35D653A39618",
+      "acknowledgeSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
+      "currentBehavior": "Implements generic Account-bound operation identity construction and validation for Client archive while preserving the existing Project archive operation bytes.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable local-only implementation independently reviewed GO; Project archive identity behavior remained byte-identical under regression proof.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["generic account-bound operation identity construction and validation"],
+        "securityRequirements": ["Bind trusted command-family prefix, exact Account digest and canonical UUID", "Reject cross-Account, noncanonical UUID and arbitrary-prefix rebinding"],
+        "syncRequirements": ["Client archive uses client-archive prefix while Project archive accepted bytes remain unchanged"]
+      },
+      "migration": {"rule": "Use only target-local typed identities.", "reconciliation": ["Identity validation is byte-for-byte deterministic across acceptance, upload and result observation"]},
+      "verification": {"tests": ["ClientArchivePowerSyncVerticalSliceTests", "existing ProjectArchivePowerSyncVerticalSliceTests"], "acceptance": ["Both operation families prove exact Account binding and Project archive regression"]}
+    },
+    {
+      "id": "SWIFT-E431F314B326",
+      "acknowledgeSourceHash": "18c5012c818f3c615a6218be8223bc167f09a0db92abfba7c80f7895de012fa3",
+      "currentBehavior": "Implements encrypted atomic Client-archive acceptance, exact Account-bound identity and replay, dependency-aware FIFO state, local lifecycle overlay and strict terminal/readback reconciliation without mutating synchronized rows.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable local-only implementation independently reviewed GO; existing schema, directory, Project setup, upload and runtime files remain bounded shared touchpoints.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["encrypted Client archive acceptance, dependency ordering and optimistic lifecycle reconciliation"],
+        "securityRequirements": ["Bind exact Account, actor, Operation, Client, contract, fingerprint and expected revision", "Keep archive optimism local-only and enqueue only immutable command evidence"],
+        "syncRequirements": ["Queued dependency waiting, terminal dependency outcomes, restart, rejection rollback and authoritative archived-readback cleanup remain exact"]
+      },
+      "migration": {"rule": "Create no Firebase adapter or dual-write path.", "reconciliation": ["Applied optimism remains until exact archived or newer authoritative Client evidence; rejection removes only matching overlay"]},
+      "verification": {"tests": ["ClientArchivePowerSyncVerticalSliceTests"], "acceptance": ["Implementation replaces this comment-only scaffold only from immutable green READY"]}
+    },
+    {
+      "id": "SWIFT-375BF832F772",
+      "acknowledgeSourceHash": "e313791f9593fe4d3a53c8201121d02c702ab66fcf55aa1cbd29303c91a874b8",
+      "currentBehavior": "Implements the scoped-user Supabase Client-archive RPC adapter with exact command encoding, Account-bound OperationID validation and strict terminal-result identity, hash, timestamp and revision validation.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable adapter uses only injected isolated-target endpoint, publishable key and scoped user token; no hosted endpoint or service-role credential is embedded.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["Swift scoped-user Client archive RPC adapter"],
+        "securityRequirements": ["Use injected publishable-key and user-token authority only", "Validate exact terminal identity/fingerprint before completion"],
+        "syncRequirements": ["Preserve full UInt64 expected-revision command evidence without floating-point coercion"]
+      },
+      "migration": {"rule": "Use only a validated isolated target environment.", "reconciliation": ["Canonical command bytes bind app, upload and trusted handler"]},
+      "verification": {"tests": ["ClientArchivePowerSyncVerticalSliceTests", "scripts/test-local-client-archive-rpc.mjs"], "acceptance": ["Malformed credentials and mismatched/unknown results fail closed"]}
+    },
+    {
+      "id": "TEST-3B1F3E444423",
+      "acknowledgeSourceHash": "a1238e20677002103a99b3cbbd86857f9ae203342a93b089a3b467616c38b67f",
+      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope and preservation; retained archive, directory and Client-detail providers are drained on success, expected-error and assertion-return paths before database close.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable synthetic provider tests pass 12/12 focused and in the 494-test complete nonparallel Swift suite.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["deterministic Client archive PowerSync and Project-setup interlock matrix"],
+        "securityRequirements": ["Negative scope, malformed evidence, credentials and unauthorized-local-row cases are mandatory"],
+        "syncRequirements": ["Encrypted restart, FIFO/terminal dependency, lifecycle, rejection and readback cases are mandatory"]
+      },
+      "migration": {"rule": "Use synthetic identities and disposable encrypted databases only.", "reconciliation": ["Prove exact allowed mutation set, no cascade/related writes and preservation of every currently represented Project/history row; extend the regression for each later related table"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ClientArchivePowerSyncVerticalSliceTests"], "acceptance": ["Every frozen provider case is executable before advancement"]}
+    },
+    {
+      "id": "SWIFT-4D4DB03E0A24",
+      "acknowledgeSourceHash": "b9bcc3e51b3bcd992d10dbb337525d746575b499dfee129742b81f246049a897",
+      "currentBehavior": "Implements Core-only Client archive admission, exact current-evidence revalidation, stable ambiguous retry, operation observation, stale-generation rejection and bounded six-state presentation over the existing Client browser.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable AppModel remains backend-neutral, interprets no provider rows and grants no archive authority.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["current-active-evidence-bound Client archive submission and exact operation-state application model"],
+        "securityRequirements": ["Consume typed Account-bound Core evidence and bounded diagnostics only"],
+        "syncRequirements": ["Preserve operation truth, stable ambiguous retry and full cancellation/drainage"]
+      },
+      "migration": {"rule": "Compose target Core contracts only.", "reconciliation": ["Rejected conflict requires refreshed active evidence and new explicit identity"]},
+      "verification": {"tests": ["ClientArchiveBrowserStagingExerciseTests"], "acceptance": ["Admission, operation, retry and lifecycle matrices pass deterministically"]}
+    },
+    {
+      "id": "TEST-E65089F7DC26",
+      "acknowledgeSourceHash": "90406a19380221995d6926adfe7c1d7e358000dd16557e7e5581af0a03845c18",
+      "currentBehavior": "Runs deterministic Client archive browser/AppModel tests for unavailable and current evidence, exact dispatch/retry, shared Project-setup eligibility, six operation states, selection changes, recovery, cancellation, stop/restart and runtime-close drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable synthetic AppModel tests pass 9/9 focused and in the 494-test complete nonparallel Swift suite.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["deterministic archive-through-Client-browser application matrix"],
+        "securityRequirements": ["Use synthetic typed identity/readiness/revision/failure evidence only"],
+        "syncRequirements": ["Exercise shared Active-to-Archived projection, Project-setup refusal, recovery, termination, stop and restart isolation"]
+      },
+      "migration": {"rule": "Use no source export or hosted data.", "reconciliation": ["Assert exact current active presentation before every command"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ClientArchiveBrowserStagingExerciseTests"], "acceptance": ["Every frozen application case passes deterministically"]}
+    },
+    {
+      "id": "SWIFT-BD7BF890CB6C",
+      "acknowledgeSourceHash": "4a8104ee8fabaf829e6cf4c4675fc3b42359f18b5e933f79cdf89bdaccfdf84e",
+      "currentBehavior": "Implements the thin Account-bound target runtime adapter that forwards Client archive submission and exact operation-state observation without embedding provider policy.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable adapter keeps provider and policy ownership outside the app target.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["thin Account-bound Client archive and operation-observation adapter"],
+        "securityRequirements": ["Expose no database, SQL, endpoint, credential or Account rebinding"],
+        "syncRequirements": ["Forward typed archive and exact operation streams without rewriting semantics"]
+      },
+      "migration": {"rule": "Adapt only isolated target runtime.", "reconciliation": ["Never access Firebase code or data"]},
+      "verification": {"tests": ["target environment checks and both staging builds"], "acceptance": ["Only thin app adapter imports PowerSync"]}
+    },
+    {
+      "id": "CONFIG-8F9EA6CCC0DB",
+      "acknowledgeSourceHash": "8014b85dd620e47dabfe1f5d4608116c01453f1e4f9cf5653572797bb65aec76",
+      "currentBehavior": "Implements the local Client-archive Postgres handler and authenticated RPC plus bounded Project-setup serialization repair with auth-first capability checks, exact Account-bound identity/request binding, deterministic Client locking, narrow lifecycle/revision/time mutation and immutable terminal results.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Filename was generated by the pinned Supabase CLI. Clean local reset, 176/176 pgTAP assertions, zero database-lint findings and scoped Data API verification pass.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["trusted Client archive handler, authenticated RPC and bounded Project-setup Client-lock repair"],
+        "securityRequirements": ["Auth-first capability validation, exact Client lock and no direct update grants", "Project setup rechecks active Client under the shared lock and returns durable rejection"],
+        "syncRequirements": ["Immutable operation results and authoritative Client/Project rows drive reconciliation"]
+      },
+      "migration": {"rule": "Apply only to disposable isolated target database; read no Firebase data.", "reconciliation": ["All existing Projects/history remain untouched and no Project succeeds after archive"]},
+      "verification": {"tests": ["supabase/tests/client_archive_vertical_slice.test.sql.ready", "scripts/test-local-client-archive-rpc.mjs"], "acceptance": ["Later DDL passes reset, lint, pgTAP, Data API, concurrency/security review while inert marker remains"]}
+    },
+    {
+      "id": "CONFIG-2DBC5A626444",
+      "acknowledgeSourceHash": "ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d",
+      "currentBehavior": "Retains the exact reviewed comment-only READY inventory as a physically present inert marker; executable Client archive pgTAP ownership moved to CONFIG-86F1E734BC70.",
+      "disposition": "retire",
+      "status": "retired",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Retired in place, byte-for-byte, by runnable replacement CONFIG-86F1E734BC70. The inert `.sql.ready` marker remains outside normal pgTAP discovery at SHA-256 ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d; package.json remains unchanged.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["retired READY reservation for Client archive database tests; replaced by CONFIG-86F1E734BC70"],
+        "securityRequirements": ["Prove manager success and restricted/revoked/anonymous/cross-Account denial", "Prove direct-write denial and auth-first non-enumeration"],
+        "syncRequirements": ["Validate exact terminal result/revision evidence consumed by local reconciliation"]
+      },
+      "migration": {"rule": "Retain this reservation byte-for-byte as an inert historical marker; runnable synthetic local proof is owned by CONFIG-86F1E734BC70.", "reconciliation": ["No statement or archive behavior executes from this retained marker"]},
+      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["CONFIG-2DBC5A626444 remains physically present and byte-identical while CONFIG-86F1E734BC70 is the sole runnable classified and claimed Client archive pgTAP leaf"]}
+    },
+    {
+      "id": "CONFIG-86F1E734BC70",
+      "acknowledgeSourceHash": "3977c2391a394cba7b440abc6b619403bc1469cc0c551a96d553cb25a46147f5",
+      "currentBehavior": "Runs 53 Client archive pgTAP assertions covering narrow lifecycle mutation and preservation, exact replay/request binding, full revision boundaries, archive/Project-setup concurrency, reserved OperationID namespace, RLS and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Runnable replacement for retired inert READY marker CONFIG-2DBC5A626444. It is the sole runnable Client archive pgTAP leaf and is discovered by the authorized conversion-control touchpoint.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["runnable Client archive invariants, preservation, replay, concurrency, Project-setup serialization and RLS tests"],
+        "securityRequirements": ["Prove manager success and restricted/revoked/anonymous/cross-Account denial", "Prove direct-write denial and auth-first non-enumeration"],
+        "syncRequirements": ["Validate exact terminal result/revision evidence consumed by local reconciliation"]
+      },
+      "migration": {"rule": "Use synthetic local fixtures only.", "reconciliation": ["Replace only retired inert CONFIG-2DBC5A626444 while preserving it physically and byte-identically"]},
+      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["All 53 Client archive and 176 cumulative pgTAP assertions pass"]}
+    },
+    {
+      "id": "CONFIG-8A30E46E3901",
+      "acknowledgeSourceHash": "9005840174642c6d2cbcbdab37abbdf515aaef1ed52fe6ec92ab4f125b5f0890",
+      "currentBehavior": "Runs disposable local scoped-user Data API verification for valid Client archive apply/replay, Account-bound identity, archive/Project-setup concurrency, authorization, operation-result scoping and immutable terminal binding.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable local-only runner passed together with the Client creation, Project setup and Project archive runners; hosted endpoints and service-role credentials remain prohibited.",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": ["scoped-user local Data API Client archive verification"],
+        "securityRequirements": ["Use synthetic user tokens and local publishable credentials only", "Prove actor/scope/capability enforcement without payload logging"],
+        "syncRequirements": ["Exercise canonical command, replay, archive/create concurrency and terminal result binding"]
+      },
+      "migration": {"rule": "Call only disposable local Supabase stack.", "reconciliation": ["No network behavior exists at READY"]},
+      "verification": {"tests": ["node scripts/test-local-client-archive-rpc.mjs"], "acceptance": ["Later runner proves apply, replay, concurrency and scoped access"]}
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-item-accounting-section-contracts",
+  "title": "Derive Project Item accounting state and ordered local sections",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Project Item Accounting Sections",
+  "surfaceIds": [
+    "SWIFT-008B49A474D1",
+    "TEST-0E4B478B0C55"
+  ],
+  "requirements": [
+    {
+      "id": "ITEMACCOUNT-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Accounting-State Rule",
+      "invariant": "A project Item is Accounted For exactly when it has at least one authoritative current-project client-paid Purchase relationship or billable Item charge/credit occurrence in available, live-Invoice or frozen-paid history; when the relationship working set is authoritative, an Item with none is Unaccounted For. Missing relationships in incomplete local evidence remain unresolved rather than being treated as authoritative absence. Space, status, category, detail completeness, Invoice selection and sent state cannot change the product-state derivation.",
+      "decisionIds": ["D-019", "D-023"],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-002", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    },
+    {
+      "id": "ITEMACCOUNT-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "One Item Identity",
+      "invariant": "Every qualifying Purchase relationship and billable occurrence references one stable physical Item identity; a section projection never creates, copies, replaces or merges an Item and duplicate Item or relationship identity is invalid evidence.",
+      "decisionIds": ["D-022"],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    },
+    {
+      "id": "ITEMACCOUNT-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Target Real-Item Requirements",
+      "invariant": "A real project Item with no qualifying relationship is a valid Unaccounted For read row with zero accounting relationship evidence; category, optional price, vendor, SKU, status and Space are not substitutes for Link evidence or budget authority.",
+      "decisionIds": ["D-018", "D-019", "D-023", "D-025"],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-002", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    },
+    {
+      "id": "ITEMACCOUNT-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Bounded Contexts",
+      "invariant": "The Project Items read boundary owns physical Item identity, project placement, optional Space and accounting-link state while consuming typed Transaction/Invoicing relationship evidence; it does not own paid-money mutation, Invoice settlement or persistence mechanics.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-002", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    },
+    {
+      "id": "ITEMACCOUNT-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The Account/Project-scoped immutable local snapshot carries deterministic row order, local version, as-of time, readiness/completeness and canonical evidence so authoritative empty and incomplete working sets remain distinct across restart and tamper is refused.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-002", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    },
+    {
+      "id": "ITEMACCOUNT-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable with synthetic deterministic evidence while the released Firebase app remains unchanged and no Item/Link writer, occurrence schema, provider, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMACCOUNT-TEST-001", "ITEMACCOUNT-TEST-002", "ITEMACCOUNT-TEST-003", "ITEMACCOUNT-TEST-004", "ITEMACCOUNT-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ItemAccountingConnectionID and BillableItemOccurrenceID are distinct stable IDs; typed ClientPaidPurchaseAccountingConnection and BillableItemAccountingOccurrence evidence bind exact Account/Project/Item identity and only the product-approved qualifying relationship kinds/phases.",
+        "ProjectItemAccountingRow retains one stable Item identity and optional Space evidence while deriving accountedFor from the presence of duplicate-free qualifying relationships, unaccountedFor only from authoritative relationship absence, or relationshipEvidenceIncomplete as a local-read resolution that is not a third product accounting state; no mutable cached boolean is accepted as authority.",
+        "ProjectItemAccountingSectionsSnapshot preserves deterministic source order within Unaccounted For first and Accounted For second, keeps unresolved rows outside both product sections, rejects duplicate/cross-scope rows, and exposes authoritative-empty versus incomplete/partial/stale local evidence.",
+        "ProjectItemAccountingQuerying is an Account/Project-scoped local watch port; ProjectItemAccountingSectionFailure exposes closed stable validation, scope, duplicate, readiness, derived-evidence, fingerprint and malformed-encoding codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free projection creates no Item, Purchase relationship, occurrence, Invoice membership, check, foreign key, uniqueness rule, index, view or migration; O-007/O-015 and the full Link/occurrence slice still own final persistence."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No CreateItem, LinkItemAsClientPaid, LinkItemAsBusinessPaid, move, credit, collection, correction or projection-refresh handler is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Local Account/Project relationship validation is not authorization. No server row, membership/financial predicate, grant or RLS policy exists in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, parameter, local table, download predicate, upload rule or provider readiness claim is defined; the value records the readiness evidence a later authorized Project stream must supply."
+    },
+    "localOffline": {
+      "items": [
+        "Relationship, row and section values are immutable canonical Codable evidence; exact identity, section order, optional Space, local version, as-of, completeness/readiness and fingerprints survive byte-identical restart.",
+        "A relationship-free Item becomes Unaccounted For only when the Project relationship working set is authoritative; partial/stale/incomplete evidence keeps that Item explicitly unresolved and outside both product sections, while already-present qualifying evidence may still prove Accounted For.",
+        "Decoding reconstructs through classification, Account/Project/Item, relationship-kind, duplicate, readiness, derived-state/section and fingerprint validators so cross-scope or tampered evidence never partially opens."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Optional Space identity is ordinary placement evidence; this slice contains no attachment byte, path, URL, cache, upload, retention or deletion behavior and cannot choose O-023."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared read semantics and port are defined, but no current Project Items screen/card, Link entry point, MCP DTO/tool/resource or transport adapter is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Item.transactionId, proto, Invoice badge or lineage evidence is decoded or transformed. Later migration must correlate each qualifying relationship and quarantine ambiguity rather than infer Link from presentation fields."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, projection-drift metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "The slice cannot create/Link/move/delete an Item, activate Unaccounted For production writes, expose accounting data, deploy, release or cut over.",
+        "O-003, O-007, O-015, O-016, O-021, O-023 and O-027 remain outside this read boundary; derived accounting state does not approve credit settlement, occurrence schema, acquisition evidence, UI layout, media retention or Item minimum evidence."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMACCOUNT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
+      "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
+      "expected": "Complete synthetic Project evidence places relationship-free real Items in Unaccounted For first and client-paid Purchase or available/live/frozen billable-occurrence Items in Accounted For second while preserving one Item identity and deterministic order.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
+    },
+    {
+      "id": "ITEMACCOUNT-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
+      "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
+      "expected": "Changing optional Space or non-authoritative presentation evidence does not change accounting state; charge and credit occurrence polarity and available/live/frozen phase all remain qualifying without choosing settlement, amount, budget or Invoice-lifecycle policy.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
+    },
+    {
+      "id": "ITEMACCOUNT-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
+      "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
+      "expected": "Representative complete, authoritative-empty, partial and stale section evidence round-trips byte-identically with relationship identity, row/section/unresolved order, optional Space, local version, as-of, readiness/completeness, derived resolution and fingerprints intact without local or remote state; incomplete relationship absence is never encoded in either product section.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
+    },
+    {
+      "id": "ITEMACCOUNT-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
+      "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
+      "expected": "Invalid Purchase classification, cross-Account/Project/Item relationship, duplicate relationship/Item identity, false authoritative absence, malformed values and tampered state/order/fingerprint evidence fail atomically with stable bounded codes.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
+    },
+    {
+      "id": "ITEMACCOUNT-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming Item/Link, schema, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 Project Item read foundation only. It implements confirmed D-019/D-022/D-023 accounting-state and one-identity projection semantics over typed relationship evidence, but no Item writer/Link, occurrence persistence, credit settlement, amount/category/budget effect, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. O-003/O-007/O-015/O-016/O-021/O-023/O-027 remain fully open outside the slice."
+}

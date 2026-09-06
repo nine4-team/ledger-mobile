@@ -1,0 +1,1363 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/generate-target-query-logical-authority-crosswalk.mjs",
+  "sourceInventory": "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.json",
+  "sourceRegistry": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json",
+  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
+  "physicalPlanes": {
+    "local": {
+      "decision": "A-004",
+      "status": "deferred"
+    },
+    "postgres": {
+      "decision": "A-003",
+      "status": "deferred"
+    }
+  },
+  "totals": {
+    "queries": 19,
+    "mapped": 7,
+    "mappedWithUnresolvedAxes": 11,
+    "decisionBlocked": 1
+  },
+  "queries": [
+    {
+      "taccessId": "TACCESS-5057FDB2D65C",
+      "tqueryId": "TQUERY-038289DD7D2C",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "protocol": "SpaceListQuerying",
+      "selector": "watchSpaces",
+      "category": "observation",
+      "signatureHash": "9089cf0209e5762269ae68e18397200140333722a9efc08bf72d6bc90d8644f3",
+      "mappingHash": "3d1be7912b4dd7144cbcdf063a588c125c5ba05cbff048486b7cb392d2517c65",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Target Space Browsing"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Workspace queries"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Implementation Boundary"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Account and immutable Space scope narrow an already-authorized local working set and never grant visibility by local presence."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Case-folded display name, exact display name, then stable Space ID ascending; duplicate display names remain distinct."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged exact-scope observation; search, authoritative Item count and primary-image projection remain separate required browser work."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Ready complete source-exhaustive evidence alone can establish authoritative active-list emptiness; partial, stale, incomplete and failed evidence cannot."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Canonical scoped Space rows retain stable identity, explicit lifecycle, revision and validated checklist evidence; active presentation excludes archived rows and represents Item count as unavailable rather than zero."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and exact Project-or-Business-Inventory Space scope."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace_or_inventory_by_immutable_scope"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-A63F74EAA132",
+      "tqueryId": "TQUERY-136644A3C02A",
+      "ownerSurfaceId": "SWIFT-D7F3D08FA568",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+      "protocol": "ClientCoreDetailsQuerying",
+      "selector": "watchClientCoreDetails",
+      "category": "observation",
+      "signatureHash": "c90bdaf7f57251c6fa31ee56208ae5d6a82b33f5d65b49be03b102f2da7fdc50",
+      "mappingHash": "e3646fd9cb5191ab98b5baed34d27c203f69a87e4efc57cd4ba607772413f20c",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target",
+          "section": "Storage and identity"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority",
+          "section": "Read models"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Boundary and Tests"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Requested Client narrows an already-authorized Account catalog and never authorizes it."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Singleton."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "None; zero-or-one observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Only complete ready zero is authoritative absence; incomplete, partial, stale, unavailable, and failed remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Zero-or-one Client core record with lifecycle/audit fields and locally observed revision."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Client."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-97F0C3EFF84D",
+      "tqueryId": "TQUERY-2932CD350E5E",
+      "ownerSurfaceId": "SWIFT-B3DBE3375ACE",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectNoteData.swift",
+      "protocol": "ProjectNoteQuerying",
+      "selector": "watchNotes",
+      "category": "observation",
+      "signatureHash": "7d5f9f4afbec603fdfaceed47da70841a0f9090ac28cab9883ede6408ab3c209",
+      "mappingHash": "aaacb0ccda00ad6e15ec4c8cf52e1c219de8bec8b0a786edc800ddb78471057f",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control",
+          "section": "Target Observable Contract — Backend Neutral"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-NOTE-READ-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Only already-authorized Account/Project rows and visible counts may appear; request scope does not authorize."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Created-at descending, then stable note ID descending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Keyset page after the exact scoped created-at/note-ID cursor; page size 1 through 200."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Local page completeness is distinct from complete Project-history coverage."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Visibility-safe live/edit/tombstone note rows with stable audit and continuation evidence."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Project."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-377740C840ED",
+      "tqueryId": "TQUERY-2ACE415664D8",
+      "ownerSurfaceId": "SWIFT-401EBD892749",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "protocol": "ClientProjectDirectoryQuerying",
+      "selector": "watchClients",
+      "category": "observation",
+      "signatureHash": "5771115e01a49239c02b000af000059eef65d551f1b5eaf7c81cd6a53e4a8be9",
+      "mappingHash": "bf18b22e6b5d991c13a61f871604516b4d4445f158d642839324f64a9a825139",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target",
+          "section": "Storage and identity"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Account ID narrows active-membership visibility and never grants it."
+        },
+        "ordering": {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md#Permanent Limits"
+          ],
+          "state": "not_defined_by_current_contract"
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Account directory observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Authoritative empty, incomplete, partial, and stale scope remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Unique Client summaries with stable identity, name, lifecycle, and audit fields."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md#Permanent Limits"
+          ],
+          "axis": "canonical_directory_order",
+          "state": "not_defined_by_current_contract"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-626ED0857269",
+      "tqueryId": "TQUERY-2D53E545A090",
+      "ownerSurfaceId": "SWIFT-1A05F36246B4",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/TransferDestinationSelection.swift",
+      "protocol": "TransferDestinationSelectionQuerying",
+      "selector": "watchTransferDestinations",
+      "category": "observation",
+      "signatureHash": "e926b9911787018ecf3ae04ce25cd3edddb45204c3959b767650b06ecc35d6c1",
+      "mappingHash": "2465f2b13b793ccae4c3992f5ba3657c65729a67a4216a3874f62fea30ba87c6",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target",
+          "section": "Destination picker"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority",
+          "section": "Read models"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Eligibility is local evidence only; the source and directory never grant server authorization."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Preserves the reviewed Project-directory upstream order without defining a new comparator."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "None; derived from one Project-directory snapshot."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Available, authoritative no destination, and incomplete directory are distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Derived eligible ProjectTransferRoute candidates; Business Inventory and the source Project are excluded."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Source Project; candidates must be other active Projects with exact same Account and Client identity."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "derived_from_project_directory_without_separate_canonical_authority"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-E002B6EBF172",
+      "tqueryId": "TQUERY-4C3A96B8C83F",
+      "ownerSurfaceId": "SWIFT-C1B994920894",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/AccountDiscoveryAndSelection.swift",
+      "protocol": "AccountQuerying",
+      "selector": "watchAuthorizedAccounts",
+      "category": "observation",
+      "signatureHash": "88b08881e92b63a1a7f645770b000a8b76e077ae5d56623510043fcb6c01c2fe",
+      "mappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
+          "role": "canonical_target",
+          "section": "Authorized Account Discovery"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Account discovery and membership"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-DISCOVERY-SELECTION-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "authorityRefs": [
+            "docs/architecture/redesign/architecture-decisions.md#A-007 — Target Authentication Choice",
+            "docs/architecture/redesign/architecture-decisions.md#A-010 — Provider-Independent Principals"
+          ],
+          "state": "not_defined_by_current_contract"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Normalized display value then stable Account ID, with a currently visible remembered Account optionally moved first."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged bootstrap observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Complete ready zero remains distinct from loading, partial, stale, unavailable, and failure."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Visibility-safe authorized Account summaries with no membership directory or provider identity payload."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Compiled environment and already-established stable Principal."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "identity_bootstrap"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "issuer_subject_to_principal_resolution",
+          "blockerIds": [
+            "A-007",
+            "A-010"
+          ],
+          "state": "decision_blocked"
+        },
+        {
+          "axis": "offline_unlock_and_revocation_window",
+          "blockerIds": [
+            "A-016"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-1B11606401F1",
+      "tqueryId": "TQUERY-7B6C178A522D",
+      "ownerSurfaceId": "SWIFT-A3B756DA1382",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/OperationLifecycle.swift",
+      "protocol": "OperationQuerying",
+      "selector": "watchOperation",
+      "category": "observation",
+      "signatureHash": "b925f93d1670e44500aa0f9c66831b87ccd0e6e296305ecfe6da12b51da13aa2",
+      "mappingHash": "6a3fcae2c77b6e31be8ae54174fe1448ad0a101fdb2dec6c1942135629b662c8",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Operation status"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority",
+          "section": "Synchronization Streams"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"
+          ],
+          "state": "not_defined_by_current_contract"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Singleton."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "None; single-operation observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Queued local state remains distinct from authoritative applied or rejected outcome."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "One operation lifecycle snapshot, potentially composed from local journal state and synchronized authoritative outcome."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Operation ID; returned snapshot carries its Account scope."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "multi_domain_local_journal_and_authoritative_outcomes"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"
+          ],
+          "axis": "authorization_merge_and_domain_routing",
+          "state": "not_defined_by_current_contract"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-5B5B86EF7444",
+      "tqueryId": "TQUERY-87E07EB9A4B3",
+      "ownerSurfaceId": "SWIFT-C6AE96622805",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift",
+      "protocol": "ProjectPreferenceQuerying",
+      "selector": "watchProjectPreferences",
+      "category": "observation",
+      "signatureHash": "f639640392c2cc999f544474defb0487b54f6038d33e5fe790225e3079d639fa",
+      "mappingHash": "a8a04d227f46d1c154f603313e3d218a9a08b8725bb59c329d74c1364926a46c",
+      "reviewClass": "decision_blocked",
+      "authorityRefs": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control",
+          "section": "Target Observable Contract — Backend Neutral"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority",
+          "section": "Read models"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-PREFERENCE-READ-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "blockerIds": [
+            "O-040"
+          ],
+          "state": "decision_blocked"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Stable Project ID ascending; pin order is preserved within a candidate stored row."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Candidate representation is an unpaged Account/Principal directory."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Missing means notStored only when directory evidence is complete; otherwise notAvailable."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Candidate stored row preserves ordered category IDs and revision; lookup distinguishes stored, notStored, and notAvailable."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Candidate representation is exact Account and Principal, with one row per Project."
+        }
+      },
+      "proposedDataDomains": [],
+      "unresolvedAxes": [
+        {
+          "axis": "feature_retention_target_stream_authorization_and_migration",
+          "blockerIds": [
+            "O-040"
+          ],
+          "state": "decision_blocked"
+        },
+        {
+          "axis": "project_workspace_dependency_if_retained",
+          "blockerIds": [
+            "O-040"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-9916CEF2B90B",
+      "tqueryId": "TQUERY-961BF10129CC",
+      "ownerSurfaceId": "SWIFT-42C7BDDCD714",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+      "protocol": "ProjectBudgetSegmentQuerying",
+      "selector": "watchProjectBudgetSegments",
+      "category": "observation",
+      "signatureHash": "10442fae8ce31d6e69ae630bc9c9d15a443a2e89941a0c00137c06204c4d6ba8",
+      "mappingHash": "6bc0746af4fc0d37059b9a16f4ac9a512573569ea5e4bf3b617c7c58fc2b8c8c",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target",
+          "section": "Budget Progress"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Workspace queries"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BUDGET-SEGMENT-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Safe Boundary"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "This query consumes only an already-authorized visible snapshot; financial authorization and download policy are not defined by this contract."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Category presentation order ascending, then stable category ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Project budget-segment observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Local readiness and LocalDataVersion remain distinct from accounting projection authority."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Per-category signed client-paid and invoicing-unpaid values with derived recognized sum and accounting projection revision."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account, Project, and currency."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        },
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BUDGET-SEGMENT-001.md#Frozen Safe Boundary"
+          ],
+          "axis": "contribution_source_eligibility_and_taxonomy",
+          "state": "not_defined_by_current_contract"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-503EEBF38AA2",
+      "tqueryId": "TQUERY-975125F40458",
+      "ownerSurfaceId": "SWIFT-77F812A8F463",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceTemplateReferenceData.swift",
+      "protocol": "SpaceTemplateQuerying",
+      "selector": "watchSpaceTemplates",
+      "category": "observation",
+      "signatureHash": "4d59e6990c4e7007025cc7ff5b36ca161b47087d1f69a54f8d53114cf4475544",
+      "mappingHash": "dc8d8e0565e607c9e46b11278bd1835066242d6effdbcafc09e274b91e26528d",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Space Templates"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-TEMPLATE-REFERENCE-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Template, checklist, and item presentation order ascending with stable identity tie-breakers."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Account reference observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Complete empty, incomplete, partial, stale, and failed states remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Visible template structure with lifecycle/revision and no copied completion state."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "exact_visibility_download_capability",
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-EC9F5E204CE6",
+      "tqueryId": "TQUERY-9FA1EEF3437A",
+      "ownerSurfaceId": "SWIFT-E084EBB4EBFF",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCategoryConfigurationData.swift",
+      "protocol": "ProjectCategoryConfigurationQuerying",
+      "selector": "watchProjectCategoryConfiguration",
+      "category": "observation",
+      "signatureHash": "38669ee6e5578023a4658a531cb6afbffb62a068932875c91bfc787b8681ea5c",
+      "mappingHash": "404c3f2539d748c09c29733af09f819dba84793cd5b30d186b9fc8fa5da8875f",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target",
+          "section": "Budget Progress"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CATEGORY-CONFIGURATION-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Category presentation order ascending, then stable category ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Project configuration observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Incomplete relationships never collapse to no relationship; authorized empty, partial, and stale remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Every visible category distinguishes no relationship, enabled without allocation, explicit zero, positive allocation, or incomplete relationship evidence."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Project over visible category definitions."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        },
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "exact_visibility_download_capability",
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-14FBA8E573D3",
+      "tqueryId": "TQUERY-A95F4BE0B9D8",
+      "ownerSurfaceId": "SWIFT-164554FA1456",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+      "protocol": "SpaceAssignmentDestinationQuerying",
+      "selector": "watchEligibleDestinations",
+      "category": "observation",
+      "signatureHash": "1993ff350fadb2e748510c75e442be1313bc746efee28d6f08e0b7272e0a4052",
+      "mappingHash": "9a829702f2486506701159d54fcf32645f25d515dcc163bb71e90991c99b1596",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Item Assignment"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority",
+          "section": "Synchronization Streams"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md",
+          "role": "verification_evidence",
+          "section": "Enhanced Pilot Review and Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Scope is selection evidence only and narrows an already-authorized local working set."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Case-folded display name, exact display name, then stable Space ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged scoped destination observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Authoritative empty, incomplete, partial, stale, and failure are distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Only active destination Spaces with stable identity, normalized display name, and revision."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and exact Project-or-Business-Inventory placement scope."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace_or_inventory_by_immutable_scope"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-42A94CA398CA",
+      "tqueryId": "TQUERY-BAFDEB7B1FDF",
+      "ownerSurfaceId": "SWIFT-A3B756DA1382",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/OperationLifecycle.swift",
+      "protocol": "OperationQuerying",
+      "selector": "watchUnresolvedOperations",
+      "category": "observation",
+      "signatureHash": "d736eeace0c100f7f2e9516efaeeab49ebffbfaaa69e2c45687fd3deb2774256",
+      "mappingHash": "a424171dc68ff2aa0dea15e49a55358293583224bf6d68ca02d1217b7bacb74e",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Operation status"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority",
+          "section": "Synchronization Streams"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"
+          ],
+          "state": "not_defined_by_current_contract"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Accepted-at ascending, then stable Operation ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged unresolved Account observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Only queued, applying, and rejected operations are unresolved; draft, applied, superseded, and resolved operations are excluded. Transient failure requeues rather than creating a new unresolved state."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Unresolved operation snapshots across relevant local and synchronized operation domains."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account; no Principal scope is present in the port signature or OperationSnapshot."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "multi_domain_identity_project_inventory_and_local_journal"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"
+          ],
+          "axis": "authorization_merge_and_domain_routing",
+          "state": "not_defined_by_current_contract"
+        },
+        {
+          "axis": "optimistic_projection_representation_if_required",
+          "blockerIds": [
+            "A-015"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-256EF1A04BD0",
+      "tqueryId": "TQUERY-BD89A02A23F2",
+      "ownerSurfaceId": "SWIFT-111A94B464D5",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/VendorSuggestionReferenceData.swift",
+      "protocol": "VendorSuggestionQuerying",
+      "selector": "watchVendorSuggestions",
+      "category": "observation",
+      "signatureHash": "454d9faabcdaad494e46ddfb100a07ee6aa01df4d3e59e85626d530ca179a48a",
+      "mappingHash": "345f7754c7809db16e8a08068f44328fe97f4b91d8178ee066317f741a13e19c",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target",
+          "section": "Receipt Details"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Presentation order ascending, then stable suggestion ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Account reference observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Complete empty, incomplete, partial, stale, and failed states remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Visible vendor/source suggestion entries remain convenience values, not Vendor or accounting identity."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "exact_visibility_download_capability",
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-968893AAAB87",
+      "tqueryId": "TQUERY-C7BD4AEAAB98",
+      "ownerSurfaceId": "SWIFT-008B49A474D1",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectItemAccountingSections.swift",
+      "protocol": "ProjectItemAccountingQuerying",
+      "selector": "watchProjectItemAccountingSections",
+      "category": "observation",
+      "signatureHash": "24169668e287e28a867b1813983c3145d349f60701cdce5c46eac3e4794a259c",
+      "mappingHash": "dbb3765e158e39bcc7469865b02507796218491ed079d7d66891482d40d0294d",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target",
+          "section": "Accounting-State Rule"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target",
+          "section": "One Item Identity"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority",
+          "section": "Project workspace"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ITEM-ACCOUNTING-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Requested scope only narrows rows already authorized for Account membership and financial visibility."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Unaccounted For first, Accounted For second; preserve upstream Item order within each section."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged observation over the provider-free currently supplied working set."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Authoritative relationship absence requires complete ready evidence; incomplete absence remains unresolved."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Project Items plus client-paid Purchase relationships and billable charge/credit occurrences derive Unaccounted For, Accounted For, or unresolved without writable derived authority."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Project; rows retain exact Client and stable Item identity."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "occurrence_and_provenance_persistence",
+          "blockerIds": [
+            "O-007",
+            "O-015"
+          ],
+          "state": "decision_blocked"
+        },
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ITEM-ACCOUNTING-001.md#Permanent Limits"
+          ],
+          "axis": "deterministic_storage_order",
+          "state": "not_defined_by_current_contract"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-C0E77930BD8C",
+      "tqueryId": "TQUERY-C84BC7558133",
+      "ownerSurfaceId": "SWIFT-401EBD892749",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "protocol": "ClientProjectDirectoryQuerying",
+      "selector": "watchProjects",
+      "category": "observation",
+      "signatureHash": "af320cc19e4234215ee55dcebcdb0f4dbb09c94ee54de26f87104e1c06a50013",
+      "mappingHash": "83836bda4610e3a9e47c8ebd00904ba5fb9bfd5e16416e12f61504aeccaa797e",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target",
+          "section": "Project relationship"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Account ID narrows active-membership visibility and never grants it."
+        },
+        "ordering": {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-PRESENTATION-001.md#Preflight Corrections"
+          ],
+          "state": "not_defined_by_current_contract"
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Account directory observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Authoritative empty, incomplete, partial, and stale scope remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Unique Project summaries with current Client summary, display fields, and lifecycle."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account; every Project retains its exact same-Account Client relationship."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "authorityRefs": [
+            "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-PRESENTATION-001.md#Preflight Corrections"
+          ],
+          "axis": "canonical_directory_order",
+          "state": "not_defined_by_current_contract"
+        }
+      ]
+    },
+    {
+      "taccessId": "TACCESS-281F2B9A29AB",
+      "tqueryId": "TQUERY-CD97754157F6",
+      "ownerSurfaceId": "SWIFT-02BF0EA3C433",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "protocol": "SpaceCoreDetailsQuerying",
+      "selector": "watchSpaceCoreDetails",
+      "category": "observation",
+      "signatureHash": "32ed6e84f2fb69457b6440d1bb479fe90348d3c4b32b544f1cf2e053cf41224a",
+      "mappingHash": "634d30017978c65cf8d6e435e2dbc4e53d87be0cfcb5e07c05112fa61ea77858",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Space Fields"
+        },
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Checklists"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority",
+          "section": "Synchronization Streams"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Contract and Exclusions"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Space identity and scope narrow an already-authorized Account working set and never authorize access."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Singleton; nested checklist and item order is explicit presentation order then stable identity."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "None; zero-or-one observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Ready found and authoritative absence remain distinct from incomplete, partial, stale, unavailable, and failed."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Zero-or-one Space core record with lifecycle, revision, timestamps, ordered checklist hierarchy, and derived counts."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Space; immutable Space scope is one Project or Business Inventory."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace_or_inventory_by_immutable_scope"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-5ADC687C32E2",
+      "tqueryId": "TQUERY-E8233F3CB7D5",
+      "ownerSurfaceId": "SWIFT-4C4690368BEC",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+      "protocol": "ProjectCoreDetailsQuerying",
+      "selector": "watchProjectCoreDetails",
+      "category": "observation",
+      "signatureHash": "73e0c1887a642de3431ddd3c7aa9b92c813255d34272abc206e026426310fa5f",
+      "mappingHash": "656750e55ef3eac147df5b4dba59f1e4720518dcaaa8f22f4c57dfcbcdc4c306",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target",
+          "section": "Target Redesign Requirements"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target",
+          "section": "Project relationship"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CORE-DETAILS-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Contract and Exclusions"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Requested Project narrows an already-authorized Account workspace and never authorizes it."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Singleton."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "None; zero-or-one observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Ready found and authoritative absence remain distinct from incomplete, partial, stale, unavailable, and failed."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Zero-or-one Project core record with exact Client relationship and locally observed revision."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and Project."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace"
+        }
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "taccessId": "TACCESS-E2B0A7946092",
+      "tqueryId": "TQUERY-EDEC33C918C3",
+      "ownerSurfaceId": "SWIFT-8351FACDBE06",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/BudgetCategoryReferenceData.swift",
+      "protocol": "BudgetCategoryReferenceQuerying",
+      "selector": "watchBudgetCategories",
+      "category": "observation",
+      "signatureHash": "2551568d75047c8d4d6711a762177211b5d24965b41073ba71a1ef328326652a",
+      "mappingHash": "fa1f6b63480d9a0d3d22ae5cb5d03f964b37d82c3b90af68d5e89a93f1afe024",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target",
+          "section": "Budget Progress"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Clients, Projects, notes, preferences, and reference data"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-BUDGET-CATEGORY-REFERENCE-001.md",
+          "role": "verification_evidence",
+          "section": "Implemented Contract"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Presentation order ascending, then stable category ID ascending."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged Account reference observation."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Authorized empty, incomplete, partial, stale, and failed states remain distinct."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Visible category definitions with stable identity, kind, lifecycle, system/exclusion state, order, and revision."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "account_catalog"
+        }
+      ],
+      "unresolvedAxes": [
+        {
+          "axis": "exact_visibility_download_capability",
+          "blockerIds": [
+            "O-026"
+          ],
+          "state": "decision_blocked"
+        }
+      ]
+    }
+  ]
+}

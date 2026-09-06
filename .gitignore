@@ -48,8 +48,10 @@ ui-debug.log
 # Worktrees
 .worktrees/
 scripts/migration-logs/
+migration/out/source-profiles/
 scripts/node_modules/
 tmp/
 
 # Fastlane run artifacts
 fastlane/report.xml
+LedgeriOS/.build/

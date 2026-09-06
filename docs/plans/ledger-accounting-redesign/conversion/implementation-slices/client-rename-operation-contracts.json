@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-rename-operation-contracts",
+  "title": "Rename one stable Client without rewriting identity or frozen history",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Client Rename Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-9CB51D74D41C",
+    "TEST-D1C8EFBDFDDE"
+  ],
+  "requirements": [
+    {
+      "id": "CLIENTRENAME-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "A rename targets one existing stable ClientID in one immutable Account and supplies one validated current display name. It cannot change Client identity, infer identity from text, merge Clients, reassign a Project or use copied project.clientName as authority.",
+      "decisionIds": [
+        "D-006"
+      ],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "The rename intent changes only the Client's current display value. Later authoritative current Project projections resolve that display by ClientID, while frozen Invoice, report, paid-history and audit snapshots are not payload members and must never be rewritten by this command.",
+      "decisionIds": [
+        "D-006"
+      ],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "RenameClient is distinct from CreateClient, ArchiveClient, ChangeProjectClient and MergeClients. The command carries no lifecycle, child, accounting, history, merge, alias or reassignment input, so O-024/O-025 remain open and unchanged.",
+      "decisionIds": [
+        "O-024",
+        "O-025"
+      ],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The rename payload is bound to exactly one OperationID, contract version, AccountID, actor PrincipalID, finite capture time, stable Client subject and same-subject expected revision through the shared fingerprint/receipt lifecycle. It defines no competing queue, retry, rejection or result semantics.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Client rename operation accepts the validated typed command and returns the shared OperationReceipt or a stable failure. Local validation never substitutes for trusted later membership/capability authorization, revision enforcement or history-safe authoritative apply.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Client table/row, handler, RLS policy, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CLIENTRENAME-TEST-001",
+        "CLIENTRENAME-TEST-002",
+        "CLIENTRENAME-TEST-003",
+        "CLIENTRENAME-TEST-004",
+        "CLIENTRENAME-TEST-005"
+      ]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ExpectedClientRevision is one exact unsigned revision. ClientRenameDraft owns exact Account, actor, operation-contract, stable Client, validated replacement display name, expected revision and finite capture time; it contains no Project/clientName/history/lifecycle/correction input.",
+        "RenameClientPayload contains only stable ClientID and ClientDisplayName. RenameClientCommand binds it to the shared OperationEnvelope, derives the exact Client subject, requires exactly one same-subject expected-revision precondition and revalidates payload, subject, precondition and fingerprint on decode.",
+        "ClientRenaming is the narrow backend-neutral operation port returning the shared OperationReceipt. Command receipt validation requires the exact OperationID and exposes no authoritative Client-row or projection result claim.",
+        "ClientRenameFailure exposes stable bounded time, binding, revision-precondition, subject, fingerprint, receipt, local-acceptance and malformed-encoding codes while reusing the verified ClientDisplayName and shared operation validators."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates or changes no clients table, name/revision/audit column, Account foreign key, constraint, index, view, trigger or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative RenameClient handler, membership/capability check, revision lock, projection update, audit event, idempotency result or history-preservation transaction exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor/Client binding is not authorization. No membership predicate, financial-visibility decision, grant, USING/WITH CHECK policy or cross-tenant database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Client table, optimistic rename projection, upload connector, conflict restoration or synchronized current-Project display claim is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, Client subject and fingerprint; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Client, name, revision, subject, preconditions, fingerprint or receipt OperationID fails atomically without rebinding identity or returning a partial command.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic Client display or authoritative server apply evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Client rename owns no attachment bytes, reference, local media receipt, upload, retention, deletion or presentation behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Client editor, current Project display, current app service, MCP tool/schema, transport, contract-catalog entry or app/MCP parity claim is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase project.clientName is decoded, propagated or rewritten and no source Client/display snapshot is transformed. Later migration must preserve frozen names and resolve current Client identity separately."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot rename a visible or authoritative Client, update Project projections, rewrite frozen history, authorize membership, archive/merge Clients, reassign Projects, define provider/schema/migration behavior, activate a feature, deploy, release or cut over."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CLIENTRENAME-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift",
+      "covers": [
+        "CLIENTRENAME-REQ-001",
+        "CLIENTRENAME-REQ-002",
+        "CLIENTRENAME-REQ-003",
+        "CLIENTRENAME-REQ-004",
+        "CLIENTRENAME-REQ-005",
+        "CLIENTRENAME-REQ-006"
+      ],
+      "expected": "A valid synthetic draft produces one typed exact-scope RenameClient command with one same-subject expected revision; the payload contains only stable Client identity and validated new display text and cannot carry Project, archive, merge, alias, reassignment or frozen-history input.",
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift",
+      "covers": [
+        "CLIENTRENAME-REQ-001",
+        "CLIENTRENAME-REQ-002",
+        "CLIENTRENAME-REQ-003",
+        "CLIENTRENAME-REQ-004",
+        "CLIENTRENAME-REQ-005",
+        "CLIENTRENAME-REQ-006"
+      ],
+      "expected": "Representative rename commands round-trip byte-identically with exact Account/actor/contract/Operation/Client/name/revision/time/subject/fingerprint evidence and no backend path, provider, credential, Project projection or server-result claim.",
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift",
+      "covers": [
+        "CLIENTRENAME-REQ-001",
+        "CLIENTRENAME-REQ-002",
+        "CLIENTRENAME-REQ-003",
+        "CLIENTRENAME-REQ-004",
+        "CLIENTRENAME-REQ-005",
+        "CLIENTRENAME-REQ-006"
+      ],
+      "expected": "Blank display text, invalid time and changed Account/actor/contract/Client/name/revision/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Client-rename stable diagnostic codes.",
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift",
+      "covers": [
+        "CLIENTRENAME-REQ-001",
+        "CLIENTRENAME-REQ-002",
+        "CLIENTRENAME-REQ-003",
+        "CLIENTRENAME-REQ-004",
+        "CLIENTRENAME-REQ-005",
+        "CLIENTRENAME-REQ-006"
+      ],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed Client/name/revision is refused by the shared lifecycle, and a failing port returns no success receipt.",
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
+    },
+    {
+      "id": "CLIENTRENAME-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": [
+        "CLIENTRENAME-REQ-001",
+        "CLIENTRENAME-REQ-002",
+        "CLIENTRENAME-REQ-003",
+        "CLIENTRENAME-REQ-004",
+        "CLIENTRENAME-REQ-005",
+        "CLIENTRENAME-REQ-006"
+      ],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming Client row/projection, server, authorization, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
+    }
+  ],
+  "implementationEvidence": [
+    "EVID-CLIENT-RENAME-001"
+  ],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 command boundary only. D-006 and the canonical Client lifecycle settle stable identity and rename semantics. O-024/O-025 remain fully open because no archive/delete/merge/reassignment behavior exists. The slice stops before physical durable storage, authoritative Client/Project projection, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

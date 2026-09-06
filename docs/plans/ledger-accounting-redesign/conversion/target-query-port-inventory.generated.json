@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/generate-target-query-port-inventory.mjs",
+  "sourceRoot": "LedgeriOS/LedgerTargetCore",
+  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
+  "totals": {
+    "ownerSurfaces": 17,
+    "protocols": 17,
+    "methods": 19,
+    "observationMethods": 19,
+    "requestResponseMethods": 0
+  },
+  "protocols": [
+    {
+      "name": "ProjectItemAccountingQuerying",
+      "ownerSurfaceId": "SWIFT-008B49A474D1",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectItemAccountingSections.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "SpaceCoreDetailsQuerying",
+      "ownerSurfaceId": "SWIFT-02BF0EA3C433",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "SpaceListQuerying",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "VendorSuggestionQuerying",
+      "ownerSurfaceId": "SWIFT-111A94B464D5",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/VendorSuggestionReferenceData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "SpaceAssignmentDestinationQuerying",
+      "ownerSurfaceId": "SWIFT-164554FA1456",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "TransferDestinationSelectionQuerying",
+      "ownerSurfaceId": "SWIFT-1A05F36246B4",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/TransferDestinationSelection.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "ClientProjectDirectoryQuerying",
+      "ownerSurfaceId": "SWIFT-401EBD892749",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "methodCount": 2
+    },
+    {
+      "name": "ProjectBudgetSegmentQuerying",
+      "ownerSurfaceId": "SWIFT-42C7BDDCD714",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "ProjectCoreDetailsQuerying",
+      "ownerSurfaceId": "SWIFT-4C4690368BEC",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "SpaceTemplateQuerying",
+      "ownerSurfaceId": "SWIFT-77F812A8F463",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceTemplateReferenceData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "BudgetCategoryReferenceQuerying",
+      "ownerSurfaceId": "SWIFT-8351FACDBE06",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/BudgetCategoryReferenceData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "OperationQuerying",
+      "ownerSurfaceId": "SWIFT-A3B756DA1382",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/OperationLifecycle.swift",
+      "methodCount": 2
+    },
+    {
+      "name": "ProjectNoteQuerying",
+      "ownerSurfaceId": "SWIFT-B3DBE3375ACE",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectNoteData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "AccountQuerying",
+      "ownerSurfaceId": "SWIFT-C1B994920894",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/AccountDiscoveryAndSelection.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "ProjectPreferenceQuerying",
+      "ownerSurfaceId": "SWIFT-C6AE96622805",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "ClientCoreDetailsQuerying",
+      "ownerSurfaceId": "SWIFT-D7F3D08FA568",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "ProjectCategoryConfigurationQuerying",
+      "ownerSurfaceId": "SWIFT-E084EBB4EBFF",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCategoryConfigurationData.swift",
+      "methodCount": 1
+    }
+  ],
+  "methods": [
+    {
+      "id": "TQUERY-C7BD4AEAAB98",
+      "ownerSurfaceId": "SWIFT-008B49A474D1",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectItemAccountingSections.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectItemAccountingQuerying",
+      "selector": "watchProjectItemAccountingSections",
+      "category": "observation",
+      "signature": "func watchProjectItemAccountingSections ( accountId : AccountID , projectId : ProjectID ) -> AsyncThrowingStream < ProjectItemAccountingSectionsSnapshot , Error >",
+      "signatureHash": "24169668e287e28a867b1813983c3145d349f60701cdce5c46eac3e4794a259c"
+    },
+    {
+      "id": "TQUERY-CD97754157F6",
+      "ownerSurfaceId": "SWIFT-02BF0EA3C433",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "ownerStatus": "verified",
+      "protocol": "SpaceCoreDetailsQuerying",
+      "selector": "watchSpaceCoreDetails",
+      "category": "observation",
+      "signature": "func watchSpaceCoreDetails ( _ request : SpaceCoreDetailsRequest ) -> AsyncThrowingStream < SpaceCoreDetailsUpdate , Error >",
+      "signatureHash": "32ed6e84f2fb69457b6440d1bb479fe90348d3c4b32b544f1cf2e053cf41224a"
+    },
+    {
+      "id": "TQUERY-038289DD7D2C",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "ownerStatus": "verified",
+      "protocol": "SpaceListQuerying",
+      "selector": "watchSpaces",
+      "category": "observation",
+      "signature": "func watchSpaces ( _ request : SpaceListRequest ) -> AsyncThrowingStream < SpaceListUpdate , Error >",
+      "signatureHash": "9089cf0209e5762269ae68e18397200140333722a9efc08bf72d6bc90d8644f3"
+    },
+    {
+      "id": "TQUERY-BD89A02A23F2",
+      "ownerSurfaceId": "SWIFT-111A94B464D5",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/VendorSuggestionReferenceData.swift",
+      "ownerStatus": "verified",
+      "protocol": "VendorSuggestionQuerying",
+      "selector": "watchVendorSuggestions",
+      "category": "observation",
+      "signature": "func watchVendorSuggestions ( accountId : AccountID ) -> AsyncThrowingStream < VendorSuggestionReferenceSnapshot , Error >",
+      "signatureHash": "454d9faabcdaad494e46ddfb100a07ee6aa01df4d3e59e85626d530ca179a48a"
+    },
+    {
+      "id": "TQUERY-A95F4BE0B9D8",
+      "ownerSurfaceId": "SWIFT-164554FA1456",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+      "ownerStatus": "verified",
+      "protocol": "SpaceAssignmentDestinationQuerying",
+      "selector": "watchEligibleDestinations",
+      "category": "observation",
+      "signature": "func watchEligibleDestinations ( _ request : SpaceAssignmentDestinationRequest ) -> AsyncThrowingStream < SpaceAssignmentDestinationDirectorySnapshot , Error >",
+      "signatureHash": "1993ff350fadb2e748510c75e442be1313bc746efee28d6f08e0b7272e0a4052"
+    },
+    {
+      "id": "TQUERY-2D53E545A090",
+      "ownerSurfaceId": "SWIFT-1A05F36246B4",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/TransferDestinationSelection.swift",
+      "ownerStatus": "verified",
+      "protocol": "TransferDestinationSelectionQuerying",
+      "selector": "watchTransferDestinations",
+      "category": "observation",
+      "signature": "func watchTransferDestinations ( source : ProjectSummary ) -> AsyncThrowingStream < TransferDestinationSelectionSnapshot , Error >",
+      "signatureHash": "e926b9911787018ecf3ae04ce25cd3edddb45204c3959b767650b06ecc35d6c1"
+    },
+    {
+      "id": "TQUERY-2ACE415664D8",
+      "ownerSurfaceId": "SWIFT-401EBD892749",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "ownerStatus": "verified",
+      "protocol": "ClientProjectDirectoryQuerying",
+      "selector": "watchClients",
+      "category": "observation",
+      "signature": "func watchClients ( accountId : AccountID ) -> AsyncThrowingStream < ClientListSnapshot , Error >",
+      "signatureHash": "5771115e01a49239c02b000af000059eef65d551f1b5eaf7c81cd6a53e4a8be9"
+    },
+    {
+      "id": "TQUERY-C84BC7558133",
+      "ownerSurfaceId": "SWIFT-401EBD892749",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "ownerStatus": "verified",
+      "protocol": "ClientProjectDirectoryQuerying",
+      "selector": "watchProjects",
+      "category": "observation",
+      "signature": "func watchProjects ( accountId : AccountID ) -> AsyncThrowingStream < ProjectListSnapshot , Error >",
+      "signatureHash": "af320cc19e4234215ee55dcebcdb0f4dbb09c94ee54de26f87104e1c06a50013"
+    },
+    {
+      "id": "TQUERY-961BF10129CC",
+      "ownerSurfaceId": "SWIFT-42C7BDDCD714",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectBudgetSegmentQuerying",
+      "selector": "watchProjectBudgetSegments",
+      "category": "observation",
+      "signature": "func watchProjectBudgetSegments ( _ request : ProjectBudgetSegmentRequest ) -> AsyncThrowingStream < ProjectBudgetSegmentSnapshot , Error >",
+      "signatureHash": "10442fae8ce31d6e69ae630bc9c9d15a443a2e89941a0c00137c06204c4d6ba8"
+    },
+    {
+      "id": "TQUERY-E8233F3CB7D5",
+      "ownerSurfaceId": "SWIFT-4C4690368BEC",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectCoreDetailsQuerying",
+      "selector": "watchProjectCoreDetails",
+      "category": "observation",
+      "signature": "func watchProjectCoreDetails ( _ request : ProjectCoreDetailsRequest ) -> AsyncThrowingStream < ProjectCoreDetailsUpdate , Error >",
+      "signatureHash": "73e0c1887a642de3431ddd3c7aa9b92c813255d34272abc206e026426310fa5f"
+    },
+    {
+      "id": "TQUERY-975125F40458",
+      "ownerSurfaceId": "SWIFT-77F812A8F463",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceTemplateReferenceData.swift",
+      "ownerStatus": "verified",
+      "protocol": "SpaceTemplateQuerying",
+      "selector": "watchSpaceTemplates",
+      "category": "observation",
+      "signature": "func watchSpaceTemplates ( accountId : AccountID ) -> AsyncThrowingStream < SpaceTemplateReferenceSnapshot , Error >",
+      "signatureHash": "4d59e6990c4e7007025cc7ff5b36ca161b47087d1f69a54f8d53114cf4475544"
+    },
+    {
+      "id": "TQUERY-EDEC33C918C3",
+      "ownerSurfaceId": "SWIFT-8351FACDBE06",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/BudgetCategoryReferenceData.swift",
+      "ownerStatus": "verified",
+      "protocol": "BudgetCategoryReferenceQuerying",
+      "selector": "watchBudgetCategories",
+      "category": "observation",
+      "signature": "func watchBudgetCategories ( accountId : AccountID ) -> AsyncThrowingStream < BudgetCategoryReferenceSnapshot , Error >",
+      "signatureHash": "2551568d75047c8d4d6711a762177211b5d24965b41073ba71a1ef328326652a"
+    },
+    {
+      "id": "TQUERY-7B6C178A522D",
+      "ownerSurfaceId": "SWIFT-A3B756DA1382",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/OperationLifecycle.swift",
+      "ownerStatus": "verified",
+      "protocol": "OperationQuerying",
+      "selector": "watchOperation",
+      "category": "observation",
+      "signature": "func watchOperation ( _ id : OperationID ) -> AsyncThrowingStream < OperationSnapshot , Error >",
+      "signatureHash": "b925f93d1670e44500aa0f9c66831b87ccd0e6e296305ecfe6da12b51da13aa2"
+    },
+    {
+      "id": "TQUERY-BAFDEB7B1FDF",
+      "ownerSurfaceId": "SWIFT-A3B756DA1382",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/OperationLifecycle.swift",
+      "ownerStatus": "verified",
+      "protocol": "OperationQuerying",
+      "selector": "watchUnresolvedOperations",
+      "category": "observation",
+      "signature": "func watchUnresolvedOperations ( accountId : AccountID ) -> AsyncThrowingStream < [ OperationSnapshot ] , Error >",
+      "signatureHash": "d736eeace0c100f7f2e9516efaeeab49ebffbfaaa69e2c45687fd3deb2774256"
+    },
+    {
+      "id": "TQUERY-2932CD350E5E",
+      "ownerSurfaceId": "SWIFT-B3DBE3375ACE",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectNoteData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectNoteQuerying",
+      "selector": "watchNotes",
+      "category": "observation",
+      "signature": "func watchNotes ( _ request : ProjectNotePageRequest ) -> AsyncThrowingStream < ProjectNotePage , Error >",
+      "signatureHash": "7d5f9f4afbec603fdfaceed47da70841a0f9090ac28cab9883ede6408ab3c209"
+    },
+    {
+      "id": "TQUERY-4C3A96B8C83F",
+      "ownerSurfaceId": "SWIFT-C1B994920894",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/AccountDiscoveryAndSelection.swift",
+      "ownerStatus": "verified",
+      "protocol": "AccountQuerying",
+      "selector": "watchAuthorizedAccounts",
+      "category": "observation",
+      "signature": "func watchAuthorizedAccounts ( environment : LedgerEnvironmentKind , principalId : PrincipalID ) -> AsyncThrowingStream < AuthorizedAccountDiscoveryUpdate , Error >",
+      "signatureHash": "88b08881e92b63a1a7f645770b000a8b76e077ae5d56623510043fcb6c01c2fe"
+    },
+    {
+      "id": "TQUERY-87E07EB9A4B3",
+      "ownerSurfaceId": "SWIFT-C6AE96622805",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectPreferenceQuerying",
+      "selector": "watchProjectPreferences",
+      "category": "observation",
+      "signature": "func watchProjectPreferences ( _ request : ProjectPreferenceDirectoryRequest ) -> AsyncThrowingStream < ProjectPreferenceDirectorySnapshot , Error >",
+      "signatureHash": "f639640392c2cc999f544474defb0487b54f6038d33e5fe790225e3079d639fa"
+    },
+    {
+      "id": "TQUERY-136644A3C02A",
+      "ownerSurfaceId": "SWIFT-D7F3D08FA568",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ClientCoreDetailsQuerying",
+      "selector": "watchClientCoreDetails",
+      "category": "observation",
+      "signature": "func watchClientCoreDetails ( _ request : ClientCoreDetailsRequest ) -> AsyncThrowingStream < ClientCoreDetailsUpdate , Error >",
+      "signatureHash": "c90bdaf7f57251c6fa31ee56208ae5d6a82b33f5d65b49be03b102f2da7fdc50"
+    },
+    {
+      "id": "TQUERY-9FA1EEF3437A",
+      "ownerSurfaceId": "SWIFT-E084EBB4EBFF",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectCategoryConfigurationData.swift",
+      "ownerStatus": "verified",
+      "protocol": "ProjectCategoryConfigurationQuerying",
+      "selector": "watchProjectCategoryConfiguration",
+      "category": "observation",
+      "signature": "func watchProjectCategoryConfiguration ( accountId : AccountID , projectId : ProjectID ) -> AsyncThrowingStream < ProjectCategoryConfigurationSnapshot , Error >",
+      "signatureHash": "38669ee6e5578023a4658a531cb6afbffb62a068932875c91bfc787b8681ea5c"
+    }
+  ]
+}

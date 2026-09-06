@@ -1,0 +1,159 @@
+{
+  "batchId": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+  "title": "Client browsing target staging application flow",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-001",
+    "EVID-CLIENT-CORE-DETAILS-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-D8A992D1F8C1",
+      "acknowledgeSourceHash": "89c7ce7ebadab4d15ea2870c54a286408acf6795229a8ef83673d537280df366",
+      "currentBehavior": "Implements pure atomic active/archived Client directory presentation, current-snapshot stable selection, and exhaustive exact Client-detail presentation over existing typed local evidence.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "Exact READY db89ef36339f48bff249b2973ea3bc9c5607bb61 / run 33956835407 passed before implementation. Root and independent review returned GO, and exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed immutable run 33958657934.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["Client directory segmentation, current-snapshot selection, and exact Client detail presentation"],
+        "securityRequirements": ["Consume only validated Account-bound typed evidence and never treat a display name as identity or authority"],
+        "syncRequirements": ["Preserve upstream order and every represented readiness, completeness, absence, cached-failure, lifecycle, and revision state without inventing authority"]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": ["Use stable Client identity rather than display text"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift"],
+        "acceptance": ["Pure presentation tests pass the frozen directory, selection, detail-state, and false-empty matrix"]
+      }
+    },
+    {
+      "id": "TEST-B6AF2BB84195",
+      "acknowledgeSourceHash": "a83ee126bf318154e8766284cdd3668880bf5f739221e9219fa55cb19d5f8259",
+      "currentBehavior": "Provides deterministic Core tests for atomic segmentation, reciprocal false-empty truth, exact order and identity, current-snapshot selection, tamper refusal, and exhaustive detail-state/revision presentation.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "Four focused Core tests contributed to the 14-test Client browsing proof; exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed immutable run 33958657934.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["deterministic pure Client browsing presentation test matrix"],
+        "securityRequirements": ["Use synthetic Account, Client, lifecycle, readiness, completeness, revision, and failure evidence only"],
+        "syncRequirements": ["Exercise both segments and every exact detail state without defining a new directory sort"]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": ["Assert exact typed presentation and request evidence"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ClientBrowsingPresentationTests"],
+        "acceptance": ["Every frozen pure-presentation case passes deterministically"]
+      }
+    },
+    {
+      "id": "SWIFT-EDBCE3C0BC96",
+      "acknowledgeSourceHash": "130e391cb72cc4f6a3ad6283a2753949d0b4dc0bc1a1947394caba1caed419c8",
+      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection and restart-generation isolation, and composes the separate Client archive application model without taking archive policy ownership.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Root and independent executable review found no remaining P0-P3 issue after lifecycle proof was strengthened; exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed immutable run 33958657934.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["reactive Client directory, current-snapshot selection, and exact Client detail application state"],
+        "securityRequirements": ["Depend only on LedgerTargetCore and expose no provider, database, SQL, credential, or authorization policy"],
+        "syncRequirements": ["Own bounded cancellation, join, termination, reselection, and restart-generation behavior without rewriting source truth"]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": ["Accept only exact Account/Client request and update evidence"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift"],
+        "acceptance": ["The application model passes failure, termination, cancellation, rapid-reselection, restart, and shutdown tests"]
+      }
+    },
+    {
+      "id": "TEST-5F23C8849E45",
+      "acknowledgeSourceHash": "1348abb5b309a410fcdf0af63748e3fc899ce1ef0419c4769d1be1a56740a114",
+      "currentBehavior": "Provides deterministic directory/detail failure matrices, exact selection/refusal, active-detail and full-stop drainage, noncooperative rapid reselection, restart isolation, and post-stop silence tests.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "The initial suite was strengthened with a delayed noncooperative A-to-B join proof and a separate both-active-observations stop/join test. Ten AppModel tests plus four Core tests and the complete 455-test suite passed locally and in exact immutable implementation CI.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["deterministic Client browsing application-model lifecycle test matrix"],
+        "securityRequirements": ["Use synthetic typed evidence and bounded non-secret diagnostics only"],
+        "syncRequirements": ["Exercise continuous updates, active-detail drainage, rapid reselection, termination, cancellation, restart isolation, and post-stop silence"]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": ["Assert exact source-termination and current-generation behavior"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ClientBrowsingStagingExerciseTests"],
+        "acceptance": ["Every frozen Client browsing application case passes deterministically"]
+      }
+    },
+    {
+      "id": "SWIFT-74AB5DDB20DB",
+      "acknowledgeSourceHash": "f6303fe7299475655fae9fd9dbb246a9d5c3b5ff5957f94e2a76b23bafa3aa04",
+      "currentBehavior": "Implements the thin target-app adapter that forwards only the runtime Client directory and exact Client-detail watches into the Core-only application model.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "Provider containment, exact forwarding, source controls and both staging builds passed exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 / immutable run 33958657934; policy remains in Core contracts.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["thin PowerSync runtime adapter"],
+        "securityRequirements": ["Expose no raw Account rebinding, database, query, SQL, visibility policy, endpoint, or credential"],
+        "syncRequirements": ["Forward runtime snapshots and cancellation without rewriting readiness, order, or revision evidence"]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": ["Do not access source Firebase code or data"]
+      },
+      "verification": {
+        "tests": ["target environment source/build-boundary checks and complete staging builds"],
+        "acceptance": ["The app adapter remains the only PowerSync-aware Client browsing application-flow leaf"]
+      }
+    },
+    {
+      "id": "SWIFT-438CDD8B6992",
+      "acknowledgeSourceHash": "536f567812a276ca7b157703d234da04493f5d89e6584da02f01d3b03286b8cd",
+      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client, exact local detail state and confirmation-bound Client archive controls/status in staging with stable ClientID-based accessibility identities.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "The view renders typed model state only, preserves upstream order, and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy. Source checks and both staging builds passed exact immutable implementation CI.",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": ["active/archived Client rows and exact local Client detail-state staging view"],
+        "securityRequirements": ["Display bounded diagnostics and typed readiness only; never expose private payloads or provider details"],
+        "syncRequirements": ["Show unknown before represented evidence and preserve honest loading, partial, stale, ready, incomplete, authoritative-empty, cached-failure, unavailable, and required-update truth"]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": ["Do not imply hosted synchronization, authorization, or production readiness"]
+      },
+      "verification": {
+        "tests": ["Core/AppModel tests, exact source checks, and iOS/macOS staging builds"],
+        "acceptance": ["Stable segment-plus-Client accessibility identities and exact directory/detail status surfaces are present"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,3893 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/extract-firestore-query-contract.mjs",
+  "sourceDigest": "87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4",
+  "scope": [
+    "LedgeriOS/LedgeriOS",
+    "mcp-server/src",
+    "firebase/functions/src",
+    "firebase/functions/scripts",
+    "migration/src",
+    "scripts"
+  ],
+  "limitations": [
+    "This is a lexical, symbol-level inventory; semantic families and offline expectations are reviewed in current-query-contract.md.",
+    "Dynamic collection names and deployed index usage require the read-only production profile or Firebase console evidence.",
+    "An occurrence proves a source reference, not that the path is exercised in production."
+  ],
+  "totals": {
+    "candidateFilesInspected": 170,
+    "sourceFilesWithOccurrences": 74,
+    "occurrences": 386
+  },
+  "bySubsystem": {
+    "audit_or_repair_tooling": 88,
+    "functions": 75,
+    "ios": 38,
+    "mcp": 161,
+    "migration": 24
+  },
+  "byOperation": {
+    "admin_sdk_get": 152,
+    "aggregate": 1,
+    "bulk_document_read": 19,
+    "collection_group": 15,
+    "collection_read": 8,
+    "cursor": 2,
+    "document_read": 15,
+    "filter": 135,
+    "limit": 17,
+    "listener": 9,
+    "offset": 4,
+    "order": 4,
+    "projection": 5
+  },
+  "sourceFiles": [
+    {
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "sourceHash": "e1ad13100d737005ed1466b2b29bdead7bbc022124502877c7e66ce5d7f745f7",
+      "occurrenceCount": 7
+    },
+    {
+      "sourcePath": "firebase/functions/scripts/backfill-item-current-source.mjs",
+      "sourceHash": "e3fd3f3b69825af5651fbea97c67521f524e66bc1c79dbf5ef018d94a9c45c9b",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "firebase/functions/scripts/backfill-item-project-price-floor.mjs",
+      "sourceHash": "8ed94d6109f33261c0ca7972bc295d97027977433036c3f547e70f1b0fa80a71",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "firebase/functions/scripts/backfill-uncategorized-movements.mjs",
+      "sourceHash": "5487922749214c85ea2253d6742a357ab352b99f1a36c7995061df72b0e7a7b8",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "firebase/functions/scripts/seed-storage-emulator.mjs",
+      "sourceHash": "f4efad1e502df656b8d55c7114d83909302a26d16ab6038e3d34013eded28ec9",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "firebase/functions/scripts/setup-health-check.mjs",
+      "sourceHash": "4dfd35de9ccb7f59b9d11a9b3a7e449012c513a848b13ddb2ad7596a4457b10d",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "firebase/functions/src/index.ts",
+      "sourceHash": "b3770b245901790185bf4e04f09c768295b0965c2ac1a78ce48b948d5d4b8bac",
+      "occurrenceCount": 56
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "sourceHash": "3ba570f95ec98b1cc8b4e9373aff369b2aa4cffe5f97fd32ece973c2b0ff136d",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "sourceHash": "22199f42e189856c857b0f9f4a4207c96ff99b650c5398336162655b82f8e529",
+      "occurrenceCount": 8
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InventoryOperationsService.swift",
+      "sourceHash": "8c59381a2a7820b3c9c74c524ca2eac2e487f48465013f99bf72c644fb77f52f",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InvitesService.swift",
+      "sourceHash": "b6ce7d4ab93bbbb1a9e94baded5b3b0503f318336bbef2e822d9bdb77f0e4995",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "sourceHash": "d36b38b67b3f9da264abcf821c229d3e36d69876f7afa07aab9e124b4239c8eb",
+      "occurrenceCount": 6
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift",
+      "sourceHash": "6f9c45446c35741416f43bbe7706ef535833b049d98c6edcf7dc91ab32a3b1d7",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift",
+      "sourceHash": "02fbcdfba4f185bfe392440c1d5b79173ef893ff468e554b6ff865223c566851",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift",
+      "sourceHash": "4a2452cb3b30a8f4fb8704da7ce0d48d93d718ecb3a42bbe87bc448c574c43ad",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift",
+      "sourceHash": "323ad0945af92aae1a0d0104d010e44aa3d2f95bf28dcccbdbe973353d42095c",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift",
+      "sourceHash": "8854a169c1bde16af4ae76e157d911147859efbae8c0bae86f03126effbad316",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/Creation/NewItemView.swift",
+      "sourceHash": "761584d89908a59254bfc2f38cdfcdaa761f2fca18d54281e322288c3ae38509",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift",
+      "sourceHash": "dd5a7d301bd146d910bee3fec6c5f676719141cffe8cda0ebdf2971100960f23",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/Settings/UsersView.swift",
+      "sourceHash": "4df3ee82f3db6b15ff457283fc9d434996d395df10719626c51880d3fb41053b",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "mcp-server/src/auth.ts",
+      "sourceHash": "7dc500dc30382c0283f05d568c3d13a2d20caeb8f6911b8706def4d9a2a292e5",
+      "occurrenceCount": 8
+    },
+    {
+      "sourcePath": "mcp-server/src/oauth.ts",
+      "sourceHash": "01163da6a78d624ba2eced87a474514ad97e55cd6c9799be2df931912878ecb7",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "mcp-server/src/resources/index.ts",
+      "sourceHash": "7730512729db61c94bfd6e82c0f5238a9835916bd1f87b377da8e7c5af03d373",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "sourceHash": "80c72e19bd80e97da4667c1dffa049bf013df9049159383a3a13ba28ca2a11e6",
+      "occurrenceCount": 7
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/budget.ts",
+      "sourceHash": "2a8c4c8738d5a44afcc0edcff034202e2848caf22ceb63bfa938a24b533b7476",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "sourceHash": "665525a014015069436ab6807c69fea77b55055c16dcc9b81c276135894cf1e0",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "sourceHash": "b5f177f3f57dfe8c411d319ca4dcfa337d2f0c60327968b683144a080407cb2a",
+      "occurrenceCount": 11
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "sourceHash": "1404be7a1705aaf64cbbb4ab06af395c3768cfc9f3cb69116ed9de5bc3a941f4",
+      "occurrenceCount": 11
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "sourceHash": "c500c14448d98ee3132cbdb134a9d743591bc4d65aa5847b25ad8cd349e630ec",
+      "occurrenceCount": 25
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "sourceHash": "a1f7d910cc999f079805810748c1b81ec31cb7b70471425fd475c8b4d80b475e",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/project-notes.ts",
+      "sourceHash": "3af3b9a85cde6678d1bbc195c3202e173b1ae44c717187111ad25b844ec3289c",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "sourceHash": "9c36798b417be1571d10e06ed297f3fb2a9b8e3fd703ce576c5f02488077c48d",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "sourceHash": "e64c01d0b55e243e5d55e6aa9162a37fac31c43f7bfaf4bea9d0284a50f7bdaf",
+      "occurrenceCount": 5
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "sourceHash": "7d5dcc7ea29a52f952a67a9b57f486793baf5e7f317fa7b927bc25f365459367",
+      "occurrenceCount": 15
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "sourceHash": "610d0dd2f61367e17a86d435b053fca2d359d217915280009c0b19816fdf3fdc",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "sourceHash": "645c14e73a6b7db877c308dc99343d41d46c0ca013ac5ffd0032c33aad1bf670",
+      "occurrenceCount": 11
+    },
+    {
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "sourceHash": "6e22d7f8af6c012f5ba59ac47766146ca9f5c52fc831c4225b64cfd4419b8ca1",
+      "occurrenceCount": 27
+    },
+    {
+      "sourcePath": "mcp-server/src/userState.ts",
+      "sourceHash": "77306cc94af30f49e4dfdec2ab50cf6d6889565e79daec9726c330d94b0b38a6",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "mcp-server/src/util/inventory.ts",
+      "sourceHash": "f1575de6865ec1e2df3141e5d9b656bbd6aeabd8ac86b89c0ab5c289a42dd979",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "mcp-server/src/util/query.ts",
+      "sourceHash": "42bb7010bb442105135751773acf95fbf9d6fbf2ca1048d7fe6cc1f05ce02220",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "sourceHash": "a6e6458b6a71165c845d70d1864e6a17bb64635072d384aecf85aad29ec03de4",
+      "occurrenceCount": 12
+    },
+    {
+      "sourcePath": "migration/src/audit-parity.ts",
+      "sourceHash": "a97167ac348d775c83189c5de682b40e3a59f0d8fd03e59456ed14b7698df8a8",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "migration/src/backfill-return-itemids.ts",
+      "sourceHash": "f9c2bfcbf805178b2b427c2f3d7f9ce79317711bfbdcbf669225453ef9228666",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "migration/src/budget-backfill.ts",
+      "sourceHash": "97bb7bf670a7869dcc52052966008afb2b9df9915baf54bf00e78293d1a12672",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "migration/src/check-urls.ts",
+      "sourceHash": "3235ede6a84f774a49a2ca2c95c06ca0642a337fb1f0744709126d80fa70900f",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "migration/src/fix-assiist-biz-uid.ts",
+      "sourceHash": "43b8f2c516ad27760fe74ee23a25e40935a727473748a617f77266c5ae0b969a",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "migration/src/fix-thumbnails.ts",
+      "sourceHash": "a388f0a03c208848b2de89319f812c13ce306a404edcefd5866500143cd45c16",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "migration/src/media-only-migrate.ts",
+      "sourceHash": "935dfc380d7b9394e4abb7248521cb7bf7e9a30aff89f7d387062875a1fc12b6",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "migration/src/migrate-images-only.ts",
+      "sourceHash": "01eea41e987075edbd721679a5a355d0745ab54449a37cf57738244c150c6a03",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "migration/src/regen-thumbnails.ts",
+      "sourceHash": "9b8850bdcb4e4caf04446567c6c0cb1675969edda6a9aaa0de1529e6e5d20927",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "migration/src/verify-user-doc.ts",
+      "sourceHash": "5f872b4652d4371548d3550942b59a6a0fef18b1d7d8ade7837d6057850344ab",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "sourceHash": "37ff82658be6f9c9dc33e82105c22644403c07f6fe05877e67b4b1bfb3657de9",
+      "occurrenceCount": 7
+    },
+    {
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "sourceHash": "98af7b144d887f1b2fc21d186af70d116b0ce926fe3b8ea4c5d091a4fd556a1c",
+      "occurrenceCount": 6
+    },
+    {
+      "sourcePath": "scripts/audit-invoice-line-categories.mjs",
+      "sourceHash": "72cb8b9ea2a3c32ffd20559c5affb9027525096a94d4fc32391e1bb9c3e6154a",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "scripts/audit-mixed-categories.mjs",
+      "sourceHash": "9134afff161e8023cfb43df6ec66912718e1a485abfc9cd74903d893ad4f062a",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "sourceHash": "5ecdf6d17c2eb8cd303c5f1472b1f3d8cddec99afb099357ff629eb59cde0d02",
+      "occurrenceCount": 8
+    },
+    {
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "sourceHash": "4b23ba132bffe9c8d157671e355cada08d11549f810856ac231a6228e87426d2",
+      "occurrenceCount": 6
+    },
+    {
+      "sourcePath": "scripts/backfill-invoice-lines.mjs",
+      "sourceHash": "0b3827e66d46909010f6e7261deb229845f08663f3164940e0a0e1488976387c",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "scripts/clear-legacy-transaction-status.mjs",
+      "sourceHash": "422f97835b185ec88ea827d30dfd490f9a4e52407997811c407e82ba66595a28",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "sourceHash": "7730123a98bbc8ac51ae47f0a12e024932b661e04243416847b1b8cf85046fe0",
+      "occurrenceCount": 7
+    },
+    {
+      "sourcePath": "scripts/export-transaction-receipt-attachments.mjs",
+      "sourceHash": "728cbeea73155e43e8a79f7891919813e1b162e152fdb7353a74cf6505d322d1",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "scripts/migrate-categories-add-supported-types.mjs",
+      "sourceHash": "5a5f5619c7a1d0a963e3aa8f3314b4ca93bcbfe74e9c9613ae3aea08fd8e3b57",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "scripts/migrate-transaction-taxonomy.mjs",
+      "sourceHash": "96955f24aaeb36354a5de37d60fde288fdcf205a8a84b52896a4c695c62ab2b0",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "scripts/migrate-transactions-delete-needsReview.mjs",
+      "sourceHash": "eeca52de2367c6ed5f800791c0ba314900997beaede7c9ec75352c8cbbbc94ed",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "scripts/migrate-transactions-to-fee-expense.mjs",
+      "sourceHash": "5f825ab0a1dbf98e66558994ffa14206ca2a966a93061cd9619d6dcb39836a07",
+      "occurrenceCount": 3
+    },
+    {
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "sourceHash": "4a2ba112fabe2791badd0dbd4e2aa0d9a9a2c3d033d99c6bf616503814a4cf20",
+      "occurrenceCount": 7
+    },
+    {
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "sourceHash": "bb937c535a2b938a79efd1816b0b20cb056ca214984bf05294f93e7475551869",
+      "occurrenceCount": 5
+    },
+    {
+      "sourcePath": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs",
+      "sourceHash": "542e0796016b57e094aaf12ca3e35f8457ce4c28919d0122b2a78b212054aa59",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "scripts/repair-1584-install-category-blockers.mjs",
+      "sourceHash": "729d199a69a64a3780f31ebb936c87d2871da3ffe1c0f431f743a9cc133bc3c0",
+      "occurrenceCount": 4
+    },
+    {
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "sourceHash": "c91b330b3b51310797a2ea8bc85289a36ef1fbc8859b419f1048f15a4288ce84",
+      "occurrenceCount": 5
+    },
+    {
+      "sourcePath": "scripts/repair-kapcsos-zero-project-prices.mjs",
+      "sourceHash": "c41cfee73c7fb69828abd689b0977111229264ee996e3ead22b1af7b04ec6b30",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "scripts/repair-witzenman-inperson-lineage.mjs",
+      "sourceHash": "a515f4bdd382d847f89543bcd4a529f01bdcbbde81eb45edd833ffc3218935d4",
+      "occurrenceCount": 1
+    },
+    {
+      "sourcePath": "scripts/revert-transactions-to-fee-expense.mjs",
+      "sourceHash": "3fbe5b0e9e102e1a6a44528a23591871e89941af3587f307935c7126465b0f89",
+      "occurrenceCount": 2
+    },
+    {
+      "sourcePath": "scripts/strip-billing-status.mjs",
+      "sourceHash": "f623a6fe4f8989be66442194d8355bc333f7f8658b7cf811b3caa4d1fba262ac",
+      "occurrenceCount": 2
+    }
+  ],
+  "occurrences": [
+    {
+      "id": "QUERY-0B4E9B4E469A",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 74,
+      "symbol": "budgetCatsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const budgetCatsSnapshot = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-FF693E6AFBE0",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 91,
+      "symbol": "projectBudgetCatsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const projectBudgetCatsSnapshot = await db .collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-21D5C5C3A43F",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 102,
+      "symbol": "txSnapshot",
+      "operation": "filter",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-3A8F4EE03E44",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 103,
+      "symbol": "txSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-70C9EE011943",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 170,
+      "symbol": "accountsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnapshot = await db.collectionGroup('projects').select().get();"
+    },
+    {
+      "id": "QUERY-13FF7BE3FB34",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 170,
+      "symbol": "accountsSnapshot",
+      "operation": "collection_group",
+      "expression": "const accountsSnapshot = await db.collectionGroup('projects').select().get();"
+    },
+    {
+      "id": "QUERY-6BE99F8B7AEA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-budget-summaries.mjs",
+      "line": 170,
+      "symbol": "accountsSnapshot",
+      "operation": "projection",
+      "expression": "const accountsSnapshot = await db.collectionGroup('projects').select().get();"
+    },
+    {
+      "id": "QUERY-5471CD413720",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-current-source.mjs",
+      "line": 78,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(`accounts/${accountId}/transactions/${txId}`).get();"
+    },
+    {
+      "id": "QUERY-15299F2038A9",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-current-source.mjs",
+      "line": 92,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await itemsRef.get();"
+    },
+    {
+      "id": "QUERY-E4FA2B2C8E66",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-current-source.mjs",
+      "line": 128,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').select().get();"
+    },
+    {
+      "id": "QUERY-BE1AB8AD1635",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-current-source.mjs",
+      "line": 128,
+      "symbol": "accountsSnap",
+      "operation": "projection",
+      "expression": "const accountsSnap = await db.collection('accounts').select().get();"
+    },
+    {
+      "id": "QUERY-0B413735C4AD",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-project-price-floor.mjs",
+      "line": 34,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db.collection('accounts').select().get();"
+    },
+    {
+      "id": "QUERY-99A1C0E45C60",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-project-price-floor.mjs",
+      "line": 34,
+      "symbol": "snapshot",
+      "operation": "projection",
+      "expression": "const snapshot = await db.collection('accounts').select().get();"
+    },
+    {
+      "id": "QUERY-519E0CA5C806",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-item-project-price-floor.mjs",
+      "line": 39,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db.collection(`accounts/${id}/items`).get();"
+    },
+    {
+      "id": "QUERY-E1944123FC24",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-uncategorized-movements.mjs",
+      "line": 119,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await txCol().where('projectId', '==', target.projectId).get();"
+    },
+    {
+      "id": "QUERY-1DE732758C17",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-uncategorized-movements.mjs",
+      "line": 119,
+      "symbol": "snap",
+      "operation": "filter",
+      "expression": "const snap = await txCol().where('projectId', '==', target.projectId).get();"
+    },
+    {
+      "id": "QUERY-2A23DFA94913",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/backfill-uncategorized-movements.mjs",
+      "line": 135,
+      "symbol": "isnap",
+      "operation": "admin_sdk_get",
+      "expression": "const isnap = await itemDoc(itemId).get();"
+    },
+    {
+      "id": "QUERY-5819775B1FFE",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/seed-storage-emulator.mjs",
+      "line": 142,
+      "symbol": "docSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const docSnap = await docRef.get();"
+    },
+    {
+      "id": "QUERY-D1168C3EEC3F",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/scripts/setup-health-check.mjs",
+      "line": 73,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await healthDoc.get();"
+    },
+    {
+      "id": "QUERY-4E9B3C0D1E40",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 104,
+      "symbol": "quotaSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const quotaSnap = await tx.get(quotaRef);"
+    },
+    {
+      "id": "QUERY-E8A95DC94729",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 165,
+      "symbol": "existing",
+      "operation": "admin_sdk_get",
+      "expression": "const existing = await tx.get(associationRef);"
+    },
+    {
+      "id": "QUERY-623C38D2DBE5",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 193,
+      "symbol": "toTxSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const toTxSnap = await toTxRef.get();"
+    },
+    {
+      "id": "QUERY-465D5D247BE7",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 202,
+      "symbol": "existing",
+      "operation": "admin_sdk_get",
+      "expression": "const existing = await tx.get(returnedRef);"
+    },
+    {
+      "id": "QUERY-DE103B5BD90F",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 253,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await txRef.get();"
+    },
+    {
+      "id": "QUERY-281B8FC12571",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 302,
+      "symbol": "invoices",
+      "operation": "filter",
+      "expression": "const invoices = await db .collection(`accounts/${accountId}/invoices`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-4E1E053887CD",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 303,
+      "symbol": "invoices",
+      "operation": "admin_sdk_get",
+      "expression": "const invoices = await db .collection(`accounts/${accountId}/invoices`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-92B369910C8B",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 334,
+      "symbol": "initialTransaction",
+      "operation": "admin_sdk_get",
+      "expression": "const initialTransaction = await transactionRef.get();"
+    },
+    {
+      "id": "QUERY-C8C7E580075B",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 359,
+      "symbol": "markerRef",
+      "operation": "admin_sdk_get",
+      "expression": "firestoreTransaction.get(markerRef), firestoreTransaction.get(transactionRef), ]);"
+    },
+    {
+      "id": "QUERY-E884F4A04FD4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 360,
+      "symbol": "markerRef",
+      "operation": "admin_sdk_get",
+      "expression": "firestoreTransaction.get(transactionRef), ]);"
+    },
+    {
+      "id": "QUERY-69602F50D65E",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 468,
+      "symbol": "parentTxSnapshot",
+      "operation": "filter",
+      "expression": "const parentTxSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('itemIds', 'array-contains', itemId) .get();"
+    },
+    {
+      "id": "QUERY-6D668C8F25B9",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 469,
+      "symbol": "parentTxSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const parentTxSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('itemIds', 'array-contains', itemId) .get();"
+    },
+    {
+      "id": "QUERY-B003481D88F4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 511,
+      "symbol": "edgesSnapshot",
+      "operation": "filter",
+      "expression": "const edgesSnapshot = await db .collection(`accounts/${accountId}/lineageEdges`) .where('itemId', '==', itemId) .get();"
+    },
+    {
+      "id": "QUERY-7A7F3177232E",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 512,
+      "symbol": "edgesSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const edgesSnapshot = await db .collection(`accounts/${accountId}/lineageEdges`) .where('itemId', '==', itemId) .get();"
+    },
+    {
+      "id": "QUERY-CC9BBA4ACAC5",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 525,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await txRef.get();"
+    },
+    {
+      "id": "QUERY-EDA8CEB09FDE",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 610,
+      "symbol": "itemsQuery",
+      "operation": "filter",
+      "expression": "let itemsQuery = db .collection(`accounts/${accountId}/items`) .where('spaceId', '==', spaceId);"
+    },
+    {
+      "id": "QUERY-DB3071FD462C",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 614,
+      "symbol": "itemsQuery",
+      "operation": "filter",
+      "expression": "itemsQuery = itemsQuery.where('projectId', '==', projectId);"
+    },
+    {
+      "id": "QUERY-AABD57525BA4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 617,
+      "symbol": "itemsQuery",
+      "operation": "filter",
+      "expression": "itemsQuery = itemsQuery.where('projectId', '==', null);"
+    },
+    {
+      "id": "QUERY-55977FD9E98E",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 620,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await itemsQuery.get();"
+    },
+    {
+      "id": "QUERY-03410F14C4E6",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 767,
+      "symbol": "accountsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();"
+    },
+    {
+      "id": "QUERY-9560C6FF7EB0",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 767,
+      "symbol": "accountsSnapshot",
+      "operation": "collection_group",
+      "expression": "const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();"
+    },
+    {
+      "id": "QUERY-3276F8D25CA0",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 767,
+      "symbol": "accountsSnapshot",
+      "operation": "filter",
+      "expression": "const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();"
+    },
+    {
+      "id": "QUERY-1760A76A95CA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 767,
+      "symbol": "accountsSnapshot",
+      "operation": "limit",
+      "expression": "const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();"
+    },
+    {
+      "id": "QUERY-1AFE0C88E126",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 781,
+      "symbol": "allAccountsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const allAccountsSnapshot = await db.collection('accounts').limit(100).get();"
+    },
+    {
+      "id": "QUERY-BB94C4C98491",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 781,
+      "symbol": "allAccountsSnapshot",
+      "operation": "limit",
+      "expression": "const allAccountsSnapshot = await db.collection('accounts').limit(100).get();"
+    },
+    {
+      "id": "QUERY-0ACF4AA34C9C",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 785,
+      "symbol": "testInviteSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const testInviteSnap = await testInviteRef.get();"
+    },
+    {
+      "id": "QUERY-507DB2962353",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 878,
+      "symbol": "existingFurnishings",
+      "operation": "admin_sdk_get",
+      "expression": "const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));"
+    },
+    {
+      "id": "QUERY-5EF5EB0C7FB4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 878,
+      "symbol": "existingFurnishings",
+      "operation": "filter",
+      "expression": "const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));"
+    },
+    {
+      "id": "QUERY-18394B830E43",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 878,
+      "symbol": "existingFurnishings",
+      "operation": "limit",
+      "expression": "const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));"
+    },
+    {
+      "id": "QUERY-1D7DFE227ACA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 883,
+      "symbol": "seedRefs",
+      "operation": "admin_sdk_get",
+      "expression": "tx.get(accountPresetsRef), ...seedRefs.map((ref) => tx.get(ref)), ]);"
+    },
+    {
+      "id": "QUERY-695AA1DFF6BA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 884,
+      "symbol": "seedRefs",
+      "operation": "admin_sdk_get",
+      "expression": "tx.get(accountPresetsRef), ...seedRefs.map((ref) => tx.get(ref)), ]);"
+    },
+    {
+      "id": "QUERY-A0FF7E6D6480",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1060,
+      "symbol": "presetBudgetCategories",
+      "operation": "filter",
+      "expression": "const presetBudgetCategories = db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .where('name', '==', 'Furnishings') .limit(1);"
+    },
+    {
+      "id": "QUERY-03A40C1ED8F2",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1061,
+      "symbol": "presetBudgetCategories",
+      "operation": "limit",
+      "expression": "const presetBudgetCategories = db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .where('name', '==', 'Furnishings') .limit(1);"
+    },
+    {
+      "id": "QUERY-6A6997E77D46",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1062,
+      "symbol": "presetSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const presetSnapshot = await presetBudgetCategories.get();"
+    },
+    {
+      "id": "QUERY-B23AC9BA013A",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1125,
+      "symbol": "userSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const userSnap = await userRef.get();"
+    },
+    {
+      "id": "QUERY-E1E3315C4CF3",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1170,
+      "symbol": "inviteSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const inviteSnap = await tx.get(inviteRef);"
+    },
+    {
+      "id": "QUERY-1562F6D98F4A",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1178,
+      "symbol": "userSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const userSnap = await tx.get(userRef);"
+    },
+    {
+      "id": "QUERY-B703DA6098F3",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1190,
+      "symbol": "userSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const userSnap = await tx.get(userRef);"
+    },
+    {
+      "id": "QUERY-7849BA521DF9",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1320,
+      "symbol": "categorySnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categorySnap = await db .doc(`accounts/${accountId}/presets/default/budgetCategories/${categoryId}`) .get();"
+    },
+    {
+      "id": "QUERY-352A88791058",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1355,
+      "symbol": "budgetCatsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const budgetCatsSnapshot = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-82F657589C8D",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1383,
+      "symbol": "projectBudgetCatsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const projectBudgetCatsSnapshot = await db .collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-2ABA12A90FBA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1394,
+      "symbol": "txSnapshot",
+      "operation": "filter",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-4078661D4781",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1395,
+      "symbol": "txSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-B78BA93F7CDE",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1551,
+      "symbol": "edgesSnapshot",
+      "operation": "filter",
+      "expression": "const edgesSnapshot = await db .collection(`accounts/${accountId}/lineageEdges`) .where('fromTransactionId', '==', transactionId) .get();"
+    },
+    {
+      "id": "QUERY-3B33870344B4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1552,
+      "symbol": "edgesSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const edgesSnapshot = await db .collection(`accounts/${accountId}/lineageEdges`) .where('fromTransactionId', '==', transactionId) .get();"
+    },
+    {
+      "id": "QUERY-5EC56E0B6ABE",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1613,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "const snapshot = await db .collection(`accounts/${accountId}/items`) .where('__name__', 'in', batch) .get();"
+    },
+    {
+      "id": "QUERY-14130996C2DE",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1614,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db .collection(`accounts/${accountId}/items`) .where('__name__', 'in', batch) .get();"
+    },
+    {
+      "id": "QUERY-ED4B93D4E05E",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1633,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "const snapshot = await db .collection(`accounts/${accountId}/items`) .where('__name__', 'in', batch) .get();"
+    },
+    {
+      "id": "QUERY-B942DCE19C3C",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1634,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db .collection(`accounts/${accountId}/items`) .where('__name__', 'in', batch) .get();"
+    },
+    {
+      "id": "QUERY-2B2113CFF4E0",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1822,
+      "symbol": "txSnapshot",
+      "operation": "filter",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('budgetCategoryId', '==', categoryId) .get();"
+    },
+    {
+      "id": "QUERY-7482D766AAF9",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1823,
+      "symbol": "txSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .where('budgetCategoryId', '==', categoryId) .get();"
+    },
+    {
+      "id": "QUERY-8754DB35ECBA",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1910,
+      "symbol": "projectsSnapshot",
+      "operation": "projection",
+      "expression": "const projectsSnapshot = await db .collection(`accounts/${accountId}/projects`) .select() .get();"
+    },
+    {
+      "id": "QUERY-C2CFB6DF1048",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1911,
+      "symbol": "projectsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const projectsSnapshot = await db .collection(`accounts/${accountId}/projects`) .select() .get();"
+    },
+    {
+      "id": "QUERY-9AE4734748A4",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1961,
+      "symbol": "projectsSnapshot",
+      "operation": "projection",
+      "expression": "const projectsSnapshot = await db .collection(`accounts/${accountId}/projects`) .select() .get();"
+    },
+    {
+      "id": "QUERY-7309CAD49728",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 1962,
+      "symbol": "projectsSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const projectsSnapshot = await db .collection(`accounts/${accountId}/projects`) .select() .get();"
+    },
+    {
+      "id": "QUERY-8F73EB6E12D3",
+      "subsystem": "functions",
+      "sourcePath": "firebase/functions/src/index.ts",
+      "line": 2010,
+      "symbol": "txSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnapshot = await db .collection(`accounts/${accountId}/transactions`) .get();"
+    },
+    {
+      "id": "QUERY-1FCF69962B3D",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "line": 14,
+      "symbol": "query",
+      "operation": "collection_group",
+      "expression": "let query = db.collectionGroup(\"users\").whereField(\"uid\", isEqualTo: userId)"
+    },
+    {
+      "id": "QUERY-06F70AD6E548",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "line": 14,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "let query = db.collectionGroup(\"users\").whereField(\"uid\", isEqualTo: userId)"
+    },
+    {
+      "id": "QUERY-183A432DB5BF",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "line": 18,
+      "symbol": "query",
+      "operation": "collection_read",
+      "expression": "if let cached = try? await query.getDocuments(source: .cache), !cached.documents.isEmpty {"
+    },
+    {
+      "id": "QUERY-1830A250A592",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift",
+      "line": 22,
+      "symbol": "snapshot",
+      "operation": "collection_read",
+      "expression": "let snapshot = try await query.getDocuments()"
+    },
+    {
+      "id": "QUERY-5FE3B789764B",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 174,
+      "symbol": "snapshot",
+      "operation": "document_read",
+      "expression": "let snapshot = try await collectionRef.document(id).getDocument()"
+    },
+    {
+      "id": "QUERY-36E15C520F32",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 180,
+      "symbol": "snapshot",
+      "operation": "collection_read",
+      "expression": "let snapshot = try await collectionRef.getDocuments()"
+    },
+    {
+      "id": "QUERY-10D959B980AD",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 186,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "let snapshot = try await collectionRef .whereField(field, isEqualTo: value) .getDocuments()"
+    },
+    {
+      "id": "QUERY-E53E8AAEA8A9",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 187,
+      "symbol": "snapshot",
+      "operation": "collection_read",
+      "expression": "let snapshot = try await collectionRef .whereField(field, isEqualTo: value) .getDocuments()"
+    },
+    {
+      "id": "QUERY-F0DA5BB2272E",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 253,
+      "symbol": "registration",
+      "operation": "listener",
+      "expression": "let registration = collectionRef.addSnapshotListener { [collectionPath] snapshot, error in"
+    },
+    {
+      "id": "QUERY-25EBAD3AA007",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 325,
+      "symbol": "registration",
+      "operation": "filter",
+      "expression": "let registration = collectionRef .whereField(field, isEqualTo: value) .addSnapshotListener { [collectionPath] snapshot, error in"
+    },
+    {
+      "id": "QUERY-0DCB1F5BDFA1",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 326,
+      "symbol": "registration",
+      "operation": "listener",
+      "expression": "let registration = collectionRef .whereField(field, isEqualTo: value) .addSnapshotListener { [collectionPath] snapshot, error in"
+    },
+    {
+      "id": "QUERY-CED857902958",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift",
+      "line": 393,
+      "symbol": "documentDecoder",
+      "operation": "listener",
+      "expression": "return collectionRef.document(id).addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-EE46CA91B084",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InventoryOperationsService.swift",
+      "line": 183,
+      "symbol": "snapshot",
+      "operation": "document_read",
+      "expression": "let snapshot = try await Firestore.firestore() .document(\"accounts/\\(accountId)/spaces/\\(spaceId)\") .getDocument()"
+    },
+    {
+      "id": "QUERY-DEC653E5C896",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InvitesService.swift",
+      "line": 11,
+      "symbol": "collectionRef",
+      "operation": "filter",
+      "expression": "return collectionRef .whereField(\"revokedAt\", isEqualTo: NSNull()) .addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-AB3B08D85C6C",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/InvitesService.swift",
+      "line": 12,
+      "symbol": "collectionRef",
+      "operation": "listener",
+      "expression": "return collectionRef .whereField(\"revokedAt\", isEqualTo: NSNull()) .addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-B31FFFFD6BFD",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 31,
+      "symbol": "col",
+      "operation": "filter",
+      "expression": "async let fromEdges = col .whereField(\"fromTransactionId\", isEqualTo: transactionId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-9B5B44A85FB2",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 32,
+      "symbol": "col",
+      "operation": "collection_read",
+      "expression": "async let fromEdges = col .whereField(\"fromTransactionId\", isEqualTo: transactionId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-62DDCCE7D2DD",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 34,
+      "symbol": "col",
+      "operation": "filter",
+      "expression": "async let toEdges = col .whereField(\"toTransactionId\", isEqualTo: transactionId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-2850652C8B95",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 35,
+      "symbol": "col",
+      "operation": "collection_read",
+      "expression": "async let toEdges = col .whereField(\"toTransactionId\", isEqualTo: transactionId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-2A802C4A25EE",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 53,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "let snapshot = try await collection(accountId: accountId) .whereField(\"itemId\", isEqualTo: itemId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-E6940066C1F2",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/LineageEdgesService.swift",
+      "line": 54,
+      "symbol": "snapshot",
+      "operation": "collection_read",
+      "expression": "let snapshot = try await collection(accountId: accountId) .whereField(\"itemId\", isEqualTo: itemId) .getDocuments()"
+    },
+    {
+      "id": "QUERY-FF1E88477925",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift",
+      "line": 238,
+      "symbol": "ref",
+      "operation": "document_read",
+      "expression": "return try await ref.getDocument().exists"
+    },
+    {
+      "id": "QUERY-334B5E35D8A6",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift",
+      "line": 305,
+      "symbol": "snapshot",
+      "operation": "document_read",
+      "expression": "let snapshot = try transaction.getDocument(docRef)"
+    },
+    {
+      "id": "QUERY-9E9838748B90",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift",
+      "line": 17,
+      "symbol": "docRef",
+      "operation": "listener",
+      "expression": "return docRef.addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-C59A1027F497",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift",
+      "line": 37,
+      "symbol": "collectionRef",
+      "operation": "listener",
+      "expression": "return collectionRef.addSnapshotListener { snapshot, _ in"
+    },
+    {
+      "id": "QUERY-57FA49B52A1C",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift",
+      "line": 74,
+      "symbol": "snap",
+      "operation": "document_read",
+      "expression": "let snap = try await db.document(path).getDocument()"
+    },
+    {
+      "id": "QUERY-241AE9EE0E3F",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift",
+      "line": 79,
+      "symbol": "snap",
+      "operation": "document_read",
+      "expression": "let snap = try await db.document(path).getDocument()"
+    },
+    {
+      "id": "QUERY-1355478CCE9B",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift",
+      "line": 108,
+      "symbol": "subscribeToActiveProtoItems",
+      "operation": "filter",
+      "expression": "collection(accountId: accountId) .whereField(\"status\", in: [ProtoItemStatus.open.rawValue, ProtoItemStatus.inReview.rawValue]) .addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-ECADB2A11D46",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift",
+      "line": 109,
+      "symbol": "subscribeToActiveProtoItems",
+      "operation": "listener",
+      "expression": "collection(accountId: accountId) .whereField(\"status\", in: [ProtoItemStatus.open.rawValue, ProtoItemStatus.inReview.rawValue]) .addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-2C1E9DEBF1F7",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift",
+      "line": 15,
+      "symbol": "subscribe",
+      "operation": "listener",
+      "expression": "documentRef(accountId: accountId).addSnapshotListener { snapshot, error in"
+    },
+    {
+      "id": "QUERY-C2911BD62303",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift",
+      "line": 37,
+      "symbol": "snapshot",
+      "operation": "document_read",
+      "expression": "let snapshot = try await documentRef(accountId: accountId).getDocument()"
+    },
+    {
+      "id": "QUERY-D8D82B20210E",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Services/VendorDefaultsService.swift",
+      "line": 47,
+      "symbol": "snapshot",
+      "operation": "document_read",
+      "expression": "let snapshot = try await documentRef(accountId: accountId).getDocument()"
+    },
+    {
+      "id": "QUERY-80E36025A223",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/Creation/NewItemView.swift",
+      "line": 1243,
+      "symbol": "projectCategoryRef",
+      "operation": "document_read",
+      "expression": "guard try await projectCategoryRef.getDocument().exists else {"
+    },
+    {
+      "id": "QUERY-1B08651B1030",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift",
+      "line": 99,
+      "symbol": "memberSnap",
+      "operation": "document_read",
+      "expression": "let memberSnap = try await memberRef.getDocument()"
+    },
+    {
+      "id": "QUERY-342EBD223405",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift",
+      "line": 108,
+      "symbol": "accountSnap",
+      "operation": "document_read",
+      "expression": "let accountSnap = try await db.document(\"accounts/\\(accountID)\").getDocument()"
+    },
+    {
+      "id": "QUERY-EA29EFC55CE5",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift",
+      "line": 139,
+      "symbol": "memberSnap",
+      "operation": "document_read",
+      "expression": "let memberSnap = try await db.document(\"accounts/\\(accountID)/users/\\(uid)\") .getDocument(source: .cache)"
+    },
+    {
+      "id": "QUERY-C2E9073C0422",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift",
+      "line": 148,
+      "symbol": "accountSnap",
+      "operation": "document_read",
+      "expression": "let accountSnap = try await db.document(\"accounts/\\(accountID)\") .getDocument(source: .cache)"
+    },
+    {
+      "id": "QUERY-C399E49A1A85",
+      "subsystem": "ios",
+      "sourcePath": "LedgeriOS/LedgeriOS/Views/Settings/UsersView.swift",
+      "line": 130,
+      "symbol": "membersRef",
+      "operation": "listener",
+      "expression": "membersListener = membersRef.addSnapshotListener { snapshot, _ in"
+    },
+    {
+      "id": "QUERY-451572A30FC6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 22,
+      "symbol": "snapshot",
+      "operation": "collection_group",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .limit(1) .get();"
+    },
+    {
+      "id": "QUERY-022A3E82CE10",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 23,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .limit(1) .get();"
+    },
+    {
+      "id": "QUERY-C64F73EBEA1C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 24,
+      "symbol": "snapshot",
+      "operation": "limit",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .limit(1) .get();"
+    },
+    {
+      "id": "QUERY-D437E9A79D19",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 25,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .limit(1) .get();"
+    },
+    {
+      "id": "QUERY-4033B7B87046",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 52,
+      "symbol": "snapshot",
+      "operation": "collection_group",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .get();"
+    },
+    {
+      "id": "QUERY-45CE1C782CD4",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 53,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .get();"
+    },
+    {
+      "id": "QUERY-25FDE22A5FE3",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 54,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await db .collectionGroup(\"users\") .where(\"uid\", \"==\", uid) .get();"
+    },
+    {
+      "id": "QUERY-06B04829578C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/auth.ts",
+      "line": 68,
+      "symbol": "accountDoc",
+      "operation": "admin_sdk_get",
+      "expression": "const accountDoc = await db.doc(`accounts/${accountId}`).get();"
+    },
+    {
+      "id": "QUERY-0A7151EF9008",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/oauth.ts",
+      "line": 50,
+      "symbol": "doc",
+      "operation": "admin_sdk_get",
+      "expression": "const doc = await authCodesCollection().doc(code).get();"
+    },
+    {
+      "id": "QUERY-99D58841EB2F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/resources/index.ts",
+      "line": 18,
+      "symbol": "projects",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"projects\").where(\"isArchived\", \"==\", false)"
+    },
+    {
+      "id": "QUERY-9641C3AFA75B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/resources/index.ts",
+      "line": 69,
+      "symbol": "transactions",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-BBA86989361A",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/resources/index.ts",
+      "line": 114,
+      "symbol": "items",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"projectId\", \"==\", null)"
+    },
+    {
+      "id": "QUERY-E4B3119EDD17",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 17,
+      "symbol": "registerAnalyticsTools",
+      "operation": "filter",
+      "expression": "queryDocs<Item>(accountCollection(db, \"items\").where(\"projectId\", \"==\", projectId)), queryDocs<Transaction>(accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)), ]);"
+    },
+    {
+      "id": "QUERY-E6E2045785E6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 18,
+      "symbol": "registerAnalyticsTools",
+      "operation": "filter",
+      "expression": "queryDocs<Transaction>(accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)), ]);"
+    },
+    {
+      "id": "QUERY-6842139605FC",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 100,
+      "symbol": "items",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"projectId\", \"==\", null)"
+    },
+    {
+      "id": "QUERY-AD2810269F0F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 136,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (projectId) query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-1B022B1C66B1",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 179,
+      "symbol": "transactions",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-5F8D32DFCCA8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 221,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-DE6C3BF93897",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/analytics.ts",
+      "line": 223,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-763CBF8E8A55",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/budget.ts",
+      "line": 23,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"isArchived\", \"==\", false);"
+    },
+    {
+      "id": "QUERY-90068EAE6D73",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/budget.ts",
+      "line": 59,
+      "symbol": "transactions",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-497D478B3CBE",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "line": 26,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await ref.get();"
+    },
+    {
+      "id": "QUERY-C61F3D19EB32",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "line": 361,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "let q: FirebaseFirestore.Query = accountCollection(db, \"transactions\").where( \"isComplete\", \"==\", false"
+    },
+    {
+      "id": "QUERY-12AAD362F616",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "line": 366,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "if (projectId === \"inventory\") q = q.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-5A535C37F553",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/composite.ts",
+      "line": 367,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "else if (projectId) q = q.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-926B2CEAAFF5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 387,
+      "symbol": "snapshots",
+      "operation": "bulk_document_read",
+      "expression": "const snapshots = await db.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-68E385338969",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 471,
+      "symbol": "invoices",
+      "operation": "filter",
+      "expression": "const invoices = await queryDocs<Invoice>(accountCollection(db, \"invoices\").where(\"projectId\", \"==\", projectId));"
+    },
+    {
+      "id": "QUERY-4151AF21C2CD",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 649,
+      "symbol": "edges",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"itemId\", \"==\", item.id)"
+    },
+    {
+      "id": "QUERY-47A3FCE84919",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 787,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await catRef.get();"
+    },
+    {
+      "id": "QUERY-D67B560CE31E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 856,
+      "symbol": "accountCategoryRef",
+      "operation": "bulk_document_read",
+      "expression": "const [projectCategorySnapshot, accountCategorySnapshot] = await db.getAll( projectCategoryRef, accountCategoryRef"
+    },
+    {
+      "id": "QUERY-909E4EAD7569",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1614,
+      "symbol": "itemSnapshots",
+      "operation": "bulk_document_read",
+      "expression": "const itemSnapshots = await firestoreTransaction.getAll(...itemRefs);"
+    },
+    {
+      "id": "QUERY-5DBBCDB331B3",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1635,
+      "symbol": "sourceTransactionSnapshots",
+      "operation": "bulk_document_read",
+      "expression": "? await firestoreTransaction.getAll(...sourceTransactionIds.map((id) => txCol.doc(id)))"
+    },
+    {
+      "id": "QUERY-19537C12447E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1648,
+      "symbol": "projectSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const projectSnapshot = await firestoreTransaction.get(projectRef);"
+    },
+    {
+      "id": "QUERY-E3FC95FC7AE2",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1663,
+      "symbol": "categorySnapshots",
+      "operation": "bulk_document_read",
+      "expression": "const categorySnapshots = await firestoreTransaction.getAll(...categoryRefs);"
+    },
+    {
+      "id": "QUERY-CD2DE70B51EB",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1664,
+      "symbol": "accountCategorySnapshots",
+      "operation": "bulk_document_read",
+      "expression": "const accountCategorySnapshots = await firestoreTransaction.getAll(...accountCategoryRefs);"
+    },
+    {
+      "id": "QUERY-2090D829242B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/inventory-operations.ts",
+      "line": 1686,
+      "symbol": "spaceSnapshots",
+      "operation": "bulk_document_read",
+      "expression": "? await firestoreTransaction.getAll(...uniqueSpaceIds.map((spaceId) => accountCollection(db, \"spaces\").doc(spaceId)))"
+    },
+    {
+      "id": "QUERY-3381F4B11515",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 151,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await ref.get();"
+    },
+    {
+      "id": "QUERY-9C50CFB3EF91",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 274,
+      "symbol": "existingSettlements",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\").where(\"settlementInvoiceId\", \"==\", invoiceId)"
+    },
+    {
+      "id": "QUERY-504548158C91",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 380,
+      "symbol": "project",
+      "operation": "document_read",
+      "expression": "const project = await getDoc(db, \"projects\", targetProjectId);"
+    },
+    {
+      "id": "QUERY-E0348604B462",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 470,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (projectId) query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-ACC4D8E60D30",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 471,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (status) query = query.where(\"status\", \"==\", normalizeInvoiceStatus(status));"
+    },
+    {
+      "id": "QUERY-CE78B57F012C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 472,
+      "symbol": "query",
+      "operation": "limit",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-9A0D35A5BC63",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 472,
+      "symbol": "query",
+      "operation": "offset",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-CE906E72C608",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 502,
+      "symbol": "invoice",
+      "operation": "filter",
+      "expression": "queryDocs<Item>(accountCollection(db, \"items\").where(\"projectId\", \"==\", projectId)), queryDocs<Transaction>(accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)), queryDocs<Invoice>(accountCollection(db, \"invoices\").where(\"projectId\", \"==\", projectId)), queryDocs<FeeInstallment>(accountCollection(db, \"projects\").doc(projectId).collection(\"feeInstallments\")), ]);"
+    },
+    {
+      "id": "QUERY-D34208A603FC",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 503,
+      "symbol": "invoice",
+      "operation": "filter",
+      "expression": "queryDocs<Transaction>(accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)), queryDocs<Invoice>(accountCollection(db, \"invoices\").where(\"projectId\", \"==\", projectId)), queryDocs<FeeInstallment>(accountCollection(db, \"projects\").doc(projectId).collection(\"feeInstallments\")), ]);"
+    },
+    {
+      "id": "QUERY-A57BEF79232D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 504,
+      "symbol": "invoice",
+      "operation": "filter",
+      "expression": "queryDocs<Invoice>(accountCollection(db, \"invoices\").where(\"projectId\", \"==\", projectId)), queryDocs<FeeInstallment>(accountCollection(db, \"projects\").doc(projectId).collection(\"feeInstallments\")), ]);"
+    },
+    {
+      "id": "QUERY-9454B271B63C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/invoices.ts",
+      "line": 553,
+      "symbol": "project",
+      "operation": "document_read",
+      "expression": "const project = await getDoc(db, \"projects\", projectId);"
+    },
+    {
+      "id": "QUERY-D836B21138A5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 212,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-3003C474663B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 214,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-33A7F77B27C0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 217,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (spaceId) query = query.where(\"spaceId\", \"==\", spaceId);"
+    },
+    {
+      "id": "QUERY-E0A63BCE44B9",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 218,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (budgetCategoryId) query = query.where(\"budgetCategoryId\", \"==\", budgetCategoryId);"
+    },
+    {
+      "id": "QUERY-6742A68F87F5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 219,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (status) query = query.where(\"status\", \"==\", status);"
+    },
+    {
+      "id": "QUERY-F21791F02ADB",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 220,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (source) query = query.where(\"source\", \"==\", source);"
+    },
+    {
+      "id": "QUERY-18D0FE131FC5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 221,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (bookmarked !== undefined) query = query.where(\"bookmark\", \"==\", bookmarked);"
+    },
+    {
+      "id": "QUERY-26D101304380",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 232,
+      "symbol": "hasClientFilter",
+      "operation": "limit",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-44C3D1369982",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 232,
+      "symbol": "hasClientFilter",
+      "operation": "offset",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-304E2887FDC4",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 273,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "q = q.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-42811267B04C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 275,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "q = q.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-4C4C07FEBB20",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 734,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-271336285762",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 736,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", filter.projectId);"
+    },
+    {
+      "id": "QUERY-045504DEC224",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 738,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.spaceId) query = query.where(\"spaceId\", \"==\", filter.spaceId);"
+    },
+    {
+      "id": "QUERY-9578388D1328",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 739,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.budgetCategoryId) query = query.where(\"budgetCategoryId\", \"==\", filter.budgetCategoryId);"
+    },
+    {
+      "id": "QUERY-B2DC3434F9D9",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 740,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.status) query = query.where(\"status\", \"==\", filter.status);"
+    },
+    {
+      "id": "QUERY-45D5549B7AA1",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 741,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.source) query = query.where(\"source\", \"==\", filter.source);"
+    },
+    {
+      "id": "QUERY-87E8F0FDC15E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 742,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.transactionId) query = query.where(\"transactionId\", \"==\", filter.transactionId);"
+    },
+    {
+      "id": "QUERY-E60B6B644B99",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 743,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.bookmarked !== undefined) query = query.where(\"bookmark\", \"==\", filter.bookmarked);"
+    },
+    {
+      "id": "QUERY-5F416745FBF2",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 745,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await query.get();"
+    },
+    {
+      "id": "QUERY-8FE6A508199D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 1156,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await firestoreTransaction.get(itemRef);"
+    },
+    {
+      "id": "QUERY-8B8C543E141E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 1200,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await transaction.get(itemRef);"
+    },
+    {
+      "id": "QUERY-FBB9BA19F4F6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 1231,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await transaction.get(itemRef);"
+    },
+    {
+      "id": "QUERY-B60E8DD5FD9B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 1261,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await transaction.get(itemRef);"
+    },
+    {
+      "id": "QUERY-17A30DB91178",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/items.ts",
+      "line": 1299,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await transaction.get(itemRef);"
+    },
+    {
+      "id": "QUERY-DD8DD611A1CC",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "line": 57,
+      "symbol": "edges",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\") .where(\"itemId\", \"==\", itemId) .orderBy(\"createdAt\", \"asc\")"
+    },
+    {
+      "id": "QUERY-534C33778058",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "line": 58,
+      "symbol": "edges",
+      "operation": "order",
+      "expression": "accountCollection(db, \"lineageEdges\") .where(\"itemId\", \"==\", itemId) .orderBy(\"createdAt\", \"asc\")"
+    },
+    {
+      "id": "QUERY-64EAF5787952",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "line": 83,
+      "symbol": "resolved",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"fromProjectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-33D9A572EEB8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/lineage.ts",
+      "line": 86,
+      "symbol": "resolved",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"toProjectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-CBD3D04089FF",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/project-notes.ts",
+      "line": 45,
+      "symbol": "notes",
+      "operation": "order",
+      "expression": "subcollection(db, \"projects\", projectId, \"notes\") .orderBy(\"createdAt\", \"desc\") .limit(n)"
+    },
+    {
+      "id": "QUERY-BF0573C89151",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/project-notes.ts",
+      "line": 46,
+      "symbol": "notes",
+      "operation": "limit",
+      "expression": "subcollection(db, \"projects\", projectId, \"notes\") .orderBy(\"createdAt\", \"desc\") .limit(n)"
+    },
+    {
+      "id": "QUERY-929FA5F771D6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "line": 29,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter === \"active\") query = query.where(\"isArchived\", \"==\", false);"
+    },
+    {
+      "id": "QUERY-F1B5D6751738",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "line": 30,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "else if (filter === \"archived\") query = query.where(\"isArchived\", \"==\", true);"
+    },
+    {
+      "id": "QUERY-0BE29F32C9A0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "line": 52,
+      "symbol": "items",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"projectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-D639A6F8C8AA",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/projects.ts",
+      "line": 84,
+      "symbol": "transactions",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\").where(\"projectId\", \"==\", projectId)"
+    },
+    {
+      "id": "QUERY-540C07AFE6D0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "line": 41,
+      "symbol": "soldEdges",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"==\", tx.id)"
+    },
+    {
+      "id": "QUERY-1C727FEA355C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "line": 95,
+      "symbol": "transactions",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"transactions\") .where(\"purchaseHandling\", \"==\", \"inventory_resale\") .limit(limit)"
+    },
+    {
+      "id": "QUERY-5DB4F6CE0F4D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "line": 96,
+      "symbol": "transactions",
+      "operation": "limit",
+      "expression": "accountCollection(db, \"transactions\") .where(\"purchaseHandling\", \"==\", \"inventory_resale\") .limit(limit)"
+    },
+    {
+      "id": "QUERY-D070D00C1B58",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "line": 188,
+      "symbol": "soldEdges",
+      "operation": "collection_read",
+      "expression": "const soldEdges = await queryDocs( accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"==\", transactionId)"
+    },
+    {
+      "id": "QUERY-170BB1DA4FFE",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/purchase-intents.ts",
+      "line": 189,
+      "symbol": "soldEdges",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"==\", transactionId)"
+    },
+    {
+      "id": "QUERY-A69641396B0E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 238,
+      "symbol": "categorySnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categorySnap = await accountCollection(db, \"projects\") .doc(args.projectId) .collection(\"budgetCategories\") .doc(args.budgetCategoryId) .get();"
+    },
+    {
+      "id": "QUERY-E9AE08280D8B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 385,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (projectId === \"inventory\") query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-1C6DCFEF5FB3",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 386,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "else if (projectId) query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-49D5F187F95E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 387,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (intendedProjectId) query = query.where(\"intendedProjectId\", \"==\", intendedProjectId);"
+    },
+    {
+      "id": "QUERY-AE6E6E08651B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 388,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (transactionId) query = query.where(\"transactionId\", \"==\", transactionId);"
+    },
+    {
+      "id": "QUERY-7FE076971B68",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 389,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (status) query = query.where(\"status\", \"==\", status);"
+    },
+    {
+      "id": "QUERY-130FD313A20C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 390,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (captureContext) query = query.where(\"captureContext\", \"==\", captureContext);"
+    },
+    {
+      "id": "QUERY-130E0FE810B2",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 391,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (activeOnly && !status) query = query.where(\"status\", \"in\", [\"open\", \"in_review\"]);"
+    },
+    {
+      "id": "QUERY-0A9CAB36FAF3",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 394,
+      "symbol": "query",
+      "operation": "limit",
+      "expression": "if (!fetchAll && isFromInventory === undefined) query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-E841907BAAD0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 394,
+      "symbol": "query",
+      "operation": "offset",
+      "expression": "if (!fetchAll && isFromInventory === undefined) query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-BEC77C486C58",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 439,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "if (projectId === \"inventory\") q = q.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-17D9E588B7F8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 440,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "else if (projectId) q = q.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-716662CCB889",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 441,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "if (status) q = q.where(\"status\", \"==\", status);"
+    },
+    {
+      "id": "QUERY-845C71B9E61F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 442,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "if (activeOnly && !status) q = q.where(\"status\", \"in\", [\"open\", \"in_review\"]);"
+    },
+    {
+      "id": "QUERY-E2139FC42DF4",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/quick-draft-items.ts",
+      "line": 464,
+      "symbol": "drafts",
+      "operation": "limit",
+      "expression": "const drafts = await queryDocs<ProtoItem>(accountCollection(db, \"protoItems\").limit(500));"
+    },
+    {
+      "id": "QUERY-F2986DF7A932",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "line": 22,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-5B30A5A1F20D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "line": 24,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-6B0DE6D22A30",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "line": 66,
+      "symbol": "items",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"spaceId\", \"==\", spaceId)"
+    },
+    {
+      "id": "QUERY-2F3C6023ACB6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/spaces.ts",
+      "line": 233,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await firestoreTransaction.get(spaceRef);"
+    },
+    {
+      "id": "QUERY-02EB353513F6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 134,
+      "symbol": "readDocument",
+      "operation": "admin_sdk_get",
+      "expression": "return firestoreTransaction ? firestoreTransaction.get(ref) : ref.get();"
+    },
+    {
+      "id": "QUERY-931BA317E4E5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 144,
+      "symbol": "readDocuments",
+      "operation": "bulk_document_read",
+      "expression": "? firestoreTransaction.getAll(...refs)"
+    },
+    {
+      "id": "QUERY-1DDA927C7D84",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 145,
+      "symbol": "readDocuments",
+      "operation": "bulk_document_read",
+      "expression": ": db.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-F761893C5B8C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 152,
+      "symbol": "readQuery",
+      "operation": "admin_sdk_get",
+      "expression": "return firestoreTransaction ? firestoreTransaction.get(query) : query.get();"
+    },
+    {
+      "id": "QUERY-66FFB0F45818",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 402,
+      "symbol": "reverseSnapshot",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"transactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-7E047E9A6B5C",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 454,
+      "symbol": "provenanceSnapshot",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"items\").where(\"inventoryEntryTransactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-F360D9913A08",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 467,
+      "symbol": "lineageFromSnapshot",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-F9F6943F3BC8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 471,
+      "symbol": "lineageToSnapshot",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"toTransactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-50A9EEC4C398",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 479,
+      "symbol": "snapshot",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"lineageEdges\").where(\"itemId\", \"in\", itemIdChunk), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-22D94C288A41",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 513,
+      "symbol": "quickDraftSnapshots",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"protoItems\").where(\"transactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-B6E70D1A288A",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transaction-item-corrections.ts",
+      "line": 517,
+      "symbol": "quickDraftSnapshots",
+      "operation": "filter",
+      "expression": "accountCollection(db, \"protoItems\").where(\"candidateTransactionId\", \"==\", input.transactionId), firestoreTransaction"
+    },
+    {
+      "id": "QUERY-BC890C7B5FAF",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 45,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await ref.get();"
+    },
+    {
+      "id": "QUERY-3BA9A6869775",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 292,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-AC569C24A35E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 294,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-1FA052773AE0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 298,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"budgetCategoryId\", \"==\", budgetCategoryId);"
+    },
+    {
+      "id": "QUERY-1F88F5D5D887",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 302,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"type\", \"==\", type);"
+    },
+    {
+      "id": "QUERY-7E3A1BAE38C5",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 306,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"purchasedBy\", \"==\", purchasedBy);"
+    },
+    {
+      "id": "QUERY-DF1A186FB9A0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 310,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"purchaseHandling\", \"==\", purchaseHandling);"
+    },
+    {
+      "id": "QUERY-6A42B07619AD",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 314,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"intendedProjectId\", \"==\", intendedProjectId);"
+    },
+    {
+      "id": "QUERY-F0B4DA5B17E7",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 318,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"source\", \"==\", source);"
+    },
+    {
+      "id": "QUERY-D903F680921B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 322,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"isComplete\", \"==\", isComplete);"
+    },
+    {
+      "id": "QUERY-E48771367F11",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 326,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"reimbursementType\", \"==\", reimbursementType);"
+    },
+    {
+      "id": "QUERY-8038521B510F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 330,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"ingestionStatus\", \"==\", ingestionStatus);"
+    },
+    {
+      "id": "QUERY-A13C526E007D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 342,
+      "symbol": "clientFilter",
+      "operation": "limit",
+      "expression": "query = query.limit(500);"
+    },
+    {
+      "id": "QUERY-556D1E364D40",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 344,
+      "symbol": "clientFilter",
+      "operation": "limit",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-8BCF220B169D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 344,
+      "symbol": "clientFilter",
+      "operation": "offset",
+      "expression": "query = query.offset(offset).limit(limit);"
+    },
+    {
+      "id": "QUERY-C5900E8B0CF6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 388,
+      "symbol": "edgesCol",
+      "operation": "filter",
+      "expression": "queryDocs<LineageEdge>(edgesCol.where(\"fromTransactionId\", \"==\", transactionId)), queryDocs<LineageEdge>(edgesCol.where(\"toTransactionId\", \"==\", transactionId)), ]);"
+    },
+    {
+      "id": "QUERY-E1F3A6AE1CA8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 389,
+      "symbol": "edgesCol",
+      "operation": "filter",
+      "expression": "queryDocs<LineageEdge>(edgesCol.where(\"toTransactionId\", \"==\", transactionId)), ]);"
+    },
+    {
+      "id": "QUERY-BAF60F11767B",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 464,
+      "symbol": "q",
+      "operation": "filter",
+      "expression": "if (projectId) q = q.where(\"projectId\", \"==\", projectId);"
+    },
+    {
+      "id": "QUERY-DD174EB3B574",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 825,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", null);"
+    },
+    {
+      "id": "QUERY-5E691D0C7659",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 827,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "query = query.where(\"projectId\", \"==\", filter.projectId);"
+    },
+    {
+      "id": "QUERY-9F8DCAF194F8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 829,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.purchasedBy) query = query.where(\"purchasedBy\", \"==\", filter.purchasedBy);"
+    },
+    {
+      "id": "QUERY-9931D5C529BF",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 830,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.source) query = query.where(\"source\", \"==\", filter.source);"
+    },
+    {
+      "id": "QUERY-A79D5ED0453D",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 831,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.isComplete !== undefined) query = query.where(\"isComplete\", \"==\", filter.isComplete);"
+    },
+    {
+      "id": "QUERY-96976E48FB53",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 832,
+      "symbol": "query",
+      "operation": "filter",
+      "expression": "if (filter.type) query = query.where(\"type\", \"==\", filter.type);"
+    },
+    {
+      "id": "QUERY-76AFDEF477C0",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 834,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await query.get();"
+    },
+    {
+      "id": "QUERY-146EA19F7719",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 901,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await firestoreTransaction.get(ref);"
+    },
+    {
+      "id": "QUERY-48C198285DF6",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/tools/transactions.ts",
+      "line": 1302,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await firestoreTransaction.get(transactionRef);"
+    },
+    {
+      "id": "QUERY-D96A9415861F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/userState.ts",
+      "line": 14,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(`mcpUserState/${uid}`).get();"
+    },
+    {
+      "id": "QUERY-DC68CD599C16",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/inventory.ts",
+      "line": 12,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(accountPath()).get();"
+    },
+    {
+      "id": "QUERY-C1FD5E69A992",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/query.ts",
+      "line": 30,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await query.get();"
+    },
+    {
+      "id": "QUERY-ED6D30C49E76",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/query.ts",
+      "line": 44,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await ref.get();"
+    },
+    {
+      "id": "QUERY-EFE5D6B459E2",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/query.ts",
+      "line": 60,
+      "symbol": "snaps",
+      "operation": "bulk_document_read",
+      "expression": "const snaps = await db.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-B52F95D7383F",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 108,
+      "symbol": "readDocuments",
+      "operation": "bulk_document_read",
+      "expression": "? firestoreTransaction.getAll(...refs)"
+    },
+    {
+      "id": "QUERY-CC69C1A5707A",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 109,
+      "symbol": "readDocuments",
+      "operation": "bulk_document_read",
+      "expression": ": db.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-223E3A3BC831",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 117,
+      "symbol": "readQuery",
+      "operation": "admin_sdk_get",
+      "expression": "? firestoreTransaction.get(query)"
+    },
+    {
+      "id": "QUERY-2D77A8D40543",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 118,
+      "symbol": "readQuery",
+      "operation": "admin_sdk_get",
+      "expression": ": query.get();"
+    },
+    {
+      "id": "QUERY-8F2D0ACB27BE",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 290,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"items\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"items\").where(\"inventoryEntryTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"lineageEdges\").where(\"toTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"invoices\"), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"trans"
+    },
+    {
+      "id": "QUERY-9382B65C9A54",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 291,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"items\").where(\"inventoryEntryTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"lineageEdges\").where(\"toTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"invoices\"), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\""
+    },
+    {
+      "id": "QUERY-1423DB23A7A8",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 292,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"lineageEdges\").where(\"fromTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"lineageEdges\").where(\"toTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"invoices\"), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"candidateTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactionRepricing"
+    },
+    {
+      "id": "QUERY-84B6AE67C91E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 293,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"lineageEdges\").where(\"toTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"invoices\"), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"candidateTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactionRepricingEvents\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactio"
+    },
+    {
+      "id": "QUERY-6764A54D8856",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 295,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"protoItems\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"protoItems\").where(\"candidateTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactionRepricingEvents\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactions\").where(\"ingestionMeta.linkedIngestionIds\", \"array-contains-any\", transactionIds), firestoreTransaction), ]);"
+    },
+    {
+      "id": "QUERY-C882DDB1031E",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 296,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"protoItems\").where(\"candidateTransactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactionRepricingEvents\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactions\").where(\"ingestionMeta.linkedIngestionIds\", \"array-contains-any\", transactionIds), firestoreTransaction), ]);"
+    },
+    {
+      "id": "QUERY-8E3BF9150964",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 297,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"transactionRepricingEvents\").where(\"transactionId\", \"in\", transactionIds), firestoreTransaction), readQuery(accountCollection(db, \"transactions\").where(\"ingestionMeta.linkedIngestionIds\", \"array-contains-any\", transactionIds), firestoreTransaction), ]);"
+    },
+    {
+      "id": "QUERY-550DA57CA8A7",
+      "subsystem": "mcp",
+      "sourcePath": "mcp-server/src/util/transaction-deletion.ts",
+      "line": 298,
+      "symbol": "tombstoneRefs",
+      "operation": "filter",
+      "expression": "readQuery(accountCollection(db, \"transactions\").where(\"ingestionMeta.linkedIngestionIds\", \"array-contains-any\", transactionIds), firestoreTransaction), ]);"
+    },
+    {
+      "id": "QUERY-D51AB7C74DF9",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/audit-parity.ts",
+      "line": 128,
+      "symbol": "fbItemSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const fbItemSnap = await db.collection(`accounts/${accountId}/items`).get();"
+    },
+    {
+      "id": "QUERY-1588B585B92E",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/audit-parity.ts",
+      "line": 131,
+      "symbol": "fbTxSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const fbTxSnap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-2A17B9AFEF20",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/backfill-return-itemids.ts",
+      "line": 103,
+      "symbol": "allTxSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const allTxSnap = await txCol.get();"
+    },
+    {
+      "id": "QUERY-54A4D6F87EE4",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/backfill-return-itemids.ts",
+      "line": 138,
+      "symbol": "itemSnap",
+      "operation": "filter",
+      "expression": "const itemSnap = await itemCol .where('transactionId', '==', returnTx.id) .get();"
+    },
+    {
+      "id": "QUERY-C6B16594B5BD",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/backfill-return-itemids.ts",
+      "line": 139,
+      "symbol": "itemSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const itemSnap = await itemCol .where('transactionId', '==', returnTx.id) .get();"
+    },
+    {
+      "id": "QUERY-60598F30D032",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/backfill-return-itemids.ts",
+      "line": 200,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-01C2FDCB4E10",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/budget-backfill.ts",
+      "line": 50,
+      "symbol": "budgetCatsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const budgetCatsSnap = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-31117A4DEA31",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/budget-backfill.ts",
+      "line": 66,
+      "symbol": "projectBudgetCatsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const projectBudgetCatsSnap = await db .collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-FAAB2018EC69",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/budget-backfill.ts",
+      "line": 76,
+      "symbol": "txSnap",
+      "operation": "filter",
+      "expression": "const txSnap = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-26A07E46748E",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/budget-backfill.ts",
+      "line": 77,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db .collection(`accounts/${accountId}/transactions`) .where('projectId', '==', projectId) .get();"
+    },
+    {
+      "id": "QUERY-5EFB8B5776A7",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/check-urls.ts",
+      "line": 29,
+      "symbol": "allItems",
+      "operation": "admin_sdk_get",
+      "expression": "const allItems = await db.collection(`accounts/${accountId}/items`).get();"
+    },
+    {
+      "id": "QUERY-C99E0D246C54",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/fix-assiist-biz-uid.ts",
+      "line": 87,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await docRef.get();"
+    },
+    {
+      "id": "QUERY-E267B35D02A0",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/fix-thumbnails.ts",
+      "line": 93,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(collectionPath).get();"
+    },
+    {
+      "id": "QUERY-0947628F73B6",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/fix-thumbnails.ts",
+      "line": 294,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await docRef.get();"
+    },
+    {
+      "id": "QUERY-79295AA3576A",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/media-only-migrate.ts",
+      "line": 99,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(collectionPath).get();"
+    },
+    {
+      "id": "QUERY-6E488A8AAEF4",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/media-only-migrate.ts",
+      "line": 168,
+      "symbol": "profileSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const profileSnap = await profileRef.get();"
+    },
+    {
+      "id": "QUERY-92B22169EA18",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/migrate-images-only.ts",
+      "line": 158,
+      "symbol": "doc",
+      "operation": "admin_sdk_get",
+      "expression": "const doc = await accountCol('transactions').doc(fbId).get();"
+    },
+    {
+      "id": "QUERY-B109728FCB49",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/migrate-images-only.ts",
+      "line": 218,
+      "symbol": "doc",
+      "operation": "admin_sdk_get",
+      "expression": "const doc = await accountCol('items').doc(fbId).get();"
+    },
+    {
+      "id": "QUERY-CE5D967C536F",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/regen-thumbnails.ts",
+      "line": 82,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(collectionPath).get();"
+    },
+    {
+      "id": "QUERY-CFF03AFFEB33",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/regen-thumbnails.ts",
+      "line": 248,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await docRef.get();"
+    },
+    {
+      "id": "QUERY-1FB54627F810",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/verify-user-doc.ts",
+      "line": 26,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(`accounts/2d612868-852e-4a80-9d02-9d10383898d4/users/${uid}`).get();"
+    },
+    {
+      "id": "QUERY-B9BC3D6DFAAF",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/verify-user-doc.ts",
+      "line": 32,
+      "symbol": "querySnap",
+      "operation": "admin_sdk_get",
+      "expression": "const querySnap = await db.collectionGroup('users').where('uid', '==', uid).get();"
+    },
+    {
+      "id": "QUERY-FC95EF49090A",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/verify-user-doc.ts",
+      "line": 32,
+      "symbol": "querySnap",
+      "operation": "collection_group",
+      "expression": "const querySnap = await db.collectionGroup('users').where('uid', '==', uid).get();"
+    },
+    {
+      "id": "QUERY-436CCD79506D",
+      "subsystem": "migration",
+      "sourcePath": "migration/src/verify-user-doc.ts",
+      "line": 32,
+      "symbol": "querySnap",
+      "operation": "filter",
+      "expression": "const querySnap = await db.collectionGroup('users').where('uid', '==', uid).get();"
+    },
+    {
+      "id": "QUERY-C46355DD6930",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 57,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collectionGroup('projects').get();"
+    },
+    {
+      "id": "QUERY-1E584D08669B",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 57,
+      "symbol": "snap",
+      "operation": "collection_group",
+      "expression": "const snap = await db.collectionGroup('projects').get();"
+    },
+    {
+      "id": "QUERY-1D78FC597A16",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 73,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collectionGroup('lineageEdges').get();"
+    },
+    {
+      "id": "QUERY-6C3DFC501558",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 73,
+      "symbol": "snap",
+      "operation": "collection_group",
+      "expression": "const snap = await db.collectionGroup('lineageEdges').get();"
+    },
+    {
+      "id": "QUERY-CD9ACCE9C2F1",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 103,
+      "symbol": "snaps",
+      "operation": "bulk_document_read",
+      "expression": "const snaps = await db.getAll(...chunk.map((p) => db.doc(p)));"
+    },
+    {
+      "id": "QUERY-D36B694A0573",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 116,
+      "symbol": "itemsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const itemsSnap = await db.collectionGroup('items').get();"
+    },
+    {
+      "id": "QUERY-491194C7C744",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-active-project-zero-price-sold-items.mjs",
+      "line": 116,
+      "symbol": "itemsSnap",
+      "operation": "collection_group",
+      "expression": "const itemsSnap = await db.collectionGroup('items').get();"
+    },
+    {
+      "id": "QUERY-1F989FB4CAE2",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 184,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-68C563F55A3D",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 191,
+      "symbol": "snap",
+      "operation": "filter",
+      "expression": "const snap = await db .collection(`accounts/${accountId}/transactions`) .where('budgetCategoryId', '==', categoryId) .get();"
+    },
+    {
+      "id": "QUERY-E56EA8C6D287",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 192,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db .collection(`accounts/${accountId}/transactions`) .where('budgetCategoryId', '==', categoryId) .get();"
+    },
+    {
+      "id": "QUERY-FA8478EA29CE",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 248,
+      "symbol": "categoriesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categoriesSnap = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-E457BD2C9C1C",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 346,
+      "symbol": "projectsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const projectsSnap = await db.collection(`accounts/${accountId}/projects`).get();"
+    },
+    {
+      "id": "QUERY-8642E9C8FCE5",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-category-type-migration.mjs",
+      "line": 349,
+      "symbol": "copiesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const copiesSnap = await projectDoc.ref.collection('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-89A9C00DB875",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-invoice-line-categories.mjs",
+      "line": 39,
+      "symbol": "invoiceSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const invoiceSnap = await db.collectionGroup('invoices').get();"
+    },
+    {
+      "id": "QUERY-933918424959",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-invoice-line-categories.mjs",
+      "line": 39,
+      "symbol": "invoiceSnap",
+      "operation": "collection_group",
+      "expression": "const invoiceSnap = await db.collectionGroup('invoices').get();"
+    },
+    {
+      "id": "QUERY-70DFD4B5C5D1",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-invoice-line-categories.mjs",
+      "line": 63,
+      "symbol": "itemSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const itemSnap = await db.doc(`accounts/${accountId}/items/${itemId}`).get();"
+    },
+    {
+      "id": "QUERY-350047804211",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-invoice-line-categories.mjs",
+      "line": 77,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.doc(`accounts/${accountId}/transactions/${txId}`).get();"
+    },
+    {
+      "id": "QUERY-D6E2560673A0",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-mixed-categories.mjs",
+      "line": 50,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-D8CC486F02DB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-mixed-categories.mjs",
+      "line": 56,
+      "symbol": "categoriesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categoriesSnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-92F859AB41C3",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-mixed-categories.mjs",
+      "line": 56,
+      "symbol": "categoriesSnap",
+      "operation": "collection_group",
+      "expression": "const categoriesSnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-7C53168935A6",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-mixed-categories.mjs",
+      "line": 88,
+      "symbol": "transactionsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const transactionsSnap = await db.collection(`accounts/${account.id}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-B7620E3A1719",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 46,
+      "symbol": "snap",
+      "operation": "filter",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/items`) .where('projectId', '==', projectId) .limit(200) .get();"
+    },
+    {
+      "id": "QUERY-FE912248B2F2",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 47,
+      "symbol": "snap",
+      "operation": "limit",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/items`) .where('projectId', '==', projectId) .limit(200) .get();"
+    },
+    {
+      "id": "QUERY-13D3F4BD7C73",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 48,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/items`) .where('projectId', '==', projectId) .limit(200) .get();"
+    },
+    {
+      "id": "QUERY-A31BBF018593",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 73,
+      "symbol": "snap",
+      "operation": "filter",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/invoices`) .where('projectId', '==', projectId) .where('status', '==', 'paid') .get();"
+    },
+    {
+      "id": "QUERY-BCE0A6EC4DA3",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 74,
+      "symbol": "snap",
+      "operation": "filter",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/invoices`) .where('projectId', '==', projectId) .where('status', '==', 'paid') .get();"
+    },
+    {
+      "id": "QUERY-C85875C0D6EB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 75,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/invoices`) .where('projectId', '==', projectId) .where('status', '==', 'paid') .get();"
+    },
+    {
+      "id": "QUERY-A3C7BFE7C3AB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 108,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.collectionGroup('transactions').get();"
+    },
+    {
+      "id": "QUERY-C450E6F7639E",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-returned-paid-item-credit-transactions.mjs",
+      "line": 108,
+      "symbol": "txSnap",
+      "operation": "collection_group",
+      "expression": "const txSnap = await db.collectionGroup('transactions').get();"
+    },
+    {
+      "id": "QUERY-F8C4D7F1A5FD",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 62,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-00401E45CFA6",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 73,
+      "symbol": "categoriesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categoriesSnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-701CC6F507C7",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 73,
+      "symbol": "categoriesSnap",
+      "operation": "collection_group",
+      "expression": "const categoriesSnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-AE11A64E1E17",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 125,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.collection(`accounts/${account.id}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-67AAACBF8FFE",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 170,
+      "symbol": "invoicesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const invoicesSnap = await db.collectionGroup('invoices').get();"
+    },
+    {
+      "id": "QUERY-749AB0ECE416",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/audit-transaction-taxonomy-impact.mjs",
+      "line": 170,
+      "symbol": "invoicesSnap",
+      "operation": "collection_group",
+      "expression": "const invoicesSnap = await db.collectionGroup('invoices').get();"
+    },
+    {
+      "id": "QUERY-B527D3337DFB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/backfill-invoice-lines.mjs",
+      "line": 181,
+      "symbol": "invoicesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const invoicesSnap = await db.collection(`accounts/${accountId}/invoices`).get();"
+    },
+    {
+      "id": "QUERY-7EB1A2240868",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/backfill-invoice-lines.mjs",
+      "line": 370,
+      "symbol": "snaps",
+      "operation": "bulk_document_read",
+      "expression": "const snaps = await collectionRef.firestore.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-D7C1321AD168",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/backfill-invoice-lines.mjs",
+      "line": 400,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-A391A17970BE",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/clear-legacy-transaction-status.mjs",
+      "line": 82,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-16E9586EA65D",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/clear-legacy-transaction-status.mjs",
+      "line": 160,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-23A1FF3A1594",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 115,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(`accounts/${args.account}`).get();"
+    },
+    {
+      "id": "QUERY-6B9408800422",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 120,
+      "symbol": "byName",
+      "operation": "admin_sdk_get",
+      "expression": "const byName = await db.collection('accounts').where('name', '==', args.accountName).limit(2).get();"
+    },
+    {
+      "id": "QUERY-E68D019E19DA",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 120,
+      "symbol": "byName",
+      "operation": "filter",
+      "expression": "const byName = await db.collection('accounts').where('name', '==', args.accountName).limit(2).get();"
+    },
+    {
+      "id": "QUERY-72C091717415",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 120,
+      "symbol": "byName",
+      "operation": "limit",
+      "expression": "const byName = await db.collection('accounts').where('name', '==', args.accountName).limit(2).get();"
+    },
+    {
+      "id": "QUERY-C56DDF1A6AC2",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 190,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/projects`).get();"
+    },
+    {
+      "id": "QUERY-29D39BBFC6D5",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 207,
+      "symbol": "accountSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountSnap = await db.doc(`accounts/${accountId}`).get();"
+    },
+    {
+      "id": "QUERY-B478F8C7BFD0",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/collect-item-tag-fixtures.mjs",
+      "line": 215,
+      "symbol": "itemSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const itemSnap = await db.collection(`accounts/${accountId}/items`).get();"
+    },
+    {
+      "id": "QUERY-321372A4E33B",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/export-transaction-receipt-attachments.mjs",
+      "line": 98,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.doc(`accounts/${ACCOUNT_ID}/transactions/${transactionId}`).get();"
+    },
+    {
+      "id": "QUERY-81B4539ED39A",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-categories-add-supported-types.mjs",
+      "line": 125,
+      "symbol": "catsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const catsSnap = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-41B8408F0C7B",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-categories-add-supported-types.mjs",
+      "line": 210,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-849742DA3C77",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transaction-taxonomy.mjs",
+      "line": 107,
+      "symbol": "categorySnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categorySnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-8A91CA7E0E4C",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transaction-taxonomy.mjs",
+      "line": 107,
+      "symbol": "categorySnap",
+      "operation": "collection_group",
+      "expression": "const categorySnap = await db.collectionGroup('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-8853D2634E23",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transaction-taxonomy.mjs",
+      "line": 146,
+      "symbol": "accountSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-EE773FFA56C6",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transaction-taxonomy.mjs",
+      "line": 153,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-A1278FC131CA",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transactions-delete-needsReview.mjs",
+      "line": 78,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-F9A47DB6E556",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transactions-delete-needsReview.mjs",
+      "line": 127,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-BBEE718A1886",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transactions-to-fee-expense.mjs",
+      "line": 149,
+      "symbol": "categoriesSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const categoriesSnap = await db .collection(`accounts/${accountId}/presets/default/budgetCategories`) .get();"
+    },
+    {
+      "id": "QUERY-2AEFC45E1ADE",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transactions-to-fee-expense.mjs",
+      "line": 158,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-16F2EF2BEA1D",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/migrate-transactions-to-fee-expense.mjs",
+      "line": 304,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    },
+    {
+      "id": "QUERY-8FD38D3C36B5",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 139,
+      "symbol": "query",
+      "operation": "limit",
+      "expression": "let query = collectionRef.orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE_SIZE);"
+    },
+    {
+      "id": "QUERY-1E77CFB69AAB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 139,
+      "symbol": "query",
+      "operation": "order",
+      "expression": "let query = collectionRef.orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE_SIZE);"
+    },
+    {
+      "id": "QUERY-90039C772BA3",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 140,
+      "symbol": "query",
+      "operation": "cursor",
+      "expression": "if (lastDocument) query = query.startAfter(lastDocument);"
+    },
+    {
+      "id": "QUERY-335482FDA089",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 141,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await query.get();"
+    },
+    {
+      "id": "QUERY-8A017132A150",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 204,
+      "symbol": "accountSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const accountSnapshot = await accountRef.get();"
+    },
+    {
+      "id": "QUERY-4056AFD672C3",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 272,
+      "symbol": "countSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const countSnapshot = await db.collection(rootName).count().get();"
+    },
+    {
+      "id": "QUERY-2DC0847AC9EF",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-firestore-auth-readonly.mjs",
+      "line": 272,
+      "symbol": "countSnapshot",
+      "operation": "aggregate",
+      "expression": "const countSnapshot = await db.collection(rootName).count().get();"
+    },
+    {
+      "id": "QUERY-E939256F42F5",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "line": 116,
+      "symbol": "query",
+      "operation": "limit",
+      "expression": "let query = collectionRef.orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE_SIZE);"
+    },
+    {
+      "id": "QUERY-A1372680A237",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "line": 116,
+      "symbol": "query",
+      "operation": "order",
+      "expression": "let query = collectionRef.orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE_SIZE);"
+    },
+    {
+      "id": "QUERY-A8F2629CAE1B",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "line": 117,
+      "symbol": "query",
+      "operation": "cursor",
+      "expression": "if (lastDocument) query = query.startAfter(lastDocument);"
+    },
+    {
+      "id": "QUERY-22F660D9A18F",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "line": 118,
+      "symbol": "snapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const snapshot = await query.get();"
+    },
+    {
+      "id": "QUERY-BDE61B710942",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/profile-firebase-storage-readonly.mjs",
+      "line": 141,
+      "symbol": "accountSnapshot",
+      "operation": "admin_sdk_get",
+      "expression": "const accountSnapshot = await accountRef.get();"
+    },
+    {
+      "id": "QUERY-A86EA37AFBAE",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs",
+      "line": 208,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`${base}/projects/${projectId}/budgetCategories`).get();"
+    },
+    {
+      "id": "QUERY-03D900AA10CB",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs",
+      "line": 520,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`${state.base}/projects/${projectId}/budgetCategories`).get();"
+    },
+    {
+      "id": "QUERY-1C5A94CC5403",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-install-category-blockers.mjs",
+      "line": 88,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${ACCOUNT_ID}/presets/default/budgetCategories`).get();"
+    },
+    {
+      "id": "QUERY-D69B66E7ADBC",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-install-category-blockers.mjs",
+      "line": 102,
+      "symbol": "projectsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const projectsSnap = await db.collection(`accounts/${ACCOUNT_ID}/projects`).get();"
+    },
+    {
+      "id": "QUERY-E7671F837881",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-install-category-blockers.mjs",
+      "line": 106,
+      "symbol": "markersSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const markersSnap = await projectDoc.ref.collection('budgetCategories').get();"
+    },
+    {
+      "id": "QUERY-16F46B7EDE15",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-1584-install-category-blockers.mjs",
+      "line": 189,
+      "symbol": "txSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const txSnap = await db.collection(`accounts/${ACCOUNT_ID}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-867B14AB25AC",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "line": 117,
+      "symbol": "transactionRefs",
+      "operation": "bulk_document_read",
+      "expression": "db.getAll(...itemRefs), db.getAll(...transactionRefs), db.collection(`${accountPath}/items`).where('projectId', '==', PROJECT_ID).get(), ]);"
+    },
+    {
+      "id": "QUERY-46DEF0F26699",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "line": 118,
+      "symbol": "transactionRefs",
+      "operation": "bulk_document_read",
+      "expression": "db.getAll(...transactionRefs), db.collection(`${accountPath}/items`).where('projectId', '==', PROJECT_ID).get(), ]);"
+    },
+    {
+      "id": "QUERY-3C7D312ECDA7",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "line": 119,
+      "symbol": "transactionRefs",
+      "operation": "filter",
+      "expression": "db.collection(`${accountPath}/items`).where('projectId', '==', PROJECT_ID).get(), ]);"
+    },
+    {
+      "id": "QUERY-79879F718314",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "line": 195,
+      "symbol": "batch",
+      "operation": "bulk_document_read",
+      "expression": "db.getAll(...itemRefs), db.collection(`${accountPath}/items`).where('projectId', '==', PROJECT_ID).get(), ]);"
+    },
+    {
+      "id": "QUERY-A989BEC8C74F",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-hal-roe-missing-budget-categories.mjs",
+      "line": 196,
+      "symbol": "batch",
+      "operation": "filter",
+      "expression": "db.collection(`${accountPath}/items`).where('projectId', '==', PROJECT_ID).get(), ]);"
+    },
+    {
+      "id": "QUERY-EB10F4D6AA48",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-kapcsos-zero-project-prices.mjs",
+      "line": 93,
+      "symbol": "docs",
+      "operation": "bulk_document_read",
+      "expression": "const docs = reader === db ? await db.getAll(...refs) : await reader.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-DE56EFFCD656",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/repair-witzenman-inperson-lineage.mjs",
+      "line": 666,
+      "symbol": "docs",
+      "operation": "bulk_document_read",
+      "expression": "const docs = await transaction.getAll(...refs);"
+    },
+    {
+      "id": "QUERY-C0A8A8A0C835",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/revert-transactions-to-fee-expense.mjs",
+      "line": 64,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(`accounts/${accountId}/transactions`).get();"
+    },
+    {
+      "id": "QUERY-08F232E704EF",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/revert-transactions-to-fee-expense.mjs",
+      "line": 121,
+      "symbol": "accountIds",
+      "operation": "admin_sdk_get",
+      "expression": ": (await db.collection('accounts').get()).docs.map((d) => d.id);"
+    },
+    {
+      "id": "QUERY-E189482AEBC5",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/strip-billing-status.mjs",
+      "line": 90,
+      "symbol": "snap",
+      "operation": "admin_sdk_get",
+      "expression": "const snap = await db.collection(collectionPath).get();"
+    },
+    {
+      "id": "QUERY-351776CFA5E4",
+      "subsystem": "audit_or_repair_tooling",
+      "sourcePath": "scripts/strip-billing-status.mjs",
+      "line": 168,
+      "symbol": "accountsSnap",
+      "operation": "admin_sdk_get",
+      "expression": "const accountsSnap = await db.collection('accounts').get();"
+    }
+  ]
+}

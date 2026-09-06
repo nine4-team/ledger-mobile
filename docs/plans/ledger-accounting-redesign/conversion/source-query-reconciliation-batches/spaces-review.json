@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-SPACES-REVIEW-001",
+  "owner": "Spaces, Checklists, and Review",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-2F3C6023ACB6",
+    "QUERY-55977FD9E98E",
+    "QUERY-5B30A5A1F20D",
+    "QUERY-6B0DE6D22A30",
+    "QUERY-AABD57525BA4",
+    "QUERY-DB3071FD462C",
+    "QUERY-EDA8CEB09FDE",
+    "QUERY-F2986DF7A932"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-012",
+    "O-023",
+    "O-026",
+    "O-037",
+    "O-038"
+  ],
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-2F3C6023ACB6",
+      "expectedOccurrenceHash": "cced0594f51334224d091bd32b72f3abf33c42139d1352961e990e20ef1db6c6",
+      "sourceOwnerSurfaceId": "MCPTOOL-16839AD4EE69",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/spaces.ts",
+        "line": 146
+      },
+      "expectedSourceOwnerHash": "b089607b24ac6878430321f5da9d459c05d6ef77d0ea3ec838d8d02122692aa4",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "MCPTOOL-16839AD4EE69",
+          "targetSurface": "AttachmentOperations.attachToSpace",
+          "expectedTargetMappingHash": "38ba6e51bdff2ab6691fdf05850c229270414a1e9880d611fd8bd45416fc782b"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-55977FD9E98E",
+      "expectedOccurrenceHash": "bd8dc6213caf0eaf7f310d557c9a90452c584767d884bec1d2bcd4eb903c38af",
+      "sourceOwnerSurfaceId": "FUNCTION-92CE4FD9E25B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 578
+      },
+      "expectedSourceOwnerHash": "ac5ae91ef670b25bfb617e85320401f4d97ecd58218037ced8c62f915b2ec145",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-037"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-037",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5B30A5A1F20D",
+      "expectedOccurrenceHash": "144c7f2d34ae9d5ece623e36d4782e3622f1f60aa4a5fd63fc45652491ea1877",
+      "sourceOwnerSurfaceId": "MCPTOOL-24DFA89A8F44",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/spaces.ts",
+        "line": 13
+      },
+      "expectedSourceOwnerHash": "a1c99eaf0110589b10e2a0e9a455f71851064b795c230c88519b42249e51b7c1",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-24DFA89A8F44",
+          "targetSurface": "ListSpacesQuery",
+          "expectedTargetMappingHash": "09e90a012fc6c43e4d44cd160639b34f9721e298fea62b336ef11aa10a2622cb"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6B0DE6D22A30",
+      "expectedOccurrenceHash": "008e88ca2e33599869b58a2d69c99ee604bb9d445ae34775dff082b782859887",
+      "sourceOwnerSurfaceId": "MCPTOOL-2B45E68B60F7",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/spaces.ts",
+        "line": 54
+      },
+      "expectedSourceOwnerHash": "f5aed7a9c45c211b9e3a1e0dbe90cd2431266d125bb494b8d7eb65bd43a74b35",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-2B45E68B60F7",
+          "targetSurface": "GetSpaceQuery",
+          "expectedTargetMappingHash": "2457d6e7376b8939ee5b125f73d951a11233a8fce29b3ebe216acfa0ca9206e8"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-AABD57525BA4",
+      "expectedOccurrenceHash": "d68ab5119ef8ef72cc6dc20d21191c7ab95a923ddd9195d4bfe9fc50615b4765",
+      "sourceOwnerSurfaceId": "FUNCTION-92CE4FD9E25B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 578
+      },
+      "expectedSourceOwnerHash": "ac5ae91ef670b25bfb617e85320401f4d97ecd58218037ced8c62f915b2ec145",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-037"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-037",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-DB3071FD462C",
+      "expectedOccurrenceHash": "c91184b49c8bfb923465ef0aca32af74fe3a462c017fd76c47842f59b40a6e85",
+      "sourceOwnerSurfaceId": "FUNCTION-92CE4FD9E25B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 578
+      },
+      "expectedSourceOwnerHash": "ac5ae91ef670b25bfb617e85320401f4d97ecd58218037ced8c62f915b2ec145",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-037"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-037",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-EDA8CEB09FDE",
+      "expectedOccurrenceHash": "30b7099a0387fc8618d4a4a20975d90247bc3af075d4436d954bbcc2fad05d1e",
+      "sourceOwnerSurfaceId": "FUNCTION-92CE4FD9E25B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 578
+      },
+      "expectedSourceOwnerHash": "ac5ae91ef670b25bfb617e85320401f4d97ecd58218037ced8c62f915b2ec145",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-037"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-037",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-F2986DF7A932",
+      "expectedOccurrenceHash": "84e9adac3e6f4628f3461b2d9890b0ffa8712f6d7c75d340392714de25a24250",
+      "sourceOwnerSurfaceId": "MCPTOOL-24DFA89A8F44",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/spaces.ts",
+        "line": 13
+      },
+      "expectedSourceOwnerHash": "a1c99eaf0110589b10e2a0e9a455f71851064b795c230c88519b42249e51b7c1",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-24DFA89A8F44",
+          "targetSurface": "ListSpacesQuery",
+          "expectedTargetMappingHash": "09e90a012fc6c43e4d44cd160639b34f9721e298fea62b336ef11aa10a2622cb"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves the human-reviewed READY classification for all eight assigned rows. Immutable CI/promotion is pending; the rows claim classification completeness only, not physical target access or target-domain implementation."
+}

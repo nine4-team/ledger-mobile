@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "item-space-clearing-operation-contracts",
+  "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Space Item Clearing Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-4C7158974133",
+    "TEST-0AB198EB6935"
+  ],
+  "requirements": [
+    {
+      "id": "ITEMSPACECLEAR-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "ClearItemSpaceAssignments replaces every selected Item's current optional Space placement with no Space. One nonempty selection may contain Items from different Spaces but every Item and referenced Space must remain in one exact Project or Business Inventory scope, and one authoritative operation applies the complete selection atomically and idempotently.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Accounting-State Rule",
+      "invariant": "Space placement is optional and independent from Item accounting state. Clearing placement cannot create, remove or change a Transaction, occurrence, Invoice membership, category, budget contribution, payer, source, price, acquisition or Accounted For classification.",
+      "decisionIds": ["D-019", "D-023"],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "The target retires generic item field dictionaries, caller-authored nulls and fire-and-forget independent bulk writes. One typed clear command carries immutable scope plus a canonical nonempty duplicate-free set of stable Item identities, exact Item revisions and their exact current Space identities.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "The later authoritative clear handler must close the selected Items' old Space-photo checkmark relationships as part of the same story while preserving Space photos and bytes. The client command carries no Attachment ID, URL, copied image, marker list or deletion instruction; review-note red markers are separate evidence.",
+      "decisionIds": ["O-023"],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "ClearItemSpaceAssignments records one story-specific placement intent with typed Ledger IDs and scope values. It exposes no SetItemSpace generic mutation, nullable field dictionary, backend path, SQL, display name, destination assignment, scope-changing Item movement, archive or accounting mutation.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The command binds one OperationID, contract version, AccountID, actor PrincipalID and finite capture time to one canonical payload and deterministic preconditions: scope relationship for every distinct current Space plus exact revision, scope and assigned-to-current-Space relationship for every Item. Changed placement, scope or revision is later rejected atomically rather than partially clearing stale offline intent.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Context-specific operations",
+      "invariant": "One narrow backend-neutral ItemSpaceAssignmentClearing port accepts only the typed ClearItemSpaceAssignments command and returns the shared OperationReceipt. Local scope/revision/current-placement evidence is a conflict precondition, never membership or authorization proof; a later trusted handler must revalidate current Account, Project/Inventory, Spaces, Items and marker relationships.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The complete canonical command and shared queued/applied/rejected receipt survive structured offline restart, while duplicate Items or changed Account/actor/contract/scope/revision/Space/Item/payload/precondition/subject/fingerprint/receipt evidence fails atomically. This Phase 1 boundary creates no row, marker mutation, schema/RLS/Sync/provider, app/MCP, migration, hosted or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACECLEAR-TEST-001", "ITEMSPACECLEAR-TEST-002", "ITEMSPACECLEAR-TEST-003", "ITEMSPACECLEAR-TEST-004", "ITEMSPACECLEAR-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ItemSpaceClearingCandidate binds one stable ItemID and exact expected Item revision to one stable current SpaceID. ItemSpaceClearingDraft binds one Account, actor, contract, immutable Project-or-Business-Inventory scope, finite capture time and a canonical nonempty duplicate-free candidate set; different current Spaces are valid.",
+        "ClearItemSpaceAssignmentsPayload contains only immutable scope and canonical Item IDs. ClearItemSpaceAssignmentsCommand derives the scope subject, payload, distinct current-Space scope preconditions, per-Item revision/scope/current-Space preconditions, shared fingerprint and receipt validation.",
+        "ItemSpaceAssignmentClearing exposes only clearItemSpaceAssignments(_:) and returns the shared OperationReceipt. ItemSpaceClearingFailure provides stable bounded empty/duplicate/time/payload/precondition/subject/fingerprint/receipt/local-acceptance/encoding diagnostics.",
+        "The command semantically closes current placement and requires later authoritative marker-relationship cleanup, but carries no marker or attachment mutation supplied by the client and never deletes media bytes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Item, Space, attachment-marker or review table, optional space_id column, relationship, revision/audit column, constraint, index, view, trigger, function or migration is created or changed."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative clear handler, membership/capability derivation, Account/Project/Inventory/Space/Item lock, scope/revision/current-placement validation, marker-relationship cleanup, row update, audit event or idempotency-result storage exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/actor/scope evidence is not authorization. No membership, financial-visibility, existing/result-row, Project/Inventory/Space/Item/attachment predicate, grant or cross-account database test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Item/Space/marker table, optimistic placement projection, upload connector, conflict restoration, authenticated download predicate or synchronized apply proof is defined."},
+    "localOffline": {
+      "items": [
+        "The command is canonical Codable evidence over draft, shared envelope, exact typed subjects/preconditions and fingerprint; decoding reconstructs through the same validators and byte-identical structured restart is required.",
+        "Input order canonicalizes by stable ItemID and distinct current Spaces canonicalize by stable SpaceID. Duplicate/empty Items and changed Account/actor/contract/scope/revision/current Space/Item/payload/precondition/subject/fingerprint/receipt evidence fail atomically.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/mismatch/receipt semantics; this is not physical durable-store, process/device restart, optimistic placement/marker mutation or authoritative server-apply evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "The intent carries no AttachmentID, object locator, byte, upload, cache, URL, marker coordinates/list, retention or deletion instruction. Later authoritative apply must close affected item-linked marker relationships without deleting Space photos; O-023 remains open for reference/byte deletion policy."},
+    "appMcp": {"items": [], "notApplicable": "No Item detail clear action, mixed-Space bulk selection UI, Space detail removal action, MCP schema/tool, transport handler, capability registration or app/MCP parity wiring is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase item.spaceId, embedded image checkmark, Project/Inventory scope, archived/missing Space, generic null update, source export row or migration disposition is decoded, normalized, quarantined or reconciled."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot persist, present or apply cleared placement; mutate marker rows; delete media; assign a destination; move Item scope; archive a Space; mutate accounting; define schema/RLS/Sync/provider/migration behavior; activate a feature; deploy, release or cut over.",
+        "O-037 remains fully open because archive behavior is absent. O-023 remains open because no attachment/reference/byte deletion occurs. O-007/O-015, A-003/A-004/A-016, physical offline verification, canonical production profiling and all hosted-resource authority remain outside this boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMSPACECLEAR-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift",
+      "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-004", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-007", "ITEMSPACECLEAR-REQ-008"],
+      "expected": "Synthetic Project and Business Inventory commands preserve one exact immutable scope, canonical nonempty Item/revision/current-Space set including mixed source Spaces, deterministic Space-scope and Item-revision/scope/current-placement preconditions, shared operation evidence, marker-cleanup semantics and no accounting/media-byte/provider field.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift",
+      "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-008"],
+      "expected": "Project/Inventory, single/mixed-Space bulk and differently ordered equivalent inputs round-trip byte-identically with exact Account/actor/contract/Operation/scope/revision/current-Space/Item/time/subject/precondition/fingerprint evidence and no authoritative clear claim.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift",
+      "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-004", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-007", "ITEMSPACECLEAR-REQ-008"],
+      "expected": "Empty/duplicate Items, invalid time and changed Account/actor/contract/scope/revision/current Space/Item/payload/precondition/subject/fingerprint/receipt evidence fail atomically through stable bounded diagnostics.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift",
+      "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-004", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-007", "ITEMSPACECLEAR-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed scope/Item/revision/current Space is refused by the shared lifecycle, and a failing port returns no false receipt, partial-success or marker-deletion evidence.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
+    },
+    {
+      "id": "ITEMSPACECLEAR-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-004", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-007", "ITEMSPACECLEAR-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming physical placement/marker mutation, accounting, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-ITEM-SPACE-CLEARING-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified decision-independent Phase 1 command boundary. Exact ready commit 2a201de4109891323e51bbd273ed33723d970508 passed immutable Actions run 33675190031; exact implementation commit f5a7ac7598f77859239b66666bc703ee4639c233 passed immutable Actions run 33677087616 with conversion traceability in 8 seconds and the isolated target environment in 2 minutes 25 seconds, including four focused/all 180 target tests in 42 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. Canonical Space/Item authority and reviewed Spaces/media/architecture contracts settle explicit bulk clear, exact current placement, atomicity, idempotency, accounting independence and preservation of current item-linked Space-photo checkmark cleanup without deleting bytes. O-037 stays open because Space archive is excluded; the command supports only explicit user-requested clear and does not define archive effects. O-023 stays open because no attachment reference or byte is removed. The slice stops before physical persistence, authoritative apply/marker cleanup, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+}

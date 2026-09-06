@@ -1,0 +1,1637 @@
+{
+  "schemaVersion": 1,
+  "generatedFromManifestSync": "2026-09-06T23:53:08.884Z",
+  "totals": {
+    "slices": 99,
+    "claimedTargetSurfaces": 329,
+    "unclaimedTargetSurfaces": 428,
+    "implementationAdvancedTargetSurfaces": 247
+  },
+  "statusCounts": {
+    "draft": 5,
+    "ready": 0,
+    "in_progress": 3,
+    "implemented": 12,
+    "verified": 79,
+    "rehearsed": 0,
+    "cutover_ready": 0
+  },
+  "slices": [
+    {
+      "sliceId": "account-discovery-and-selection-contracts",
+      "title": "Discover visible Accounts and express explicit workspace choice without creating authorization",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Identity, Membership, and Workspace Context",
+      "surfaceIds": [
+        "SWIFT-C1B994920894",
+        "TEST-11AC450D596A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-discovery-and-selection-contracts.json"
+    },
+    {
+      "sliceId": "account-discovery-powersync-provider",
+      "title": "Read locally available Accounts and make one explicit workspace choice",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Identity, Membership, and Workspace Context",
+      "surfaceIds": [
+        "SWIFT-3BFEA9F12A91",
+        "SWIFT-8AA6BB698C64",
+        "SWIFT-A8B0B06147C3",
+        "TEST-D960EA615333"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-discovery-powersync-provider.json"
+    },
+    {
+      "sliceId": "account-pending-work-staging-application-flow",
+      "title": "Present exact Account pending-local-work status in target staging",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Account Pending Work Staging Application Flow",
+      "surfaceIds": [
+        "SWIFT-5165512013CB",
+        "SWIFT-87B098BA9F12",
+        "SWIFT-BBA33BDFCD93",
+        "TEST-0B0E0C9D531B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-pending-work-staging-application-flow.json"
+    },
+    {
+      "sliceId": "account-workspace-pending-work-runtime",
+      "title": "Compose one Account-workspace pending-work and attachment durability runtime",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Account Workspace Pending-Work Runtime",
+      "surfaceIds": [
+        "SWIFT-75CFE285AF37",
+        "TEST-8D6A15063B2D"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 9,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json"
+    },
+    {
+      "sliceId": "account-workspace-runtime-isolation",
+      "title": "Bind every local Account workspace database to one validated target environment",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Environment and Composition Control",
+      "surfaceIds": [
+        "SWIFT-4E250D0D302E",
+        "TEST-3FCFFC5C8AD8"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-runtime-isolation.json"
+    },
+    {
+      "sliceId": "attachment-capture-and-local-durability-receipt",
+      "title": "Accept attachment capture only with scoped local-durability evidence",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Attachment Local Capture Contracts",
+      "surfaceIds": [
+        "SWIFT-D8174F26DDD5",
+        "TEST-BA04EFCE369C"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-capture-and-local-durability-receipt.json"
+    },
+    {
+      "sliceId": "attachment-exact-local-byte-resolver",
+      "title": "Resolve one accepted Attachment receipt to reverified protected local bytes",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Attachment Exact Local Byte Resolver",
+      "surfaceIds": [
+        "SWIFT-82312CAAB02F",
+        "TEST-CF9AB8ADB530"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-exact-local-byte-resolver.json"
+    },
+    {
+      "sliceId": "attachment-local-byte-durability-provider",
+      "title": "Accept an offline attachment only after protected local bytes and queue evidence re-verify",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Attachment Local Durability Provider",
+      "surfaceIds": [
+        "SWIFT-68F4E18977D4",
+        "SWIFT-F850F907B87F",
+        "TEST-CE5D3D0516D1"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 11,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json"
+    },
+    {
+      "sliceId": "budget-category-reference-powersync-provider",
+      "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Budget Category Reference Provider",
+      "surfaceIds": [
+        "SWIFT-241B51091042",
+        "TEST-53618161645B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-powersync-provider.json"
+    },
+    {
+      "sliceId": "budget-category-reference-read-contracts",
+      "title": "Read authorized budget-category reference data with stable offline semantics",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Budget Category Reference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-8351FACDBE06",
+        "TEST-61925915E20E"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-read-contracts.json"
+    },
+    {
+      "sliceId": "client-archive-browser-supabase-powersync-vertical-slice",
+      "title": "Archive one active Client offline through the isolated Client browser",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Client Archive Browser Vertical Slice",
+      "surfaceIds": [
+        "CONFIG-86F1E734BC70",
+        "CONFIG-8A30E46E3901",
+        "CONFIG-8F9EA6CCC0DB",
+        "SWIFT-35D653A39618",
+        "SWIFT-375BF832F772",
+        "SWIFT-4D4DB03E0A24",
+        "SWIFT-BD7BF890CB6C",
+        "SWIFT-E431F314B326",
+        "TEST-3B1F3E444423",
+        "TEST-E65089F7DC26"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-browser-supabase-powersync-vertical-slice.json"
+    },
+    {
+      "sliceId": "client-archive-operation-contracts",
+      "title": "Archive one Client without deleting identity, Projects, or history",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Archive Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-82AD18E41C5C",
+        "TEST-DAD87DF6C1DB"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-archive-use-case-contracts",
+      "title": "Dispatch one selected Client archive intent",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Archive Use Case",
+      "surfaceIds": [
+        "SWIFT-7A484C80FD98",
+        "TEST-E10E6D44CC8A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-use-case-contracts.json"
+    },
+    {
+      "sliceId": "client-browsing-staging-application-flow",
+      "title": "Browse locally represented Clients and preserve exact Client detail truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Browsing Staging Application Flow",
+      "surfaceIds": [
+        "SWIFT-438CDD8B6992",
+        "SWIFT-74AB5DDB20DB",
+        "SWIFT-D8A992D1F8C1",
+        "SWIFT-EDBCE3C0BC96",
+        "TEST-5F23C8849E45",
+        "TEST-B6AF2BB84195"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-browsing-staging-application-flow.json"
+    },
+    {
+      "sliceId": "client-core-details-read-contracts",
+      "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Core Details Read Contracts",
+      "surfaceIds": [
+        "SWIFT-D7F3D08FA568",
+        "TEST-F304037D32B6"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-core-details-read-contracts.json"
+    },
+    {
+      "sliceId": "client-creation-operation-contracts",
+      "title": "Create one Account-scoped Client through the shared operation contract",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Creation Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-3B3E02643603",
+        "TEST-E42E9E6D7B28"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-creation-supabase-powersync-vertical-spike",
+      "title": "Create and read one Client offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "in_progress",
+      "owner": "Client Identity",
+      "surfaceIds": [
+        "CONFIG-0C8B77A5FB08",
+        "CONFIG-428FDE11BBE4",
+        "CONFIG-5C0C92D825F3",
+        "CONFIG-63468A3CE4F2",
+        "CONFIG-7AB0A2FE74E7",
+        "CONFIG-CC390AE55FE6",
+        "CONFIG-E8340EBE4EBA",
+        "MCPMOD-68F7991697DD",
+        "MCPMOD-EDF53EB768EB",
+        "SWIFT-19D4AA7B766B",
+        "SWIFT-2ADDF7B64EA0",
+        "SWIFT-2FAE0364C908",
+        "SWIFT-548A8A928FAE",
+        "SWIFT-A9434A1623BC",
+        "SWIFT-A9F7D22095F8",
+        "SWIFT-D9F0F491C95C",
+        "SWIFT-EBCBC4925D9D",
+        "TEST-E0636D89C442"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-supabase-powersync-vertical-spike.json"
+    },
+    {
+      "sliceId": "client-project-directory-powersync-provider",
+      "title": "Browse local Clients and Projects through the PowerSync directory port",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Client and Project Directory",
+      "surfaceIds": [
+        "SWIFT-B23F91245E50",
+        "TEST-5AAEE26660C8"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 14,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-project-directory-powersync-provider.json"
+    },
+    {
+      "sliceId": "client-project-directory-read-contracts",
+      "title": "Define authoritative Client/Project identity and local directory read contracts",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Client and Project Domain Read Contracts",
+      "surfaceIds": [
+        "SWIFT-401EBD892749",
+        "TEST-0911D1BF8A05"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-project-directory-read-contracts.json"
+    },
+    {
+      "sliceId": "client-rename-operation-contracts",
+      "title": "Rename one stable Client without rewriting identity or frozen history",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Rename Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-9CB51D74D41C",
+        "TEST-D1C8EFBDFDDE"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-rename-supabase-powersync-vertical-slice",
+      "title": "Rename one Client offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Client Identity",
+      "surfaceIds": [
+        "CONFIG-3193C7F8A5F9",
+        "CONFIG-B3D8C4F9F504",
+        "CONFIG-EC93D3BAC0C4",
+        "MCPMOD-A23569C60118",
+        "MCPMOD-EFFAAFBBD1AD",
+        "SWIFT-5ABC145B2FAF",
+        "SWIFT-5CB20A965406",
+        "SWIFT-6816C6E0F96A",
+        "TEST-77ABFEE573E1"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 13,
+      "blockerCount": 2,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-supabase-powersync-vertical-slice.json"
+    },
+    {
+      "sliceId": "client-rename-use-case-contracts",
+      "title": "Dispatch one typed Client display-name replacement",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Client Rename Use Case",
+      "surfaceIds": [
+        "SWIFT-2F4458F40735",
+        "TEST-341B2CD23B6A"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-use-case-contracts.json"
+    },
+    {
+      "sliceId": "deterministic-target-test-support",
+      "title": "Provide deterministic provider-free reference adapters for target use-case tests",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Deterministic Target Test Support",
+      "surfaceIds": [
+        "SWIFT-8AB5414F20CE",
+        "TEST-77875A971729"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/deterministic-target-test-support.json"
+    },
+    {
+      "sliceId": "direct-space-creation-use-case-contracts",
+      "title": "Validate and dispatch one direct Space creation intent",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Direct Space Creation Use Case",
+      "surfaceIds": [
+        "SWIFT-3615734A053E",
+        "SWIFT-517FA18158D9",
+        "TEST-915EC8E0BFC9",
+        "TEST-EBA9C48BC4EE"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/direct-space-creation-use-case-contracts.json"
+    },
+    {
+      "sliceId": "exact-money-and-domain-identity",
+      "title": "Make target entity identity and money representation exact before product accounting slices",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Exact Money and Domain Identity",
+      "surfaceIds": [
+        "SWIFT-3AC58A64B789",
+        "TEST-15ECC49577C0"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/exact-money-and-domain-identity.json"
+    },
+    {
+      "sliceId": "firebase-source-fixture-catalog",
+      "title": "Define versioned synthetic Firebase source fixtures for deterministic migration tests",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Firebase Source Fixture Catalog",
+      "surfaceIds": [
+        "SWIFT-B4A356C2FE88",
+        "TEST-1C328F2AB1C1"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json"
+    },
+    {
+      "sliceId": "item-space-assignment-local-durability-provider",
+      "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Item Space Assignment Local Durability Provider",
+      "surfaceIds": [
+        "SWIFT-09809DBC3BA1",
+        "TEST-557358553F23"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-local-durability-provider.json"
+    },
+    {
+      "sliceId": "item-space-assignment-operation-contracts",
+      "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Item Assignment Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-4B007A00C393",
+        "TEST-51D893DD949E"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json"
+    },
+    {
+      "sliceId": "item-space-assignment-use-case-contracts",
+      "title": "Validate one local Space destination and dispatch one exact Item assignment",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Item Space Assignment Use Case",
+      "surfaceIds": [
+        "SWIFT-0540BE125F5A",
+        "TEST-DA67EAC9C2EF"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-use-case-contracts.json"
+    },
+    {
+      "sliceId": "item-space-clearing-local-durability-provider",
+      "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Item Space Clearing Local Durability Provider",
+      "surfaceIds": [
+        "SWIFT-02B978845267",
+        "TEST-9E8111F721E6"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
+    },
+    {
+      "sliceId": "item-space-clearing-operation-contracts",
+      "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Item Clearing Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-4C7158974133",
+        "TEST-0AB198EB6935"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json"
+    },
+    {
+      "sliceId": "item-space-clearing-use-case-contracts",
+      "title": "Bind one typed Item placement-clear intent and dispatch the verified clear operation",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Item Space Clearing Use Case",
+      "surfaceIds": [
+        "SWIFT-EEAC86485FF6",
+        "TEST-CA84B398990C"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json"
+    },
+    {
+      "sliceId": "local-operation-identity-ownership-guard",
+      "title": "Enforce one fail-closed local OperationID namespace across command families",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Shared Local Operation Identity Guard",
+      "surfaceIds": [
+        "SWIFT-142941D87D78",
+        "TEST-5272CB2301DE"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+    },
+    {
+      "sliceId": "migration-environment-guard",
+      "title": "Define a provider-free fail-closed migration preflight primitive",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Migration Environment Guard",
+      "surfaceIds": [
+        "SWIFT-DB6A733FD6DE",
+        "TEST-2634F83E11F3"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
+    },
+    {
+      "sliceId": "migration-run-plan-and-journal-integrity",
+      "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Migration Run Plan and Journal Integrity",
+      "surfaceIds": [
+        "SWIFT-CBE990F49610",
+        "TEST-05A1A0F4E72C"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-run-plan-and-journal-integrity.json"
+    },
+    {
+      "sliceId": "non-item-receipt-line-reconstruction-contracts",
+      "title": "Represent ordered non-item receipt lines and exact reconstruction evidence",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Receipt Line Reconstruction",
+      "surfaceIds": [
+        "SWIFT-B687382A0772",
+        "TEST-4CDC064BC93C"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/non-item-receipt-line-reconstruction-contracts.json"
+    },
+    {
+      "sliceId": "operation-lifecycle-and-readiness",
+      "title": "Accept offline operations durably and distinguish queued work from authoritative results",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Shared Operation and Readiness Contracts",
+      "surfaceIds": [
+        "SWIFT-A3B756DA1382",
+        "TEST-7D6F49F784FB"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
+    {
+      "sliceId": "operational-health-and-objective-registry",
+      "title": "Make local health, service objectives, alert candidates, and runbooks explicit without activating operations",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Operational Health and Objective Registry",
+      "surfaceIds": [
+        "SWIFT-D9A560340CA9",
+        "TEST-D534C0EDD709"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operational-health-and-objective-registry.json"
+    },
+    {
+      "sliceId": "pending-work-powersync-provider",
+      "title": "Derive an exact restart-safe local pending-work summary without manufacturing a clean state",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Session Ending and Pending-Work Provider",
+      "surfaceIds": [
+        "SWIFT-4AB6FC526AA5",
+        "TEST-2053D13BB3B5"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json"
+    },
+    {
+      "sliceId": "privacy-safe-telemetry-and-correlation",
+      "title": "Make operational signals useful without exposing Ledger data",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Privacy-Safe Telemetry and Correlation",
+      "surfaceIds": [
+        "SWIFT-C1EC0E1D9BE6",
+        "TEST-BDC6ADC6F366"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/privacy-safe-telemetry-and-correlation.json"
+    },
+    {
+      "sliceId": "project-archival-review-workflow",
+      "title": "Review complete Project-note history offline before and after Project archival",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Project Archival Review",
+      "surfaceIds": [
+        "CONFIG-00C8635E9EF9",
+        "CONFIG-DBE8715A260A",
+        "CONFIG-EADCA9A7026D",
+        "MCPMOD-4CB1EBAC253A",
+        "MCPMOD-84FF0804E57E",
+        "SWIFT-07516815EBBD",
+        "SWIFT-283C354B7848",
+        "SWIFT-754648D5F97F",
+        "TEST-3CB458C292B0",
+        "TEST-A920874A5571"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archival-review-workflow.json"
+    },
+    {
+      "sliceId": "project-archive-browser-supabase-powersync-vertical-slice",
+      "title": "Archive one active Project offline through the isolated Project browser",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Project Archive Browser Vertical Slice",
+      "surfaceIds": [
+        "CONFIG-20D251EF21F6",
+        "CONFIG-78696A3C79AA",
+        "CONFIG-CAB6A5DAD1C0",
+        "SWIFT-0753297CA29A",
+        "SWIFT-4F36B1F525D0",
+        "SWIFT-53B8C9C37D3F",
+        "SWIFT-D58BDD1F45EE",
+        "TEST-475355568D74",
+        "TEST-EAAB5CD74000"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-browser-supabase-powersync-vertical-slice.json"
+    },
+    {
+      "sliceId": "project-archive-operation-contracts",
+      "title": "Archive one Project without changing identity or deleting history",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Archive Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-10A07B52B82D",
+        "TEST-756CB57BD6CA"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-archive-use-case-contracts",
+      "title": "Dispatch one archive-only Project intent",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Archive Use Case",
+      "surfaceIds": [
+        "SWIFT-7C5BD31FBF71",
+        "TEST-29C0CCC4353F"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-use-case-contracts.json"
+    },
+    {
+      "sliceId": "project-browsing-presentation-contracts",
+      "title": "Present Project directory selection and detail-header truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Browsing Presentation",
+      "surfaceIds": [
+        "SWIFT-6075C2D24BAD",
+        "SWIFT-FC9E3C33FECA",
+        "TEST-02013D984E64",
+        "TEST-8CB70D14D5BC"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-browsing-presentation-contracts.json"
+    },
+    {
+      "sliceId": "project-browsing-staging-application-flow",
+      "title": "Browse locally represented Projects and preserve exact Project detail truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Browsing Staging Application Flow",
+      "surfaceIds": [
+        "SWIFT-07427FF0DA84",
+        "SWIFT-AA91CE0C3FAB",
+        "SWIFT-CAB085E24751",
+        "TEST-5C7E5E715EAE"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-browsing-staging-application-flow.json"
+    },
+    {
+      "sliceId": "project-budget-segment-read-contracts",
+      "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Budget Segment Read Contracts",
+      "surfaceIds": [
+        "SWIFT-42C7BDDCD714",
+        "TEST-A0B2D5B97695"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-budget-segment-read-contracts.json"
+    },
+    {
+      "sliceId": "project-category-configuration-read-contracts",
+      "title": "Read exact Project category configuration without inventing budget authority",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Category Configuration Read Contracts",
+      "surfaceIds": [
+        "SWIFT-E084EBB4EBFF",
+        "TEST-DB57E9433EB6"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json"
+    },
+    {
+      "sliceId": "project-category-configuration-revision-foundation",
+      "title": "Persist one independent revision for every Project category-configuration set",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Project Category Configuration",
+      "surfaceIds": [
+        "CONFIG-3F4DAB40CF04",
+        "CONFIG-6EE152848D09"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 11,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-revision-foundation.json"
+    },
+    {
+      "sliceId": "project-core-details-read-contracts",
+      "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Core Details Read Contracts",
+      "surfaceIds": [
+        "SWIFT-4C4690368BEC",
+        "TEST-5F24EA7C310A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-core-details-read-contracts.json"
+    },
+    {
+      "sliceId": "project-details-update-operation-contracts",
+      "title": "Replace or clear one Project description without changing other Project state",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Details Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-1A34CF88E95E",
+        "TEST-22878D176671"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-details-update-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-details-update-use-case-contracts",
+      "title": "Normalize and dispatch one Project description replacement",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Details Update Use Case",
+      "surfaceIds": [
+        "SWIFT-B95AD78B8CEC",
+        "TEST-315066B94566"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-details-update-use-case-contracts.json"
+    },
+    {
+      "sliceId": "project-existing-client-selection-read-contracts",
+      "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Existing-Client Selection Projection",
+      "surfaceIds": [
+        "SWIFT-0C8433A6C6F4",
+        "TEST-8B902DC97729"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-existing-client-selection-read-contracts.json"
+    },
+    {
+      "sliceId": "project-item-accounting-section-contracts",
+      "title": "Derive Project Item accounting state and ordered local sections",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Project Item Accounting Sections",
+      "surfaceIds": [
+        "SWIFT-008B49A474D1",
+        "TEST-0E4B478B0C55"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-item-accounting-section-contracts.json"
+    },
+    {
+      "sliceId": "project-item-link-presentation-contracts",
+      "title": "Present exact Project Item accounting labels and Unaccounted-only Link payer choices",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Item Link Presentation",
+      "surfaceIds": [
+        "SWIFT-A2FCAF3E6103",
+        "TEST-F63806A8047A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-item-link-presentation-contracts.json"
+    },
+    {
+      "sliceId": "project-note-creation-operation-contracts",
+      "title": "Add one Project note through a stable shared operation contract",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Note Creation Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-9CDB2BCAC71B",
+        "TEST-DB2559406D3D"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-note-read-contracts",
+      "title": "Read bounded Project notes with stable audit and offline-history evidence",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Note Read Contracts",
+      "surfaceIds": [
+        "SWIFT-B3DBE3375ACE",
+        "TEST-E8DC4AE52ED7"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-read-contracts.json"
+    },
+    {
+      "sliceId": "project-preference-read-contracts",
+      "title": "Represent current-Principal Project preference-shaped reads without confusing absence with unsynchronized data",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Preference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-C6AE96622805",
+        "TEST-96AAFA22224B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-preference-read-contracts.json"
+    },
+    {
+      "sliceId": "project-preference-update-operation-contracts",
+      "title": "Represent one current-Principal Project preference-shaped replacement without last-write-wins ambiguity",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Preference Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-8668DE2251DE",
+        "TEST-AC9956AE9D5C"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-preference-update-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-rename-operation-contracts",
+      "title": "Rename one stable Project without changing its Client relationship",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Rename Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-797909434B82",
+        "TEST-3CE7B387E9B7"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-rename-use-case-contracts",
+      "title": "Dispatch one typed Project display-name replacement",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Rename Use Case",
+      "surfaceIds": [
+        "SWIFT-5A812E7B8C95",
+        "TEST-E1BAA8DF70B4"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-use-case-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-existing-client-application-flow",
+      "title": "Create a Project for an existing Client from honest local Client and category evidence",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Setup Application Flow",
+      "surfaceIds": [
+        "SWIFT-1F2F5FE68160",
+        "SWIFT-64E1171C47C5",
+        "SWIFT-99B1B3CFBB7A",
+        "TEST-E92B32DB7642"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 9,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-existing-client-application-flow.json"
+    },
+    {
+      "sliceId": "project-setup-form-presentation-contracts",
+      "title": "Prepare one evidence-bound Project setup command offline",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Setup Presentation",
+      "surfaceIds": [
+        "SWIFT-EC2117B393FB",
+        "TEST-38F09C637761"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-form-presentation-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-operation-contracts",
+      "title": "Create one Project with authoritative Client identity and exact category setup",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Setup Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-C1C5DFC81448",
+        "TEST-99B322EB971A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-supabase-powersync-vertical-slice",
+      "title": "Create and read one complete Project setup offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "in_progress",
+      "owner": "Project Setup",
+      "surfaceIds": [
+        "CONFIG-09CEA78268BF",
+        "CONFIG-C1B257780C7C",
+        "CONFIG-E1332AB9A867",
+        "MCPMOD-3C6E07498EC9",
+        "MCPMOD-C5E2CD8754AB",
+        "MCPMOD-E9B4396B90B9",
+        "SWIFT-56CB8BCDD85C",
+        "SWIFT-5D88C2B47970",
+        "SWIFT-7FCF476FF67C",
+        "TEST-3F2CAFC760D5"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-supabase-powersync-vertical-slice.json"
+    },
+    {
+      "sliceId": "project-setup-use-case-contracts",
+      "title": "Derive and dispatch one complete Project setup",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Project Setup Use Case",
+      "surfaceIds": [
+        "SWIFT-EE8576F5CD39",
+        "TEST-BB8C5679BA31"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-use-case-contracts.json"
+    },
+    {
+      "sliceId": "protected-artifact-export-lifecycle",
+      "title": "Prepare an authorized snapshot for a protected time-bounded local handoff",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Protected Artifact Lifecycle",
+      "surfaceIds": [
+        "SWIFT-7452FE59FE81",
+        "TEST-1FC8EF92E971"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/protected-artifact-export-lifecycle.json"
+    },
+    {
+      "sliceId": "reproducible-release-manifest-and-artifact-integrity",
+      "title": "Prove exactly what a target build contains before release",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Reproducible Release and Artifact Integrity",
+      "surfaceIds": [
+        "SWIFT-B2CF26BDA1A8",
+        "TEST-E323BA653B17"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/reproducible-release-manifest-and-artifact-integrity.json"
+    },
+    {
+      "sliceId": "scoped-route-resolution-and-restoration",
+      "title": "Restore and resolve routes only inside the active workspace",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Scoped Route Resolution",
+      "surfaceIds": [
+        "SWIFT-D0BC2109537E",
+        "TEST-E106594B9EF3"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/scoped-route-resolution-and-restoration.json"
+    },
+    {
+      "sliceId": "session-ending-pending-work-contracts",
+      "title": "End or remove one local Account session without silently losing accepted offline work",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Session Ending and Pending-Work Policy",
+      "surfaceIds": [
+        "SWIFT-1599BDC0D574",
+        "TEST-95498CCCD467"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/session-ending-pending-work-contracts.json"
+    },
+    {
+      "sliceId": "shared-list-query-presentation",
+      "title": "Distinguish local list readiness from authoritative empty results",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Shared Query Presentation",
+      "surfaceIds": [
+        "SWIFT-38DC8C755068",
+        "TEST-7E87ABB4166B"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/shared-list-query-presentation.json"
+    },
+    {
+      "sliceId": "source-query-reconciliation-control",
+      "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Source Query Reconciliation Control",
+      "surfaceIds": [
+        "CONFIG-40F01696B8A6",
+        "CONFIG-A8BD153106B8"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
+    },
+    {
+      "sliceId": "space-assignment-destination-powersync-picker",
+      "title": "Browse and select active same-scope Space assignment destinations from one encrypted local workspace",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Space Assignment Destination Picker",
+      "surfaceIds": [
+        "CONFIG-048B775BE4E4",
+        "CONFIG-5F4C2A8274C3",
+        "CONFIG-DC77B9F609A7",
+        "SWIFT-0A528DE84879",
+        "SWIFT-62E2D7E9B40E",
+        "SWIFT-698CCC538675",
+        "SWIFT-A1156933E12E",
+        "TEST-0126A06E52D0",
+        "TEST-33BFA84BCBB2"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-assignment-destination-powersync-picker.json"
+    },
+    {
+      "sliceId": "space-assignment-destination-read-contracts",
+      "title": "Read exact active same-scope Space assignment destinations offline without treating cached rows as authority",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Assignment Destination Read Contracts",
+      "surfaceIds": [
+        "SWIFT-164554FA1456",
+        "TEST-A3D73145E3EC"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-assignment-destination-read-contracts.json"
+    },
+    {
+      "sliceId": "space-browser-powersync-provider",
+      "title": "Browse active Project or Inventory Spaces offline and open existing Space details",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Space Browser PowerSync Provider",
+      "surfaceIds": [
+        "SWIFT-08DC933EC0F4",
+        "SWIFT-8B0A5006A2CA",
+        "SWIFT-F78CAEEBEDC4",
+        "TEST-55014C110C73",
+        "TEST-A76066CC8EAA"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-browser-powersync-provider.json"
+    },
+    {
+      "sliceId": "space-checklist-editing-presentation-contracts",
+      "title": "Edit one evidence-bound Space checklist hierarchy offline",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Checklist Editing Presentation",
+      "surfaceIds": [
+        "SWIFT-A9BCA70B7F9C",
+        "TEST-94F32F5E9219"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-editing-presentation-contracts.json"
+    },
+    {
+      "sliceId": "space-checklist-revision-operation-contracts",
+      "title": "Replace one Space's complete ordered checklist hierarchy without changing other Space state",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Checklist Revision Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-EB8803C0864A",
+        "TEST-9A22BFF16437"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-revision-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-checklist-revision-use-case-contracts",
+      "title": "Derive and dispatch one complete Space checklist replacement",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Checklist Revision Use Case",
+      "surfaceIds": [
+        "SWIFT-1FDB27E18B95",
+        "TEST-674E6F23E5BE"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-revision-use-case-contracts.json"
+    },
+    {
+      "sliceId": "space-core-details-powersync-provider",
+      "title": "Review one complete active or archived Space offline with ordered checklist progress",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Space Core Details",
+      "surfaceIds": [
+        "CONFIG-55809460A27C",
+        "CONFIG-C07E3326B896",
+        "SWIFT-058F3155F97F",
+        "SWIFT-2335BBE3E8FD",
+        "SWIFT-B762FCFD8525",
+        "SWIFT-C99453DE8B49",
+        "TEST-33D5654E41CA",
+        "TEST-FDF70607A5B4"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-core-details-powersync-provider.json"
+    },
+    {
+      "sliceId": "space-core-details-read-contracts",
+      "title": "Read one Space's provider-free core details with explicit offline truth",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Core Details Read Contracts",
+      "surfaceIds": [
+        "SWIFT-02BF0EA3C433",
+        "TEST-377B0FDAF4D4"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-core-details-read-contracts.json"
+    },
+    {
+      "sliceId": "space-creation-operation-contracts",
+      "title": "Create one Project or Business Inventory Space without unrelated effects",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Creation Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-F61D38406022",
+        "TEST-F46861BCC21A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-creation-supabase-powersync-vertical-slice",
+      "title": "Create one Space offline and read it back in the exact local destination directory",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Space Creation Provider",
+      "surfaceIds": [
+        "CONFIG-47B4E611F656",
+        "CONFIG-D480EE9180E9",
+        "CONFIG-D810BACE7514",
+        "MCPMOD-6041493AFB54",
+        "MCPMOD-96D987A7F175",
+        "SWIFT-4A4871681A0C",
+        "SWIFT-81770E563598",
+        "SWIFT-A3C39A0A230C",
+        "SWIFT-D0265A748544",
+        "SWIFT-E759DC8D7078",
+        "TEST-0FCB8A65AEFB",
+        "TEST-987BC22BCDF4"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 12,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-supabase-powersync-vertical-slice.json"
+    },
+    {
+      "sliceId": "space-details-update-operation-contracts",
+      "title": "Replace one Space's complete mutable details without changing scope or child state",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Details Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-EDFA6A1EF8C3",
+        "TEST-E8832A105D5C"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-details-update-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-details-update-use-case-contracts",
+      "title": "Validate and dispatch one complete Space details replacement",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Details Update Use Case",
+      "surfaceIds": [
+        "SWIFT-306643A5CD0D",
+        "TEST-235F73A8DC9E"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-details-update-use-case-contracts.json"
+    },
+    {
+      "sliceId": "space-list-read-and-presentation-contracts",
+      "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space List Read and Presentation Contracts",
+      "surfaceIds": [
+        "SWIFT-0DCDAFBB4350",
+        "TEST-54B6515645F8"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json"
+    },
+    {
+      "sliceId": "space-read-target-mcp",
+      "title": "List and inspect authorized Spaces through bounded target MCP reads",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Spaces and Placement Read Models",
+      "surfaceIds": [
+        "MCPMOD-1B9E357E244B",
+        "MCPMOD-E3EF7C97DA9C"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-read-target-mcp.json"
+    },
+    {
+      "sliceId": "space-template-reference-read-contracts",
+      "title": "Read ordered Space-template structure offline without carrying checked state or granting write authority",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Space Template Reference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-77F812A8F463",
+        "TEST-CB30140F137B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-template-reference-read-contracts.json"
+    },
+    {
+      "sliceId": "target-environment-isolation",
+      "title": "Start the target app only in one validated, isolated environment",
+      "kind": "technical_control",
+      "status": "in_progress",
+      "owner": "Environment and Composition Control",
+      "surfaceIds": [
+        "CONFIG-031396750B85",
+        "CONFIG-1FC6F8A5DFA5",
+        "CONFIG-2439DF7AA062",
+        "CONFIG-2EBA890AF767",
+        "CONFIG-634171BE50F3",
+        "CONFIG-6E140F8E16C0",
+        "CONFIG-77D38BB6819B",
+        "CONFIG-81235587F306",
+        "CONFIG-D94C7653FB36",
+        "FILE-A6E49E3815F4",
+        "MAN-RELEASE-001",
+        "SWIFT-061553E63650",
+        "SWIFT-481A2D09BC68",
+        "SWIFT-88C69E26FBA0",
+        "TEST-0AD8A0619179"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-environment-isolation.json"
+    },
+    {
+      "sliceId": "target-query-logical-authority-crosswalk-control",
+      "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Target Query Logical-Authority Control",
+      "surfaceIds": [
+        "CONFIG-5422E6C6A047",
+        "CONFIG-ED6818A70D4E"
+      ],
+      "requirementCount": 12,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json"
+    },
+    {
+      "sliceId": "target-query-port-inventory-control",
+      "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Target Query-Port Conversion Control",
+      "surfaceIds": [
+        "CONFIG-9B16CFCB67A4",
+        "CONFIG-C1C61B2D6569"
+      ],
+      "requirementCount": 15,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json"
+    },
+    {
+      "sliceId": "transaction-taxonomy-and-transfer-identity",
+      "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Transaction Taxonomy and Transfer Identity",
+      "surfaceIds": [
+        "SWIFT-C7C58265EA19",
+        "TEST-28D11BDABC0A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-taxonomy-and-transfer-identity.json"
+    },
+    {
+      "sliceId": "transaction-type-choice-presentation-contracts",
+      "title": "Present canonical Transaction type choices and scope-relative meaning",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Transaction Type Choice Presentation",
+      "surfaceIds": [
+        "SWIFT-F90B7B48C1F6",
+        "TEST-F66BBF1FC092"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-type-choice-presentation-contracts.json"
+    },
+    {
+      "sliceId": "transfer-destination-powersync-picker",
+      "title": "Browse and select same-Client Transfer destination Projects from the existing local directory",
+      "kind": "product",
+      "status": "implemented",
+      "owner": "Transfer Destination Picker",
+      "surfaceIds": [
+        "SWIFT-A266AA431CC2",
+        "SWIFT-A89D47BD8E9E",
+        "SWIFT-B51F1CEFB750",
+        "SWIFT-B75E621E13BB",
+        "TEST-AE71DAB919F1",
+        "TEST-DE003BB60B7F"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-powersync-picker.json"
+    },
+    {
+      "sliceId": "transfer-destination-selection-contracts",
+      "title": "Select exact same-Client Transfer destinations from local directory evidence",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Transfer Destination Selection",
+      "surfaceIds": [
+        "SWIFT-1A05F36246B4",
+        "TEST-C01243D7B782"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-selection-contracts.json"
+    },
+    {
+      "sliceId": "typed-edit-draft-and-submission",
+      "title": "Preserve typed edit intent through durable operation results",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Typed Edit Draft and Submission",
+      "surfaceIds": [
+        "SWIFT-3E0BAFEF6955",
+        "TEST-F9037F34FAF9"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/typed-edit-draft-and-submission.json"
+    },
+    {
+      "sliceId": "validated-target-composition",
+      "title": "Validate one explicit environment-bound target composition before application or provider wiring",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Validated Target Composition",
+      "surfaceIds": [
+        "SWIFT-06BA59E1BBDF",
+        "TEST-952BC24E0233"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/validated-target-composition.json"
+    },
+    {
+      "sliceId": "vendor-suggestion-powersync-provider-and-picker",
+      "title": "Read and select Account vendor suggestions from an encrypted offline workspace",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Vendor Suggestion Offline Picker",
+      "surfaceIds": [
+        "CONFIG-456D371094F4",
+        "CONFIG-C35C70C22D3B",
+        "CONFIG-F2A050C625BB",
+        "SWIFT-0CAF55A667DD",
+        "SWIFT-1854C369125A",
+        "SWIFT-7947DB9A7607",
+        "SWIFT-92517AD05CF0",
+        "SWIFT-C73CD63C401A",
+        "TEST-46C1EA676FF3",
+        "TEST-7C2F42BE6C1D",
+        "TEST-A03D922ACD36"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 2,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-powersync-provider-and-picker.json"
+    },
+    {
+      "sliceId": "vendor-suggestion-reference-read-contracts",
+      "title": "Read ordered vendor suggestions offline without creating Vendor identity or write authority",
+      "kind": "product",
+      "status": "verified",
+      "owner": "Vendor Suggestion Reference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-111A94B464D5",
+        "TEST-A73A49564E8C"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json"
+    },
+    {
+      "sliceId": "versioned-contract-catalog",
+      "title": "Publish one versioned contract catalog to the target app and MCP",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "MCP Platform and Contract Registry",
+      "surfaceIds": [
+        "CONFIG-1BF5CA7701CD",
+        "CONFIG-5209F00EB920",
+        "CONFIG-A02A8D8114A1",
+        "CONFIG-B2A2BF619303",
+        "CONFIG-E8C1EA5B72F9",
+        "FILE-3920BDE7C604",
+        "MCPMOD-CE84DA4C8EA4",
+        "SWIFT-5FA3004D3855",
+        "SWIFT-6AA27A022A10",
+        "TEST-C8A63111BD2B"
+      ],
+      "requirementCount": 4,
+      "verificationCount": 3,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/versioned-contract-catalog.json"
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "batchId": "M0-CAPABILITY-CONTROL-001",
+  "title": "Capability evolution guidance and deterministic conversion coverage controls",
+  "reviewedAt": "2026-09-03",
+  "evidence": ["EVID-CAPABILITY-001", "EVID-CONTROL-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001"],
+  "surfaces": [
+    {
+      "id": "FILE-7FD1F9FEF537",
+      "acknowledgeSourceHash": "c5d15186c0decbd6f663d5b17990440c3b96e2c19f806a00828af478a38e5c9f",
+      "currentBehavior": "Deterministically assigns every Swift service/Auth file and MCP source module in the configured scope to an initial user or operational capability, records source hashes, declared symbols and lexical coupling/read/write/observation/offline signals, and fails generation/checking when any source is unassigned or artifacts are stale.",
+      "disposition": "source_only",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-001"],
+      "verification": {
+        "tests": ["node --check scripts/extract-current-capability-surfaces.mjs", "npm run conversion:capabilities:generate", "npm run conversion:capabilities:check"],
+        "acceptance": ["All 41 Swift service/Auth and 47 MCP source files are assigned", "An unassigned or changed in-scope source fails generation/checking until reviewed"]
+      },
+      "notes": "Capability assignment is source triage, not target port/schema approval."
+    },
+    {
+      "id": "FILE-208B7E9D7F47",
+      "acknowledgeSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details, Project category-configuration revision and Vendor-suggestion migration/test/Data-API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "disposition": "preserve",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-SPACE-CREATION-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "verification": {
+        "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
+        "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
+      },
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Project category-configuration revision migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership."
+    },
+    {
+      "id": "CONFIG-9B16CFCB67A4",
+      "acknowledgeSourceHash": "10be72ecee01e0852709de28219ffc0dcc8e88533d02b1cd8e2d32118d165593",
+      "currentBehavior": "Dependency-free deterministic Node lexical scanner that inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying whose owner is implemented, verified, rehearsed or cutover-ready. It records owner lifecycle visibly, keeps TQUERY/signature/digest stable across status-only promotion, rejects earlier/blocked/retired/unknown owners, preserves the existing adversarial Swift lexical/grammar guarantees, emits timestamp-free JSON/Markdown, and byte-checks both artifacts without writing.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query-Port Conversion Control",
+        "surfaces": [
+          "deterministic target Querying-protocol method inventory generator",
+          "stable TQUERY identity and separate signature-drift evidence",
+          "read-only stale generated-artifact check"
+        ],
+        "securityRequirements": [
+          "Read repository Swift and conversion metadata only; expose no credential, tenant data, local data or provider endpoint"
+        ],
+        "syncRequirements": [
+          "Inventory records declarations only and must not imply PowerSync visibility or local-row readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Generate target-port evidence only; do not transform Firebase data or infer source-query parity.",
+        "reconciliation": [
+          "Every emitted TQUERY is reviewed in the later logical access/index crosswalk",
+          "A later control reconciles the complete generated TQUERY set against all 386 QUERY-* source occurrences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/generate-target-query-port-inventory.mjs",
+          "npm run target:query-ports:test",
+          "npm run target:query-ports:check"
+        ],
+        "acceptance": [
+          "Exactly 17 implemented-or-later owners, 17 public exact-suffix Querying protocols and 19 direct methods are emitted at the reviewed baseline",
+          "Unsupported, ambiguous, duplicate, empty or invalid-owner input fails closed",
+          "Check byte-compares deterministic JSON and Markdown without writing"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Twenty-two focused tests cover the 17-owner/17-protocol/19-method inventory and exact status matrices."
+    },
+    {
+      "id": "CONFIG-C1C61B2D6569",
+      "acknowledgeSourceHash": "4327c4b2111da008aa5be151eba4c64dd1fa506cd644df9efed220a61b8b1c75",
+      "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 17-owner/17-protocol/19-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query-Port Conversion Control",
+        "surfaces": [
+          "target query-port inventory generator contract tests",
+          "parser and normalization adversarial fixtures",
+          "exact baseline and stale-output regression control"
+        ],
+        "securityRequirements": [
+          "Fixtures are synthetic or repository-local and tests perform no hosted or production access"
+        ],
+        "syncRequirements": [
+          "Tests reject any interpretation of declaration inventory as Sync authorization, visibility or readiness proof"
+        ]
+      },
+      "migration": {
+        "rule": "Exercise repository and synthetic declaration fixtures only; perform no source export or target data migration.",
+        "reconciliation": [
+          "Exact baseline counts and multi-method protocol sets match repository declarations",
+          "Generated artifacts are byte-identical after generate then check"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/tests/generate-target-query-port-inventory.test.mjs",
+          "npm run target:query-ports:test"
+        ],
+        "acceptance": [
+          "All supported syntax, exclusions, signature axes and fail-closed cases are covered",
+          "READY, implementation and promotion allowlists preserve unrelated surfaces"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33842465485. All 22 focused tests pass."
+    },
+    {
+      "id": "CONFIG-5422E6C6A047",
+      "acknowledgeSourceHash": "7d4c99000839df4e7510b1385008ecf298d10eae94e8200444d104c038f41440",
+      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over all 19 generated TQUERY rows. It validates exact implemented-or-later input lifecycle while omitting lifecycle from logical output, so status-only promotion preserves TACCESS, mapping hashes and crosswalk bytes. It binds the reviewed Space-list row and retains the existing closed-schema, deterministic, filesystem-safe and no-semantic-inference guarantees.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query Logical-Authority Control",
+        "surfaces": [
+          "closed-schema target query logical-authority registry validator",
+          "stable TACCESS identity and separate mapping-drift evidence",
+          "deterministic read-only generated JSON freshness control"
+        ],
+        "securityRequirements": [
+          "Read only repository JSON/control metadata; no credential, tenant data, provider endpoint, hosted resource or production access",
+          "Logical scope fields narrow expected reads but never authorize access or select RLS policy"
+        ],
+        "syncRequirements": [
+          "Every data-domain label remains a proposed_architecture_dependency and cannot authorize or claim an implemented Sync Stream",
+          "Postgres and local physical planes remain globally deferred under A-003 and A-004"
+        ]
+      },
+      "migration": {
+        "rule": "Review target logical authority only; do not map or translate Firebase queries, indexes or data.",
+        "reconciliation": [
+          "Bind exactly one reviewed row to each of the 19 current generated TQUERY methods",
+          "Leave all 386 QUERY source occurrences for a separate downstream reconciliation slice"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/generate-target-query-logical-authority-crosswalk.mjs",
+          "npm run target:query-authority:generate",
+          "npm run target:query-authority:check",
+          "immutable implementation CI under the slice dossier"
+        ],
+        "acceptance": [
+          "Generated JSON binds all 19 current TQUERY methods and exact signatures to the reviewed lifecycle-neutral registry",
+          "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original 18-row verification remains backed by 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. All 24 focused tests pass."
+    },
+    {
+      "id": "CONFIG-ED6818A70D4E",
+      "acknowledgeSourceHash": "9d3f3f6ca8874fb9f178c92651c7fca08367e4ed676fed058a05d7566f6c4f94",
+      "currentBehavior": "Executable 24-test JSON-only logical-authority structural suite covering the fully derived 19-row upstream inventory, exact implemented-or-later lifecycle inputs, lifecycle-neutral output stability, Space-list scope/readiness mapping, registry schemas, review-class consistency, authority/filesystem safety, stable identities and mapping hashes, deterministic bytes, read-only checking, CLI/package/CI topology and no semantic inference.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query Logical-Authority Control",
+        "surfaces": [
+          "exact 19-row inventory/signature binding tests",
+          "closed-schema and discriminated-axis rejection matrix",
+          "deterministic identity, mapping hash, stale artifact and lifecycle-allowlist tests"
+        ],
+        "securityRequirements": [
+          "Use repository metadata and synthetic JSON fixtures only; perform no hosted or production access",
+          "Prove the closed schema has no authorization-policy implementation field; free-text meaning remains human-reviewed"
+        ],
+        "syncRequirements": [
+          "Accept only the exact proposed_architecture_dependency state and frozen domain-value enum; do not infer stream authorization from free text"
+        ]
+      },
+      "migration": {
+        "rule": "Test target logical-authority metadata only; perform no source export, source-query matching or target migration.",
+        "reconciliation": [
+          "Prove exact TQUERY set equality and signature freshness",
+          "Prove the downstream 386-source-query reconciliation boundary remains explicit and untouched"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+          "npm run target:query-authority:test",
+          "npm run target:query-authority:generate",
+          "npm run target:query-authority:check"
+        ],
+        "acceptance": [
+          "All 24 focused tests pass locally",
+          "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33853355777. All 24 focused tests pass."
+    },
+    {
+      "id": "CONFIG-A8BD153106B8",
+      "acknowledgeSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Source Query Reconciliation Control",
+        "surfaces": [
+          "aggregate 386-occurrence reconciliation registry validator",
+          "deterministic generated reconciliation artifact checker"
+        ],
+        "securityRequirements": [
+          "Consume repository-controlled source, target-authority, manifest, and registry evidence only",
+          "Treat logical scope mappings as evidence rather than authorization"
+        ],
+        "syncRequirements": [
+          "Reject per-row physical or provider mappings and preserve A-003/A-004 as global-only deferrals"
+        ]
+      },
+      "migration": {
+        "rule": "Validate reviewed classification/control evidence without inferring mappings or defining physical target access.",
+        "reconciliation": [
+          "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/generate-source-query-reconciliation.mjs",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check",
+          "npm run source:query-reconciliation:test"
+        ],
+        "acceptance": [
+          "Generated JSON binds all 386 occurrences and 584 reviewed outcomes while unresolved counts remain fail-closed"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"],
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. Only the target-authority binding and verified-owner guard changed; all 386 classifications and 584 outcomes remain unchanged, and all 25 focused tests pass."
+    },
+    {
+      "id": "CONFIG-40F01696B8A6",
+      "acknowledgeSourceHash": "6602c8e76fb8394a412e44f34eb88df91ba58501102bb7b9d68e7ce09d1ece36",
+      "currentBehavior": "Executable 25-test adversarial Node suite covering the exact 386-query/584-outcome baseline, lifecycle-neutral target bindings, verified-or-later acceptance, exhaustive lower/blocked/retired/unknown/missing-owner rejection, closed schemas, source identity, blocker/evidence anti-laundering, retirement/gate order, deterministic output, historical checkpoint diff, fail-closed workflow topology, filesystem containment, atomic writes, read-only checking and exact CLI arity.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Source Query Reconciliation Control",
+        "surfaces": [
+          "exact 386-assignment, row and binding tests",
+          "outcome-authority and lifecycle-allowlist tests"
+        ],
+        "securityRequirements": [
+          "Use repository metadata and synthetic fixtures only; never access hosted or production systems"
+        ],
+        "syncRequirements": [
+          "Tests must reject physical/provider fields without defining target access"
+        ]
+      },
+      "migration": {
+        "rule": "Test repository-controlled reconciliation metadata only; do not contact hosted or production systems.",
+        "reconciliation": [
+          "Human semantic review remains separate from future structural test success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/tests/generate-source-query-reconciliation.test.mjs",
+          "npm run source:query-reconciliation:test",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check"
+        ],
+        "acceptance": [
+          "All focused structural and adversarial tests pass locally and check mode is byte-exact/read-only"
+        ]
+      },
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass."
+    }
+  ]
+}
