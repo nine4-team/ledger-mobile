@@ -1,0 +1,51 @@
+{
+  "batchId": "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001",
+  "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-ITEM-SPACE-CLEARING-001",
+    "EVID-ITEM-SPACE-CLEARING-USE-CASE-001",
+    "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-02B978845267",
+      "acknowledgeSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
+      "currentBehavior": "Comment-only DRAFT scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
+      "target": {
+        "owner": "Item Space Clearing Local Durability Provider",
+        "surfaces": ["Account-bound PowerSync local clearing-command acceptance store"],
+        "securityRequirements": ["Reject foreign Account/Principal scope, changed/any-family evidence, and malformed local rows before side effects through the shared identity guard"],
+        "syncRequirements": ["Persist localOnly clearing evidence without ps_crud, projection, upload, or authoritative apply"]
+      },
+      "migration": {"rule": "Synthetic isolated target data only; no source import or production access.", "reconciliation": ["One accepted clear maps to one generic queued operation and one exact clearing-command evidence row"]},
+      "verification": {"tests": ["ItemSpaceClearingPowerSyncStoreTests"], "acceptance": ["Atomic acceptance, restart, replay, collision, cancellation, watch, and runtime lifecycle obligations pass"]},
+      "notes": "No Item/Space/marker projection, server apply, Postgres/RLS/Sync/RPC/upload, app/MCP, Firebase, migration, production, or cutover work."
+    },
+    {
+      "id": "TEST-9E8111F721E6",
+      "acknowledgeSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
+      "currentBehavior": "Comment-only DRAFT scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
+      "target": {
+        "owner": "Item Space Clearing Local Durability Provider",
+        "surfaces": ["Deterministic isolated PowerSync clearing-provider and runtime test suite"],
+        "securityRequirements": ["Prove fail-closed cross-scope, every-registered-family, and malformed-evidence behavior"],
+        "syncRequirements": ["Prove clearing evidence is localOnly and leaves ps_crud/upload/projections unchanged"]
+      },
+      "migration": {"rule": "Use encrypted temporary test databases and typed synthetic commands only.", "reconciliation": []},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingPowerSyncStoreTests"], "acceptance": ["All frozen dossier obligations pass without hosted resources"]},
+      "notes": "Passing local tests do not prove server authorization, marker cleanup, authoritative apply, hosted PowerSync Sync, or cutover readiness."
+    }
+  ]
+}

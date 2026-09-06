@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 350
+State version: 352
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: TARGET-LIFECYCLE-AND-ITEM-ASSIGNMENT-VERIFIED-PROMOTION
+- Checkpoint: LOCAL-OPERATION-IDENTITY-OWNERSHIP-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current committed conversion base: `261de4709237a960eecd995c2733f5f48f31dcc5`
+- Current committed conversion base: `04843679c1bffa41aab2efecf2723695dc97fc4a`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -34,9 +34,10 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **550 of 740 target-relevant surfaces mapped or
-  later (74.3%)**. Local surface-implementation coverage is **237 of 740
-  implemented or later (32.0%)**. The current promotion moves already-
+- Planning/control coverage is **554 of 744 target-relevant surfaces mapped or
+  later (74.5%)**. Local surface-implementation coverage is **237 of 744
+  implemented or later (31.9%)**. The current comment-only READY adds mapped technical-
+  control surfaces but no implementation credit. The prior promotion moves already-
   implemented surfaces to verified after exact synchronized CI; it adds no new
   provider-backed product workflow, hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
@@ -55,8 +56,8 @@ without modifying the running Firebase application before hard cutover.
   hosted Sync/Auth, migration and cutover work is materially harder than the
   completed average. The exact four lanes above remain authoritative evidence;
   no repository-surface percentage may be presented as app completion.
-- The implementation tracker currently contains 283 status-bearing rows: 68
-  done, 11 verified, 12 implemented, 12 in progress, 28 design, 60 blocked, 90
+- The implementation tracker currently contains 285 status-bearing rows: 68
+  done, 11 verified, 12 implemented, 12 in progress, 30 design, 60 blocked, 90
   not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -89,6 +90,44 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Independent corrected-DRAFT review of Item-to-Space clearing found that its
+  proposed reciprocal assignment lookup still protected only two command
+  families. Three bounded read-only audits then enumerated all five executable
+  writers and every current OperationID-bearing local relation and confirmed
+  that command-only, result-only, pending-only, or overlay-only evidence could
+  be rebound whenever the generic local-operation row was absent. Corrected-
+  DRAFT review then caught an inaccurate claim that database-only creation
+  stores were constructor-scoped. A second review correctly rejected an interim
+  attempt to model insert-only command-view rows separately from `ps_crud`:
+  pinned PowerSync 0.5.3 writes only the queue entry for those inserts. The new
+  comment-only `local-operation-identity-ownership-guard` READY package keeps
+  `spike_local_operations.id` as the normal ownership claim and freezes one
+  exhaustive ID-scoped inspection inside every provider write transaction,
+  including each exact queue command type while preserving the existing Account-
+  runtime scope boundary. Further review preserved disjoint archive-ID prefix
+  validation while requiring direct synthetic guard classification for that
+  otherwise impossible public pair, and corrected operation-only handling so a
+  canonical typed applied/rejected creation row remains replayable after queue
+  and reconciled/rejected pending drainage, while any still-present pending graph
+  must validate exactly and incomplete rows fail closed. No new cleanup is
+  authorized. The inventory also treats a forbidden local operation-result table
+  mutation queued in `ps_crud` as malformed reservation evidence. The
+  exact PowerSync core 0.5.3 revision is now a frozen input with executable
+  four-view representation proof, and the four stores that previously swallowed
+  cancellation may add only default-no-op proof checkpoints plus explicit
+  `CancellationError` passthrough. It also requires
+  explicit create-Client/create-Project family/envelope evidence,
+  exact current-family pair/concurrency/orphan/restart/failure proof, and static
+  future-family completeness. A second empty registry table was rejected because
+  it would duplicate authority and still miss pre-existing orphan evidence. The
+  two independent final reviews returned GO with no P0-P3 finding; exact READY
+  CI is pending and executable guard work remains forbidden until it passes. The
+  clearing DRAFT now depends on this foundation, registers one sixth family
+  centrally, removes pairwise provider coupling, and adds the missing high
+  positive Date-round-trippable provider-time success case. All changes remain
+  documentation/comment-only; no executable provider, schema table, hosted,
+  source-backend, migration, production, or cutover behavior advanced.
 
 - Exact diagnostic-correction commit `e43fbdde255b9e205320f68cc4c54388d55a331c`
   passed every immutable job in Actions run `34033111578`: conversion controls,
@@ -4472,18 +4511,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Synchronize and verify this administrative promotion of the lifecycle,
-Budget-category and Item-assignment provider records, then commit, push and
-require all immutable workflow jobs on the exact promotion commit.
-
-From that exact verified base, create a comment-only READY package for
-`item-space-clearing-local-durability-provider`. Two
-independent selection audits agree on the narrow sibling boundary: reuse the
-verified clearing command/use case byte-for-byte, persist one localOnly
-clearing-command row plus one shared queued operation, add no Item/Space/marker
-projection or `ps_crud`, and include explicit cross-command OperationID collision
-proof against assignment evidence. Require independent READY review and exact
-READY CI before executable clearing work.
+Commit and push the exact synchronized comment-only
+`local-operation-identity-ownership-guard` READY package. Wait for every job in
+its immutable Actions run to pass before replacing either scaffold. Then
+implement only the frozen guard/store/test/checker touchpoints, independently
+review the actual diff, and pass the complete local plus exact implementation-CI
+gate. Only after that foundation is verified may the Item-to-Space clearing
+DRAFT register its sixth family and advance toward READY.
 
 Do not add authoritative Item/Space apply, optimistic placement projection,
 user-facing assignment/clearing UI, upload connector, Postgres/RLS/Sync changes,

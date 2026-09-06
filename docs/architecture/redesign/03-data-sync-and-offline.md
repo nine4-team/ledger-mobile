@@ -89,6 +89,40 @@ representations. Money remains integer cents.
 - A corrupted database is quarantined for diagnostics before a clean resync;
   pending operations and local-only media must be exported/recovered first.
 
+### Local OperationID ownership
+
+An `OperationID` has one namespace across command families. Within an encrypted
+Account database, `local_operations.id` is the normal-path ownership claim. An
+accepting provider must inspect every local relation that can retain that ID in
+the same serialized transaction before it replays or creates work. This includes
+the local operation, synchronized result, pending projections, optimistic
+overlays, local-only command evidence, each insert-only command view's upload-
+queue (`ps_crud`) evidence, and any local-mutation queue evidence for the
+synchronized operation-result relation. Under the pinned PowerSync behavior, an
+insert-only view writes that queue evidence without persisting a second backing
+command row; the guard must follow the actual storage contract.
+
+One typed same-family owner may proceed only to that family's state-aware replay
+validation. Required auxiliary evidence varies by lifecycle: a canonical
+terminal operation may legitimately remain alone only where that family's
+existing lifecycle drains its auxiliary evidence. For current creation flows,
+rejected handling and applied authoritative reconciliation can both drain
+pending evidence; any still-present pending graph must validate exactly, and
+this guard authorizes no new cleanup. A row in a queued/applying state is incomplete without the
+family's command/projection evidence. A complete graph owned by another family
+is a payload mismatch. Untyped or malformed operation-only, other orphaned,
+malformed, ambiguous, or multi-family evidence still reserves the ID, but it
+cannot be replayed, repaired, deleted, or rebound during command admission. Adding an operation-
+bearing relation or accepting provider therefore requires registering it in one
+central integrity inventory and extending the schema-to-provider completeness
+test before implementation can advance.
+
+This local guard prevents reuse inside one physical Account database. Globally
+unique client generation plus the authoritative server operation/result key
+protect collisions across separate devices and databases. Local corruption is
+quarantined under the lifecycle rule above; command admission does not invent a
+cleanup or retention policy.
+
 ## Synchronization Streams
 
 The target stream families are:

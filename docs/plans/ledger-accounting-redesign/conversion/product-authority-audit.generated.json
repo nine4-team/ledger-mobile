@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T13:23:25.953Z",
+  "generatedFromManifestSync": "2026-09-06T14:49:35.204Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1002,
-    "targetRelevantSurfaces": 740,
-    "batches": 43,
-    "productScopeSurfaces": 817,
-    "technicalControlSurfaces": 185
+    "surfaces": 1006,
+    "targetRelevantSurfaces": 744,
+    "batches": 45,
+    "productScopeSurfaces": 819,
+    "technicalControlSurfaces": 187
   },
   "canonicalTargetCoverage": [
     {
@@ -106,13 +106,14 @@
       "path": "docs/specs/spaces.md",
       "batchIds": [
         "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
+        "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-SPACE-CORE-DETAILS-PROVIDER-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 200,
-      "targetRelevantSurfaceCount": 194
+      "surfaceCount": 202,
+      "targetRelevantSurfaceCount": 196
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -133,10 +134,11 @@
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
+        "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001",
         "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 32,
-      "targetRelevantSurfaceCount": 29
+      "surfaceCount": 34,
+      "targetRelevantSurfaceCount": 31
     },
     {
       "path": "docs/specs/budget-management.md",
@@ -2061,6 +2063,142 @@
       "surfaceIds": [
         "SWIFT-09809DBC3BA1",
         "TEST-557358553F23"
+      ]
+    },
+    {
+      "batchId": "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001",
+      "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
+      "scope": "product",
+      "rationale": "The isolated provider accepts the already-verified Item-to-Space clearing command into encrypted Account-local durability while preserving exact mixed-Space evidence, Project-or-Account subject, cross-command replay isolation, operation lifecycle, and pending-work truth. It grants no server authority, placement or marker projection, upload, app/MCP, hosted, or production behavior.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-local-durability-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-02B978845267",
+        "TEST-9E8111F721E6"
+      ]
+    },
+    {
+      "batchId": "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001",
+      "title": "Enforce one fail-closed local OperationID namespace across command families",
+      "scope": "technical_control",
+      "rationale": "The target-only guard enforces the already-authoritative global OperationID namespace across every current local command family and operation-bearing relation. It changes no product command, accounting rule, server authority, upload shape, hosted resource, migration execution, or production behavior.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/architecture/redesign/01-system-context-and-principles.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-142941D87D78",
+        "TEST-5272CB2301DE"
       ]
     },
     {

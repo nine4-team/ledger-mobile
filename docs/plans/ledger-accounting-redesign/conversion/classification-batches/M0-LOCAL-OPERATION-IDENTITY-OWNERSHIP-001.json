@@ -1,0 +1,47 @@
+{
+  "batchId": "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001",
+  "title": "Enforce one fail-closed local OperationID namespace across command families",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-OPERATION-CORE-001",
+    "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-142941D87D78",
+      "acknowledgeSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
+      "currentBehavior": "Comment-only READY scaffold for a centralized local OperationID evidence inventory and ownership guard; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
+      "target": {
+        "owner": "Shared Local Operation Identity Guard",
+        "surfaces": ["One ID-scoped fail-closed current-family evidence inventory used inside each accepting provider transaction"],
+        "securityRequirements": ["Reserve malformed, orphaned, ambiguous, foreign-family, and multi-family evidence without disclosure, repair, or rebinding"],
+        "syncRequirements": ["Inspect existing local/result/projection evidence, each exact ps_crud entry produced by an insert-only command view, and forbidden local result-table mutation queue evidence without adding synchronized or upload state"]
+      },
+      "migration": {"rule": "No shipped target database exists; untyped synthetic evidence is classified only when unambiguous and is otherwise conservatively reserved.", "reconciliation": ["Every current operation-bearing relation, insert-only-view ps_crud command entry, forbidden result-mutation ps_crud type and accepting provider appears exactly once in the centralized inventory"]},
+      "verification": {"tests": ["LocalOperationIdentityGuardTests", "scripts/check-target-environment.mjs"], "acceptance": ["All current family pairs, orphan sources, concurrency, replay, restart, pinned-PowerSync insert-only representation, and static completeness obligations pass"]},
+      "notes": "No second registry table, server, upload, projection, cleanup, hosted, source-backend, migration execution, production, or cutover behavior."
+    },
+    {
+      "id": "TEST-5272CB2301DE",
+      "acknowledgeSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
+      "currentBehavior": "Comment-only READY scaffold for current-family pair, orphan-evidence, concurrency, replay, failure, and restart proof; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
+      "target": {
+        "owner": "Shared Local Operation Identity Guard",
+        "surfaces": ["Deterministic encrypted local OperationID ownership integration suite"],
+        "securityRequirements": ["Prove every present ownership evidence class reserves an ID without leaking cross-family or cross-scope details"],
+        "syncRequirements": ["Prove refusal creates no new ps_crud, projection, pending, result, or receipt evidence"]
+      },
+      "migration": {"rule": "Use only disposable encrypted test databases and synthetic operation graphs.", "reconciliation": []},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter LocalOperationIdentityGuardTests"], "acceptance": ["The frozen LOCALOPID test matrix passes without hosted resources"]},
+      "notes": "Passing local tests do not prove hosted authorization, real PowerSync synchronization, production migration, or cutover readiness."
+    }
+  ]
+}

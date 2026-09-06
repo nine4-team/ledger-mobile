@@ -5,14 +5,16 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 550 of 740 target-relevant
+Status: M0 backend-surface classification complete; 554 of 744 target-relevant
 surfaces are target-mapped or later and the remaining 190 are explicitly tied
-to decisions/spikes/production evidence. Of those target surfaces, 235 are now
-implemented or later. This 31.8% is local surface-implementation coverage,
+to decisions/spikes/production evidence. Of those target surfaces, 237 are now
+implemented or later. This 31.9% is local surface-implementation coverage,
 not shipped-app or cutover readiness. Ten provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
-zero. Decision-independent target
-foundations are in progress. M1 is blocked only by canonical production-profile
+zero. The shared local OperationID ownership guard is comment-only READY after
+two independent final GO reviews; exact READY CI must pass before executable
+work, and Item-to-Space clearing remains DRAFT behind it. Decision-independent
+target foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The dedicated Project category-configuration revision is
 implemented locally across two claimed leaves from frozen READY `dec9a570`.

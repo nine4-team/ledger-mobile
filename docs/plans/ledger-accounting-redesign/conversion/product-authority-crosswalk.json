@@ -722,6 +722,45 @@
         { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
       ]
     },
+    "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001": {
+      "scope": "technical_control",
+      "rationale": "The target-only guard enforces the already-authoritative global OperationID namespace across every current local command family and operation-bearing relation. It changes no product command, accounting rule, server authority, upload shape, hosted resource, migration execution, or production behavior.",
+      "authorities": [
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated provider accepts the already-verified Item-to-Space clearing command into encrypted Account-local durability while preserving exact mixed-Space evidence, Project-or-Account subject, cross-command replay isolation, operation lifecycle, and pending-work truth. It grants no server authority, placement or marker projection, upload, app/MCP, hosted, or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-local-durability-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001": {
       "scope": "technical_control",
       "rationale": "This staging-only read surface projects the existing exact Account-scoped pending-work summary as four independent local counts with honest clean, pending, loading and failure truth. It adds no session-ending decision, synchronization, upload, deletion, signout, provider, schema, hosted or production authority.",

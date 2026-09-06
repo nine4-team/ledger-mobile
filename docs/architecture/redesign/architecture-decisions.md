@@ -1,8 +1,8 @@
 # Architecture Decision Register
 
 Status: active
-Architecture version: 0.1
-Last reviewed: 2026-08-31
+Architecture version: 0.2
+Last reviewed: 2026-09-06
 
 This register records cross-cutting technical decisions. Product behavior remains
 in the redesign product decision log. A proposed decision is not an
@@ -37,6 +37,7 @@ implementation authorization.
 | A-015 | blocked | Choose the optimistic projection mechanism for complex offline commands |
 | A-016 | blocked | Approve the bounded offline-access lease |
 | A-017 | accepted | Firebase is a migration source, not a redesigned application adapter |
+| A-018 | accepted | Use one fail-closed OperationID ownership inventory across local command families |
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 
@@ -275,3 +276,39 @@ Supabase/PowerSync implementation and deterministic test adapters.
 switch. The old Firebase binary may continue to exist on devices, but the frozen
 Firebase backend rejects post-cutover writes and the new app uses only the target
 data implementation.
+
+## A-018 — One Fail-Closed Local OperationID Ownership Inventory
+
+**Decision:** `OperationID` is one global idempotency namespace, not a namespace
+per Account, device, payload, or command family. Within one encrypted Account
+database, `local_operations.id` is the normal ownership claim and every
+operation-bearing local relation participates in one centralized integrity
+inventory before any command admission or replay.
+
+**Reason:** An insert-only command view's `ps_crud` entry, synchronized result,
+forbidden local result-table queue mutation, pending projection, or overlay can
+outlive or become detached from the generic operation
+row. Checking only one family view or only the generic row allows malformed
+evidence to be silently rebound to another family and makes later replay,
+upload, and reconciliation ambiguous. The pinned PowerSync insert-only trigger
+writes the queue entry without persisting a second backing command row, so the
+inventory follows that actual storage contract.
+
+**Consequences:**
+
+- one typed same-family owner may proceed only to state-aware exact provider
+  validation; a terminal row may stand alone only where that family's existing
+  lifecycle drains auxiliary evidence, while incomplete nonterminal or untyped
+  rows fail closed and no new cleanup is implied;
+- a different family or changed payload returns a stable mismatch;
+- orphaned, malformed, ambiguous, or multi-family evidence reserves the ID and
+  fails closed without repair or deletion;
+- claim, inspection, and family writes share one serialized local transaction;
+- schema/source controls reject an unregistered operation-bearing relation or
+  accepting provider; and
+- local enforcement covers one physical Account database, while globally unique
+  generation and the authoritative server result key cover separate devices.
+
+This decision adds no second local registry table and chooses no cleanup or
+retention behavior. It does not advance A-003, A-004, A-015, A-016, hosted
+resources, migration execution, or production authority.

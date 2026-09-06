@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T13:23:25.953Z",
+  "generatedFromManifestSync": "2026-09-06T14:49:35.204Z",
   "totals": {
-    "slices": 92,
-    "claimedTargetSurfaces": 312,
+    "slices": 94,
+    "claimedTargetSurfaces": 316,
     "unclaimedTargetSurfaces": 428,
     "implementationAdvancedTargetSurfaces": 237
   },
   "statusCounts": {
-    "draft": 3,
-    "ready": 0,
+    "draft": 4,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 13,
     "verified": 73,
@@ -480,6 +480,21 @@
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-use-case-contracts.json"
     },
     {
+      "sliceId": "item-space-clearing-local-durability-provider",
+      "title": "Durably accept Item-to-Space clearing in the encrypted local target store",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Item Space Clearing Local Durability Provider",
+      "surfaceIds": [
+        "SWIFT-02B978845267",
+        "TEST-9E8111F721E6"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
+    },
+    {
       "sliceId": "item-space-clearing-operation-contracts",
       "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
       "kind": "product",
@@ -508,6 +523,21 @@
       "verificationCount": 10,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json"
+    },
+    {
+      "sliceId": "local-operation-identity-ownership-guard",
+      "title": "Enforce one fail-closed local OperationID namespace across command families",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Shared Local Operation Identity Guard",
+      "surfaceIds": [
+        "SWIFT-142941D87D78",
+        "TEST-5272CB2301DE"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
     },
     {
       "sliceId": "migration-run-plan-and-journal-integrity",

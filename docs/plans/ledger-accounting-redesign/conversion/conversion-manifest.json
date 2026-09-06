@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T13:23:25.953Z",
+    "lastSynchronizedAt": "2026-09-06T14:49:35.204Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18771,6 +18771,58 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-02B978845267",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
+      "acknowledgedSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Clearing Local Durability Provider",
+        "surfaces": [
+          "Account-bound PowerSync local clearing-command acceptance store"
+        ],
+        "securityRequirements": [
+          "Reject foreign Account/Principal scope, changed/any-family evidence, and malformed local rows before side effects through the shared identity guard"
+        ],
+        "syncRequirements": [
+          "Persist localOnly clearing evidence without ps_crud, projection, upload, or authoritative apply"
+        ]
+      },
+      "migration": {
+        "rule": "Synthetic isolated target data only; no source import or production access.",
+        "reconciliation": [
+          "One accepted clear maps to one generic queued operation and one exact clearing-command evidence row"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ItemSpaceClearingPowerSyncStoreTests"
+        ],
+        "acceptance": [
+          "Atomic acceptance, restart, replay, collision, cancellation, watch, and runtime lifecycle obligations pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
+      ],
+      "notes": "No Item/Space/marker projection, server apply, Postgres/RLS/Sync/RPC/upload, app/MCP, Firebase, migration, production, or cutover work.",
+      "classificationBatch": "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-02BF0EA3C433",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
@@ -20553,6 +20605,59 @@
       ],
       "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-142941D87D78",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift"
+        }
+      ],
+      "observedSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
+      "acknowledgedSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for a centralized local OperationID evidence inventory and ownership guard; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Shared Local Operation Identity Guard",
+        "surfaces": [
+          "One ID-scoped fail-closed current-family evidence inventory used inside each accepting provider transaction"
+        ],
+        "securityRequirements": [
+          "Reserve malformed, orphaned, ambiguous, foreign-family, and multi-family evidence without disclosure, repair, or rebinding"
+        ],
+        "syncRequirements": [
+          "Inspect existing local/result/projection evidence, each exact ps_crud entry produced by an insert-only command view, and forbidden local result-table mutation queue evidence without adding synchronized or upload state"
+        ]
+      },
+      "migration": {
+        "rule": "No shipped target database exists; untyped synthetic evidence is classified only when unambiguous and is otherwise conservatively reserved.",
+        "reconciliation": [
+          "Every current operation-bearing relation, insert-only-view ps_crud command entry, forbidden result-mutation ps_crud type and accepting provider appears exactly once in the centralized inventory"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LocalOperationIdentityGuardTests",
+          "scripts/check-target-environment.mjs"
+        ],
+        "acceptance": [
+          "All current family pairs, orphan sources, concurrency, replay, restart, pinned-PowerSync insert-only representation, and static completeness obligations pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
+      ],
+      "notes": "No second registry table, server, upload, projection, cleanup, hosted, source-backend, migration execution, production, or cutover behavior.",
+      "classificationBatch": "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
     },
     {
       "id": "SWIFT-14D0C2F1019A",
@@ -44214,6 +44319,56 @@
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
+      "id": "TEST-5272CB2301DE",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift"
+        }
+      ],
+      "observedSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
+      "acknowledgedSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold for current-family pair, orphan-evidence, concurrency, replay, failure, and restart proof; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Shared Local Operation Identity Guard",
+        "surfaces": [
+          "Deterministic encrypted local OperationID ownership integration suite"
+        ],
+        "securityRequirements": [
+          "Prove every present ownership evidence class reserves an ID without leaking cross-family or cross-scope details"
+        ],
+        "syncRequirements": [
+          "Prove refusal creates no new ps_crud, projection, pending, result, or receipt evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use only disposable encrypted test databases and synthetic operation graphs.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter LocalOperationIdentityGuardTests"
+        ],
+        "acceptance": [
+          "The frozen LOCALOPID test matrix passes without hosted resources"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
+      ],
+      "notes": "Passing local tests do not prove hosted authorization, real PowerSync synchronization, production migration, or cutover readiness.",
+      "classificationBatch": "M0-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
+    },
+    {
       "id": "TEST-5286613EC809",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectCategoryConfigurationPowerSyncQueryTests.swift",
@@ -46908,6 +47063,56 @@
       ],
       "notes": "Target-only Phase 1 verified tests. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-9E8111F721E6",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift"
+        }
+      ],
+      "observedSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
+      "acknowledgedSourceHash": "8e5217c65bcdfd36149f41654f2daf1e7afc178adfc28cf2c6c22e1a0f05562e",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only DRAFT scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Clearing Local Durability Provider",
+        "surfaces": [
+          "Deterministic isolated PowerSync clearing-provider and runtime test suite"
+        ],
+        "securityRequirements": [
+          "Prove fail-closed cross-scope, every-registered-family, and malformed-evidence behavior"
+        ],
+        "syncRequirements": [
+          "Prove clearing evidence is localOnly and leaves ps_crud/upload/projections unchanged"
+        ]
+      },
+      "migration": {
+        "rule": "Use encrypted temporary test databases and typed synthetic commands only.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceClearingPowerSyncStoreTests"
+        ],
+        "acceptance": [
+          "All frozen dossier obligations pass without hosted resources"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
+      ],
+      "notes": "Passing local tests do not prove server authorization, marker cleanup, authoritative apply, hosted PowerSync Sync, or cutover readiness.",
+      "classificationBatch": "M0-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
     },
     {
       "id": "TEST-A03D922ACD36",
