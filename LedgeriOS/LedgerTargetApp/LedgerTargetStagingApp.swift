@@ -118,6 +118,7 @@ private struct OfflineProviderSpikeView: View {
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
         SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
+        SpaceCoreDetailsStagingExerciseView(model: model.spaceDetails)
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations
         )
@@ -154,8 +155,10 @@ private final class OfflineClientSpikeModel {
     let projectArchive: ProjectArchiveBrowserStagingExercise
     let projectSetup: ProjectSetupStagingExercise
     let spaceDestinations: SpaceAssignmentDestinationStagingExercise
+    let spaceDetails: SpaceCoreDetailsStagingExercise
     let transferDestinations: TransferDestinationSelectionStagingExercise
     private let syntheticSpaceScope: ItemPlacementScope
+    private let syntheticSpaceId: SpaceID
     private let syntheticTransferSource: ProjectSummary
 
     init() {
@@ -221,10 +224,12 @@ private final class OfflineClientSpikeModel {
             now: Date.init
         )
         spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
+        spaceDetails = SpaceCoreDetailsStagingExercise(accountId: accountId)
         transferDestinations = TransferDestinationSelectionStagingExercise(
             accountId: accountId
         )
         syntheticSpaceScope = .project(try! ProjectID(validating: "project-primary"))
+        syntheticSpaceId = try! SpaceID(validating: "space-primary")
         let syntheticClientId = try! ClientID(validating: "client-primary")
         let syntheticClient = try! ClientSummary(
             id: syntheticClientId,
@@ -269,6 +274,10 @@ private final class OfflineClientSpikeModel {
                 scope: syntheticSpaceScope,
                 runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
             )
+            await spaceDetails.select(
+                spaceId: syntheticSpaceId,
+                runtime: SpaceCoreDetailsStagingRuntimeAdapter(runtime)
+            )
             await transferDestinations.open(
                 source: syntheticTransferSource,
                 runtime: TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)
@@ -294,6 +303,7 @@ private final class OfflineClientSpikeModel {
             await projectBrowser.stop()
             projectSetup.stop()
             await spaceDestinations.stop()
+            await spaceDetails.stop()
             await transferDestinations.stop()
             openedRuntime = nil
             try await runtime.close()
@@ -316,6 +326,7 @@ private final class OfflineClientSpikeModel {
         await projectBrowser.stop()
         projectSetup.stop()
         await spaceDestinations.stop()
+        await spaceDetails.stop()
         await transferDestinations.stop()
         if let openedRuntime {
             try? await openedRuntime.close()

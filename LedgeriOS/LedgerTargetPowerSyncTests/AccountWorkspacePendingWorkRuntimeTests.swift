@@ -488,7 +488,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all nine streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all ten streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -535,6 +535,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             projectId: projectRequest.projectId,
             pageSize: 20
         )
+        let spaceId = try SpaceID(validating: "space-lifecycle")
         let streams: [Any] = [
             runtime.watchClient(clientRequest),
             runtime.watchProject(projectRequest),
@@ -544,10 +545,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchSpaceAssignmentDestinations(scope: spaceScope),
             runtime.watchTransferDestinations(source: transferSource),
             runtime.watchProjectNotes(noteRequest),
+            runtime.watchSpaceCoreDetails(spaceId: spaceId),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(9)
+        await streamCounter.waitUntilEntered(10)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -558,6 +560,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .spaceAssignmentDestinations,
             .transferDestinations,
             .projectNotes,
+            .spaceCoreDetails,
             .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
@@ -601,6 +604,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchTransferDestinations(source: transferSource)
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
+        try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
@@ -654,6 +658,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchTransferDestinations(source: transferSource)
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
+        try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
@@ -932,6 +937,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             projectId: ProjectID(validating: "project-runtime"),
             pageSize: 20
         ))
+        _ = runtime.watchSpaceCoreDetails(
+            spaceId: try SpaceID(validating: "space-runtime")
+        )
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
@@ -1088,6 +1096,37 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(query.cancelAndDrainCount == 1)
         #expect(query.terminationCount == 1)
         try await Self.expectClosed(runtime.watchProjectNotes(request))
+        context.remove()
+    }
+
+    @Test("Space core-details facade binds exact Space and drains before close")
+    func spaceCoreDetailsFacadeAndDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "space-core-details-facade")
+        let query = RuntimeSpaceCoreDetailsQuery()
+        var dependencies = context.dependencies()
+        dependencies.makeSpaceCoreDetailsQuery = { _, _, _, _ in query }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let spaceId = try SpaceID(validating: "space-runtime-detail")
+        let expected = try SpaceCoreDetailsRequest(
+            accountId: context.accountId,
+            spaceId: spaceId
+        )
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchSpaceCoreDetails(spaceId: spaceId) {}
+            } catch { }
+        }
+        for _ in 0..<2_000 {
+            if query.requests.count == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(query.requests == [expected])
+
+        try await runtime.close()
+        await consumer.value
+        #expect(query.cancelAndDrainCount == 1)
+        #expect(query.terminationCount == 1)
+        try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
         context.remove()
     }
 
@@ -1350,6 +1389,33 @@ private final class RuntimeProjectNoteQuery:
     func watchNotes(
         _ request: ProjectNotePageRequest
     ) -> AsyncThrowingStream<ProjectNotePage, Error> {
+        lock.withLock { recordedRequests.append(request) }
+        return AsyncThrowingStream { continuation in
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { self?.terminations += 1 }
+            }
+        }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+    }
+}
+
+private final class RuntimeSpaceCoreDetailsQuery:
+    AccountWorkspaceSpaceCoreDetailsQuerying, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var recordedRequests: [SpaceCoreDetailsRequest] = []
+    private var drains = 0
+    private var terminations = 0
+    var requests: [SpaceCoreDetailsRequest] { lock.withLock { recordedRequests } }
+    var cancelAndDrainCount: Int { lock.withLock { drains } }
+    var terminationCount: Int { lock.withLock { terminations } }
+
+    func watchSpaceCoreDetails(
+        _ request: SpaceCoreDetailsRequest
+    ) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
         lock.withLock { recordedRequests.append(request) }
         return AsyncThrowingStream { continuation in
             continuation.onTermination = { [weak self] _ in

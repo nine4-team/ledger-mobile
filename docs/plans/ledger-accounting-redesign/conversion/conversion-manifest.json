@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T00:12:06.515Z",
+    "lastSynchronizedAt": "2026-09-06T01:10:08.930Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -690,8 +690,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
-      "acknowledgedSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
+      "observedSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
+      "acknowledgedSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
@@ -1084,8 +1084,8 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
-      "acknowledgedSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
+      "observedSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
+      "acknowledgedSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
       "metadata": {},
       "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign",
@@ -1343,10 +1343,10 @@
           "path": "supabase/tests/space_core_details_read.test.sql"
         }
       ],
-      "observedSourceHash": "d47a2ed002afa5152d0f1e8a32211bcedaf8c65da7b005c3c5d4b4890578a583",
-      "acknowledgedSourceHash": "d47a2ed002afa5152d0f1e8a32211bcedaf8c65da7b005c3c5d4b4890578a583",
+      "observedSourceHash": "b27e9fcc5a4d3ad7432eebc959eca913d1e89da2eed0ead9020db62a52b35e90",
+      "acknowledgedSourceHash": "b27e9fcc5a4d3ad7432eebc959eca913d1e89da2eed0ead9020db62a52b35e90",
       "metadata": {},
-      "currentBehavior": "One-test pgTAP READY placeholder keeps the repository runner valid and contains no Space assertion.",
+      "currentBehavior": "Executable 84-assertion pgTAP suite proves additive schema, exact values, hierarchy, lifecycle visibility, forced RLS, least privilege and unchanged destination behavior.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -1375,12 +1375,13 @@
           "The implementation replaces the placeholder with executable assertions"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "The current pass is runner scaffolding, not product or security proof.",
+      "notes": "Synthetic rows run inside rolled-back pgTAP transactions; no hosted or source-data claim is made.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -1942,8 +1943,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
-      "acknowledgedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "observedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
+      "acknowledgedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -2626,10 +2627,10 @@
           "path": "supabase/migrations/20260905234410_space_core_details_read.sql"
         }
       ],
-      "observedSourceHash": "444eb27207a3cc17f5de9d5bf812002101aba71f187a5272de9b58d7f5a65a04",
-      "acknowledgedSourceHash": "444eb27207a3cc17f5de9d5bf812002101aba71f187a5272de9b58d7f5a65a04",
+      "observedSourceHash": "0acd842bad30831bd4ed19cb31cad7737d4bd0f6d0f188203d20b1e90c940eb2",
+      "acknowledgedSourceHash": "0acd842bad30831bd4ed19cb31cad7737d4bd0f6d0f188203d20b1e90c940eb2",
       "metadata": {},
-      "currentBehavior": "Comment-only READY migration scaffold freezes an additive composite Space parent key plus separate no-client-grant read relations and performs no DDL.",
+      "currentBehavior": "Executable migration adds only the composite Space parent key and separate forced-RLS, no-client-grant core-detail/checklist/checklist-item read relations.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -2658,12 +2659,13 @@
           "Schema, constraints, indexes, privileges and policy shape pass on a disposable database"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "No executable DDL, source-data transform, writer or hosted operation exists at READY.",
+      "notes": "No source-data transform, client writer, hosted operation or production relation exists.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -6396,8 +6398,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
-      "acknowledgedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "observedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
+      "acknowledgedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -18770,12 +18772,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "1de8cd55ea1950ee9d96face5c33a4ef4ff79069e370ce0b96491e7e0b75391a",
-      "acknowledgedSourceHash": "1de8cd55ea1950ee9d96face5c33a4ef4ff79069e370ce0b96491e7e0b75391a",
+      "observedSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
+      "acknowledgedSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold defines an isolated thin Space detail renderer and contains no executable SwiftUI.",
+      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states and only authoritative checklist progress.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -18803,10 +18805,11 @@
           "Thin rendering compiles with no broad SpaceDetailView advancement"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
       "notes": "Items, media, review, templates, accounting, editing and archive controls are excluded.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
@@ -18822,8 +18825,8 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
-      "acknowledgedSourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
+      "observedSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
+      "acknowledgedSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20690,8 +20693,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
-      "acknowledgedSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
+      "observedSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
+      "acknowledgedSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -21321,12 +21324,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceCoreDetailsStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "b8e2dbb6d46b80bd702ae4299410105f4fa6aea029a20d27b8fe1e341995d8af",
-      "acknowledgedSourceHash": "b8e2dbb6d46b80bd702ae4299410105f4fa6aea029a20d27b8fe1e341995d8af",
+      "observedSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
+      "acknowledgedSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold defines a Core-only exact-Space presentation boundary and contains no executable AppModel.",
+      "currentBehavior": "Executable Core-only exact-Space presenter owns selection generations and honest waiting/partial/stale/ready/absence/failure state.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -21354,12 +21357,13 @@
           "Every readiness/lifecycle/hierarchy state maps deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "No lifecycle eligibility or editing policy is introduced.",
+      "notes": "No lifecycle eligibility, editing policy or incomplete-progress authority is introduced.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -25507,8 +25511,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
-      "acknowledgedSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
+      "observedSourceHash": "b512c920b50a35bae857cb4276233259f5b76e343c2b1e48b0913f9b17ad7563",
+      "acknowledgedSourceHash": "b512c920b50a35bae857cb4276233259f5b76e343c2b1e48b0913f9b17ad7563",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -28153,8 +28157,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "5773af880b1aa80031b561e369dd41e4ac37aea50cc2e2a392b9655f66a62c3e",
-      "acknowledgedSourceHash": "5773af880b1aa80031b561e369dd41e4ac37aea50cc2e2a392b9655f66a62c3e",
+      "observedSourceHash": "e82ece6b18b84458f1e5281f7314c20e394677e8b97290fca782400a4c5c2640",
+      "acknowledgedSourceHash": "e82ece6b18b84458f1e5281f7314c20e394677e8b97290fca782400a4c5c2640",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -34219,12 +34223,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SpaceCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "de0545a43c917f877778e61ced88e6108b98191fd7ac9e27623a37b772ec8538",
-      "acknowledgedSourceHash": "de0545a43c917f877778e61ced88e6108b98191fd7ac9e27623a37b772ec8538",
+      "observedSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
+      "acknowledgedSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold defines the exact-Space PowerSync query boundary and contains no executable provider.",
+      "currentBehavior": "Executable internal Account-bound PowerSync query reconstructs exact Space details with causal current-process completeness and fail-closed validation.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -34253,12 +34257,13 @@
           "All readiness, hierarchy, revocation and lifecycle cases pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "No provider type or authorization object may cross LedgerTargetCore.",
+      "notes": "No provider type or authorization object crosses LedgerTargetCore; real authenticated hosted Sync remains planned.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -35608,12 +35613,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "d101e260a57861735cfeae4d80b23efd2e46b41e72dec6fae6717be1fa10e2d6",
-      "acknowledgedSourceHash": "d101e260a57861735cfeae4d80b23efd2e46b41e72dec6fae6717be1fa10e2d6",
+      "observedSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
+      "acknowledgedSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold defines a thin runtime-forwarding boundary and contains no executable adapter.",
+      "currentBehavior": "Executable thin adapter forwards only the typed close-aware exact-Space runtime watch.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -35641,12 +35646,13 @@
           "The adapter contains no independent semantic logic"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "No MCP or production route.",
+      "notes": "No database, authorization, mutation, MCP or production route crosses the adapter.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -42073,12 +42079,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCoreDetailsPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "51a7ff83817ec110143795270ad1707654bcbe9ca899c93a0a31ccc496c9c441",
-      "acknowledgedSourceHash": "51a7ff83817ec110143795270ad1707654bcbe9ca899c93a0a31ccc496c9c441",
+      "observedSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
+      "acknowledgedSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold lists the required encrypted provider matrix and contains no executable test.",
+      "currentBehavior": "Executable controlled-source and encrypted-local suite proves reconstruction, startup order, causal reread, restart reset, revocation, malformed refusal and drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -42106,12 +42112,13 @@
           "Every frozen provider obligation is executable"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "A real authenticated PowerSync rehearsal remains a separate planned gate.",
+      "notes": "Uses disposable encrypted local databases and controlled sources; a real authenticated PowerSync rehearsal remains planned.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -45012,8 +45019,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "72bba5ab048a90f03558d66db92f9814c3f050d479f97042eec5fb96a2821e13",
-      "acknowledgedSourceHash": "72bba5ab048a90f03558d66db92f9814c3f050d479f97042eec5fb96a2821e13",
+      "observedSourceHash": "aa1adfbcf4d42329ea5e2dbe380b303d7a8f064ef87ba15b5e4e106280e1ae00",
+      "acknowledgedSourceHash": "aa1adfbcf4d42329ea5e2dbe380b303d7a8f064ef87ba15b5e4e106280e1ae00",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -48747,12 +48754,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceCoreDetailsStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "e041e822e822fc8b09523d4f40c7aa23d3497501ca72531e21d2e11f6e10b467",
-      "acknowledgedSourceHash": "e041e822e822fc8b09523d4f40c7aa23d3497501ca72531e21d2e11f6e10b467",
+      "observedSourceHash": "7797d23c742d5da9f3415780da9a356931ef3df7ca8a25d629e1fa7a11dc58c3",
+      "acknowledgedSourceHash": "7797d23c742d5da9f3415780da9a356931ef3df7ca8a25d629e1fa7a11dc58c3",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold lists the application-model state and cancellation matrix and contains no executable test.",
+      "currentBehavior": "Executable AppModel suite proves every readiness state, ordered progress, selection replacement, cancellation clearing and late-update refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
@@ -48780,12 +48787,13 @@
           "Waiting, partial, stale, ready, absence and failure states pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
       ],
-      "notes": "No provider import or production UI route is allowed.",
+      "notes": "No provider import, production route or mutation action exists.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     }
   ]

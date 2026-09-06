@@ -201,3 +201,97 @@ streams:
         AND note.project_id = subscription.parameter('project_id')
         AND principal.auth_user_id = auth.user_id()
         AND membership.state = 'active'
+
+  space_core_details:
+    queries:
+      - |
+        SELECT
+          space.id,
+          space.account_id,
+          space.scope_kind,
+          space.project_id,
+          space.display_name,
+          space.lifecycle,
+          space.revision
+        FROM spike_spaces AS space
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = space.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          detail.id,
+          detail.account_id,
+          detail.notes,
+          detail.created_at_ms,
+          detail.updated_at_ms
+        FROM spike_space_core_details AS detail
+        JOIN spike_spaces AS space
+          ON space.account_id = detail.account_id
+         AND space.id = detail.id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = detail.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE detail.account_id = subscription.parameter('account_id')
+        AND detail.id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          checklist.id,
+          checklist.account_id,
+          checklist.space_id,
+          checklist.checklist_id,
+          checklist.name,
+          checklist.presentation_order
+        FROM spike_space_checklists AS checklist
+        JOIN spike_spaces AS space
+          ON space.account_id = checklist.account_id
+         AND space.id = checklist.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = checklist.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE checklist.account_id = subscription.parameter('account_id')
+        AND checklist.space_id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          item.id,
+          item.account_id,
+          item.space_id,
+          item.checklist_id,
+          item.item_id,
+          item.item_text,
+          item.is_checked,
+          item.presentation_order
+        FROM spike_space_checklist_items AS item
+        JOIN spike_space_checklists AS checklist
+          ON checklist.account_id = item.account_id
+         AND checklist.space_id = item.space_id
+         AND checklist.checklist_id = item.checklist_id
+        JOIN spike_spaces AS space
+          ON space.account_id = item.account_id
+         AND space.id = item.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = item.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE item.account_id = subscription.parameter('account_id')
+        AND item.space_id = subscription.parameter('space_id')
+        AND checklist.account_id = subscription.parameter('account_id')
+        AND checklist.space_id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'

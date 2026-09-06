@@ -122,6 +122,18 @@ public final class LedgerOfflineClientRuntime: Sendable {
         }
     }
 
+    public func watchSpaceCoreDetails(
+        spaceId: SpaceID
+    ) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startSpaceCoreDetailsWatch(
+                id: id,
+                spaceId: spaceId,
+                continuation: continuation
+            )
+        }
+    }
+
     public func watchBudgetCategories()
         -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>
     {

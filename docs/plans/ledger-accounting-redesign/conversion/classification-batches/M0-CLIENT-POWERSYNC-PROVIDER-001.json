@@ -19,7 +19,7 @@
     {
       "id": "CONFIG-428FDE11BBE4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
+      "acknowledgeSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
       "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
@@ -88,7 +88,7 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
+      "acknowledgeSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
       "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
@@ -121,7 +121,7 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
+      "acknowledgeSourceHash": "b512c920b50a35bae857cb4276233259f5b76e343c2b1e48b0913f9b17ad7563",
       "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",

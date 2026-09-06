@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 326
+State version: 327
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-CORE-DETAILS-PROVIDER-READY-LOCAL
+- Checkpoint: SPACE-CORE-DETAILS-PROVIDER-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,15 +34,14 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Planning/control coverage is **529 of 713 target-relevant surfaces mapped or
-  later (74.2%)**. Local surface-implementation coverage is **219 of 713
-  implemented or verified (30.7%)**. Eight new Space core-details scaffolds
-  are READY/target-mapped only; they add no implementation, hosted or cutover
-  credit.
+  later (74.2%)**. Local surface-implementation coverage is **227 of 713
+  implemented or verified (31.8%)**. Eight Space core-details leaves now execute
+  locally but add no hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
-- Nine provider-backed product workflows have working local behavior after the
-  current slice: four mutations and five reads. Forty-seven additional product
+- Ten provider-backed product workflows have working local behavior after the
+  current slice: four mutations and six reads. Forty-seven additional product
   slices are verified provider-free contracts, not shipped workflows. Hosted
   authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
   and cutover-ready surface counts remain zero.
@@ -51,16 +50,17 @@ without modifying the running Firebase application before hard cutover.
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
 - The implementation tracker currently contains 279 status-bearing rows: 68
-  done, eight verified, 11 implemented, one ready and zero awaiting verification,
+  done, eight verified, 12 implemented, zero ready and zero awaiting verification,
   12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Nine provider-backed product slices have working local behavior: Client
+- Ten provider-backed product slices have working local behavior: Client
   creation, Project setup, Project archive and Client archive through their
   browsers, the Client/Project directory, Principal-scoped Account discovery,
   the exact Project-or-Business-Inventory Space destination picker, and the
-  derived same-Client Transfer destination picker, and Project note-history
-  continuity across Project archival. Four are mutation workflows and five are
+  derived same-Client Transfer destination picker, Project note-history
+  continuity across Project archival, and one exact active/archived Space
+  core-details read. Four are mutation workflows and six are
   reads. Client creation and Project setup have local
   identity, ordinary-name command, encrypted-offline, RLS, replay and readback
   mechanics; Project archive has the corresponding lifecycle/revision command,
@@ -84,25 +84,24 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Froze `space-core-details-powersync-provider` at READY after two independent
-  read-only audits converged on exact Space details as the strongest
-  decision-independent next workflow. Eight machine-discovered scaffolds now
-  bind the verified Core query to a separate one-to-one detail relation plus
-  relational checklist/item reads, one exact signed Account/Space stream,
-  positive signed-bigint revision transport, causal encrypted local
-  completeness, close-aware runtime ownership, exhaustive Core-only
-  presentation and isolated staging. The migration remains comment-only, the
-  pgTAP leaf contains one explicitly non-proving runner placeholder and all six
-  Swift leaves remain comment-only. Independent actual-diff review rejected
-  adding columns to the already exposed base relation and rejected an impossible
-  full-UInt64 physical claim and identified the composite key required for exact
-  same-Account child foreign keys. The corrected design preserves the existing
-  seven-column active-only destination rows/Data API/grant/policy/streams while
-  adding only that redundant `(account_id,id)` parent key, bounds nested
-  order to UInt32, proves Spaces under archived Projects, and excludes broad Space UI, every
-  writer/archive effect, Items, media, templates, accounting and MCP. A-003/
-  A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 remain unadvanced;
-  `EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001`.
+- Implemented `space-core-details-powersync-provider` from frozen READY
+  `9b62bec1403261a7d966c570af981da461d80f12`. Eight claimed leaves now provide
+  separate relational detail/checklist read tables with forced RLS and no client
+  grants, one exact signed active/archived Space stream, positive signed-bigint
+  revision transport, causal encrypted local completeness, close-aware runtime
+  ownership, exhaustive Core-only presentation and isolated staging. Independent
+  review rejected an unapproved timestamp-order constraint, expanded the
+  privilege proof to all table privileges, then found missing real encrypted
+  restart/startup/invalidation coverage and progress counts rendered from
+  incomplete evidence; all four defects were corrected. The existing
+  seven-column active-only destination rows/Data API/grant/policy/streams remain
+  unchanged. Local pgTAP, Data API regression, database lint, provider/runtime/
+  AppModel/complete Swift suites, target controls and both builds pass. Exact-
+  commit CI and real authenticated PowerSync remain pending. A-003/A-004/A-016
+  and O-023/O-026/O-037/O-044/O-045/O-046 remain unadvanced; broad Space UI,
+  every writer/archive effect, Items, media, templates, accounting, MCP, hosted,
+  Firebase, migration, production and cutover remain excluded;
+  `EVID-SPACE-CORE-DETAILS-PROVIDER-001`.
 
 - Implemented the ten-leaf Project archival-review delivery batch from frozen
   READY `1e893c6c02dc22a52cb1332e3a98a26c714d5fba`. It now provides forced-RLS

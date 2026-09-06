@@ -119,7 +119,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "acknowledgeSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -174,7 +174,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
+      "acknowledgeSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -308,7 +308,7 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
+      "acknowledgeSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
       "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client flows, and the local Space destination picker; it drains all owned observations before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -360,7 +360,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "acknowledgeSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

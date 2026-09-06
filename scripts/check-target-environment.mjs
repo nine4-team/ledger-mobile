@@ -398,6 +398,7 @@ if (
     "watchProjectNotes",
     "watchProjects",
     "watchSpaceAssignmentDestinations",
+    "watchSpaceCoreDetails",
     "watchTransferDestinations",
   ];
   if (
@@ -978,6 +979,129 @@ if (
         "target_project_note_sync_query_unbounded_directive",
         "The exact Project-note stream must sync full scope; paging belongs to local reads.",
       );
+    }
+  }
+
+  const spaceCoreDetailsFiles = {
+    provider: path.join(powerSyncRoot, "SpaceCoreDetailsPowerSyncQuery.swift"),
+    providerTests: path.join(powerSyncTestRoot, "SpaceCoreDetailsPowerSyncQueryTests.swift"),
+    model: path.join(appModelRoot, "SpaceCoreDetailsStagingExercise.swift"),
+    modelTests: path.join(appModelTestRoot, "SpaceCoreDetailsStagingExerciseTests.swift"),
+    adapter: path.join(targetAppRoot, "SpaceCoreDetailsStagingRuntimeAdapter.swift"),
+    view: path.join(targetAppRoot, "SpaceCoreDetailsStagingExerciseView.swift"),
+  };
+  for (const filePath of Object.values(spaceCoreDetailsFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_space_core_details_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(spaceCoreDetailsFiles).every(fs.existsSync)) {
+    const provider = fs.readFileSync(spaceCoreDetailsFiles.provider, "utf8");
+    const model = fs.readFileSync(spaceCoreDetailsFiles.model, "utf8");
+    const adapter = fs.readFileSync(spaceCoreDetailsFiles.adapter, "utf8");
+    const view = fs.readFileSync(spaceCoreDetailsFiles.view, "utf8");
+    const runtimePath = path.join(powerSyncRoot, "LedgerOfflineClientRuntime.swift");
+    const runtime = fs.readFileSync(runtimePath, "utf8");
+    const syncPath = path.join(repositoryRoot, "powersync/sync-streams.yaml");
+    const sync = fs.existsSync(syncPath) ? fs.readFileSync(syncPath, "utf8") : "";
+    const syncSection = sync.match(
+      /^  space_core_details:\n([\s\S]*?)(?=^  [a-z][a-z0-9_]*:\n|(?![\s\S]))/m,
+    )?.[0] ?? "";
+    for (const required of [
+      "SpaceCoreDetailsQuerying",
+      "SpaceCoreDetailsLocalReading",
+      "space_core_details",
+      "LedgerPowerSyncTable.spaceCoreDetails",
+      "LedgerPowerSyncTable.spaceChecklists",
+      "LedgerPowerSyncTable.spaceChecklistItems",
+      "cancelAndDrainWatches()",
+    ]) {
+      if (!provider.includes(required)) {
+        fail("target_space_core_details_provider_incomplete", required);
+      }
+    }
+    if (/public\s+(?:final\s+)?class\s+SpaceCoreDetailsPowerSyncQuery/.test(provider)) {
+      fail("target_space_core_details_provider_public", relative(spaceCoreDetailsFiles.provider));
+    }
+    if (!/public\s+func\s+watchSpaceCoreDetails\s*\(\s*spaceId:\s*SpaceID/.test(runtime)) {
+      fail("target_space_core_details_runtime_facade_missing", relative(runtimePath));
+    }
+    for (const required of [
+      "generation",
+      "oldTask?.cancel()",
+      "await oldTask?.value",
+      "update.validating(request: request)",
+      "progressCountsAreAuthoritative",
+    ]) {
+      if (!model.includes(required)) {
+        fail("target_space_core_details_presenter_incomplete", required);
+      }
+    }
+    if (!adapter.includes("runtime.watchSpaceCoreDetails(spaceId: spaceId)")) {
+      fail("target_space_core_details_adapter_incomplete", relative(spaceCoreDetailsFiles.adapter));
+    }
+    if (/PowerSync|SQL|Supabase|Firebase|Firestore|credential|authorization/i.test(model)) {
+      fail("target_space_core_details_model_boundary_escape", relative(spaceCoreDetailsFiles.model));
+    }
+    if (/PowerSyncDatabaseProtocol|\bSQL\b|Supabase|Firebase|Firestore|credential|authorization/i.test(adapter)) {
+      fail("target_space_core_details_adapter_boundary_escape", relative(spaceCoreDetailsFiles.adapter));
+    }
+    if (/\bButton\s*\(|SpaceDetailView|MCP|Firebase|Firestore|Supabase|PowerSyncDatabaseProtocol|\bSQL\b/.test(view)) {
+      fail("target_space_core_details_view_scope_escape", relative(spaceCoreDetailsFiles.view));
+    }
+    if (
+      !view.includes("if model.progressCountsAreAuthoritative") ||
+      !view.includes("target-space-core-details-progress-incomplete")
+    ) {
+      fail(
+        "target_space_core_details_incomplete_progress_exposed",
+        "Checklist counts must be withheld when local hierarchy completeness is unknown",
+      );
+    }
+    for (const required of [
+      "space_core_details:",
+      "subscription.parameter('account_id')",
+      "subscription.parameter('space_id')",
+      "principal.auth_user_id = auth.user_id()",
+      "membership.state = 'active'",
+      "FROM spike_spaces AS space",
+      "FROM spike_space_core_details AS detail",
+      "FROM spike_space_checklists AS checklist",
+      "FROM spike_space_checklist_items AS item",
+    ]) {
+      if (!syncSection.includes(required)) {
+        fail("target_space_core_details_sync_scope_incomplete", required);
+      }
+    }
+    if ((syncSection.match(/^      - \|$/gm) ?? []).length !== 4) {
+      fail("target_space_core_details_sync_query_count", "expected four relation queries");
+    }
+    if (/space\.lifecycle\s*=|project\.lifecycle\s*=/.test(syncSection)) {
+      fail("target_space_core_details_lifecycle_filter", "exact detail cannot exclude archived Space or Project evidence");
+    }
+    for (const required of [
+      "SpaceCoreDetailsStagingExerciseView(model: model.spaceDetails)",
+      "SpaceCoreDetailsStagingRuntimeAdapter(runtime)",
+      "syntheticSpaceId",
+    ]) {
+      if (!stagingAppSource.includes(required)) {
+        fail("target_space_core_details_staging_missing", required);
+      }
+    }
+    for (const fileName of [
+      "SpaceCoreDetailsStagingRuntimeAdapter.swift",
+      "SpaceCoreDetailsStagingExerciseView.swift",
+    ]) {
+      if (!project.includes(fileName)) {
+        fail("target_space_core_details_project_membership_missing", fileName);
+      }
+    }
+    const mcpSource = filesWithExtension(
+      path.join(repositoryRoot, "LedgerTargetMCP", "src"),
+      ".ts",
+    ).map((filePath) => fs.readFileSync(filePath, "utf8")).join("\n");
+    if (/spaceCoreDetails|space_core_details|SpaceCoreDetails/.test(mcpSource)) {
+      fail("target_space_core_details_mcp_escape", "Space details remain outside MCP in this slice");
     }
   }
 

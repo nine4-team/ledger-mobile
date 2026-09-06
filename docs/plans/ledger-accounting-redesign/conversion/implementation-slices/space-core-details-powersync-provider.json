@@ -3,7 +3,7 @@
   "sliceId": "space-core-details-powersync-provider",
   "title": "Review one complete active or archived Space offline with ordered checklist progress",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Core Details",
   "surfaceIds": [
     "CONFIG-C07E3326B896",
@@ -316,8 +316,8 @@
       "owner": "SpaceCoreDetailsPowerSyncQueryTests plus frozen SpaceCoreDetailsDataTests",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-011"],
       "expected": "Project- and Business-Inventory-scoped active/archived relational rows, including a Space under an archived Project, reconstruct through the unchanged verified Core validators with exact text, a lossless positive signed-bigint-to-UInt64 revision lift, timestamps, hierarchy, order and derived counts; zero and values above Int64.max fail closed at this provider boundary.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-002",
@@ -325,8 +325,8 @@
       "owner": "supabase/tests/space_core_details_read.test.sql",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-011"],
       "expected": "A clean reset proves unchanged seven-column base Space rows/access plus the sole additive (account_id,id) unique parent key, separate one-to-one core detail, millisecond consistency, relational nested identity/order, UInt32 order bounds, same-Account foreign keys, exact indexes, zero-child validity and no opaque/stored-derived authority.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-003",
@@ -334,8 +334,8 @@
       "owner": "space_core_details_read.test.sql plus Sync configuration tests",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-010"],
       "expected": "PUBLIC, anon, authenticated direct relation access, revoked/nonmember/cross-Account and guessed-ID paths expose no child or archived-detail row; no write grant, handler, SECURITY DEFINER or second permissive parent policy exists.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-013",
@@ -343,8 +343,8 @@
       "owner": "supabase/tests/space_core_details_read.test.sql",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-009"],
       "expected": "Forced-RLS tests prove active members can exercise only the intended exact-Account parent/child read policy under test-owner setup while the client roles retain no new direct relation grant and the existing active destination SELECT remains unchanged.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-004",
@@ -361,8 +361,8 @@
       "owner": "SpaceCoreDetailsPowerSyncQueryTests",
       "covers": ["SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-008"],
       "expected": "Both row/completion startup orders, independent invalidations, exact fresh reread, encrypted retained rows, authoritative absence and reopen reset pass without incomplete children becoming complete.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-006",
@@ -370,8 +370,8 @@
       "owner": "SpaceCoreDetailsPowerSyncQueryTests plus AccountWorkspacePendingWorkRuntimeTests",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-008"],
       "expected": "Selection/account/runtime loss and membership revocation clear prior evidence; malformed/orphan/duplicate/rebound/overflow rows fail atomically; all row/status/subscription observers unsubscribe and drain before database close.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-007",
@@ -379,8 +379,8 @@
       "owner": "SpaceCoreDetailsStagingExerciseTests and target source-boundary checker",
       "covers": ["SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-008"],
       "expected": "Core-only tests cover every presentation state, ordered checklist progress, active/archived detail and late-event refusal; adapter/view remain thin and no MCP or mutation boundary exists.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-008",
@@ -388,8 +388,8 @@
       "owner": "SpaceCoreDetails provider, AppModel and isolated staging suites",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-010", "SPACECOREPROVIDER-REQ-011"],
       "expected": "An isolated user selects one active or archived Space, including one under an archived Project, sees honest offline core fields and ordered checklist progress, survives restart and selection change, and has no write, Item, media, template, accounting or MCP action.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-009",
@@ -397,8 +397,8 @@
       "owner": "Conversion controls, target checker, complete Swift suite and both staging builds",
       "covers": ["SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-010"],
       "expected": "The synchronized implementation checkpoint passes all conversion/target controls, complete tests, deterministic generation and macOS/iOS builds with unchanged Firebase and production boundaries.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-010",
@@ -415,8 +415,8 @@
       "owner": "Independent Supabase Postgres/RLS/PowerSync and offline-concurrency reviews",
       "covers": ["SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-010"],
       "expected": "Review confirms least privilege, indexed relational modeling, no permissive-policy broadening, exact signed stream authorization, causal completeness, lifecycle parity, drainage and exclusion boundaries.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-012",
@@ -424,12 +424,12 @@
       "owner": "Existing Space assignment destination pgTAP/Data API/provider regression suites",
       "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-010", "SPACECOREPROVIDER-REQ-011"],
       "expected": "The prior active-only Space destination schema, RLS, streams, local query and staging picker remain unchanged in behavior and every existing regression passes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY after two independent read-only authority audits converged on this candidate and rejected blocked alternatives. Their actual-diff review found and corrected pre-implementation overclaims: extending spike_spaces columns would broaden its existing Data API grant and break select-star regression; its bigint/SQLite path cannot transport all UInt64 values; and exact same-Account child foreign keys require an additive (account_id,id) unique parent key. Eight machine-discovered scaffolds now freeze that non-behavioral parent key, a separate no-client-grant one-to-one core-detail relation, relational checklist children with UInt32 order bounds, exact active/archived on-demand Sync including Spaces under archived Projects, encrypted causal local reconstruction, bounded Core-only presentation and isolated staging. The seven existing spike_spaces columns, row bytes, Data API shape, grant, policy and streams remain unchanged. The migration is comment-only and the pgTAP leaf contains one explicitly non-proving runner placeholder; all Swift leaves are comment-only. No executable Space core-details provider exists yet. TEST-004 remains planned for real authenticated PowerSync. A-003/A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced. Broad Space UI, writers, archive effects, Items, media, review, templates, accounting, MCP, hosted resources, Firebase, migration, production, release and cutover remain excluded."
+  "notes": "Implemented and locally verified from frozen READY 9b62bec1403261a7d966c570af981da461d80f12. Eight claimed leaves now provide the additive relational forced-RLS schema, exact signed active/archived stream, encrypted causal local reconstruction, close-aware runtime, Core-only presentation and isolated staging detail. Independent review found and root closed an unapproved timestamp-order constraint, incomplete privilege assertions, missing encrypted restart/startup/invalidation proof and incomplete-progress rendering. The existing seven-column active-only Space destination Data API/RLS/streams remain unchanged. TEST-004 remains planned for real authenticated PowerSync and TEST-010 remains planned until exact-commit CI passes. A-003/A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced. Broad Space UI, writers, archive effects, Items, media, review, templates, accounting, MCP, hosted resources, Firebase, migration, production, release and cutover remain excluded."
 }

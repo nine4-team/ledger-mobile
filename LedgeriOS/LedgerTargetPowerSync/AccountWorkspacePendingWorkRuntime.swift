@@ -83,6 +83,12 @@ protocol AccountWorkspaceProjectNoteQuerying: ProjectNoteQuerying {
 
 extension ProjectNotePowerSyncQuery: AccountWorkspaceProjectNoteQuerying {}
 
+protocol AccountWorkspaceSpaceCoreDetailsQuerying: SpaceCoreDetailsQuerying {
+    func cancelAndDrainWatches() async
+}
+
+extension SpaceCoreDetailsPowerSyncQuery: AccountWorkspaceSpaceCoreDetailsQuerying {}
+
 protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
     func watchOperation(
         _ operationId: OperationID
@@ -109,6 +115,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case clientDirectory
     case projectDirectory
     case projectNotes
+    case spaceCoreDetails
     case budgetCategories
     case spaceAssignmentDestinations
     case transferDestinations
@@ -186,6 +193,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             AccountID,
             @Sendable @escaping () -> Date
         ) throws -> any AccountWorkspaceProjectNoteQuerying
+    var makeSpaceCoreDetailsQuery:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            PrincipalID,
+            AccountID,
+            @Sendable @escaping () -> Date
+        ) -> any AccountWorkspaceSpaceCoreDetailsQuerying
     var makeProjectArchiveStore:
         @Sendable (
             any PowerSyncDatabaseProtocol,
@@ -308,6 +322,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeSpaceCoreDetailsQuery: { database, principalId, accountId, now in
+            SpaceCoreDetailsPowerSyncQuery(
+                database: database,
+                principalId: principalId,
+                accountId: accountId,
+                now: now
+            )
+        },
         makeProjectArchiveStore: { database, accountId, principalId, now in
             ProjectArchivePowerSyncStore(
                 database: database,
@@ -358,6 +380,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let spaceAssignmentDestinationQuery:
         any AccountWorkspaceSpaceAssignmentDestinationQuerying
     let projectNoteQuery: any AccountWorkspaceProjectNoteQuerying
+    let spaceCoreDetailsQuery: any AccountWorkspaceSpaceCoreDetailsQuerying
     let vault: AttachmentLocalByteVault
     let closeAttachmentDatabase: @Sendable () async throws -> Void
     let closeStructuredDatabase: @Sendable () async throws -> Void
@@ -383,6 +406,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         spaceAssignmentDestinationQuery:
             any AccountWorkspaceSpaceAssignmentDestinationQuerying,
         projectNoteQuery: any AccountWorkspaceProjectNoteQuerying,
+        spaceCoreDetailsQuery: any AccountWorkspaceSpaceCoreDetailsQuerying,
         projectArchiveStore: any AccountWorkspaceProjectArchiveStoring,
         vault: AttachmentLocalByteVault,
         closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
@@ -439,6 +463,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         self.budgetCategoryQuery = budgetCategoryQuery
         self.spaceAssignmentDestinationQuery = spaceAssignmentDestinationQuery
         self.projectNoteQuery = projectNoteQuery
+        self.spaceCoreDetailsQuery = spaceCoreDetailsQuery
         self.vault = vault
         self.closeAttachmentDatabase = closeAttachmentDatabase
         self.closeStructuredDatabase = closeStructuredDatabase
@@ -629,6 +654,31 @@ actor AccountWorkspacePendingWorkRuntime {
             },
             makeStream: { resources in
                 resources.projectNoteQuery.watchNotes(request)
+            }
+        )
+    }
+
+    func startSpaceCoreDetailsWatch(
+        id: UUID,
+        spaceId: SpaceID,
+        continuation: AsyncThrowingStream<SpaceCoreDetailsUpdate, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .spaceCoreDetails,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                do {
+                    return resources.spaceCoreDetailsQuery.watchSpaceCoreDetails(
+                        try SpaceCoreDetailsRequest(
+                            accountId: resources.accountId,
+                            spaceId: spaceId
+                        )
+                    )
+                } catch {
+                    return AsyncThrowingStream { $0.finish(throwing: error) }
+                }
             }
         )
     }
@@ -841,6 +891,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
         await resources.projectNoteQuery.cancelAndDrainWatches()
+        await resources.spaceCoreDetailsQuery.cancelAndDrainWatches()
         await resources.transferDestinationQuery.cancelAndDrainWatches()
         await resources.projectArchiveStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()
@@ -938,6 +989,7 @@ public enum LedgerPowerSyncLocalBootstrap {
         var spaceAssignmentDestinationQuery:
             (any AccountWorkspaceSpaceAssignmentDestinationQuerying)?
         var projectNoteQuery: (any AccountWorkspaceProjectNoteQuerying)?
+        var spaceCoreDetailsQuery: (any AccountWorkspaceSpaceCoreDetailsQuerying)?
         var runtimeResources: AccountWorkspaceRuntimeResources?
 
         do {
@@ -1061,6 +1113,14 @@ public enum LedgerPowerSyncLocalBootstrap {
             projectNoteQuery = madeProjectNoteQuery
             dependencies.lifecycleEvent(.projectNoteQueryConstructed)
 
+            let madeSpaceCoreDetailsQuery = dependencies.makeSpaceCoreDetailsQuery(
+                openedStructured.database,
+                principalId,
+                accountId,
+                dependencies.now
+            )
+            spaceCoreDetailsQuery = madeSpaceCoreDetailsQuery
+
             let madeProjectArchiveStore = dependencies.makeProjectArchiveStore(
                 openedStructured.database,
                 accountId,
@@ -1076,6 +1136,7 @@ public enum LedgerPowerSyncLocalBootstrap {
                 budgetCategoryQuery: madeBudgetCategoryQuery,
                 spaceAssignmentDestinationQuery: madeSpaceAssignmentDestinationQuery,
                 projectNoteQuery: madeProjectNoteQuery,
+                spaceCoreDetailsQuery: madeSpaceCoreDetailsQuery,
                 projectArchiveStore: madeProjectArchiveStore,
                 vault: openedVault,
                 closeAttachmentDatabase: openedAttachment.closePreservingData,
@@ -1099,12 +1160,14 @@ public enum LedgerPowerSyncLocalBootstrap {
                 runtimeResources != nil
                 || spaceAssignmentDestinationQuery != nil
                 || projectNoteQuery != nil
+                || spaceCoreDetailsQuery != nil
                 || budgetCategoryQuery != nil
                 || pendingWorkQuery != nil
                 || attachmentStore != nil
             runtimeResources = nil
             spaceAssignmentDestinationQuery = nil
             projectNoteQuery = nil
+            spaceCoreDetailsQuery = nil
             budgetCategoryQuery = nil
             pendingWorkQuery = nil
             attachmentStore = nil

@@ -9,6 +9,9 @@ public enum LedgerPowerSyncTable {
     public static let clientCommands = "spike_client_commands"
     public static let budgetCategories = "spike_budget_categories"
     public static let spaces = "spike_spaces"
+    public static let spaceCoreDetails = "spike_space_core_details"
+    public static let spaceChecklists = "spike_space_checklists"
+    public static let spaceChecklistItems = "spike_space_checklist_items"
     public static let projects = "spike_projects"
     public static let projectNotes = "spike_project_notes"
     public static let pendingProjects = "spike_pending_projects"
@@ -114,6 +117,49 @@ public enum LedgerPowerSyncSchema {
                 .ascending(
                     name: "space_assignment_destination_scope",
                     columns: ["account_id", "scope_kind", "project_id", "lifecycle"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.spaceCoreDetails,
+            columns: [
+                .text("account_id"), .text("notes"),
+                .integer("created_at_ms"), .integer("updated_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "space_core_details_account",
+                    columns: ["account_id"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.spaceChecklists,
+            columns: [
+                .text("account_id"), .text("space_id"), .text("checklist_id"),
+                .text("name"), .integer("presentation_order")
+            ],
+            indexes: [
+                .ascending(
+                    name: "space_checklist_space_order",
+                    columns: ["account_id", "space_id", "presentation_order"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.spaceChecklistItems,
+            columns: [
+                .text("account_id"), .text("space_id"), .text("checklist_id"),
+                .text("item_id"), .text("item_text"), .integer("is_checked"),
+                .integer("presentation_order")
+            ],
+            indexes: [
+                .ascending(
+                    name: "space_checklist_item_checklist_order",
+                    columns: [
+                        "account_id", "space_id", "checklist_id",
+                        "presentation_order"
+                    ]
                 )
             ]
         ),

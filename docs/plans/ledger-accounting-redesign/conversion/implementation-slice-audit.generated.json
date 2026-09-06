@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T00:12:06.515Z",
+  "generatedFromManifestSync": "2026-09-06T01:10:08.930Z",
   "totals": {
     "slices": 87,
     "claimedTargetSurfaces": 291,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 219
+    "implementationAdvancedTargetSurfaces": 227
   },
   "statusCounts": {
     "draft": 2,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 11,
+    "implemented": 12,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -1132,7 +1132,7 @@
       "sliceId": "space-core-details-powersync-provider",
       "title": "Review one complete active or archived Space offline with ordered checklist progress",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Core Details",
       "surfaceIds": [
         "CONFIG-55809460A27C",

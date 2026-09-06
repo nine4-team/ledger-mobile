@@ -4,6 +4,7 @@
   "reviewedAt": "2026-09-05",
   "evidence": [
     "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
+    "EVID-SPACE-CORE-DETAILS-PROVIDER-001",
     "EVID-SPACE-CORE-DETAILS-001",
     "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
     "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
@@ -11,12 +12,12 @@
   "surfaces": [
     {
       "id": "CONFIG-C07E3326B896",
-      "acknowledgeSourceHash": "444eb27207a3cc17f5de9d5bf812002101aba71f187a5272de9b58d7f5a65a04",
-      "currentBehavior": "Comment-only READY migration scaffold freezes an additive composite Space parent key plus separate no-client-grant read relations and performs no DDL.",
+      "acknowledgeSourceHash": "0acd842bad30831bd4ed19cb31cad7737d4bd0f6d0f188203d20b1e90c940eb2",
+      "currentBehavior": "Executable migration adds only the composite Space parent key and separate forced-RLS, no-client-grant core-detail/checklist/checklist-item read relations.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Additive exact-Account Space parent key plus separate one-to-one core-detail and relational checklist read schema"],
@@ -25,16 +26,16 @@
       },
       "migration": {"rule": "Create only synthetic spike-prefixed read schema; import no Firebase rows.", "reconciliation": ["Existing Space destination rows and active-only reads remain unchanged"]},
       "verification": {"tests": ["space_core_details_read.test.sql"], "acceptance": ["Schema, constraints, indexes, privileges and policy shape pass on a disposable database"]},
-      "notes": "No executable DDL, source-data transform, writer or hosted operation exists at READY."
+      "notes": "No source-data transform, client writer, hosted operation or production relation exists."
     },
     {
       "id": "CONFIG-55809460A27C",
-      "acknowledgeSourceHash": "d47a2ed002afa5152d0f1e8a32211bcedaf8c65da7b005c3c5d4b4890578a583",
-      "currentBehavior": "One-test pgTAP READY placeholder keeps the repository runner valid and contains no Space assertion.",
+      "acknowledgeSourceHash": "b27e9fcc5a4d3ad7432eebc959eca913d1e89da2eed0ead9020db62a52b35e90",
+      "currentBehavior": "Executable 84-assertion pgTAP suite proves additive schema, exact values, hierarchy, lifecycle visibility, forced RLS, least privilege and unchanged destination behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Space core-details Postgres/RLS verification"],
@@ -43,16 +44,16 @@
       },
       "migration": {"rule": "Use only synthetic rows inside rolled-back pgTAP transactions.", "reconciliation": ["Destination behavior and row bytes remain unchanged"]},
       "verification": {"tests": ["npm run supabase:test:db"], "acceptance": ["The implementation replaces the placeholder with executable assertions"]},
-      "notes": "The current pass is runner scaffolding, not product or security proof."
+      "notes": "Synthetic rows run inside rolled-back pgTAP transactions; no hosted or source-data claim is made."
     },
     {
       "id": "SWIFT-B762FCFD8525",
-      "acknowledgeSourceHash": "de0545a43c917f877778e61ced88e6108b98191fd7ac9e27623a37b772ec8538",
-      "currentBehavior": "Comment-only READY scaffold defines the exact-Space PowerSync query boundary and contains no executable provider.",
+      "acknowledgeSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
+      "currentBehavior": "Executable internal Account-bound PowerSync query reconstructs exact Space details with causal current-process completeness and fail-closed validation.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Account-bound SpaceCoreDetailsQuerying PowerSync adapter"],
@@ -61,16 +62,16 @@
       },
       "migration": {"rule": "Decode only synthetic target-local rows.", "reconciliation": ["Reconstruct the verified Core snapshot without a second domain model"]},
       "verification": {"tests": ["SpaceCoreDetailsPowerSyncQueryTests"], "acceptance": ["All readiness, hierarchy, revocation and lifecycle cases pass"]},
-      "notes": "No provider type or authorization object may cross LedgerTargetCore."
+      "notes": "No provider type or authorization object crosses LedgerTargetCore; real authenticated hosted Sync remains planned."
     },
     {
       "id": "TEST-33D5654E41CA",
-      "acknowledgeSourceHash": "51a7ff83817ec110143795270ad1707654bcbe9ca899c93a0a31ccc496c9c441",
-      "currentBehavior": "Comment-only READY scaffold lists the required encrypted provider matrix and contains no executable test.",
+      "acknowledgeSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
+      "currentBehavior": "Executable controlled-source and encrypted-local suite proves reconstruction, startup order, causal reread, restart reset, revocation, malformed refusal and drainage.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Encrypted Space core-details provider test suite"],
@@ -79,16 +80,16 @@
       },
       "migration": {"rule": "Use disposable encrypted local databases only.", "reconciliation": ["Canonical snapshots survive close/reopen byte-identically"]},
       "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceCoreDetailsPowerSyncQueryTests"], "acceptance": ["Every frozen provider obligation is executable"]},
-      "notes": "A real authenticated PowerSync rehearsal remains a separate planned gate."
+      "notes": "Uses disposable encrypted local databases and controlled sources; a real authenticated PowerSync rehearsal remains planned."
     },
     {
       "id": "SWIFT-2335BBE3E8FD",
-      "acknowledgeSourceHash": "b8e2dbb6d46b80bd702ae4299410105f4fa6aea029a20d27b8fe1e341995d8af",
-      "currentBehavior": "Comment-only READY scaffold defines a Core-only exact-Space presentation boundary and contains no executable AppModel.",
+      "acknowledgeSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
+      "currentBehavior": "Executable Core-only exact-Space presenter owns selection generations and honest waiting/partial/stale/ready/absence/failure state.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Selection-generation-safe Space core-details staging model"],
@@ -97,16 +98,16 @@
       },
       "migration": {"rule": "Compose target Core values only.", "reconciliation": ["Late prior-selection updates cannot mutate current presentation"]},
       "verification": {"tests": ["SpaceCoreDetailsStagingExerciseTests"], "acceptance": ["Every readiness/lifecycle/hierarchy state maps deterministically"]},
-      "notes": "No lifecycle eligibility or editing policy is introduced."
+      "notes": "No lifecycle eligibility, editing policy or incomplete-progress authority is introduced."
     },
     {
       "id": "TEST-FDF70607A5B4",
-      "acknowledgeSourceHash": "e041e822e822fc8b09523d4f40c7aa23d3497501ca72531e21d2e11f6e10b467",
-      "currentBehavior": "Comment-only READY scaffold lists the application-model state and cancellation matrix and contains no executable test.",
+      "acknowledgeSourceHash": "7797d23c742d5da9f3415780da9a356931ef3df7ca8a25d629e1fa7a11dc58c3",
+      "currentBehavior": "Executable AppModel suite proves every readiness state, ordered progress, selection replacement, cancellation clearing and late-update refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Space core-details staging-model verification"],
@@ -115,16 +116,16 @@
       },
       "migration": {"rule": "Use deterministic in-memory Core ports.", "reconciliation": ["Active and archived presentation preserve exact record identity"]},
       "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceCoreDetailsStagingExerciseTests"], "acceptance": ["Waiting, partial, stale, ready, absence and failure states pass"]},
-      "notes": "No provider import or production UI route is allowed."
+      "notes": "No provider import, production route or mutation action exists."
     },
     {
       "id": "SWIFT-C99453DE8B49",
-      "acknowledgeSourceHash": "d101e260a57861735cfeae4d80b23efd2e46b41e72dec6fae6717be1fa10e2d6",
-      "currentBehavior": "Comment-only READY scaffold defines a thin runtime-forwarding boundary and contains no executable adapter.",
+      "acknowledgeSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
+      "currentBehavior": "Executable thin adapter forwards only the typed close-aware exact-Space runtime watch.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Thin target-app Space detail runtime adapter"],
@@ -133,16 +134,16 @@
       },
       "migration": {"rule": "Wire only the isolated target staging graph.", "reconciliation": ["Runtime closure terminates the forwarded stream"]},
       "verification": {"tests": ["Target environment checker and staging builds"], "acceptance": ["The adapter contains no independent semantic logic"]},
-      "notes": "No MCP or production route."
+      "notes": "No database, authorization, mutation, MCP or production route crosses the adapter."
     },
     {
       "id": "SWIFT-058F3155F97F",
-      "acknowledgeSourceHash": "1de8cd55ea1950ee9d96face5c33a4ef4ff79069e370ce0b96491e7e0b75391a",
-      "currentBehavior": "Comment-only READY scaffold defines an isolated thin Space detail renderer and contains no executable SwiftUI.",
+      "acknowledgeSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
+      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states and only authoritative checklist progress.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
       "target": {
         "owner": "Space Core Details",
         "surfaces": ["Isolated Space core-details staging view"],
