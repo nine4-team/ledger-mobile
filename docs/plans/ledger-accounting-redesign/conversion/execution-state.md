@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 342
+State version: 343
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-IMPLEMENTATION-COMMIT-AND-CI
+- Checkpoint: ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-VERIFICATION-PROMOTION
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current clean conversion base: `eeec46508014e64c8f3876c2157eb1cb6e5e9406`
+- Current clean conversion base: `67decdd5897af309a98c5067abb647bdc3e0d56c`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -53,7 +53,7 @@ without modifying the running Firebase application before hard cutover.
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
 - The implementation tracker currently contains 282 status-bearing rows: 68
-  done, nine verified, 13 implemented, zero ready and zero awaiting verification,
+  done, ten verified, 12 implemented, zero ready and zero awaiting verification,
   12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -123,7 +123,10 @@ without modifying the running Firebase application before hard cutover.
   replaced/current/noncooperative work; stop is terminal and each runtime
   reopening gets a fresh child drained before runtime close on both teardown
   paths. Eight focused/all 585 Swift tests, controls and both staging builds pass
-  locally. Exact implementation commit/CI remains pending;
+  locally. Exact implementation `67decdd5` passed all three immutable jobs in
+  Actions run `34023379271` attempt 2 after attempt 1 timed out in a
+  pre-existing Space-creation restart test that did not reproduce in 50
+  focused local runs or the complete rerun;
   `EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001`.
 
 - Initial independent READY review correctly returned NO-GO. Three P1 findings
@@ -4416,21 +4419,18 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the exact independently reviewed Account pending-local-work staging
-implementation checkpoint, require immutable exact-head CI, then promote its
-evidence only after all three jobs pass. After promotion, select the next
-highest-value unblocked vertical slice from the durable conversion inventory.
+Commit the administrative verification promotion for the Account pending-work
+staging slice and require immutable exact-head CI. Then start the reviewed
+`item-space-assignment-local-durability-provider` boundary: atomically persist
+one canonical `AssignItemsToSpaceCommand` plus one shared queued local operation
+in the encrypted Principal/Account PowerSync database, expose it only through
+the existing Account runtime lifecycle, and prove restart, replay, rollback,
+scope, cancellation and pending-summary behavior.
 
-The surface must preserve all four counts separately, exact environment/
-Principal/Account/revision/time/fingerprint evidence and all-zero-only clean
-truth. Manual refresh replacement and stop must cancel and join prior work;
-generation isolation must reject noncooperative late results; staging resource
-teardown must remove and drain the fresh per-runtime child before runtime close.
-Never add logout/session disposition, sync, upload, destructive Account/session
-cleanup, database/key/media deletion, signout, Account switching, remote-durability
-copy, schema/RLS/Data API/Sync Stream/provider/Storage/MCP/Auth/hosted/Firebase/
-migration/production/cutover behavior. A-003/A-004/A-007/A-016 and O-023 remain
-unadvanced.
+Do not add authoritative Item/Space apply, optimistic Item projection,
+user-facing assignment UI, upload connector, Postgres/RLS/Sync changes, MCP,
+hosted resources, Firebase, migration, production or cutover behavior. Preserve
+the unresolved O-027/O-037/O-023 and A-003/A-004/A-015 gates.
 
 Continue without waiting on the two M1 evidence blockers:
 

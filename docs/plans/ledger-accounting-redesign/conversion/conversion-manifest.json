@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T08:57:45.626Z",
+    "lastSynchronizedAt": "2026-09-06T09:35:10.559Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -25673,7 +25673,7 @@
           "Exact counts, identity, refresh, failure and lifecycle truth pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -30355,7 +30355,7 @@
           "Four separate counts and bounded status compile without actions beyond refresh"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -35154,7 +35154,7 @@
           "Adapter contains no independent policy"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -41934,7 +41934,7 @@
           "All frozen application obligations pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"

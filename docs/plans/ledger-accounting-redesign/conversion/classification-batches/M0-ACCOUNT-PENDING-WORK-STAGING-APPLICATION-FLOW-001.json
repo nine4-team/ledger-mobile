@@ -14,7 +14,7 @@
       "acknowledgeSourceHash": "6b9eb06b60866c8f5daa3f3226c8069f64360135a207d02ca60309237f5ce689",
       "currentBehavior": "Implements a Core-only expected-scope-bound manual-refresh Account pending-work staging AppModel with exact presentation and terminal task drainage.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
       "target": {
@@ -32,7 +32,7 @@
       "acknowledgeSourceHash": "b3ec6988c6ccc801ed1393239f09738f79a0d4dff1833f1590e13112a07badc6",
       "currentBehavior": "Provides executable exact-count, scope, evidence, copy, failure, UUID-generation and terminal-drainage verification.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
       "target": {
@@ -50,7 +50,7 @@
       "acknowledgeSourceHash": "856ffdf87ad4f55ad2aff8f7492d32fa8fc29c2c0d6f2d8110153c3918ab61b6",
       "currentBehavior": "Implements the exact thin runtime adapter that forwards one argument-free pendingWorkSummary read without rebinding.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
       "target": {
@@ -68,7 +68,7 @@
       "acknowledgeSourceHash": "0586cec495251643ba8ed79924286139d7301a44ec7a687c53acc14137a28c33",
       "currentBehavior": "Implements a neutral staging section showing four exact pending-work counts, bounded diagnostics and manual refresh.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
       "target": {

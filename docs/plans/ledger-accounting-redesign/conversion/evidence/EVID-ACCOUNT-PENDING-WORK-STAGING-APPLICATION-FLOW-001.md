@@ -1,9 +1,11 @@
 # EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001 — Account Pending Work Staging Application Flow
 
-- Status: IMPLEMENTED locally / exact implementation commit and immutable CI pending
+- Status: VERIFIED / exact implementation commit and immutable CI passed
 - Date: 2026-09-06
 - Exact implementation base: corrected READY commit `eeec46508014e64c8f3876c2157eb1cb6e5e9406`
 - Exact READY CI: Actions run `34021709793` passed all three jobs
+- Exact implementation: `67decdd5897af309a98c5067abb647bdc3e0d56c`
+- Exact implementation CI: Actions run `34023379271` attempt 2 passed all three jobs
 - Environment: dedicated target worktree only
 - Production/Firebase impact: none
 
@@ -83,7 +85,12 @@ remaining P0-P3 finding.
   restored and rechecked.
 - Deterministic target project generation and both macOS and iOS Simulator
   staging builds passed.
-- Exact implementation commit/CI and verification promotion remain pending.
+- Exact implementation commit `67decdd5897af309a98c5067abb647bdc3e0d56c`
+  passed all three immutable jobs in Actions run `34023379271` attempt 2.
+  Attempt 1 timed out in the pre-existing synchronous Space-creation restart
+  test. The same exact implementation passed 50 consecutive focused
+  Space-creation suites locally and the complete no-parallel Swift suite on
+  attempt 2, so the retry is recorded without inventing a product-code fix.
 
 ## Explicit Non-Advancement
 
