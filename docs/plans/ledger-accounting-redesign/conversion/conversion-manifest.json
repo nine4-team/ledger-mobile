@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T01:26:52.983Z",
+    "lastSynchronizedAt": "2026-09-06T02:30:28.389Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -690,10 +690,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
-      "acknowledgedSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
+      "observedSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
+      "acknowledgedSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, and six comment-only blocked Project-category provider/application placeholders.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -736,7 +736,7 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The six Project-category placeholders compile but expose no symbol or behavior while O-026 remains open. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -925,6 +925,56 @@
       ],
       "notes": "Retain strict build configuration while target modules change.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-3F4DAB40CF04",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260906014441_project_category_configuration_revision.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260906014441_project_category_configuration_revision.sql"
+        }
+      ],
+      "observedSourceHash": "bcfeec1c6f4e3cae276f2e306df93fbf3016f1198fa9f4fd980a20ca65718176",
+      "acknowledgedSourceHash": "bcfeec1c6f4e3cae276f2e306df93fbf3016f1198fa9f4fd980a20ca65718176",
+      "metadata": {},
+      "currentBehavior": "Comment-only CLI-created migration scaffold for a dedicated Project category-configuration revision.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Dedicated full-range set-level configuration revision"
+        ],
+        "securityRequirements": [
+          "No grant, RLS or authorization change"
+        ],
+        "syncRequirements": [
+          "Lossless canonical decimal-text Project projection"
+        ]
+      },
+      "migration": {
+        "rule": "Backfill only synthetic target Projects to revision 1; source import remains excluded.",
+        "reconciliation": [
+          "Never infer target revision from Firebase timestamps or row versions"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "project_category_configuration_revision.test.sql"
+        ],
+        "acceptance": [
+          "Exact type/range/default/backfill and independence pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "READY scaffold; no executable DDL yet.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
       "id": "CONFIG-3F7C92E2669F",
@@ -1727,6 +1777,56 @@
       ],
       "notes": "Preserve current source launch behavior until cutover; target gets explicit isolated profiles. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-6EE152848D09",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/project_category_configuration_revision.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/project_category_configuration_revision.test.sql"
+        }
+      ],
+      "observedSourceHash": "d7d0828bcd88d5e97c7334c94d16100ddc33d1072921bef191eccce0b10a0a6c",
+      "acknowledgedSourceHash": "d7d0828bcd88d5e97c7334c94d16100ddc33d1072921bef191eccce0b10a0a6c",
+      "metadata": {},
+      "currentBehavior": "One-placeholder pgTAP READY scaffold with no product assertion.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Dedicated configuration-revision database proof"
+        ],
+        "securityRequirements": [
+          "Use rolled-back synthetic rows only"
+        ],
+        "syncRequirements": [
+          "Verify lossless Project projection prerequisite"
+        ]
+      },
+      "migration": {
+        "rule": "Test disposable target schema only.",
+        "reconciliation": [
+          "Prove archive does not change configuration revision"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:db"
+        ],
+        "acceptance": [
+          "Placeholder is replaced only after READY"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "READY scaffold; one runner-validity assertion only.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
       "id": "CONFIG-77D38BB6819B",
@@ -4182,10 +4282,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "5e410734bd40e64106a1fd022ba7437aee75d3ccee94911e8e1cb81cde1923aa",
-      "acknowledgedSourceHash": "5e410734bd40e64106a1fd022ba7437aee75d3ccee94911e8e1cb81cde1923aa",
+      "observedSourceHash": "2f089993c473978097d443361f4099dd4409a01fcc537a5cbe90b6e42b61a700",
+      "acknowledgedSourceHash": "2f089993c473978097d443361f4099dd4409a01fcc537a5cbe90b6e42b61a700",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review and Space core-details migration/test leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details and Project category-configuration revision migration/test leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -4240,7 +4340,7 @@
         "EVID-SPACE-CREATION-PROVIDER-READY-001",
         "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"
       ],
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Space core-details migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership.",
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Project category-configuration revision migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -32305,6 +32405,56 @@
       "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
+      "id": "SWIFT-A3CDC454B0BA",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ProjectCategoryConfigurationPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ProjectCategoryConfigurationPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "e99359dd02cd43becdb3d6999c67d2f3d3e3658416b1f8f411396536db1afc88",
+      "acknowledgedSourceHash": "e99359dd02cd43becdb3d6999c67d2f3d3e3658416b1f8f411396536db1afc88",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only Project category PowerSync provider placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future exact-Project local configuration query"
+        ],
+        "securityRequirements": [
+          "Do not bless incomplete download visibility"
+        ],
+        "syncRequirements": [
+          "Requires dedicated revision plus separately reviewed exact stream"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked by O-026 and a future provider READY boundary.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
+    },
+    {
       "id": "SWIFT-A3E38557F13F",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/QuickNoteModal.swift",
@@ -34466,6 +34616,56 @@
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
+      "id": "SWIFT-BD6661CFC518",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectCategoryConfigurationStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectCategoryConfigurationStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "a989d8adc03c59d7ea7e2dfbffa2b2184b1cdd959171f344fc60c7a289eb4159",
+      "acknowledgedSourceHash": "a989d8adc03c59d7ea7e2dfbffa2b2184b1cdd959171f344fc60c7a289eb4159",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only future read-only staging-view placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future isolated configuration review view"
+        ],
+        "securityRequirements": [
+          "Render only typed authorized evidence"
+        ],
+        "syncRequirements": [
+          "Depends on verified provider"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked downstream of provider.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
+    },
+    {
       "id": "SWIFT-BD714AB9981F",
       "kind": "swift_model",
       "name": "LedgeriOS/LedgeriOS/Models/Shared/ActionMenuItem.swift",
@@ -36486,6 +36686,56 @@
       "classificationBatch": "M0-BACKEND-AUTH-001"
     },
     {
+      "id": "SWIFT-D2C84703FEEA",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/ProjectCategoryConfigurationStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/ProjectCategoryConfigurationStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "000b244425fd8124bbd117788c47d0758b6a18b13a54a450ca42ce78118b60ab",
+      "acknowledgedSourceHash": "000b244425fd8124bbd117788c47d0758b6a18b13a54a450ca42ce78118b60ab",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only future AppModel placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future truthful configuration presenter"
+        ],
+        "securityRequirements": [
+          "Clear on scope loss"
+        ],
+        "syncRequirements": [
+          "Depends on verified provider"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked downstream of provider.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
+    },
+    {
       "id": "SWIFT-D2E27E81511F",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/ItemConflictSheet.swift",
@@ -36590,6 +36840,56 @@
       ],
       "notes": "M2 withheld: O-016/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "SWIFT-D3652DD63EA1",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectCategoryConfigurationStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectCategoryConfigurationStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "0a70ae6d4fc8111dd28273960890d876ba4288b66921633bc05d1978344635b9",
+      "acknowledgedSourceHash": "0a70ae6d4fc8111dd28273960890d876ba4288b66921633bc05d1978344635b9",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only future staging-runtime adapter placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future thin typed runtime forwarder"
+        ],
+        "securityRequirements": [
+          "Expose no provider authority"
+        ],
+        "syncRequirements": [
+          "Depends on verified provider"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked downstream of provider.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
       "id": "SWIFT-D49180285F84",
@@ -43097,6 +43397,56 @@
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
+      "id": "TEST-5286613EC809",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectCategoryConfigurationPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectCategoryConfigurationPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "179d7a02938690d04408efd90afdc605f925d8e3f35cf2736d3b8170fc4e2eb7",
+      "acknowledgedSourceHash": "179d7a02938690d04408efd90afdc605f925d8e3f35cf2736d3b8170fc4e2eb7",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only future provider-test placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future encrypted provider proof"
+        ],
+        "securityRequirements": [
+          "No false authorization/completeness claim"
+        ],
+        "syncRequirements": [
+          "Future causal exact-stream proof"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked with provider.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
+    },
+    {
       "id": "TEST-53618161645B",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
@@ -43248,6 +43598,56 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-561F3FACCE6F",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/ProjectCategoryConfigurationStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectCategoryConfigurationStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "045de514f1007c1f8256deda7b48d1e2f8b7016bd1e46f7a054bfd140fef8ed5",
+      "acknowledgedSourceHash": "045de514f1007c1f8256deda7b48d1e2f8b7016bd1e46f7a054bfd140fef8ed5",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only future AppModel-test placeholder.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Category Configuration",
+        "surfaces": [
+          "Future readiness/selection proof"
+        ],
+        "securityRequirements": [
+          "No stale selection leakage"
+        ],
+        "syncRequirements": [
+          "Depends on verified provider"
+        ]
+      },
+      "migration": {
+        "rule": "No implementation in this batch.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": [
+          "Remain comment-only"
+        ]
+      },
+      "status": "blocked",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+      ],
+      "notes": "Blocked downstream of provider.",
+      "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
       "id": "TEST-5AAEE26660C8",

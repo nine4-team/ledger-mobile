@@ -20,8 +20,8 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "5e410734bd40e64106a1fd022ba7437aee75d3ccee94911e8e1cb81cde1923aa",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review and Space core-details migration/test leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "acknowledgeSourceHash": "2f089993c473978097d443361f4099dd4409a01fcc537a5cbe90b6e42b61a700",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details and Project category-configuration revision migration/test leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
@@ -30,7 +30,7 @@
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Space core-details migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership."
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Project category-configuration revision migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership."
     },
     {
       "id": "CONFIG-9B16CFCB67A4",

@@ -174,8 +174,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "aed1c7a88034e717b6edd5d30d628983fe39e94aa1c97565f7f42ff95362948d",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
+      "acknowledgeSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, and six comment-only blocked Project-category provider/application placeholders.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -188,7 +188,7 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The six Project-category placeholders compile but expose no symbol or behavior while O-026 remains open. The Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

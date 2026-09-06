@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T01:26:52.983Z",
+  "generatedFromManifestSync": "2026-09-06T02:30:28.389Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 975,
-    "targetRelevantSurfaces": 713,
-    "batches": 38,
+    "surfaces": 983,
+    "targetRelevantSurfaces": 721,
+    "batches": 39,
     "productScopeSurfaces": 804,
-    "technicalControlSurfaces": 171
+    "technicalControlSurfaces": 179
   },
   "canonicalTargetCoverage": [
     {
@@ -132,6 +132,15 @@
       ],
       "surfaceCount": 24,
       "targetRelevantSurfaceCount": 21
+    },
+    {
+      "path": "docs/specs/budget-management.md",
+      "batchIds": [
+        "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+        "M0-PROJECT-POWERSYNC-PROVIDER-001"
+      ],
+      "surfaceCount": 18,
+      "targetRelevantSurfaceCount": 18
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -2404,6 +2413,58 @@
       ]
     },
     {
+      "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+      "title": "Dedicated Project category-configuration revision and blocked provider leaves",
+      "scope": "technical_control",
+      "rationale": "The isolated prerequisite gives every Project category-configuration set one independent, lossless concurrency generation, while leaving final category download/mutation authorization and the provider/application workflow blocked on O-026.",
+      "surfaceCount": 8,
+      "targetRelevantSurfaceCount": 8,
+      "authorities": [
+        {
+          "path": "docs/specs/budget-management.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CATEGORY-CONFIGURATION-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-3F4DAB40CF04",
+        "CONFIG-6EE152848D09",
+        "SWIFT-A3CDC454B0BA",
+        "SWIFT-BD6661CFC518",
+        "SWIFT-D2C84703FEEA",
+        "SWIFT-D3652DD63EA1",
+        "TEST-5286613EC809",
+        "TEST-561F3FACCE6F"
+      ]
+    },
+    {
       "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
@@ -2611,7 +2672,7 @@
         },
         {
           "path": "docs/specs/budget-management.md",
-          "role": "current_product"
+          "role": "canonical_target"
         },
         {
           "path": "docs/specs/offline-first.md",

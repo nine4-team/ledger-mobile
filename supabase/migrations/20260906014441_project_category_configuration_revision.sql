@@ -1,0 +1,4 @@
+-- READY scaffold only. Add one dedicated category_configuration_revision to each
+-- Project, independent from the Project entity revision and allocation-row
+-- revisions. Exact invariants are frozen by the provider-independent revision
+-- foundation dossier before this file becomes executable.

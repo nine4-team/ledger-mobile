@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
 		24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */; };
 		38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */; };
@@ -24,6 +25,7 @@
 		A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */; };
 		AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */; };
 		DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */; };
+		DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */; };
 		E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */; };
 		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */ = {isa = PBXBuildFile; productRef = 9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */; };
 		EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */; };
@@ -34,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectNoteHistoryStagingExerciseView.swift; sourceTree = "<group>"; };
 		3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -44,6 +47,7 @@
 		6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCreationStagingExerciseView.swift; sourceTree = "<group>"; };
 		76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientRenameStagingExercise.swift; sourceTree = "<group>"; };
 		86109C0CC4785A451308867C /* LedgeriOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LedgeriOS; path = .; sourceTree = SOURCE_ROOT; };
+		9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingExerciseView.swift; sourceTree = "<group>"; };
 		9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
 		A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
@@ -91,6 +95,8 @@
 				3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */,
 				4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */,
 				5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */,
+				9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */,
+				1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */,
 				33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */,
 				E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */,
 				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
@@ -192,6 +198,8 @@
 				68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
 				87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */,
 				520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */,
+				14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */,
+				DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */,
 				843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */,
 				4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */,
 				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,

@@ -10,6 +10,7 @@
     "docs/specs/spaces.md",
     "docs/specs/account-discovery-and-workspace-selection.md",
     "docs/specs/session-ending-pending-work.md",
+    "docs/specs/budget-management.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -328,7 +329,7 @@
       "authorities": [
         { "path": "docs/specs/projects.md", "role": "canonical_target" },
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
-        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/specs/budget-management.md", "role": "canonical_target" },
         { "path": "docs/specs/offline-first.md", "role": "current_product" },
         { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
@@ -620,6 +621,20 @@
         { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001": {
+      "scope": "technical_control",
+      "rationale": "The isolated prerequisite gives every Project category-configuration set one independent, lossless concurrency generation, while leaving final category download/mutation authorization and the provider/application workflow blocked on O-026.",
+      "authorities": [
+        { "path": "docs/specs/budget-management.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CATEGORY-CONFIGURATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" }
       ]
     },
     "M0-SPACE-CORE-DETAILS-PROVIDER-001": {
