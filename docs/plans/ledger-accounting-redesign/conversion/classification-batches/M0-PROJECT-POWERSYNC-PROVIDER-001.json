@@ -86,7 +86,7 @@
     },
     {
       "id": "SWIFT-5D88C2B47970",
-      "acknowledgeSourceHash": "3075ef3d9c123b092495928861e25d2360d265da5a273e4df2b3ae7bde57d0d4",
+      "acknowledgeSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
       "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, projected category-configuration revision text 1 and the complete Client/Project/allocation overlay; exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
       "disposition": "redesign",
       "status": "target_mapped",

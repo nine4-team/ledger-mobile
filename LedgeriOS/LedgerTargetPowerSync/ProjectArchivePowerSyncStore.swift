@@ -27,23 +27,38 @@ public enum ProjectArchiveOperationIdentity {
     }
 }
 
+enum ProjectArchivePowerSyncStoreCheckpoint: Equatable, Sendable {
+    case beforeTransaction
+    case inventoryConstruction
+    case inventoryRead
+    case afterOwnershipInspection
+    case operationWrite
+    case projectionWrite
+    case commandWrite
+    case beforeCommit
+    case afterCommit
+}
+
 actor ProjectArchivePowerSyncStore: ProjectArchiving {
     private let database: any PowerSyncDatabaseProtocol
     private let accountId: AccountID
     private let principalId: PrincipalID
     private let now: @Sendable () -> Date
+    private let checkpoint: @Sendable (ProjectArchivePowerSyncStoreCheckpoint) throws -> Void
     private let watchRegistry = ProjectArchiveOperationWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
         accountId: AccountID,
         principalId: PrincipalID,
-        now: @Sendable @escaping () -> Date = Date.init
+        now: @Sendable @escaping () -> Date = Date.init,
+        checkpoint: @Sendable @escaping (ProjectArchivePowerSyncStoreCheckpoint) throws -> Void = { _ in }
     ) {
         self.database = database
         self.accountId = accountId
         self.principalId = principalId
         self.now = now
+        self.checkpoint = checkpoint
     }
 
     func archive(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
@@ -73,9 +88,28 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
         ) else {
             throw ProjectArchiveFailure.invalidEncodedCommand
         }
+        let testCheckpoint = checkpoint
 
+        try Task.checkCancellation()
         do {
+            try testCheckpoint(.beforeTransaction)
             let receipt = try await database.writeTransaction { transaction in
+                try Task.checkCancellation()
+                let ownership = try LocalOperationIdentityGuard.inspect(
+                    transaction: transaction,
+                    operationId: command.envelope.operationId,
+                    expectedFamily: .archiveProject,
+                    expectedFingerprint: command.fingerprint.sha256,
+                    checkpoint: { point in
+                        switch point {
+                        case .inventoryConstruction:
+                            try testCheckpoint(.inventoryConstruction)
+                        case .inventoryRead:
+                            try testCheckpoint(.inventoryRead)
+                        }
+                    }
+                )
+                try testCheckpoint(.afterOwnershipInspection)
                 let existing = try transaction.getOptional(
                     sql: """
                     SELECT account_id, actor_principal_id, contract_version,
@@ -92,7 +126,8 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                     parameters: [command.envelope.operationId.rawValue]
                 ) { try ProjectArchiveReplayRow(cursor: $0) }
                 if let existing {
-                    guard existing.fingerprint == command.fingerprint.sha256 else {
+                    guard ownership == .matchingOwner,
+                          existing.fingerprint == command.fingerprint.sha256 else {
                         throw OperationContractFailure.payloadMismatch(
                             command.envelope.operationId
                         )
@@ -111,6 +146,30 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
                     }
                     try existing.validateTerminal(state: state, command: command)
+                    let commandRows = try transaction.getAll(
+                        sql: """
+                        SELECT data,
+                               json_type(data, '$.data.client_created_at_ms')
+                                 AS client_created_at_type
+                        FROM ps_crud
+                        WHERE json_extract(data, '$.id') = ?
+                          AND json_extract(data, '$.type') = ?
+                        """,
+                        parameters: [
+                            command.envelope.operationId.rawValue,
+                            LedgerPowerSyncTable.projectArchiveCommands
+                        ]
+                    ) { try ProjectArchiveReplayCommand(cursor: $0) }
+                    guard commandRows.count <= 1,
+                          commandRows.allSatisfy({
+                            $0.matches(
+                                command,
+                                envelopeJSON: envelopeJSON,
+                                capturedAtMilliseconds: clientCreatedAtMilliseconds
+                            )
+                          }) else {
+                        throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
+                    }
                     let overlays = try transaction.getAll(
                         sql: """
                         SELECT account_id, actor_principal_id, project_id,
@@ -130,7 +189,7 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         }
                     }
                     if state == .queued || state == .applying {
-                        guard overlays.count == 1 else {
+                        guard commandRows.count == 1, overlays.count == 1 else {
                             throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
                         }
                     } else if state == .rejected {
@@ -142,6 +201,9 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         operationId: command.envelope.operationId,
                         localState: state
                     )
+                }
+                guard ownership == .unclaimed else {
+                    throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
                 }
 
                 let revision = command.draft.expectedRevision.rawValue
@@ -208,6 +270,8 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                 }
 
                 let projectedRevision = Int64(revision) + 1
+                try Task.checkCancellation()
+                try testCheckpoint(.operationWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.localOperations) (
@@ -230,6 +294,8 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         envelopeJSON
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.projectionWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.projectArchiveOverlays) (
@@ -250,6 +316,8 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         acceptedAtMilliseconds
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.commandWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.projectArchiveCommands) (
@@ -270,12 +338,23 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                         envelopeJSON
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.beforeCommit)
                 return OperationReceipt(
                     operationId: command.envelope.operationId,
                     localState: .queued
                 )
             }
+            try testCheckpoint(.afterCommit)
+            try Task.checkCancellation()
             return try command.validate(receipt)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as LocalOperationIdentityGuardFailure {
+            if failure == .payloadMismatch {
+                throw OperationContractFailure.payloadMismatch(command.envelope.operationId)
+            }
+            throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
         } catch let failure as LedgerOfflineClientRuntimeFailure {
             throw failure
         } catch let failure as OperationContractFailure {
@@ -405,6 +484,90 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
           ON result.id = operation.id
         WHERE operation.id = ?
         """
+}
+
+private struct ProjectArchiveReplayCommand {
+    private struct TypedEnvelope: Decodable {
+        struct Payload: Decodable {
+            let clientCreatedAtMilliseconds: Int64
+
+            enum CodingKeys: String, CodingKey {
+                case clientCreatedAtMilliseconds = "client_created_at_ms"
+            }
+        }
+
+        let data: Payload
+    }
+
+    let operationId: String
+    let operation: String
+    let table: String
+    let accountId: String
+    let actorPrincipalId: String
+    let contractVersion: String
+    let clientCreatedAtMilliseconds: Int64
+    let projectId: String
+    let expectedRevision: String
+    let fingerprint: String
+    let envelopeJSON: String
+
+    init(cursor: any SqlCursor) throws {
+        let json = try cursor.getString(name: "data")
+        let capturedStorageType = try cursor.getString(name: "client_created_at_type")
+        guard let bytes = json.data(using: .utf8),
+              let typedEnvelope = try? JSONDecoder().decode(TypedEnvelope.self, from: bytes),
+              let root = try JSONSerialization.jsonObject(with: bytes) as? [String: Any],
+              Set(root.keys).isSuperset(of: ["id", "op", "type", "data"]),
+              let operationId = root["id"] as? String,
+              let operation = root["op"] as? String,
+              let table = root["type"] as? String,
+              let data = root["data"] as? [String: Any],
+              Set(data.keys) == [
+                "account_id", "actor_principal_id", "contract_version",
+                "client_created_at_ms", "project_id", "expected_revision",
+                "fingerprint", "envelope_json"
+              ],
+              let accountId = data["account_id"] as? String,
+              let actorPrincipalId = data["actor_principal_id"] as? String,
+              let contractVersion = data["contract_version"] as? String,
+              let projectId = data["project_id"] as? String,
+              let expectedRevision = data["expected_revision"] as? String,
+              let fingerprint = data["fingerprint"] as? String,
+              let envelopeJSON = data["envelope_json"] as? String,
+              capturedStorageType == "integer" else {
+            throw ProjectArchivePowerSyncFailure.malformedLocalEvidence
+        }
+        self.operationId = operationId
+        self.operation = operation
+        self.table = table
+        self.accountId = accountId
+        self.actorPrincipalId = actorPrincipalId
+        self.contractVersion = contractVersion
+        clientCreatedAtMilliseconds = typedEnvelope.data.clientCreatedAtMilliseconds
+        self.projectId = projectId
+        self.expectedRevision = expectedRevision
+        self.fingerprint = fingerprint
+        self.envelopeJSON = envelopeJSON
+    }
+
+    func matches(
+        _ command: ArchiveProjectCommand,
+        envelopeJSON expectedEnvelopeJSON: String,
+        capturedAtMilliseconds expectedCapturedAtMilliseconds: Int64
+    ) -> Bool {
+        operationId == command.envelope.operationId.rawValue
+            && operation == "PUT"
+            && table == LedgerPowerSyncTable.projectArchiveCommands
+            && accountId == command.envelope.accountId.rawValue
+            && actorPrincipalId == command.envelope.actorPrincipalId.rawValue
+            && contractVersion == command.envelope.contractVersion.rawValue
+            && clientCreatedAtMilliseconds == expectedCapturedAtMilliseconds
+            && clientCreatedAtMilliseconds >= 0
+            && projectId == command.draft.projectId.rawValue
+            && expectedRevision == String(command.draft.expectedRevision.rawValue)
+            && fingerprint == command.fingerprint.sha256
+            && envelopeJSON == expectedEnvelopeJSON
+    }
 }
 
 private struct ProjectArchiveReplayRow {

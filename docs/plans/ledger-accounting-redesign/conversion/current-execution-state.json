@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 1,
+  "stateVersion": 2,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -18,7 +18,7 @@
   },
   "activeBatch": {
     "id": "local-operation-identity-ownership-guard",
-    "status": "implementation_review",
+    "status": "ci_verification",
     "outcome": "Prevent an offline operation identifier from being accepted for a different command family, account, principal, target, or payload across retry and restart.",
     "dossiers": [
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
@@ -34,10 +34,10 @@
       "scripts/check-target-environment.mjs"
     ],
     "nextActions": [
-      "Complete primary review of the corrected eight-file implementation diff against the frozen dossier.",
-      "Run focused guard/store tests, then the complete local integration gate.",
-      "Obtain independent adversarial review and resolve every material finding.",
-      "Synchronize implementation evidence and status, commit and push the exact implementation checkpoint, then require immutable CI to pass."
+      "Synchronize conversion outputs and pass the complete conversion-control gate.",
+      "Commit and push the exact reviewed implementation checkpoint.",
+      "Require every immutable workflow job to pass and then promote this dossier to verified.",
+      "Advance the Item-to-Space clearing batch only after that promotion."
     ]
   },
   "followingBatch": {
@@ -58,7 +58,7 @@
     },
     "targetRelevantSurfaces": 744,
     "mappedOrLaterSurfaces": 554,
-    "implementedOrLaterSurfaces": 237,
+    "implementedOrLaterSurfaces": 239,
     "locallyWorkingProviderWorkflows": 10,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0

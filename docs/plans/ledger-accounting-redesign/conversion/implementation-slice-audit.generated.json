@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T16:13:47.642Z",
+  "generatedFromManifestSync": "2026-09-06T16:59:21.219Z",
   "totals": {
     "slices": 94,
     "claimedTargetSurfaces": 316,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 237
+    "implementationAdvancedTargetSurfaces": 239
   },
   "statusCounts": {
     "draft": 4,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
+    "implemented": 14,
     "verified": 73,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -528,7 +528,7 @@
       "sliceId": "local-operation-identity-ownership-guard",
       "title": "Enforce one fail-closed local OperationID namespace across command families",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Shared Local Operation Identity Guard",
       "surfaceIds": [
         "SWIFT-142941D87D78",

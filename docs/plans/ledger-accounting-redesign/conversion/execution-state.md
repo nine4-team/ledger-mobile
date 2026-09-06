@@ -6,7 +6,7 @@
 > record or the active dossier identifies a specific evidence gap or discrepancy.
 
 Last updated: 2026-09-06
-State version: 352
+State version: 353
 
 ## Objective
 
@@ -18,10 +18,12 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: LOCAL-OPERATION-IDENTITY-OWNERSHIP-READY
+- Checkpoint: LOCAL-OPERATION-IDENTITY-OWNERSHIP-IMPLEMENTED-LOCAL-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Current verified conversion base: `4d16d68945fb68116db794a15e0d12b258dad1d6`
+  (the reviewed implementation is locally green and awaits its exact immutable
+  implementation-CI checkpoint)
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -40,9 +42,10 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Planning/control coverage is **554 of 744 target-relevant surfaces mapped or
-  later (74.5%)**. Local surface-implementation coverage is **237 of 744
-  implemented or later (31.9%)**. The current comment-only READY adds mapped technical-
-  control surfaces but no implementation credit. The prior promotion moves already-
+  later (74.5%)**. Local surface-implementation coverage is **239 of 744
+  implemented or later (32.1%)**. The current locally green technical-control
+  implementation advances two owned surfaces but no provider-backed product
+  workflow. The prior promotion moves already-
   implemented surfaces to verified after exact synchronized CI; it adds no new
   provider-backed product workflow, hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
@@ -95,6 +98,21 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Exact READY `4d16d68945fb68116db794a15e0d12b258dad1d6` / immutable
+  run `34040671631` authorized the shared local OperationID ownership guard.
+  The bounded eight-file implementation centralizes every current operation-ID
+  relation and queue representation across all five accepting stores without a
+  second registry table or upload/schema/product change. Primary executable
+  review corrected invalid `ps_crud` JSON attribution, valid partial Project
+  reconciliation, and exact terminal creation-result validation. The expanded
+  matrix covers all families, destinations, races, orphan/corrupt evidence,
+  lifecycle drainage, provider failure boundaries and encrypted restart.
+  Independent corrected-diff review returned GO with no P0-P3. Focused 9/9,
+  affected 94/94, complete serial Swift and MCP tests, disposable local
+  Supabase lint/database/RPC checks, target controls and both staging builds pass
+  locally. Exact implementation commit and immutable CI remain pending; the
+  clearing batch cannot advance until verified promotion.
 
 - Independent corrected-DRAFT review of Item-to-Space clearing found that its
   proposed reciprocal assignment lookup still protected only two command
@@ -4516,13 +4534,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Complete primary review of the corrected eight-file
-`local-operation-identity-ownership-guard` implementation against exact green
-READY `4d16d689` / immutable run `34040671631`. Run focused tests, obtain an
-independent adversarial review, resolve every material finding, then synchronize
-the implementation evidence and pass the complete local plus exact
-implementation-CI gate. Only after that foundation is verified may the
-Item-to-Space clearing DRAFT register its sixth family and advance toward READY.
+Synchronize the locally green `local-operation-identity-ownership-guard`
+implementation evidence and conversion outputs, pass the complete conversion
+control gate, then commit and push the exact reviewed checkpoint. Require every
+immutable workflow job to pass before promoting the dossier to verified. Only
+after that promotion may the Item-to-Space clearing DRAFT register its sixth
+family and advance toward READY.
 
 Do not add authoritative Item/Space apply, optimistic placement projection,
 user-facing assignment/clearing UI, upload connector, Postgres/RLS/Sync changes,

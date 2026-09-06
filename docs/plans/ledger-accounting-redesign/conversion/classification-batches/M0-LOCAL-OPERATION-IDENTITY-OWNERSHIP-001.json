@@ -9,10 +9,10 @@
   "surfaces": [
     {
       "id": "SWIFT-142941D87D78",
-      "acknowledgeSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
-      "currentBehavior": "Comment-only READY scaffold for a centralized local OperationID evidence inventory and ownership guard; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "acknowledgeSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
+      "currentBehavior": "Implemented centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact immutable implementation CI remains pending.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
       "target": {
@@ -27,10 +27,10 @@
     },
     {
       "id": "TEST-5272CB2301DE",
-      "acknowledgeSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
-      "currentBehavior": "Comment-only READY scaffold for current-family pair, orphan-evidence, concurrency, replay, failure, and restart proof; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "acknowledgeSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
+      "currentBehavior": "Executable encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact immutable implementation CI remains pending.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"],
       "target": {

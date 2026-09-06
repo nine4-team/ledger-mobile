@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T16:13:47.642Z",
+    "lastSynchronizedAt": "2026-09-06T16:59:21.219Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2099,8 +2099,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
-      "acknowledgedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
+      "observedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "acknowledgedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6665,8 +6665,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
-      "acknowledgedSourceHash": "13f782f3f83421d65252fa87892f99fb2757ebdcc518ea9c5313770ea1df3e02",
+      "observedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "acknowledgedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -19743,8 +19743,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
-      "acknowledgedSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
+      "observedSourceHash": "124b257ced5fc89e4999c49228b804885b5b091bec0ee79f49d284e3b4c4f36e",
+      "acknowledgedSourceHash": "124b257ced5fc89e4999c49228b804885b5b091bec0ee79f49d284e3b4c4f36e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20617,12 +20617,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift"
         }
       ],
-      "observedSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
-      "acknowledgedSourceHash": "25c0b268ce0b0a4bff044fdc67f491ea8ae1ff00dfd96337359417f6b469df10",
+      "observedSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
+      "acknowledgedSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
       "metadata": {
-        "firebaseCoupling": "none_detected"
+        "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Comment-only READY scaffold for a centralized local OperationID evidence inventory and ownership guard; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "currentBehavior": "Implemented centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact immutable implementation CI remains pending.",
       "disposition": "redesign",
       "target": {
         "owner": "Shared Local Operation Identity Guard",
@@ -20651,7 +20651,7 @@
           "All current family pairs, orphan sources, concurrency, replay, restart, pinned-PowerSync insert-only representation, and static completeness obligations pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"
@@ -22722,8 +22722,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCreationPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
-      "acknowledgedSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
+      "observedSourceHash": "298df7ad573d6a3b3ad38c6ed5d910bf3d9e0f9e34119072969fe41645a09b86",
+      "acknowledgedSourceHash": "298df7ad573d6a3b3ad38c6ed5d910bf3d9e0f9e34119072969fe41645a09b86",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -26004,8 +26004,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
-      "acknowledgedSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
+      "observedSourceHash": "f76f966d2ba6e45b3f83aa77a8fbbb4e098f60ba2fa6611841059294be52d1d1",
+      "acknowledgedSourceHash": "f76f966d2ba6e45b3f83aa77a8fbbb4e098f60ba2fa6611841059294be52d1d1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -27058,8 +27058,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "3075ef3d9c123b092495928861e25d2360d265da5a273e4df2b3ae7bde57d0d4",
-      "acknowledgedSourceHash": "3075ef3d9c123b092495928861e25d2360d265da5a273e4df2b3ae7bde57d0d4",
+      "observedSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
+      "acknowledgedSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -39221,8 +39221,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "efc86325f540e618ffc2ff7175ae088124577c00fbeb7ee8667037e0919f9bbe",
-      "acknowledgedSourceHash": "efc86325f540e618ffc2ff7175ae088124577c00fbeb7ee8667037e0919f9bbe",
+      "observedSourceHash": "18c5012c818f3c615a6218be8223bc167f09a0db92abfba7c80f7895de012fa3",
+      "acknowledgedSourceHash": "18c5012c818f3c615a6218be8223bc167f09a0db92abfba7c80f7895de012fa3",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -44329,12 +44329,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift"
         }
       ],
-      "observedSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
-      "acknowledgedSourceHash": "36dff10a0bfdaea26505b3f0d77dd8a85ed2f68acfc36cbdd41ee21f06a8093c",
+      "observedSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
+      "acknowledgedSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for current-family pair, orphan-evidence, concurrency, replay, failure, and restart proof; executable implementation remains gated on the exact READY commit passing immutable CI.",
+      "currentBehavior": "Executable encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact immutable implementation CI remains pending.",
       "disposition": "redesign",
       "target": {
         "owner": "Shared Local Operation Identity Guard",
@@ -44360,7 +44360,7 @@
           "The frozen LOCALOPID test matrix passes without hosted resources"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001"

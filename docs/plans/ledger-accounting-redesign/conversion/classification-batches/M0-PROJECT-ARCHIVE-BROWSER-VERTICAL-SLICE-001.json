@@ -13,7 +13,7 @@
   "surfaces": [
     {
       "id": "SWIFT-53B8C9C37D3F",
-      "acknowledgeSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
+      "acknowledgeSourceHash": "f76f966d2ba6e45b3f83aa77a8fbbb4e098f60ba2fa6611841059294be52d1d1",
       "currentBehavior": "Implements encrypted atomic Project-archive acceptance, exact Account-bound operation identity, local lifecycle overlay, replay, FIFO upload state and authoritative/rejected reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
       "status": "implemented",

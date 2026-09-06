@@ -1,6 +1,6 @@
 # EVID-LOCAL-OPERATION-IDENTITY-OWNERSHIP-001 — Shared Local OperationID Ownership
 
-- Status: comment-only READY after two independent GO reviews; executable implementation not started
+- Status: implemented locally; exact implementation CI pending
 - Date: 2026-09-06
 - Base commit: `04843679c1bffa41aab2efecf2723695dc97fc4a`
 - Environment: dedicated target worktree and disposable encrypted local databases only
@@ -91,19 +91,61 @@ is verified. Its slice must add one family/relation entry to the centralized
 inventory and prove clearing against all five existing families; it no longer
 owns ad hoc reciprocal pairwise checks.
 
+## Executable Outcome
+
+Exact READY commit `4d16d68945fb68116db794a15e0d12b258dad1d6`
+passed immutable workflow run `34040671631` before executable work began. The
+bounded implementation changes exactly the shared guard, its matrix suite, the
+five accepting stores, and the target static checker. It:
+
+- inspects every current ID-bearing local relation and every supported or
+  forbidden ID-bearing `ps_crud` representation inside the accepting store's
+  existing write transaction;
+- preserves the five existing command families and rejects cross-family or
+  changed-payload reuse without disclosing stored ownership detail;
+- persists and checks explicit creation-family and canonical-envelope evidence;
+- recognizes exact applied/rejected creation results after supported graph
+  drainage while validating every auxiliary row that remains;
+- treats malformed JSON queue evidence containing the exact generated
+  top-level operation ID as a fail-closed reservation; and
+- adds no registry table, server schema, upload transaction shape, projection,
+  cleanup, hosted dependency, or source-backend behavior.
+
+## Review Corrections
+
+Primary executable review found and corrected three material gaps before the
+local gate: invalid `ps_crud` JSON could escape attribution, partially reconciled
+Project graphs were rejected even when each surviving row was exact, and
+terminal creation-result validation did not match the current handler contract.
+The corrected suite now exercises all five family matrices, queue/result/orphan
+representations, same- and cross-family races, lifecycle drainage, every
+injected provider failure boundary, and encrypted restart. Independent
+adversarial re-review of the corrected eight-file diff returned GO with no
+P0–P3 finding.
+
+## Local Verification
+
+The following isolated checks passed on 2026-09-06 without hosted or production
+access:
+
+- focused shared-guard suite: 9 of 9 tests;
+- seven affected provider suites: 94 of 94 tests;
+- complete serial Swift package suite;
+- complete target MCP suite;
+- target environment checker and unchanged PowerSync package pin;
+- disposable local Supabase schema lint, pgTAP/database checks, Space-destination
+  read, Project-note read, and Data API/RPC checks;
+- macOS staging build and iOS Simulator staging build; and
+- clean patch validation.
+
+`LOCALOPID-TEST-001` through `-009` and `-011` through `-012` are therefore
+passed. `LOCALOPID-TEST-010` remains planned until the exact implementation
+commit passes every immutable workflow job.
+
 ## Non-Advancement
 
-This READY package creates no executable guard, second registry table, synchronized row,
-upload entry, optimistic projection, cleanup/retention behavior, server schema,
-handler, grant, RLS policy, Sync Stream, app/MCP feature, hosted resource,
-source-backend change, migration execution, production access, release, or
-cutover authority. A-003/A-004/A-015/A-016 remain unadvanced.
-
-## READY Gate
-
-Two independent corrected-DRAFT reviewers audited the exact authority,
-relation/provider inventory, touchpoint hashes, concurrency primitive, error
-semantics, legacy behavior, tests, and non-advancement clauses and returned GO
-with no P0–P3 finding. The exact synchronized READY commit and immutable workflow
-run remain pending; no comment scaffold may be replaced with executable code
-until every job passes.
+This implementation creates no second registry table, synchronized row, new
+upload entry, optimistic product projection, cleanup/retention behavior, server
+schema, handler, grant, RLS policy, Sync Stream, app/MCP feature, hosted
+resource, source-backend change, migration execution, production access,
+release, or cutover authority. A-003/A-004/A-015/A-016 remain unadvanced.

@@ -27,23 +27,38 @@ public enum ClientArchiveOperationIdentity {
     }
 }
 
+enum ClientArchivePowerSyncStoreCheckpoint: Equatable, Sendable {
+    case beforeTransaction
+    case inventoryConstruction
+    case inventoryRead
+    case afterOwnershipInspection
+    case operationWrite
+    case projectionWrite
+    case commandWrite
+    case beforeCommit
+    case afterCommit
+}
+
 actor ClientArchivePowerSyncStore: ClientArchiving {
     private let database: any PowerSyncDatabaseProtocol
     private let accountId: AccountID
     private let principalId: PrincipalID
     private let now: @Sendable () -> Date
+    private let checkpoint: @Sendable (ClientArchivePowerSyncStoreCheckpoint) throws -> Void
     private let watchRegistry = ClientArchiveOperationWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
         accountId: AccountID,
         principalId: PrincipalID,
-        now: @Sendable @escaping () -> Date = Date.init
+        now: @Sendable @escaping () -> Date = Date.init,
+        checkpoint: @Sendable @escaping (ClientArchivePowerSyncStoreCheckpoint) throws -> Void = { _ in }
     ) {
         self.database = database
         self.accountId = accountId
         self.principalId = principalId
         self.now = now
+        self.checkpoint = checkpoint
     }
 
     func archive(_ command: ArchiveClientCommand) async throws -> OperationReceipt {
@@ -75,14 +90,36 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
         }
         let scopedAccountId = accountId.rawValue
         let scopedPrincipalId = principalId.rawValue
+        let testCheckpoint = checkpoint
 
+        try Task.checkCancellation()
         do {
+            try testCheckpoint(.beforeTransaction)
             let receipt = try await database.writeTransaction { transaction in
+                try Task.checkCancellation()
+                let ownership = try LocalOperationIdentityGuard.inspect(
+                    transaction: transaction,
+                    operationId: command.envelope.operationId,
+                    expectedFamily: .archiveClient,
+                    expectedFingerprint: command.fingerprint.sha256,
+                    checkpoint: { point in
+                        switch point {
+                        case .inventoryConstruction:
+                            try testCheckpoint(.inventoryConstruction)
+                        case .inventoryRead:
+                            try testCheckpoint(.inventoryRead)
+                        }
+                    }
+                )
+                try testCheckpoint(.afterOwnershipInspection)
                 let replay = try transaction.getOptional(
                     sql: Self.replaySQL,
                     parameters: [command.envelope.operationId.rawValue]
                 ) { try ClientArchiveReplayRow(cursor: $0) }
                 if let replay {
+                    guard ownership == .matchingOwner else {
+                        throw ClientArchivePowerSyncFailure.malformedLocalEvidence
+                    }
                     let commandRows = try transaction.getAll(
                         sql: """
                         SELECT data,
@@ -119,6 +156,9 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
                         commandRows: commandRows,
                         overlays: overlays
                     )
+                }
+                guard ownership == .unclaimed else {
+                    throw ClientArchivePowerSyncFailure.malformedLocalEvidence
                 }
 
                 let revision = command.draft.expectedRevision.rawValue
@@ -170,6 +210,8 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
                 }
 
                 let projectedRevision = Int64(revision) + 1
+                try Task.checkCancellation()
+                try testCheckpoint(.operationWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.localOperations) (
@@ -187,6 +229,8 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
                         String(revision), envelopeJSON
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.projectionWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.clientArchiveOverlays) (
@@ -203,6 +247,8 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
                         projectedRevision, acceptedAtMilliseconds
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.commandWrite)
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.clientArchiveCommands) (
@@ -218,11 +264,21 @@ actor ClientArchivePowerSyncStore: ClientArchiving {
                         String(revision), command.fingerprint.sha256, envelopeJSON
                     ]
                 )
+                try Task.checkCancellation()
+                try testCheckpoint(.beforeCommit)
                 return OperationReceipt(
                     operationId: command.envelope.operationId, localState: .queued
                 )
             }
+            try testCheckpoint(.afterCommit)
+            try Task.checkCancellation()
             return try command.validate(receipt)
+        } catch is CancellationError { throw CancellationError() }
+          catch let error as LocalOperationIdentityGuardFailure {
+            if error == .payloadMismatch {
+                throw OperationContractFailure.payloadMismatch(command.envelope.operationId)
+            }
+            throw ClientArchivePowerSyncFailure.malformedLocalEvidence
         } catch let error as LedgerOfflineClientRuntimeFailure { throw error }
           catch let error as OperationContractFailure { throw error }
           catch let error as ClientArchiveFailure { throw error }

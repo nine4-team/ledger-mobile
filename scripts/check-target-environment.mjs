@@ -2273,6 +2273,289 @@ if (
   }
 }
 
+const localOperationGuardPath = path.join(
+  powerSyncRoot,
+  "LocalOperationIdentityGuard.swift",
+);
+const localOperationGuardTestsPath = path.join(
+  powerSyncTestRoot,
+  "LocalOperationIdentityGuardTests.swift",
+);
+const localOperationAcceptingStores = [
+  ["ClientCreationPowerSyncStore", "ClientCreationPowerSyncStore.swift", "createClient"],
+  ["ProjectSetupPowerSyncStore", "ProjectSetupPowerSyncStore.swift", "createProject"],
+  ["ProjectArchivePowerSyncStore", "ProjectArchivePowerSyncStore.swift", "archiveProject"],
+  ["ClientArchivePowerSyncStore", "ClientArchivePowerSyncStore.swift", "archiveClient"],
+  ["ItemSpaceAssignmentPowerSyncStore", "ItemSpaceAssignmentPowerSyncStore.swift", "assignItemsToSpace"],
+];
+if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
+  fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
+} else {
+  const guardSource = fs.readFileSync(localOperationGuardPath, "utf8");
+  const guardCode = swiftWithoutComments(guardSource);
+  const guardCompact = (guardCode ?? "").replace(/\s+/g, "");
+  const guardTests = fs.readFileSync(localOperationGuardTestsPath, "utf8");
+  const familyCases = [
+    'casecreateClient="create_client"',
+    'casecreateProject="create_project"',
+    'casearchiveProject="archive_project"',
+    'casearchiveClient="archive_client"',
+    'caseassignItemsToSpace="assign_items_to_space"',
+  ];
+  for (const familyCase of familyCases) {
+    if (!guardCompact.includes(familyCase)) {
+      fail("target_local_operation_identity_family_inventory", familyCase);
+    }
+  }
+  const relationBlock = guardCompact.match(
+    /staticletoperationBearingRelations=\[([^\]]*)\]/,
+  )?.[1] ?? "";
+  const expectedRelations = [
+    "localOperations", "operationResults", "pendingClients", "pendingProjects",
+    "pendingProjectCategoryAllocations", "projectArchiveOverlays",
+    "clientArchiveOverlays", "itemSpaceAssignmentCommands",
+  ];
+  const registeredRelations = [
+    ...relationBlock.matchAll(/LedgerPowerSyncTable\.([A-Za-z]+)/g),
+  ].map((match) => match[1]);
+  if (JSON.stringify(registeredRelations) !== JSON.stringify(expectedRelations)) {
+    fail("target_local_operation_identity_relation_inventory", registeredRelations.join(","));
+  }
+  const expectedInsertOnly = [
+    "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
+  ];
+  const insertOnlyBlock = guardCompact.match(
+    /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,
+  )?.[1] ?? "";
+  const registeredInsertOnly = [
+    ...insertOnlyBlock.matchAll(/LedgerPowerSyncTable\.([A-Za-z]+)/g),
+  ].map((match) => match[1]);
+  if (JSON.stringify(registeredInsertOnly) !== JSON.stringify(expectedInsertOnly)) {
+    fail("target_local_operation_identity_ps_crud_inventory", registeredInsertOnly.join(","));
+  }
+  if (
+    !guardCompact.includes(
+      "staticletforbiddenMutationTables=[LedgerPowerSyncTable.operationResults]",
+    ) ||
+    !guardCompact.includes("FROMps_crud") ||
+    !guardCompact.includes("LedgerPowerSyncTable.operationResults")
+  ) {
+    fail("target_local_operation_identity_result_mutation_guard", relative(localOperationGuardPath));
+  }
+  const providerBlock = guardCompact.match(
+    /staticletacceptingProviders=\[([^\]]*)\]/,
+  )?.[1] ?? "";
+  const registeredProviders = [...providerBlock.matchAll(/"([A-Za-z]+)"/g)]
+    .map((match) => match[1]);
+  const expectedProviders = localOperationAcceptingStores.map(([name]) => name);
+  if (JSON.stringify(registeredProviders) !== JSON.stringify(expectedProviders)) {
+    fail("target_local_operation_identity_provider_inventory", registeredProviders.join(","));
+  }
+  for (const [provider, file, family] of localOperationAcceptingStores) {
+    const storePath = path.join(powerSyncRoot, file);
+    const source = fs.readFileSync(storePath, "utf8");
+    const code = (swiftWithoutComments(source) ?? "").replace(/\s+/g, "");
+    const guardIndex = code.indexOf("LocalOperationIdentityGuard.inspect(");
+    const firstWriteIndex = code.indexOf("INSERTINTO");
+    if (
+      guardIndex < 0 || firstWriteIndex < 0 || guardIndex >= firstWriteIndex ||
+      !code.includes(`expectedFamily:.${family}`) ||
+      !code.includes("writeTransaction{transactionin")
+    ) {
+      fail("target_local_operation_identity_guard_before_write", provider);
+    }
+  }
+  for (const [file, family] of [
+    ["ClientCreationPowerSyncStore.swift", "create_client"],
+    ["ProjectSetupPowerSyncStore.swift", "create_project"],
+  ]) {
+    const code = (swiftWithoutComments(
+      fs.readFileSync(path.join(powerSyncRoot, file), "utf8"),
+    ) ?? "").replace(/\s+/g, "");
+    if (
+      !code.includes(`'${family}'`) ||
+      !code.includes("command_envelope_json") ||
+      !code.includes("envelopeJSON")
+    ) {
+      fail("target_local_operation_identity_creation_owner_evidence", file);
+    }
+  }
+  if (/spike_local_operation_(?:owner|ownership|registry)/i.test(guardCode ?? "")) {
+    fail("target_local_operation_identity_second_registry", relative(localOperationGuardPath));
+  }
+  for (const id of Array.from({ length: 12 }, (_, index) =>
+    `LOCALOPID-TEST-${String(index + 1).padStart(3, "0")}`)) {
+    if (!guardTests.includes(id)) {
+      fail("target_local_operation_identity_test_id_missing", id);
+    }
+  }
+  for (const testFunction of [
+    "exactInventoryAndInsertOnlyRepresentation", "orderedFamilyMatrix",
+    "orphanInventoryMatrix", "terminalAndLegacyClassification",
+    "concurrentClaims", "checkpointAtomicityAndCancellation",
+    "encryptedRestartStability", "privacyAndNoMutation",
+    "ownerAndAuxiliaryTamperMatrix",
+  ]) {
+    if (swiftFunctionBody(guardTests, `func ${testFunction}(`) === null) {
+      fail("target_local_operation_identity_executable_test_missing", testFunction);
+    }
+  }
+  const orphanBody = swiftFunctionBody(guardTests, "func orphanInventoryMatrix(") ?? "";
+  for (const proof of [
+    "for destination in LocalOperationCommandFamily.allCases",
+    "insertSynchronizedResult(",
+  ]) {
+    if (!orphanBody.includes(proof)) {
+      fail("target_local_operation_identity_orphan_matrix_incomplete", proof);
+    }
+  }
+  for (const proof of [
+    '["operation", "synchronized_result"]', "result_mutation_queue",
+    "orphan-invalid-json",
+  ]) {
+    if (!guardTests.includes(proof)) {
+      fail("target_local_operation_identity_orphan_matrix_incomplete", proof);
+    }
+  }
+  const concurrencyBody = swiftFunctionBody(guardTests, "func concurrentClaims(") ?? "";
+  for (const proof of [
+    "submitRaceOutcome(",
+    "ProjectArchivePowerSyncFailure.invalidOperationIdentity",
+    "ClientArchivePowerSyncFailure.invalidOperationIdentity",
+    "expectOneCompleteGraph(",
+  ]) {
+    if (!concurrencyBody.includes(proof)) {
+      fail("target_local_operation_identity_concurrency_matrix_incomplete", proof);
+    }
+  }
+  if (!guardTests.includes('outcomes.filter { $0 == "payloadMismatch" }.count == 1')) {
+    fail("target_local_operation_identity_concurrency_matrix_incomplete", "payloadMismatch");
+  }
+  const changedSubmissionBody = swiftFunctionBody(
+    guardTests, "func submitChanged(",
+  ) ?? "";
+  for (const family of [
+    "ClientCreationPowerSyncStore", "ProjectSetupPowerSyncStore",
+    "ProjectArchivePowerSyncStore", "ClientArchivePowerSyncStore",
+    "ItemSpaceAssignmentPowerSyncStore",
+  ]) {
+    if (!changedSubmissionBody.includes(family)) {
+      fail("target_local_operation_identity_changed_race_incomplete", family);
+    }
+  }
+  const terminalHelper = swiftFunctionBody(
+    guardTests, "func verifyCreationTerminalReconciliation(",
+  ) ?? "";
+  if (
+    countOccurrences(
+      terminalHelper, "PowerSyncOverlayReconciler.reconcileClient(",
+    ) < 2 ||
+    countOccurrences(
+      terminalHelper, "PowerSyncOverlayReconciler.reconcileProjectCore(",
+    ) < 2
+  ) {
+    fail(
+      "target_local_operation_identity_terminal_matrix_incomplete",
+      "applied and rejected authoritative reconciliation",
+    );
+  }
+  for (const proof of [
+    "PowerSyncOverlayReconciler.reconcileClient(",
+    "PowerSyncOverlayReconciler.reconcileProjectCore(",
+    "insertCreationResult(",
+    ".localState == .rejected", ".localState == .applied",
+  ]) {
+    if (!terminalHelper.includes(proof)) {
+      fail("target_local_operation_identity_terminal_matrix_incomplete", proof);
+    }
+  }
+  for (const proof of [
+    "client_created", "project_created", "unknown_rejection",
+    "$.request_sha256", "$.client_created_at_ms",
+  ]) {
+    if (!guardTests.includes(proof)) {
+      fail("target_local_operation_identity_result_tamper_matrix_incomplete", proof);
+    }
+  }
+  for (const proof of [
+    "requestSHA256 == nil",
+    "clientCreatedAt == operation.clientCreatedAtMilliseconds",
+    "clientCreationRejectionCodes", "projectCreationRejectionCodes",
+  ]) {
+    if (!guardCode.includes(proof)) {
+      fail("target_local_operation_identity_creation_result_validation", proof);
+    }
+  }
+  const checkpointBody = swiftFunctionBody(
+    guardTests, "func checkpointAtomicityAndCancellation(",
+  ) ?? "";
+  const rawFailureBody = swiftFunctionBody(
+    guardTests, "func verifyBoundedRawErrorMapping(",
+  ) ?? "";
+  if (
+    !checkpointBody.includes("verifyBoundedRawErrorMapping()") ||
+    !rawFailureBody.includes("LocalOperationGuardInjectedFailure()") ||
+    !rawFailureBody.includes("ClientCreationFailure.localAcceptanceFailed") ||
+    !rawFailureBody.includes("ProjectSetupFailure.localAcceptanceFailed") ||
+    !rawFailureBody.includes("ProjectArchiveFailure.localAcceptanceFailed") ||
+    !rawFailureBody.includes("ClientArchiveFailure.localAcceptanceFailed") ||
+    !rawFailureBody.includes("ItemSpaceAssignmentFailure.localAcceptanceFailed")
+  ) {
+    fail("target_local_operation_identity_failure_mapping_incomplete", "five providers");
+  }
+  const malformedFailureBody = swiftFunctionBody(
+    guardTests, "func verifyMalformedGuardErrorMapping(",
+  ) ?? "";
+  for (const proof of [
+    "ClientCreationFailure.localAcceptanceFailed",
+    "ProjectSetupFailure.localAcceptanceFailed",
+    "ProjectArchivePowerSyncFailure.malformedLocalEvidence",
+    "ClientArchivePowerSyncFailure.malformedLocalEvidence",
+    "ItemSpaceAssignmentPowerSyncStoreFailure.malformedLocalEvidence",
+  ]) {
+    if (!malformedFailureBody.includes(proof)) {
+      fail("target_local_operation_identity_guard_mapping_incomplete", proof);
+    }
+  }
+  const restartBody = swiftFunctionBody(
+    guardTests, "func encryptedRestartStability(",
+  ) ?? "";
+  for (const proof of [
+    "insertSynchronizedResult(",
+    "reservationCounts(database) == baselineCounts",
+  ]) {
+    if (!restartBody.includes(proof)) {
+      fail("target_local_operation_identity_restart_matrix_incomplete", proof);
+    }
+  }
+  for (const proof of [
+    '["pending_client", "pending_project", "pending_allocation",',
+    '"project_overlay", "client_overlay", "result_mutation",',
+    '"result_mutation_queue"]',
+    "restart-invalid-json", "restart-multiple-family", "unknown-type",
+    "malformed-envelope", "foreign-scope",
+  ]) {
+    if (!guardTests.includes(proof)) {
+      fail("target_local_operation_identity_restart_matrix_incomplete", proof);
+    }
+  }
+  if (!restartBody.includes("for family in LocalOperationCommandFamily.allCases")) {
+    fail("target_local_operation_identity_restart_matrix_incomplete", "all command families");
+  }
+  const resolved = JSON.parse(
+    fs.readFileSync(path.join(packageRoot, "Package.resolved"), "utf8"),
+  );
+  const corePin = resolved.pins?.find(
+    (pin) => pin.identity === "powersync-sqlite-core-swift",
+  );
+  if (
+    corePin?.state?.version !== "0.5.3" ||
+    corePin?.state?.revision !== "0302873677f07039d5e2fc4d1aefdf093e8e6292"
+  ) {
+    fail("target_local_operation_identity_powersync_core_pin", JSON.stringify(corePin?.state));
+  }
+}
+
 const blockedCategoryProviderLeaves = [
   path.join(powerSyncRoot, "ProjectCategoryConfigurationPowerSyncQuery.swift"),
   path.join(powerSyncTestRoot, "ProjectCategoryConfigurationPowerSyncQueryTests.swift"),

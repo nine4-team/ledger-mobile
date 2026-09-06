@@ -21,6 +21,9 @@ public enum ItemSpaceAssignmentPowerSyncStoreFailure: Error, Equatable, Sendable
 
 enum ItemSpaceAssignmentPowerSyncStoreCheckpoint: Equatable, Sendable {
     case beforeTransaction
+    case inventoryConstruction
+    case inventoryRead
+    case afterOwnershipInspection
     case existingRead
     case commandWrite
     case operationWrite
@@ -90,6 +93,21 @@ actor ItemSpaceAssignmentPowerSyncStore: ItemSpaceAssigning {
             try Task.checkCancellation()
             let receipt = try await database.writeTransaction { transaction in
                 try Task.checkCancellation()
+                let ownership = try LocalOperationIdentityGuard.inspect(
+                    transaction: transaction,
+                    operationId: command.envelope.operationId,
+                    expectedFamily: .assignItemsToSpace,
+                    expectedFingerprint: command.fingerprint.sha256,
+                    checkpoint: { point in
+                        switch point {
+                        case .inventoryConstruction:
+                            try testCheckpoint(.inventoryConstruction)
+                        case .inventoryRead:
+                            try testCheckpoint(.inventoryRead)
+                        }
+                    }
+                )
+                try testCheckpoint(.afterOwnershipInspection)
                 try testCheckpoint(.existingRead)
                 let existingCommand = try transaction.getOptional(
                     sql: Self.commandEvidenceSQL,
@@ -111,7 +129,8 @@ actor ItemSpaceAssignmentPowerSyncStore: ItemSpaceAssigning {
                 }
 
                 if existingCommand != nil || existingOperation != nil || existingResult != nil {
-                    guard let existingCommand, let existingOperation,
+                    guard ownership == .matchingOwner,
+                          let existingCommand, let existingOperation,
                           existingResult == nil else {
                         throw ItemSpaceAssignmentPowerSyncStoreFailure
                             .malformedLocalEvidence
@@ -139,6 +158,9 @@ actor ItemSpaceAssignmentPowerSyncStore: ItemSpaceAssigning {
                         operationId: command.envelope.operationId,
                         localState: .queued
                     )
+                }
+                guard ownership == .unclaimed else {
+                    throw ItemSpaceAssignmentPowerSyncStoreFailure.malformedLocalEvidence
                 }
 
                 try Task.checkCancellation()
@@ -194,6 +216,11 @@ actor ItemSpaceAssignmentPowerSyncStore: ItemSpaceAssigning {
             return try command.validate(receipt)
         } catch is CancellationError {
             throw CancellationError()
+        } catch let failure as LocalOperationIdentityGuardFailure {
+            if failure == .payloadMismatch {
+                throw OperationContractFailure.payloadMismatch(command.envelope.operationId)
+            }
+            throw ItemSpaceAssignmentPowerSyncStoreFailure.malformedLocalEvidence
         } catch let failure as LedgerOfflineClientRuntimeFailure {
             throw failure
         } catch let failure as OperationContractFailure {

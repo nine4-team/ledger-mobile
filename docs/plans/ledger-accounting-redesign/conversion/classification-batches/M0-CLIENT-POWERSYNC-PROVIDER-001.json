@@ -110,7 +110,7 @@
     {
       "id": "SWIFT-2FAE0364C908",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
+      "acknowledgeSourceHash": "298df7ad573d6a3b3ad38c6ed5d910bf3d9e0f9e34119072969fe41645a09b86",
       "currentBehavior": "Accepts one CreateClient command offline in one local transaction that persists operation evidence, an optimistic Client row and an insert-only upload command; exact replay returns the same receipt and changed replay is refused.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete store is module-internal and lifecycle-owned. Physical encrypted local persistence is tested; server authority remains separate.",

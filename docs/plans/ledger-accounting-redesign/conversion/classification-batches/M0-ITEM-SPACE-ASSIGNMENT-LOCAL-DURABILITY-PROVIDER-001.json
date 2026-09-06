@@ -12,7 +12,7 @@
   "surfaces": [
     {
       "id": "SWIFT-09809DBC3BA1",
-      "acknowledgeSourceHash": "b984b45d235e799f53eda577dd10c12d67fed421d3d56aa998c2b8a5b60aeb58",
+      "acknowledgeSourceHash": "124b257ced5fc89e4999c49228b804885b5b091bec0ee79f49d284e3b4c4f36e",
       "currentBehavior": "Executable Account/Principal-bound encrypted local store atomically accepts one canonical Item-to-Space command plus one queued generic operation, validates exact replay and queued-only observation, and drains watches without defining authoritative apply or upload.",
       "disposition": "redesign",
       "status": "verified",
