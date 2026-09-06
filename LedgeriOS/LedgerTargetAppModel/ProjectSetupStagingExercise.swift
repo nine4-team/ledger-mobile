@@ -74,9 +74,8 @@ public final class ProjectSetupStagingExercise {
     private var pendingIdentity: ProjectSetupSubmissionIdentity?
     private var pendingCapturedAt: Date?
     private var pendingInputFingerprint: InputFingerprint?
-    private var clientTask: Task<Void, Never>?
-    private var categoryTask: Task<Void, Never>?
-    private var generation: UInt64 = 0
+    private var admittedTasks: [UUID: Task<Void, Never>] = [:]
+    private var generation = UUID()
 
     public init(
         accountId: AccountID,
@@ -112,11 +111,11 @@ public final class ProjectSetupStagingExercise {
         return "\(receipt.localState.rawValue) — local operation state"
     }
 
-    public func start(runtime: ProjectSetupStagingRuntime) {
-        stop()
-        self.runtime = runtime
-        generation &+= 1
+    public func start(runtime: ProjectSetupStagingRuntime) async {
+        generation = UUID()
         let activeGeneration = generation
+        self.runtime = nil
+        isSubmitting = false
         clientSnapshot = nil
         categorySnapshot = nil
         preparation = nil
@@ -128,48 +127,59 @@ public final class ProjectSetupStagingExercise {
         categoryStatus = "loading • completeness unknown"
         diagnostic = nil
 
-        clientTask = Task { [weak self] in
+        await cancelAndDrainAdmittedTasks()
+
+        guard generation == activeGeneration else { return }
+        self.runtime = runtime
+
+        let clientTaskID = UUID()
+        let clientTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.admittedTasks[clientTaskID] = nil }
             do {
                 for try await directory in runtime.watchClients() {
                     guard !Task.isCancelled else { return }
-                    self?.receiveClients(directory, generation: activeGeneration)
+                    self.receiveClients(directory, generation: activeGeneration)
                 }
             } catch is CancellationError {
                 return
             } catch {
-                self?.receiveFailure(
+                self.receiveFailure(
                     "project_setup_clients_local_failed",
                     source: .clients,
                     generation: activeGeneration
                 )
             }
         }
-        categoryTask = Task { [weak self] in
+        admittedTasks[clientTaskID] = clientTask
+
+        let categoryTaskID = UUID()
+        let categoryTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.admittedTasks[categoryTaskID] = nil }
             do {
                 for try await snapshot in runtime.watchBudgetCategories() {
                     guard !Task.isCancelled else { return }
-                    self?.receiveCategories(snapshot, generation: activeGeneration)
+                    self.receiveCategories(snapshot, generation: activeGeneration)
                 }
             } catch is CancellationError {
                 return
             } catch {
-                self?.receiveFailure(
+                self.receiveFailure(
                     "project_setup_categories_local_failed",
                     source: .categories,
                     generation: activeGeneration
                 )
             }
         }
+        admittedTasks[categoryTaskID] = categoryTask
     }
 
-    public func stop() {
-        generation &+= 1
-        clientTask?.cancel()
-        categoryTask?.cancel()
-        clientTask = nil
-        categoryTask = nil
+    public func stop() async {
+        generation = UUID()
         runtime = nil
         isSubmitting = false
+        await cancelAndDrainAdmittedTasks()
     }
 
     public func setCategory(_ categoryId: BudgetCategoryID, selected: Bool) {
@@ -185,15 +195,57 @@ public final class ProjectSetupStagingExercise {
     public func submit() async {
         guard canSubmit, let runtime, let preparation, let selectedClientId else { return }
         let activeGeneration = generation
+        let inputFingerprint = currentInputFingerprint()
+        let capturedProjectName = projectName
+        let capturedProjectDescription = projectDescription
+        let capturedCategoryIDs = selectedCategoryIds
         isSubmitting = true
         diagnostic = nil
         receipt = nil
 
+        let taskID = UUID()
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.admittedTasks[taskID] = nil }
+            await self.performSubmission(
+                runtime: runtime,
+                preparation: preparation,
+                selectedClientId: selectedClientId,
+                projectName: capturedProjectName,
+                projectDescription: capturedProjectDescription,
+                categoryIDs: capturedCategoryIDs,
+                inputFingerprint: inputFingerprint,
+                generation: activeGeneration
+            )
+        }
+        admittedTasks[taskID] = task
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private func performSubmission(
+        runtime: ProjectSetupStagingRuntime,
+        preparation: ProjectSetupFormPreparation,
+        selectedClientId: ClientID,
+        projectName: String,
+        projectDescription: String,
+        categoryIDs: Set<BudgetCategoryID>,
+        inputFingerprint: InputFingerprint,
+        generation activeGeneration: UUID
+    ) async {
+        defer {
+            if generation == activeGeneration {
+                isSubmitting = false
+            }
+        }
         do {
-            let fingerprint = currentInputFingerprint()
+            try Task.checkCancellation()
             let identity: ProjectSetupSubmissionIdentity
             let capturedAt: Date
-            if pendingInputFingerprint == fingerprint,
+            if pendingInputFingerprint == inputFingerprint,
                let pendingIdentity,
                let pendingCapturedAt {
                 identity = pendingIdentity
@@ -203,13 +255,13 @@ public final class ProjectSetupStagingExercise {
                 capturedAt = now()
                 pendingIdentity = identity
                 pendingCapturedAt = capturedAt
-                pendingInputFingerprint = fingerprint
+                pendingInputFingerprint = inputFingerprint
             }
 
             let client = try preparation.clientSelectionSnapshot.selection(
                 clientId: selectedClientId
             )
-            let allocations = try selectedCategoryIds.map {
+            let allocations = try categoryIDs.map {
                 try NullableCategoryAllocation(categoryId: $0, allocation: nil)
             }
             let selection = try preparation.selection(
@@ -227,6 +279,7 @@ public final class ProjectSetupStagingExercise {
                 operationContractVersion: operationContractVersion,
                 capturedAt: capturedAt
             )
+            try Task.checkCancellation()
             guard generation == activeGeneration else { return }
             receipt = accepted
             pendingIdentity = nil
@@ -245,11 +298,17 @@ public final class ProjectSetupStagingExercise {
             guard generation == activeGeneration else { return }
             diagnostic = "project_setup_local_failed"
         }
-        guard generation == activeGeneration else { return }
-        isSubmitting = false
     }
 
-    private func receiveClients(_ directory: ClientListSnapshot, generation: UInt64) {
+    private func cancelAndDrainAdmittedTasks() async {
+        let tasks = Array(admittedTasks.values)
+        tasks.forEach { $0.cancel() }
+        for task in tasks {
+            await task.value
+        }
+    }
+
+    private func receiveClients(_ directory: ClientListSnapshot, generation: UUID) {
         guard self.generation == generation else { return }
         do {
             let snapshot = try ProjectExistingClientSelectionSnapshot(directory: directory)
@@ -280,7 +339,7 @@ public final class ProjectSetupStagingExercise {
 
     private func receiveCategories(
         _ snapshot: BudgetCategoryReferenceSnapshot,
-        generation: UInt64
+        generation: UUID
     ) {
         guard self.generation == generation else { return }
         guard snapshot.accountId == accountId else {
@@ -324,7 +383,7 @@ public final class ProjectSetupStagingExercise {
     private func receiveFailure(
         _ code: String,
         source: StreamSource,
-        generation: UInt64
+        generation: UUID
     ) {
         guard self.generation == generation else { return }
         switch source {

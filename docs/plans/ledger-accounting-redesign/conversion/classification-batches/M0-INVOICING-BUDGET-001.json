@@ -1489,7 +1489,7 @@
       "acknowledgeSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
       "currentBehavior": "Defines the provider-free exact Account/Project/currency budget-segment request, signed paid/unpaid category values, derived recognized arithmetic, validated local snapshot, bounded failures and narrow query port.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
@@ -1533,15 +1533,16 @@
     {
       "id": "TEST-A0B2D5B97695",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
+      "acknowledgeSourceHash": "04dad151c390dcab722a71725521da8758998d00044b841cb0dcc81f62b66371",
       "currentBehavior": "Implements five deterministic provider-free tests for exact signed segment arithmetic, canonical readiness/restart, bounded rejection, exact-request/upstream-failure port behavior, cancellation and frozen encoded shape.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
-        "EVID-PROJECT-BUDGET-SEGMENT-001"
+        "EVID-PROJECT-BUDGET-SEGMENT-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Verified Phase 1 synthetic tests. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites passed locally, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "target": {

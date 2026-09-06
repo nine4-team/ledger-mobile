@@ -12,7 +12,7 @@ struct ProjectSetupStagingExerciseTests {
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let setup = SetupProbe()
         let model = try Self.model()
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
 
         categories.yield(try Self.categorySnapshot(quality: .partial, complete: false))
         await Self.waitUntil { model.categoryStatus == "partial • incomplete" }
@@ -41,12 +41,12 @@ struct ProjectSetupStagingExerciseTests {
                 model.categoryStatus == "ready • authoritative empty"
         }
         #expect(!model.canSubmit)
-        model.stop()
+        await model.stop()
 
         let reverseClients = ControlledStream<ClientListSnapshot>()
         let reverseCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let reverse = try Self.model()
-        reverse.start(runtime: Self.runtime(reverseClients, reverseCategories, setup))
+        await reverse.start(runtime: Self.runtime(reverseClients, reverseCategories, setup))
         reverseClients.yield(try Self.clientSnapshot(quality: .partial, complete: false))
         await Self.waitUntil { reverse.clients.count == 2 }
         #expect(!reverse.canSubmit)
@@ -57,7 +57,7 @@ struct ProjectSetupStagingExerciseTests {
         #expect(reverse.canSubmit)
         #expect(reverse.clientStatus == "partial • incomplete")
         #expect(reverse.categoryStatus == "stale • incomplete")
-        reverse.stop()
+        await reverse.stop()
     }
 
     @Test("Represented stale choices submit zero or exact nil-allocation categories")
@@ -67,7 +67,7 @@ struct ProjectSetupStagingExerciseTests {
         let setup = SetupProbe(responses: [.receipt(.queued), .receipt(.applied)])
         let identities = IdentitySequence()
         let model = try Self.model(identities: identities)
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         categories.yield(try Self.categorySnapshot(quality: .stale, complete: false))
         clients.yield(try Self.clientSnapshot(quality: .partial, complete: false))
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
@@ -98,7 +98,7 @@ struct ProjectSetupStagingExerciseTests {
             "category-alpha", "category-beta"
         ])
         #expect(calls[1].draft.categoryAllocations.allSatisfy { $0.allocation == nil })
-        model.stop()
+        await model.stop()
     }
 
     @Test("Removed choices are pruned and invalid input never dispatches")
@@ -107,7 +107,7 @@ struct ProjectSetupStagingExerciseTests {
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let setup = SetupProbe()
         let model = try Self.model()
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
@@ -126,7 +126,7 @@ struct ProjectSetupStagingExerciseTests {
         await model.submit()
         #expect(await setup.commands().isEmpty)
 
-        model.stop()
+        await model.stop()
     }
 
     @Test("Invalid newer Client or category evidence invalidates the prior preparation")
@@ -135,7 +135,7 @@ struct ProjectSetupStagingExerciseTests {
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let setup = SetupProbe()
         let model = try Self.model()
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
@@ -172,7 +172,7 @@ struct ProjectSetupStagingExerciseTests {
         #expect(!model.canSubmit)
         #expect(model.projectName == "Retained typed input")
         #expect(await setup.commands().isEmpty)
-        model.stop()
+        await model.stop()
     }
 
     @Test("Simultaneous submission dispatches once and ambiguous retry preserves identities")
@@ -183,7 +183,7 @@ struct ProjectSetupStagingExerciseTests {
         let identities = IdentitySequence()
         let clock = AdvancingClock()
         let model = try Self.model(identities: identities, clock: clock)
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
@@ -195,11 +195,14 @@ struct ProjectSetupStagingExerciseTests {
         #expect(didSuspend)
         guard didSuspend else {
             first.cancel()
+            await setup.resumeSuspension()
+            await first.value
+            await model.stop()
             return
         }
         await model.submit()
         #expect(await setup.commands().count == 1)
-        await setup.resumeSuspendedFailure()
+        await setup.resumeSuspension()
         await first.value
         #expect(model.diagnostic == "project_setup_local_acceptance_failed")
         #expect(model.projectName == "Retry Project")
@@ -214,7 +217,7 @@ struct ProjectSetupStagingExerciseTests {
         #expect(calls[0].envelope.clientCreatedAt == calls[1].envelope.clientCreatedAt)
         #expect(identities.allocationCount == 1)
         #expect(clock.readCount == 1)
-        model.stop()
+        await model.stop()
     }
 
     @Test(arguments: LocalOperationState.allCases)
@@ -223,7 +226,7 @@ struct ProjectSetupStagingExerciseTests {
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let setup = SetupProbe(responses: [.receipt(state)])
         let model = try Self.model()
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot(rows: []))
         await Self.waitUntil { model.clients.count == 2 && model.categoryStatus == "ready • authoritative empty" }
@@ -233,7 +236,7 @@ struct ProjectSetupStagingExerciseTests {
         #expect(model.receiptState == state.rawValue)
         #expect(model.receiptOperationId == "operation-1")
         #expect(model.projectName == "Receipt Project")
-        model.stop()
+        await model.stop()
     }
 
     @Test("Cancellation is bounded, retains input, and never reports success")
@@ -243,7 +246,7 @@ struct ProjectSetupStagingExerciseTests {
         let setup = SetupProbe(responses: [.cancellation, .receipt(.queued)])
         let clock = AdvancingClock()
         let model = try Self.model(clock: clock)
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
@@ -262,7 +265,48 @@ struct ProjectSetupStagingExerciseTests {
         #expect(calls[0] == calls[1])
         #expect(clock.readCount == 1)
         #expect(model.receiptState == "queued")
-        model.stop()
+        await model.stop()
+    }
+
+    @Test("Caller cancellation rejects a late success from a noncooperative dependency")
+    func callerCancellationRejectsLateSuccess() async throws {
+        let clients = ControlledStream<ClientListSnapshot>()
+        let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let setup = SetupProbe(responses: [.suspendedReceipt(.queued)])
+        let model = try Self.model()
+        await model.start(runtime: Self.runtime(clients, categories, setup))
+        clients.yield(try Self.clientSnapshot())
+        categories.yield(try Self.categorySnapshot())
+        await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
+        model.projectName = "Cancelled late success"
+        model.selectedClientId = model.clients[0].id
+
+        let completion = CompletionProbe()
+        let submission = Task { @MainActor in
+            await model.submit()
+            await completion.mark()
+        }
+        let didSuspend = await Self.waitUntilAsync { await setup.isSuspended() }
+        #expect(didSuspend)
+        guard didSuspend else {
+            submission.cancel()
+            await setup.resumeSuspension()
+            await submission.value
+            await model.stop()
+            return
+        }
+
+        submission.cancel()
+        #expect(!(await completion.value))
+        await setup.resumeSuspension()
+        await submission.value
+
+        #expect(await completion.value)
+        #expect(model.receipt == nil)
+        #expect(model.diagnostic == "project_setup_cancelled")
+        #expect(model.projectName == "Cancelled late success")
+        #expect(!model.isSubmitting)
+        await model.stop()
     }
 
     @Test("Typed form and operation failures remain bounded and dispatch honestly")
@@ -279,7 +323,7 @@ struct ProjectSetupStagingExerciseTests {
             makeIdentity: { throw ProjectSetupFormFailure.invalidSelectionFingerprint },
             now: { Self.timestamp }
         )
-        formModel.start(runtime: Self.runtime(formClients, formCategories, formSetup))
+        await formModel.start(runtime: Self.runtime(formClients, formCategories, formSetup))
         formClients.yield(try Self.clientSnapshot())
         formCategories.yield(try Self.categorySnapshot())
         await Self.waitUntil { formModel.clients.count == 2 && formModel.categories.count == 2 }
@@ -288,13 +332,13 @@ struct ProjectSetupStagingExerciseTests {
         await formModel.submit()
         #expect(formModel.diagnostic == "project_setup_form_selection_fingerprint_invalid")
         #expect(await formSetup.commands().isEmpty)
-        formModel.stop()
+        await formModel.stop()
 
         let operationClients = ControlledStream<ClientListSnapshot>()
         let operationCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let operationSetup = SetupProbe(responses: [.receiptMismatch])
         let operationModel = try Self.model()
-        operationModel.start(runtime: Self.runtime(
+        await operationModel.start(runtime: Self.runtime(
             operationClients,
             operationCategories,
             operationSetup
@@ -310,7 +354,7 @@ struct ProjectSetupStagingExerciseTests {
         #expect(operationModel.diagnostic == "project_setup_receipt_mismatch")
         #expect(operationModel.receipt == nil)
         #expect(await operationSetup.commands().count == 1)
-        operationModel.stop()
+        await operationModel.stop()
     }
 
     @Test("Stop drains both streams and prevents late mutation")
@@ -319,14 +363,14 @@ struct ProjectSetupStagingExerciseTests {
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
         let setup = SetupProbe()
         let model = try Self.model()
-        model.start(runtime: Self.runtime(clients, categories, setup))
+        await model.start(runtime: Self.runtime(clients, categories, setup))
         clients.yield(try Self.clientSnapshot())
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
         model.projectName = "Retained"
-        model.stop()
-        #expect(await Self.waitUntilAsync { await clients.isCancelled() })
-        #expect(await Self.waitUntilAsync { await categories.isCancelled() })
+        await model.stop()
+        #expect(clients.isCancelled())
+        #expect(categories.isCancelled())
         clients.yield(try Self.clientSnapshot(rows: []))
         categories.yield(try Self.categorySnapshot(rows: []))
         await Task.yield()
@@ -334,6 +378,254 @@ struct ProjectSetupStagingExerciseTests {
         #expect(model.categories.count == 2)
         #expect(model.projectName == "Retained")
         #expect(!model.canSubmit)
+    }
+
+    @Test("Restart drains prior streams before activating replacement evidence")
+    func restartDrainsPriorStreamsBeforeReplacement() async throws {
+        let oldClients = ControlledStream<ClientListSnapshot>()
+        let oldCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let newClients = ControlledStream<ClientListSnapshot>()
+        let newCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let setup = SetupProbe()
+        let model = try Self.model()
+
+        await model.start(runtime: Self.runtime(oldClients, oldCategories, setup))
+        oldClients.yield(try Self.clientSnapshot())
+        oldCategories.yield(try Self.categorySnapshot())
+        await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
+
+        await model.start(runtime: Self.runtime(newClients, newCategories, setup))
+        #expect(oldClients.isCancelled())
+        #expect(oldCategories.isCancelled())
+        #expect(model.clients.isEmpty)
+        #expect(model.categories.isEmpty)
+
+        oldClients.yield(try Self.clientSnapshot())
+        oldCategories.yield(try Self.categorySnapshot())
+        newClients.yield(try Self.clientSnapshot(rows: [try Self.client("client-two", "Client Two")]))
+        newCategories.yield(try Self.categorySnapshot(rows: [
+            try Self.category("category-beta", "Beta", order: 2)
+        ]))
+        await Self.waitUntil { model.clients.count == 1 && model.categories.count == 1 }
+        #expect(model.clients.map(\.id.rawValue) == ["client-two"])
+        #expect(model.categories.map(\.id.rawValue) == ["category-beta"])
+
+        await model.stop()
+        #expect(newClients.isCancelled())
+        #expect(newCategories.isCancelled())
+    }
+
+    @Test("Concurrent stop and restart share drainage with an admitted submission")
+    func concurrentStopAndRestartDrainSubmission() async throws {
+        let oldClients = ControlledStream<ClientListSnapshot>()
+        let oldCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let newClients = ControlledStream<ClientListSnapshot>()
+        let newCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let setup = SetupProbe(responses: [.suspendedReceipt(.queued)])
+        let model = try Self.model()
+
+        await model.start(runtime: Self.runtime(oldClients, oldCategories, setup))
+        oldClients.yield(try Self.clientSnapshot())
+        oldCategories.yield(try Self.categorySnapshot())
+        await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
+        model.projectName = "Drain before restart"
+        model.selectedClientId = model.clients[0].id
+
+        let submission = Task { @MainActor in await model.submit() }
+        let didSuspend = await Self.waitUntilAsync { await setup.isSuspended() }
+        #expect(didSuspend)
+        guard didSuspend else {
+            submission.cancel()
+            await setup.resumeSuspension()
+            await submission.value
+            await model.stop()
+            return
+        }
+
+        let stopLifecycle = LifecycleCallProbe()
+        let stop = Task { @MainActor in
+            stopLifecycle.markEntered()
+            await model.stop()
+            stopLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            let entered = await MainActor.run { stopLifecycle.entered }
+            return entered && oldClients.isCancelled() && oldCategories.isCancelled()
+        })
+
+        let restartLifecycle = LifecycleCallProbe()
+        let restart = Task { @MainActor in
+            restartLifecycle.markEntered()
+            await model.start(runtime: Self.runtime(newClients, newCategories, setup))
+            restartLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            await MainActor.run { restartLifecycle.entered }
+        })
+        #expect(!stopLifecycle.completed)
+        #expect(!restartLifecycle.completed)
+
+        await setup.resumeSuspension()
+        await submission.value
+        await stop.value
+        await restart.value
+        #expect(stopLifecycle.completed)
+        #expect(restartLifecycle.completed)
+        #expect(model.diagnostic == nil)
+        #expect(model.receipt == nil)
+
+        newClients.yield(try Self.clientSnapshot(rows: [try Self.client("client-two", "Client Two")]))
+        newCategories.yield(try Self.categorySnapshot(rows: []))
+        await Self.waitUntil {
+            model.clients.map(\.id.rawValue) == ["client-two"] &&
+                model.categoryStatus == "ready • authoritative empty"
+        }
+        await model.stop()
+    }
+
+    @Test("Concurrent starts share drainage and only the latest runtime activates")
+    func concurrentStartsShareDrainage() async throws {
+        let oldClients = ControlledStream<ClientListSnapshot>()
+        let oldCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let firstClients = ControlledStream<ClientListSnapshot>()
+        let firstCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let latestClients = ControlledStream<ClientListSnapshot>()
+        let latestCategories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let firstActivation = RuntimeActivationProbe()
+        let latestActivation = RuntimeActivationProbe()
+        let setup = SetupProbe(responses: [.suspendedReceipt(.queued)])
+        let model = try Self.model()
+
+        await model.start(runtime: Self.runtime(oldClients, oldCategories, setup))
+        oldClients.yield(try Self.clientSnapshot())
+        oldCategories.yield(try Self.categorySnapshot())
+        await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
+        model.projectName = "Drain before two starts"
+        model.selectedClientId = model.clients[0].id
+
+        let submission = Task { @MainActor in await model.submit() }
+        let didSuspend = await Self.waitUntilAsync { await setup.isSuspended() }
+        #expect(didSuspend)
+        guard didSuspend else {
+            submission.cancel()
+            await setup.resumeSuspension()
+            await submission.value
+            await model.stop()
+            return
+        }
+
+        let firstLifecycle = LifecycleCallProbe()
+        let firstStart = Task { @MainActor in
+            firstLifecycle.markEntered()
+            await model.start(runtime: Self.runtime(
+                firstClients,
+                firstCategories,
+                setup,
+                activation: firstActivation
+            ))
+            firstLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            let entered = await MainActor.run { firstLifecycle.entered }
+            return entered && oldClients.isCancelled() && oldCategories.isCancelled()
+        })
+
+        let latestLifecycle = LifecycleCallProbe()
+        let latestStart = Task { @MainActor in
+            latestLifecycle.markEntered()
+            await model.start(runtime: Self.runtime(
+                latestClients,
+                latestCategories,
+                setup,
+                activation: latestActivation
+            ))
+            latestLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            await MainActor.run { latestLifecycle.entered }
+        })
+        #expect(!firstLifecycle.completed)
+        #expect(!latestLifecycle.completed)
+        #expect(firstActivation.counts == .zero)
+        #expect(latestActivation.counts == .zero)
+
+        await setup.resumeSuspension()
+        await submission.value
+        await firstStart.value
+        await latestStart.value
+
+        #expect(firstLifecycle.completed)
+        #expect(latestLifecycle.completed)
+        #expect(firstActivation.counts == .zero)
+        #expect(latestActivation.counts == .both)
+        #expect(model.receipt == nil)
+        latestClients.yield(try Self.clientSnapshot(rows: [try Self.client("client-two", "Client Two")]))
+        latestCategories.yield(try Self.categorySnapshot(rows: []))
+        await Self.waitUntil {
+            model.clients.map(\.id.rawValue) == ["client-two"] &&
+                model.categoryStatus == "ready • authoritative empty"
+        }
+        await model.stop()
+    }
+
+    @Test("Concurrent stops share drainage and neither returns before admitted work")
+    func concurrentStopsShareDrainage() async throws {
+        let clients = ControlledStream<ClientListSnapshot>()
+        let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let setup = SetupProbe(responses: [.suspendedReceipt(.queued)])
+        let model = try Self.model()
+
+        await model.start(runtime: Self.runtime(clients, categories, setup))
+        clients.yield(try Self.clientSnapshot())
+        categories.yield(try Self.categorySnapshot())
+        await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
+        model.projectName = "Drain before two stops"
+        model.selectedClientId = model.clients[0].id
+
+        let submission = Task { @MainActor in await model.submit() }
+        let didSuspend = await Self.waitUntilAsync { await setup.isSuspended() }
+        #expect(didSuspend)
+        guard didSuspend else {
+            submission.cancel()
+            await setup.resumeSuspension()
+            await submission.value
+            await model.stop()
+            return
+        }
+
+        let firstLifecycle = LifecycleCallProbe()
+        let firstStop = Task { @MainActor in
+            firstLifecycle.markEntered()
+            await model.stop()
+            firstLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            let entered = await MainActor.run { firstLifecycle.entered }
+            return entered && clients.isCancelled() && categories.isCancelled()
+        })
+
+        let secondLifecycle = LifecycleCallProbe()
+        let secondStop = Task { @MainActor in
+            secondLifecycle.markEntered()
+            await model.stop()
+            secondLifecycle.markCompleted()
+        }
+        #expect(await Self.waitUntilAsync {
+            await MainActor.run { secondLifecycle.entered }
+        })
+        #expect(!firstLifecycle.completed)
+        #expect(!secondLifecycle.completed)
+
+        await setup.resumeSuspension()
+        await submission.value
+        await firstStop.value
+        await secondStop.value
+
+        #expect(firstLifecycle.completed)
+        #expect(secondLifecycle.completed)
+        #expect(model.receipt == nil)
+        #expect(model.diagnostic == nil)
+        #expect(!model.isSubmitting)
     }
 
     private static let accountId = try! AccountID(validating: "account-project-setup")
@@ -358,11 +650,18 @@ struct ProjectSetupStagingExerciseTests {
     private static func runtime(
         _ clients: ControlledStream<ClientListSnapshot>,
         _ categories: ControlledStream<BudgetCategoryReferenceSnapshot>,
-        _ setup: SetupProbe
+        _ setup: SetupProbe,
+        activation: RuntimeActivationProbe? = nil
     ) -> ProjectSetupStagingRuntime {
         ProjectSetupStagingRuntime(
-            watchClients: { clients.stream },
-            watchBudgetCategories: { categories.stream },
+            watchClients: {
+                activation?.markClients()
+                return clients.stream
+            },
+            watchBudgetCategories: {
+                activation?.markCategories()
+                return categories.stream
+            },
             create: { command in try await setup.create(command) }
         )
     }
@@ -538,24 +837,75 @@ private final class ControlledStream<Value: Sendable>: @unchecked Sendable {
         stream = AsyncThrowingStream { captured = $0 }
         continuation = captured!
         continuation.onTermination = { [cancellation] _ in
-            Task { await cancellation.mark() }
+            cancellation.mark()
         }
     }
 
     func yield(_ value: Value) { continuation.yield(value) }
     func finish(throwing error: Error) { continuation.finish(throwing: error) }
-    func isCancelled() async -> Bool { await cancellation.value }
+    func isCancelled() -> Bool { cancellation.value }
 }
 
 private enum StreamProbeFailure: Error { case upstream }
 
-private actor CancellationProbe {
-    private var cancelled = false
-
-    var value: Bool { cancelled }
+private actor CompletionProbe {
+    private(set) var value = false
 
     func mark() {
-        cancelled = true
+        value = true
+    }
+}
+
+@MainActor
+private final class LifecycleCallProbe {
+    private(set) var entered = false
+    private(set) var completed = false
+
+    func markEntered() {
+        entered = true
+    }
+
+    func markCompleted() {
+        completed = true
+    }
+}
+
+private struct RuntimeActivationCounts: Equatable, Sendable {
+    let clients: Int
+    let categories: Int
+
+    static let zero = RuntimeActivationCounts(clients: 0, categories: 0)
+    static let both = RuntimeActivationCounts(clients: 1, categories: 1)
+}
+
+private final class RuntimeActivationProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var clientCount = 0
+    private var categoryCount = 0
+
+    var counts: RuntimeActivationCounts {
+        lock.withLock {
+            RuntimeActivationCounts(clients: clientCount, categories: categoryCount)
+        }
+    }
+
+    func markClients() {
+        lock.withLock { clientCount += 1 }
+    }
+
+    func markCategories() {
+        lock.withLock { categoryCount += 1 }
+    }
+}
+
+private final class CancellationProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+
+    var value: Bool { lock.withLock { cancelled } }
+
+    func mark() {
+        lock.withLock { cancelled = true }
     }
 }
 
@@ -587,6 +937,7 @@ private final class AdvancingClock {
 private enum SetupResponse: Sendable {
     case receipt(LocalOperationState)
     case suspendedFailure
+    case suspendedReceipt(LocalOperationState)
     case cancellation
     case receiptMismatch
 }
@@ -597,6 +948,7 @@ private actor SetupProbe {
     private var recorded: [CreateProjectCommand] = []
     private var responses: [SetupResponse]
     private var suspended: CheckedContinuation<Void, Never>?
+    private var releaseRequested = false
 
     init(responses: [SetupResponse] = [.receipt(.queued)]) {
         self.responses = responses
@@ -609,8 +961,11 @@ private actor SetupProbe {
         case .receipt(let state):
             return OperationReceipt(operationId: command.envelope.operationId, localState: state)
         case .suspendedFailure:
-            await withCheckedContinuation { suspended = $0 }
+            await waitForSuspensionRelease()
             throw SetupProbeFailure.ambiguous
+        case .suspendedReceipt(let state):
+            await waitForSuspensionRelease()
+            return OperationReceipt(operationId: command.envelope.operationId, localState: state)
         case .cancellation:
             throw CancellationError()
         case .receiptMismatch:
@@ -625,8 +980,23 @@ private actor SetupProbe {
 
     func isSuspended() -> Bool { suspended != nil }
 
-    func resumeSuspendedFailure() {
-        suspended?.resume()
-        suspended = nil
+    func resumeSuspension() {
+        guard let suspended else {
+            releaseRequested = true
+            return
+        }
+        self.suspended = nil
+        suspended.resume()
+    }
+
+    private func waitForSuspensionRelease() async {
+        await withCheckedContinuation { continuation in
+            if releaseRequested {
+                releaseRequested = false
+                continuation.resume()
+            } else {
+                suspended = continuation
+            }
+        }
     }
 }

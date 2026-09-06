@@ -195,10 +195,10 @@ struct ProjectBudgetSegmentDataTests {
             } catch {}
             return snapshots
         }
-        await probe.waitForFirstDelivery()
+        #expect(await probe.waitForFirstDelivery())
         consumer.cancel()
         #expect(await consumer.value == [fixture.ready])
-        await probe.waitForCancellation()
+        #expect(await probe.waitForCancellation())
 
         let bytes = try OperationContractCodec.encode(fixture.ready)
         let root = try #require(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
@@ -424,7 +424,10 @@ private struct CancellablePort: ProjectBudgetSegmentQuerying {
             }
             continuation.onTermination = { @Sendable _ in
                 producer.cancel()
-                Task { await probe.markCancelled() }
+                Task {
+                    await producer.value
+                    await probe.markCancelled()
+                }
             }
         }
     }
@@ -433,28 +436,27 @@ private struct CancellablePort: ProjectBudgetSegmentQuerying {
 private actor CancellationProbe {
     private var deliveredFirst = false
     private var cancelled = false
-    private var firstWaiter: CheckedContinuation<Void, Never>?
-    private var cancellationWaiter: CheckedContinuation<Void, Never>?
-
     func markFirstDelivery() {
         deliveredFirst = true
-        firstWaiter?.resume()
-        firstWaiter = nil
     }
 
-    func waitForFirstDelivery() async {
-        guard !deliveredFirst else { return }
-        await withCheckedContinuation { firstWaiter = $0 }
+    func waitForFirstDelivery() async -> Bool {
+        for _ in 0..<5_000 {
+            if deliveredFirst { return true }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return false
     }
 
     func markCancelled() {
         cancelled = true
-        cancellationWaiter?.resume()
-        cancellationWaiter = nil
     }
 
-    func waitForCancellation() async {
-        guard !cancelled else { return }
-        await withCheckedContinuation { cancellationWaiter = $0 }
+    func waitForCancellation() async -> Bool {
+        for _ in 0..<5_000 {
+            if cancelled { return true }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return false
     }
 }

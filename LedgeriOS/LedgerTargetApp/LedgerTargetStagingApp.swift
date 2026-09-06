@@ -279,7 +279,7 @@ private final class OfflineClientSpikeModel {
                 expectedAccountId: accountId,
                 runtime: AccountPendingWorkStagingRuntimeAdapter.adapt(runtime)
             )
-            projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
+            await projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
             await spaceDestinations.open(
                 scope: syntheticSpaceScope,
                 runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
@@ -314,7 +314,7 @@ private final class OfflineClientSpikeModel {
             await clientArchive.stop()
             await clientBrowser.stop()
             await projectBrowser.stop()
-            projectSetup.stop()
+            await projectSetup.stop()
             await spaceDestinations.stop()
             await spaceDetails.stop()
             await transferDestinations.stop()
@@ -340,7 +340,7 @@ private final class OfflineClientSpikeModel {
         await clientArchive.stop()
         await clientBrowser.stop()
         await projectBrowser.stop()
-        projectSetup.stop()
+        await projectSetup.stop()
         await spaceDestinations.stop()
         await spaceDetails.stop()
         await transferDestinations.stop()

@@ -138,7 +138,8 @@
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
         "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
-        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -312,7 +313,7 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
+      "acknowledgeSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
       "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",

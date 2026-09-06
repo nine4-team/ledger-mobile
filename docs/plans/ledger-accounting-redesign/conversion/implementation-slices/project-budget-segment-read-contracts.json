@@ -3,7 +3,7 @@
   "sliceId": "project-budget-segment-read-contracts",
   "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
   "kind": "product",
-  "status": "verified",
+  "status": "implemented",
   "owner": "Project Budget Segment Read Contracts",
   "surfaceIds": [
     "SWIFT-42C7BDDCD714",
@@ -180,11 +180,11 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming contribution, authorization, physical local/Sync, schema/RLS, app/MCP, migration or production behavior.",
-      "status": "passed",
-      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
+      "status": "planned",
+      "evidence": []
     }
   ],
-  "implementationEvidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"],
+  "implementationEvidence": ["EVID-PROJECT-BUDGET-SEGMENT-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Verified decision-independent Phase 1 query boundary. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths from exact green ready commit 43189f1abe6e023f4d29b00f190b40464ce7a3e5. The integration agent reviewed every changed line and reran five focused tests; an independent adversarial reviewer verified exact ancestry/scope and found no P0-P3 defect after five focused/all 189 target tests, target isolation and source review. The candidate was integrated at ddbe7d7b. The complete local integration gate passed conversion/capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, five focused/all 189 tests, repeatable project generation, both staging builds and clean formatting. Exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640: conversion traceability and the isolated target environment, including all 189 tests and both staging builds, succeeded with clean artifacts. Canonical Budget Progress and D-012 settle the exact signed paid/unpaid meanings, derived sum and no-change-on-collection invariant while visual treatment remains open. The slice carries no source-kind/contribution eligibility, budget/remaining/over/source count, Invoice/Transaction command, negative-credit presentation, Postgres/RLS/PowerSync/Auth/provider, app/MCP, migration, hosted-resource, production or cutover behavior. O-005 remains open."

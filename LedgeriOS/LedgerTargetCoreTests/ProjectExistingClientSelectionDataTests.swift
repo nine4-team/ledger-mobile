@@ -388,12 +388,12 @@ struct ProjectExistingClientSelectionDataTests {
         let consumer = Task {
             await Self.consume(DirectoryCancellablePort(probe: probe), accountId: accountId)
         }
-        await probe.waitForStart()
+        #expect(await probe.waitForStart())
         consumer.cancel()
         let cancelled = await consumer.value
         #expect(cancelled.snapshots.isEmpty)
         #expect(cancelled.failure == .cancelled)
-        await probe.waitForCancellation()
+        #expect(await probe.waitForCancellation())
     }
 
     @Test("Encoded values expose only the frozen projection and bounded diagnostic contract")
@@ -682,7 +682,10 @@ private struct DirectoryCancellablePort: ClientProjectDirectoryQuerying {
             }
             continuation.onTermination = { @Sendable _ in
                 producer.cancel()
-                Task { await probe.markCancelled() }
+                Task {
+                    await producer.value
+                    await probe.markCancelled()
+                }
             }
         }
     }
@@ -697,28 +700,27 @@ private struct DirectoryCancellablePort: ClientProjectDirectoryQuerying {
 private actor DirectoryCancellationProbe {
     private var started = false
     private var cancelled = false
-    private var startWaiter: CheckedContinuation<Void, Never>?
-    private var cancellationWaiter: CheckedContinuation<Void, Never>?
-
     func markStarted() {
         started = true
-        startWaiter?.resume()
-        startWaiter = nil
     }
 
-    func waitForStart() async {
-        guard !started else { return }
-        await withCheckedContinuation { startWaiter = $0 }
+    func waitForStart() async -> Bool {
+        for _ in 0..<5_000 {
+            if started { return true }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return false
     }
 
     func markCancelled() {
         cancelled = true
-        cancellationWaiter?.resume()
-        cancellationWaiter = nil
     }
 
-    func waitForCancellation() async {
-        guard !cancelled else { return }
-        await withCheckedContinuation { cancellationWaiter = $0 }
+    func waitForCancellation() async -> Bool {
+        for _ in 0..<5_000 {
+            if cancelled { return true }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return false
     }
 }

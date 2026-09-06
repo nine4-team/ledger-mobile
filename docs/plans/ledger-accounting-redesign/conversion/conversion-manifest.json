@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T12:22:59.153Z",
+    "lastSynchronizedAt": "2026-09-06T13:02:35.868Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2152,7 +2152,8 @@
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
         "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
-        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -18820,7 +18821,7 @@
           "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -19092,8 +19093,8 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
-      "acknowledgedSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
+      "observedSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
+      "acknowledgedSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20119,7 +20120,7 @@
           "Synthetic fixtures prove only filtering, order, explicit existing-ID selection, readiness, restart, refusal and encoded exclusion without a second port or provider"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -21639,7 +21640,7 @@
           "No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -24111,7 +24112,7 @@
           "Synthetic target-only fixtures prove exact signed arithmetic, no-double-count collection exchange, scope/currency validation, readiness/restart and exact-request refusal without selecting unresolved presentation or source eligibility"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
@@ -25021,7 +25022,7 @@
           "Synthetic single-Project fixtures prove exact identity/relationship/core/revision/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -27619,8 +27620,8 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "1a03b56d20bd72cf08115dc18557b16859e6ea7bb798e9d35c25803c730d78cd",
-      "acknowledgedSourceHash": "1a03b56d20bd72cf08115dc18557b16859e6ea7bb798e9d35c25803c730d78cd",
+      "observedSourceHash": "3c665e7f68d75a2b9a04691e69e1dbe497b65b6218b5c9ee4f817fedb0b2d7ef",
+      "acknowledgedSourceHash": "3c665e7f68d75a2b9a04691e69e1dbe497b65b6218b5c9ee4f817fedb0b2d7ef",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -27652,12 +27653,13 @@
           "The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
-      "notes": "Exact READY CI passed before implementation; independent executable review returned final GO after four corrections.",
+      "notes": "The previously verified application flow now also owns and drains every admitted observer/submission across concurrent lifecycle calls. Independent correction review is GO; exact correction CI remains pending.",
       "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
@@ -31977,7 +31979,7 @@
           "The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -37953,7 +37955,7 @@
           "Synthetic fixtures prove exact core/revision/readiness/restart/refusal/port behavior without a provider, hosted resource or production input"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -43251,8 +43253,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100",
-      "acknowledgedSourceHash": "92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100",
+      "observedSourceHash": "25f7013ca31f9d3c3599e7752cf8dd90fdfe601475e1c7181e6b2ed7a0aedd75",
+      "acknowledgedSourceHash": "25f7013ca31f9d3c3599e7752cf8dd90fdfe601475e1c7181e6b2ed7a0aedd75",
       "metadata": {
         "firebaseCoupled": true
       },
@@ -43289,12 +43291,13 @@
           "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
-        "EVID-SPACE-CORE-DETAILS-001"
+        "EVID-SPACE-CORE-DETAILS-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Verified tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
@@ -44742,8 +44745,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
-      "acknowledgedSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
+      "observedSourceHash": "199c2a4d5580d697a569836c6cc657ec2db481762f937734a57b19b1280697e0",
+      "acknowledgedSourceHash": "199c2a4d5580d697a569836c6cc657ec2db481762f937734a57b19b1280697e0",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -44780,12 +44783,13 @@
           "Tests prove only the provider-free single-Project core-record contract and explicitly exclude complete-workspace, child, media, accounting, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
-        "EVID-PROJECT-CORE-DETAILS-001"
+        "EVID-PROJECT-CORE-DETAILS-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Implemented synthetic tests cover exact Account/Project/Client identity, canonical description, active/archived core rows, local revision truth, explicit completeness/readiness/absence/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure, cancellation and encoded exclusions. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
@@ -46167,8 +46171,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
         }
       ],
-      "observedSourceHash": "5c2f4c5325b0a793487615354ae610281a8479c1d33a3e36172f8a7f9f8b4bd9",
-      "acknowledgedSourceHash": "5c2f4c5325b0a793487615354ae610281a8479c1d33a3e36172f8a7f9f8b4bd9",
+      "observedSourceHash": "8c577052bd9b5dca768cf170636a2d150af5c34310616e5a8c9653ccc776b7ed",
+      "acknowledgedSourceHash": "8c577052bd9b5dca768cf170636a2d150af5c34310616e5a8c9653ccc776b7ed",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -46203,14 +46207,15 @@
           "Tests prove only the frozen pure projection contract and explicitly exclude a second port, final UI policy, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-001",
         "EVID-PROJECT-SETUP-001",
-        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"
+        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Seven focused and all 218 target tests pass locally and in immutable Actions run 33707305340 on exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad after primary review added four direct edge assertions and independent review rejected a P1 false-authoritative-empty bug. Corrected tests cover exact source-row exhaustiveness, non-exhaustive empty/archived/active behavior, count/fingerprint tamper and restart. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
@@ -46968,8 +46973,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift"
         }
       ],
-      "observedSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
-      "acknowledgedSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
+      "observedSourceHash": "04dad151c390dcab722a71725521da8758998d00044b841cb0dcc81f62b66371",
+      "acknowledgedSourceHash": "04dad151c390dcab722a71725521da8758998d00044b841cb0dcc81f62b66371",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -47006,12 +47011,13 @@
           "Self-tests prove only the provider-free segment read boundary and do not claim server, database, provider, migration or UI evidence"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
-        "EVID-PROJECT-BUDGET-SEGMENT-001"
+        "EVID-PROJECT-BUDGET-SEGMENT-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Verified Phase 1 synthetic tests. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites passed locally, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
@@ -49550,12 +49556,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "f6aca99da4db4715bc5eeeaa3bcdec86968d9872ab8790276a43144584bf8a0b",
-      "acknowledgedSourceHash": "f6aca99da4db4715bc5eeeaa3bcdec86968d9872ab8790276a43144584bf8a0b",
+      "observedSourceHash": "9ab72864683360044c0907c6e8b083ee7ae8673240bd1681f30859328539b504",
+      "acknowledgedSourceHash": "9ab72864683360044c0907c6e8b083ee7ae8673240bd1681f30859328539b504",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Nine deterministic Project Setup application-model tests cover independently arriving evidence, false-empty meaning, selection, exact submission, failures, retry, receipts, cancellation and shutdown.",
+      "currentBehavior": "Fourteen deterministic Project Setup application-model tests cover independently arriving evidence, false-empty meaning, selection, exact submission, failures, retry, receipts, caller cancellation, concurrent lifecycle drainage and shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -49583,12 +49589,13 @@
           "All frozen Project Setup application-model cases pass deterministically"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
-      "notes": "Controlled streams, an advancing clock and fake backend-neutral setup operator provide bounded deterministic proof.",
+      "notes": "Controlled streams, lifecycle barriers, bounded probes, an advancing clock and a fake backend-neutral setup operator provide deterministic proof. Exact correction CI remains pending.",
       "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
@@ -49808,8 +49815,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "755426139af7a27acf176d83a3a752cd565cd0cdc452c2f36fac1f9374da35cd",
-      "acknowledgedSourceHash": "755426139af7a27acf176d83a3a752cd565cd0cdc452c2f36fac1f9374da35cd",
+      "observedSourceHash": "c622b6869bcd4811633a40473c15f51c718e04a0ef177e09e9cf885dec785343",
+      "acknowledgedSourceHash": "c622b6869bcd4811633a40473c15f51c718e04a0ef177e09e9cf885dec785343",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -49845,12 +49852,13 @@
           "Tests prove only the provider-free single-Client core-record contract and explicitly exclude workspace/CRM, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
-        "EVID-CLIENT-CORE-DETAILS-001"
+        "EVID-CLIENT-CORE-DETAILS-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Six tests pass after primary every-line and independent adversarial review corrected one false-positive waiting-state assertion. Exact checkpoint 6cea8459d0e50f174300c1aef44b72f3004cdf11 passed immutable Actions run 33702499992. Tests cover exact identity/core/audit/revision, all local truth, canonical restart, bounded refusal/diagnostics, port-side validation, failure/cancellation and encoded exclusions; physical persistence, authorization, provider, migration and production remain unproved.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"

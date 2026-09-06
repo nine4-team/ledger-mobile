@@ -3,7 +3,7 @@
   "sliceId": "space-core-details-read-contracts",
   "title": "Read one Space's provider-free core details with explicit offline truth",
   "kind": "product",
-  "status": "verified",
+  "status": "implemented",
   "owner": "Space Core Details Read Contracts",
   "surfaceIds": ["SWIFT-02BF0EA3C433", "TEST-377B0FDAF4D4"],
   "requirements": [
@@ -195,11 +195,11 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming provider, migration, hosted or production behavior.",
-      "status": "passed",
-      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+      "status": "planned",
+      "evidence": []
     }
   ],
-  "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-001"],
+  "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Verified decision-independent Phase 1 query boundary. Candidate 1920389d28a71fff3b3233bef2971fe9525bc6e3 descends from exact green ready commit 8849344dc66d71d9dd9b9ba589a76deb007f3172 and changed only the two allowlisted paths. Primary every-line review found three test gaps: direct normalization refusal for notes/checklist names/item text, independent AccountID/SpaceID fingerprint binding, and request validation inside the reference port rather than only its consumer. After correction, an independent adversarial review found one P3 diagnostic-stability gap; a test-only correction pinned all 18 exact unique public codes. Primary and independent focused reruns passed 6 tests, independent and primary full reruns passed all 199 tests in 46 suites, target isolation and clean diffs passed, and no P0-P3 finding remains. Integrated as 72b24afa/503b3839/05509124. Complete local gates passed, and exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031: conversion traceability and isolated target verification, including all 199 tests and both staging builds, succeeded with clean artifacts. Timestamp provenance/order, percentage, archive effects, Item/assignment, media, review, template, legacy completion, accounting, provider/schema/RLS/Sync, app/MCP, migration and production claims remain excluded; O-023/O-026/O-037 remain open."

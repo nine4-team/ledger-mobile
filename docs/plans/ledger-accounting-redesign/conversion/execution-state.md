@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 348
+State version: 349
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SERIAL-TARGET-TEST-SHARED-PROCESS-LEAK-INVESTIGATION
+- Checkpoint: TARGET-LIFECYCLE-DRAINAGE-CORRECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current committed conversion base: `a54719140a305012e3978eb809908ee77a17587a`
+- Current committed conversion base: `e43fbdde255b9e205320f68cc4c54388d55a331c`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -53,7 +53,7 @@ without modifying the running Firebase application before hard cutover.
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
 - The implementation tracker currently contains 283 status-bearing rows: 68
-  done, ten verified, 12 implemented, one ready and zero awaiting verification,
+  done, nine verified, 13 implemented, one ready and zero awaiting verification,
   12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -86,6 +86,24 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Exact diagnostic-correction commit `e43fbdde255b9e205320f68cc4c54388d55a331c`
+  passed every immutable job in Actions run `34033111578`: conversion controls,
+  disposable local Supabase verification, the complete serial target suite,
+  macOS staging build, iOS Simulator staging build and clean-artifact checks.
+  This clears the non-passing checkpoint but does not retrospectively assign a
+  cause to run `34030874960`.
+- A bounded target lifecycle correction is now implemented locally. Project
+  Setup owns every observer and submission in one shared admitted-task registry,
+  concurrent start/start, stop/stop and stop/start calls share drainage, only
+  the latest generation activates replacement observers, and a cancelled
+  noncooperative submission cannot publish late success. Staging awaits that
+  drainage before runtime close. Five provider-free cancellation fixtures now
+  join producers and use bounded assertions. Independent review twice returned
+  NO-GO and drove correction of concrete races; final re-review is GO with no
+  P0-P3 finding. Fourteen focused tests, 44/44 affected tests, 100 exact
+  adversarial repetitions and all 611 target tests pass locally. A fresh exact synchronized CI run is
+  still required, so affected slices remain `implemented`.
 
 - Committed the separately owned Budget-category shutdown correction as
   `a54719140a305012e3978eb809908ee77a17587a`. Exact Actions run
@@ -4437,22 +4455,19 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Diagnose the unresolved serial target-test shared-process failure without
-weakening, filtering, or merely extending the verification gate. Runs
-`34029102593` and `34030874960` both prove that conversion/traceability and
-disposable-local-Supabase jobs pass; their target-test event order also proves
-suite serialization. Run the Space test alone and after the exact preceding
-suite prefix under a bounded watchdog that captures process/task/thread state
-before the 20-minute job timeout. Audit provider/runtime registries and spawned
-tasks for drainage at suite return. The Budget-category code correction remains
-owned by `budget-category-reference-powersync-provider`: cancellation wakes its
-idle internal event loop and both upstream observers are awaited before registry
-drainage. A causal lifecycle correction, independent review and exact all-job CI
-must pass before promotion.
+Synchronize, commit and push the independently reviewed target lifecycle
+correction, then require all immutable workflow jobs on that exact commit. The
+checkpoint must retain honest `implemented` status until conversion controls,
+the disposable-local-Supabase job, complete serial target tests, both staging
+builds and clean artifacts pass. If a shared-process timeout recurs, capture the
+actual stalled test-process stack before changing behavior; this correction is
+quality/lifecycle hardening, not a claimed causal diagnosis of the prior runner
+timeout.
 
-After that exact correction run passes, promote both the Budget-category
-reliability correction and `item-space-assignment-local-durability-provider`
-with immutable commit/run evidence. Then create a comment-only READY package
+After that exact correction run passes, promote the six affected lifecycle/test
+slices together with the Budget-category reliability correction and
+`item-space-assignment-local-durability-provider`, recording immutable
+commit/run evidence. Then create a comment-only READY package
 for `item-space-clearing-local-durability-provider` from that exact base. Two
 independent selection audits agree on the narrow sibling boundary: reuse the
 verified clearing command/use case byte-for-byte, persist one localOnly

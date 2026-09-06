@@ -3301,7 +3301,7 @@
       "acknowledgeSourceHash": "a8dac7b7b351db6722d5ab4f9cd851d86f3d36439298539b83fa3e88d6696605",
       "currentBehavior": "Implements the provider-free single-Project core-record read contract with exact identity, relationship, canonical description, locally observed revision, offline truth, bounded failures and a narrow query port.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -3346,15 +3346,16 @@
     {
       "id": "TEST-5F24EA7C310A",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
+      "acknowledgeSourceHash": "199c2a4d5580d697a569836c6cc657ec2db481762f937734a57b19b1280697e0",
       "currentBehavior": "Tests the provider-free single-Project core-record read contract across exact identity, relationship, canonical description, revision, readiness, restart, refusal, diagnostics, port validation, failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
-        "EVID-PROJECT-CORE-DETAILS-001"
+        "EVID-PROJECT-CORE-DETAILS-001",
+        "EVID-TARGET-LIFECYCLE-DRAINAGE-001"
       ],
       "notes": "Implemented synthetic tests cover exact Account/Project/Client identity, canonical description, active/archived core rows, local revision truth, explicit completeness/readiness/absence/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure, cancellation and encoded exclusions. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "target": {
@@ -3395,7 +3396,7 @@
       "acknowledgeSourceHash": "32a0d3f76ec6a62194311c9e08fd06902aea163b05ea8fdc2f0597e13f49c1b0",
       "currentBehavior": "Implements the provider-free single-Client core-record request, validated local snapshot, explicit update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-CORE-DETAILS-001"],
       "notes": "Verified provider-free implementation at exact checkpoint 6cea8459d0e50f174300c1aef44b72f3004cdf11 and immutable Actions run 33702499992. Exact Account/Client identity, verified ClientSummary, locally observed revision, explicit offline truth and one narrow port; no workspace/CRM, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
@@ -3417,12 +3418,12 @@
     {
       "id": "TEST-F304037D32B6",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "755426139af7a27acf176d83a3a752cd565cd0cdc452c2f36fac1f9374da35cd",
+      "acknowledgeSourceHash": "c622b6869bcd4811633a40473c15f51c718e04a0ef177e09e9cf885dec785343",
       "currentBehavior": "Executes six provider-free tests for exact Client identity/core/revision, every local truth state, exhaustive negative evidence, explicit failure semantics, port validation/cancellation and exact encoded exclusions.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-CORE-DETAILS-001"],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
       "notes": "Six tests pass after primary every-line and independent adversarial review corrected one false-positive waiting-state assertion. Exact checkpoint 6cea8459d0e50f174300c1aef44b72f3004cdf11 passed immutable Actions run 33702499992. Tests cover exact identity/core/audit/revision, all local truth, canonical restart, bounded refusal/diagnostics, port-side validation, failure/cancellation and encoded exclusions; physical persistence, authorization, provider, migration and production remain unproved.",
       "target": {
         "owner": "Client Core Details Read Contracts",
@@ -3445,7 +3446,7 @@
       "acknowledgeSourceHash": "fcc321e02472e209791970dbe4c918455dd6d60c7ec5c0ae0dea4f4f30603ca0",
       "currentBehavior": "Implements a pure provider-free projection from validated ClientListSnapshot evidence into ordered active existing-Client choices, explicit existing-ID setup input, source-exhaustive availability, content-bound fingerprints, canonical restart and bounded refusal.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-SETUP-001", "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"],
       "notes": "Verified at exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad by immutable Actions run 33707305340 after primary every-line and independent adversarial review. The first reviewed candidate was rejected for a P1 false-authoritative-empty defect; the corrected implementation binds sourceDirectoryRowCount and permits noActiveClient only for ready, complete, source-exhaustive evidence. It reuses ClientListSnapshot and ProjectClientSelectionInput, adds no second query port or selected/default Client, and defines no final UI, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
@@ -3467,12 +3468,12 @@
     {
       "id": "TEST-8B902DC97729",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5c2f4c5325b0a793487615354ae610281a8479c1d33a3e36172f8a7f9f8b4bd9",
+      "acknowledgeSourceHash": "8c577052bd9b5dca768cf170636a2d150af5c34310616e5a8c9653ccc776b7ed",
       "currentBehavior": "Executes seven deterministic provider-free tests for ordered active projection, exhaustive versus non-exhaustive availability, explicit selection, fingerprint/count/corruption refusal, canonical restart, existing-port failure/cancellation and exact encoded/diagnostic boundaries.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-SETUP-001", "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-SETUP-001", "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
       "notes": "Seven focused and all 218 target tests pass locally and in immutable Actions run 33707305340 on exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad after primary review added four direct edge assertions and independent review rejected a P1 false-authoritative-empty bug. Corrected tests cover exact source-row exhaustiveness, non-exhaustive empty/archived/active behavior, count/fingerprint tamper and restart. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved.",
       "target": {
         "owner": "Project Existing-Client Selection Projection",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T12:22:59.153Z",
+  "generatedFromManifestSync": "2026-09-06T13:02:35.868Z",
   "totals": {
     "slices": 92,
     "claimedTargetSurfaces": 312,
@@ -11,8 +11,8 @@
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 15,
-    "verified": 71,
+    "implemented": 21,
+    "verified": 65,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -248,7 +248,7 @@
       "sliceId": "client-core-details-read-contracts",
       "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Client Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-D7F3D08FA568",
@@ -712,7 +712,7 @@
       "sliceId": "project-budget-segment-read-contracts",
       "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Project Budget Segment Read Contracts",
       "surfaceIds": [
         "SWIFT-42C7BDDCD714",
@@ -757,7 +757,7 @@
       "sliceId": "project-core-details-read-contracts",
       "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Project Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-4C4690368BEC",
@@ -802,7 +802,7 @@
       "sliceId": "project-existing-client-selection-read-contracts",
       "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Project Existing-Client Selection Projection",
       "surfaceIds": [
         "SWIFT-0C8433A6C6F4",
@@ -937,7 +937,7 @@
       "sliceId": "project-setup-existing-client-application-flow",
       "title": "Create a Project for an existing Client from honest local Client and category evidence",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Project Setup Application Flow",
       "surfaceIds": [
         "SWIFT-1F2F5FE68160",
@@ -1215,7 +1215,7 @@
       "sliceId": "space-core-details-read-contracts",
       "title": "Read one Space's provider-free core details with explicit offline truth",
       "kind": "product",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Space Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-02BF0EA3C433",

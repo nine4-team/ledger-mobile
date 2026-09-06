@@ -3,7 +3,7 @@
   "sliceId": "project-setup-existing-client-application-flow",
   "title": "Create a Project for an existing Client from honest local Client and category evidence",
   "kind": "product",
-  "status": "verified",
+  "status": "implemented",
   "owner": "Project Setup Application Flow",
   "surfaceIds": [
     "SWIFT-64E1171C47C5",
@@ -202,13 +202,13 @@
       "id": "PROJECTSETUPAPP-TEST-009",
       "kind": "operational",
       "owner": ".github/workflows/supabase-conversion-control.yml",
-      "covers": ["PROJECTSETUPAPP-REQ-008"],
+      "covers": ["PROJECTSETUPAPP-REQ-006", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
       "expected": "The later exact synchronized implementation checkpoint passes conversion controls, focused and complete nonparallel Swift tests, isolated local Supabase regressions, repeatable target generation, both staging builds, clean artifacts, and independent executable review before verified promotion.",
-      "status": "passed",
-      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
+      "status": "planned",
+      "evidence": []
     }
   ],
-  "implementationEvidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Verified after exact READY commit bc2de1ba and immutable run 33949737440 passed all three jobs before executable work. The executable AppModel is Core-only; the app adapter alone bridges LedgerOfflineClientRuntime; the staging form uses represented existing Client and active non-system category identities, no default selection, zero or selected-null categories, exact readiness/empty/failure state and exact local receipts. Independent executable review found and drove correction of regenerated capturedAt on ambiguous retry, incomplete failure proof, unbounded test waits, and stale submission after invalid newer evidence; final re-review returned GO with no P0-P3. Nine focused tests and all 428 Swift tests in 75 suites pass locally. Exact implementation commit 2dc519e64d5cde4e716cbff68f6443fe8f1989b4 passed all three immutable jobs in Actions run 33951550789, including conversion controls, disposable local Supabase schema/RLS/RPC regressions, the complete nonparallel target suite, both staging builds and clean tracked artifacts. O-043 new Client, O-026 administration, O-040 defaults/cards, hosted/Auth/production/Firebase/migration/cutover and A-003/A-004/A-007/A-016 remain open and unadvanced."
