@@ -67,10 +67,25 @@ Passing local evidence:
 - the six affected suites — 44 tests; and
 - `swift test --package-path LedgeriOS --no-parallel` — 611 tests in 93 suites.
 
-The affected slices are deliberately `implemented`, not `verified`, and their
-existing exact-CI obligations are reopened until the synchronized correction
-commit passes every immutable workflow job. Hosted Swift stack capture remains
-the required diagnostic if the earlier non-reproducing timeout recurs.
+The first synchronized implementation checkpoint `b7dba780` triggered Actions
+run `34034920599`. It failed fast in the Linux query-inventory control because
+the checkpoint had administratively downgraded five unchanged verified Core
+query owners together with their strengthened test fixtures. The inventory is
+deliberately defined only over verified query owners, so that bookkeeping was
+invalid. No Swift, Supabase or build job ran and this is not passing evidence.
+The correction restores those unchanged domain/query implementations and their
+test-only slice status to verified while retaining the new test hashes and this
+evidence; only the changed Project Setup application-flow implementation stays
+at `implemented`. The complete local Linux control sequence, including all 20
+query-inventory and 23 query-authority tests, passes after correction.
+
+The Project Setup application-flow slice is deliberately `implemented`, not
+`verified`, and its exact-CI obligation is reopened until the synchronized
+correction commit passes every immutable workflow job. The five provider-free
+read contracts retain their verified domain implementations because only their
+test producer-drain fixtures changed; the strengthened fixtures pass locally
+and remain tied to this evidence. Hosted Swift stack capture remains the
+required diagnostic if the earlier non-reproducing timeout recurs.
 
 ## Explicit non-advancement
 

@@ -3,7 +3,7 @@
   "sliceId": "project-existing-client-selection-read-contracts",
   "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Existing-Client Selection Projection",
   "surfaceIds": ["SWIFT-0C8433A6C6F4", "TEST-8B902DC97729"],
   "requirements": [
@@ -178,8 +178,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming final UI, mutation, authorization, persistence, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],

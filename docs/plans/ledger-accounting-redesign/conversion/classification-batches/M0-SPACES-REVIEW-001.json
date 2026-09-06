@@ -1546,7 +1546,7 @@
       "acknowledgeSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
       "currentBehavior": "Defines the implemented provider-free request, validated core Space snapshot, explicit local readiness/absence evidence, bounded update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1594,7 +1594,7 @@
       "acknowledgeSourceHash": "25f7013ca31f9d3c3599e7752cf8dd90fdfe601475e1c7181e6b2ed7a0aedd75",
       "currentBehavior": "Tests the implemented provider-free single-Space core-details contract across Project/Inventory scope, lifecycle, checklist/count evidence, offline readiness/absence/restart, exact request binding, bounded failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",

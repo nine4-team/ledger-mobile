@@ -3,7 +3,7 @@
   "sliceId": "space-core-details-read-contracts",
   "title": "Read one Space's provider-free core details with explicit offline truth",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Core Details Read Contracts",
   "surfaceIds": ["SWIFT-02BF0EA3C433", "TEST-377B0FDAF4D4"],
   "requirements": [
@@ -195,8 +195,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming provider, migration, hosted or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],

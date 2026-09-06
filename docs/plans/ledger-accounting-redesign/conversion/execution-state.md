@@ -16,7 +16,7 @@ without modifying the running Firebase application before hard cutover.
 - Checkpoint: TARGET-LIFECYCLE-DRAINAGE-CORRECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current committed conversion base: `e43fbdde255b9e205320f68cc4c54388d55a331c`
+- Current committed conversion base: `b7dba780eeac48d514e7bee7523958629f3d54a2`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -103,7 +103,17 @@ without modifying the running Firebase application before hard cutover.
   NO-GO and drove correction of concrete races; final re-review is GO with no
   P0-P3 finding. Fourteen focused tests, 44/44 affected tests, 100 exact
   adversarial repetitions and all 611 target tests pass locally. A fresh exact synchronized CI run is
-  still required, so affected slices remain `implemented`.
+  still required, so the Project Setup application-flow slice remains
+  `implemented`. The five provider-free read contracts retain their verified
+  implementation status because only bounded test-fixture drainage changed.
+- The first synchronized lifecycle checkpoint `b7dba780` failed fast in
+  Actions run `34034920599` before Swift/Supabase/build execution. The Linux
+  query-inventory control correctly rejected an administrative downgrade of
+  five unchanged verified Core query owners. The corrected ledger restores
+  those query implementations and test-only slices to verified, retains their
+  strengthened current test hashes, and leaves only the changed Project Setup
+  application flow at `implemented`. The exact complete Linux conversion-control
+  sequence now passes locally; a corrected immutable run is pending.
 
 - Committed the separately owned Budget-category shutdown correction as
   `a54719140a305012e3978eb809908ee77a17587a`. Exact Actions run

@@ -3,7 +3,7 @@
   "sliceId": "project-budget-segment-read-contracts",
   "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Budget Segment Read Contracts",
   "surfaceIds": [
     "SWIFT-42C7BDDCD714",
@@ -180,8 +180,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming contribution, authorization, physical local/Sync, schema/RLS, app/MCP, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-BUDGET-SEGMENT-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],

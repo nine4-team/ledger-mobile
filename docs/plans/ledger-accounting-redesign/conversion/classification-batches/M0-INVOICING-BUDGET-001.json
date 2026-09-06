@@ -1489,7 +1489,7 @@
       "acknowledgeSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
       "currentBehavior": "Defines the provider-free exact Account/Project/currency budget-segment request, signed paid/unpaid category values, derived recognized arithmetic, validated local snapshot, bounded failures and narrow query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
@@ -1536,7 +1536,7 @@
       "acknowledgeSourceHash": "04dad151c390dcab722a71725521da8758998d00044b841cb0dcc81f62b66371",
       "currentBehavior": "Implements five deterministic provider-free tests for exact signed segment arithmetic, canonical readiness/restart, bounded rejection, exact-request/upstream-failure port behavior, cancellation and frozen encoded shape.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",

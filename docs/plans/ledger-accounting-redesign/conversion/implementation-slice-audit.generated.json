@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T13:02:35.868Z",
+  "generatedFromManifestSync": "2026-09-06T13:05:53.308Z",
   "totals": {
     "slices": 92,
     "claimedTargetSurfaces": 312,
@@ -11,8 +11,8 @@
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 21,
-    "verified": 65,
+    "implemented": 16,
+    "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -248,7 +248,7 @@
       "sliceId": "client-core-details-read-contracts",
       "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Client Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-D7F3D08FA568",
@@ -712,7 +712,7 @@
       "sliceId": "project-budget-segment-read-contracts",
       "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Budget Segment Read Contracts",
       "surfaceIds": [
         "SWIFT-42C7BDDCD714",
@@ -757,7 +757,7 @@
       "sliceId": "project-core-details-read-contracts",
       "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-4C4690368BEC",
@@ -802,7 +802,7 @@
       "sliceId": "project-existing-client-selection-read-contracts",
       "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Existing-Client Selection Projection",
       "surfaceIds": [
         "SWIFT-0C8433A6C6F4",
@@ -1215,7 +1215,7 @@
       "sliceId": "space-core-details-read-contracts",
       "title": "Read one Space's provider-free core details with explicit offline truth",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Space Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-02BF0EA3C433",

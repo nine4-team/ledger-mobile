@@ -3,7 +3,7 @@
   "sliceId": "project-core-details-read-contracts",
   "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Core Details Read Contracts",
   "surfaceIds": ["SWIFT-4C4690368BEC", "TEST-5F24EA7C310A"],
   "requirements": [
@@ -168,8 +168,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming complete-workspace, provider, migration, hosted or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-CORE-DETAILS-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],

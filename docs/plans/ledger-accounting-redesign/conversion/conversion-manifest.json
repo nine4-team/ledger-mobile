@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T13:02:35.868Z",
+    "lastSynchronizedAt": "2026-09-06T13:05:53.308Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18821,7 +18821,7 @@
           "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -20120,7 +20120,7 @@
           "Synthetic fixtures prove only filtering, order, explicit existing-ID selection, readiness, restart, refusal and encoded exclusion without a second port or provider"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -24112,7 +24112,7 @@
           "Synthetic target-only fixtures prove exact signed arithmetic, no-double-count collection exchange, scope/currency validation, readiness/restart and exact-request refusal without selecting unresolved presentation or source eligibility"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
@@ -25022,7 +25022,7 @@
           "Synthetic single-Project fixtures prove exact identity/relationship/core/revision/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -37955,7 +37955,7 @@
           "Synthetic fixtures prove exact core/revision/readiness/restart/refusal/port behavior without a provider, hosted resource or production input"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -43291,7 +43291,7 @@
           "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -44783,7 +44783,7 @@
           "Tests prove only the provider-free single-Project core-record contract and explicitly exclude complete-workspace, child, media, accounting, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -46207,7 +46207,7 @@
           "Tests prove only the frozen pure projection contract and explicitly exclude a second port, final UI policy, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -47011,7 +47011,7 @@
           "Self-tests prove only the provider-free segment read boundary and do not claim server, database, provider, migration or UI evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
@@ -49852,7 +49852,7 @@
           "Tests prove only the provider-free single-Client core-record contract and explicitly exclude workspace/CRM, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
