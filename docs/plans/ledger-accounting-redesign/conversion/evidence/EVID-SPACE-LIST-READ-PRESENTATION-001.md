@@ -1,10 +1,12 @@
-# EVID-SPACE-LIST-READ-PRESENTATION-001 — Active Space List Contract READY Boundary
+# EVID-SPACE-LIST-READ-PRESENTATION-001 — Active Space List Contract
 
 - Timestamp: 2026-09-06
-- Class: DRAFT-to-READY design evidence; no executable implementation or hosted rehearsal
+- Class: implementation / provider-free active Space browser integrity contract; no hosted rehearsal
 - Reviewed base: `2297e8dbe7f7f0febb7e33b4da0be591d4c82ade`
+- Exact READY checkpoint: `c9d4d8bbce6319f81aacb5851b16035d3c7ab809` / Actions run `34062468352`
 - Target branch: `codex/supabase-powersync-implementation`
 - Slice: `space-list-read-and-presentation-contracts`
+- Implementation state: locally reviewed and implemented; exact implementation CI pending
 
 ## Bounded Outcome
 
@@ -39,14 +41,19 @@ it can derive the existing `SpaceCoreDetailsRequest`.
 
 ## Frozen Implementation Boundary
 
-Only these comment-only target leaves may change during implementation:
+Only these target leaves changed during implementation:
 
 - `LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift`
 - `LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift`
 
 Their exact pre-implementation hashes and permitted changes live in the slice
-dossier. No provider, persistence, Postgres, RLS, PowerSync, app/MCP, source
-migration, Firebase, hosted, production, release or cutover behavior advances.
+dossier. The implemented SHA-256 hashes are:
+
+- `SpaceDirectoryPresentation.swift` — `5546daf4452220b2dca5f8782054ae0b6c95f560a54456f7d204d8355601b676`;
+- `SpaceDirectoryPresentationTests.swift` — `9b5d278ed8b23fd26c6f7991da443343cc6b791c0974f4879862a256070d165e`.
+
+No provider, persistence, Postgres, RLS, PowerSync, app/MCP, source migration,
+Firebase, hosted, production, release or cutover behavior advances.
 
 ## Review and Verification
 
@@ -60,6 +67,38 @@ The first independent READY review returned NO-GO and identified missing
 canonical browser authority, non-exact fingerprint material and an invalid
 dependency identifier; those findings were corrected without widening this
 slice. Narrow independent re-review returned GO with no P0-P3 finding. Exact
-immutable READY CI is still required before executable edits; executable review,
-the complete local batch gate and one exact immutable CI run are required before
-verified status.
+READY commit `c9d4d8bbce6319f81aacb5851b16035d3c7ab809` then passed all three
+immutable Actions jobs in run `34062468352` before executable edits.
+
+## Implementation and Quality-Control Trial
+
+One write-capable subagent changed only the two frozen leaves. Its first
+candidate passed six focused tests and a full Swift suite, but root and an
+independent read-only reviewer both rejected it. The review found that a
+retryable or required-update failure could retain a ready-complete cached empty
+snapshot which a caller could project as authoritative empty. It also found
+that strict restart decoding stopped at outer containers, presentation and
+selection fingerprints lacked independent basis assertions, unexpected port
+errors could be swallowed by a test helper, and several dossier-promised
+negative cases were absent.
+
+The corrected implementation:
+
+- projects failed cache only as explicit stale, incomplete failure evidence, so
+  cached empty evidence cannot prove absence;
+- strictly reconstructs nested Project-or-Inventory scope, checklist collection,
+  checklist, checklist item, presentation row and update associated-value shapes;
+- independently asserts the exact version and basis fields for request,
+  presentation-evidence and selection fingerprints;
+- rejects selection against independently valid wrong-Account or wrong-scope
+  presentations and rejects rebound retryable/required-update cache; and
+- keeps unexpected upstream errors observable while preserving bounded domain
+  failures and cancellation drainage.
+
+Final root and independent re-review returned GO with no P0-P3 findings. Root
+ran the six focused tests successfully and `swift test --package-path LedgeriOS`
+passed all 661 tests in 98 suites in 31.175 seconds. Final independent batch
+re-review reproduced all 661 tests, the six focused tests and conversion
+controls and returned GO with no P0-P3. The complete local conversion,
+target-app/build and disposable Supabase provider jobs pass; one exact immutable
+implementation CI run remains required before verified status.

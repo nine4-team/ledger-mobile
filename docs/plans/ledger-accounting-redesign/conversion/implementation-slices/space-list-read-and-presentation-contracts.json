@@ -3,7 +3,7 @@
   "sliceId": "space-list-read-and-presentation-contracts",
   "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space List Read and Presentation Contracts",
   "surfaceIds": ["SWIFT-0DCDAFBB4350", "TEST-54B6515645F8"],
   "deliveryContract": {
@@ -193,8 +193,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
       "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-002", "SPACELIST-REQ-003", "SPACELIST-REQ-004", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-009"],
       "expected": "Project and Business Inventory fixtures remain strictly separated by exact Account/scope. Active presentation excludes explicit archived rows, canonicalizes by folded name/exact name/stable ID, preserves duplicate names, derives exact 0/0 and nonzero checklist progress from validated collections and exposes itemCountUnavailable rather than numeric zero.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
     },
     {
       "id": "SPACELIST-TEST-002",
@@ -202,8 +202,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
       "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-003", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-009"],
       "expected": "Ready-complete-source-exhaustive empty alone is authoritative. Ready incomplete/nonexhaustive, partial, stale and failed empty evidence never becomes empty truth; partial/stale represented active rows remain visibly usable, and cached Item-count state remains unavailable.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
     },
     {
       "id": "SPACELIST-TEST-003",
@@ -211,8 +211,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
       "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-002", "SPACELIST-REQ-003", "SPACELIST-REQ-004", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
       "expected": "Canonical restart binds Account, exact scope, ordered source and active rows, Space identity/name/lifecycle/revision/checklist state, unavailable Item count, source fingerprint/counts/completeness/quality/version/as-of and selection evidence byte-identically. Missing, extra, malformed, reordered or independently tampered fields fail closed.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
     },
     {
       "id": "SPACELIST-TEST-004",
@@ -220,8 +220,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
       "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-003", "SPACELIST-REQ-006", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
       "expected": "Selection rejects an absent, archived, wrong-Account, wrong-scope or same-name sibling Space and any changed current presentation evidence before returning only the exact existing SpaceCoreDetailsRequest. Detail validation accepts separately valid later mutable fields/revision but rejects Account, Space or immutable-scope rebinding.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
     },
     {
       "id": "SPACELIST-TEST-005",
@@ -229,8 +229,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
       "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
       "expected": "A deterministic reference port validates every update against the exact request before yield, preserves bounded waiting/unavailable/retryable/required-update states, rejects rebound cache, propagates failure and stops after cancellation without false row, empty, selection, detail or authorization evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
     },
     {
       "id": "SPACELIST-TEST-006",
@@ -242,8 +242,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY at exact base 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade after the first independent review returned NO-GO and the narrow correction re-review returned GO with no P0-P3 finding. The dossier claims only its two newly discovered target leaves; legacy source files remain source evidence. Canonical Target Space Browsing explicitly preserves the final active browser, search, authoritative Item count, checklist progress, primary-image behavior and stable-ID navigation while allowing this isolated non-production foundation to implement only exact-scope active rows, checklist progress, honest readiness and selection. The numeric Item count in SWIFT-43F5DBD4F7F3 has no authoritative target Item projection and is deliberately unavailable, never zero; search and media also remain required future parity rather than silently removed. Source browser surfaces remain target_mapped. O-037 is not advanced: there is no archived list segment, archive effect or assigned-Item resolver. The one-slice batch is justified by the reusable high-risk false-empty/fingerprint/selection invariant and by the fact that every physical provider dependency remains below verified. Exact immutable READY CI remains required before executable edits."
+  "notes": "Exact READY commit c9d4d8bbce6319f81aacb5851b16035d3c7ab809 passed all three jobs in immutable Actions run 34062468352 before executable edits. The first independently reviewed implementation candidate passed its focused tests but was rejected for a real failed-cache false-empty defect plus recursive Codable and proof gaps. Corrected code adds an explicit failed presentation that downgrades cached evidence to stale/incomplete, strict nested reconstruction, independent request/presentation/selection fingerprint-basis assertions, exact wrong-Account/wrong-scope selection and rebound-cache refusal, and observable unexpected port errors. Final independent re-review returned GO with no P0-P3; six focused tests, all 661 Swift tests in 98 suites, the complete conversion-control job, both staging builds and the disposable local Supabase provider job pass locally. The dossier still claims only its two target leaves; final search, authoritative Item count and primary-image parity remain required later work, source browser surfaces remain target_mapped, O-037 is unadvanced, and exact immutable implementation CI is still required before verified promotion."
 }

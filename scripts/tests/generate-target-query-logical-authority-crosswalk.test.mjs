@@ -110,7 +110,7 @@ function makeFixtureRepository() {
   return root;
 }
 
-test("repository crosswalk is exactly the reviewed 18-row logical-authority baseline", () => {
+test("repository crosswalk is exactly the reviewed 19-row logical-authority baseline", () => {
   const crosswalk = buildRepositoryCrosswalk(ROOT);
   assert.equal(crosswalk.inventoryDigest, INVENTORY.inventoryDigest);
   assert.deepEqual(crosswalk.physicalPlanes, {
@@ -118,12 +118,12 @@ test("repository crosswalk is exactly the reviewed 18-row logical-authority base
     local: { status: "deferred", decision: "A-004" },
   });
   assert.deepEqual(crosswalk.totals, {
-    queries: 18,
-    mapped: 6,
+    queries: 19,
+    mapped: 7,
     mappedWithUnresolvedAxes: 11,
     decisionBlocked: 1,
   });
-  assert.equal(new Set(crosswalk.queries.map((query) => query.tqueryId)).size, 18);
+  assert.equal(new Set(crosswalk.queries.map((query) => query.tqueryId)).size, 19);
   assert.ok(crosswalk.queries.every((query) => /^TACCESS-[A-F0-9]{12}$/.test(query.taccessId)));
   assert.ok(crosswalk.queries.every((query) => /^[a-f0-9]{64}$/.test(query.mappingHash)));
   assert.ok(
@@ -148,6 +148,12 @@ test("repository crosswalk is exactly the reviewed 18-row logical-authority base
     "contribution_source_eligibility_and_taxonomy",
   ]);
   assert.doesNotMatch(JSON.stringify(budget), /O-007|O-015/);
+
+  const spaces = crosswalk.queries.find((query) => query.tqueryId === "TQUERY-038289DD7D2C");
+  assert.equal(spaces.reviewClass, "mapped");
+  assert.equal(spaces.logicalAxes.scope.value, "Exact Account and exact Project-or-Business-Inventory Space scope.");
+  assert.equal(spaces.logicalAxes.readiness.value, "Ready complete source-exhaustive evidence alone can establish authoritative active-list emptiness; partial, stale, incomplete and failed evidence cannot.");
+  assert.deepEqual(spaces.unresolvedAxes, []);
 
   const unresolved = crosswalk.queries.find(
     (query) => query.tqueryId === "TQUERY-BAFDEB7B1FDF",
@@ -199,6 +205,37 @@ test("generated rows join exact inventory ownership facts without copying them i
     for (const key of ["ownerSurfaceId", "ownerPath", "protocol", "selector", "category"]) {
       assert.equal(Object.hasOwn(row, key), false);
     }
+  }
+});
+
+test("logical authority accepts implemented-or-later input but remains byte-stable across lifecycle promotion", () => {
+  const rendered = [];
+  for (const status of ["implemented", "verified", "rehearsed", "cutover_ready"]) {
+    const inventory = clone(INVENTORY);
+    inventory.methods.find((method) => method.id === "TQUERY-038289DD7D2C").ownerStatus = status;
+    const crosswalk = build(REGISTRY, inventory);
+    assert.equal(
+      Object.hasOwn(
+        crosswalk.queries.find((query) => query.tqueryId === "TQUERY-038289DD7D2C"),
+        "ownerStatus",
+      ),
+      false,
+    );
+    rendered.push(renderArtifact(crosswalk));
+  }
+  assert.equal(new Set(rendered).size, 1);
+
+  for (const status of [
+    "discovered",
+    "characterized",
+    "target_mapped",
+    "blocked",
+    "retired",
+    "unknown",
+  ]) {
+    const inventory = clone(INVENTORY);
+    inventory.methods.find((method) => method.id === "TQUERY-038289DD7D2C").ownerStatus = status;
+    expectFailure(() => build(REGISTRY, inventory), /ownerStatus.*unsupported value/);
   }
 });
 
@@ -653,15 +690,15 @@ test("invalid repository input fails before generate overwrites an existing arti
   assert.equal(fs.readFileSync(generatedPath, "utf8"), "sentinel\n");
 });
 
-test("repository generated artifact is current and contains all 18 reviewed rows", () => {
+test("repository generated artifact is current and contains all 19 reviewed rows", () => {
   const expected = renderArtifact(buildRepositoryCrosswalk(ROOT));
   const filePath = path.join(ROOT, ARTIFACT_RELATIVE);
   assert.doesNotThrow(() => checkArtifact(expected, filePath, { root: ROOT }));
   const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  assert.equal(parsed.queries.length, 18);
+  assert.equal(parsed.queries.length, 19);
   assert.deepEqual(parsed.totals, {
-    queries: 18,
-    mapped: 6,
+    queries: 19,
+    mapped: 7,
     mappedWithUnresolvedAxes: 11,
     decisionBlocked: 1,
   });

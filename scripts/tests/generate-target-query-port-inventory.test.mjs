@@ -62,18 +62,18 @@ function tempArtifacts() {
   };
 }
 
-test("repository baseline is exactly the reviewed 16-owner, 16-protocol, 18-method inventory", () => {
+test("repository baseline is exactly the reviewed 17-owner, 17-protocol, 19-method inventory", () => {
   const inventory = buildRepositoryInventory(ROOT);
   assert.deepEqual(inventory.totals, {
-    ownerSurfaces: 16,
-    protocols: 16,
-    methods: 18,
-    observationMethods: 18,
+    ownerSurfaces: 17,
+    protocols: 17,
+    methods: 19,
+    observationMethods: 19,
     requestResponseMethods: 0,
   });
   assert.ok(inventory.methods.every((method) => method.selector.startsWith("watch")));
   assert.ok(inventory.methods.every((method) => method.category === "observation"));
-  assert.equal(new Set(inventory.methods.map((method) => method.id)).size, 18);
+  assert.equal(new Set(inventory.methods.map((method) => method.id)).size, 19);
   assert.ok(inventory.methods.every((method) => /^TQUERY-[A-F0-9]{12}$/.test(method.id)));
   assert.ok(inventory.methods.every((method) => /^[a-f0-9]{64}$/.test(method.signatureHash)));
 
@@ -576,13 +576,46 @@ test("malformed, ambiguous, unsupported, duplicate, empty, and unowned inputs fa
   for (const [label, source, ownerManifest] of invalidSources) {
     assert.throws(() => scan(source, ownerManifest), undefined, label);
   }
-  for (const status of ["unverified", "target_mapped", "implemented", "promoted"]) {
+  for (const status of [
+    "unverified",
+    "discovered",
+    "characterized",
+    "target_mapped",
+    "blocked",
+    "promoted",
+    "retired",
+  ]) {
     assert.throws(
       () => scan(fixtureProtocol("func watchFixture() -> Int"), manifest([surface({ status })])),
       /invalid manifest owner status/,
       status,
     );
   }
+});
+
+test("implemented and later target owners are inventoried before and after verification", () => {
+  for (const status of ["implemented", "verified", "rehearsed", "cutover_ready"]) {
+    const method = oneMethod(
+      scan(fixtureProtocol("func watchFixture() -> Int"), manifest([surface({ status })])),
+    );
+    assert.equal(method.ownerStatus, status);
+  }
+});
+
+test("owner lifecycle transitions preserve query identity, signature, and inventory digest while changing review bytes", () => {
+  const implemented = scan(
+    fixtureProtocol("func watchFixture() -> Int"),
+    manifest([surface({ status: "implemented" })]),
+  );
+  const verified = scan(
+    fixtureProtocol("func watchFixture() -> Int"),
+    manifest([surface({ status: "verified" })]),
+  );
+  assert.equal(implemented.methods[0].id, verified.methods[0].id);
+  assert.equal(implemented.methods[0].signatureHash, verified.methods[0].signatureHash);
+  assert.equal(implemented.inventoryDigest, verified.inventoryDigest);
+  assert.notEqual(renderArtifacts(implemented).json, renderArtifacts(verified).json);
+  assert.notEqual(renderArtifacts(implemented).markdown, renderArtifacts(verified).markdown);
 });
 
 test("a fail-closed scan completes before generate overwrites either artifact", () => {
@@ -663,6 +696,8 @@ test("repository generated JSON and Markdown match and contain no timestamp", ()
   assert.deepEqual(JSON.parse(artifacts.json), inventory);
   assert.doesNotMatch(artifacts.json, /generatedAt|timestamp/i);
   assert.match(artifacts.markdown, /generated diffs still require human review/i);
+  assert.match(artifacts.markdown, /\| TQUERY \| Owner \| Status \|/);
+  assert.match(artifacts.markdown, /\| `TQUERY-038289DD7D2C` \| `SWIFT-0DCDAFBB4350` \| `implemented` \|/);
   assert.match(artifacts.markdown, /does not define product semantics/i);
 });
 

@@ -1,7 +1,7 @@
 # EVID-TARGET-QUERY-PORT-INVENTORY-001 — Target Query-Port Inventory Control
 
 - Timestamp: 2026-09-03
-- Class: verified / deterministic target query-port conversion control
+- Class: implemented lifecycle amendment / originally verified deterministic target query-port conversion control
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
 - Exact READY checkpoint:
@@ -20,9 +20,9 @@
 - Product decisions: none; A-003/A-004: not applicable
 - Production reads or mutations: none
 - Hosted Supabase/PowerSync resources contacted: none
-- Verification state: verified; `TQUERYCONTROL-TEST-001` through `-008` pass,
-  the complete generated JSON/Markdown diff was reviewed, and independent
-  adversarial review returned GO with no remaining P0-P2 finding
+- Verification state: the original control remains verified by its recorded
+  immutable run; the lifecycle amendment is implemented locally with 22 focused
+  tests passing and awaits exact current-batch CI
 
 ## Operational Outcome and Authority
 
@@ -323,3 +323,24 @@ clean-artifact checking. Independent final review confirmed all frozen hashes,
 every generated identity and signature hash, the full invalid/valid adversarial
 matrix, exact scope and lifecycle preservation, and returned GO with no
 actionable P0-P2 finding.
+
+## Lifecycle-Compatibility Amendment — 2026-09-06
+
+The newer required checkpoint sequence records a new query owner honestly as
+`implemented` before immutable CI and only later advances it to `verified`.
+The original verified-only scanner predated that sequence and rejected the
+Space-list implementation checkpoint.
+
+The amended control admits exactly `implemented`, `verified`, `rehearsed`, and
+`cutover_ready` owners; rejects discovered, characterized, target-mapped,
+blocked, retired, unknown, missing, or ambiguous ownership; and displays each
+owner status in generated Markdown. A status-only transition changes generated
+review bytes but preserves TQUERY identity, signature hash, and inventory
+digest. The reviewed current inventory is 17 owners, 17 protocols, and 19
+observation methods, including `SpaceListQuerying.watchSpaces` at implemented.
+
+All 22 focused tests and generate/check pass locally. The two CONFIG surfaces
+are reopened at `implemented`; exact current-batch CI is required before they
+return to `verified`. Final independent re-review reproduced the 22 focused
+tests and current artifacts and returned GO with no P0-P3. The complete local
+conversion, target-app/build and disposable Supabase provider jobs also pass.

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "generator": "scripts/generate-target-query-port-inventory.mjs",
   "sourceRoot": "LedgeriOS/LedgerTargetCore",
-  "inventoryDigest": "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2",
+  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
   "totals": {
-    "ownerSurfaces": 16,
-    "protocols": 16,
-    "methods": 18,
-    "observationMethods": 18,
+    "ownerSurfaces": 17,
+    "protocols": 17,
+    "methods": 19,
+    "observationMethods": 19,
     "requestResponseMethods": 0
   },
   "protocols": [
@@ -21,6 +21,12 @@
       "name": "SpaceCoreDetailsQuerying",
       "ownerSurfaceId": "SWIFT-02BF0EA3C433",
       "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "methodCount": 1
+    },
+    {
+      "name": "SpaceListQuerying",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
       "methodCount": 1
     },
     {
@@ -130,6 +136,17 @@
       "category": "observation",
       "signature": "func watchSpaceCoreDetails ( _ request : SpaceCoreDetailsRequest ) -> AsyncThrowingStream < SpaceCoreDetailsUpdate , Error >",
       "signatureHash": "32ed6e84f2fb69457b6440d1bb479fe90348d3c4b32b544f1cf2e053cf41224a"
+    },
+    {
+      "id": "TQUERY-038289DD7D2C",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "ownerStatus": "implemented",
+      "protocol": "SpaceListQuerying",
+      "selector": "watchSpaces",
+      "category": "observation",
+      "signature": "func watchSpaces ( _ request : SpaceListRequest ) -> AsyncThrowingStream < SpaceListUpdate , Error >",
+      "signatureHash": "9089cf0209e5762269ae68e18397200140333722a9efc08bf72d6bc90d8644f3"
     },
     {
       "id": "TQUERY-BD89A02A23F2",

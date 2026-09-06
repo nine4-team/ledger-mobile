@@ -53,7 +53,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
       "section": "5. Commands and queries are separate",
-      "invariant": "A verified target query outcome binds an exact non-decision-blocked TQUERY, TACCESS, and mappingHash. A future-query or nonquery outcome binds an exact manifest surface, exact target.surfaces member, and hash of {surfaceId,disposition,target}; status is validated separately as target_mapped, implemented, verified, rehearsed or cutover_ready and blocked/retired is rejected.",
+      "invariant": "A verified target query outcome binds an exact non-decision-blocked TQUERY, TACCESS, and mappingHash, joins its ownerSurfaceId to the current conversion manifest, and accepts only owner lifecycle verified, rehearsed or cutover_ready; implemented and every earlier, blocked, retired, unknown or missing owner fail closed. A future-query or nonquery outcome binds an exact manifest surface, exact target.surfaces member, and hash of {surfaceId,disposition,target}; status is validated separately as target_mapped, implemented, verified, rehearsed or cutover_ready and blocked/retired is rejected.",
       "decisionIds": [],
       "verificationIds": [
         "SQUERY-TEST-003",
@@ -519,7 +519,7 @@
       "kind": "domain",
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
-      "expected": "Verified target query outcomes accept only an exact non-decision-blocked TQUERY/TACCESS/mappingHash triple from the bound target authority artifact.",
+      "expected": "Verified target query outcomes accept only an exact non-decision-blocked TQUERY/TACCESS/mappingHash triple whose owner joins the current manifest at verified, rehearsed or cutover_ready; implemented, earlier, blocked, retired, unknown and missing owners reject.",
       "status": "passed",
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
@@ -584,7 +584,7 @@
       "kind": "operational",
       "owner": "conversion control, exact diff review and future Ubuntu CI",
       "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009", "SQUERY-REQ-010"],
-      "expected": "Exact synchronized lifecycle/allowlists, classification-only READY semantics and unresolved promotion guards, deterministic JSON, read-only check, safe regular non-symlink input/output paths, exact directory contents/CLI arity, unchanged source/target authority artifacts and Linux-before-Swift gating all pass at their authorized lifecycle stage.",
+      "expected": "Exact synchronized lifecycle/allowlists, classification-only READY semantics and unresolved promotion guards, deterministic JSON, read-only check, safe regular non-symlink input/output paths, exact directory contents/CLI arity, unchanged source authority, exact hash-bound lifecycle-neutral target-authority rebinding and conversion-control-before-Swift gating all pass at their authorized lifecycle stage.",
       "status": "passed",
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     }
@@ -592,5 +592,5 @@
   "implementationEvidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "IMPLEMENTED contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed run 33872927608; exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed run 33880331322. The executable dependency-free generator/checker and 23-test suite enforce synchronized lifecycle, the immutable historical checkpoint diff, exact package/workflow authority, closed schemas, retention-before-retirement order, content-hashed retirement authority, complete evidence bindings, canonical conflict rules, safe atomic output, and byte-exact read-only checking. Workflow validation permits only the exact always-run local-Supabase cleanup step; every verification step remains fail-closed. Independent adversarial review returned GO with no remaining P0-P2 finding. SQUERY-TEST-001 through -010 pass; administrative VERIFIED metadata promotion remains separate. O-041 remains proposed only, and the generated artifact deliberately reports 115 authority-blocked and six evidence-blocked outcomes. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
+  "notes": "IMPLEMENTED contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed run 33872927608; exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed run 33880331322. The current lifecycle amendment rebinds only the exact new 19-row lifecycle-neutral target-authority hash/digest while preserving all 386 source classifications and 584 outcomes. The 25-test suite now joins verified_target_query_port ownership to current manifest truth, accepts only verified/rehearsed/cutover_ready, and rejects every lower, blocked, retired, unknown or missing owner. Final independent re-review returned GO with no P0-P3 and the complete local batch gate passes; exact current-batch CI remains pending. O-041 remains proposed only; 115 authority-blocked and six evidence-blocked outcomes remain unchanged. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
 }

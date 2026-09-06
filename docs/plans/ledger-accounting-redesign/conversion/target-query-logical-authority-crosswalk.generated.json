@@ -3,7 +3,7 @@
   "generator": "scripts/generate-target-query-logical-authority-crosswalk.mjs",
   "sourceInventory": "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.json",
   "sourceRegistry": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json",
-  "inventoryDigest": "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2",
+  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
   "physicalPlanes": {
     "local": {
       "decision": "A-004",
@@ -15,12 +15,74 @@
     }
   },
   "totals": {
-    "queries": 18,
-    "mapped": 6,
+    "queries": 19,
+    "mapped": 7,
     "mappedWithUnresolvedAxes": 11,
     "decisionBlocked": 1
   },
   "queries": [
+    {
+      "taccessId": "TACCESS-5057FDB2D65C",
+      "tqueryId": "TQUERY-038289DD7D2C",
+      "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "protocol": "SpaceListQuerying",
+      "selector": "watchSpaces",
+      "category": "observation",
+      "signatureHash": "9089cf0209e5762269ae68e18397200140333722a9efc08bf72d6bc90d8644f3",
+      "mappingHash": "3d1be7912b4dd7144cbcdf063a588c125c5ba05cbff048486b7cb392d2517c65",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target",
+          "section": "Target Space Browsing"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority",
+          "section": "Workspace queries"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md",
+          "role": "verification_evidence",
+          "section": "Frozen Implementation Boundary"
+        }
+      ],
+      "logicalAxes": {
+        "authorization": {
+          "state": "reviewed",
+          "value": "Account and immutable Space scope narrow an already-authorized local working set and never grant visibility by local presence."
+        },
+        "ordering": {
+          "state": "reviewed",
+          "value": "Case-folded display name, exact display name, then stable Space ID ascending; duplicate display names remain distinct."
+        },
+        "pagination": {
+          "state": "reviewed",
+          "value": "Unpaged exact-scope observation; search, authoritative Item count and primary-image projection remain separate required browser work."
+        },
+        "readiness": {
+          "state": "reviewed",
+          "value": "Ready complete source-exhaustive evidence alone can establish authoritative active-list emptiness; partial, stale, incomplete and failed evidence cannot."
+        },
+        "result": {
+          "state": "reviewed",
+          "value": "Canonical scoped Space rows retain stable identity, explicit lifecycle, revision and validated checklist evidence; active presentation excludes archived rows and represents Item count as unavailable rather than zero."
+        },
+        "scope": {
+          "state": "reviewed",
+          "value": "Exact Account and exact Project-or-Business-Inventory Space scope."
+        }
+      },
+      "proposedDataDomains": [
+        {
+          "state": "proposed_architecture_dependency",
+          "value": "project_workspace_or_inventory_by_immutable_scope"
+        }
+      ],
+      "unresolvedAxes": []
+    },
     {
       "taccessId": "TACCESS-A63F74EAA132",
       "tqueryId": "TQUERY-136644A3C02A",

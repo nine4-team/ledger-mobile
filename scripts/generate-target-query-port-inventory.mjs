@@ -15,6 +15,12 @@ const JSON_RELATIVE =
 const MARKDOWN_RELATIVE =
   "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.md";
 const GENERATOR_RELATIVE = "scripts/generate-target-query-port-inventory.mjs";
+const INVENTORIED_OWNER_STATUSES = new Set([
+  "implemented",
+  "verified",
+  "rehearsed",
+  "cutover_ready",
+]);
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -836,7 +842,7 @@ function resolveOwner(manifest, sourcePath) {
   if (matches.length === 0) fail(`missing manifest owner for ${sourcePath}`);
   if (matches.length !== 1) fail(`ambiguous manifest owner for ${sourcePath}`);
   const owner = matches[0];
-  if (owner.status !== "verified") {
+  if (!INVENTORIED_OWNER_STATUSES.has(owner.status)) {
     fail(`invalid manifest owner status for ${sourcePath}: ${owner.status}`);
   }
   return owner;
@@ -1028,7 +1034,7 @@ export function renderArtifacts(inventory) {
     "## Result",
     "",
     `- Inventory digest: \`${inventory.inventoryDigest}\``,
-    `- Verified owner surfaces: ${inventory.totals.ownerSurfaces}`,
+    `- Implemented-or-later owner surfaces: ${inventory.totals.ownerSurfaces}`,
     `- Public exact-suffix \`Querying\` protocols: ${inventory.totals.protocols}`,
     `- Direct instance methods: ${inventory.totals.methods}`,
     `- Observation methods: ${inventory.totals.observationMethods}`,
@@ -1045,11 +1051,11 @@ export function renderArtifacts(inventory) {
     "",
     "## Methods",
     "",
-    "| TQUERY | Owner | Protocol | Selector | Category | Signature hash | Canonical signature |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
+    "| TQUERY | Owner | Status | Protocol | Selector | Category | Signature hash | Canonical signature |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ...inventory.methods.map(
       (method) =>
-        `| \`${method.id}\` | \`${method.ownerSurfaceId}\` | \`${method.protocol}\` | \`${method.selector}\` | ${method.category} | \`${method.signatureHash}\` | \`${escapeMarkdown(method.signature)}\` |`,
+        `| \`${method.id}\` | \`${method.ownerSurfaceId}\` | \`${method.ownerStatus}\` | \`${method.protocol}\` | \`${method.selector}\` | ${method.category} | \`${method.signatureHash}\` | \`${escapeMarkdown(method.signature)}\` |`,
     ),
     "",
     "## Limits",

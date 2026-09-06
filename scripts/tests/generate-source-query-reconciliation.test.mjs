@@ -426,6 +426,18 @@ test("verified target queries bind exact nonblocked TQUERY/TACCESS/mapping tripl
       },
       /decision-blocked TQUERY/,
     ],
+    [
+      (value) => {
+        const found = findOutcome(value, (entry) => entry.category === "verified_target_query_port").outcome;
+        const implemented = value.targetAuthority.queries.find(
+          (query) => query.tqueryId === "TQUERY-038289DD7D2C",
+        );
+        found.tqueryId = implemented.tqueryId;
+        found.taccessId = implemented.taccessId;
+        found.expectedMappingHash = implemented.mappingHash;
+      },
+      /owner below verified lifecycle/,
+    ],
   ];
   assert.match(outcome.tqueryId, /^TQUERY-/);
   for (const [mutate, pattern] of cases) {
@@ -433,6 +445,58 @@ test("verified target queries bind exact nonblocked TQUERY/TACCESS/mapping tripl
     mutate(value);
     expectFailure(() => build(value), pattern);
   }
+});
+
+test("verified target-query outcomes accept every exact verified-or-later owner lifecycle", () => {
+  for (const status of ["verified", "rehearsed", "cutover_ready"]) {
+    const value = inputs();
+    const found = findOutcome(value, (entry) => entry.category === "verified_target_query_port").outcome;
+    const query = value.targetAuthority.queries.find(
+      (entry) => entry.tqueryId === "TQUERY-038289DD7D2C",
+    );
+    found.tqueryId = query.tqueryId;
+    found.taccessId = query.taccessId;
+    found.expectedMappingHash = query.mappingHash;
+    value.manifest.surfaces.find((entry) => entry.id === query.ownerSurfaceId).status = status;
+    assert.doesNotThrow(() => build(value), status);
+  }
+});
+
+test("verified target-query outcomes reject every below-verified owner lifecycle and missing current owner", () => {
+  const statuses = [
+    "discovered",
+    "characterized",
+    "target_mapped",
+    "implemented",
+    "blocked",
+    "retired",
+    "unknown",
+  ];
+  for (const status of statuses) {
+    const value = inputs();
+    const found = findOutcome(value, (entry) => entry.category === "verified_target_query_port").outcome;
+    const query = value.targetAuthority.queries.find(
+      (entry) => entry.tqueryId === "TQUERY-038289DD7D2C",
+    );
+    found.tqueryId = query.tqueryId;
+    found.taccessId = query.taccessId;
+    found.expectedMappingHash = query.mappingHash;
+    value.manifest.surfaces.find((entry) => entry.id === query.ownerSurfaceId).status = status;
+    expectFailure(() => build(value), /owner below verified lifecycle/);
+  }
+
+  const missing = inputs();
+  const found = findOutcome(missing, (entry) => entry.category === "verified_target_query_port").outcome;
+  const query = missing.targetAuthority.queries.find(
+    (entry) => entry.tqueryId === "TQUERY-038289DD7D2C",
+  );
+  found.tqueryId = query.tqueryId;
+  found.taccessId = query.taccessId;
+  found.expectedMappingHash = query.mappingHash;
+  missing.manifest.surfaces = missing.manifest.surfaces.filter(
+    (entry) => entry.id !== query.ownerSurfaceId,
+  );
+  expectFailure(() => build(missing), /missing manifest owner/);
 });
 
 test("future and nonquery mappings bind exact manifest members, status, disposition, target, and hash", () => {

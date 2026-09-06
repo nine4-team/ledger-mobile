@@ -211,6 +211,21 @@ The checker also enforces the inverse: no target-relevant manifest surface may
 advance to `implemented` or later without exactly one implementation slice that
 has reached the corresponding status.
 
+Mechanical target-query inventory follows the same checkpoint sequence. A
+public `Querying` port enters that inventory when its exact manifest owner is
+`implemented`, `verified`, `rehearsed`, or `cutover_ready`; pre-implementation,
+blocked, retired, and unknown owners reject the inventory. The inventory records
+owner status for human review, but its TQUERY identity, signature hash, and
+inventory digest are lifecycle-stable.
+
+Logical query authority is lifecycle-neutral: `mapped` means the query's scope,
+result, ordering, pagination, readiness, and authorization boundaries were
+reviewed, not that its implementation passed verification. A consumer claiming
+a `verified_target_query_port` must join the TQUERY's owner surface to the
+current conversion manifest and require exactly `verified`, `rehearsed`, or
+`cutover_ready`. It may not trust stale generated lifecycle prose or interpret
+`implemented` as verified.
+
 ## Required Work Sequence
 
 1. **Select the slice.** Identify stable manifest surfaces and owning capability

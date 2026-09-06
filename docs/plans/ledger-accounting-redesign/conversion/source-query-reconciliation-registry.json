@@ -9,8 +9,8 @@
   },
   "targetAuthority": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-crosswalk.generated.json",
-    "artifactSha256": "4b2876c7627afcea6282c53f3cd17615dba6036412efec1500bd48afb411f7b2",
-    "inventoryDigest": "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2"
+    "artifactSha256": "9effa187e948004a511731239be2ed47ae6f4de393033551c978609a754b0022",
+    "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941"
   },
   "conversionManifestPath": "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
   "batchDirectory": "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches",

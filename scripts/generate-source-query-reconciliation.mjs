@@ -28,15 +28,15 @@ const EXPECTED_SOURCE_SHA =
 const EXPECTED_SOURCE_DIGEST =
   "87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4";
 const EXPECTED_TARGET_SHA =
-  "4b2876c7627afcea6282c53f3cd17615dba6036412efec1500bd48afb411f7b2";
+  "9effa187e948004a511731239be2ed47ae6f4de393033551c978609a754b0022";
 const EXPECTED_TARGET_DIGEST =
-  "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2";
+  "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941";
 const EXPECTED_CONTROL_MODEL_SHA =
   "d2792fd288184c621a38127b5a7d669dcd4bde4bbb3039556d4e71ee32bd7f84";
 const EXPECTED_REQUIREMENTS_SHA =
-  "53b45a50617968d80b0267623c3853afe30be69cdc43dcd391cb118120f1edc9";
+  "63196e3048b49013a56873294dad3584d4d76e04501f062ff22cc147aaff0fa3";
 const EXPECTED_VERIFICATION_STABLE_SHA =
-  "69add5c66b69747b7b1c7bd982860afedcda814dd023e6e9b99b001182d6711e";
+  "62430e5dc93c8e25d02036d9756bdb42fae0ac1e4ab64f78d2e84fbd573b6034";
 const EXPECTED_CONTRACTS_SHA =
   "171e3464ca4d26ed9446d7da0b0cc892e433226fd59d4a14e0410c83d657bacd";
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
@@ -58,6 +58,11 @@ const CATEGORY_ORDER = Object.freeze([
 const TARGET_STATUSES = Object.freeze([
   "target_mapped",
   "implemented",
+  "verified",
+  "rehearsed",
+  "cutover_ready",
+]);
+const VERIFIED_OR_LATER_TARGET_STATUSES = new Set([
   "verified",
   "rehearsed",
   "cutover_ready",
@@ -1543,6 +1548,11 @@ function validateOutcome(
   if (outcome.category === "verified_target_query_port") {
     const query = targetQueries.get(outcome.tqueryId);
     if (!query) fail(`${label} references missing TQUERY ${outcome.tqueryId}`);
+    const owner = manifestSurfaces.get(query.ownerSurfaceId);
+    if (!owner) fail(`${label} references TQUERY with missing manifest owner`);
+    if (!VERIFIED_OR_LATER_TARGET_STATUSES.has(owner.status)) {
+      fail(`${label} references TQUERY owner below verified lifecycle ${outcome.tqueryId}`);
+    }
     if (query.reviewClass === "decision_blocked") fail(`${label} references decision-blocked TQUERY`);
     if (outcome.taccessId !== query.taccessId || outcome.expectedMappingHash !== query.mappingHash) {
       fail(`${label} does not bind the exact target-query authority row`);
@@ -1801,9 +1811,11 @@ function validateReadySemanticFreeze(root, dossier, registry, batches, { enforce
   if (!enforceRepositoryDiff || !["implemented", "verified"].includes(dossier.status)) return;
   const base = dossier.controlModel.lifecycleAllowlists.implementation.baseCommit;
   const baseRegistry = baselineJson(root, base, REGISTRY_RELATIVE, "READY registry baseline");
+  const reboundBaseRegistry = structuredClone(baseRegistry);
+  reboundBaseRegistry.targetAuthority = registry.targetAuthority;
   requireEqual(
     stripLifecycleNarrative(registry),
-    stripLifecycleNarrative(baseRegistry),
+    stripLifecycleNarrative(reboundBaseRegistry),
     "registry semantic READY freeze",
   );
   for (const { descriptor, batch } of batches) {

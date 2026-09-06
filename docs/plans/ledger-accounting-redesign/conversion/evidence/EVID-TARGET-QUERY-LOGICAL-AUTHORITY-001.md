@@ -1,7 +1,7 @@
 # EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001 — Target Query Logical-Authority Crosswalk
 
 - Timestamp: 2026-09-03
-- Class: verified / target query logical-authority conversion control
+- Class: implemented lifecycle amendment / originally verified target query logical-authority conversion control
 - Target baseline: amended immutable READY commit
   `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a` on
   `codex/supabase-powersync-implementation`
@@ -14,8 +14,9 @@
   `66d56bf1ee8302e63b5622c879e62dbbe4b7e95e`; immutable GitHub Actions run
   `33853355777` passed both jobs, including the Linux structural gate before the
   dependent target test/build job
-- Verification state: verified; `TQUERYAUTH-TEST-001` through `-010` pass and
-  independent final adversarial review returned GO with no P0-P3 finding
+- Verification state: the original 18-row control remains verified by its
+  recorded immutable run; the 19-row lifecycle-neutral amendment passes 24
+  focused tests locally and awaits exact current-batch CI
 
 ## Selection and Scope
 
@@ -292,3 +293,21 @@ for macOS and iOS Simulator. Exact-path review finds no Swift, registry,
 discoverer, query-extractor, query artifact, schema, RLS, Sync, provider,
 Firebase, hosted or production change. No hosted service or production system
 is contacted by this implementation or promotion.
+
+## Lifecycle-Neutral 19-Row Amendment — 2026-09-06
+
+The registry now binds 19 TQUERY methods and adds the reviewed
+`SpaceListQuerying.watchSpaces` logical row: exact Account plus Project-or-
+Business-Inventory scope, active-only presentation, folded-name/exact-name/ID
+ordering, unpaged observation, strict false-empty readiness, and authorization
+as a narrowing constraint rather than a grant. Search, authoritative Item count,
+and primary-image projection remain separate required browser work.
+
+The upstream inventory accepts implemented-or-later owners, but this logical
+artifact deliberately omits lifecycle. `mapped` means the six logical axes were
+reviewed; it is not verification evidence. Status-only promotion therefore
+leaves TACCESS identity, mapping hash, and generated logical-authority bytes
+unchanged. All 24 focused tests and generate/check pass locally. The two CONFIG
+surfaces are reopened at `implemented` pending exact current-batch CI. Final
+independent re-review reproduced the lifecycle-neutral bytes and returned GO
+with no P0-P3; the complete local batch gate also passes.

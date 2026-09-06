@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T21:53:14.687Z",
+  "generatedFromManifestSync": "2026-09-06T23:12:09.305Z",
   "totals": {
     "slices": 99,
     "claimedTargetSurfaces": 329,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 245
+    "implementationAdvancedTargetSurfaces": 247
   },
   "statusCounts": {
     "draft": 5,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
-    "verified": 77,
+    "implemented": 16,
+    "verified": 75,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -1378,7 +1378,7 @@
       "sliceId": "space-list-read-and-presentation-contracts",
       "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space List Read and Presentation Contracts",
       "surfaceIds": [
         "SWIFT-0DCDAFBB4350",
@@ -1451,7 +1451,7 @@
       "sliceId": "target-query-logical-authority-crosswalk-control",
       "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
       "kind": "technical_control",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Target Query Logical-Authority Control",
       "surfaceIds": [
         "CONFIG-5422E6C6A047",
@@ -1466,7 +1466,7 @@
       "sliceId": "target-query-port-inventory-control",
       "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
       "kind": "technical_control",
-      "status": "verified",
+      "status": "implemented",
       "owner": "Target Query-Port Conversion Control",
       "surfaceIds": [
         "CONFIG-9B16CFCB67A4",

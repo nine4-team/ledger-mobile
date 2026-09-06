@@ -1,5 +1,5 @@
 {
-  "inventoryDigest": "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2",
+  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
   "physicalPlanes": {
     "postgres": {"status": "deferred", "decision": "A-003"},
     "local": {"status": "deferred", "decision": "A-004"}
@@ -30,6 +30,28 @@
         {"axis": "occurrence_and_provenance_persistence", "state": "decision_blocked", "blockerIds": ["O-007", "O-015"]},
         {"axis": "deterministic_storage_order", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ITEM-ACCOUNTING-001.md#Permanent Limits"]}
       ]
+    },
+    {
+      "tqueryId": "TQUERY-038289DD7D2C",
+      "expectedSignatureHash": "9089cf0209e5762269ae68e18397200140333722a9efc08bf72d6bc90d8644f3",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Space Browsing"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Workspace queries"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md", "section": "Frozen Implementation Boundary"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and exact Project-or-Business-Inventory Space scope."},
+        "result": {"state": "reviewed", "value": "Canonical scoped Space rows retain stable identity, explicit lifecycle, revision and validated checklist evidence; active presentation excludes archived rows and represents Item count as unavailable rather than zero."},
+        "ordering": {"state": "reviewed", "value": "Case-folded display name, exact display name, then stable Space ID ascending; duplicate display names remain distinct."},
+        "pagination": {"state": "reviewed", "value": "Unpaged exact-scope observation; search, authoritative Item count and primary-image projection remain separate required browser work."},
+        "readiness": {"state": "reviewed", "value": "Ready complete source-exhaustive evidence alone can establish authoritative active-list emptiness; partial, stale, incomplete and failed evidence cannot."},
+        "authorization": {"state": "reviewed", "value": "Account and immutable Space scope narrow an already-authorized local working set and never grant visibility by local presence."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace_or_inventory_by_immutable_scope"}
+      ],
+      "unresolvedAxes": []
     },
     {
       "tqueryId": "TQUERY-CD97754157F6",

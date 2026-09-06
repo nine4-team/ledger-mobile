@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T21:53:14.687Z",
+    "lastSynchronizedAt": "2026-09-06T23:12:09.305Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1084,10 +1084,10 @@
           "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
         }
       ],
-      "observedSourceHash": "bb093fb3e58f8c6f9ff217e96a300300762966f6f3ae853abe86daf658c55693",
-      "acknowledgedSourceHash": "bb093fb3e58f8c6f9ff217e96a300300762966f6f3ae853abe86daf658c55693",
+      "observedSourceHash": "87fe6029a01623aab9c0b074accaa7a445107ab52f5e7914d7c14f21a37ef0da",
+      "acknowledgedSourceHash": "87fe6029a01623aab9c0b074accaa7a445107ab52f5e7914d7c14f21a37ef0da",
       "metadata": {},
-      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks including the required nonparallel complete-Swift-package gate, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
+      "currentBehavior": "Executable 25-test adversarial Node suite covering the exact 386-query/584-outcome baseline, lifecycle-neutral target bindings, verified-or-later acceptance, exhaustive lower/blocked/retired/unknown/missing-owner rejection, closed schemas, source identity, blocker/evidence anti-laundering, retirement/gate order, deterministic output, historical checkpoint diff, fail-closed workflow topology, filesystem containment, atomic writes, read-only checking and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -1124,7 +1124,7 @@
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional, verification steps cannot skip or tolerate failures, and removal of --no-parallel from the complete Swift package gate fails closed. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority.",
+      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass locally and exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1391,10 +1391,10 @@
           "path": "scripts/generate-target-query-logical-authority-crosswalk.mjs"
         }
       ],
-      "observedSourceHash": "50eb4ba95cc01d8f7fdd76f0b868eded68063dcf2f84860c7e64859cf613dc5b",
-      "acknowledgedSourceHash": "50eb4ba95cc01d8f7fdd76f0b868eded68063dcf2f84860c7e64859cf613dc5b",
+      "observedSourceHash": "7d4c99000839df4e7510b1385008ecf298d10eae94e8200444d104c038f41440",
+      "acknowledgedSourceHash": "7d4c99000839df4e7510b1385008ecf298d10eae94e8200444d104c038f41440",
       "metadata": {},
-      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over every generated TQUERY. It fully re-derives the closed upstream inventory schema, relationships, ordering, totals, signature/category/TQUERY identities and digest; enforces registry schemas, exact enums/allowlists/references and review-class consistency; derives collision-checked TACCESS identities and canonical registry-row mapping hashes; canonicalizes all nested output object keys while preserving array order; and accepts exactly one CLI mode. Repository inputs, authority paths, artifact and artifact parent are realpath-contained regular non-symlink paths. Generate uses an unpredictable exclusive no-follow sibling temporary and atomic rename; check is read-only and byte-exact. It performs no free-text keyword or Markdown semantic/status parsing.",
+      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over all 19 generated TQUERY rows. It validates exact implemented-or-later input lifecycle while omitting lifecycle from logical output, so status-only promotion preserves TACCESS, mapping hashes and crosswalk bytes. It binds the reviewed Space-list row and retains the existing closed-schema, deterministic, filesystem-safe and no-semantic-inference guarantees.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -1415,7 +1415,7 @@
       "migration": {
         "rule": "Review target logical authority only; do not map or translate Firebase queries, indexes or data.",
         "reconciliation": [
-          "Bind exactly one reviewed row to each of the 18 current generated TQUERY methods",
+          "Bind exactly one reviewed row to each of the 19 current generated TQUERY methods",
           "Leave all 386 QUERY source occurrences for a separate downstream reconciliation slice"
         ]
       },
@@ -1427,16 +1427,16 @@
           "immutable implementation CI under the slice dossier"
         ],
         "acceptance": [
-          "Generated JSON binds all 18 current TQUERY methods and exact signatures to the reviewed registry",
+          "Generated JSON binds all 19 current TQUERY methods and exact signatures to the reviewed lifecycle-neutral registry",
           "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "Verified from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363 after exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. Independent final adversarial review returned GO. Physical access, provider, runtime and production behavior remain excluded.",
+      "notes": "Original 18-row verification remains backed by exact implementation 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row Space amendment; 24 focused tests pass locally and exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2387,10 +2387,10 @@
           "path": "scripts/generate-target-query-port-inventory.mjs"
         }
       ],
-      "observedSourceHash": "52202829194b8ce52be51224f6597d20082206f26891aef9b36bdfb6fe6bd562",
-      "acknowledgedSourceHash": "52202829194b8ce52be51224f6597d20082206f26891aef9b36bdfb6fe6bd562",
+      "observedSourceHash": "10be72ecee01e0852709de28219ffc0dcc8e88533d02b1cd8e2d32118d165593",
+      "acknowledgedSourceHash": "10be72ecee01e0852709de28219ffc0dcc8e88533d02b1cd8e2d32118d165593",
       "metadata": {},
-      "currentBehavior": "Dependency-free deterministic Node lexical scanner that recursively inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying, masks nested ordinary/multiline/raw strings and regex literals without declaration leakage, uses already-masked lexical context to distinguish regex from division across comments, preserves split multiline return types through direct-member boundaries, validates declaration prefixes plus protocol-header, generic-parameter, parameter-clause and function-tail grammar recursively through nonempty nested types with valid component start/end states, rejects unsupported non-ASCII code tokens, emits stable timestamp-free JSON/Markdown with separate identity and signature drift, and fails closed on malformed, ambiguous, duplicate, unsupported or invalid-owner input; check byte-compares both artifacts without writing.",
+      "currentBehavior": "Dependency-free deterministic Node lexical scanner that inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying whose owner is implemented, verified, rehearsed or cutover-ready. It records owner lifecycle visibly, keeps TQUERY/signature/digest stable across status-only promotion, rejects earlier/blocked/retired/unknown owners, preserves the existing adversarial Swift lexical/grammar guarantees, emits timestamp-free JSON/Markdown, and byte-checks both artifacts without writing.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -2420,17 +2420,17 @@
           "npm run target:query-ports:check"
         ],
         "acceptance": [
-          "Exactly 16 verified owners, 16 public exact-suffix Querying protocols and 18 direct methods are emitted at the frozen baseline",
+          "Exactly 17 implemented-or-later owners, 17 public exact-suffix Querying protocols and 19 direct methods are emitted at the reviewed baseline",
           "Unsupported, ambiguous, duplicate, empty or invalid-owner input fails closed",
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Verified after exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 passed immutable Actions run 33837081633 and exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated regex context, multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested types, and silent omission of Unicode or backticked protocol identifiers before checkpoint. Generation/checking emits the reviewed 16-owner/16-protocol/18-method inventory.",
+      "notes": "Original verification remains backed by exact implementation a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Reopened at implemented for the lifecycle amendment; 22 focused tests pass locally for the 17-owner/17-protocol/19-method inventory and exact status matrices. Exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2547,10 +2547,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "c2933a7db85a6245faef8654daf3a666f5d1f51249f62ca1682b4aa2fc04a8e1",
-      "acknowledgedSourceHash": "c2933a7db85a6245faef8654daf3a666f5d1f51249f62ca1682b4aa2fc04a8e1",
+      "observedSourceHash": "4b4576a5b61f175e2c21382c142f47917ac3e3df7d21a949d1e97b5e0feda15b",
+      "acknowledgedSourceHash": "4b4576a5b61f175e2c21382c142f47917ac3e3df7d21a949d1e97b5e0feda15b",
       "metadata": {},
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map, including compact current-state validation inside conversion:check, and the byte-exact workflow including the isolated Space and Project-note Data API read gates; permits only the exact unconditional local-Supabase cleanup step; requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites; and keeps every verification step fail-closed.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -2590,7 +2590,7 @@
         "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
         "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. Later provider slices re-acknowledged only the exact package command and workflow fingerprints needed to run their isolated local Data API read checks, most recently the Project-note before/after-archive continuity check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
+      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle amendment changes only the exact target-authority binding and verified-owner guard; all 386 classifications and 584 outcomes remain unchanged. All 25 focused tests pass locally; exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2955,10 +2955,10 @@
           "path": "scripts/tests/generate-target-query-port-inventory.test.mjs"
         }
       ],
-      "observedSourceHash": "ad956e93111280201c87739b5bfa0b5389ad5d2123a4d26bacf2209fdb09bd46",
-      "acknowledgedSourceHash": "ad956e93111280201c87739b5bfa0b5389ad5d2123a4d26bacf2209fdb09bd46",
+      "observedSourceHash": "3d3d2d8b0f4653feece82d3b095ab6e29037ace3ae48001dcf04d8233ae1e8aa",
+      "acknowledgedSourceHash": "3d3d2d8b0f4653feece82d3b095ab6e29037ace3ae48001dcf04d8233ae1e8aa",
       "metadata": {},
-      "currentBehavior": "Twenty dependency-free Node tests prove the exact target query-port baseline, deterministic normalization and order, identity changes across selector/protocol/owner while signature-only drift preserves identity, nested string/regex interpolation safety, comment-separated regex and division behavior, declaration-prefix and protocol-header/generic-parameter/parameter-clause/function-tail validation including nested component start/end states, valid composition/member/function types, explicit non-ASCII and backticked-name rejection, multiline and adversarial Swift syntax including split opaque/attributed returns, exact exclusions, fail-closed invalid inputs before artifact overwrite, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
+      "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 17-owner/17-protocol/19-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -2991,12 +2991,12 @@
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Verified after immutable READY run 33837081633 and exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485. All 20 focused tests and the independent adversarial matrix pass.",
+      "notes": "Original verification remains backed by run 33842465485. Reopened at implemented for the lifecycle amendment; all 22 focused tests pass locally and exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -3830,15 +3830,15 @@
           "path": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs"
         }
       ],
-      "observedSourceHash": "0679f744957c3a7972a3f09a185310487e0f34f97286ef16bad5acceb74ad96c",
-      "acknowledgedSourceHash": "0679f744957c3a7972a3f09a185310487e0f34f97286ef16bad5acceb74ad96c",
+      "observedSourceHash": "9d3f3f6ca8874fb9f178c92651c7fca08367e4ed676fed058a05d7566f6c4f94",
+      "acknowledgedSourceHash": "9d3f3f6ca8874fb9f178c92651c7fca08367e4ed676fed058a05d7566f6c4f94",
       "metadata": {},
-      "currentBehavior": "Executable 23-test JSON-only logical-authority structural suite covering fully derived upstream inventory schema/relations/totals/identities, exact registry schema/enums/allowlists, 18/18 binding, review-class consistency including count-preserving swaps, authority heading and realpath/symlink safety, stable identities and mapping hashes, recursive object-key canonicalization with preserved array order, exclusive temporary-file refusal, deterministic bytes, missing/stale read-only checking, no-overwrite failures, exact CLI arity, package/CI topology and the explicit absence of free-text semantic inference.",
+      "currentBehavior": "Executable 24-test JSON-only logical-authority structural suite covering the fully derived 19-row upstream inventory, exact implemented-or-later lifecycle inputs, lifecycle-neutral output stability, Space-list scope/readiness mapping, registry schemas, review-class consistency, authority/filesystem safety, stable identities and mapping hashes, deterministic bytes, read-only checking, CLI/package/CI topology and no semantic inference.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
         "surfaces": [
-          "exact 18-row inventory/signature binding tests",
+          "exact 19-row inventory/signature binding tests",
           "closed-schema and discriminated-axis rejection matrix",
           "deterministic identity, mapping hash, stale artifact and lifecycle-allowlist tests"
         ],
@@ -3865,16 +3865,16 @@
           "npm run target:query-authority:check"
         ],
         "acceptance": [
-          "All 23 focused tests pass locally",
+          "All 24 focused tests pass locally",
           "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "Verified from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363 after exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. Contiguous firestoreQuery/firestoreIndex cases remain executable and the committed discovery exclusions prevent false source-surface/query inventory drift. Machine tests prove structure and freshness only; row semantics remain a required human review surface, and independent final adversarial review returned GO.",
+      "notes": "Original verification remains backed by run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row amendment; all 24 focused tests pass locally and exact current-batch CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -20485,12 +20485,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift"
         }
       ],
-      "observedSourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
-      "acknowledgedSourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
+      "observedSourceHash": "5546daf4452220b2dca5f8782054ae0b6c95f560a54456f7d204d8355601b676",
+      "acknowledgedSourceHash": "5546daf4452220b2dca5f8782054ae0b6c95f560a54456f7d204d8355601b676",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only target scaffold for exact-scope active Space-list and presentation contracts.",
+      "currentBehavior": "Implements the provider-free exact-scope Space-list request, canonical local snapshot, active-only directory presentation, checklist progress, explicit unavailable Item count, failed-cache truth and evidence-bound selection into exact Space details.",
       "disposition": "redesign",
       "target": {
         "owner": "Space List Read and Presentation Contracts",
@@ -20522,13 +20522,14 @@
           "Only exact-scope complete evidence can produce an authoritative active Space list or selection"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
-        "EVID-M2-SPACES-REVIEW-001"
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-LIST-READ-PRESENTATION-001"
       ],
-      "notes": "Target-only leaf. It will preserve active Space browsing and checklist progress while making incomplete evidence and unavailable Item counts explicit.",
+      "notes": "Implemented after root and independent review rejected the first green candidate for a failed-cache false-empty defect and recursive restart/test-proof gaps. The corrected contract downgrades retryable/required-update cache to stale incomplete presentation evidence, validates nested canonical shapes, and preserves the final search/count/media parity obligations for later slices.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -45149,12 +45150,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
-      "acknowledgedSourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
+      "observedSourceHash": "9b5d278ed8b23fd26c6f7991da443343cc6b791c0974f4879862a256070d165e",
+      "acknowledgedSourceHash": "9b5d278ed8b23fd26c6f7991da443343cc6b791c0974f4879862a256070d165e",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only target test scaffold for the Space-list read and presentation contract.",
+      "currentBehavior": "Runs six provider-free tests covering exact Account/scope, canonical ordering, active filtering, checklist progress, unavailable Item count, false-empty refusal, recursive restart/tamper, selection/detail continuity, read-port failure and cancellation boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Space List Read and Presentation Contract Tests",
@@ -45182,13 +45183,14 @@
           "All exact contract and negative cases pass without a backend dependency"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
-        "EVID-M2-SPACES-REVIEW-001"
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-LIST-READ-PRESENTATION-001"
       ],
-      "notes": "Will prove exact scope, active-only filtering, deterministic ordering, checklist progress, false-empty refusal and stable-ID detail selection.",
+      "notes": "Six focused tests pass after two review-and-correction rounds. They independently reconstruct all three fingerprint bases and directly cover failed cached-empty degradation, wrong Account/scope selection validation, rebound cache refusal, strict nested Codable shapes, unexpected failures and cancellation. Exact implementation CI is still pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

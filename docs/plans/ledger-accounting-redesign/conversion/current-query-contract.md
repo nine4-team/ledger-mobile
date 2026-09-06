@@ -91,6 +91,16 @@ offline reads and subscriptions. MCP and server handlers may use Postgres
 queries/RPCs. Migration and audit tooling remains source-specific until cutover.
 No Firebase implementation of redesigned accounting is required.
 
+The mechanical target-port inventory admits only exact manifest owners at
+`implemented` or later active lifecycle states. Its generated review output
+shows current owner status, while TQUERY identity, signature hash, inventory
+digest, TACCESS identity, mapping hash, and logical-authority bytes remain stable
+across status-only promotion. A logical row classified `mapped` is reviewed
+semantic authority, not verification evidence. The source-reconciliation
+category `verified_target_query_port` is valid only when the TQUERY owner joins
+to the current manifest at `verified`, `rehearsed`, or `cutover_ready`; an
+`implemented` or otherwise ineligible owner fails closed.
+
 ## Completeness and Limitations
 
 The generated catalog is symbol-complete for recognized Firestore query/read

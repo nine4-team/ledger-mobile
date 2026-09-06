@@ -75,15 +75,21 @@ const LOGICAL_AXIS_NAMES = Object.freeze([
   "readiness",
   "authorization",
 ]);
+const INVENTORIED_OWNER_STATUSES = Object.freeze([
+  "implemented",
+  "verified",
+  "rehearsed",
+  "cutover_ready",
+]);
 const EXPECTED_COUNTS = Object.freeze({
-  ownerSurfaces: 16,
-  protocols: 16,
-  methods: 18,
-  observationMethods: 18,
+  ownerSurfaces: 17,
+  protocols: 17,
+  methods: 19,
+  observationMethods: 19,
   requestResponseMethods: 0,
 });
 const EXPECTED_REVIEW_COUNTS = Object.freeze({
-  mapped: 6,
+  mapped: 7,
   mapped_with_unresolved_axes: 11,
   decision_blocked: 1,
 });
@@ -456,7 +462,7 @@ function validateInventory(inventory) {
       `${label}.ownerPath`,
       /^LedgeriOS\/LedgerTargetCore\/[A-Za-z0-9_/-]+\.swift$/,
     );
-    if (method.ownerStatus !== "verified") fail(`${label}.ownerStatus must equal verified`);
+    requireEnum(method.ownerStatus, INVENTORIED_OWNER_STATUSES, `${label}.ownerStatus`);
     requireString(method.protocol, `${label}.protocol`, /^[A-Za-z_][A-Za-z0-9_]*Querying$/);
     requireString(method.selector, `${label}.selector`, /^[A-Za-z_][A-Za-z0-9_]*$/);
     requireEnum(method.category, ["observation", "request_response"], `${label}.category`);

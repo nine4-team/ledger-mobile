@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 11,
+  "stateVersion": 14,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -17,28 +17,36 @@
     "meaning": "Deterministic synthetic Firebase source fixtures and the fail-closed provider-free migration environment guard passed all three immutable CI jobs after two independent correction rounds; no production source, hosted target or migration execution was accessed."
   },
   "readyCheckpoint": {
-    "name": "MIGRATION-SAFETY-READY",
-    "commit": "d281498bde31c27bd17879571ef67b42bfb1dc3d",
-    "ciRun": 34056116157,
+    "name": "SPACE-LIST-READ-PRESENTATION-READY",
+    "commit": "c9d4d8bbce6319f81aacb5851b16035d3c7ab809",
+    "ciRun": 34062468352,
     "ciStatus": "passed",
-    "meaning": "The independently reviewed comment-only migration-safety boundary and generated residual register passed all three immutable CI jobs; this authorized local provider-free implementation only."
+    "meaning": "The independently corrected two-file Space list/presentation boundary passed conversion traceability, isolated local Supabase provider checks, all existing target tests and both staging builds before executable edits; it authorized only the provider-free Core implementation."
   },
   "activeBatch": {
     "id": "space-browser-contract-foundation",
-    "status": "ready",
-    "outcome": "Freeze and implement the reusable provider-free integrity contract for a future active Project-or-Business-Inventory Space browser: exact local readiness, checklist progress, honest unavailable Item count and stable-ID navigation into existing detail. The physical provider remains DRAFT until its three implementation dependencies are verified; production search, Item count, media and public MCP parity remain required and explicitly deferred rather than removed.",
+    "status": "ci_verification",
+    "outcome": "Implement the reusable provider-free integrity contract for a future active Project-or-Business-Inventory Space browser and correct the query-control lifecycle so newly implemented query ports can be inventoried without being misrepresented as verified. The inventory exposes current lifecycle while keeping TQUERY identity stable; logical authority is lifecycle-neutral; source reconciliation independently requires verified-or-later current owners for verified-target-query claims. The physical provider remains DRAFT until its three implementation dependencies are verified, and production search, Item count, media and public MCP parity remain required.",
     "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
     ],
     "allowedPaths": [
       "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
-      "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift"
+      "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "scripts/generate-target-query-port-inventory.mjs",
+      "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "scripts/generate-target-query-logical-authority-crosswalk.mjs",
+      "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "scripts/generate-source-query-reconciliation.mjs",
+      "scripts/tests/generate-source-query-reconciliation.test.mjs"
     ],
     "nextActions": [
-      "Commit and push the independently approved provider-free READY boundary and require all three immutable CI jobs to pass before executable edits.",
-      "Record the exact green READY commit/run in the compact checkpoint without widening the two-file implementation boundary.",
-      "Implement the two frozen Core leaves, independently review them, then run focused checks, one complete local batch gate and one exact immutable CI run before verified promotion.",
-      "Keep the physical PowerSync/app and MCP dossiers DRAFT until their named dependency/parity blockers close; select the next full workflow batch immediately after this reusable integrity foundation."
+      "Commit and push the reviewed implemented checkpoint, then require all three immutable CI jobs to pass on that exact SHA.",
+      "Promote the two Space surfaces and the six amended control surfaces only after exact implementation commit/run evidence, while keeping physical PowerSync/app and MCP Space dossiers DRAFT.",
+      "Select and begin the next coherent workflow batch immediately after promotion."
     ]
   },
   "progress": {
@@ -49,7 +57,7 @@
     },
     "targetRelevantSurfaces": 757,
     "mappedOrLaterSurfaces": 567,
-    "implementedOrLaterSurfaces": 245,
+    "implementedOrLaterSurfaces": 247,
     "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0
@@ -58,7 +66,7 @@
     "measurementUnit": "verified end-to-end workflow",
     "speedMultiplierTarget": 3,
     "tokenEfficiencyMultiplierTarget": 3,
-    "measurementStart": "The recreated Codex goal began at zero tokens on 2026-09-06; record goal token and elapsed-time deltas at each integrated batch checkpoint.",
+    "measurementStart": "The backend goal remains active even when its UI chip is absent; record backend-reported goal token and elapsed-time deltas at each integrated batch checkpoint without fabricating a UI-derived reset.",
     "normalBatchSliceMinimum": 2,
     "normalBatchSliceMaximum": 4,
     "normalBatchFullLocalGates": 1,
@@ -81,8 +89,8 @@
     "requiredReads": [
       "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-browser-powersync-provider.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-read-target-mcp.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
     ],
     "requiredCommands": [
       "git status --short --branch",

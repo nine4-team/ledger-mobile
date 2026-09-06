@@ -3,7 +3,7 @@
   "sliceId": "target-query-logical-authority-crosswalk-control",
   "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
   "kind": "technical_control",
-  "status": "verified",
+  "status": "implemented",
   "owner": "Target Query Logical-Authority Control",
   "surfaceIds": ["CONFIG-5422E6C6A047", "CONFIG-ED6818A70D4E"],
   "requirements": [
@@ -30,7 +30,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
       "section": "Required Slice Dossier",
-      "invariant": "The registry records only inventory digest, globally deferred physical planes, and 18 closed-schema rows containing TQUERY/signature binding, review class, authority references, logical axes, proposed architecture dependencies, and unresolved axes.",
+      "invariant": "The registry records only inventory digest, globally deferred physical planes, and 19 closed-schema rows containing TQUERY/signature binding, review class, authority references, logical axes, proposed architecture dependencies, and unresolved axes.",
       "decisionIds": [],
       "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-002", "TQUERYAUTH-TEST-003"]
     },
@@ -111,7 +111,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
       "section": "Pull Request and Checkpoint Evidence",
-      "invariant": "READY, implementation and promotion use exact allowlists, preserve all 16 query-owner surfaces plus FILE-063B0E6EC659 and MAN-INDEX-001 at their existing lifecycle state, path-exclude both logical-authority control leaves from generic Firebase audit/repair discovery, exact-path-exclude the logical-authority test fixture from current-source query candidate inspection, preserve the 386 QUERY inventory, and never confuse structural validation with semantic approval.",
+      "invariant": "READY, implementation and promotion use exact allowlists, preserve the 16 prior query-owner surfaces plus FILE-063B0E6EC659 and MAN-INDEX-001, add the implemented Space-list query owner explicitly, path-exclude both logical-authority control leaves from generic Firebase audit/repair discovery, exact-path-exclude the logical-authority test fixture from current-source query candidate inspection, preserve the 386 QUERY inventory, and never confuse structural validation or logical mapped status with lifecycle verification.",
       "decisionIds": [],
       "verificationIds": ["TQUERYAUTH-TEST-007", "TQUERYAUTH-TEST-008"]
     }
@@ -119,7 +119,8 @@
   "contracts": {
     "domain": {
       "items": [
-        "The reviewed registry contains exactly one row for each of the 18 generated TQUERY methods and no extra row.",
+        "The reviewed registry contains exactly one row for each of the 19 generated TQUERY methods and no extra row.",
+        "The logical crosswalk accepts implemented-or-later inventory owners but omits lifecycle from its output so TACCESS, mapping hashes and bytes remain stable across status-only promotion; mapped is semantic review, not lifecycle verification.",
         "Each row records exact signature binding, review class, authority references, six logical axes, proposed architecture dependencies and explicit unresolved axes without repeating generated owner/protocol/selector/category/path data.",
         "Only a reviewed axis carries value. A not_defined_by_current_contract axis carries authorityRefs, and a decision_blocked axis carries blockerIds; the latter two forbid value.",
         "Exact reviewClass values are mapped, mapped_with_unresolved_axes and decision_blocked; exact authority roles are canonical_target, architecture_authority, conversion_control and verification_evidence; exact logical-axis states are reviewed, not_defined_by_current_contract and decision_blocked; proposedDataDomains accepts only state proposed_architecture_dependency.",
@@ -174,7 +175,7 @@
       "kind": "domain",
       "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
       "covers": ["TQUERYAUTH-REQ-001", "TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-004", "TQUERYAUTH-REQ-008"],
-      "expected": "Exact set equality proves one closed-schema registry row for each of 18 current TQUERY methods, with exact inventory digest and signature binding and no copied generated ownership fields.",
+      "expected": "Exact set equality proves one closed-schema registry row for each of 19 current TQUERY methods, with exact inventory digest and signature binding and no copied generated ownership or lifecycle fields.",
       "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
     },
@@ -228,7 +229,7 @@
       "kind": "operational",
       "owner": "conversion control and exact diff review",
       "covers": ["TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-006", "TQUERYAUTH-REQ-007", "TQUERYAUTH-REQ-009", "TQUERYAUTH-REQ-010", "TQUERYAUTH-REQ-012"],
-      "expected": "Exact READY, implementation and promotion allowlists pass; both logical-authority leaves remain CONFIG-only and the 386-occurrence query inventory remains current/unchanged with contiguous firestoreQuery/firestoreIndex implementation tests; FILE-49BE7A26CE03 is deliberately re-acknowledged without status/owner change; all 16 query owners, FILE-063B0E6EC659, MAN-INDEX-001 and existing package/workflow surfaces preserve status and ownership.",
+      "expected": "Exact READY, implementation and promotion allowlists pass; both logical-authority leaves remain CONFIG-only and the 386-occurrence source-query inventory remains current/unchanged with contiguous firestoreQuery/firestoreIndex implementation tests; FILE-49BE7A26CE03 is deliberately re-acknowledged without status/owner change; the 16 prior query owners preserve status and ownership while the implemented Space-list owner is added explicitly.",
       "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
     },
@@ -263,5 +264,5 @@
   "implementationEvidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Verified after amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a passed Actions run 33849974363 and exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. The dependency-free JSON-only generator/checker and 23-test adversarial suite bind all 18 current TQUERY methods to the reviewed registry, re-derive all upstream inventory relationships/hashes/totals, enforce review-class consistency, canonicalize nested output, enforce realpath/non-symlink inputs and safe exclusive atomic artifact generation, derive collision-checked TACCESS identities and mapping hashes, and emit one deterministic generated JSON artifact. The committed READY addendum preserves genuine path exclusions for generic Firebase-tool and current-query discovery while the implementation tests retain contiguous forbidden-key cases and the 386 QUERY inventory remains unchanged. TQUERYAUTH-TEST-001 through -010 pass; human review of all 18 generated rows is recorded separately in evidence, and independent final adversarial review returned GO with no P0-P3 finding. The validator is structural only and cannot approve free-text meaning. A-003/A-004 and every existing query owner remain unadvanced."
+  "notes": "The original verified 18-row control remains backed by exact implementation 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / immutable run 33853355777. This lifecycle-compatibility amendment reopens the two CONFIG surfaces at honest implemented status pending exact batch CI. The 24-test suite binds the reviewed 19-row registry including SpaceListQuerying, validates implemented-or-later upstream lifecycle, proves logical crosswalk/TACCESS/mapping bytes remain stable across status-only promotion, and preserves the original structural, filesystem, deterministic and no-semantic-inference guarantees. Final independent re-review returned GO with no P0-P3 and the complete local batch gate passes. The 386 source QUERY inventory is unchanged; A-003/A-004 remain deferred."
 }

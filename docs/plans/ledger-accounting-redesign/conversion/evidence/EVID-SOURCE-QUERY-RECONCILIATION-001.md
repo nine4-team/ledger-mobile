@@ -419,3 +419,21 @@ Follow-up evidence-sync commit
 `33861762639`. Both jobs completed successfully again, including all target
 contract tests and the isolated macOS and generic iOS Simulator builds. The only
 annotations were the runner's Node.js action-runtime deprecation warnings.
+
+## Target-Authority Lifecycle Amendment — 2026-09-06
+
+The bound target authority now contains 19 lifecycle-neutral logical rows. The
+source registry rebinds only that exact artifact hash and inventory digest; all
+386 source rows, 584 outcomes, category counts, retirement authorities, and
+Space source-query classifications remain unchanged. In particular, existing
+source ListSpaces/GetSpace outcomes remain approved future target queries
+because the new Core list port intentionally excludes authoritative Item count,
+search, and primary-image parity.
+
+For every `verified_target_query_port` outcome, the control now joins the
+TQUERY's ownerSurfaceId to the current conversion manifest and accepts exactly
+`verified`, `rehearsed`, or `cutover_ready`. Implemented, every earlier state,
+blocked, retired, unknown, and missing owners reject. All 25 focused tests and
+generate/check pass locally. Final independent re-review reproduced the exact
+386/584 artifact and returned GO with no P0-P3; the complete local batch gate
+also passes. Exact current-batch CI is pending.

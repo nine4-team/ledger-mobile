@@ -5552,3 +5552,62 @@ Active Space-browser integrity READY promotion later on 2026-09-06:
   approved; and
 - executable edits remain prohibited until the exact comment-only checkpoint
   passes all three immutable CI jobs.
+
+Active Space-browser integrity implementation-review checkpoint later on
+2026-09-06:
+
+- exact READY commit `c9d4d8bbce6319f81aacb5851b16035d3c7ab809`
+  passed all three immutable jobs in Actions run `34062468352`, including
+  conversion traceability, disposable local Supabase provider checks, all
+  existing target tests and both staging builds;
+- one write-capable worker changed only the two frozen Core leaves. Root and an
+  independent read-only reviewer rejected its first green candidate because a
+  failed retryable/required-update cache could be reprojected as authoritative
+  empty, recursively nested restart shapes were not strict, two fingerprint
+  bases lacked independent proof, and several promised negative tests were
+  absent;
+- the corrected contract downgrades failed cache to explicit stale/incomplete
+  presentation evidence, strictly reconstructs nested scope/checklist/update
+  shapes, independently proves all three exact fingerprint bases, keeps
+  unexpected upstream errors observable and rejects wrong-Account, wrong-scope
+  and rebound-cache evidence;
+- final root and independent re-review returned GO with no P0-P3 findings. Six
+  focused tests and all 661 Swift tests across 98 suites pass locally;
+- the two owned surfaces and dossier advanced to `implemented`, raising
+  implemented-or-later target surfaces from 245 to 247. The complete synchronized
+  local batch gate and exact immutable implementation CI remain required before
+  verified promotion; and
+- the provider/app and MCP Space-browser dossiers remain DRAFT. No Firebase
+  application/worktree, hosted or production system, migration, release or
+  cutover was touched or authorized.
+
+Active Space query-control lifecycle correction checkpoint later on 2026-09-06:
+
+- implementing `SpaceListQuerying` exposed a real lifecycle defect in the
+  existing control: the target query inventory accepted only `verified` owners,
+  even though the required vertical method says an `implemented` checkpoint
+  must pass the immutable gate before it can be promoted to `verified`;
+- the corrected inventory accepts exactly implemented, verified, rehearsed and
+  cutover-ready owners, exposes owner status for review, and deliberately keeps
+  TQUERY identity, signature hash and inventory digest stable across a
+  lifecycle-only promotion. It now reports 17 owners, 17 protocols and 19
+  methods, including `SpaceListQuerying.watchSpaces` as
+  `TQUERY-038289DD7D2C`;
+- the logical-authority crosswalk accepts the same implemented-or-later input
+  but omits lifecycle from its output, so all 19 TACCESS/mapping rows remain
+  byte-stable across status-only promotion. Source reconciliation separately
+  joins every verified-target-query claim back to the current manifest and
+  accepts only verified, rehearsed or cutover-ready owners;
+- the first independent review returned NO-GO because an earlier correction
+  made inventory identity status-sensitive and did not exhaustively prove all
+  rejected states or missing owners. Those issues were corrected with explicit
+  positive/negative lifecycle matrices, missing-owner proof and
+  lifecycle-neutrality proof;
+- 22 inventory, 24 logical-authority and 25 source-reconciliation tests now pass
+  locally. The source reconciliation remains exactly 386 rows / 584 outcomes;
+  no source row was remapped to the incomplete Space list contract; and
+- the Space surfaces and the six amended control surfaces remain implemented
+  pending synchronized conversion checks, final independent re-review, one
+  complete local batch gate and exact immutable CI. No Firebase worktree,
+  hosted/production resource, migration, release or cutover was touched or
+  authorized.
