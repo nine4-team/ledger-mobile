@@ -681,6 +681,25 @@
         { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
       ]
+    },
+    "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "This rejected Vendor-suggestion provider/picker candidate is retained only as a blocked DRAFT. The provider-free value contract does not authorize any reader population, archived disclosure, picker behavior, default population, or mutation. O-026 and proposed O-047 must be resolved before a future candidate may refreeze an Account subset; suggestion values remain convenience text rather than Vendor or accounting identity.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
     }
   }
 }

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 332
+State version: 334
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: POWERSYNC-WATCH-LIFECYCLE-CORRECTION-EXACT-CI-VERIFIED
+- Checkpoint: VENDOR-SUGGESTION-PROVIDER-PICKER-REJECTED-DRAFT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,11 +33,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **531 of 721 target-relevant surfaces mapped or
-  later (73.6%)**. Local surface-implementation coverage is **229 of 721
-  implemented or later (31.8%)**. The dedicated Project category-configuration
-  revision adds two implemented leaves but no new provider-backed workflow,
-  hosted-rehearsal or cutover-ready credit.
+- Planning/control coverage is **542 of 732 target-relevant surfaces mapped or
+  later (74.0%)**. Local surface-implementation coverage is **229 of 732
+  implemented or later (31.3%)**. The eleven newly tracked Vendor-candidate
+  leaves increase planning coverage only; adversarial review rejected the
+  candidate before executable work, so they add no implementation,
+  provider-backed workflow, hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -84,6 +85,18 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Independent adversarial review rejected the proposed provider-backed Vendor
+  suggestion picker before executable work. The initial audits had mistaken a
+  provider-free value/snapshot contract and architecture mechanics for product
+  authority: O-026/O-047 must first choose reader roles, archived-row disclosure
+  and picker/free-text/selection behavior. The draft also incorrectly narrowed
+  revision from `0...UInt64.max` to positive-only; that is corrected. Ten leaves
+  remain comment-only and the pgTAP leaf has one explicit skipped plan with no
+  passing assertion. All eleven carry exact O-026/O-047 blockers, an expanded
+  security/Sync negative matrix and an explicit hosted TEST-011 ceiling. There
+  is no READY commit and no executable provider, schema, picker or population;
+  `EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001`.
 
 - Corrected the implementation tracker's stale Space core-details row from
   `ready`/comment-only to the already-proven `implemented` state. The owning

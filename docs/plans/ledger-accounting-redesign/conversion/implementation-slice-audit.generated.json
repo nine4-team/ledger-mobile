@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T05:44:22.751Z",
+  "generatedFromManifestSync": "2026-09-06T06:49:01.613Z",
   "totals": {
-    "slices": 88,
-    "claimedTargetSurfaces": 293,
+    "slices": 89,
+    "claimedTargetSurfaces": 304,
     "unclaimedTargetSurfaces": 428,
     "implementationAdvancedTargetSurfaces": 229
   },
   "statusCounts": {
-    "draft": 2,
+    "draft": 3,
     "ready": 0,
     "in_progress": 3,
     "implemented": 13,
@@ -1415,6 +1415,30 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/validated-target-composition.json"
+    },
+    {
+      "sliceId": "vendor-suggestion-powersync-provider-and-picker",
+      "title": "Read and select Account vendor suggestions from an encrypted offline workspace",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Vendor Suggestion Offline Picker",
+      "surfaceIds": [
+        "CONFIG-456D371094F4",
+        "CONFIG-C35C70C22D3B",
+        "CONFIG-F2A050C625BB",
+        "SWIFT-0CAF55A667DD",
+        "SWIFT-1854C369125A",
+        "SWIFT-7947DB9A7607",
+        "SWIFT-92517AD05CF0",
+        "SWIFT-C73CD63C401A",
+        "TEST-46C1EA676FF3",
+        "TEST-7C2F42BE6C1D",
+        "TEST-A03D922ACD36"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 2,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-powersync-provider-and-picker.json"
     },
     {
       "sliceId": "vendor-suggestion-reference-read-contracts",

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T05:44:22.751Z",
+    "lastSynchronizedAt": "2026-09-06T06:49:01.613Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -690,10 +690,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
-      "acknowledgedSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
+      "observedSourceHash": "cc7d5bb7d2099b52bdd5a9586908e51139ac860a6a1294ef80c3d832ceac0aa0",
+      "acknowledgedSourceHash": "cc7d5bb7d2099b52bdd5a9586908e51139ac860a6a1294ef80c3d832ceac0aa0",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, and six comment-only blocked Project-category provider/application placeholders.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, and two comment-only Vendor-suggestion picker leaves.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1181,6 +1181,58 @@
       ],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
+    },
+    {
+      "id": "CONFIG-456D371094F4",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-vendor-suggestion-read.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-vendor-suggestion-read.mjs"
+        }
+      ],
+      "observedSourceHash": "b7a8887288cf413ae2f83526d5aa48eb8ea9c82399e9d472e89f8a61f86a35a9",
+      "acknowledgedSourceHash": "b7a8887288cf413ae2f83526d5aa48eb8ea9c82399e9d472e89f8a61f86a35a9",
+      "metadata": {},
+      "currentBehavior": "Comment-only DRAFT placeholder for future isolated local Data API vendor-suggestion authorization checks.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Disposable local Supabase Data API regression"
+        ],
+        "securityRequirements": [
+          "Exercise only caller-scoped publishable-key sessions",
+          "Verify denied writes without service-role client use"
+        ],
+        "syncRequirements": [
+          "Confirm exact authorized Data API row shape"
+        ]
+      },
+      "migration": {
+        "rule": "Read only synthetic disposable-local fixtures.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "node scripts/test-local-vendor-suggestion-read.mjs"
+        ],
+        "acceptance": [
+          "Member read and all negative cases pass without hosted access"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No source migration, credential logging or hosted project call.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "CONFIG-47B4E611F656",
@@ -2941,6 +2993,59 @@
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
+      "id": "CONFIG-C35C70C22D3B",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260906061012_vendor_suggestion_reference_read.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260906061012_vendor_suggestion_reference_read.sql"
+        }
+      ],
+      "observedSourceHash": "6509c2df3e3e55094aa9e10eec0b7149756da33c295abd2b5d672eb889c0153e",
+      "acknowledgedSourceHash": "6509c2df3e3e55094aa9e10eec0b7149756da33c295abd2b5d672eb889c0153e",
+      "metadata": {},
+      "currentBehavior": "Comment-only DRAFT placeholder for a future read-only Account-scoped vendor-suggestion relation; O-026/O-047 block reader entitlement and archived-row disclosure.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "SELECT-only spike_vendor_suggestions schema"
+        ],
+        "securityRequirements": [
+          "Authenticated active-Account members read; anon and every client write are denied"
+        ],
+        "syncRequirements": [
+          "Expose active and archived rows to the exact Account stream without creating Vendor identity"
+        ]
+      },
+      "migration": {
+        "rule": "Create synthetic spike-prefixed read state only; import or seed no source values.",
+        "reconciliation": [
+          "Later migration explicitly assigns stable IDs, normalized keys and order or quarantines invalid source values"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "vendor_suggestion_reference_read.test.sql"
+        ],
+        "acceptance": [
+          "Clean-database schema, constraint, grant and RLS matrix passes"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No RPC, trigger, default seed or O-026 mutation is authorized.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-C4677DA3DE5C",
       "kind": "application_or_backend_configuration",
       "name": "migration/tsconfig.json",
@@ -3820,6 +3925,60 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-F2A050C625BB",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/vendor_suggestion_reference_read.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/vendor_suggestion_reference_read.test.sql"
+        }
+      ],
+      "observedSourceHash": "f7fcd4f18510cb05ca23a95fb7530df51879d2b3dc2105f4ae1d781b040c8474",
+      "acknowledgedSourceHash": "f7fcd4f18510cb05ca23a95fb7530df51879d2b3dc2105f4ae1d781b040c8474",
+      "metadata": {},
+      "currentBehavior": "Runner-valid DRAFT placeholder with one explicitly skipped test and no vendor-suggestion schema, value, order, grant, RLS or denied-write assertion.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Rolled-back pgTAP database verification"
+        ],
+        "securityRequirements": [
+          "Positive member read and anonymous/revoked/nonmember/cross-Account denial",
+          "No client INSERT, UPDATE or DELETE grant"
+        ],
+        "syncRequirements": [
+          "Prove exact fields and ordering support"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic rows in a rolled-back local transaction only.",
+        "reconciliation": [
+          "No source or hosted data enters tests"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:db"
+        ],
+        "acceptance": [
+          "The implementation replaces this placeholder with executable assertions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "The explicit skip keeps the repository-wide pgTAP runner valid without creating a passing security claim.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-F3494FD36EE5",
       "kind": "application_or_backend_configuration",
       "name": "mcp-server/package.json",
@@ -4287,10 +4446,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "2f089993c473978097d443361f4099dd4409a01fcc537a5cbe90b6e42b61a700",
-      "acknowledgedSourceHash": "2f089993c473978097d443361f4099dd4409a01fcc537a5cbe90b6e42b61a700",
+      "observedSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
+      "acknowledgedSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details and Project category-configuration revision migration/test leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details, Project category-configuration revision and Vendor-suggestion migration/test/Data-API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -19916,6 +20075,61 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-0CAF55A667DD",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/VendorSuggestionPickerView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/VendorSuggestionPickerView.swift"
+        }
+      ],
+      "observedSourceHash": "834ec699d59940ce1405b49ad510e6b5c894e7362dc7e2004ae7426b561b35e4",
+      "acknowledgedSourceHash": "834ec699d59940ce1405b49ad510e6b5c894e7362dc7e2004ae7426b561b35e4",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a future thin isolated SwiftUI vendor-suggestion picker.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Isolated staging picker view"
+        ],
+        "securityRequirements": [
+          "Accessibility and errors expose no hidden rows or stable private identity"
+        ],
+        "syncRequirements": [
+          "Render only tested AppModel state"
+        ]
+      },
+      "migration": {
+        "rule": "Compile only in LedgerTargetStaging.",
+        "reconciliation": [
+          "Selection yields free text and offers no save action"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target source-boundary checks and macOS/iOS builds"
+        ],
+        "acceptance": [
+          "View compiles without advancing current Firebase picker"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No add/edit/archive/reorder/default-seed UI.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-0DC9E061596B",
       "kind": "swift_logic",
       "name": "LedgeriOS/LedgeriOS/Logic/SelectionCalculations.swift",
@@ -20611,6 +20825,62 @@
       ],
       "notes": "Retain a narrow platform utility with privacy-safe call sites.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "SWIFT-1854C369125A",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/VendorSuggestionPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/VendorSuggestionPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "843bf488a0ef2b6039242d33484ed121a6b03746eb2399e28d75de0402b83e4d",
+      "acknowledgedSourceHash": "843bf488a0ef2b6039242d33484ed121a6b03746eb2399e28d75de0402b83e4d",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a future authorized encrypted PowerSync vendor-suggestion query and owned watch/subscription lifecycle.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "VendorSuggestionQuerying PowerSync adapter"
+        ],
+        "securityRequirements": [
+          "Exact Principal/Account binding and active local membership sentinel",
+          "Fail closed on malformed, foreign or normalized-key-mismatched evidence"
+        ],
+        "syncRequirements": [
+          "Current-process exact-Account completeness, encrypted restart and cancel-and-drain ownership"
+        ]
+      },
+      "migration": {
+        "rule": "Decode only target-local rows through the verified Core contract.",
+        "reconciliation": [
+          "Archived rows remain resolvable but only active rows are selectable"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "VendorSuggestionPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "All scope, readiness, restart, revocation, malformed and lifecycle cases pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No generic CRUD or provider type crosses LedgerTargetCore.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-18C61B83B5DF",
@@ -28484,6 +28754,61 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-7947DB9A7607",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/VendorSuggestionPickerAppModel.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/VendorSuggestionPickerAppModel.swift"
+        }
+      ],
+      "observedSourceHash": "28151d7cf3fbe6e2b214f122556c9e2edbf8f586a4ac6b8b135f31d7f5f76ad7",
+      "acknowledgedSourceHash": "28151d7cf3fbe6e2b214f122556c9e2edbf8f586a4ac6b8b135f31d7f5f76ad7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a future generation-safe Core-only vendor-suggestion picker AppModel.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Observable picker AppModel"
+        ],
+        "securityRequirements": [
+          "Stable-ID selection must still resolve inside the current represented snapshot"
+        ],
+        "syncRequirements": [
+          "Cancel, replace and drain watches without late-state rebound"
+        ]
+      },
+      "migration": {
+        "rule": "Hold ephemeral selection only; migrate no picker state.",
+        "reconciliation": [
+          "Return only selected sourceSnapshot text"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "VendorSuggestionPickerAppModelTests"
+        ],
+        "acceptance": [
+          "Selection, replacement, cancellation, failure and Other fallback pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No silent save, seed or settings mutation.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-797909434B82",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/ProjectRenameOperation.swift",
@@ -30981,6 +31306,59 @@
       ],
       "notes": "Target user UI hides occurrence movement vocabulary while migration review can display exact legacy evidence. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-92517AD05CF0",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/VendorSuggestionPickerRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/VendorSuggestionPickerRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "fe11ace00c8ee50f4d5fc9c2f4efa154447a62aae02df3de13ab53f9f0f8023c",
+      "acknowledgedSourceHash": "fe11ace00c8ee50f4d5fc9c2f4efa154447a62aae02df3de13ab53f9f0f8023c",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a future thin target-app runtime-to-picker adapter.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Thin Account-bound staging runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose no Account rebinding, credential, database, SQL or authorization object"
+        ],
+        "syncRequirements": [
+          "Forward only the close-aware typed runtime watch"
+        ]
+      },
+      "migration": {
+        "rule": "Wire only the isolated target staging graph.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "Target environment checker and staging builds"
+        ],
+        "acceptance": [
+          "Adapter contains no independent semantics"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No MCP or current-app surface.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-92844793C8F5",
@@ -35703,6 +36081,61 @@
       ],
       "notes": "Verified target-only Phase 1 read surface at exact implementation commit 59526ccc and immutable Actions run 33624655214. It defines exact Account/Principal/Project scope, ordered unique pinned category identities, preference revision, derived query identity, canonical local evidence, authoritative absence versus incomplete unavailability and one narrow read port. Four focused/all 132 tests, graph/contracts, both staging builds and clean artifacts pass. It cannot authorize a caller, calculate or mutate budget values, resolve category visibility, write preferences, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source preferences or activate production.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-C73CD63C401A",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/VendorSuggestionPickerPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/VendorSuggestionPickerPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "9e4385568f25ba4e33cf9b11930fb4f0081182c10057ae3564bebf47f333e2fb",
+      "acknowledgedSourceHash": "9e4385568f25ba4e33cf9b11930fb4f0081182c10057ae3564bebf47f333e2fb",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for future product-authorized Vendor suggestion presentation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Pure vendor-suggestion picker presentation"
+        ],
+        "securityRequirements": [
+          "Render only typed locally represented evidence"
+        ],
+        "syncRequirements": [
+          "Never present incomplete empty as no suggestions"
+        ]
+      },
+      "migration": {
+        "rule": "Compose verified Core values only.",
+        "reconciliation": [
+          "Selection output remains free text"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "VendorSuggestionPickerPresentationTests"
+        ],
+        "acceptance": [
+          "All readiness and active/archive states map exhaustively"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No persistence, accounting identity or O-026 control.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-C7C58265EA19",
@@ -43149,6 +43582,59 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "TEST-46C1EA676FF3",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerAppModelTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerAppModelTests.swift"
+        }
+      ],
+      "observedSourceHash": "2b2cd5d300c00656c0457f83848f42070d6396a1eeb789b60bb0e7c84f68cea2",
+      "acknowledgedSourceHash": "2b2cd5d300c00656c0457f83848f42070d6396a1eeb789b60bb0e7c84f68cea2",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for future picker AppModel lifecycle and selection verification.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Picker AppModel test suite"
+        ],
+        "securityRequirements": [
+          "Removed or archived rows cannot remain selected"
+        ],
+        "syncRequirements": [
+          "Noncooperative late events cannot mutate stopped or replaced state"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic Core ports only.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionPickerAppModelTests"
+        ],
+        "acceptance": [
+          "Every frozen lifecycle and selection case passes"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "No provider or production route is imported.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "TEST-475355568D74",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift",
@@ -44638,6 +45124,61 @@
       "classificationBatch": "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001"
     },
     {
+      "id": "TEST-7C2F42BE6C1D",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/VendorSuggestionPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/VendorSuggestionPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "8f803ac5ad3b336f2cbc8855941159a6dbb349a1719b6a3d1d66d4769b15b746",
+      "acknowledgedSourceHash": "8f803ac5ad3b336f2cbc8855941159a6dbb349a1719b6a3d1d66d4769b15b746",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for future encrypted-local vendor-suggestion provider verification.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "PowerSync provider test suite"
+        ],
+        "securityRequirements": [
+          "Cross-scope, revoked and malformed evidence yields no false snapshot"
+        ],
+        "syncRequirements": [
+          "Prove both startup orders, causal freshness, restart reset, unsubscribe and full task drainage"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable encrypted local databases and controlled subscription sources.",
+        "reconciliation": [
+          "No production data or hosted authorization claim"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Every frozen provider obligation becomes executable"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "Real authenticated PowerSync remains a planned rehearsal.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "TEST-7D6F49F784FB",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
@@ -45991,6 +46532,59 @@
       ],
       "notes": "Target-only Phase 1 verified tests. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-A03D922ACD36",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/VendorSuggestionPickerPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "593de5646323e3c3bd05949a083ec9b47b71bde3165f4efbb6d355089bd53a97",
+      "acknowledgedSourceHash": "593de5646323e3c3bd05949a083ec9b47b71bde3165f4efbb6d355089bd53a97",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for future picker presentation verification.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Offline Picker",
+        "surfaces": [
+          "Picker presentation test suite"
+        ],
+        "securityRequirements": [
+          "Archived rows never become selectable and diagnostics reveal no hidden rows"
+        ],
+        "syncRequirements": [
+          "Waiting, partial, stale, ready and authoritative-empty stay distinct"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic provider-free fixtures.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionPickerPresentationTests"
+        ],
+        "acceptance": [
+          "Exhaustive state and field mapping passes"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-026",
+        "O-047"
+      ],
+      "evidence": [
+        "EVID-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-READY-001"
+      ],
+      "notes": "Fixed/excluded options are not owned by this backend read slice.",
+      "classificationBatch": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "TEST-A0B2D5B97695",

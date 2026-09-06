@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T05:44:22.751Z",
+  "generatedFromManifestSync": "2026-09-06T06:49:01.613Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 983,
-    "targetRelevantSurfaces": 721,
-    "batches": 39,
-    "productScopeSurfaces": 804,
+    "surfaces": 994,
+    "targetRelevantSurfaces": 732,
+    "batches": 40,
+    "productScopeSurfaces": 815,
     "technicalControlSurfaces": 179
   },
   "canonicalTargetCoverage": [
@@ -20,10 +20,11 @@
         "M0-INVOICING-BUDGET-001",
         "M0-ITEM-CREATION-LINK-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
-        "M0-REPORTING-SEARCH-001"
+        "M0-REPORTING-SEARCH-001",
+        "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 539,
-      "targetRelevantSurfaceCount": 387
+      "surfaceCount": 550,
+      "targetRelevantSurfaceCount": 398
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -3343,6 +3344,81 @@
         "SWIFT-B75E621E13BB",
         "TEST-AE71DAB919F1",
         "TEST-DE003BB60B7F"
+      ]
+    },
+    {
+      "batchId": "M0-VENDOR-SUGGESTION-POWERSYNC-PROVIDER-001",
+      "title": "Read and select Account vendor suggestions from an encrypted offline workspace",
+      "scope": "product",
+      "rationale": "This rejected Vendor-suggestion provider/picker candidate is retained only as a blocked DRAFT. The provider-free value contract does not authorize any reader population, archived disclosure, picker behavior, default population, or mutation. O-026 and proposed O-047 must be resolved before a future candidate may refreeze an Account subset; suggestion values remain convenience text rather than Vendor or accounting identity.",
+      "surfaceCount": 11,
+      "targetRelevantSurfaceCount": 11,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-456D371094F4",
+        "CONFIG-C35C70C22D3B",
+        "CONFIG-F2A050C625BB",
+        "SWIFT-0CAF55A667DD",
+        "SWIFT-1854C369125A",
+        "SWIFT-7947DB9A7607",
+        "SWIFT-92517AD05CF0",
+        "SWIFT-C73CD63C401A",
+        "TEST-46C1EA676FF3",
+        "TEST-7C2F42BE6C1D",
+        "TEST-A03D922ACD36"
       ]
     }
   ]

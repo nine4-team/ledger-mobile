@@ -1,7 +1,7 @@
 # Ledger Accounting Redesign — Decision Log
 
 Status: active
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 Program index: [README.md](README.md)
 
 This file is the central decision register. Canonical specs contain the full
@@ -109,6 +109,7 @@ decisions.
 | O-044 | What exact cross-runtime scalar, control, edge-whitespace and UTF-8 size contracts govern new and edited Space names and notes? | The verified Swift values use Foundation trimming and otherwise admit unbounded text including U+0000, while JavaScript and PostgreSQL cannot preserve the same input set. A shared app/MCP/Postgres Space writer cannot promise exact behavior without separate single-line-name and multiline-notes rules. | Review the [combined Space-creation decision packet](decision-packets/O-044-O-045-O-046-space-creation-boundary.md), which recommends the existing language-neutral edge set, no Unicode normalization, unsafe-control rejection, a 512-byte single-line name maximum and a 16,384-byte multiline notes maximum; product approval is still required. |
 | O-045 | Which Account members may create a direct Project or Business Inventory Space? | Architecture requires command-specific authorization, but canonical Space authority currently says only current membership and exact parent. Current Firebase member-write behavior is migration evidence, not target authority. | Review the [combined Space-creation decision packet](decision-packets/O-044-O-045-O-046-space-creation-boundary.md), which recommends allowing any active Account member to create a Space in an otherwise authorized scope, without inventing a financial, Project-management or shared-reference-data capability; product approval is still required. |
 | O-046 | May a new Space be created under an archived Project? | Project archive preserves existing Spaces but does not decide whether new child creation remains valid. App, MCP, offline admission and the trusted handler must use one rule. | Review the [combined Space-creation decision packet](decision-packets/O-044-O-045-O-046-space-creation-boundary.md), which recommends rejecting new Space creation under an archived Project while preserving and resolving existing child Spaces; product approval is still required. |
+| O-047 | Who may read vendor suggestions, when may archived suggestions download, and what free-text/selection behavior does the redesigned picker preserve? | O-026 governs shared-list mutation but does not settle read entitlement, archived-catalog disclosure, offline completeness, or whether arbitrary source text remains available independently of the shared list. | Review the [O-047 decision packet](decision-packets/O-047-vendor-suggestion-reading-and-picker.md), which recommends active suggestions for eligible owning-record editors, contextual archived resolution, honest offline readiness, stable-ID selection, and independent free text with no implicit shared-list mutation; product approval is still required. |
 
 ## Clarification: “No Inventory Hop”
 

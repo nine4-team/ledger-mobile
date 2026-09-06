@@ -2,7 +2,7 @@
 
 Status: active crosswalk; product authority remains external
 Architecture version: 0.1
-Last reviewed: 2026-09-04
+Last reviewed: 2026-09-06
 
 ## Purpose
 
@@ -98,6 +98,7 @@ is still open.
 | O-044 | Space name/notes cross-runtime boundary | Separate single-line name and multiline optional-notes trim/control/NUL/Unicode/UTF-8 rules shared by app, MCP, Postgres, offline commands and migration; proposed contract is in the [combined Space-creation decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-044-O-045-O-046-space-creation-boundary.md) | Approved name/notes scalar and byte rules plus cross-runtime fixtures, zero-dispatch invalid-input tests and lossless migration/quarantine proof |
 | O-045 | Direct Space-create authorization | Exact Account role/capability for Project and Business Inventory creation, non-enumerating handler order and app/MCP parity; proposed contract is in the [combined Space-creation decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-044-O-045-O-046-space-creation-boundary.md) | Approved writer role/capability plus positive, denied-role, revoked, forged-actor and cross-tenant tests |
 | O-046 | Archived-Project Space creation | Parent-lifecycle precondition for new Space creation while existing archived-Project children remain preserved; proposed contract is in the [combined Space-creation decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-044-O-045-O-046-space-creation-boundary.md) | Approved active/archived parent rule plus local/app/MCP/server parity, replay and race tests |
+| O-047 | Vendor-suggestion reads and picker | Reader eligibility, active versus contextual archived Sync, free-text fallback, stable-ID selection, readiness and selection clearing; proposed contract is in the [O-047 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-047-vendor-suggestion-reading-and-picker.md) | Approved read/archived-disclosure/picker contract plus role, spoofing, offline, restart, selection and zero-implicit-mutation tests |
 
 ## Traceability Enforcement
 

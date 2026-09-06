@@ -175,8 +175,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "45c10ee83621fbbcc0afa0efa2c5a041db9e916574f5aef0b65c3b48abc4c36c",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, and six comment-only blocked Project-category provider/application placeholders.",
+      "acknowledgeSourceHash": "cc7d5bb7d2099b52bdd5a9586908e51139ac860a6a1294ef80c3d832ceac0aa0",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, and two comment-only Vendor-suggestion picker leaves.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
