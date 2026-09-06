@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 10,
+  "stateVersion": 11,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -10,11 +10,11 @@
     "version": 2
   },
   "verifiedCheckpoint": {
-    "name": "ITEM-SPACE-CLEARING-LOCAL-DURABILITY-VERIFIED",
-    "commit": "049455223afd3147b596913667f43b3f43d93642",
-    "ciRun": 34052053056,
+    "name": "MIGRATION-SAFETY-VERIFIED",
+    "commit": "2297e8dbe7f7f0febb7e33b4da0be591d4c82ade",
+    "ciRun": 34059595786,
     "ciStatus": "passed",
-    "meaning": "The sixth-family Item-to-Space clearing provider and corrected Budget watch-drainage proof passed the complete immutable gate; authoritative clearing apply and hosted Sync remain unimplemented."
+    "meaning": "Deterministic synthetic Firebase source fixtures and the fail-closed provider-free migration environment guard passed all three immutable CI jobs after two independent correction rounds; no production source, hosted target or migration execution was accessed."
   },
   "readyCheckpoint": {
     "name": "MIGRATION-SAFETY-READY",
@@ -24,30 +24,21 @@
     "meaning": "The independently reviewed comment-only migration-safety boundary and generated residual register passed all three immutable CI jobs; this authorized local provider-free implementation only."
   },
   "activeBatch": {
-    "id": "firebase-source-fixture-and-migration-environment-guard",
-    "status": "ci_verification",
-    "outcome": "Freeze and independently review a two-slice local migration-safety batch: deterministic synthetic Firebase source fixtures plus a fail-closed provider-free preflight consistency primitive that initially admits only source_fixture, targetLocal, dry_run and no credentials.",
+    "id": "space-browser-contract-foundation",
+    "status": "ready",
+    "outcome": "Freeze and implement the reusable provider-free integrity contract for a future active Project-or-Business-Inventory Space browser: exact local readiness, checklist progress, honest unavailable Item count and stable-ID navigation into existing detail. The physical provider remains DRAFT until its three implementation dependencies are verified; production search, Item count, media and public MCP parity remain required and explicitly deferred rather than removed.",
     "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json"
     ],
     "allowedPaths": [
-      "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift",
-      "LedgeriOS/LedgerTargetMigrationCore/MigrationEnvironmentGuard.swift",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/FirebaseSourceFixtureTests.swift",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationEnvironmentGuardTests.swift",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/manifest.json",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/firestore/documents.json",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/auth/identity-metadata.json",
-      "LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/FirebaseSource/v1/storage/object-metadata.json",
-      "LedgeriOS/Package.swift",
-      "scripts/check-target-environment.mjs"
+      "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift"
     ],
     "nextActions": [
-      "Close every P1/P2 finding from the first independent implementation audit: exact checker, raw-UTF8 identity, duplicate-key refusal, full boundary/tamper proof, top-level collection limits, digest-before-parse, Account binding/hash derivation and honest exact-byte synthetic privacy review.",
-      "Commit and push the synchronized bounded implementation checkpoint after the complete local batch gate passed.",
-      "Require all three jobs in the exact immutable CI workflow to pass before any verified promotion.",
-      "Record the green exact implementation run and advance eligible surfaces to verified in the next natural control checkpoint."
+      "Commit and push the independently approved provider-free READY boundary and require all three immutable CI jobs to pass before executable edits.",
+      "Record the exact green READY commit/run in the compact checkpoint without widening the two-file implementation boundary.",
+      "Implement the two frozen Core leaves, independently review them, then run focused checks, one complete local batch gate and one exact immutable CI run before verified promotion.",
+      "Keep the physical PowerSync/app and MCP dossiers DRAFT until their named dependency/parity blockers close; select the next full workflow batch immediately after this reusable integrity foundation."
     ]
   },
   "progress": {
@@ -56,8 +47,8 @@
       "center": 15,
       "high": 18
     },
-    "targetRelevantSurfaces": 748,
-    "mappedOrLaterSurfaces": 558,
+    "targetRelevantSurfaces": 757,
+    "mappedOrLaterSurfaces": 567,
     "implementedOrLaterSurfaces": 245,
     "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
@@ -89,8 +80,9 @@
   "resume": {
     "requiredReads": [
       "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-environment-guard.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-browser-powersync-provider.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-read-target-mcp.json"
     ],
     "requiredCommands": [
       "git status --short --branch",

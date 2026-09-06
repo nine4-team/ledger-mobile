@@ -1,6 +1,6 @@
 # EVID-MIGRATION-ENVIRONMENT-GUARD-001 — Migration Environment Guard
 
-- Status: implemented; independent review and complete local gate passed; immutable implementation CI pending
+- Status: verified; independent review, complete local gate, and immutable implementation CI passed
 - Date: 2026-09-06
 - Environment: isolated provider-free migration target only
 - Production/Firebase impact: none
@@ -14,7 +14,7 @@ The comment-only guard boundary passed the immutable READY gate at commit
 `34056116157`. That checkpoint authorized only the provider-free local
 implementation now present in this worktree.
 
-## Current Implementation Candidate
+## Verified Implementation
 
 `MigrationEnvironmentGuard.swift` now implements a package-visible fail-closed
 preflight consistency primitive. It revalidates one canonical MigrationRunPlan
@@ -46,7 +46,7 @@ outside public client API. The guard accepts only immutable provider-free values
 and exposes no provider, closure, handle, credential material, path, URL,
 filesystem payload, database, network, Auth, Storage, or executor hook.
 
-## Candidate Verification
+## Verification
 
 Local focused verification passes:
 
@@ -73,8 +73,9 @@ evidence; and no-token rejection behavior.
 
 The first independent implementation audit returned NO-GO. Two correction
 rounds closed every finding, and the final read-only re-review returned GO with
-zero P0-P3 findings. This document does not yet claim an exact implementation
-commit, immutable implementation CI, or verified status.
+zero P0-P3 findings. Exact implementation commit
+`2297e8dbe7f7f0febb7e33b4da0be591d4c82ade` passed all three jobs in immutable
+GitHub Actions run `34059595786`.
 
 ## Explicit Limits
 
@@ -83,7 +84,7 @@ authorization. A separately tracked sole-executor/composition slice must own an
 independently trusted policy and require this opaque token plus an exact policy
 match before provider construction. No such executor exists here.
 
-This candidate cannot export, transform, load, reconcile, persist a journal,
+This implementation cannot export, transform, load, reconcile, persist a journal,
 sign or approve a plan, authorize apply, execute/resume/abort/rollback migration,
 activate an environment, access hosted or production systems, change the
 Firebase application, release, or cut over. O-022 and A-003/A-004 remain

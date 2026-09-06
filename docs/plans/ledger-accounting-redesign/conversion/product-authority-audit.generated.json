@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T20:57:34.985Z",
+  "generatedFromManifestSync": "2026-09-06T21:53:14.687Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1010,
-    "targetRelevantSurfaces": 748,
+    "surfaces": 1019,
+    "targetRelevantSurfaces": 757,
     "batches": 45,
-    "productScopeSurfaces": 819,
+    "productScopeSurfaces": 828,
     "technicalControlSurfaces": 191
   },
   "canonicalTargetCoverage": [
@@ -38,8 +38,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 497,
-      "targetRelevantSurfaceCount": 343
+      "surfaceCount": 506,
+      "targetRelevantSurfaceCount": 352
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -56,8 +56,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 556,
-      "targetRelevantSurfaceCount": 373
+      "surfaceCount": 565,
+      "targetRelevantSurfaceCount": 382
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -112,8 +112,8 @@
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 202,
-      "targetRelevantSurfaceCount": 196
+      "surfaceCount": 211,
+      "targetRelevantSurfaceCount": 205
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -3503,8 +3503,8 @@
       "title": "Spaces, review, and work queues",
       "scope": "product",
       "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
-      "surfaceCount": 68,
-      "targetRelevantSurfaceCount": 64,
+      "surfaceCount": 77,
+      "targetRelevantSurfaceCount": 73,
       "authorities": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -3547,7 +3547,15 @@
           "role": "conversion_control"
         },
         {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md",
+          "role": "conversion_control"
+        },
+        {
           "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
           "role": "conversion_control"
         },
         {
@@ -3563,6 +3571,14 @@
           "role": "architecture_authority"
         },
         {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
           "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
           "role": "architecture_authority"
         }
@@ -3573,14 +3589,18 @@
         "CONFIG-DC77B9F609A7",
         "FILE-42005FEF8FD8",
         "MCPMOD-155A4AB80AC9",
+        "MCPMOD-1B9E357E244B",
         "MCPMOD-D391DC704D1F",
+        "MCPMOD-E3EF7C97DA9C",
         "MCPTOOL-24DFA89A8F44",
         "MCPTOOL-2B45E68B60F7",
         "MCPTOOL-7211ECCE184C",
         "MCPTOOL-7259894A6F1C",
         "SWIFT-02BF0EA3C433",
         "SWIFT-0540BE125F5A",
+        "SWIFT-08DC933EC0F4",
         "SWIFT-0A528DE84879",
+        "SWIFT-0DCDAFBB4350",
         "SWIFT-164554FA1456",
         "SWIFT-1FDB27E18B95",
         "SWIFT-279736869F7E",
@@ -3599,6 +3619,7 @@
         "SWIFT-62E2D7E9B40E",
         "SWIFT-698CCC538675",
         "SWIFT-8494F171316C",
+        "SWIFT-8B0A5006A2CA",
         "SWIFT-8E04DCE88D68",
         "SWIFT-901849ED8462",
         "SWIFT-912A031F137B",
@@ -3616,6 +3637,7 @@
         "SWIFT-EEAC86485FF6",
         "SWIFT-EF8BEC4E8BE5",
         "SWIFT-F61D38406022",
+        "SWIFT-F78CAEEBEDC4",
         "TEST-0126A06E52D0",
         "TEST-0AB198EB6935",
         "TEST-235F73A8DC9E",
@@ -3623,6 +3645,8 @@
         "TEST-377B0FDAF4D4",
         "TEST-3885FE2E9453",
         "TEST-51D893DD949E",
+        "TEST-54B6515645F8",
+        "TEST-55014C110C73",
         "TEST-674E6F23E5BE",
         "TEST-68DF2A480C92",
         "TEST-8BFDF8C22B0C",
@@ -3630,6 +3654,7 @@
         "TEST-94F32F5E9219",
         "TEST-9A22BFF16437",
         "TEST-A3D73145E3EC",
+        "TEST-A76066CC8EAA",
         "TEST-CA84B398990C",
         "TEST-DA67EAC9C2EF",
         "TEST-E8832A105D5C",

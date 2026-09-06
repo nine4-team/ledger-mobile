@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T20:57:34.985Z",
+  "generatedFromManifestSync": "2026-09-06T21:53:14.687Z",
   "totals": {
-    "slices": 96,
-    "claimedTargetSurfaces": 320,
+    "slices": 99,
+    "claimedTargetSurfaces": 329,
     "unclaimedTargetSurfaces": 428,
     "implementationAdvancedTargetSurfaces": 245
   },
   "statusCounts": {
-    "draft": 3,
-    "ready": 0,
+    "draft": 5,
+    "ready": 1,
     "in_progress": 3,
-    "implemented": 15,
-    "verified": 75,
+    "implemented": 13,
+    "verified": 77,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -438,7 +438,7 @@
       "sliceId": "firebase-source-fixture-catalog",
       "title": "Define versioned synthetic Firebase source fixtures for deterministic migration tests",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Firebase Source Fixture Catalog",
       "surfaceIds": [
         "SWIFT-B4A356C2FE88",
@@ -558,7 +558,7 @@
       "sliceId": "migration-environment-guard",
       "title": "Define a provider-free fail-closed migration preflight primitive",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Migration Environment Guard",
       "surfaceIds": [
         "SWIFT-DB6A733FD6DE",
@@ -1206,6 +1206,24 @@
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-assignment-destination-read-contracts.json"
     },
     {
+      "sliceId": "space-browser-powersync-provider",
+      "title": "Browse active Project or Inventory Spaces offline and open existing Space details",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Space Browser PowerSync Provider",
+      "surfaceIds": [
+        "SWIFT-08DC933EC0F4",
+        "SWIFT-8B0A5006A2CA",
+        "SWIFT-F78CAEEBEDC4",
+        "TEST-55014C110C73",
+        "TEST-A76066CC8EAA"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-browser-powersync-provider.json"
+    },
+    {
       "sliceId": "space-checklist-editing-presentation-contracts",
       "title": "Edit one evidence-bound Space checklist hierarchy offline",
       "kind": "product",
@@ -1355,6 +1373,36 @@
       "verificationCount": 6,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-details-update-use-case-contracts.json"
+    },
+    {
+      "sliceId": "space-list-read-and-presentation-contracts",
+      "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space List Read and Presentation Contracts",
+      "surfaceIds": [
+        "SWIFT-0DCDAFBB4350",
+        "TEST-54B6515645F8"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json"
+    },
+    {
+      "sliceId": "space-read-target-mcp",
+      "title": "List and inspect authorized Spaces through bounded target MCP reads",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Spaces and Placement Read Models",
+      "surfaceIds": [
+        "MCPMOD-1B9E357E244B",
+        "MCPMOD-E3EF7C97DA9C"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-read-target-mcp.json"
     },
     {
       "sliceId": "space-template-reference-read-contracts",

@@ -51,6 +51,40 @@ Spaces are organizational containers for items. They represent physical location
 - O-037 remains the authority for assigned Items when an existing Space is
   archived. It does not change direct creation semantics.
 
+## Target Space Browsing
+
+The redesigned Project and Business Inventory Space browsers preserve the
+shipped user-visible browsing capability while replacing listener-owned truth
+with explicit local-read evidence:
+
+- one browser is bound to one Account and exactly one Project or Business
+  Inventory scope;
+- the normal browser lists active Spaces only. This is not a decision about
+  archive/restore effects or assigned Items under O-037, and an authorized
+  archived Space may still be reached through a separate exact-ID historical or
+  detail flow;
+- rows have one deterministic case-insensitive name order with exact display
+  name and stable Space ID tie-breakers. Duplicate names remain distinct;
+- the production browser retains case-insensitive name search. Exact search
+  normalization and cross-platform matching must be frozen before that search
+  implementation becomes READY;
+- a complete production card retains the Space display name, authorized Item
+  count, aggregate checklist progress, and authorized primary-image behavior.
+  Numeric zero Items is valid only when a complete, visibility-safe Item
+  projection proves zero. Missing, partial, stale, or not-yet-implemented Item
+  or media evidence is unavailable—not zero and not an authoritative empty
+  collection; and
+- selection and detail navigation use stable Space ID plus current exact-scope
+  evidence, never display name, row position, route strings, or local presence
+  as authorization.
+
+An isolated target staging foundation may implement exact-scope active rows,
+checklist progress, honest readiness, and stable-ID detail selection before the
+Item-count, media, and search dependencies are available. Such a foundation
+must mark those dimensions unavailable or absent, remain outside production
+routing, leave the source browser responsibilities `target_mapped`, and must not
+claim feature-complete browser, app, MCP, migration, release, or cutover parity.
+
 ## Scope
 
 - `projectId` set: space belongs to that project

@@ -5488,3 +5488,67 @@ Migration-safety implemented local-gate checkpoint later on 2026-09-06:
   implementation CI remains required before verified promotion; and
 - no Firebase application/worktree, production data/system, hosted resource,
   credential, migration execution, release or cutover was touched or authorized.
+
+Migration-safety verified implementation checkpoint later on 2026-09-06:
+
+- exact implementation commit
+  `2297e8dbe7f7f0febb7e33b4da0be591d4c82ade` passed all three immutable jobs in
+  GitHub Actions run `34059595786`: conversion state and traceability, isolated
+  target environment, and disposable local Supabase provider slices;
+- both implementation dossiers and their four owned target surfaces therefore
+  advanced together from `implemented` to `verified`, with all thirteen
+  verification obligations bound to their durable evidence records;
+- the first two bounded write-capable worker implementations were not accepted
+  on first pass: one independent review returned NO-GO, two correction rounds
+  closed every P1/P2 finding, and the final re-review returned GO with zero
+  P0-P3 findings;
+- one full local batch gate and one exact immutable implementation run were used
+  for the two-slice batch, consistent with the throughput method; the restored
+  goal did not expose a trustworthy token-usage delta for this checkpoint, so
+  no token-efficiency number is fabricated; and
+- the verified catalog and guard remain provider-free evidence and consistency
+  controls only. They grant no filesystem-loader, executor, source export,
+  transform, load, apply, hosted/production access, release, or cutover
+  authority.
+
+Active Space-browser first READY review and correction checkpoint later on
+2026-09-06:
+
+- nine new target-only Space/app/MCP scaffolds were discovered, classified and
+  assigned to three DRAFT dossiers with zero conversion errors; all remain
+  comment-only;
+- root narrowed the product path after source comparison: production search,
+  authoritative Item count and primary-image behavior are preserved requirements,
+  not features to delete, while unavailable Item evidence can never become zero;
+- the first independent senior review returned NO-GO. It found missing canonical
+  browser authority, three not-yet-verified physical dependencies, one invalid
+  dependency ID, non-exact fingerprint material, a non-executable hosted-only
+  Sync test owner, premature active READY state and comment-triggered Firebase
+  coupling metadata;
+- `docs/specs/spaces.md` now records canonical Target Space Browsing and permits
+  only an isolated non-production foundation before search/Item/media dependencies
+  arrive. Exact request/evidence/selection fingerprint versions, basis fields,
+  canonical codec and lowercase SHA-256 construction are frozen;
+- the dependency ID, test ownership, active state and comment-only coupling were
+  corrected. Residual artifacts were regenerated to 567 mapped / 190 residual /
+  47 blocker keys and target environment checks pass;
+- the physical PowerSync/app dossier remains DRAFT on its three implemented-but-
+  unverified dependencies, and the MCP dossier remains DRAFT on O-007/O-015/O-023;
+  neither is in the active implementation boundary; and
+- the active one-slice exception is only the two-leaf provider-free integrity
+  foundation, justified by the reusable false-empty/fingerprint/selection risk
+  and the inability to depend on unverified physical providers. Independent
+  re-review is required before READY.
+
+Active Space-browser integrity READY promotion later on 2026-09-06:
+
+- narrow independent correction re-review returned GO with no P0-P3 finding;
+- the reviewer confirmed canonical product preservation, both exact verified
+  dependencies, exact fingerprint material, reciprocal executable verification,
+  matched scaffold hashes, current generated controls and the justified
+  one-slice high-risk exception;
+- only `space-list-read-and-presentation-contracts` advanced from DRAFT to READY;
+  the PowerSync/app and target MCP dossiers remain DRAFT and were explicitly not
+  approved; and
+- executable edits remain prohibited until the exact comment-only checkpoint
+  passes all three immutable CI jobs.

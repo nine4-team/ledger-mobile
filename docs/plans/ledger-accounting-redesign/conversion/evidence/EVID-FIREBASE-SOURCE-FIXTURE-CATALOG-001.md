@@ -1,6 +1,6 @@
 # EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001 — Firebase Source Fixture Catalog
 
-- Status: implemented; independent review and complete local gate passed; immutable implementation CI pending
+- Status: verified; independent review, complete local gate, and immutable implementation CI passed
 - Date: 2026-09-06
 - Environment: isolated provider-free migration test target only
 - Production/Firebase impact: none
@@ -16,7 +16,7 @@ immutable READY gate at commit
 implementation now present in this worktree. It did not authorize source
 export, provider access, production data, migration execution, or cutover.
 
-## Current Implementation Candidate
+## Verified Implementation
 
 `FirebaseSourceFixture.swift` now implements a closed, bounded Firebase source
 value model and validates one exact synthetic v1 catalog. It preserves integer,
@@ -54,7 +54,7 @@ parsing. Separate package-only validation directly proves schema-specific
 prohibited identity, credential, token, URL, and media field rejection. This is
 defense in depth and does not claim arbitrary-string PII detection.
 
-## Candidate Verification
+## Verification
 
 Local focused verification passes:
 
@@ -81,8 +81,9 @@ unreachable without constructing an unsupported in-memory value.
 
 The first independent implementation audit returned NO-GO. Two correction
 rounds closed every finding, and the final read-only re-review returned GO with
-zero P0-P3 findings. This document does not yet claim an exact implementation
-commit, immutable implementation CI, or verified status.
+zero P0-P3 findings. Exact implementation commit
+`2297e8dbe7f7f0febb7e33b4da0be591d4c82ade` passed all three jobs in immutable
+GitHub Actions run `34059595786`.
 
 ## Exact Privacy Review and Limits
 
@@ -94,7 +95,7 @@ or user media byte. The manifest truthfully records
 production-derived restricted snapshot still requires a separate human
 privacy/security approval.
 
-This candidate performs no filesystem discovery beyond caller-supplied bytes,
+This implementation performs no filesystem discovery beyond caller-supplied bytes,
 network/provider/database/Auth/Storage access, export, transform, load,
 reconciliation execution, hosted rehearsal, production read/write, Firebase
 application change, apply authorization, release, or cutover. A separate future

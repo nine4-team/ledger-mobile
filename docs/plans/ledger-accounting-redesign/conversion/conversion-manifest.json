@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T20:57:34.985Z",
+    "lastSynchronizedAt": "2026-09-06T21:53:14.687Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -9884,6 +9884,63 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "MCPMOD-1B9E357E244B",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/tests/spaceReadTools.test.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/tests/spaceReadTools.test.ts"
+        }
+      ],
+      "observedSourceHash": "4a72020ef62491a70ab94003a051499649328275d153ceaebf815e44efe76c12",
+      "acknowledgedSourceHash": "4a72020ef62491a70ab94003a051499649328275d153ceaebf815e44efe76c12",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target MCP test scaffold for the deferred Space-read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target MCP Space Read Tests",
+        "surfaces": [
+          "future core-only Space read wire-contract matrix"
+        ],
+        "securityRequirements": [
+          "Prove non-enumerating auth/scope failures and absence of restricted fields"
+        ],
+        "syncRequirements": [
+          "Round-trip partial, stale, incomplete and authoritative-empty truth exactly"
+        ]
+      },
+      "migration": {
+        "rule": "Keep tests comment-only until the blocked MCP contract is separately authorized.",
+        "reconciliation": [
+          "Future tests must distinguish partial diagnostic behavior from full source-tool replacement"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "future LedgerTargetMCP Space-read suite"
+        ],
+        "acceptance": [
+          "No test claims public parity or registration before Item/media dependencies close"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "DRAFT proof surface only; it does not establish registration or public tool parity.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "MCPMOD-2CAC62C341EE",
       "kind": "mcp_module",
       "name": "mcp-server/src/tools/schema.ts",
@@ -12316,6 +12373,63 @@
       ],
       "notes": "Generate exact contract/version/capability state and explicit deprecated rejections. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "MCPMOD-E3EF7C97DA9C",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/src/spaceReadTools.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/src/spaceReadTools.ts"
+        }
+      ],
+      "observedSourceHash": "c67299ad4cfe45b01457d9d7e785add8af2e6447a5901955ec4879e4027e4887",
+      "acknowledgedSourceHash": "c67299ad4cfe45b01457d9d7e785add8af2e6447a5901955ec4879e4027e4887",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target MCP Space-read scaffold documenting a possible bounded core-only projection.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target MCP Space Read Contracts",
+        "surfaces": [
+          "unregistered space_core_only_v1 design"
+        ],
+        "securityRequirements": [
+          "Use injected authenticated request context and emit no raw provider, Item, media, hidden-count or financial data"
+        ],
+        "syncRequirements": [
+          "Preserve explicit readiness and non-enumerating absence without strengthening local evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Do not register or claim public source-tool parity while dependencies remain open.",
+        "reconciliation": [
+          "Future public replacement must reconcile Item counts, Item rows and media behavior explicitly"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "future target MCP contract and parity tests"
+        ],
+        "acceptance": [
+          "No fabricated zero count, empty Item list or empty image list can satisfy replacement parity"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "DRAFT and unregistered. Public list_spaces/get_space replacement remains blocked until authoritative Item-count/detail and media projections exist or product authority approves a narrower diagnostic.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "MCPMOD-E72071DBC337",
@@ -19682,6 +19796,61 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "SWIFT-08DC933EC0F4",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/SpaceBrowserStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/SpaceBrowserStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
+      "acknowledgedSourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target AppModel scaffold for Space browser presentation and stable-ID selection.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Browser Staging AppModel",
+        "surfaces": [
+          "active Space browser state",
+          "stable-ID list-to-detail selection",
+          "request replacement and cancellation"
+        ],
+        "securityRequirements": [
+          "Render only validated exact-request snapshots and never convert cache state into authorization"
+        ],
+        "syncRequirements": [
+          "Preserve every Core readiness state and reject late prior-request events"
+        ]
+      },
+      "migration": {
+        "rule": "Add isolated target presentation only.",
+        "reconciliation": [
+          "AppModel output matches Core contract fixtures without provider interpretation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceBrowserStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Presentation and navigation remain bound to represented current Space evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Core-only presentation boundary; it adds no search, mutation, Item count or archived-list segment.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-093E5E4F8D20",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/ProjectPreferencesService.swift",
@@ -20304,6 +20473,63 @@
       ],
       "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-0DCDAFBB4350",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
+      "acknowledgedSourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target scaffold for exact-scope active Space-list and presentation contracts.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space List Read and Presentation Contracts",
+        "surfaces": [
+          "SpaceListRequest",
+          "SpaceListSnapshot",
+          "SpaceListPresentation",
+          "SpaceListQuerying",
+          "evidence-bound detail selection"
+        ],
+        "securityRequirements": [
+          "Bind Account and exact Project-or-Business-Inventory scope; do not infer visibility from local presence"
+        ],
+        "syncRequirements": [
+          "Preserve readiness, quality, source exhaustiveness and explicit non-authoritative empty states"
+        ]
+      },
+      "migration": {
+        "rule": "Implement only the isolated provider-free target contract; source Firebase screens remain unchanged.",
+        "reconciliation": [
+          "Contract fixtures cover active source behavior, stable identity/order, checklist progress and named deferred parity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceDirectoryPresentationTests"
+        ],
+        "acceptance": [
+          "Only exact-scope complete evidence can produce an authoritative active Space list or selection"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Target-only leaf. It will preserve active Space browsing and checklist progress while making incomplete evidence and unavailable Item counts explicit.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "SWIFT-0E4D079D9951",
@@ -31103,6 +31329,60 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-8B0A5006A2CA",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/SpaceBrowserStagingComposition.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/SpaceBrowserStagingComposition.swift"
+        }
+      ],
+      "observedSourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
+      "acknowledgedSourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target staging composition scaffold for Project/Inventory Space browsing into existing exact-Space detail.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Browser Staging Composition",
+        "surfaces": [
+          "typed Project/Inventory browser composition",
+          "existing exact-Space detail handoff"
+        ],
+        "securityRequirements": [
+          "Accept only validated runtime-bound Account and typed scope"
+        ],
+        "syncRequirements": [
+          "Forward provider/AppModel state without view-owned filtering or readiness inference"
+        ]
+      },
+      "migration": {
+        "rule": "Compile only in the isolated target staging application.",
+        "reconciliation": [
+          "Build and source checks prove no Firebase or production route coupling"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "isolated staging builds and source-boundary checks"
+        ],
+        "acceptance": [
+          "The composition can only browse represented Spaces and open existing stable-ID detail"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Thin isolated composition only; it cannot become production navigation or add mutations.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-8B52C90F1043",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift",
@@ -34845,14 +35125,14 @@
           "Closed typed-value fidelity, canonical bytes, privacy/path/tamper/size refusal, restart parity and MigrationRunIntegrity compatibility pass without external access"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"
       ],
-      "notes": "Provider-free implementation and seven-test suite exist after the exact READY gate; two correction rounds and final independent review returned GO with zero P0-P3 findings, and the complete local gate passed. Exact immutable implementation CI remains pending. This is not a Firebase adapter, exporter, production snapshot or migration authority.",
+      "notes": "Provider-free implementation and seven-test suite passed the complete local gate and exact immutable implementation commit 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade / Actions run 34059595786 after two correction rounds and a final independent GO review with zero P0-P3 findings. This is not a Firebase adapter, exporter, production snapshot or migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -38649,14 +38929,14 @@
           "Exact admissible tuple, complete mismatch matrix, provider-free zero-access validation, canonical restart and non-authority checks pass without claiming executor ordering"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
-      "notes": "Provider-free implementation and seven-test suite exist after the exact READY gate; two correction rounds and final independent review returned GO with zero P0-P3 findings, and the complete local gate passed. Exact immutable implementation CI remains pending. It must not be confused with the verified evidence-only MigrationRunIntegrity contract or with operational apply authority.",
+      "notes": "Provider-free implementation and seven-test suite passed the complete local gate and exact immutable implementation commit 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade / Actions run 34059595786 after two correction rounds and a final independent GO review with zero P0-P3 findings. It must not be confused with the verified evidence-only MigrationRunIntegrity contract or with operational apply authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -41172,6 +41452,61 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-F78CAEEBEDC4",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SpaceBrowserPowerSyncProvider.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SpaceBrowserPowerSyncProvider.swift"
+        }
+      ],
+      "observedSourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
+      "acknowledgedSourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target scaffold for a PowerSync-backed exact-scope Space browser.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Browser PowerSync Provider",
+        "surfaces": [
+          "exact-scope local Space browser query",
+          "space_browser completion lease",
+          "relational checklist-progress reconstruction"
+        ],
+        "securityRequirements": [
+          "Reject foreign, mixed-scope, inactive-membership and malformed local evidence without enumeration"
+        ],
+        "syncRequirements": [
+          "Require exact current-process browser completion for authoritative empty and drain every observer before close"
+        ]
+      },
+      "migration": {
+        "rule": "Read isolated target relations only; no source import or Firebase implementation.",
+        "reconciliation": [
+          "Synthetic Project and Inventory fixtures reconcile canonical rows and completeness independently"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceBrowserPowerSyncProviderTests"
+        ],
+        "acceptance": [
+          "Offline list truth remains exact across restart, cancellation, membership loss and close"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Will own a browser-specific completeness source; assignment-destination completion cannot authorize browser empty state.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-F81A30E4CBC8",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Settings/UsersView.swift",
@@ -42700,14 +43035,14 @@
           "All dossier fixture, restart, rejection, media-metadata, migration compatibility, reconciliation and isolation obligations pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"
       ],
-      "notes": "The automatic filename heuristic reports Firebase coupling, but the executable target test imports no Firebase SDK/provider and performs no external access. The complete local gate passed; exact immutable implementation CI remains pending.",
+      "notes": "The automatic filename heuristic reports Firebase coupling, but the executable target test imports no Firebase SDK/provider and performs no external access. The complete local gate and exact immutable implementation commit 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade / Actions run 34059595786 passed.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -43121,14 +43456,14 @@
           "All dossier domain, restart, rejection, provider-free zero-access, reconciliation and operational obligations pass without claiming trusted policy or executor ordering"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
-      "notes": "Provider-free tests exist and final independent review returned GO with zero P0-P3 findings; complete local and immutable implementation verification remain pending. The tests validate consistency only and do not authorize migration execution.",
+      "notes": "Provider-free tests passed the complete local gate and exact immutable implementation commit 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade / Actions run 34059595786; final independent review returned GO with zero P0-P3 findings. The tests validate consistency only and do not authorize migration execution.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -44802,6 +45137,112 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-54B6515645F8",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
+      "acknowledgedSourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target test scaffold for the Space-list read and presentation contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space List Read and Presentation Contract Tests",
+        "surfaces": [
+          "provider-free Space-list contract matrix"
+        ],
+        "securityRequirements": [
+          "Exercise Account/scope rebinding and absent/archived selection rejection"
+        ],
+        "syncRequirements": [
+          "Exercise ready, partial, stale, unavailable, required-update and authoritative-empty truth"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target values only.",
+        "reconciliation": [
+          "Every frozen requirement has reciprocal executable test coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDirectoryPresentationTests"
+        ],
+        "acceptance": [
+          "All exact contract and negative cases pass without a backend dependency"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Will prove exact scope, active-only filtering, deterministic ordering, checklist progress, false-empty refusal and stable-ID detail selection.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-55014C110C73",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift"
+        }
+      ],
+      "observedSourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
+      "acknowledgedSourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only encrypted-local and controlled-completeness test scaffold for the Space browser provider.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Browser PowerSync Provider Tests",
+        "surfaces": [
+          "encrypted local Space-browser provider matrix"
+        ],
+        "securityRequirements": [
+          "Positive and negative exact-scope evidence cases reveal no foreign rows or hidden counts"
+        ],
+        "syncRequirements": [
+          "Test causal stream completion separately from row presence and connection state"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable synthetic local target databases only.",
+        "reconciliation": [
+          "Expected rows and readiness match canonical provider-free fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceBrowserPowerSyncProviderTests"
+        ],
+        "acceptance": [
+          "Every browser readiness, rejection, restart and close obligation is executable"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Will prove both scopes, deterministic rows, isolation, current-process completeness, restart and drainage.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-557358553F23",
@@ -47577,6 +48018,59 @@
       ],
       "notes": "Verified target-only deterministic tests at exact implementation commit 519b4338c7cbe8cc63a01820116bef5283a8625a and immutable Actions run 33632364285. Four focused/all 140 tests, graph/contracts, both staging builds and clean tracked artifacts pass. They cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-A76066CC8EAA",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
+      "acknowledgedSourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target tests for Space browser staging presentation and list-to-detail continuity.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Browser Staging AppModel Tests",
+        "surfaces": [
+          "Space browser presentation and navigation matrix"
+        ],
+        "securityRequirements": [
+          "Reject wrong-Account, wrong-scope, archived, absent and stale selections"
+        ],
+        "syncRequirements": [
+          "Prove waiting, partial, stale, ready, empty and bounded-failure presentation"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory target fixtures only.",
+        "reconciliation": [
+          "Every presenter state derives from one validated Core update"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceBrowserStagingExerciseTests"
+        ],
+        "acceptance": [
+          "No late or rebound snapshot can drive visible rows or detail navigation"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Will cover request replacement, cancellation, late-event refusal and every browser readiness state.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-A920874A5571",
