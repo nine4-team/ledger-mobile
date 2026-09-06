@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 331
+State version: 332
 
 ## Objective
 
@@ -84,6 +84,13 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Corrected the implementation tracker's stale Space core-details row from
+  `ready`/comment-only to the already-proven `implemented` state. The owning
+  evidence and this execution state already recorded exact implementation
+  `a1be2ffd` / immutable run `34003366795`; this is bookkeeping reconciliation
+  only and does not add an eleventh product workflow or advance hosted/cutover
+  readiness.
 
 - Implemented `project-category-configuration-revision-foundation` from frozen
   READY `dec9a5703fc9d723d02f60ff6b1037f2db8e9dd2`. Every synthetic target
