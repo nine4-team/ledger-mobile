@@ -1,8 +1,1 @@
-{
-  "schemaVersion": 0,
-  "scaffoldOnly": true,
-  "status": "ready_scaffold_only",
-  "resourceKind": "auth_identity_metadata",
-  "authorityDisposition": "evidence_only",
-  "entries": []
-}
+{"authorityDisposition":"evidence_only","entries":[{"accountScopeID":"a11ce000000000000000000000000001","entityCode":"auth_identities","evidenceKind":"record","identityClass":"synthetic_passwordless","metadata":{"entries":[{"key":"createdAt","value":{"kind":"timestamp","nanoseconds":123456789,"seconds":"1704067200"}},{"key":"disabled","value":{"kind":"bool","value":false}},{"key":"principalHint","value":{"kind":"string","value":"synthetic-principal-alpha"}}],"kind":"map"},"sourceRecordID":"auth_identity_alpha"},{"accountScopeID":"a11ce000000000000000000000000001","entityCode":"auth_identities","evidenceKind":"unsupported","identityClass":"synthetic_legacy_provider","metadata":{"entries":[{"key":"legacyProviderEvidence","value":{"evidence":{"kind":"string","value":"synthetic-provider-class"},"kind":"unsupported","sourceKind":"provider_shape"}}],"kind":"map"},"sourceRecordID":"auth_identity_legacy"}],"resourceKind":"auth_identity_metadata","schemaVersion":1}

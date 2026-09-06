@@ -5444,3 +5444,47 @@ Target-environment isolation checkpoint verified later on 2026-09-01:
 - the target CI job is defined but has no external run evidence yet; and
 - no hosted resource, credential, network backend, production read/mutation,
   deployment, migration, release, branch/ref operation, or cutover occurred.
+
+Migration-safety READY and first implementation-review checkpoint on 2026-09-06:
+
+- exact comment-only READY commit `d281498bde31c27bd17879571ef67b42bfb1dc3d`
+  passed all three immutable jobs in Actions run `34056116157` after the stale
+  generated M2 residual register was refreshed;
+- two disjoint implementation workers produced the provider-free synthetic
+  Firebase fixture catalog and local dry-run preflight guard, and all 13 initial
+  focused tests passed under root reproduction;
+- mandatory independent implementation review returned NO-GO with no P0, three
+  P1 defects and five P2 proof/process gaps; no implementation status was
+  promoted;
+- parallel correction work owns raw-UTF8 identity, duplicate JSON-key refusal,
+  full boundary/tamper tests, top-level collection limits, digest-before-parse,
+  authenticated Account binding and a real catalog-to-guard path; root owns the
+  executable environment checker, exact-byte review evidence and tracker state;
+- schema-v1 Account-scope hashing is now explicitly frozen as SHA-256 over the
+  authenticated opaque fixture Account ID's exact UTF-8 bytes, without prefix,
+  delimiter, normalization or framing, matching the existing target-resource
+  identifier-hash convention; and
+- no Firebase application/worktree, provider, credential, hosted/production
+  system, migration execution, release or cutover was touched or authorized.
+
+Migration-safety implemented local-gate checkpoint later on 2026-09-06:
+
+- both implementation workers' first passes were independently audited; two
+  correction rounds closed raw-UTF8 identity, duplicate JSON keys, exact
+  boundary/tamper proof, Account binding/visibility, synthetic-review truth,
+  resource framing, checker and lifecycle-document defects;
+- final independent read-only re-review returned GO with zero P0-P3 findings;
+- the exact synthetic catalog contains 21 records across 15 entity groups and
+  is pinned by three payload hashes plus bundle digest
+  `1ecd6b1ed0bfbe4b9e65d0c55e367562d761cbe00fd0f38cdb86111fd2b7f4a2`;
+- both focused suites passed 14 tests total, and the complete target package
+  passed 655 tests across 97 suites;
+- all conversion/query/residual/environment/generated-contract controls, 26
+  MCP tests, XcodeGen stability, macOS and generic iOS Simulator staging builds,
+  local Supabase schema lint, 374 pgTAP assertions across 11 SQL suites and all
+  local RLS/RPC/read matrices passed;
+- four owned surfaces advanced honestly from target_mapped to implemented,
+  raising implemented-or-later target surfaces from 241 to 245; immutable
+  implementation CI remains required before verified promotion; and
+- no Firebase application/worktree, production data/system, hosted resource,
+  credential, migration execution, release or cutover was touched or authorized.

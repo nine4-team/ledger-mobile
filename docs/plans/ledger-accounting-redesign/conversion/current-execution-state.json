@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 9,
+  "stateVersion": 10,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -16,9 +16,16 @@
     "ciStatus": "passed",
     "meaning": "The sixth-family Item-to-Space clearing provider and corrected Budget watch-drainage proof passed the complete immutable gate; authoritative clearing apply and hosted Sync remain unimplemented."
   },
+  "readyCheckpoint": {
+    "name": "MIGRATION-SAFETY-READY",
+    "commit": "d281498bde31c27bd17879571ef67b42bfb1dc3d",
+    "ciRun": 34056116157,
+    "ciStatus": "passed",
+    "meaning": "The independently reviewed comment-only migration-safety boundary and generated residual register passed all three immutable CI jobs; this authorized local provider-free implementation only."
+  },
   "activeBatch": {
     "id": "firebase-source-fixture-and-migration-environment-guard",
-    "status": "ready",
+    "status": "ci_verification",
     "outcome": "Freeze and independently review a two-slice local migration-safety batch: deterministic synthetic Firebase source fixtures plus a fail-closed provider-free preflight consistency primitive that initially admits only source_fixture, targetLocal, dry_run and no credentials.",
     "dossiers": [
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/firebase-source-fixture-catalog.json",
@@ -37,9 +44,10 @@
       "scripts/check-target-environment.mjs"
     ],
     "nextActions": [
-      "Commit and push the independently reviewed comment-only READY boundary and require its exact immutable CI gate to pass.",
-      "Implement both provider-free slices within the frozen boundary using focused tests and mandatory independent migration-safety review.",
-      "Run one complete local batch gate, exact immutable CI, and promote only evidence actually proven."
+      "Close every P1/P2 finding from the first independent implementation audit: exact checker, raw-UTF8 identity, duplicate-key refusal, full boundary/tamper proof, top-level collection limits, digest-before-parse, Account binding/hash derivation and honest exact-byte synthetic privacy review.",
+      "Commit and push the synchronized bounded implementation checkpoint after the complete local batch gate passed.",
+      "Require all three jobs in the exact immutable CI workflow to pass before any verified promotion.",
+      "Record the green exact implementation run and advance eligible surfaces to verified in the next natural control checkpoint."
     ]
   },
   "progress": {
@@ -50,7 +58,7 @@
     },
     "targetRelevantSurfaces": 748,
     "mappedOrLaterSurfaces": 558,
-    "implementedOrLaterSurfaces": 241,
+    "implementedOrLaterSurfaces": 245,
     "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0

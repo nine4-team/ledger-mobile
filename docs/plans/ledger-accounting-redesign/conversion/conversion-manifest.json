@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T19:46:28.155Z",
+    "lastSynchronizedAt": "2026-09-06T20:57:34.985Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2101,10 +2101,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
-      "acknowledgedSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
+      "observedSourceHash": "022e671c495989c93b75c21453df4042c60359d5057dfb65c465f3a126389da2",
+      "acknowledgedSourceHash": "022e671c495989c93b75c21453df4042c60359d5057dfb65c465f3a126389da2",
       "metadata": {},
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; the two migration-safety source/test pairs remain explicit comment-only READY scaffolds; the four registered test resources remain exact empty schema-version-zero READY markers; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -6669,10 +6669,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
-      "acknowledgedSourceHash": "341f0bfd15bdd6452f687ea359b45cd57054fc84211df978935e2c8e7057bf80",
+      "observedSourceHash": "022e671c495989c93b75c21453df4042c60359d5057dfb65c465f3a126389da2",
+      "acknowledgedSourceHash": "022e671c495989c93b75c21453df4042c60359d5057dfb65c465f3a126389da2",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; keeps both migration-safety pairs and all four test resources inert at READY scaffold status; and rejects target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -34809,12 +34809,12 @@
           "path": "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift"
         }
       ],
-      "observedSourceHash": "f175d7a6740be5503c21422a702c567b0b19341f1d9fdc68c480ab0afa7bf0e6",
-      "acknowledgedSourceHash": "f175d7a6740be5503c21422a702c567b0b19341f1d9fdc68c480ab0afa7bf0e6",
+      "observedSourceHash": "e24fbd1af65a00b42d5eb82c72edcb07b1a121cca5b08a5c96813cc709899eb6",
+      "acknowledgedSourceHash": "e24fbd1af65a00b42d5eb82c72edcb07b1a121cca5b08a5c96813cc709899eb6",
       "metadata": {
-        "firebaseCoupling": "none_detected"
+        "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Contains only an explicit comment-only READY scaffold for a future provider-free, versioned synthetic Firebase source-fixture contract; it defines no executable declaration and reads no source, file, credential, provider, database, network or production value.",
+      "currentBehavior": "Implements the provider-free closed Firebase value model, exact reviewed synthetic v1 fixture catalog, bounded canonical-one-LF validation, deterministic MigrationSourceSnapshot/entity identity, and stable refusal taxonomy without source, credential, provider, database, network, or production access.",
       "disposition": "redesign",
       "target": {
         "owner": "Firebase Source Fixture Catalog",
@@ -34824,7 +34824,7 @@
           "MigrationSourceSnapshot fixture identity"
         ],
         "securityRequirements": [
-          "Accept only the exact reviewed synthetic catalog digests, reject schema-specific prohibited identity/credential/media fields, and bind recorded human privacy review to exact bytes without claiming generic PII detection",
+          "Accept only the exact independently reviewed synthetic catalog digests, reject schema-specific prohibited identity/credential/media fields, and bind the recorded independent synthetic privacy review to exact bytes without claiming generic PII detection",
           "Import or invoke no Firebase SDK, legacy reverse migration, profiler or provider code"
         ],
         "syncRequirements": [
@@ -34832,27 +34832,27 @@
         ]
       },
       "migration": {
-        "rule": "After a separate READY gate, represent reviewed source shapes as versioned synthetic test evidence only; perform no export, transform, load, apply or reconciliation execution.",
+        "rule": "Represent reviewed source shapes as versioned synthetic test evidence only; perform no export, transform, load, apply or reconciliation execution.",
         "reconciliation": [
           "Every accepted fixture component and entity must be bound by exact counts and hashes while malformed or ambiguous source shapes remain named blocker evidence"
         ]
       },
       "verification": {
         "tests": [
-          "FirebaseSourceFixtureTests (planned after READY)"
+          "swift test --package-path LedgeriOS --filter FirebaseSourceFixtureTests"
         ],
         "acceptance": [
           "Closed typed-value fidelity, canonical bytes, privacy/path/tamper/size refusal, restart parity and MigrationRunIntegrity compatibility pass without external access"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"
       ],
-      "notes": "READY scaffold only after corrected independent review returned GO with no P0-P3; exact immutable READY CI is still required before executable fixture decoding or validation begins. This is not a Firebase adapter, exporter, production snapshot or migration authority.",
+      "notes": "Provider-free implementation and seven-test suite exist after the exact READY gate; two correction rounds and final independent review returned GO with zero P0-P3 findings, and the complete local gate passed. Exact immutable implementation CI remains pending. This is not a Firebase adapter, exporter, production snapshot or migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -38613,12 +38613,12 @@
           "path": "LedgeriOS/LedgerTargetMigrationCore/MigrationEnvironmentGuard.swift"
         }
       ],
-      "observedSourceHash": "0f664046f2b508c489e362b65d7163f0809f26680a37450b2664d71ea5ca3eda",
-      "acknowledgedSourceHash": "0f664046f2b508c489e362b65d7163f0809f26680a37450b2664d71ea5ca3eda",
+      "observedSourceHash": "e3c19db31a0dd2439b379e4243c4b6524d0b18556e2ad8d7327abff10373177b",
+      "acknowledgedSourceHash": "e3c19db31a0dd2439b379e4243c4b6524d0b18556e2ad8d7327abff10373177b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only an explicit comment-only READY scaffold for a future provider-free preflight consistency primitive. The proposed initial tuple is source_fixture, targetLocal, dry_run and no credentials; no executable primitive, trusted policy, provider-ordering enforcement or migration entry point exists.",
+      "currentBehavior": "Implements a provider-free package-visible preflight consistency primitive that revalidates exact fixture, target, Account, plan, artifact, contract, dry-run, no-credential and evidence-only identity before issuing a private-construction non-Codable process-local token; it is not trusted provider-ordering enforcement or a migration entry point.",
       "disposition": "redesign",
       "target": {
         "owner": "Migration Environment Guard",
@@ -38636,27 +38636,27 @@
         ]
       },
       "migration": {
-        "rule": "After a separate READY gate, admit only the exact local synthetic dry-run no-credential tuple and perform zero migration work.",
+        "rule": "Admit only the exact local synthetic dry-run no-credential tuple and perform zero migration work.",
         "reconciliation": [
           "The guard may prove exact plan/fixture/target/Account/artifact/contract identity agreement only; it cannot export, transform, load, reconcile or authorize apply"
         ]
       },
       "verification": {
         "tests": [
-          "MigrationEnvironmentGuardTests (planned after READY)"
+          "swift test --package-path LedgeriOS --filter MigrationEnvironmentGuardTests"
         ],
         "acceptance": [
           "Exact admissible tuple, complete mismatch matrix, provider-free zero-access validation, canonical restart and non-authority checks pass without claiming executor ordering"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
-      "notes": "READY scaffold only after corrected independent review returned GO with no P0-P3; exact immutable READY CI is still required before executable validation begins. It must not be confused with the verified evidence-only MigrationRunIntegrity contract or with operational apply authority.",
+      "notes": "Provider-free implementation and seven-test suite exist after the exact READY gate; two correction rounds and final independent review returned GO with zero P0-P3 findings, and the complete local gate passed. Exact immutable implementation CI remains pending. It must not be confused with the verified evidence-only MigrationRunIntegrity contract or with operational apply authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -42665,12 +42665,12 @@
           "path": "LedgeriOS/LedgerTargetMigrationCoreTests/FirebaseSourceFixtureTests.swift"
         }
       ],
-      "observedSourceHash": "f1b2dae5f2ba5f037dbebd6ba88f46548b8482a0efe04b5a9fc14d2b9aa11728",
-      "acknowledgedSourceHash": "f1b2dae5f2ba5f037dbebd6ba88f46548b8482a0efe04b5a9fc14d2b9aa11728",
+      "observedSourceHash": "48c8027dffdb41ef27eb98364b39697c4cb1166163b0ea8fe3de2167c2c14213",
+      "acknowledgedSourceHash": "48c8027dffdb41ef27eb98364b39697c4cb1166163b0ea8fe3de2167c2c14213",
       "metadata": {
         "firebaseCoupled": true
       },
-      "currentBehavior": "Contains only an explicit comment-only READY test scaffold describing future deterministic fixture, privacy, tamper, typed-value, malformed-source and non-authority proof; it declares no test and makes no passing claim.",
+      "currentBehavior": "Executes seven deterministic provider-free tests for typed Firebase boundaries, exact synthetic catalog identity and restart, tamper/path/schema/canonical/privacy refusal, metadata-only media faults, MigrationRunIntegrity compatibility, exact source counting, and non-authority isolation.",
       "disposition": "redesign",
       "target": {
         "owner": "Firebase Source Fixture Catalog",
@@ -42680,34 +42680,34 @@
           "migration-integrity compatibility and reconciliation-count tests"
         ],
         "securityRequirements": [
-          "Use exact reviewed synthetic catalog digests, schema-specific prohibited-field checks and recorded human byte review; make no claim of exhaustive semantic PII detection"
+          "Use exact independently reviewed synthetic catalog digests, schema-specific prohibited-field checks and recorded independent synthetic byte review; make no claim of exhaustive semantic PII detection"
         ],
         "syncRequirements": [
           "Run deterministically without Firebase, PowerSync, filesystem discovery, database, network or hosted resources"
         ]
       },
       "migration": {
-        "rule": "After READY, test the provider-free fixture contract only; do not test against a production export or execute a migration.",
+        "rule": "Test the provider-free fixture contract only; do not test against a production export or execute a migration.",
         "reconciliation": [
           "Exact fixture totals and per-entity hashes account for every synthetic entry while coverage limitations remain explicit"
         ]
       },
       "verification": {
         "tests": [
-          "swift test --package-path LedgeriOS --filter FirebaseSourceFixtureTests (planned after READY)"
+          "swift test --package-path LedgeriOS --filter FirebaseSourceFixtureTests"
         ],
         "acceptance": [
           "All dossier fixture, restart, rejection, media-metadata, migration compatibility, reconciliation and isolation obligations pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-FIREBASE-SOURCE-FIXTURE-CATALOG-001"
       ],
-      "notes": "The automatic filename heuristic reports Firebase coupling, but the current file is comment-only and the candidate target contract forbids every Firebase SDK/provider import and all external access.",
+      "notes": "The automatic filename heuristic reports Firebase coupling, but the executable target test imports no Firebase SDK/provider and performs no external access. The complete local gate passed; exact immutable implementation CI remains pending.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -43086,12 +43086,12 @@
           "path": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationEnvironmentGuardTests.swift"
         }
       ],
-      "observedSourceHash": "cc4b6bc9d92ab16ca41b6a9559f2d3393a1eaec98f040f1ebee457e2617cdaab",
-      "acknowledgedSourceHash": "cc4b6bc9d92ab16ca41b6a9559f2d3393a1eaec98f040f1ebee457e2617cdaab",
+      "observedSourceHash": "62bb0ae2323bcaeac17aae5fbbbfe7cf783ab1e005e96cd5d8a565fd2ec19bfb",
+      "acknowledgedSourceHash": "62bb0ae2323bcaeac17aae5fbbbfe7cf783ab1e005e96cd5d8a565fd2ec19bfb",
       "metadata": {
-        "firebaseCoupled": false
+        "firebaseCoupled": true
       },
-      "currentBehavior": "Contains only an explicit comment-only READY test scaffold describing future exact-tuple, mismatch, provider-free zero-access, restart, package-token and non-authority proof; it declares no test and makes no passing claim.",
+      "currentBehavior": "Executes seven provider-free tests for exact local tuple and default normalization, canonical policy/receipt restart evidence, independent identity and policy mismatch, duplicate/unknown/noncanonical/tampered refusal, exact byte ceilings, no-token rejection, package-token boundaries, and non-authority evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Migration Environment Guard",
@@ -43108,27 +43108,27 @@
         ]
       },
       "migration": {
-        "rule": "After READY, test only provider-free preflight; do not construct providers or execute migration work.",
+        "rule": "Test only provider-free preflight; do not construct providers or execute migration work.",
         "reconciliation": [
           "A Cartesian single-mismatch matrix proves exact agreement without recording partial acceptance"
         ]
       },
       "verification": {
         "tests": [
-          "swift test --package-path LedgeriOS --filter MigrationEnvironmentGuardTests (planned after READY)"
+          "swift test --package-path LedgeriOS --filter MigrationEnvironmentGuardTests"
         ],
         "acceptance": [
           "All dossier domain, restart, rejection, provider-free zero-access, reconciliation and operational obligations pass without claiming trusted policy or executor ordering"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-ENVIRONMENT-GUARD-001"
       ],
-      "notes": "READY test scaffold only; it neither validates nor authorizes a migration environment today.",
+      "notes": "Provider-free tests exist and final independent review returned GO with zero P0-P3 findings; complete local and immutable implementation verification remain pending. The tests validate consistency only and do not authorize migration execution.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

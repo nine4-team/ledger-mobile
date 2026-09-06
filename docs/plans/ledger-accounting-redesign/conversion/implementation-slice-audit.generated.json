@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T19:46:28.155Z",
+  "generatedFromManifestSync": "2026-09-06T20:57:34.985Z",
   "totals": {
     "slices": 96,
     "claimedTargetSurfaces": 320,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 241
+    "implementationAdvancedTargetSurfaces": 245
   },
   "statusCounts": {
     "draft": 3,
-    "ready": 2,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
+    "implemented": 15,
     "verified": 75,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -438,7 +438,7 @@
       "sliceId": "firebase-source-fixture-catalog",
       "title": "Define versioned synthetic Firebase source fixtures for deterministic migration tests",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Firebase Source Fixture Catalog",
       "surfaceIds": [
         "SWIFT-B4A356C2FE88",
@@ -558,7 +558,7 @@
       "sliceId": "migration-environment-guard",
       "title": "Define a provider-free fail-closed migration preflight primitive",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Migration Environment Guard",
       "surfaceIds": [
         "SWIFT-DB6A733FD6DE",

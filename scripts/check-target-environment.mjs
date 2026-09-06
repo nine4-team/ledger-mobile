@@ -49,53 +49,69 @@ const sourceProject = path.join(
   "LedgeriOS.xcodeproj",
   "project.pbxproj",
 );
-const migrationSafetyReadySwiftScaffolds = [
-  path.join(migrationCoreRoot, "FirebaseSourceFixture.swift"),
-  path.join(migrationCoreRoot, "MigrationEnvironmentGuard.swift"),
-  path.join(migrationTestRoot, "FirebaseSourceFixtureTests.swift"),
-  path.join(migrationTestRoot, "MigrationEnvironmentGuardTests.swift"),
-];
-const migrationSafetyReadyFixtureRoot = path.join(
+const migrationSafetyImplementationSwiftFiles = {
+  fixture: path.join(migrationCoreRoot, "FirebaseSourceFixture.swift"),
+  guard: path.join(migrationCoreRoot, "MigrationEnvironmentGuard.swift"),
+  fixtureTests: path.join(migrationTestRoot, "FirebaseSourceFixtureTests.swift"),
+  guardTests: path.join(migrationTestRoot, "MigrationEnvironmentGuardTests.swift"),
+};
+const migrationSafetyFixtureRoot = path.join(
   migrationTestRoot,
   "Fixtures/FirebaseSource/v1",
 );
-const migrationSafetyReadyExpectedDirectories = new Set([
+const migrationSafetyExpectedDirectories = new Set([
   "auth",
   "firestore",
   "storage",
 ]);
-const migrationSafetyReadyExpectedFiles = new Set([
+const migrationSafetyExpectedFiles = new Set([
   "auth/identity-metadata.json",
   "firestore/documents.json",
   "manifest.json",
   "storage/object-metadata.json",
 ]);
-const migrationSafetyReadyMaximumResourceBytes = 4_096;
-const migrationSafetyReadyResources = new Map([
+const migrationSafetyMaximumResourceBytes = 4_194_304;
+const migrationSafetyResources = new Map([
   [
     path.join(migrationTestRoot, "Fixtures/FirebaseSource/v1/manifest.json"),
-    "firebase_source_fixture_manifest",
+    {
+      kind: "firebase_source_fixture_manifest",
+      byteCount: 3_146,
+      sha256: "e689aea023cb6fe666e1b37d45b130e534bacd52fd90ae0c54407b16118c3e20",
+    },
   ],
   [
     path.join(
       migrationTestRoot,
       "Fixtures/FirebaseSource/v1/firestore/documents.json",
     ),
-    "firestore_documents",
+    {
+      kind: "firestore_documents",
+      byteCount: 6_231,
+      sha256: "16f78cef5e69e720db2db9e70ec34c8ec02fe5f8e736d1139f3c08703e834d70",
+    },
   ],
   [
     path.join(
       migrationTestRoot,
       "Fixtures/FirebaseSource/v1/auth/identity-metadata.json",
     ),
-    "auth_identity_metadata",
+    {
+      kind: "auth_identity_metadata",
+      byteCount: 971,
+      sha256: "060cc947968cc135a533822ae071e17ca5f232fcf99e4a0d867ae42e53d73f74",
+    },
   ],
   [
     path.join(
       migrationTestRoot,
       "Fixtures/FirebaseSource/v1/storage/object-metadata.json",
     ),
-    "storage_object_metadata",
+    {
+      kind: "storage_object_metadata",
+      byteCount: 2_351,
+      sha256: "9d10c8143c923cce031a318700a4787bd0624794633b5b85aeddbd35aaa06f3d",
+    },
   ],
 ]);
 
@@ -3298,9 +3314,9 @@ for (const filePath of blockedCategoryProviderLeaves) {
   }
 }
 
-for (const filePath of migrationSafetyReadySwiftScaffolds) {
+for (const filePath of Object.values(migrationSafetyImplementationSwiftFiles)) {
   if (!fs.existsSync(filePath)) {
-    fail("target_migration_safety_ready_leaf_missing", relative(filePath));
+    fail("target_migration_safety_implementation_leaf_missing", relative(filePath));
     continue;
   }
   const source = fs.readFileSync(filePath, "utf8");
@@ -3308,45 +3324,182 @@ for (const filePath of migrationSafetyReadySwiftScaffolds) {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("//"));
+  if (substantiveLines.length === 0 || source.includes("SCAFFOLD ONLY")) {
+    fail(
+      "target_migration_safety_implementation_leaf_not_executable",
+      `${relative(filePath)} must contain the reviewed executable migration-safety implementation.`,
+    );
+  }
+}
+
+if (
+  Object.values(migrationSafetyImplementationSwiftFiles).every((filePath) =>
+    fs.existsSync(filePath),
+  )
+) {
+  const fixtureSource = fs.readFileSync(
+    migrationSafetyImplementationSwiftFiles.fixture,
+    "utf8",
+  );
+  const guardSource = fs.readFileSync(
+    migrationSafetyImplementationSwiftFiles.guard,
+    "utf8",
+  );
+  const fixtureTests = fs.readFileSync(
+    migrationSafetyImplementationSwiftFiles.fixtureTests,
+    "utf8",
+  );
+  const guardTests = fs.readFileSync(
+    migrationSafetyImplementationSwiftFiles.guardTests,
+    "utf8",
+  );
+
+  for (const marker of [
+    "public enum FirebaseSourceFixtureFailure",
+    "public indirect enum FirebaseSourceValue",
+    "public struct ValidatedFirebaseSourceFixture",
+    "package let accountScopeID: MigrationOpaqueID",
+    "public struct FirebaseSourceFixtureCatalog",
+    "manifestEnvelope == canonicalEnvelope + Data([0x0a])",
+    "package static func validateNoProhibitedFields",
+    "ledger.firebase-source-fixture.v1\\0",
+    "ledger.firebase-source-fixture.entity.v1\\0",
+  ]) {
+    if (!fixtureSource.includes(marker)) {
+      fail("target_firebase_source_fixture_contract_missing", marker);
+    }
+  }
+  for (const testID of [
+    "FBSOURCEFIXTURE-TEST-001",
+    "FBSOURCEFIXTURE-TEST-002",
+    "FBSOURCEFIXTURE-TEST-003",
+    "FBSOURCEFIXTURE-TEST-004",
+    "FBSOURCEFIXTURE-TEST-005",
+    "FBSOURCEFIXTURE-TEST-006",
+    "FBSOURCEFIXTURE-TEST-007",
+  ]) {
+    if (!fixtureTests.includes(testID)) {
+      fail("target_firebase_source_fixture_test_missing", testID);
+    }
+  }
+
+  for (const marker of [
+    "package enum MigrationPreflightCredentialDescriptor",
+    "package enum MigrationPreflightFailure",
+    "package struct MigrationPreflightRequest",
+    "package struct MigrationPreflightPolicy",
+    "package struct MigrationPreflightReceipt",
+    "package struct MigrationPreflightConsistencyToken",
+    "package enum MigrationPreflightInitialPolicyFactory",
+    "package enum MigrationEnvironmentGuard",
+    "ledger.migration-preflight-policy.v1\\0",
+    "ledger.migration-preflight-receipt.v1\\0",
+  ]) {
+    if (!guardSource.includes(marker)) {
+      fail("target_migration_environment_guard_contract_missing", marker);
+    }
+  }
+  for (const testID of [
+    "MIGENVGUARD-TEST-001",
+    "MIGENVGUARD-TEST-002",
+    "MIGENVGUARD-TEST-003",
+    "MIGENVGUARD-TEST-004",
+    "MIGENVGUARD-TEST-005",
+    "MIGENVGUARD-TEST-006",
+  ]) {
+    if (!guardTests.includes(testID)) {
+      fail("target_migration_environment_guard_test_missing", testID);
+    }
+  }
+
+  const tokenStart = guardSource.indexOf(
+    "package struct MigrationPreflightConsistencyToken",
+  );
+  const tokenEnd = guardSource.indexOf(
+    "package struct MigrationPreflightResult",
+    tokenStart,
+  );
+  const tokenSource =
+    tokenStart >= 0 && tokenEnd > tokenStart
+      ? guardSource.slice(tokenStart, tokenEnd)
+      : "";
   if (
-    substantiveLines.length !== 0 ||
-    !source.includes("READY") ||
-    !source.includes("SCAFFOLD ONLY")
+    tokenSource.length === 0 ||
+    !tokenSource.includes("private init(") ||
+    /\b(?:public|Codable|Encodable|Decodable)\b/.test(tokenSource)
   ) {
     fail(
-      "target_migration_safety_ready_leaf_executable",
-      `${relative(filePath)} must remain an explicit comment-only READY scaffold until its separate READY boundary passes.`,
+      "target_migration_preflight_token_boundary_invalid",
+      "MigrationPreflightConsistencyToken must remain package-visible, private-initializer, and non-Codable.",
     );
+  }
+  for (const typeName of [
+    "MigrationPreflightCredentialDescriptor",
+    "MigrationPreflightFailure",
+    "MigrationPreflightRequest",
+    "MigrationPreflightPolicyContent",
+    "MigrationPreflightPolicy",
+    "MigrationPreflightReceiptContent",
+    "MigrationPreflightReceipt",
+    "MigrationPreflightConsistencyToken",
+    "MigrationPreflightResult",
+    "MigrationPreflightInitialPolicyFactory",
+    "MigrationEnvironmentGuard",
+  ]) {
+    if (new RegExp(`\\bpublic\\s+(?:struct|enum|class|actor)\\s+${typeName}\\b`).test(guardSource)) {
+      fail("target_migration_preflight_public_api_exposed", typeName);
+    }
+  }
+
+  const executableMigrationSafetySource = maskSwiftLexical(
+    `${fixtureSource}\n${guardSource}`,
+    { strings: true },
+  );
+  for (const forbiddenAPI of [
+    "URLSession",
+    "FileManager",
+    "FileHandle",
+    "ProcessInfo",
+    "NSPersistentContainer",
+    "SupabaseClient",
+    "PowerSyncDatabase",
+    "Firestore",
+    "FirebaseAuth",
+    "FirebaseStorage",
+  ]) {
+    if (new RegExp(`\\b${forbiddenAPI}\\b`).test(executableMigrationSafetySource)) {
+      fail("target_migration_safety_access_api_forbidden", forbiddenAPI);
+    }
   }
 }
 
 const observedMigrationSafetyDraftDirectories = new Set();
 const observedMigrationSafetyDraftFiles = new Set();
-if (!fs.existsSync(migrationSafetyReadyFixtureRoot)) {
+if (!fs.existsSync(migrationSafetyFixtureRoot)) {
   fail(
-    "target_migration_safety_ready_fixture_root_missing",
-    relative(migrationSafetyReadyFixtureRoot),
+    "target_migration_safety_fixture_root_missing",
+    relative(migrationSafetyFixtureRoot),
   );
 } else {
-  const rootStat = fs.lstatSync(migrationSafetyReadyFixtureRoot);
+  const rootStat = fs.lstatSync(migrationSafetyFixtureRoot);
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
     fail(
-      "target_migration_safety_ready_fixture_root_unsafe",
-      `${relative(migrationSafetyReadyFixtureRoot)} must be one real directory.`,
+      "target_migration_safety_fixture_root_unsafe",
+      `${relative(migrationSafetyFixtureRoot)} must be one real directory.`,
     );
   } else {
-    const realRoot = fs.realpathSync(migrationSafetyReadyFixtureRoot);
+    const realRoot = fs.realpathSync(migrationSafetyFixtureRoot);
     const inspectFixtureTree = (directory) => {
       for (const name of fs.readdirSync(directory)) {
         const entryPath = path.join(directory, name);
         const logicalPath = path
-          .relative(migrationSafetyReadyFixtureRoot, entryPath)
+          .relative(migrationSafetyFixtureRoot, entryPath)
           .split(path.sep)
           .join("/");
         const stat = fs.lstatSync(entryPath);
         if (stat.isSymbolicLink()) {
           fail(
-            "target_migration_safety_ready_fixture_symlink",
+            "target_migration_safety_fixture_symlink",
             logicalPath,
           );
           continue;
@@ -3360,7 +3513,7 @@ if (!fs.existsSync(migrationSafetyReadyFixtureRoot)) {
           path.isAbsolute(realRelative)
         ) {
           fail(
-            "target_migration_safety_ready_fixture_escape",
+            "target_migration_safety_fixture_escape",
             logicalPath,
           );
           continue;
@@ -3372,77 +3525,144 @@ if (!fs.existsSync(migrationSafetyReadyFixtureRoot)) {
         }
         if (!stat.isFile()) {
           fail(
-            "target_migration_safety_ready_fixture_nonregular",
+            "target_migration_safety_fixture_nonregular",
             logicalPath,
           );
           continue;
         }
-        if (stat.size > migrationSafetyReadyMaximumResourceBytes) {
+        if (stat.size > migrationSafetyMaximumResourceBytes) {
           fail(
-            "target_migration_safety_ready_fixture_oversized",
-            `${logicalPath} is ${stat.size} bytes; READY maximum is ${migrationSafetyReadyMaximumResourceBytes}.`,
+            "target_migration_safety_fixture_oversized",
+            `${logicalPath} is ${stat.size} bytes; implementation maximum is ${migrationSafetyMaximumResourceBytes}.`,
           );
         }
         observedMigrationSafetyDraftFiles.add(logicalPath);
       }
     };
-    inspectFixtureTree(migrationSafetyReadyFixtureRoot);
+    inspectFixtureTree(migrationSafetyFixtureRoot);
   }
 }
 
 if (
   JSON.stringify([...observedMigrationSafetyDraftDirectories].sort()) !==
-  JSON.stringify([...migrationSafetyReadyExpectedDirectories].sort())
+  JSON.stringify([...migrationSafetyExpectedDirectories].sort())
 ) {
   fail(
-    "target_migration_safety_ready_fixture_directories_unexpected",
-    `expected ${JSON.stringify([...migrationSafetyReadyExpectedDirectories].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftDirectories].sort())}`,
+    "target_migration_safety_fixture_directories_unexpected",
+    `expected ${JSON.stringify([...migrationSafetyExpectedDirectories].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftDirectories].sort())}`,
   );
 }
 if (
   JSON.stringify([...observedMigrationSafetyDraftFiles].sort()) !==
-  JSON.stringify([...migrationSafetyReadyExpectedFiles].sort())
+  JSON.stringify([...migrationSafetyExpectedFiles].sort())
 ) {
   fail(
-    "target_migration_safety_ready_fixture_files_unexpected",
-    `expected ${JSON.stringify([...migrationSafetyReadyExpectedFiles].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftFiles].sort())}`,
+    "target_migration_safety_fixture_files_unexpected",
+    `expected ${JSON.stringify([...migrationSafetyExpectedFiles].sort())}; observed ${JSON.stringify([...observedMigrationSafetyDraftFiles].sort())}`,
   );
 }
 
-for (const [filePath, resourceKind] of migrationSafetyReadyResources) {
+for (const [filePath, expectedResource] of migrationSafetyResources) {
   if (!fs.existsSync(filePath)) {
-    fail("target_migration_safety_ready_resource_missing", relative(filePath));
+    fail("target_migration_safety_resource_missing", relative(filePath));
     continue;
+  }
+  const resourceBytes = fs.readFileSync(filePath);
+  const resourceSHA256 = createHash("sha256")
+    .update(resourceBytes)
+    .digest("hex");
+  if (
+    resourceBytes.length !== expectedResource.byteCount ||
+    resourceSHA256 !== expectedResource.sha256
+  ) {
+    fail(
+      "target_migration_safety_resource_identity_mismatch",
+      `${relative(filePath)} must remain ${expectedResource.byteCount} bytes with SHA-256 ${expectedResource.sha256}; observed ${resourceBytes.length} bytes and ${resourceSHA256}.`,
+    );
+  }
+  if (
+    resourceBytes.length === 0 ||
+    resourceBytes.at(-1) !== 0x0a ||
+    (resourceBytes.length > 1 && resourceBytes.at(-2) === 0x0a)
+  ) {
+    fail(
+      "target_migration_safety_resource_framing_invalid",
+      `${relative(filePath)} must be canonical JSON followed by exactly one terminal LF.`,
+    );
   }
   let resource;
   try {
-    resource = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    resource = JSON.parse(resourceBytes.toString("utf8"));
   } catch {
-    fail("target_migration_safety_ready_resource_invalid", relative(filePath));
+    fail("target_migration_safety_resource_invalid", relative(filePath));
     continue;
   }
-  const exactKeys = [
-    "authorityDisposition",
-    "entries",
-    "resourceKind",
-    "scaffoldOnly",
-    "schemaVersion",
-    "status",
-  ];
-  if (
-    JSON.stringify(Object.keys(resource).sort()) !== JSON.stringify(exactKeys) ||
-    resource.schemaVersion !== 0 ||
-    resource.scaffoldOnly !== true ||
-    resource.status !== "ready_scaffold_only" ||
-    resource.resourceKind !== resourceKind ||
-    resource.authorityDisposition !== "evidence_only" ||
-    !Array.isArray(resource.entries) ||
-    resource.entries.length !== 0
-  ) {
-    fail(
-      "target_migration_safety_ready_resource_executable",
-      `${relative(filePath)} must remain the exact empty schema-version-zero READY resource scaffold until its separate READY boundary passes.`,
-    );
+  if (expectedResource.kind === "firebase_source_fixture_manifest") {
+    const exactKeys = ["bundleSHA256", "content"];
+    const contentKeys = [
+      "accountScopeID",
+      "authorityDisposition",
+      "capturedAtEpochMilliseconds",
+      "coverageLimits",
+      "entities",
+      "files",
+      "fixtureVersion",
+      "privacyReview",
+      "provenance",
+      "sanitizationVersion",
+      "schemaVersion",
+    ];
+    if (
+      JSON.stringify(Object.keys(resource).sort()) !== JSON.stringify(exactKeys) ||
+      typeof resource.content !== "object" ||
+      resource.content === null ||
+      JSON.stringify(Object.keys(resource.content).sort()) !==
+        JSON.stringify(contentKeys) ||
+      resource.content.schemaVersion !== 1 ||
+      resource.content.provenance !== "synthetic_only" ||
+      resource.content.authorityDisposition !== "evidence_only" ||
+      !Array.isArray(resource.content.files) ||
+      resource.content.files.length !== 3 ||
+      !Array.isArray(resource.content.entities) ||
+      resource.content.entities.length === 0 ||
+      resource.bundleSHA256 !==
+        "1ecd6b1ed0bfbe4b9e65d0c55e367562d761cbe00fd0f38cdb86111fd2b7f4a2" ||
+      JSON.stringify(Object.keys(resource.content.privacyReview ?? {}).sort()) !==
+        JSON.stringify([
+          "evidenceID",
+          "reviewKind",
+          "reviewed",
+          "reviewedPayloadSHA256",
+        ]) ||
+      resource.content.privacyReview.reviewKind !==
+        "independent_agent_synthetic_review" ||
+      resource.content.privacyReview.reviewed !== true
+    ) {
+      fail(
+        "target_migration_safety_manifest_shape_invalid",
+        `${relative(filePath)} must remain the exact nonempty synthetic schema-v1 manifest shape.`,
+      );
+    }
+  } else {
+    const exactKeys = [
+      "authorityDisposition",
+      "entries",
+      "resourceKind",
+      "schemaVersion",
+    ];
+    if (
+      JSON.stringify(Object.keys(resource).sort()) !== JSON.stringify(exactKeys) ||
+      resource.schemaVersion !== 1 ||
+      resource.resourceKind !== expectedResource.kind ||
+      resource.authorityDisposition !== "evidence_only" ||
+      !Array.isArray(resource.entries) ||
+      resource.entries.length === 0
+    ) {
+      fail(
+        "target_migration_safety_resource_shape_invalid",
+        `${relative(filePath)} must remain the exact nonempty synthetic schema-v1 resource shape.`,
+      );
+    }
   }
 }
 
@@ -3457,7 +3677,7 @@ try {
   );
 } catch (error) {
   fail(
-    "target_migration_safety_ready_package_metadata_unavailable",
+    "target_migration_safety_package_metadata_unavailable",
     error instanceof Error ? error.message : String(error),
   );
 }
@@ -3472,7 +3692,7 @@ const hasExactFixtureCopy =
   Object.hasOwn(migrationTestResources[0]?.rule ?? {}, "copy");
 if (!hasExactFixtureCopy) {
   fail(
-    "target_migration_safety_ready_resources_unregistered",
+    "target_migration_safety_resources_unregistered",
     "Parsed SwiftPM metadata must register exactly one copied Fixtures resource on LedgerTargetMigrationCoreTests and nowhere as executable application content.",
   );
 }
