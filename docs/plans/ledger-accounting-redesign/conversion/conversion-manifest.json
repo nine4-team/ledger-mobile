@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T05:12:37.240Z",
+    "lastSynchronizedAt": "2026-09-06T05:44:22.751Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -21955,12 +21955,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
-      "acknowledgedSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
+      "observedSourceHash": "71da82034cbe484ba398aa2aa9cc47c324cc25058fb610dd70f60e8dbbdbb95c",
+      "acknowledgedSourceHash": "71da82034cbe484ba398aa2aa9cc47c324cc25058fb610dd70f60e8dbbdbb95c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence.",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence; the provider owns, cancels and joins every admitted database watch and refuses new watches after shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -25734,12 +25734,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "32e0bcc431035a15945a0beaa3047437c4524527bc6e7d6ed093050b92871632",
-      "acknowledgedSourceHash": "32e0bcc431035a15945a0beaa3047437c4524527bc6e7d6ed093050b92871632",
+      "observedSourceHash": "a98a77029573fcc731314aa7e2fe8a19684462a6a0a0ba2dbb4005cf0dc44c93",
+      "acknowledgedSourceHash": "a98a77029573fcc731314aa7e2fe8a19684462a6a0a0ba2dbb4005cf0dc44c93",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement, and the provider owns, cancels and joins every admitted database watch while refusing watches after shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -28264,12 +28264,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "e829d4c9a9147d1c687c53ee2f79f7bcd1a0764e1847851c392189bb3b69c90e",
-      "acknowledgedSourceHash": "e829d4c9a9147d1c687c53ee2f79f7bcd1a0764e1847851c392189bb3b69c90e",
+      "observedSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
+      "acknowledgedSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project directory watches, drains before database close without implementing session ending.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project detail and directory watches, is cancelled and joined before database close without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -42672,12 +42672,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "b6e7913bf592012a44bb82dc1a44a1fab14146d9824bdc8211fd1228abf9df5a",
-      "acknowledgedSourceHash": "b6e7913bf592012a44bb82dc1a44a1fab14146d9824bdc8211fd1228abf9df5a",
+      "observedSourceHash": "a1238e20677002103a99b3cbbd86857f9ae203342a93b089a3b467616c38b67f",
+      "acknowledgedSourceHash": "a1238e20677002103a99b3cbbd86857f9ae203342a93b089a3b467616c38b67f",
       "metadata": {
         "firebaseCoupled": true
       },
-      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and explicit directory-watch drainage before database close.",
+      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope and preservation; retained archive, directory and Client-detail providers are drained on success, expected-error and assertion-return paths before database close.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -42953,12 +42953,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "663382adc125b26f87117efbd7992c09d4abbaa9693915224e68a709a2df5fc8",
-      "acknowledgedSourceHash": "663382adc125b26f87117efbd7992c09d4abbaa9693915224e68a709a2df5fc8",
+      "observedSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
+      "acknowledgedSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs ten target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch and Int64 RPC precision.",
+      "currentBehavior": "Runs eleven target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, Int64 RPC precision, and joined Project-detail provider shutdown with late-watch refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -42983,7 +42983,7 @@
           "npm run target:powersync:test"
         ],
         "acceptance": [
-          "All ten Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability and core-only reconciliation retaining all three pending allocations"
+          "All eleven Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability, joined provider shutdown and core-only reconciliation retaining all three pending allocations"
         ]
       },
       "status": "target_mapped",
@@ -42996,7 +42996,7 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
-      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
+      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only; provider teardown is proven before database close.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -43159,12 +43159,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "05604da795d86890072a63e655f88ba13e73225395c4fedad653503f53eb431c",
-      "acknowledgedSourceHash": "05604da795d86890072a63e655f88ba13e73225395c4fedad653503f53eb431c",
+      "observedSourceHash": "3f2f84ea7a673248e2b176cabe9f98f6c64576c61c19040b88c0853388915477",
+      "acknowledgedSourceHash": "3f2f84ea7a673248e2b176cabe9f98f6c64576c61c19040b88c0853388915477",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope, malformed-evidence refusal and explicit directory-watch drainage before every database-close path.",
+      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope and malformed-evidence refusal; retained archive, directory and Project-detail providers are drained on success, expected-error and assertion-return paths before every database close.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
@@ -47849,12 +47849,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
-      "acknowledgedSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
+      "observedSourceHash": "6c6c6f1724af92257d59ed8b7e95d02c26176a1f2a8f7d897b891af949aaf593",
+      "acknowledgedSourceHash": "6c6c6f1724af92257d59ed8b7e95d02c26176a1f2a8f7d897b891af949aaf593",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "currentBehavior": "Runs eleven target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal, Swift RPC boundaries, and joined Client-detail provider shutdown with late-watch refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -47879,7 +47879,7 @@
           "npm run target:powersync:test"
         ],
         "acceptance": [
-          "All nine isolated Client PowerSync tests pass"
+          "All eleven isolated Client PowerSync tests pass"
         ]
       },
       "status": "target_mapped",
@@ -47890,7 +47890,7 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001"
       ],
-      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; no hosted provider access.",
+      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; provider teardown is proven before database close and no hosted provider access occurs.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {

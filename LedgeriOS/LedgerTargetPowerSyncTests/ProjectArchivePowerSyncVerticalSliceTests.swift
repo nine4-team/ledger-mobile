@@ -45,17 +45,19 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             accountId: Self.accountId,
             uuid: UUID(uuidString: "11111111-2222-4333-8444-666666666666")!
         )
-        var missing = Self.store(database).watchOperation(missingOperationId)
+        let operationStore = Self.store(database)
+        var missing = operationStore.watchOperation(missingOperationId)
             .makeAsyncIterator()
         await #expect(throws: ProjectArchivePowerSyncFailure.operationNotFound) {
             _ = try await missing.next()
         }
-        try await database.close(deleteDatabase: true)
-        var invalid = Self.store(database)
+        var invalid = operationStore
             .watchOperation(wrongNamespace.envelope.operationId).makeAsyncIterator()
         await #expect(throws: ProjectArchivePowerSyncFailure.invalidOperationIdentity) {
             _ = try await invalid.next()
         }
+        await operationStore.cancelAndDrainWatches()
+        try await database.close(deleteDatabase: true)
         fixture.remove()
     }
 
@@ -467,13 +469,14 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_local_operations SET local_state = 'queued' WHERE id = ?",
             parameters: [command.envelope.operationId.rawValue]
         )
-        var operationIterator = Self.store(database)
+        let operationStore = Self.store(database)
+        var operationIterator = operationStore
             .watchOperation(command.envelope.operationId).makeAsyncIterator()
         await #expect(throws: ProjectArchivePowerSyncFailure.malformedLocalEvidence) {
             _ = try await operationIterator.next()
         }
         await #expect(throws: ProjectArchivePowerSyncFailure.malformedLocalEvidence) {
-            _ = try await Self.store(database).archive(command)
+            _ = try await operationStore.archive(command)
         }
         let connector = LedgerPowerSyncUploadConnector(
             credentialProvider: { nil },
@@ -484,6 +487,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         await #expect(throws: LedgerPowerSyncUploadFailure.pendingOverlayMismatch) {
             try await connector.uploadData(database: database)
         }
+        await operationStore.cancelAndDrainWatches()
         await directoryQuery.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
@@ -566,7 +570,8 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
                 command.envelope.operationId.rawValue
             ]
         )
-        var requestMismatch = Self.store(reopened)
+        let operationStore = Self.store(reopened)
+        var requestMismatch = operationStore
             .watchOperation(command.envelope.operationId).makeAsyncIterator()
         await #expect(throws: ProjectArchivePowerSyncFailure.malformedLocalEvidence) {
             _ = try await requestMismatch.next()
@@ -579,11 +584,12 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_operation_results SET error_code = 'contract_unsupported' WHERE id = ?",
             parameters: [command.envelope.operationId.rawValue]
         )
-        var mismatched = Self.store(reopened).watchOperation(command.envelope.operationId)
+        var mismatched = operationStore.watchOperation(command.envelope.operationId)
             .makeAsyncIterator()
         await #expect(throws: ProjectArchivePowerSyncFailure.malformedLocalEvidence) {
             _ = try await mismatched.next()
         }
+        await operationStore.cancelAndDrainWatches()
         try await reopened.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -738,21 +744,34 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
     private static func firstProjectList(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectListSnapshot {
         let directoryQuery = query(database)
         var iterator = directoryQuery.watchProjects(accountId: accountId).makeAsyncIterator()
-        let snapshot = try #require(try await iterator.next())
-        await directoryQuery.cancelAndDrainWatches()
-        return snapshot
+        do {
+            let snapshot = try #require(try await iterator.next())
+            await directoryQuery.cancelAndDrainWatches()
+            return snapshot
+        } catch {
+            await directoryQuery.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func firstProjectDetailUpdate(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectCoreDetailsUpdate {
         let request = try ProjectCoreDetailsRequest(accountId: accountId, projectId: projectId)
-        var iterator = ProjectCoreDetailsPowerSyncQuery(
+        let query = ProjectCoreDetailsPowerSyncQuery(
             database: database,
             principalId: principalId,
             accountId: accountId,
             now: { updatedAt }
-        ).watchProjectCoreDetails(request).makeAsyncIterator()
-        _ = try await iterator.next()
-        return try #require(try await iterator.next())
+        )
+        var iterator = query.watchProjectCoreDetails(request).makeAsyncIterator()
+        do {
+            _ = try await iterator.next()
+            let update = try #require(try await iterator.next())
+            await query.cancelAndDrainWatches()
+            return update
+        } catch {
+            await query.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func firstProjectDetail(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectCoreDetailsLocalSnapshot {
@@ -762,8 +781,16 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
     }
 
     private static func firstOperation(_ command: ArchiveProjectCommand, _ database: any PowerSyncDatabaseProtocol) async throws -> OperationSnapshot {
-        var iterator = store(database).watchOperation(command.envelope.operationId).makeAsyncIterator()
-        return try #require(try await iterator.next())
+        let operationStore = store(database)
+        var iterator = operationStore.watchOperation(command.envelope.operationId).makeAsyncIterator()
+        do {
+            let snapshot = try #require(try await iterator.next())
+            await operationStore.cancelAndDrainWatches()
+            return snapshot
+        } catch {
+            await operationStore.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func uploadRequest(_ command: ArchiveProjectCommand) throws -> ProjectArchiveUploadRequest {

@@ -12,8 +12,8 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "e829d4c9a9147d1c687c53ee2f79f7bcd1a0764e1847851c392189bb3b69c90e",
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project directory watches, drains before database close without implementing session ending.",
+      "acknowledgeSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project detail and directory watches, is cancelled and joined before database close without implementing session ending.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],

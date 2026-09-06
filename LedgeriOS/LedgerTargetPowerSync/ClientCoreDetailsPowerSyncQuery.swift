@@ -7,6 +7,7 @@ final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @uncheck
     private let principalId: PrincipalID
     private let boundAccountId: AccountID
     private let now: @Sendable () -> Date
+    private let watchRegistry = ClientCoreDetailsWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
@@ -28,12 +29,26 @@ final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @uncheck
         }
 
         return AsyncThrowingStream { continuation in
+            let id = UUID()
+            let handle = ClientCoreDetailsWatchTaskHandle()
+            let registration = Task { await watchRegistry.register(id: id, handle: handle) }
             let task = Task {
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
+                    continuation.finish()
+                    if admitted { await watchRegistry.finished(id: id) }
+                    return
+                }
                 do {
-                    continuation.yield(try ClientCoreDetailsUpdate(
+                    if case .terminated = continuation.yield(try ClientCoreDetailsUpdate(
                         request: request,
                         state: .waiting(.loading)
-                    ))
+                    )) {
+                        continuation.finish()
+                        await watchRegistry.finished(id: id)
+                        return
+                    }
+                    try Task.checkCancellation()
                     let rows = try database.watch(
                         sql: """
                         WITH scope AS (
@@ -211,15 +226,17 @@ final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @uncheck
                                 operationId: operationId
                             )
                         }
-                        continuation.yield(try ClientCoreDetailsUpdate(
+                        if case .terminated = continuation.yield(try ClientCoreDetailsUpdate(
                             request: request,
                             state: .snapshot(local)
-                        ))
+                        )) { break }
                     }
                     continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: CancellationError())
                 } catch {
                     do {
-                        continuation.yield(try ClientCoreDetailsUpdate(
+                        _ = continuation.yield(try ClientCoreDetailsUpdate(
                             request: request,
                             state: .failed(failure: .retryable, cached: nil)
                         ))
@@ -228,9 +245,15 @@ final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @uncheck
                         continuation.finish(throwing: error)
                     }
                 }
+                await watchRegistry.finished(id: id)
             }
-            continuation.onTermination = { _ in task.cancel() }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
         }
+    }
+
+    func cancelAndDrainWatches() async {
+        await watchRegistry.cancelAndDrain()
     }
 
     static func snapshotQuality(
@@ -250,6 +273,58 @@ final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @uncheck
         AsyncThrowingStream { continuation in
             continuation.finish(throwing: error)
         }
+    }
+}
+
+private final class ClientCoreDetailsWatchTaskHandle: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let shouldCancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if shouldCancel { task.cancel() }
+    }
+
+    func cancel() {
+        let installed = lock.withLock {
+            cancellationRequested = true
+            return task
+        }
+        installed?.cancel()
+    }
+}
+
+private actor ClientCoreDetailsWatchRegistry {
+    private var handles: [UUID: ClientCoreDetailsWatchTaskHandle] = [:]
+    private var isClosing = false
+    private var drainWaiters: [CheckedContinuation<Void, Never>] = []
+
+    func register(id: UUID, handle: ClientCoreDetailsWatchTaskHandle) -> Bool {
+        guard !isClosing else {
+            handle.cancel()
+            return false
+        }
+        handles[id] = handle
+        return true
+    }
+
+    func finished(id: UUID) {
+        handles.removeValue(forKey: id)
+        guard handles.isEmpty else { return }
+        let waiters = drainWaiters
+        drainWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func cancelAndDrain() async {
+        isClosing = true
+        for handle in handles.values { handle.cancel() }
+        guard !handles.isEmpty else { return }
+        await withCheckedContinuation { drainWaiters.append($0) }
     }
 }
 

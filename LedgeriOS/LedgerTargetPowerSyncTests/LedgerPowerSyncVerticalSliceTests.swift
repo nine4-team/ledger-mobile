@@ -215,12 +215,14 @@ struct LedgerPowerSyncVerticalSliceTests {
 
         guard case .waiting(.loading)? = first?.state else {
             Issue.record("Expected an explicit loading state before the first local query")
+            await query.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.removeDirectory()
             return
         }
         guard case .snapshot(let snapshot)? = second?.state else {
             Issue.record("Expected an optimistic local Client snapshot")
+            await query.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.removeDirectory()
             return
@@ -232,6 +234,7 @@ struct LedgerPowerSyncVerticalSliceTests {
         #expect(snapshot.row?.client.displayName == command.draft.displayName)
         #expect(snapshot.row?.locallyObservedRevision == ExpectedClientRevision(1))
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -277,17 +280,19 @@ struct LedgerPowerSyncVerticalSliceTests {
             accountId: command.envelope.accountId,
             clientId: command.draft.clientId
         )
-        var iterator = ClientCoreDetailsPowerSyncQuery(
+        let query = ClientCoreDetailsPowerSyncQuery(
             database: database,
             principalId: command.envelope.actorPrincipalId,
             accountId: command.envelope.accountId,
             now: { Self.observedAt }
-        ).watchClientCoreDetails(request).makeAsyncIterator()
+        )
+        var iterator = query.watchClientCoreDetails(request).makeAsyncIterator()
         _ = try await iterator.next()
         let update = try await iterator.next()
 
         guard case .snapshot(let snapshot)? = update?.state else {
             Issue.record("Expected authoritative Client snapshot")
+            await query.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.removeDirectory()
             return
@@ -301,6 +306,38 @@ struct LedgerPowerSyncVerticalSliceTests {
         }
         #expect(pendingCount == 0)
 
+        await query.cancelAndDrainWatches()
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Client details provider drains accepted watches and refuses watches after shutdown")
+    func clientDetailsProviderShutdownIsJoined() async throws {
+        let fixture = try DatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.command()
+        let request = try ClientCoreDetailsRequest(
+            accountId: command.envelope.accountId,
+            clientId: command.draft.clientId
+        )
+        let query = ClientCoreDetailsPowerSyncQuery(
+            database: database,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
+            now: { Self.observedAt }
+        )
+        var admitted = query.watchClientCoreDetails(request).makeAsyncIterator()
+        #expect(try await admitted.next()?.state == .waiting(.loading))
+
+        await query.cancelAndDrainWatches()
+        do {
+            while try await admitted.next() != nil {}
+        } catch is CancellationError {
+            // An admitted database observation may expose cancellation as its terminal signal.
+        }
+
+        var refused = query.watchClientCoreDetails(request).makeAsyncIterator()
+        #expect(try await refused.next() == nil)
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }

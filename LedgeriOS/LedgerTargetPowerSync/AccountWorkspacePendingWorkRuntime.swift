@@ -893,6 +893,8 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.projectNoteQuery.cancelAndDrainWatches()
         await resources.spaceCoreDetailsQuery.cancelAndDrainWatches()
         await resources.transferDestinationQuery.cancelAndDrainWatches()
+        await resources.detailsQuery.cancelAndDrainWatches()
+        await resources.projectDetailsQuery.cancelAndDrainWatches()
         await resources.directoryQuery.cancelAndDrainWatches()
         await resources.projectArchiveStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()

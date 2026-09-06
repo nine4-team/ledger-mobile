@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 329
+State version: 330
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: DIRECTORY-WATCH-LIFECYCLE-CORRECTION-IMPLEMENTED-LOCAL
+- Checkpoint: POWERSYNC-WATCH-LIFECYCLE-CORRECTION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -106,9 +106,9 @@ without modifying the running Firebase application before hard cutover.
   cutover remain unadvanced;
   `EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001`.
 
-- Corrected Client/Project directory-watch ownership after the first attempt of
+- Corrected Client/Project directory and core-details watch ownership after the first attempt of
   run `34011514963` exposed a nondeterministic target-test process shutdown. The
-  provider now registers every Client/Project watch before execution, rejects
+  directory provider now registers every Client/Project watch before execution, rejects
   watches after close begins, cancels each admitted outer task, and joins its
   database and completeness observations before runtime database close. Direct
   Client archive, Project archive, Transfer destination and directory tests now
@@ -117,8 +117,17 @@ without modifying the running Firebase application before hard cutover.
   watches; both were corrected to reuse a retained query and drain on every
   later close path. Re-review returned GO with no P0-P3. Local 17/17 directory,
   8/8 Project archive and 567/567 complete Swift tests, conversion controls,
-  target-environment checks, MCP/contracts and both staging builds pass.
-  Corrected exact-commit CI remains pending; no SQL/query result/product policy,
+  target-environment checks, MCP/contracts and both staging builds pass. The
+  directory-only checkpoint `b4bcbe8c` then repeated the CI timeout in run
+  `34013428800`, proving the initial diagnosis incomplete. A fresh independent
+  audit found the same unjoined-task flaw in both core-details providers plus
+  archive/direct-test helper close paths. Both detail providers now own
+  cancel-and-drain registries; runtime close joins them before the directory,
+  archive stores and database; and retained helpers drain on success, expected
+  error and assertion-return paths. Final review returned GO with no P0-P3
+  after one stale-count correction. Local 62/62 affected and 569/569 complete
+  Swift tests, full conversion/query controls, 26 MCP tests and both builds pass.
+  Expanded corrected exact-commit CI remains pending; no SQL/query result/product policy,
   Firebase, hosted, migration, production or cutover behavior changed;
   `EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001`.
 

@@ -60,9 +60,11 @@ the disposable local Supabase job passed schema, RLS, RPC, replay, lint and all
 373 pgTAP assertions, and the isolated target job passed all 566 Swift tests,
 MCP/contracts, environment guards and both staging builds. Attempt 1 had already
 passed the conversion and Supabase jobs but timed out during target-test process
-shutdown. The unchanged exact-commit rerun passed; the directory-watch lifecycle
-defect exposed by that nondeterminism is separately corrected and evidenced by
-`EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001` without changing this slice's
+shutdown. The unchanged exact-commit rerun passed, but later directory-only
+correction run `34013428800` again timed out after the Client archive suite.
+That result proved the initial diagnosis incomplete. The expanded directory and
+core-details provider-lifecycle correction is separately reviewed and evidenced
+by `EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001` without changing this slice's
 schema, Sync projection or Project-store implementation.
 
 ## Remaining Gates and Safety Boundary

@@ -1,6 +1,6 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001 — Client/Project PowerSync Directory Provider
 
-- Status: implemented; original exact implementation CI passed; lifecycle correction exact CI pending; hosted Sync proof pending
+- Status: implemented; original exact implementation CI passed; expanded lifecycle correction independently reviewed and exact CI pending; hosted Sync proof pending
 - Date: 2026-09-06
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -136,7 +136,7 @@ provider slices in 1 minute 52 seconds, and the isolated target environment in
 authenticated PowerSync streams; that prevents `verified` or `rehearsed`
 status and keeps A-004 proposed.
 
-## Directory Watch Lifecycle Correction
+## Directory and Core-Details Watch Lifecycle Correction
 
 GitHub Actions run `34011514963` attempt 1 passed conversion and local Supabase
 jobs but timed out in the target job after the Client archive suite. Rerunning
@@ -160,13 +160,44 @@ queries and could resume from an expected error before nested teardown joined.
 Both paths now reuse one retained query and await its drain on every later
 early-return or normal close. Re-review returned GO with no P0-P3 findings.
 
-Corrected local verification passes:
+The directory-only correction was committed as
+`b4bcbe8c00844095fec05fbe918c3abce93de803` and exercised by Actions run
+`34013428800`. Conversion and local Supabase passed, but the isolated-target
+test process again stopped making progress immediately after the Client archive
+suite and the job was cancelled at its 20-minute limit. The logs terminated an
+orphaned `swiftpm-testing` process. This contradicted the directory-only root
+cause and prevented promotion of that checkpoint.
+
+A fresh independent audit then found the remaining lifecycle gap. The concrete
+Client and Project core-details providers also spawned unregistered database
+watch tasks, and archive/direct-provider test helpers could observe a snapshot
+or expected failure before those tasks had removed themselves. Both providers
+now own close-aware registries with admission-before-use, cancel-before-handle-
+installation safety, consumer-termination handling, task joining, idempotent
+drain and permanent late-watch refusal. Runtime close drains both providers
+after public stream leases and before the directory, archive stores and
+structured database. Every changed test helper retains and drains its exact
+provider on success, error and explicit assertion-return paths.
+
+Independent re-review returned GO on the complete concurrency correction. It
+verified register/close races, consumer termination, natural completion,
+multiple drains, late refusal, runtime ordering and all modified close paths.
+One P3 stale test-count statement was corrected in both provider classification
+batches and regenerated artifacts; final review returned GO with no P0-P3.
+
+Expanded corrected local verification passes:
 
 - 17 of 17 focused directory tests, including simultaneous active Client and
   Project watches, provider shutdown, database close, and late-watch refusal;
-- 8 of 8 focused Project archive tests after the review correction;
-- all 567 Swift tests in 90 suites nonparallel;
+- 62 of 62 focused Client/Project detail, archive and runtime tests;
+- all 569 Swift tests in 90 suites nonparallel;
 - 20 consecutive focused directory-suite runs;
-- conversion source synchronization, target-environment checks, deterministic
-  target generation, both isolated staging builds, and immutable exact-commit
-  CI remain required before this correction is promoted as final evidence.
+- conversion synchronization/checking, query-port and logical-authority tests,
+  source-query reconciliation, capability/query/residual controls, M0,
+  target-environment isolation, generated app/MCP contracts and all 26 MCP
+  tests;
+- macOS and generic iOS Simulator staging builds.
+
+Immutable exact-commit CI remains required before this correction is promoted
+as final evidence. No SQL, query-result semantics, product policy, Firebase,
+hosted resource, migration, production or cutover behavior changed.

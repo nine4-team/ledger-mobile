@@ -99,8 +99,8 @@
     {
       "id": "SWIFT-2ADDF7B64EA0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
-      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence.",
+      "acknowledgeSourceHash": "71da82034cbe484ba398aa2aa9cc47c324cc25058fb610dd70f60e8dbbdbb95c",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence; the provider owns, cancels and joins every admitted database watch and refuses new watches after shutdown.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync Client core-details query adapter"], "securityRequirements": ["Queries bind exact Account and Client identifiers"], "syncRequirements": ["Pending local operation evidence overrides earlier has-synced state and keeps the view partial"]},
@@ -176,13 +176,13 @@
     {
       "id": "TEST-E0636D89C442",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
-      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "acknowledgeSourceHash": "6c6c6f1724af92257d59ed8b7e95d02c26176a1f2a8f7d897b891af949aaf593",
+      "currentBehavior": "Runs eleven target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal, Swift RPC boundaries, and joined Client-detail provider shutdown with late-watch refusal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; no hosted provider access.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; provider teardown is proven before database close and no hosted provider access occurs.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync vertical-slice test suite"], "securityRequirements": ["Tests assert encryption, scoped credentials and malformed/rebound refusal"], "syncRequirements": ["Tests assert exact CRUD transaction, terminal drain and non-authoritative optimism"]},
       "migration": {"rule": "Use synthetic target-only commands and delete disposable databases after each test.", "reconciliation": ["Swift canonical bytes/hash match the target MCP fixture exactly"]},
-      "verification": {"tests": ["npm run target:powersync:test"], "acceptance": ["All nine isolated Client PowerSync tests pass"]}
+      "verification": {"tests": ["npm run target:powersync:test"], "acceptance": ["All eleven isolated Client PowerSync tests pass"]}
     }
   ]
 }

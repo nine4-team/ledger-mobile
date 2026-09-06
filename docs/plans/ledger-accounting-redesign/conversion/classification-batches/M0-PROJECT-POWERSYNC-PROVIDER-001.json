@@ -110,8 +110,8 @@
     },
     {
       "id": "SWIFT-56CB8BCDD85C",
-      "acknowledgeSourceHash": "32e0bcc431035a15945a0beaa3047437c4524527bc6e7d6ed093050b92871632",
-      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
+      "acknowledgeSourceHash": "a98a77029573fcc731314aa7e2fe8a19684462a6a0a0ba2dbb4005cf0dc44c93",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement, and the provider owns, cancels and joins every admitted database watch while refusing watches after shutdown.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
@@ -158,13 +158,13 @@
     },
     {
       "id": "TEST-3F2CAFC760D5",
-      "acknowledgeSourceHash": "663382adc125b26f87117efbd7992c09d4abbaa9693915224e68a709a2df5fc8",
-      "currentBehavior": "Runs ten target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch and Int64 RPC precision.",
+      "acknowledgeSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
+      "currentBehavior": "Runs eleven target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, Int64 RPC precision, and joined Project-detail provider shutdown with late-watch refusal.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"],
-      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
+      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only; provider teardown is proven before database close.",
       "target": {
         "owner": "Project Setup",
         "surfaces": ["Project setup PowerSync vertical-slice test suite"],
@@ -177,7 +177,7 @@
       },
       "verification": {
         "tests": ["npm run target:powersync:test"],
-        "acceptance": ["All ten Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability and core-only reconciliation retaining all three pending allocations"]
+        "acceptance": ["All eleven Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability, joined provider shutdown and core-only reconciliation retaining all three pending allocations"]
       }
     },
     {

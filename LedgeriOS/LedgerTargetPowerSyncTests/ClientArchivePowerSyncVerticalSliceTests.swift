@@ -191,6 +191,9 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         }
         guard case .failed = (try await Self.firstClientDetailUpdate(database)).state else {
             Issue.record("Expected Client detail to fail closed")
+            await directoryQuery.cancelAndDrainWatches()
+            try await database.close(deleteDatabase: true)
+            fixture.remove()
             return
         }
         _ = try await database.execute(
@@ -209,6 +212,9 @@ struct ClientArchivePowerSyncVerticalSliceTests {
             }
             guard case .failed = (try await Self.firstClientDetailUpdate(database)).state else {
                 Issue.record("Expected missing \(state) overlay to fail closed")
+                await directoryQuery.cancelAndDrainWatches()
+                try await database.close(deleteDatabase: true)
+                fixture.remove()
                 return
             }
         }
@@ -484,6 +490,9 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         }
         guard case .failed = (try await Self.firstClientDetailUpdate(actorDatabase)).state else {
             Issue.record("Expected foreign archive actor to fail Client detail closed")
+            await directoryQuery.cancelAndDrainWatches()
+            try await actorDatabase.close(deleteDatabase: true)
+            actorFixture.remove()
             return
         }
         await directoryQuery.cancelAndDrainWatches()
@@ -594,6 +603,8 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         #expect(snapshot.fingerprint == command.fingerprint)
         guard case .applied(let result) = snapshot.state else {
             Issue.record("Expected applied operation watch evidence")
+            try await database.close(deleteDatabase: true)
+            fixture.remove()
             return
         }
         #expect(result.resultCode.rawValue == "client_archived")
@@ -622,11 +633,13 @@ struct ClientArchivePowerSyncVerticalSliceTests {
             sql: "UPDATE spike_operation_results SET actor_principal_id = ? WHERE id = ?",
             parameters: ["principal-foreign", command.envelope.operationId.rawValue]
         )
-        var malformed = Self.store(database).watchOperation(command.envelope.operationId)
+        let malformedStore = Self.store(database)
+        var malformed = malformedStore.watchOperation(command.envelope.operationId)
             .makeAsyncIterator()
         await #expect(throws: ClientArchivePowerSyncFailure.malformedLocalEvidence) {
             _ = try await malformed.next()
         }
+        await malformedStore.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.remove()
     }
@@ -988,9 +1001,17 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         _ command: ArchiveClientCommand,
         _ database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationSnapshot {
-        var iterator = store(database).watchOperation(command.envelope.operationId)
+        let archiveStore = store(database)
+        var iterator = archiveStore.watchOperation(command.envelope.operationId)
             .makeAsyncIterator()
-        return try #require(try await iterator.next())
+        do {
+            let snapshot = try await iterator.next()
+            await archiveStore.cancelAndDrainWatches()
+            return try #require(snapshot)
+        } catch {
+            await archiveStore.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func query(_ database: any PowerSyncDatabaseProtocol) -> ClientProjectDirectoryPowerSyncQuery {
@@ -1027,27 +1048,45 @@ struct ClientArchivePowerSyncVerticalSliceTests {
     private static func firstClientList(_ database: any PowerSyncDatabaseProtocol) async throws -> ClientListSnapshot {
         let directoryQuery = query(database)
         var iterator = directoryQuery.watchClients(accountId: accountId).makeAsyncIterator()
-        let snapshot = try #require(try await iterator.next())
-        await directoryQuery.cancelAndDrainWatches()
-        return snapshot
+        do {
+            let snapshot = try #require(try await iterator.next())
+            await directoryQuery.cancelAndDrainWatches()
+            return snapshot
+        } catch {
+            await directoryQuery.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func firstProjectList(_ database: any PowerSyncDatabaseProtocol) async throws -> ProjectListSnapshot {
         let directoryQuery = query(database)
         var iterator = directoryQuery.watchProjects(accountId: accountId).makeAsyncIterator()
-        let snapshot = try #require(try await iterator.next())
-        await directoryQuery.cancelAndDrainWatches()
-        return snapshot
+        do {
+            let snapshot = try #require(try await iterator.next())
+            await directoryQuery.cancelAndDrainWatches()
+            return snapshot
+        } catch {
+            await directoryQuery.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func firstClientDetailUpdate(_ database: any PowerSyncDatabaseProtocol) async throws -> ClientCoreDetailsUpdate {
         let request = try ClientCoreDetailsRequest(accountId: accountId, clientId: clientId)
-        var iterator = ClientCoreDetailsPowerSyncQuery(
+        let query = ClientCoreDetailsPowerSyncQuery(
             database: database, principalId: principalId, accountId: accountId,
             now: { updatedAt }
-        ).watchClientCoreDetails(request).makeAsyncIterator()
-        _ = try await iterator.next()
-        return try #require(try await iterator.next())
+        )
+        var iterator = query.watchClientCoreDetails(request).makeAsyncIterator()
+        do {
+            _ = try await iterator.next()
+            let update = try await iterator.next()
+            await query.cancelAndDrainWatches()
+            return try #require(update)
+        } catch {
+            await query.cancelAndDrainWatches()
+            throw error
+        }
     }
 
     private static func firstClientDetail(_ database: any PowerSyncDatabaseProtocol) async throws -> ClientCoreDetailsLocalSnapshot {

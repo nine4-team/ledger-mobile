@@ -141,6 +141,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         let update = try await iterator.next()
         guard case .snapshot(let snapshot)? = update?.state else {
             Issue.record("Expected an optimistic Project snapshot")
+            await query.cancelAndDrainWatches()
             try await reopened.close(deleteDatabase: true)
             fixture.removeDirectory()
             return
@@ -170,6 +171,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         let replay = try await ProjectSetupPowerSyncStore(database: reopened).create(command)
         #expect(replay.localState == .applied)
 
+        await query.cancelAndDrainWatches()
         try await reopened.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -376,16 +378,18 @@ struct ProjectPowerSyncVerticalSliceTests {
             accountId: command.envelope.accountId,
             projectId: command.draft.projectId
         )
-        var iterator = ProjectCoreDetailsPowerSyncQuery(
+        let query = ProjectCoreDetailsPowerSyncQuery(
             database: database,
             principalId: command.envelope.actorPrincipalId,
             accountId: command.envelope.accountId,
             now: { Self.observedAt }
-        ).watchProjectCoreDetails(request).makeAsyncIterator()
+        )
+        var iterator = query.watchProjectCoreDetails(request).makeAsyncIterator()
         _ = try await iterator.next()
         let update = try await iterator.next()
         guard case .snapshot(let snapshot)? = update?.state else {
             Issue.record("Expected authoritative Project snapshot")
+            await query.cancelAndDrainWatches()
             try await database.close(deleteDatabase: true)
             fixture.removeDirectory()
             return
@@ -408,6 +412,7 @@ struct ProjectPowerSyncVerticalSliceTests {
             ) == 3
         )
 
+        await query.cancelAndDrainWatches()
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -436,6 +441,37 @@ struct ProjectPowerSyncVerticalSliceTests {
         #expect(request.categoryAllocationsJSON == "[]")
         #expect(request.description == nil)
 
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Project details provider drains accepted watches and refuses watches after shutdown")
+    func projectDetailsProviderShutdownIsJoined() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.existingClientCommand()
+        let request = try ProjectCoreDetailsRequest(
+            accountId: command.envelope.accountId,
+            projectId: command.draft.projectId
+        )
+        let query = ProjectCoreDetailsPowerSyncQuery(
+            database: database,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
+            now: { Self.observedAt }
+        )
+        var admitted = query.watchProjectCoreDetails(request).makeAsyncIterator()
+        #expect(try await admitted.next()?.state == .waiting(.loading))
+
+        await query.cancelAndDrainWatches()
+        do {
+            while try await admitted.next() != nil {}
+        } catch is CancellationError {
+            // An admitted database observation may expose cancellation as its terminal signal.
+        }
+
+        var refused = query.watchProjectCoreDetails(request).makeAsyncIterator()
+        #expect(try await refused.next() == nil)
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
