@@ -26,7 +26,6 @@ jobs:
 
       - name: Validate conversion control plane
         run: |
-          npm run conversion:state:check
           npm run target:query-ports:test
           npm run target:query-ports:check
           npm run target:query-authority:test

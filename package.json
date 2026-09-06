@@ -2,7 +2,7 @@
   "scripts": {
     "conversion:state:check": "node scripts/check-conversion-current-state.mjs",
     "conversion:sync": "node scripts/supabase-conversion-ledger.mjs sync",
-    "conversion:check": "node scripts/supabase-conversion-ledger.mjs check",
+    "conversion:check": "node scripts/check-conversion-current-state.mjs && node scripts/supabase-conversion-ledger.mjs check",
     "conversion:report": "node scripts/supabase-conversion-ledger.mjs report",
     "conversion:queries:generate": "node scripts/extract-firestore-query-contract.mjs generate",
     "conversion:queries:check": "node scripts/extract-firestore-query-contract.mjs check",
