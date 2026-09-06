@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T14:49:35.204Z",
+    "lastSynchronizedAt": "2026-09-06T16:08:00.873Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -472,8 +472,8 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
-      "acknowledgedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
+      "observedSourceHash": "61caab3c635f02d024143ba4e4e53011849f31bab142a2210370131be1a035b2",
+      "acknowledgedSourceHash": "61caab3c635f02d024143ba4e4e53011849f31bab142a2210370131be1a035b2",
       "metadata": {},
       "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
@@ -2053,8 +2053,8 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "9705e06b1115765ccf52cde15b106244d61095fabbddb7690d43a0ef584fafd2",
-      "acknowledgedSourceHash": "9705e06b1115765ccf52cde15b106244d61095fabbddb7690d43a0ef584fafd2",
+      "observedSourceHash": "86c2c551bb04561913d6225bb19267158642ade285d5aca64785ba227dff8b37",
+      "acknowledgedSourceHash": "86c2c551bb04561913d6225bb19267158642ade285d5aca64785ba227dff8b37",
       "metadata": {},
       "currentBehavior": "Defines root repository commands for conversion controls, target tests/builds, and isolated local Supabase Client/Project/Space database and Data API verification. Vitest remains the root development test dependency.",
       "disposition": "preserve",

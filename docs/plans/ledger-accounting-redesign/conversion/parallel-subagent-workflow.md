@@ -20,7 +20,10 @@ serial.
 A write-capable assignment may begin only when all of the following are true:
 
 1. the slice dossier is `ready`, has no blocker and passes conversion checking;
-2. the exact ready commit has passed both pull-request CI jobs;
+2. the reviewed READY records are committed on an exact base; a separate READY
+   CI run is required only for a high-risk boundary identified by the vertical-
+   slice method, otherwise the last green integration commit plus focused
+   READY/control checks is sufficient;
 3. the assignment is recorded in `parallel-work-registry.json` with its exact
    base commit, branch/worktree, owned paths, forbidden paths and tests;
 4. owned paths do not overlap another active assignment or a shared foundation;
@@ -68,6 +71,22 @@ read-only scout or adversarial reviewer, and the integration agent retaining
 all control-plane and promotion work. This preserves useful parallelism while
 avoiding worktree, control-commit and CI overhead for micro-slices.
 
+## Minimal Worker Context
+
+Every worker brief contains only:
+
+- the compact current-state file and exact base commit;
+- the assigned dossier plus its exact canonical authority headings;
+- owned and forbidden paths;
+- the public contracts the candidate must preserve;
+- focused acceptance commands; and
+- the required handoff shape below.
+
+Do not fork or paste the complete conversation, detailed execution history,
+control-plane README, unrelated dossiers or all specs into a worker by default.
+A worker may request one additional bounded source when a concrete ambiguity
+requires it. This is both a correctness boundary and a token-control boundary.
+
 ## Ownership
 
 The integration agent exclusively owns:
@@ -96,6 +115,11 @@ The worker returns one candidate commit plus:
 - a requirement-by-requirement account of the implementation;
 - assumptions, compromises and remaining risks; and
 - confirmation that forbidden files/actions were untouched.
+
+Workers normally run focused checks only. The integration agent owns the one
+complete local batch gate and exact integrated-commit CI. Repeating the complete
+gate on worker, reviewer and integration branches is reserved for a shared
+runtime/build change or investigation of a concrete integration-only failure.
 
 A changed path outside the allowlist, a material base/authority change, an
 implicit A-/O- decision or incomplete handoff invalidates the candidate until

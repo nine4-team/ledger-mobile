@@ -1,7 +1,7 @@
 # Vertical Slice Implementation Method
 
 Status: required before any redesigned target surface advances beyond
-`target_mapped`
+`target_mapped`; method version 2
 
 ## Purpose
 
@@ -83,7 +83,9 @@ machine-checked implementation-slice dossier (one umbrella user-workflow slice
 is preferred when practical) with its exact base commit, dependent verified
 slices, union change boundary, risk domains, requirement-to-test map, reviewers,
 rollback boundary, and unresolved blockers. Normal batches contain one coherent
-workflow and no more than four independently understandable sub-slices.
+workflow and two to four independently understandable sub-slices. A one-slice
+batch must identify the reusable high-risk invariant, external dependency or
+architectural uncertainty that makes isolation cheaper than batching.
 
 Do not combine two distinct high-risk authorities merely to save a CI cycle.
 Auth/identity, financial accounting, destructive migration, Sync authorization,
@@ -99,6 +101,33 @@ projects, manifests, and status/evidence records. If a constituent slice fails
 review or CI, the exact batch cannot be promoted; remove or correct it in a new
 synchronized checkpoint and rerun the batch gate. Never reuse a failed exact
 commit's evidence to promote neighboring work.
+
+### Context, token and round-trip discipline
+
+The compact `current-execution-state.json` record is the normal resume entry
+point. Do not load this document, the control-plane README, the detailed
+execution history, every target spec or every dossier after each compaction.
+Load the active dossier and only the exact authority/code sections needed for
+the next action. Broaden the read only when a concrete discrepancy or review
+question requires it.
+
+During development, run the smallest focused checker or test suite that can
+falsify the change. The integration agent runs the complete local gate once on
+the synchronized normal batch and requests one immutable CI run on that exact
+commit. Workers do not independently rerun the complete repository gate unless
+their candidate changes a shared build/runtime boundary or the integration
+agent requests it after a failure.
+
+At each integrated batch checkpoint, record the number of completed workflows,
+elapsed time, goal-token delta when available, full local gates, immutable CI
+runs, accepted review findings and rework loops. Evaluate the approximately
+three-times speed and token-efficiency target using cost per verified end-to-end
+workflow. Commit count, surface count, generated-document count and agent
+utilization are diagnostic data, not progress.
+
+Efficiency targets never justify combining unrelated authorities, omitting a
+negative/security/offline/reconciliation test, weakening a checker, accepting a
+known race, or advancing an unsupported status.
 
 ## Required Slice Dossier
 

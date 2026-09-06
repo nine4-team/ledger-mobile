@@ -1,5 +1,9 @@
 # Supabase Conversion Control Plane
 
+For a task start, handoff, or context-compaction resume, begin with
+`current-execution-state.json`. This README explains the complete control plane
+and retains broader status history; it is not mandatory resume context.
+
 Terminology: the **backend surface map** is the complete manifest of places
 Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
@@ -11,9 +15,10 @@ to decisions/spikes/production evidence. Of those target surfaces, 237 are now
 implemented or later. This 31.9% is local surface-implementation coverage,
 not shipped-app or cutover readiness. Ten provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
-zero. The shared local OperationID ownership guard is comment-only READY after
-two independent final GO reviews; exact READY CI must pass before executable
-work, and Item-to-Space clearing remains DRAFT behind it. Decision-independent
+zero. The shared local OperationID ownership guard's comment-only READY commit
+`4d16d689` passed all three immutable jobs in run `34040671631`; its executable
+implementation is under primary review, and Item-to-Space clearing remains
+DRAFT behind it. Decision-independent
 target foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The dedicated Project category-configuration revision is

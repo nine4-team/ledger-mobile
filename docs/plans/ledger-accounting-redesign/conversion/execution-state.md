@@ -1,5 +1,10 @@
 # Supabase Conversion Execution State
 
+> Detailed checkpoint history. Do not load this file during a normal task
+> start, handoff, or context-compaction resume. The compact authoritative resume
+> record is `current-execution-state.json`; consult this history only when that
+> record or the active dossier identifies a specific evidence gap or discrepancy.
+
 Last updated: 2026-09-06
 State version: 352
 
@@ -16,7 +21,7 @@ without modifying the running Firebase application before hard cutover.
 - Checkpoint: LOCAL-OPERATION-IDENTITY-OWNERSHIP-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current committed conversion base: `04843679c1bffa41aab2efecf2723695dc97fc4a`
+- Current verified conversion base: `4d16d68945fb68116db794a15e0d12b258dad1d6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -4511,13 +4516,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the exact synchronized comment-only
-`local-operation-identity-ownership-guard` READY package. Wait for every job in
-its immutable Actions run to pass before replacing either scaffold. Then
-implement only the frozen guard/store/test/checker touchpoints, independently
-review the actual diff, and pass the complete local plus exact implementation-CI
-gate. Only after that foundation is verified may the Item-to-Space clearing
-DRAFT register its sixth family and advance toward READY.
+Complete primary review of the corrected eight-file
+`local-operation-identity-ownership-guard` implementation against exact green
+READY `4d16d689` / immutable run `34040671631`. Run focused tests, obtain an
+independent adversarial review, resolve every material finding, then synchronize
+the implementation evidence and pass the complete local plus exact
+implementation-CI gate. Only after that foundation is verified may the
+Item-to-Space clearing DRAFT register its sixth family and advance toward READY.
 
 Do not add authoritative Item/Space apply, optimistic placement projection,
 user-facing assignment/clearing UI, upload connector, Postgres/RLS/Sync changes,

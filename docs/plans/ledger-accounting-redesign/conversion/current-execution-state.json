@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "stateVersion": 1,
+  "updatedAt": "2026-09-06",
+  "branch": "codex/supabase-powersync-implementation",
+  "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
+  "historyFile": "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+  "method": {
+    "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+    "version": 2
+  },
+  "verifiedCheckpoint": {
+    "name": "LOCAL-OPERATION-IDENTITY-OWNERSHIP-READY",
+    "commit": "4d16d68945fb68116db794a15e0d12b258dad1d6",
+    "ciRun": 34040671631,
+    "ciStatus": "passed",
+    "meaning": "The reviewed operation-identity guard contract is frozen; executable implementation is not yet verified."
+  },
+  "activeBatch": {
+    "id": "local-operation-identity-ownership-guard",
+    "status": "implementation_review",
+    "outcome": "Prevent an offline operation identifier from being accepted for a different command family, account, principal, target, or payload across retry and restart.",
+    "dossiers": [
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+    ],
+    "allowedPaths": [
+      "LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSync/ClientCreationPowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
+      "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift",
+      "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift",
+      "scripts/check-target-environment.mjs"
+    ],
+    "nextActions": [
+      "Complete primary review of the corrected eight-file implementation diff against the frozen dossier.",
+      "Run focused guard/store tests, then the complete local integration gate.",
+      "Obtain independent adversarial review and resolve every material finding.",
+      "Synchronize implementation evidence and status, commit and push the exact implementation checkpoint, then require immutable CI to pass."
+    ]
+  },
+  "followingBatch": {
+    "id": "item-space-clearing-provider-workflow",
+    "status": "blocked_by_active_batch",
+    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
+    "dossiers": [
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
+    ]
+  },
+  "progress": {
+    "practicalCompletionEstimatePercent": {
+      "low": 12,
+      "center": 15,
+      "high": 18
+    },
+    "targetRelevantSurfaces": 744,
+    "mappedOrLaterSurfaces": 554,
+    "implementedOrLaterSurfaces": 237,
+    "locallyWorkingProviderWorkflows": 10,
+    "hostedAuthenticatedRehearsals": 0,
+    "cutoverReadyWorkflows": 0
+  },
+  "efficiency": {
+    "measurementUnit": "verified end-to-end workflow",
+    "speedMultiplierTarget": 3,
+    "tokenEfficiencyMultiplierTarget": 3,
+    "measurementStart": "The recreated Codex goal began at zero tokens on 2026-09-06; record goal token and elapsed-time deltas at each integrated batch checkpoint.",
+    "normalBatchSliceMinimum": 2,
+    "normalBatchSliceMaximum": 4,
+    "normalBatchFullLocalGates": 1,
+    "normalBatchImmutableCiRuns": 1,
+    "maximumConcurrentWriters": 2,
+    "qualityOverride": "Correctness and required evidence outrank throughput targets."
+  },
+  "blockers": [
+    "A canonical immutable production export or acceptable project-matching service-account access is still required for production-profile evidence.",
+    "Hosted Supabase and PowerSync resources, credentials, spending and authenticated rehearsal require explicit user authorization.",
+    "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes."
+  ],
+  "guardrails": [
+    "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
+    "Do not implement redesigned behavior in Firebase.",
+    "Do not access or mutate production systems or production data.",
+    "Do not create paid or hosted resources, migrate data, freeze Firebase, release, or cut over without explicit user approval."
+  ],
+  "resume": {
+    "requiredReads": [
+      "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/local-operation-identity-ownership-guard.json"
+    ],
+    "requiredCommands": [
+      "git status --short --branch",
+      "npm run conversion:state:check"
+    ],
+    "readHistoryOnlyWhen": "The compact state or active dossier lacks evidence needed for a concrete decision, audit, or discrepancy investigation."
+  }
+}

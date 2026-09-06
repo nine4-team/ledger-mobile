@@ -183,7 +183,7 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "9705e06b1115765ccf52cde15b106244d61095fabbddb7690d43a0ef584fafd2",
+      "acknowledgeSourceHash": "86c2c551bb04561913d6225bb19267158642ade285d5aca64785ba227dff8b37",
       "currentBehavior": "Defines root repository commands for conversion controls, target tests/builds, and isolated local Supabase Client/Project/Space database and Data API verification. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
