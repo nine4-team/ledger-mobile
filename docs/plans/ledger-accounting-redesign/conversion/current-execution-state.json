@@ -1,59 +1,36 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 51,
+  "stateVersion": 55,
+  "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
-    "version": 3
+    "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "HISTORY-RETURN-VENDOR-AUDIT-CI-GREEN",
-    "commit": "941ece440819e85fa9d1ca5354597dc7dc6d415c",
-    "ciRun": 34149541956,
+    "name": "TRANSACTION-WORKSPACE-AUDIT-CI-GREEN",
+    "commit": "25e95c33a8bb827ecbc9cd51db76ab51e6702398",
+    "ciRun": 34150509730,
     "ciStatus": "passed",
-    "meaning": "Exact history/return source-boundary and vendor MCP reporting batch passed automatic CI. Product decisions remain open; this does not verify new app features."
+    "meaning": "Last committed baseline before management simplification; GitHub success reverified. Does not claim new app behavior."
   },
   "activeWorkflow": {
-    "id": "active-workspace-to-space-checklist",
-    "kind": "product_ui",
-    "status": "local_verification",
-    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
-    "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
+    "id": "simplify-implementation-management",
+    "kind": "selection",
+    "status": "planning",
+    "recordPath": null,
+    "outcome": "Replace overlapping maintenance with one detailed behavior checklist and compact state, preserve authority and evidence, define audit completion and verify the simpler workflow. App implementation is parked, not complete.",
     "nextActions": [
-      "Current batch ready for one commit/push: Project/Inventory host routes and financial Transaction browser, creation/correction with MCP parity, O-065 role matrix honestly pending Item coverage, and companion-spec checker/lineage/reassign references. Independent final reviews GO; 22 negative +6 positive self-tests and conversion check pass.",
-      "181 stories, 21 heading audits/401 headings. Companion specs can reference canonical owners without new stories. Checker retained unique ownership, exact headings/hashes and known IDs; independent review GO, 22 negative +6 positive self-tests pass. Lineage/reassign mapped to existing owners; return/status and data-model remain partial.",
-      "Main and next_workflow_selection read ordinary Item spec/source/baseline. Next integrate: shared browse/card/detail/filters/selection into existing Item section/provenance stories; add one grouped ordinary-edit outcome. Copies require separate relationship-inheritance decision, not a block on fundamental one-Item identity. O-065 covers command roles; do not silently inherit source Transaction/paid/media relationships.",
-      "Item findings: preserve 1–20 Make Copies/exact unsuffixed names/cancel/idempotence; four editable status labels vs Sold filter and raw to-purchase/to purchase need explicit treatment; detail bookmark/filter exists but card toggle not wired. Source detail sections start expanded, conflicting old prose. Do not copy malformed-price silent save or unchanged-save name materialization.",
-      "Account/email reviewer finished: AccountView.swift owner UI name/logo controls write through AccountsService but source Firestore rules deny Account updates; logo upload may orphan bytes, errors console-only. Need one target profile workflow+permission decision, not currency settings. Email: no intake/matcher; MCP transactions.ts/composite.ts actively read/write/filter/triage caller-supplied ingestion metadata. Decide that narrow surface's disposition, not a new email service; receiptEmailed manual flag is separate. Main must verify cited source before accepting mappings."
+      "Simplification is locally implemented. One product-behavior-checklist.json owns current UI, target outcomes, audit gaps and execution evidence; old files stay historical. Direct authority/profile/decision fields derive inverse maps and audit summaries. Method v4 and AGENTS describe this process.",
+      "Integrated local checks pass: current-state 29 negative/8 positive tests, loader/conservation (1919 behaviors,183 outcomes,5 records), source omission 4 negative/2 positive, CI safety 5 tests, source snapshots, target environment isolation. Checks do not rewrite tracked artifacts; --migrate refuses overwrite. No app implementation was added.",
+      "Independent final review GO (no P0-P2 findings): finite background/MCP disposition+source-digest closure, migrated-record preservation, exact historical/new CI payload checks and resumeAfterWorkflowId verified. Unfinished contents remain editable; original Git evidence stays immutable. Runtime test/build CI jobs are unchanged; redundant metadata commands are legacy-namespaced.",
+      "Next: finish independent review, commit/push this integrated diff on the existing Supabase branch, inspect its single automatic PR CI run, and correct real failures. Do not repeat legacy metadata gates or dispatch duplicate CI. No simplification commit/run yet.",
+      "After simplification goal is verified complete, the app audit is still partial. Read `node scripts/ledger-product-checklist.mjs --audit`; use --outcome ID / --workflow ID / --audit-sources KIND for focused context. resumeAfterWorkflowId preserves the parked app workflow; finish finite audit before expanding app implementation."
     ]
   },
-  "progress": {
-    "practicalCompletionEstimatePercent": {
-      "low": 14,
-      "center": 18,
-      "high": 21
-    },
-    "locallyWorkingProviderWorkflows": 15,
-    "hostedAuthenticatedRehearsals": 0,
-    "cutoverReadyWorkflows": 0,
-    "note": "No feature gain. 181 target stories; 21 heading audits/401 headings. Prior 941ece44 CI passed. Current Transaction/Inventory and companion-reference batch in final review. 0/1919 verified behaviors; ordinary Item/profile/email and final capability crosswalk remain incomplete."
-  },
-  "blockers": [
-    "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
-    "Hosted Supabase and PowerSync resources, credentials, spending, and authenticated rehearsal require explicit user authorization.",
-    "O-052 must be approved for final Project/Client mutation authorization, including notes, hero images and category allocations. O-026 separately gates shared category/template mutations; do not infer command permissions from financial visibility.",
-    "O-051 must be approved before a rejected operation can be retried or acknowledged as resolved; read-only exact recovery may proceed without inventing that policy.",
-    "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes.",
-    "O-053 Space mutation authorization and O-054 manual Space completion meaning require user decisions; continue independent audit.",
-    "O-055 portable Space checklist/template text and search rules remain unresolved; no invented text bounds or matching policy.",
-    "O-056 category-name validation and uniqueness rules remain unresolved; shared category create/rename and restore collision cannot be silently chosen.",
-    "O-057/O-058 cross-reference A-007 identity/onboarding and A-016 offline lease/unlock/revocation choices; no provider, fallback, duration or retention policy approved.",
-    "O-059 member/invite ownership and role/access safety matrix, and O-060 mixed collected-payment confidentiality/archived grants/Project overrides require product approval.",
-    "O-061 import scope/quantity/duplicate documents, O-062 separate Closeout, O-063 Review reasons/grouping/navigation and O-064 Item deletion/retention require product decisions; unrelated audit can continue.",
-    "O-065 ordinary Item/Transaction command-role matrix is unresolved; read visibility does not grant record/edit/cancel/copy/correct permission."
-  ],
+  "blockers": [],
   "guardrails": [
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
     "Do not implement redesigned behavior in Firebase.",

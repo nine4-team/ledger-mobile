@@ -4,7 +4,7 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "a3f3aa352e78949f303a269b0051a2c4b15bb2daadd6a9a3f6a082883c854594"
+    "sourceHash": "5ec22d4bdd02622ce935513882bf0bc1fa8d8dec5de0291981aebe65d5e72bbc"
   },
   "completeness": {
     "status": "partial",
@@ -324,7 +324,9 @@
         "item-evidence-reconciliation",
         "item-intake-atomic-boundary",
         "receipt-parser-preservation",
-        "invoice-import-confirmation"
+        "invoice-import-confirmation",
+        "item-everyday-editing",
+        "item-physical-copies"
       ],
       "workflowKinds": [
         "product_ui"
@@ -351,34 +353,6 @@
         "accounting",
         "media_durability",
         "app_mcp_parity"
-      ]
-    },
-    {
-      "profile": "item_section_media",
-      "storyIds": [
-        "item-accounting-sections"
-      ],
-      "workflowKinds": [
-        "product_ui"
-      ],
-      "requiredLayers": [
-        "domain",
-        "app_ui",
-        "postgres_schema",
-        "postgres_handler",
-        "rls",
-        "powersync_sync",
-        "local_offline",
-        "media"
-      ],
-      "requiredRisks": [
-        "ui_fidelity",
-        "database_integrity",
-        "handler_idempotency",
-        "tenant_authorization",
-        "sync_visibility",
-        "offline_durability",
-        "media_durability"
       ]
     },
     {
@@ -799,7 +773,8 @@
         "universal-search-query-results",
         "search-contextual-detail",
         "needs-review-queue",
-        "transaction-browser-and-detail"
+        "transaction-browser-and-detail",
+        "item-accounting-sections"
       ],
       "workflowKinds": [
         "product_ui"
@@ -924,35 +899,6 @@
       "path": "docs/specs/invoice-centered-project-accounting.md",
       "sourceHash": "7c6540cb3c9e968d110bc9580fc51ba90aa3681420fe13bdc2ccb12c85375150",
       "auditStatus": "audited",
-      "storyIds": [
-        "accounting-scope-owner-boundary",
-        "direct-client-paid-entry",
-        "business-paid-physical-entry",
-        "business-paid-expense-entry",
-        "furnishings-additional-requests-overlay",
-        "accounting-entry-routing",
-        "project-invoicing-workspace",
-        "invoice-build-edit",
-        "invoice-collect",
-        "paid-history-boundary",
-        "budget-paid-unpaid-progress",
-        "accounting-corrections-refunds",
-        "expense-edit-lifecycle",
-        "manual-invoice-adjustments",
-        "invoice-credit-zero-settlement",
-        "invoice-sent-revision-delivery",
-        "receipt-evidence-ownership",
-        "receipt-component-treatment",
-        "vendor-cash-refund",
-        "client-credit-cash-settlement",
-        "transaction-posting-correction",
-        "accounting-relationship-provenance",
-        "fee-demand-lifecycle",
-        "vendor-noncash-adjustment",
-        "client-summary-value-semantics",
-        "report-receipt-evidence-sharing",
-        "transaction-browser-and-detail"
-      ],
       "headingCoverage": [
         {
           "heading": "Invoice-Centered Project Accounting",
@@ -1182,21 +1128,6 @@
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
       "sourceHash": "802bc08ba3e7524bcbab57d8cc7a1fa1e04e49a2b84ef381b2e4560ae965dbe1",
       "auditStatus": "audited",
-      "storyIds": [
-        "item-inventory-to-project",
-        "item-remove-before-invoice",
-        "item-remove-live-invoice",
-        "item-credit-after-payment",
-        "item-resale",
-        "item-project-to-inventory",
-        "item-inventory-back-to-source-project",
-        "item-cross-client-through-inventory",
-        "item-correction",
-        "item-vendor-return",
-        "item-charge-credit-presentation",
-        "item-cycle-provenance",
-        "item-collection-frozen-membership"
-      ],
       "headingCoverage": [
         {
           "heading": "Inventory Item Invoicing and Return Lifecycle",
@@ -1432,27 +1363,6 @@
       "path": "docs/specs/client-identity-and-project-transfers.md",
       "sourceHash": "a61c52289dcc7652c08fd7b196acecd8913f268b10eb2dd72b83f57706bc75ae",
       "auditStatus": "audited",
-      "storyIds": [
-        "client-identity",
-        "client-lifecycle",
-        "client-create-select",
-        "client-archive",
-        "client-correction-merge",
-        "transaction-taxonomy",
-        "same-client-transfer",
-        "transfer-paired-records",
-        "transfer-budget-reallocation",
-        "transfer-picker-confirmation",
-        "transfer-open-allocation",
-        "transfer-paid-allocation",
-        "transfer-sent-invoice-policy",
-        "transfer-additional-requests-policy",
-        "transfer-destination-space-policy",
-        "transfer-reversal-correction",
-        "transfer-later-credit-host",
-        "client-identity-migration",
-        "legacy-transaction-interpretation"
-      ],
       "headingCoverage": [
         {
           "heading": "Client Identity and Project Transfers",
@@ -1709,25 +1619,6 @@
       "path": "docs/specs/projects.md",
       "sourceHash": "7b7a2affc58f86a32592b87f80199e0d921ab118a2816d78df87ead886fce1a4",
       "auditStatus": "audited",
-      "storyIds": [
-        "project-creation-existing-client",
-        "project-list",
-        "project-detail",
-        "project-edit",
-        "project-archive",
-        "project-deletion-policy",
-        "project-creation-new-client",
-        "project-description-update",
-        "project-unarchive",
-        "project-category-selection",
-        "project-inline-category-create",
-        "project-hero-media",
-        "project-form-navigation",
-        "project-transaction-export-entry",
-        "project-note-actions",
-        "project-initial-notes-preservation",
-        "project-initial-notes-capture"
-      ],
       "headingCoverage": [
         {
           "heading": "Projects",
@@ -2025,12 +1916,6 @@
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
       "sourceHash": "ce354f271eb218cef392c0188ef058f423eecf6f3592a90fa96086081ea4b676",
       "auditStatus": "audited",
-      "storyIds": [
-        "account-discovery-authorized",
-        "workspace-selection-explicit",
-        "workspace-selection-remembered",
-        "workspace-selection-failure-privacy"
-      ],
       "headingCoverage": [
         {
           "heading": "Account Discovery and Workspace Selection",
@@ -2104,15 +1989,6 @@
       "path": "docs/specs/session-ending-pending-work.md",
       "sourceHash": "4aa3b912db58b5f42395622351ebb14d8451a9bc52b2e0c2148b615e41e72936",
       "auditStatus": "audited",
-      "storyIds": [
-        "session-ending-pending-work",
-        "session-pending-work-summary",
-        "session-clean-logout",
-        "session-sync-then-logout",
-        "session-destructive-removal",
-        "session-cancel-ending",
-        "session-interrupted-cleanup"
-      ],
       "headingCoverage": [
         {
           "heading": "Session Ending and Pending Local Work",
@@ -2172,34 +2048,14 @@
     },
     {
       "path": "docs/specs/data-model.md",
-      "sourceHash": "d01c30844ea72759d7ea0e70e52c1ffc8892471b6cf0ae27dc32ee76587ab181",
+      "sourceHash": "3992215173aea4ad349d1ee72af74796a11df6019ee12e3c141cf4585cc31b39",
       "auditStatus": "partial",
       "reason": "The file describes the current persisted model and must be explicitly reconciled with target entity stories or classified as source-only."
     },
     {
       "path": "docs/specs/proto-item-capture.md",
-      "sourceHash": "a7c33dae9f6355148b1dbffdc3c11b5cad57d61b3cd76251ea4b107ce2ed96d7",
+      "sourceHash": "f55ca651edbd404c1aa2fc15366421a7d67990296901f5f6f40a0a11755db887",
       "auditStatus": "audited",
-      "storyIds": [
-        "item-create-unified-wizard",
-        "item-accounting-state",
-        "item-link-client-paid",
-        "item-link-business-paid",
-        "item-one-identity",
-        "legacy-proto-item-migration",
-        "stale-client-authority-cutover",
-        "item-intake-vocabulary",
-        "item-wizard-optional-details",
-        "item-intake-entry-contexts",
-        "item-accounting-sections",
-        "item-link-choice-review-cancel",
-        "item-unaccounted-real-shape",
-        "item-evidence-reconciliation",
-        "item-capture-mcp-parity",
-        "item-redesign-production-isolation",
-        "item-target-authority-opening",
-        "item-intake-atomic-boundary"
-      ],
       "headingCoverage": [
         {
           "heading": "Item Creation and Accounting Link",
@@ -2407,31 +2263,6 @@
       "path": "docs/specs/spaces.md",
       "sourceHash": "4eb0664df026434065b1ff3b8bdf1e71b53c2bf565ef26b1678f5092464f1edc",
       "auditStatus": "audited",
-      "storyIds": [
-        "space-list-to-detail",
-        "space-fields",
-        "space-checklist-toggle",
-        "space-checklist-editor",
-        "space-checklist-progress",
-        "space-templates",
-        "space-item-assignment",
-        "space-archive-assignment",
-        "space-details-edit",
-        "space-browser-search",
-        "space-browser-card-evidence",
-        "space-create-from-template",
-        "space-save-as-template",
-        "space-item-clear",
-        "space-assignment-picker",
-        "space-checklist-rejection-resolution",
-        "space-command-mcp-parity",
-        "space-media-lifecycle",
-        "space-media-view-print",
-        "space-photo-item-markers",
-        "space-review-notes",
-        "space-manual-completion",
-        "space-detail-item-entry"
-      ],
       "headingCoverage": [
         {
           "heading": "Spaces",
@@ -2623,18 +2454,6 @@
       "path": "docs/plans/non-item-receipt-lines/design.md",
       "sourceHash": "e6f903e0548981208ae9e8e901bdbe87ce744eb860261d66c732514df4651187",
       "auditStatus": "audited",
-      "storyIds": [
-        "non-item-receipt-lines",
-        "receipt-completeness",
-        "non-item-line-lifecycle",
-        "non-item-line-migration",
-        "receipt-line-editor",
-        "receipt-audit-explanation",
-        "receipt-line-export",
-        "receipt-parser-preservation",
-        "receipt-command-mcp-parity",
-        "receipt-line-readback"
-      ],
       "headingCoverage": [
         {
           "heading": "Non-Item Receipt Lines",
@@ -2856,12 +2675,6 @@
       "path": "docs/specs/offline-first.md",
       "sourceHash": "3840c29a84a08f1e8dc51e15c7353293f12b892ceb5a577d5172806b8596f276",
       "auditStatus": "audited",
-      "storyIds": [
-        "offline-working-set-readiness",
-        "offline-command-durability-and-status",
-        "attachment-capture-delivery-verification",
-        "attachment-reference-and-byte-retention"
-      ],
       "headingCoverage": [
         {
           "heading": "Offline-First Architecture",
@@ -3059,23 +2872,6 @@
       "path": "docs/specs/budget-management.md",
       "sourceHash": "3f29810f0ca96ad84f6e5d096c88f4d1a8c2bc3db00418bbfccf52e052110202",
       "auditStatus": "audited",
-      "storyIds": [
-        "budget-categories",
-        "project-budget-allocation",
-        "budget-progress-calculation",
-        "budget-sign-conventions",
-        "budget-pinning",
-        "budget-offline-conflict",
-        "budget-category-directory",
-        "budget-category-lifecycle",
-        "budget-category-order",
-        "budget-default-category-routing",
-        "budget-card-preview",
-        "budget-row-presentation",
-        "budget-picker-eligibility",
-        "budget-readiness-provenance",
-        "budget-manage-entry"
-      ],
       "headingCoverage": [
         {
           "heading": "Budget Management",
@@ -3470,7 +3266,6 @@
       "path": "docs/specs/lineage-tracking.md",
       "sourceHash": "6ea789d70b1e456e3b974c415caedaaed2231455a8cb75844fcd1c16dcb01459",
       "auditStatus": "audited",
-      "storyIds": [],
       "headingCoverage": [
         {
           "heading": "Lineage Tracking",
@@ -3645,8 +3440,169 @@
     {
       "path": "docs/specs/return-and-sale-tracking.md",
       "sourceHash": "f174ccec2c8ef42cdf2143b7c4a272775243a952aa7bfe0a96aba38a5ca6ec51",
-      "auditStatus": "partial",
-      "reason": "Retained return-status/recovery behavior must be separated from obsolete Firebase and two-hop mechanics."
+      "auditStatus": "audited",
+      "headingCoverage": [
+        {
+          "heading": "Return and Sale Tracking",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Target Return and Recovery Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-project-to-inventory",
+            "item-vendor-return",
+            "vendor-cash-refund",
+            "client-credit-cash-settlement",
+            "item-credit-after-payment",
+            "item-correction",
+            "needs-review-queue",
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Shipped Source Evidence",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Item Status Lifecycle",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Return Flow",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Step 1: Mark for Return",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Step 2: Process Return",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Step 3: Budget Impact",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Disposition Lifecycle",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Incomplete Return Detection",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Detection Rules",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Detection Algorithm (pseudocode)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "What to Do with Incomplete Returns",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Returning to Inventory",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "What Happens",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Paid Invoice Credits",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Per-Batch Returns",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Budget Impact",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Lineage",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Why a Single Step (Not Two)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Project → Project Moves",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Return Transaction Properties",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        },
+        {
+          "heading": "Sign Convention Summary",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source mechanics or title; target contract maps the retained workflow through canonical owners, without movement Transactions, duplicate triggers or status-as-refund inference."
+        }
+      ]
     },
     {
       "path": "docs/specs/transaction-audit.md",
@@ -3664,7 +3620,6 @@
       "path": "docs/specs/reassign-vs-sell.md",
       "sourceHash": "ebbc40e32fcaafa019777a44a92b4e8cadd32035cd1668188caf2e72f2e492ad",
       "auditStatus": "audited",
-      "storyIds": [],
       "headingCoverage": [
         {
           "heading": "Correct/Move vs Sell vs Return",
@@ -3861,13 +3816,6 @@
       "path": "docs/specs/reports.md",
       "sourceHash": "1c44119a8770dea6415349097bf25b8d05514a1a5da690087227c87e6dc85d0f",
       "auditStatus": "audited",
-      "storyIds": [
-        "report-snapshot-and-delivery",
-        "invoice-report-readback",
-        "property-management-report",
-        "client-summary-report-readback",
-        "vendor-aggregate-report"
-      ],
       "headingCoverage": [
         {
           "heading": "Reports",
@@ -3990,12 +3938,6 @@
       "path": "docs/specs/invoice-import.md",
       "sourceHash": "97cdbe1ba13ed72f2b0e4d9302d6bc30f540deb361e753dba78d5bd07db4c767",
       "auditStatus": "audited",
-      "storyIds": [
-        "local-vendor-pdf-review",
-        "invoice-import-expanded-capabilities",
-        "invoice-import-confirmation",
-        "vendor-recognition-and-presets"
-      ],
       "headingCoverage": [
         {
           "heading": "Invoice Import",
@@ -4130,10 +4072,6 @@
       "path": "docs/specs/authentication-offline-access.md",
       "sourceHash": "30b2dbbbb3fd2e491ee0e5e2a6897887935c5b3eae573266360ceba04313353f",
       "auditStatus": "audited",
-      "storyIds": [
-        "auth-online-entry-and-recovery-boundary",
-        "offline-unlock-lease-and-account-isolation"
-      ],
       "headingCoverage": [
         {
           "heading": "Authentication & Offline Access",
@@ -4246,13 +4184,6 @@
       "path": "docs/specs/financial-access-controls.md",
       "sourceHash": "67182918899ec8ed119475f17ac651b260440cbe6d2e95ca03ea948912a6ab06",
       "auditStatus": "audited",
-      "storyIds": [
-        "financial-access-policy-and-invoice-visibility",
-        "financial-access-no-leak-projections",
-        "team-financial-access-settings",
-        "invitation-financial-access",
-        "financial-access-migration"
-      ],
       "headingCoverage": [
         {
           "heading": "Financial Access Controls",
@@ -4398,10 +4329,6 @@
       "path": "docs/specs/billing-invoicing.md",
       "sourceHash": "6286ed174185c1ba9f37469948ca48c531734b719e405ef7d070b773fadcc37e",
       "auditStatus": "audited",
-      "storyIds": [
-        "billing-summary-values",
-        "contract-derived-project-and-fee-import"
-      ],
       "headingCoverage": [
         {
           "heading": "Billing & Invoicing",
@@ -4580,11 +4507,6 @@
       "path": "docs/specs/search-results.md",
       "sourceHash": "4f56ab6808712d69f137db09a8c36f31edfaaf1a2ed222be0abb741b03f017ec",
       "auditStatus": "audited",
-      "storyIds": [
-        "universal-search-query-results",
-        "search-contextual-detail",
-        "search-selection-and-action-routing"
-      ],
       "headingCoverage": [
         {
           "heading": "Search Results & Item Detail — Contextual Details",
@@ -4680,10 +4602,6 @@
       "path": "docs/specs/needs-review-tab.md",
       "sourceHash": "5b41a271e65b47b52121635b502fa9afc57c5b8551b719bfae09990f0fc912c9",
       "auditStatus": "audited",
-      "storyIds": [
-        "needs-review-queue",
-        "needs-review-contextual-resolution"
-      ],
       "headingCoverage": [
         {
           "heading": "Needs Review Tab",
@@ -4792,9 +4710,6 @@
       "path": "docs/specs/project-closeout-report.md",
       "sourceHash": "3ecf697b4a5ed422f4911ea666eed50bd364bb4cab218ecb5904767a444a8beb",
       "auditStatus": "audited",
-      "storyIds": [
-        "project-closeout-report"
-      ],
       "headingCoverage": [
         {
           "heading": "Project Closeout Report",
@@ -4889,6 +4804,376 @@
           "storyIds": [
             "project-closeout-report"
           ]
+        }
+      ]
+    },
+    {
+      "path": "docs/specs/items.md",
+      "sourceHash": "a0c8e89d05647fdc3a38d4bebbf3bb8729213d488b299d8c69194c3b4db03a29",
+      "auditStatus": "audited",
+      "headingCoverage": [
+        {
+          "heading": "Items",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Target Everyday Workspace",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Target Everyday Editing",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Target Physical Copies",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-physical-copies",
+            "item-one-identity"
+          ]
+        },
+        {
+          "heading": "Source and Shared Model Reference",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Unaccounted For and Accounted For Items",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Item Entity",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-wizard-optional-details",
+            "accounting-relationship-provenance"
+          ]
+        },
+        {
+          "heading": "Price Invariant",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-wizard-optional-details"
+          ]
+        },
+        {
+          "heading": "Display Name",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-physical-copies"
+          ]
+        },
+        {
+          "heading": "Physical Copies and Quantity Expansion",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-physical-copies",
+            "item-one-identity"
+          ]
+        },
+        {
+          "heading": "Scoping",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-one-identity",
+            "item-intake-entry-contexts",
+            "space-item-assignment"
+          ]
+        },
+        {
+          "heading": "Statuses",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Validation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Creation Flow",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard"
+          ]
+        },
+        {
+          "heading": "First: familiar minimum fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard"
+          ]
+        },
+        {
+          "heading": "Then: optional details and Link",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-wizard-optional-details",
+            "item-link-choice-review-cancel"
+          ]
+        },
+        {
+          "heading": "Unaccounted For Item Accounting Route",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-link-choice-review-cancel",
+            "item-link-client-paid",
+            "item-link-business-paid"
+          ]
+        },
+        {
+          "heading": "Creation Context",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-intake-entry-contexts"
+          ]
+        },
+        {
+          "heading": "On Create",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Editing",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Edit Details Modal",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Other Edit Actions (via action menu)",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "space-item-assignment",
+            "item-link-choice-review-cancel"
+          ]
+        },
+        {
+          "heading": "Item Detail View",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Layout",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Toolbar",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Live Data",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Action Menu",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-physical-copies"
+          ]
+        },
+        {
+          "heading": "Menu Contexts",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections",
+            "item-everyday-editing"
+          ]
+        },
+        {
+          "heading": "Single-Item Actions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-physical-copies",
+            "item-correction",
+            "item-vendor-return",
+            "space-item-assignment"
+          ]
+        },
+        {
+          "heading": "Bulk Actions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-everyday-editing",
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Item List",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "List Controls",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Filter Facets",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Duplicate Grouping",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Item Card",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Price Display Priority",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Image Management",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification",
+            "attachment-reference-and-byte-retention"
+          ]
+        },
+        {
+          "heading": "On Detail View",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "On Creation",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
+        },
+        {
+          "heading": "Bulk Creation from Receipt Text",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-import-expanded-capabilities"
+          ]
+        },
+        {
+          "heading": "Cross-Scope Operations",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-to-project",
+            "item-project-to-inventory",
+            "item-cross-client-through-inventory",
+            "same-client-transfer"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
         }
       ]
     }
@@ -5119,337 +5404,147 @@
     "open": [
       {
         "decisionId": "O-002",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-sent-invoice-policy"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-003",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "accounting-corrections-refunds",
-          "invoice-credit-zero-settlement",
-          "client-credit-cash-settlement",
-          "billing-summary-values"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-004",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "accounting-corrections-refunds",
-          "invoice-credit-zero-settlement",
-          "client-credit-cash-settlement",
-          "billing-summary-values"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-005",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "budget-paid-unpaid-progress",
-          "budget-row-presentation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-006",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "expense-edit-lifecycle",
-          "receipt-line-editor",
-          "receipt-command-mcp-parity"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-007",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-resale",
-          "item-project-to-inventory",
-          "item-inventory-back-to-source-project",
-          "item-cross-client-through-inventory",
-          "accounting-relationship-provenance",
-          "item-cycle-provenance"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-008",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "non-item-line-migration",
-          "receipt-component-treatment",
-          "receipt-line-editor",
-          "receipt-command-mcp-parity",
-          "invoice-import-confirmation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-009",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "manual-invoice-adjustments",
-          "financial-access-policy-and-invoice-visibility",
-          "financial-access-migration",
-          "invoice-report-readback",
-          "project-closeout-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-010",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-sent-invoice-policy",
-          "item-remove-live-invoice",
-          "invoice-credit-zero-settlement",
-          "billing-summary-values"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-011",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-additional-requests-policy"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-012",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-destination-space-policy"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-013",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-reversal-correction"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-014",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-later-credit-host"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-015",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-resale",
-          "item-project-to-inventory",
-          "item-inventory-back-to-source-project",
-          "item-cross-client-through-inventory",
-          "accounting-relationship-provenance",
-          "item-cycle-provenance",
-          "search-selection-and-action-routing",
-          "search-contextual-detail"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-016",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-link-business-paid",
-          "invoice-import-confirmation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-017",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-create-unified-wizard"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-018",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "legacy-proto-item-migration",
-          "stale-client-authority-cutover"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-019",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "legacy-proto-item-migration",
-          "item-evidence-reconciliation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-020",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-target-authority-opening"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-021",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-create-unified-wizard"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-022",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "stale-client-authority-cutover"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-023",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-media-lifecycle",
-          "space-review-notes",
-          "attachment-reference-and-byte-retention"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-024",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-deletion-policy"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-025",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "client-correction-merge"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-026",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-templates",
-          "budget-categories",
-          "budget-offline-conflict",
-          "project-inline-category-create",
-          "space-create-from-template",
-          "space-save-as-template",
-          "budget-category-lifecycle",
-          "budget-category-order",
-          "budget-default-category-routing",
-          "vendor-recognition-and-presets"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-027",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "item-create-unified-wizard",
-          "item-unaccounted-real-shape",
-          "item-capture-mcp-parity",
-          "invoice-import-confirmation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-028",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "accounting-corrections-refunds",
-          "vendor-noncash-adjustment",
-          "vendor-aggregate-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-029",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "accounting-corrections-refunds",
-          "transaction-posting-correction",
-          "receipt-line-editor",
-          "receipt-command-mcp-parity",
-          "contract-derived-project-and-fee-import",
-          "invoice-import-confirmation",
-          "search-selection-and-action-routing",
-          "vendor-aggregate-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-030",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "receipt-completeness",
-          "non-item-line-migration"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-031",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "receipt-completeness",
-          "non-item-line-migration",
-          "receipt-component-treatment",
-          "invoice-import-confirmation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-032",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "legacy-transaction-interpretation",
-          "accounting-corrections-refunds",
-          "item-vendor-return",
-          "non-item-line-migration",
-          "vendor-cash-refund",
-          "transaction-posting-correction",
-          "receipt-line-editor",
-          "receipt-command-mcp-parity",
-          "invoice-import-confirmation",
-          "needs-review-queue",
-          "needs-review-contextual-resolution",
-          "vendor-aggregate-report",
-          "transaction-browser-and-detail",
-          "accounting-entry-routing"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-033",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "invoice-collect",
-          "billing-summary-values"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-034",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "transfer-sent-invoice-policy",
-          "item-remove-live-invoice",
-          "invoice-sent-revision-delivery",
-          "invoice-report-readback"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-035",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "client-summary-value-semantics",
-          "project-closeout-report",
-          "billing-summary-values"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-036",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "report-receipt-evidence-sharing",
-          "project-closeout-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-037",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-archive-assignment"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-038",
@@ -5457,261 +5552,119 @@
       },
       {
         "decisionId": "O-039",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-note-actions",
-          "project-initial-notes-capture"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-040",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "budget-pinning",
-          "budget-card-preview"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-041",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "vendor-aggregate-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-042",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "client-lifecycle"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-043",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "client-lifecycle",
-          "client-create-select",
-          "client-identity-migration",
-          "project-creation-new-client"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-044",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-fields",
-          "space-details-edit",
-          "space-create-from-template",
-          "space-command-mcp-parity"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-045",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-fields",
-          "space-create-from-template",
-          "space-command-mcp-parity"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-046",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-fields",
-          "space-create-from-template",
-          "space-command-mcp-parity"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-047",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "vendor-recognition-and-presets"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-048",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-edit"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-049",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-creation-existing-client",
-          "project-edit",
-          "project-creation-new-client"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-050",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-edit"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-051",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "session-ending-pending-work",
-          "space-checklist-rejection-resolution"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-052",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-creation-existing-client",
-          "project-archive",
-          "client-lifecycle",
-          "client-create-select",
-          "client-archive",
-          "project-budget-allocation",
-          "budget-offline-conflict",
-          "project-creation-new-client",
-          "project-description-update",
-          "project-unarchive",
-          "project-hero-media",
-          "project-note-actions",
-          "project-initial-notes-capture",
-          "contract-derived-project-and-fee-import"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-053",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-checklist-toggle",
-          "space-checklist-editor",
-          "space-item-assignment",
-          "space-archive-assignment",
-          "space-details-edit",
-          "space-item-clear",
-          "space-command-mcp-parity",
-          "space-media-lifecycle",
-          "space-photo-item-markers",
-          "space-review-notes",
-          "space-manual-completion",
-          "search-selection-and-action-routing"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-054",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-manual-completion"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-055",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "space-checklist-editor",
-          "space-templates",
-          "space-browser-search",
-          "space-create-from-template",
-          "space-save-as-template",
-          "space-command-mcp-parity",
-          "universal-search-query-results"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-056",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "budget-categories",
-          "project-inline-category-create",
-          "budget-category-lifecycle"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-057",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "auth-online-entry-and-recovery-boundary",
-          "offline-unlock-lease-and-account-isolation",
-          "invitation-financial-access",
-          "financial-access-migration"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-058",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "offline-unlock-lease-and-account-isolation",
-          "financial-access-no-leak-projections"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-059",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "team-financial-access-settings",
-          "invitation-financial-access",
-          "financial-access-migration"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-060",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "financial-access-policy-and-invoice-visibility",
-          "financial-access-no-leak-projections",
-          "team-financial-access-settings",
-          "invitation-financial-access",
-          "financial-access-migration",
-          "project-closeout-report",
-          "billing-summary-values",
-          "universal-search-query-results",
-          "needs-review-queue",
-          "invoice-report-readback",
-          "search-contextual-detail",
-          "needs-review-contextual-resolution",
-          "vendor-aggregate-report",
-          "transaction-browser-and-detail"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-061",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "invoice-import-expanded-capabilities",
-          "invoice-import-confirmation"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-062",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "project-closeout-report"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-063",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "needs-review-queue",
-          "needs-review-contextual-resolution"
-        ]
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-064",
-        "auditStatus": "mapped",
-        "storyIds": [
-          "search-selection-and-action-routing"
-        ]
+        "auditStatus": "mapped"
       },
       {
-      "decisionId": "O-065",
-      "auditStatus": "pending",
-        "storyIds": [
-          "accounting-entry-routing",
-          "transaction-posting-correction"
-        ]
+        "decisionId": "O-065",
+        "auditStatus": "pending"
+      },
+      {
+        "decisionId": "O-066",
+        "auditStatus": "mapped"
+      },
+      {
+        "decisionId": "O-067",
+        "auditStatus": "mapped"
       }
     ]
   },
@@ -6582,7 +6535,8 @@
         "decisionIds": [
           "O-017",
           "O-021",
-          "O-027"
+          "O-027",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -7277,14 +7231,24 @@
     },
     {
       "storyId": "item-accounting-sections",
-      "title": "Keep both Item sections fully usable",
-      "outcome": "Project Items shows Unaccounted For Items first and Accounted For Items below. Search, Space assignment, media editing and ordinary physical details work in either section. Space may change before, during or after Link without changing accounting state.",
+      "title": "Browse shared Item lists, cards and details",
+      "outcome": "Preserve contextual Item sections/counts, list/card/detail, query/sort/facets/grouping, visible selection/totals and picker-only behavior with honest readiness. Show exact identity, placement and occurrence-based history; keep detail bookmark/filter, not an unwired card toggle. Edits use owning workflows.",
       "authority": {
-        "path": "docs/specs/proto-item-capture.md",
-        "section": "Accounting-State Rule"
+        "path": "docs/specs/items.md",
+        "section": "Target Everyday Workspace"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-060",
+          "O-067",
+          "O-007",
+          "O-015"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "item-link-choice-review-cancel",
@@ -7345,7 +7309,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-027"
+          "O-027",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -8348,7 +8313,7 @@
     {
       "storyId": "invoice-import-expanded-capabilities",
       "title": "Resolve expanded document capture and review scope",
-      "outcome": "Implement camera/image OCR, broader vendor/date editing, adding/removing/searching rows or tax-included controls only if approved for this release. Expose unsupported, no-row, large/multipage and uncertain parse states honestly; do not force network parsing onto the supported local PDF path.",
+      "outcome": "Implement approved expanded capture/review only: camera/image OCR, pasted receipt text, broader field/row editing or tax controls. Expose unsupported/no-row/large/uncertain parsing honestly. Historical text-import code is absent; never add a new writer or force network parsing onto supported local PDFs.",
       "authority": {
         "path": "docs/specs/invoice-import.md",
         "section": "Historical and Proposed Import Description"
@@ -8552,6 +8517,51 @@
         "decisionIds": [
           "O-032",
           "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-everyday-editing",
+      "title": "Edit ordinary Item details safely",
+      "outcome": "Preserve rename/vendor/SKU/amounts/notes, four-state and clear-status controls, detail bookmark, bulk status and Copy ID(s). Save exact revisions with validation, paid-price locks, durable status and safe retry; Cancel/unchanged Save invent nothing. Relational and media actions use owning workflows.",
+      "authority": {
+        "path": "docs/specs/items.md",
+        "section": "Target Everyday Editing"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-065",
+          "O-047",
+          "O-023",
+          "O-015",
+          "O-051",
+          "O-064",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-physical-copies",
+      "title": "Create distinct physical copies without copied history",
+      "outcome": "Preserve Make Copies' 1–20 additional count, exact unsuffixed name, count-aware Create, Cancel and durable error/retry. Each new object has a stable distinct ID; duplicate submission creates no extras. Apply approved relationship/media inheritance without copying frozen Invoice/payment facts.",
+      "authority": {
+        "path": "docs/specs/items.md",
+        "section": "Target Physical Copies"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-066",
+          "O-065",
+          "O-023",
+          "O-051"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"

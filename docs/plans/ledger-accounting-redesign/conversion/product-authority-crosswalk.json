@@ -20,6 +20,7 @@
     "docs/specs/invoice-import.md",
     "docs/specs/search-results.md",
     "docs/specs/needs-review-tab.md",
+    "docs/specs/items.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -33,6 +34,7 @@
         { "path": "docs/specs/invoice-import.md", "role": "canonical_target" },
         { "path": "docs/specs/search-results.md", "role": "canonical_target" },
         { "path": "docs/specs/needs-review-tab.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "canonical_target" },
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
         { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
         { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },

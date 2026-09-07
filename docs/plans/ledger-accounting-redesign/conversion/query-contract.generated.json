@@ -16,7 +16,6 @@
     "An occurrence proves a source reference, not that the path is exercised in production."
   ],
   "totals": {
-    "candidateFilesInspected": 170,
     "sourceFilesWithOccurrences": 74,
     "occurrences": 386
   },

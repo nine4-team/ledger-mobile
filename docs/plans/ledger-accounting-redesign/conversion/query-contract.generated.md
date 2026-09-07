@@ -7,7 +7,6 @@ Source digest: `87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4
 
 ## Coverage
 
-- 170 Firestore-candidate source files inspected
 - 74 source files contain recognized occurrences
 - 386 query, read, listener, ordering, or pagination occurrences cataloged
 

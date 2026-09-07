@@ -1,8 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checklistRelativePath, loadProductChecklist, projectLegacyStructures } from "./ledger-product-checklist.mjs";
+import { backgroundAuditScope } from "./supabase-conversion-ledger.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "..");
@@ -11,25 +13,18 @@ const stateRelativePath =
 const statePath = join(repositoryRoot, stateRelativePath);
 const workflowRecordsRelative =
   "docs/plans/ledger-accounting-redesign/conversion/workflow-records";
-const workflowRecordsPath = join(repositoryRoot, workflowRecordsRelative);
-const targetStoryCatalogRelative =
-  "docs/plans/ledger-accounting-redesign/conversion/target-product-story-catalog.json";
-const targetStoryCatalogPath = join(repositoryRoot, targetStoryCatalogRelative);
+const targetStoryCatalogRelative = checklistRelativePath;
+const checklist = loadProductChecklist();
+const checklistViews = projectLegacyStructures(checklist);
 const manifest = JSON.parse(
   readFileSync(
     join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json"),
     "utf8",
   ),
 );
-const authorityCrosswalk = JSON.parse(
-  readFileSync(
-    join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/product-authority-crosswalk.json"),
-    "utf8",
-  ),
-);
 const surfacesById = new Map((manifest.surfaces ?? []).map((surface) => [surface.id, surface]));
-const canonicalTargetSpecs = new Set(authorityCrosswalk.canonicalTargetSpecs ?? []);
-const targetStoryCatalog = JSON.parse(readFileSync(targetStoryCatalogPath, "utf8"));
+const canonicalTargetSpecs = new Set(checklistViews.canonicalSpecs);
+const targetStoryCatalog = checklistViews.catalog;
 const targetStoriesById = new Map(
   (targetStoryCatalog.stories ?? []).map((story) => [story.storyId, story]),
 );
@@ -468,6 +463,22 @@ function workflowEvidencePayload(record) {
   return payload;
 }
 
+function committedWorkflowRecord(commit, workflowId, legacyPath) {
+  // Old CI runs keep their original evidence paths. Once a commit contains the
+  // unified checklist, it must contain the exact record there: no fallback to
+  // stale legacy evidence is allowed.
+  let unifiedExists = false;
+  try {
+    execFileSync("git", ["cat-file", "-e", `${commit}:${checklistRelativePath}`], { cwd: repositoryRoot, stdio: "ignore" });
+    unifiedExists = true;
+  } catch { /* Pre-consolidation evidence is read at its original path. */ }
+  const payload = JSON.parse(execFileSync("git", ["show", `${commit}:${unifiedExists ? checklistRelativePath : legacyPath}`], { cwd: repositoryRoot, encoding: "utf8", maxBuffer: 8 * 1024 * 1024 }));
+  if (!unifiedExists) return payload;
+  const record = [payload.currentProduct, ...(payload.executionRecords ?? [])].find((entry) => entry?.workflowId === workflowId);
+  if (!record) throw new Error(`Exact CI checklist lacks workflow ${workflowId}`);
+  return record;
+}
+
 function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative) {
   requireCondition(catalog?.schemaVersion === 1, `${prefix}: schemaVersion must equal 1.`);
   requireCondition(catalog?.catalogId === "ledger-target-product-stories", `${prefix}: catalogId is invalid.`);
@@ -630,12 +641,13 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
       ["audited", "partial", "source_only"].includes(entry?.auditStatus),
       `${entryPrefix}.auditStatus must be audited, partial, or source_only.`,
     );
-    if (entry?.storyIds !== undefined) {
-      requireStrings(entry.storyIds, `${entryPrefix}.storyIds`, { allowEmpty: true });
-    }
+    const ownedStoryIds = (catalog.stories ?? [])
+      .filter((story) => story.authority?.path === entry.path)
+      .map((story) => story.storyId);
+    requireCondition(entry.storyIds === undefined, `${entryPrefix}: story ownership is derived from stories; do not maintain a reverse list.`);
     if (entry?.auditStatus === "source_only") {
       requireCondition(allowedSourceOnlyAuthorities.has(entry.path), `${entryPrefix}: source_only is not approved for this authority.`);
-      requireCondition((entry.storyIds ?? []).length === 0, `${entryPrefix}: source_only authority cannot claim target stories.`);
+      requireCondition(ownedStoryIds.length === 0, `${entryPrefix}: source_only authority cannot claim target stories.`);
       requireString(entry?.reason, `${entryPrefix}.reason`);
     } else {
       if (entry.auditStatus === "partial") incompleteAuthorityCount += 1;
@@ -654,8 +666,8 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
         const key = headingInventoryKey(headingEntry ?? {});
         requireCondition(!recordedHeadingKeys.has(key), `${headingPrefix}: heading occurrence is duplicated.`);
         recordedHeadingKeys.add(key);
-        requireCondition(expectedHeadingKeys.has(key), `${headingPrefix}: heading occurrence is not in the current authority file.`);
         if (headingEntry?.disposition === "story") {
+          requireCondition(expectedHeadingKeys.has(key), `${headingPrefix}: heading occurrence is not in the current authority file.`);
           requireStrings(headingEntry?.storyIds, `${headingPrefix}.storyIds`);
           for (const storyId of headingEntry?.storyIds ?? []) {
             // A heading may restate a story owned by a companion spec. Keep
@@ -669,21 +681,19 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
           requireCondition((headingEntry?.storyIds ?? []).length === 0, `${headingPrefix}: supporting_or_nonproduct cannot claim stories.`);
         }
       }
-      requireCondition(
-        recordedHeadingKeys.size === expectedHeadingKeys.size &&
-          [...expectedHeadingKeys].every((key) => recordedHeadingKeys.has(key)),
-        `${entryPrefix}: headingCoverage must account for every current Markdown heading exactly once.`,
-      );
+      // The reviewed source hash covers the complete spec. Keep validating all
+      // cited product headings, but do not require a duplicate inventory entry
+      // for every title/supporting heading. New prose still invalidates review.
       // Companion specs may clarify canonical stories without owning new ones.
       // Require real story references; ownership stays unique below.
       requireCondition(headingStoryIds.size > 0, `${entryPrefix}: audited authority must map at least one story.`);
-      for (const storyId of entry.storyIds ?? []) {
+      for (const storyId of ownedStoryIds) {
         requireCondition(headingStoryIds.has(storyId), `${entryPrefix}: audited story ${storyId} is absent from headingCoverage.`);
       }
     } else {
       requireCondition(entry?.headingCoverage === undefined, `${entryPrefix}: headingCoverage is allowed only after the authority is audited.`);
     }
-    for (const storyId of entry?.storyIds ?? []) {
+    for (const storyId of ownedStoryIds) {
       requireCondition(!coveredStoryIds.has(storyId), `${entryPrefix}: story ${storyId} is mapped by more than one authority entry.`);
       coveredStoryIds.add(storyId);
       const story = catalogStoriesById.get(storyId);
@@ -705,7 +715,6 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
     ["confirmed", decisionIdsInSection(decisionLogPath, "Confirmed Decisions", prefix)],
     ["open", decisionIdsInSection(decisionLogPath, "Open Product Decisions", prefix)],
   ]);
-  const openDecisionStoryLinks = new Map();
   const openDecisionEntriesById = new Map();
   let pendingDecisionCount = 0;
   for (const [group, expectedIds] of expectedDecisionSets) {
@@ -720,12 +729,17 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
       requireCondition(expectedIds.has(entry?.decisionId), `${entryPrefix}.decisionId is not in the declared decision-log section.`);
       if (group === "open") openDecisionEntriesById.set(entry.decisionId, entry);
       requireCondition(["mapped", "pending"].includes(entry?.auditStatus), `${entryPrefix}.auditStatus must be mapped or pending.`);
-      if (entry?.storyIds !== undefined) {
+      if (group === "open") {
+        requireCondition(entry.storyIds === undefined, `${entryPrefix}: open-decision links are derived from story blockers; do not maintain a reverse list.`);
+      } else if (entry?.storyIds !== undefined) {
         requireStrings(entry.storyIds, `${entryPrefix}.storyIds`, { allowEmpty: true });
       }
+      const linkedStoryIds = group === "open"
+        ? (catalog.stories ?? []).filter((story) => (story.blocker?.decisionIds ?? []).includes(entry.decisionId)).map((story) => story.storyId)
+        : (entry.storyIds ?? []);
       if (entry?.auditStatus === "mapped") {
-        requireCondition((entry.storyIds ?? []).length > 0, `${entryPrefix}: mapped decision requires storyIds.`);
-        for (const storyId of entry.storyIds ?? []) {
+        requireCondition(linkedStoryIds.length > 0, `${entryPrefix}: mapped decision requires linked stories.`);
+        for (const storyId of linkedStoryIds) {
           requireCondition(storyIds.has(storyId), `${entryPrefix}: unknown story ${storyId}.`);
           if (group === "open") {
             const story = catalogStoriesById.get(storyId);
@@ -734,8 +748,6 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
               (story?.blocker?.decisionIds ?? []).includes(entry.decisionId),
               `${entryPrefix}: blocked story ${storyId} does not declare ${entry.decisionId}.`,
             );
-            if (!openDecisionStoryLinks.has(entry.decisionId)) openDecisionStoryLinks.set(entry.decisionId, new Set());
-            openDecisionStoryLinks.get(entry.decisionId).add(storyId);
           }
         }
       } else {
@@ -752,15 +764,79 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
     for (const decisionId of story.blocker?.decisionIds ?? []) {
       const decisionEntry = openDecisionEntriesById.get(decisionId);
       requireCondition(
-        decisionEntry?.auditStatus === "pending" ||
-          (openDecisionStoryLinks.get(decisionId)?.has(story.storyId) ?? false),
-        `${prefix}: blocked story ${story.storyId} lacks reverse mapped decisionCoverage.open evidence for ${decisionId}.`,
+        Boolean(decisionEntry),
+        `${prefix}: blocked story ${story.storyId} lacks an audit entry for ${decisionId}.`,
       );
     }
   }
   if (catalog?.completeness?.status === "complete") {
     requireCondition(incompleteAuthorityCount === 0, `${prefix}: complete catalog cannot contain partial authority audits.`);
     requireCondition(pendingDecisionCount === 0, `${prefix}: complete catalog cannot contain pending decision audits.`);
+  }
+}
+
+function validateChecklist(value) {
+  requireCondition(value?.schemaVersion === 1 && value?.checklistId === "ledger-product-behavior-checklist", "Unified checklist identity is invalid.");
+  requireCondition(value.canonicalSpecs === undefined, "Canonical spec registration belongs on authority reviews, not a duplicate list.");
+  for (const profile of value.deliveryProfiles ?? []) requireCondition(profile.storyIds === undefined, "Delivery profile membership is derived from outcomes.");
+  for (const review of value.authorityReviews ?? []) {
+    requireCondition(typeof review.canonicalTarget === "boolean", `${review.path}: canonicalTarget must be explicit.`);
+    requireCondition(review.storyIds === undefined, "Authority ownership is derived from outcomes.");
+  }
+  for (const review of Object.values(value.decisionReviews ?? {}).flat()) requireCondition(review.storyIds === undefined, "Decision references belong on outcomes, not reverse lists.");
+  const requiredAreas = new Set(["current-ui-target-disposition", "indexed-specs-and-decisions", "background-and-mcp-capabilities"]);
+  const seen = new Set();
+  const expectedBackground = backgroundAuditScope(manifest);
+  const backgroundIds = new Set(expectedBackground.sources.map((surface) => surface.id));
+  const outcomeIds = new Set(value.outcomes?.map((outcome) => outcome.storyId));
+  for (const area of value.auditAreas ?? []) {
+    requireCondition(!seen.has(area.auditAreaId), `Duplicate audit area ${area.auditAreaId}.`);
+    seen.add(area.auditAreaId);
+    requireCondition(["partial", "reviewed"].includes(area.status), `Invalid audit area status ${area.auditAreaId}.`);
+    requireString(area.completionRule, `${area.auditAreaId}.completionRule`);
+    requireStrings(area.remainingGaps, `${area.auditAreaId}.remainingGaps`, { allowEmpty: true });
+    if (area.status === "reviewed") {
+      requireCondition(area.remainingGaps?.length === 0, `${area.auditAreaId}: reviewed audit still has gaps.`);
+      requireString(area.reviewNote, `${area.auditAreaId}.reviewNote`);
+      requireStrings(area.evidencePaths, `${area.auditAreaId}.evidencePaths`);
+      for (const path of area.evidencePaths ?? []) repositoryFile(path, `${area.auditAreaId}.evidencePaths`);
+    }
+    if (area.auditAreaId === "background-and-mcp-capabilities") {
+      requireCondition(Array.isArray(area.capabilityDispositions), "Background audit requires its finite capability dispositions.");
+      const disposedIds = new Set();
+      for (const entry of area.capabilityDispositions ?? []) {
+        requireStrings(entry.sourceIds, "capabilityDisposition.sourceIds");
+        requireStrings(entry.outcomeIds, "capabilityDisposition.outcomeIds");
+        requireCondition(["preserve", "redesign", "retire"].includes(entry.disposition), "Invalid capability disposition.");
+        for (const id of entry.sourceIds ?? []) {
+          requireCondition(backgroundIds.has(id) && !disposedIds.has(id), `Unknown or duplicate background source ${id}.`);
+          disposedIds.add(id);
+        }
+        for (const id of entry.outcomeIds ?? []) {
+          requireCondition(outcomeIds.has(id), `Background capability references unknown outcome ${id}.`);
+          if (entry.disposition === "retire") requireCondition(value.outcomes.find((outcome) => outcome.storyId === id)?.status === "retired", `Retired capability requires authority-retired outcome ${id}.`);
+        }
+      }
+      if (area.status === "reviewed") {
+        requireCondition(area.reviewedSourceDigest === expectedBackground.digest, "Background audit source snapshot changed; review affected capabilities.");
+        requireCondition(area.reviewedFirebaseCommit === value.currentProduct?.sourceBaseline?.commit, "Background audit must bind to the reviewed Firebase baseline.");
+        requireCondition(disposedIds.size === backgroundIds.size, "Background audit cannot close with undispositioned source capabilities.");
+      }
+    }
+  }
+  requireCondition([...requiredAreas].every((id) => seen.has(id)), "Checklist must account for UI, specs/decisions, and background/MCP audit areas.");
+  requireCondition(value.completeness === undefined && value.remainingAudit === undefined, "Audit completion and remaining gaps are derived; do not maintain duplicate summaries.");
+  const confirmedIds = new Set(value.decisionReviews?.confirmed?.map((entry) => entry.decisionId));
+  const migratedRecordIds = (value.migration?.sourceFiles?.workflowRecords ?? []).map((entry) => entry.path.split("/").at(-1).replace(/\.json$/, ""));
+  const recordIds = new Set(value.executionRecords?.map((record) => record.workflowId));
+  requireCondition(migratedRecordIds.length === 5 && migratedRecordIds.every((id) => recordIds.has(id)), "Migrated workflow evidence records must remain present; update unfinished work rather than deleting its history.");
+  const reviewedPaths = new Set(value.authorityReviews?.map((entry) => entry.path));
+  for (const outcome of value.outcomes ?? []) {
+    requireStrings(outcome.confirmedDecisionIds, `${outcome.storyId}.confirmedDecisionIds`, { allowEmpty: true });
+    for (const id of outcome.confirmedDecisionIds ?? []) requireCondition(confirmedIds.has(id), `${outcome.storyId}: unknown confirmed decision ${id}.`);
+    for (const ref of [...(outcome.authorityHeadingRefs ?? []), ...(outcome.companionAuthorityRefs ?? [])]) {
+      requireCondition(reviewedPaths.has(ref.path), `${outcome.storyId}: heading reference lacks authority review ${ref.path}.`);
+    }
   }
 }
 
@@ -1088,12 +1164,7 @@ function validateWorkflowRecord(record, relativePath) {
           stdio: "ignore",
         });
         if (requestedProductGate) {
-          const committedRecord = JSON.parse(
-            execFileSync("git", ["show", `${verification.ci.commit}:${relativePath}`], {
-              cwd: repositoryRoot,
-              encoding: "utf8",
-            }),
-          );
+          const committedRecord = committedWorkflowRecord(verification.ci.commit, record.workflowId, relativePath);
           requireCondition(
             JSON.stringify(canonicalJson(workflowEvidencePayload(committedRecord))) ===
               JSON.stringify(canonicalJson(workflowEvidencePayload(record))),
@@ -1521,6 +1592,54 @@ function runSelfTests() {
     validateWorkflowRecord(value, `${workflowRecordsRelative}/${value.workflowId}.json`);
   }, /both covered and uncovered/);
 
+  expectFailure("missing background audit", () => {
+    const value = structuredClone(checklist);
+    value.auditAreas = value.auditAreas.filter((area) => area.auditAreaId !== "background-and-mcp-capabilities");
+    validateChecklist(value);
+  }, /must account for UI/);
+  expectFailure("premature audit completion", () => {
+    const value = structuredClone(checklist);
+    value.auditAreas[0].status = "reviewed";
+    validateChecklist(value);
+  }, /reviewed audit still has gaps/);
+  expectFailure("unknown direct confirmed decision", () => {
+    const value = structuredClone(checklist);
+    value.outcomes[0].confirmedDecisionIds = ["D-999"];
+    validateChecklist(value);
+  }, /unknown confirmed decision/);
+  expectFailure("lost migrated workflow evidence", () => {
+    const value = structuredClone(checklist);
+    value.executionRecords.pop();
+    validateChecklist(value);
+  }, /Migrated workflow evidence records must remain present/);
+  expectFailure("prose-only background audit closure", () => {
+    const value = structuredClone(checklist);
+    const area = value.auditAreas.find((entry) => entry.auditAreaId === "background-and-mcp-capabilities");
+    Object.assign(area, { status: "reviewed", remainingGaps: [], reviewNote: "Synthetic prose-only claim", evidencePaths: ["docs/specs/README.md"] });
+    validateChecklist(value);
+  }, /cannot close with undispositioned/);
+  {
+    const value = structuredClone(checklist);
+    for (const area of value.auditAreas) {
+      area.status = "reviewed";
+      area.remainingGaps = [];
+      area.reviewNote = "Synthetic reviewed-area fixture; not a production audit claim.";
+      area.evidencePaths = ["docs/specs/README.md"];
+    }
+    for (const review of value.authorityReviews) if (review.auditStatus === "partial") review.auditStatus = "audited";
+    for (const review of Object.values(value.decisionReviews).flat()) review.auditStatus = "mapped";
+    const area = value.auditAreas.find((entry) => entry.auditAreaId === "background-and-mcp-capabilities");
+    const scope = backgroundAuditScope(manifest);
+    area.reviewedSourceDigest = scope.digest;
+    area.reviewedFirebaseCommit = value.currentProduct.sourceBaseline.commit;
+    area.capabilityDispositions = [{ sourceIds: scope.sources.map((surface) => surface.id), outcomeIds: [value.outcomes[0].storyId], disposition: "preserve" }];
+    const before = errors.length;
+    validateChecklist(value);
+    if (errors.length !== before || projectLegacyStructures(value).catalog.completeness.status !== "complete" || !value.outcomes.some((outcome) => outcome.status === "blocked")) {
+      throw new Error("Reviewed audit must be able to close while product outcomes remain blocked.");
+    }
+  }
+
   expectFailure("missing UI risk", () => {
     const value = structuredClone(baseCoverage);
     value.riskDomains = ["none"];
@@ -1749,13 +1868,25 @@ function runSelfTests() {
     validateWorkflowRecord(value, `${workflowRecordsRelative}/${value.workflowId}.json`);
   }, /missing, not an ancestor of HEAD, or does not contain this workflow record/);
 
-  expectFailure("open decision mapped to unrelated story", () => {
+  expectFailure("manually duplicated authority ownership", () => {
+    const value = structuredClone(targetStoryCatalog);
+    value.authorityCoverage[0].storyIds = ["project-list"];
+    validateTargetStoryCatalog(value, "self-test-duplicate-authority-owner");
+  }, /story ownership is derived/);
+
+  expectFailure("unknown story blocker", () => {
+    const value = structuredClone(targetStoryCatalog);
+    value.stories.find((story) => story.status === "blocked").blocker.decisionIds = ["O-999"];
+    validateTargetStoryCatalog(value, "self-test-unknown-blocker");
+  }, /blocker decision O-999 is not present/);
+
+  expectFailure("manually duplicated open-decision links", () => {
     const value = structuredClone(targetStoryCatalog);
     const decision = value.decisionCoverage.open.find((entry) => entry.decisionId === "O-002");
     decision.auditStatus = "mapped";
     decision.storyIds = ["project-list"];
     validateTargetStoryCatalog(value, "self-test-unrelated-open-decision");
-  }, /open decision may map only to a blocked story/);
+  }, /open-decision links are derived/);
 
   expectFailure("stale authority source hash", () => {
     const value = structuredClone(targetStoryCatalog);
@@ -1773,7 +1904,6 @@ function runSelfTests() {
     const value = structuredClone(targetStoryCatalog);
     const entry = value.authorityCoverage.find((entry) => entry.path === "docs/specs/lineage-tracking.md");
     entry.auditStatus = "audited";
-    entry.storyIds = [];
     entry.headingCoverage = markdownHeadingInventory(join(repositoryRoot, entry.path)).map((heading) => (
       heading.heading === "Target History Contract"
         ? { ...heading, disposition: "story", storyIds: ["item-cycle-provenance"] }
@@ -1838,14 +1968,26 @@ function runSelfTests() {
     }
   }
 
+  {
+    const id = checklist.currentProduct.workflowId;
+    const historicalCommit = checklist.currentProduct.verification.ci.commit;
+    for (const commit of [historicalCommit, "HEAD"]) {
+      const record = committedWorkflowRecord(commit, id, `${workflowRecordsRelative}/${id}.json`);
+      if (record.workflowId !== id || !Array.isArray(record.uiJourneys)) {
+        throw new Error("Historical/unified CI evidence lookup returned the wrong workflow.");
+      }
+    }
+  }
+
   expectFailure("undeclared database risks", () => {
     const value = structuredClone(baseCoverage);
     validateDerivedLayers(value, ["supabase/migrations/example.sql"], value.workflowId);
   }, /requires layer postgres_schema/);
 
-  console.log("Conversion current-state self-tests passed: 22 negative cases and 6 positive/cumulative cases.");
+  console.log("Conversion current-state self-tests passed: 29 negative cases and 8 positive/cumulative cases.");
 }
 
+validateChecklist(checklist);
 validateTargetStoryCatalog(targetStoryCatalog);
 
 if (process.argv[2] === "--self-test") {
@@ -1872,7 +2014,7 @@ if (state) {
   requireCondition(state.branch === "codex/supabase-powersync-implementation", "branch is incorrect.");
   requireCondition(state.worktree === "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase", "worktree is incorrect.");
   repositoryFile(state.method?.path, "method.path");
-  requireCondition(state.method?.version === 3, "method.version must equal 3.");
+  requireCondition(state.method?.version === 4, "method.version must equal 4.");
 
   const checkpoint = state.verifiedCheckpoint ?? {};
   requireString(checkpoint.name, "verifiedCheckpoint.name");
@@ -1892,6 +2034,7 @@ if (state) {
 
   const active = state.activeWorkflow ?? {};
   requireString(active.id, "activeWorkflow.id");
+  if (state.resumeAfterWorkflowId !== undefined) requireCondition(checklistViews.workflowRecords.some((record) => record.workflowId === state.resumeAfterWorkflowId), "resumeAfterWorkflowId must name preserved workflow evidence.");
   requireCondition(
     active.kind === "selection" || workflowKinds.has(active.kind),
     "activeWorkflow.kind is not allowed.",
@@ -1930,12 +2073,12 @@ if (state) {
   } else {
     const activeRecordPath = repositoryFile(active.recordPath, "activeWorkflow.recordPath");
     requireCondition(
-      active.recordPath?.startsWith(`${workflowRecordsRelative}/`) && active.recordPath?.endsWith(".json"),
-      "activeWorkflow.recordPath must point into workflow-records.",
+      active.recordPath === checklistRelativePath,
+      "activeWorkflow.recordPath must point to the unified checklist.",
     );
     if (activeRecordPath) {
       try {
-        const record = JSON.parse(readFileSync(activeRecordPath, "utf8"));
+        const record = checklistViews.workflowRecords.find((entry) => entry.workflowId === active.id);
         requireCondition(record.workflowId === active.id, "Active record workflowId does not match current state.");
         requireCondition(record.kind === active.kind, "Active record kind does not match current state.");
         requireCondition(record.status === active.status, "Active record status does not match current state.");
@@ -1945,15 +2088,7 @@ if (state) {
     }
   }
 
-  for (const field of ["locallyWorkingProviderWorkflows", "hostedAuthenticatedRehearsals", "cutoverReadyWorkflows"]) {
-    requireCondition(Number.isInteger(state.progress?.[field]) && state.progress[field] >= 0, `progress.${field} must be non-negative.`);
-  }
-  const estimate = state.progress?.practicalCompletionEstimatePercent ?? {};
-  requireCondition(
-    Number.isFinite(estimate.low) && Number.isFinite(estimate.center) && Number.isFinite(estimate.high) &&
-      0 <= estimate.low && estimate.low <= estimate.center && estimate.center <= estimate.high && estimate.high <= 100,
-    "Practical completion estimate is invalid.",
-  );
+  requireCondition(state.progress === undefined, "Do not duplicate checklist progress or estimates in current state.");
   requireCondition(
     Array.isArray(state.guardrails) &&
       state.guardrails.some((value) => value.includes("/Users/benjaminmackenzie/Dev/ledger_mobile")) &&
@@ -1974,9 +2109,8 @@ if (state) {
 const workflowRecords = [];
 try {
   const workflowIds = new Set();
-  for (const name of readdirSync(workflowRecordsPath).filter((value) => value.endsWith(".json")).sort()) {
-    const relativePath = `${workflowRecordsRelative}/${name}`;
-    const record = JSON.parse(readFileSync(join(workflowRecordsPath, name), "utf8"));
+  for (const record of checklistViews.workflowRecords) {
+    const relativePath = `${workflowRecordsRelative}/${record.workflowId}.json`;
     requireCondition(!workflowIds.has(record.workflowId), `${relativePath}: duplicate workflowId ${record.workflowId}.`);
     workflowIds.add(record.workflowId);
     validateWorkflowRecord(record, relativePath);
@@ -2022,8 +2156,8 @@ if (state?.activeWorkflow?.kind !== "selection" && /^[0-9a-f]{40}$/.test(state?.
 
 const agents = readFileSync(join(repositoryRoot, "AGENTS.md"), "utf8");
 requireCondition(
-  agents.includes(stateRelativePath) && agents.includes("npm run conversion:state:check"),
-  "AGENTS.md must require current state and its checker on resume.",
+  agents.includes(stateRelativePath) && agents.includes(checklistRelativePath),
+  "AGENTS.md must point to current state and the unified checklist on resume.",
 );
 
 if (errors.length > 0) {

@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROGRAM_DIR = path.join(
@@ -1498,7 +1498,38 @@ function mergeDiscovery(manifest, discovered) {
   return manifest;
 }
 
-function validate(manifest, discovered, initialErrors = []) {
+function isProductSourceSurface(surface) {
+  // Target implementation is verified through executable tests and checklist
+  // evidence, not by copying every target edit into the Firebase inventory.
+  const targetOrTrackingPath = (value) =>
+    /^LedgeriOS\/LedgerTarget/.test(value) ||
+    /^(LedgerTargetMCP|supabase)\//.test(value) ||
+    /^scripts\/(test-local-|check-target-|check-conversion-|generate-target-|ledger-product-checklist)/.test(value) ||
+    /^scripts\/tests\/check-conversion-ci\.test\.mjs$/.test(value) ||
+    /^scripts\/(?:tests\/)?(?:generate-source-query-reconciliation|generate-m2-residual-register|extract-current-capability-surfaces|extract-firestore-query-contract)(?:\.test)?\.mjs$/.test(value) ||
+    value === "scripts/supabase-conversion-ledger.mjs" ||
+    value === ".github/workflows/supabase-conversion-control.yml" ||
+    value === "package.json";
+  return !(surface.sourceRefs?.length && surface.sourceRefs.every((ref) => targetOrTrackingPath(ref.path ?? "")));
+}
+
+export function backgroundAuditScope(manifest) {
+  const sources = (manifest.surfaces ?? []).filter((surface) =>
+    isProductSourceSurface(surface) &&
+    !["swift_ui_component", "swift_view", "existing_test_evidence"].includes(surface.kind) &&
+    surface.sourcePresence !== "missing",
+  ).sort((left, right) => left.id.localeCompare(right.id));
+  const digest = crypto.createHash("sha256").update(JSON.stringify(sources.map((surface) => ({
+    id: surface.id, refs: surface.sourceRefs, hash: surface.observedSourceHash ?? null,
+  })))).digest("hex");
+  return { sources, digest };
+}
+
+function validate(manifest, discovered, initialErrors = [], { sourceOnly = false } = {}) {
+  if (sourceOnly) {
+    manifest = { ...manifest, surfaces: manifest.surfaces.filter(isProductSourceSurface) };
+    discovered = discovered.filter(isProductSourceSurface);
+  }
   const errors = [...initialErrors];
   const warnings = [];
   if (manifest.schemaVersion !== 1) errors.push("schemaVersion must be 1");
@@ -1513,10 +1544,10 @@ function validate(manifest, discovered, initialErrors = []) {
     if (!surface.id) errors.push("surface missing id");
     if (manifestIds.has(surface.id)) errors.push(`duplicate surface id ${surface.id}`);
     manifestIds.add(surface.id);
-    if (!allowedStatuses.has(surface.status)) {
+    if (!sourceOnly && !allowedStatuses.has(surface.status)) {
       errors.push(`${surface.id}: invalid status ${surface.status}`);
     }
-    if (!allowedDispositions.has(surface.disposition)) {
+    if (!sourceOnly && !allowedDispositions.has(surface.disposition)) {
       errors.push(`${surface.id}: invalid disposition ${surface.disposition}`);
     }
     if (!Array.isArray(surface.sourceRefs) || surface.sourceRefs.length === 0) {
@@ -1545,6 +1576,9 @@ function validate(manifest, discovered, initialErrors = []) {
     ) {
       errors.push(`${surface.id}: source changed after characterization`);
     }
+    // Source inventory is an omission/change alarm, not a parallel target
+    // implementation tracker. Product completion is checked from the checklist.
+    if (sourceOnly) continue;
     const characterized = !new Set(["discovered", "blocked"]).has(surface.status);
     if (characterized) {
       if (!surface.currentBehavior?.trim()) {
@@ -1601,7 +1635,11 @@ function validate(manifest, discovered, initialErrors = []) {
   }
   for (const surface of manifest.surfaces ?? []) {
     if (surface.discovery === "automatic" && !discoveredIds.has(surface.id)) {
-      warnings.push(`recorded automatic surface no longer discovered: ${surface.id}`);
+      if (sourceOnly && !new Set(["retired", "cutover_ready"]).has(surface.status)) {
+        errors.push(`${surface.id}: source disappeared without retirement evidence`);
+      } else {
+        warnings.push(`recorded automatic surface no longer discovered: ${surface.id}`);
+      }
     }
   }
 
@@ -1785,10 +1823,38 @@ function printValidation(validation) {
 
 function main() {
   const command = process.argv[2] ?? "check";
+  if (command === "source-self-test") {
+    const source = { id: "source", discovery: "automatic", sourcePresence: "present", sourceRefs: [{ path: "mcp-server/src/tools/items.ts" }], observedSourceHash: "reviewed", acknowledgedSourceHash: "reviewed", status: "characterized" };
+    const manifest = { schemaVersion: 1, surfaces: [source] };
+    const check = (recorded, live) => validate(recorded, live, [], { sourceOnly: true });
+    const fails = (label, result, pattern) => {
+      if (!result.errors.some((message) => pattern.test(message))) throw new Error(`${label}: omission check failed to reject invalid evidence`);
+    };
+    fails("new source", check(manifest, [source, { ...source, id: "new" }]), /new unrecorded source/);
+    fails("changed source", check(manifest, [{ ...source, observedSourceHash: "changed" }]), /source hash changed/);
+    fails("duplicate source", check({ ...manifest, surfaces: [source, source] }, [source]), /duplicate surface/);
+    fails("removed source", check(manifest, []), /disappeared without retirement/);
+    const target = { ...source, id: "target", sourceRefs: [{ path: "LedgeriOS/LedgerTargetCore/Item.swift" }] };
+    if (check(manifest, [source, target]).errors.length) throw new Error("Target implementation must not require source inventory promotion");
+    if (check(manifest, [source]).errors.length) throw new Error("Unchanged source rejected");
+    console.log("Source omission self-tests passed: four negative and two positive cases.");
+    return;
+  }
   if (!fs.existsSync(MANIFEST_PATH)) {
     throw new Error(`Missing manifest: ${relative(MANIFEST_PATH)}`);
   }
   const discovered = discoverAll();
+  if (command === "source-check" ||
+      (command === "gate" && new Set(["M3", "M4", "M5"]).has(process.argv[3]))) {
+    const validation = validate(loadManifest(), discovered, [], { sourceOnly: true });
+    printValidation(validation);
+    if (validation.errors.length) process.exit(1);
+    console.log(`Source omission check: ${discovered.filter(isProductSourceSurface).length} product-source surfaces; no unrecorded or changed source. Target and tracking edits use tests/checklist evidence.`);
+    if (command === "gate") {
+      execFileSync(process.execPath, [path.join(ROOT, "scripts/check-conversion-current-state.mjs"), "--gate", process.argv[3]], { cwd: ROOT, stdio: "inherit" });
+    }
+    return;
+  }
   const batches = loadClassificationBatches();
   const productAuthorityCrosswalk = loadProductAuthorityCrosswalk();
   const implementationSlices = loadImplementationSlices();
@@ -1884,4 +1950,4 @@ function main() {
   if (validation.errors.length > 0) process.exit(1);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();

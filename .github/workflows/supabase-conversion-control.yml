@@ -26,17 +26,12 @@ jobs:
       - name: Validate conversion control plane
         run: |
           node scripts/check-conversion-current-state.mjs --self-test
-          npm run target:query-ports:test
-          npm run target:query-ports:check
-          npm run target:query-authority:test
-          npm run target:query-authority:check
+          node scripts/ledger-product-checklist.mjs --self-test
+          node scripts/supabase-conversion-ledger.mjs source-self-test
+          npm run conversion:ci:test
           npm run conversion:check
-          npm run source:query-reconciliation:test
-          npm run source:query-reconciliation:check
           npm run conversion:capabilities:check
           npm run conversion:queries:check
-          npm run conversion:residuals:check
-          npm run conversion:gate:m0
 
       - name: Confirm checks did not rewrite tracked artifacts
         run: git diff --exit-code

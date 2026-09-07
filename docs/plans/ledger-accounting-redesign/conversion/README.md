@@ -1,5 +1,14 @@
 # Supabase Conversion Control Plane
 
+> **Superseded management system.** Maintain only
+> [product-behavior-checklist.json](product-behavior-checklist.json) and
+> [current-execution-state.json](current-execution-state.json), following
+> [the current method](vertical-slice-implementation-method.md).
+> Separate target-story, authority-crosswalk, workflow-record, classification,
+> dossier and generated-audit files below retain historical evidence, not active
+> synchronization requirements. `npm run conversion:check` validates the live
+> checklist and source omissions without regenerating these historical records.
+
 > **Historical reference after method v3.** Current implementation procedure is
 > [Workflow Implementation Method](vertical-slice-implementation-method.md) and
 > current work is recorded only in `current-execution-state.json`. The detailed

@@ -7,77 +7,50 @@
 
 ## Supabase/PowerSync redesign continuity
 
-- Finish the behavior/spec audit before expanding implementation. Preserve
-  every user-visible control, option, navigation and meaningful state, plus
-  background and MCP capabilities. Keep unresolved product choices explicit.
-- Use the simplest architecture that meets the product requirements. Reuse
-  existing implementations and introduce an abstraction only for a concrete
-  problem; do not reproduce accidental Firebase complexity or grow tracking
-  infrastructure as a substitute for finishing the app.
-- For any Supabase/PowerSync redesign, conversion, migration, or cutover task,
-  first read only
+- Resume from
   `docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json`,
-  inspect `git status`, and run `npm run conversion:state:check`. After workflow
-  selection, read its single `workflow-records/*.json` record and only the
-  authority sections named there before editing. The large
-  README, generated catalogs, historical dossiers, evidence files and execution
-  history are reference material, not mandatory resume context.
-- After a task start, resume, handoff, or context compaction, treat conversation
-  history and summaries as advisory. Reconstruct the work from the repository
-  current-state record, exact Git checkpoint and current diff. Do not run the
-  complete conversion suite merely to recover context.
-- Treat `docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json`
-  as the code-surface coverage source of truth only. The Product Behavior
-  Catalog is the current-product parity checklist,
-  `target-product-story-catalog.json` is the redesigned-outcome checklist, and
-  product specs plus the redesign decision log remain product authority.
-- Run `node scripts/supabase-conversion-ledger.mjs check` after changing
-  conversion coverage and at the integrated workflow boundary. The surface
-  catalog is a passive omission audit, not the unit of implementation progress.
-- Keep `current-execution-state.json` under its enforced size limit and update
-  its verified base, active workflow, next actions, progress and blockers when
-  the workflow or integration checkpoint changes.
-- For target implementation, read
-  `docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md`
-  when the method version in current state changes, then work through the
-  recorded active workflow. Do not create comment-only scaffolds, new slice
-  dossiers, standalone evidence narratives, READY commits, or promotion-only
-  commits for ordinary workflows.
-- The normal execution unit is one coherent user workflow. Preserve exhaustive
-  page/control/option/transition/state coverage inside that workflow while
-  implementing its technical layers together. Use focused checks while
-  developing and one complete local gate plus one immutable CI run on the
-  integrated workflow. Use the automatic pull-request run; do not manually
-  dispatch the same commit. Use a separate short design note and specialist
-  review only for the high-risk boundaries listed by the implementation method.
-- The current-app UI baseline covers all 167 inventoried UI components/views.
-  Every product workflow must claim exact controls/options/transitions/states
-  from that baseline and only the target story IDs it fully implements. Keep
-  every completed workflow record so both current behavior and redesigned-story
-  coverage remain cumulative rather than being overwritten by current state.
-- Use no more than two disjoint write-capable subagents concurrently. Delegate
-  a complete independently testable outcome, give each worker only the current
-  state, exact authority references and owned paths, and have workers
-  run focused checks. The integration agent owns shared files, full gates, and
-  the compact workflow/checkpoint update.
-- Optimize for elapsed time and tokens per verified end-to-end workflow. Do not
-  optimize for commit count, surface count, document count or agent utilization,
-  and never relax correctness, tenant security, accounting, offline/replay,
-  migration/reconciliation or evidence gates to improve the metric.
-- Continue autonomously from one bounded checkpoint to the next. Pause only for
-  an explicit product/architecture decision, permission or external resource
-  named by the control plane, a production-impacting action, or a blocker that
-  cannot be resolved safely from repository authority.
-- Do not implement redesigned v2 behavior in Firebase. Firebase work is limited
-  to read-only discovery/export, backups, final source freeze/rejected-write
-  recovery, and retained rollback evidence.
-- Do not mark a workflow verified from compilation or prose alone, and do not
-  authorize production migration from these files without explicit user approval.
-- Never treat mapped, converted, promoted, or verified code surfaces as proof of
-  product completion. M3, M4, and M5 also require the exhaustive target-story
-  audit, passed story coverage, and passed coverage of every current Product
-  Behavior Catalog obligation.
-- A completed target story must cite exact implementation files for every
-  required layer and passed story-specific checks for every required risk. At
-  M3/M4/M5, its exact CI commit and run must be verified against GitHub Actions;
-  declared labels or locally edited CI metadata are not completion evidence.
+  `git status`, and the current diff. Treat conversation summaries as advisory
+  and do not run a full suite merely to recover context.
+- `docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json`
+  is the only active conversion checklist. It owns current UI
+  controls/options/transitions/states, background and MCP behavior, target
+  outcomes, direct authority/decision/delivery-profile links, review gaps,
+  workflow acceptance, and implementation/test/CI evidence. Specs and confirmed
+  decisions remain product authority.
+- `current-execution-state.json` is only a compact resume pointer: checkpoint,
+  active workflow, next actions, blockers, and exclusions. Do not turn it into a
+  second tracker.
+- Existing target catalogs, workflow records, implementation trackers, surface
+  classifications, crosswalks, dossiers, and generated audits are historical
+  evidence. Preserve their exact commits and CI references, but do not keep them
+  synchronized, promote individual surfaces, or create replacement tracking
+  documents.
+- Finish the finite product audit before expanding implementation: review every
+  inventoried UI and background/MCP surface plus every redesign/spec/decision
+  area; disposition every known behavior; and link every unresolved decision to
+  the affected outcomes. An unresolved decision blocks only those outcomes, not
+  audit completion. Audit completion does not require premature per-heading
+  commands, schema, or test designs.
+- Implement one coherent user workflow at a time with the simplest architecture
+  that satisfies its approved behavior. Reuse existing capabilities; add an
+  abstraction only for a concrete shared problem. Do not create comment-only
+  scaffolds, slice dossiers, evidence essays, READY commits, or promotion-only
+  commits for ordinary work.
+- Preserve security, accounting, offline/replay, media, migration,
+  reconciliation, and risk-specific evidence. Completion requires concrete
+  implementation files and passed story-specific checks for every required
+  layer/risk; compilation or prose is not proof.
+- Use focused checks while building, then run `npm run conversion:check` and the
+  applicable full local tests once at the integrated boundary. Use the automatic
+  pull-request CI run for that exact commit; do not manually dispatch duplicate
+  CI for the same commit.
+- M3-M5 are cumulative product gates, not surface-stage gates. M3 requires the
+  audited checklist and verified target behavior; M4 adds migration/rehearsal;
+  M5 adds explicit cutover readiness. Mapped code surfaces never prove product
+  completion.
+- Continue autonomously between bounded checkpoints. Pause only for an affected
+  unresolved decision, unavailable authority/resource, production-impacting
+  action, or a blocker that cannot be resolved safely from repository evidence.
+- Do not implement redesigned behavior in Firebase or touch the Firebase
+  checkout. Production/hosted access, source freeze, migration, release, and
+  cutover require explicit user authorization.

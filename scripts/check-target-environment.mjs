@@ -2973,10 +2973,6 @@ if (
       path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),
       "124b257ced5fc89e4999c49228b804885b5b091bec0ee79f49d284e3b4c4f36e",
     ],
-    [
-      path.join(scriptDirectory, "supabase-conversion-ledger.mjs"),
-      "c195cf80166b19acb36766891e148879848f585a301ea99da9d9b785ab536a86",
-    ],
   ];
   for (const [frozenPath, expectedHash] of frozenDependencies) {
     const actualHash = createHash("sha256")

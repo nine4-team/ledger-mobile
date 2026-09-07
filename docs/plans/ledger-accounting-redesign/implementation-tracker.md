@@ -1,5 +1,11 @@
 # Ledger Accounting Redesign — Implementation Tracker
 
+> **Historical snapshot; no longer a maintained progress tracker.** Use
+> [the product behavior checklist](conversion/product-behavior-checklist.json)
+> for obligations and evidence, and [current state](conversion/current-execution-state.json)
+> for the active work and next actions. The statuses and counts below describe
+> earlier checkpoints; do not synchronize them or use them as current completion claims.
+
 Status: provider-backed local target implementation in progress; hosted validation and production migration remain gated
 Last updated: 2026-09-06
 Program index: [README.md](README.md)

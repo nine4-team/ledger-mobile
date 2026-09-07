@@ -107,6 +107,11 @@ Project Items displays **Unaccounted For Items** first and **Accounted For
 Items** below. Search, Space assignment, media editing, and ordinary physical
 Item details are available in either section.
 
+The shared [everyday Item workspace](items.md#target-everyday-workspace) defines
+the complete list/card/detail, filtering/grouping/selection and readiness
+behavior in each context. Its ordinary editing and copy flows are separate
+owning commands; a section heading alone is not functional completion.
+
 Business Inventory does not use this project accounting projection merely
 because an Item lacks a project Link. Inventory acquisition completeness is a
 separate concern.

@@ -20,6 +20,7 @@ migration mechanics.
 | [session-ending-pending-work.md](session-ending-pending-work.md) | Canonical target logout, account-removal, pending-operation, and durable local-work safety behavior |
 | [data-model.md](data-model.md) | All entities, relationships, canonical lookups, and validation rules |
 | [proto-item-capture.md](proto-item-capture.md) | Canonical target unified Item wizard, accounting Link, and hard-cutover legacy capture import |
+| [items.md](items.md) | Shared everyday Item browse/detail/edit/copy controls; canonical intake and accounting relationships override source storage mechanics |
 | [spaces.md](spaces.md) | Canonical target organizational placement, scoped assignment, template, checklist, and archive behavior |
 | [non-item receipt-line design](../plans/non-item-receipt-lines/design.md) | Canonical target physical-Item versus nonphysical receipt completeness model |
 | [write-tiers.md](write-tiers.md) | Current Firebase write patterns; superseded for the redesigned target by the architecture package |

@@ -2,6 +2,93 @@
 
 ## Overview
 
+**Target authority:** The contracts below and canonical intake/accounting specs
+govern the redesigned app. Source field tables, Firestore subscriptions,
+placeholder-first uploads, mutable Transaction associations and recurring proto
+rows are implementation evidence, not requirements to rebuild those mechanisms.
+Preserve the exact UI baseline through shared Item workflows in Project,
+Inventory, Space, Transaction and picker contexts.
+
+## Target Everyday Workspace
+
+Keep Unaccounted/Accounted section counts and expansion, local search,
+created-date/alphabetical ordering, contextual filters and duplicate-name groups.
+Preserve OR-within/AND-across facets, All-except/Only, clear/reset, and conditional
+Space/category choices. Preserve bookmark, image, SKU, name, source, payer,
+accounting-association and meaningful-price facets using canonical evidence;
+O-067 owns the unresolved Sold-status facet, not a new editable fifth status.
+
+Groups show count, representative thumbnail/source/SKU and authorized totals,
+expand into individual physical identities and support group selection without
+merging objects. Cards show image/placeholder, name, normalized current price,
+source/SKU/context, warnings and applicable workflow/category/Invoice badges.
+Paid-history prices remain frozen evidence, not current-price normalization.
+
+Preserve select-all-visible, selected count/eligible positive-price total, Clear
+and deterministic open-versus-select behavior. Prune selection when query,
+filters, rows, scope or authorization remove eligibility. Detail opens exact IDs
+or explicit unavailable states; loading/partial/stale, authoritative empty,
+no-match and error remain distinct. Hidden financial rows/amounts/counts never
+enter the projection (O-060).
+Picker contexts remain selection-only and return the chosen stable identities;
+they do not acquire the normal list's navigation or mutation actions.
+
+Detail retains Media, Notes, Details and History, current placement and resolved/
+missing/loading relationship states. Workflow Status is not accounting state.
+Show History when canonical authorized evidence is meaningful; use occurrence/
+Invoice evidence rather than a mutable Transaction pointer, and never treat the
+source's two-node threshold as proof of completeness. Preserve
+the shipped initially expanded sections; the older collapsed Notes/Details prose
+below is stale. Preserve the wired detail bookmark toggle and list facet; the
+unwired source card callback does not authorize a new card toggle.
+
+## Target Everyday Editing
+
+One shared Item-edit workflow covers rename, name/vendor/SKU, purchase/project/
+market amounts, notes, the four current editable status labels, clear-status
+where supported, detail bookmark and bulk status. Keep current-selection
+indication, Save/Cancel and explicit validation. Invalid nonblank amounts must
+not be silently ignored; unchanged Save must not materialize a legacy fallback
+name into a new value. Bind accepted edits to the exact Item/revision, durably
+retain pending/applied/rejected state and support safe retry. Cancel creates no
+operation. O-065 governs command roles for app and MCP, not read visibility.
+Transport retries reuse the accepted operation. Retrying or acknowledging a
+terminal rejection follows O-051; it is not automatic resubmission as new work.
+
+Apply the canonical current-price floor without rewriting acquisition/paid
+history. Locks and eligibility derive from exact collected occurrence evidence,
+not stale screen flags. Distinguish amount unset from zero and retain unknown
+legacy evidence. Source `to-purchase` and `to purchase` aliases must resolve to
+one shared typed meaning while imports preserve their raw source values. A
+workflow-status clear cannot reverse an applied return, refund or credit.
+
+Copy ID(s), Space/Link/clear-association, sale/return/Transfer/correction and
+delete controls route to existing owning workflows with fresh eligibility and
+their confirmations; they are not generic field patches. O-053 governs Space
+mutation, O-064 Item deletion, and O-047 vendor selection. Media add/view/primary/
+pin/remove composes the existing durable attachment/reference-retention contract
+(O-023), with visible failures instead of source fire-and-forget cleanup.
+
+## Target Physical Copies
+
+Preserve Make Copies in its existing detail/Transaction contexts, the 1–20
+additional-copy control, exact unsuffixed resolved name, count-aware Create,
+Cancel and visible pending/error/retry. Every new physical object gets a distinct
+stable ID; duplicate submission/restart must not produce extra objects.
+
+O-066 must settle which descriptive/media/placement/acquisition/accounting
+relationships are inherited. Copying the source mutable Item wholesale is not
+approved: it may accidentally inherit a Transaction or paid history. This is
+separate from moving the existing Item, reconciling duplicate evidence, and
+receipt quantity expansion. Preserve the source Item and never duplicate frozen
+payment or Invoice facts merely because Make Copies was selected.
+
+## Source and Shared Model Reference
+
+The remaining sections mix source UI evidence with shared domain rules. The
+explicit target contracts above and canonical intake/lifecycle specs prevail
+where source mechanics or stale presentation descriptions conflict.
+
 Items are the individual physical products tracked in Ledger. Each item represents a real-world object (a piece of furniture, a decor piece, a rug, etc.) that belongs to either a project or business inventory. Items are linked to transactions, assigned to spaces, and carry pricing, status, and media data.
 
 Items are a shared domain module — the same `Item` entity and UI components are used across both project and business inventory scopes.
@@ -354,6 +441,12 @@ Item cards display the normalized project price. During the legacy-data transiti
 Images selected during creation are uploaded in background after the item document is created. First image is set as primary.
 
 ## Bulk Creation from Receipt Text
+
+**Unverified historical proposal, not shipped parity:** the named modal and
+HomeGoods parser are absent from the inspected app/MCP source and exact UI
+baseline. Do not invent this flow during ordinary Item work. If desired for
+this release, treat it as expanded import scope under O-061, using the shared
+review/confirmation pipeline rather than another Item writer.
 
 `CreateItemsFromListModal` provides a 2-step flow for creating multiple items from pasted receipt text:
 

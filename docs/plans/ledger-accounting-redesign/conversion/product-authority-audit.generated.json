@@ -224,6 +224,14 @@
       "targetRelevantSurfaceCount": 45
     },
     {
+      "path": "docs/specs/items.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
       "path": "docs/plans/non-item-receipt-lines/design.md",
       "batchIds": [
         "M0-APP-SHELL-PRESENTATION-001",
@@ -643,6 +651,10 @@
         },
         {
           "path": "docs/specs/needs-review-tab.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/items.md",
           "role": "canonical_target"
         },
         {

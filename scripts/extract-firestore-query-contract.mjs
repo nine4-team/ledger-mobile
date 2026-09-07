@@ -216,7 +216,6 @@ function buildArtifacts() {
       "An occurrence proves a source reference, not that the path is exercised in production.",
     ],
     totals: {
-      candidateFilesInspected: extracted.candidateFilesInspected,
       sourceFilesWithOccurrences: extracted.sourceFiles.length,
       occurrences: extracted.occurrences.length,
     },
@@ -237,7 +236,6 @@ function buildArtifacts() {
     "",
     "## Coverage",
     "",
-    `- ${artifact.totals.candidateFilesInspected} Firestore-candidate source files inspected`,
     `- ${artifact.totals.sourceFilesWithOccurrences} source files contain recognized occurrences`,
     `- ${artifact.totals.occurrences} query, read, listener, ordering, or pagination occurrences cataloged`,
     "",

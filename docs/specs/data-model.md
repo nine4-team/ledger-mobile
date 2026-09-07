@@ -31,9 +31,20 @@ Preserve capabilities, not accidental source storage shapes:
   in Item specs means a monetary amount input; it does not authorize a new
   Account currency selector or multi-currency feature. Reuse canonical Money
   semantics and preserve the existing formatting behavior.
-- Email ingestion, matching confidence/reasons, confirmation and linked shipments
-  need an explicit target disposition. Existing local vendor-PDF import is not
-  evidence that email ingestion is preserved, redesigned or retired.
+  Source Settings exposes profile mutation to the cached Owner role, but its
+  direct Account update conflicts with the checked-in Firestore rules denying
+  Account updates. Logo upload can precede that failed reference write; failures
+  are silent or console-only. These source inconsistencies are not target parity
+  requirements, nor evidence about currently deployed production rules.
+- Caller-supplied email-import metadata has a shipped MCP read/write/filter/triage
+  surface that needs an explicit target disposition. The inspected app/functions/
+  MCP source contains no email intake, matching or deduplication service. Do not
+  build one merely because fields for confidence, reason or linked shipments
+  exist. Preserve raw migration evidence separately from approved typed review
+  reasons. Existing local vendor-PDF import does not own this MCP capability.
+  The app's manual `receiptEmailed` checkbox is a separate fact, not ingestion
+  or matching evidence; the old edit alias `hasEmailReceipt` must not become a
+  second contradictory target field.
 - Inventory destination planning is O-038, including its set/change/clear versus
   resolve/reopen distinction. Preserve raw source intent as migration evidence;
   do not approve the packet's proposed Item-level planning by copying it here.
