@@ -2786,7 +2786,7 @@ if (
     ],
     [
       path.join(scriptDirectory, "supabase-conversion-ledger.mjs"),
-      "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
+      "e85e928c641a0172e58347c67ce523063c928aa5913cfcde273be8352bde3d05",
     ],
   ];
   for (const [frozenPath, expectedHash] of frozenDependencies) {
