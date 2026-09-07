@@ -8,13 +8,13 @@
   },
   "completeness": {
     "status": "partial",
-    "reason": "99 stories recorded. Independent review accepted all five completed spec audits, including Item lifecycle and intake after correcting blocker scope, atomic legacy resolution and migration-media evidence requirements. Twenty confirmed decisions and twenty open-decision dependency sets are mapped. Other authority/decision audits remain pending."
+    "reason": "111 stories recorded. Six spec heading audits are accepted after independent review and integration corrections. Twenty-six confirmed decisions and thirty open-decision dependency sets are mapped. Other authority/decision audits remain pending; none of these counts imply implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
     "Item lifecycle and intake audits passed independent review: distinct sale/return/correction/collection, one Item identity, exact fields/contexts, derived accounting sections, Link choices/cancel/review, duplicate reconciliation, MCP parity and isolation. Their named product decisions remain unresolved.",
-    "Split Client lifecycle and Project setup/editing branches: new Client, rename/archive/merge, description updates, inline categories, hero media, category edits and unarchive. Map O-025/O-026/O-039/O-042/O-043/O-048/O-049/O-050 precisely. The Client/Transfer spec still contains source-era collection/Cloud Function/additive-reader language; reconcile its technical rollout wording with isolated Postgres target authority without implementing Firebase changes.",
-    "Separate same-Client Transfer open-charge movement, paid attribution, Additional Requests tag, destination Space and reversal. Add Client identity migration; avoid double-counting the existing overlapping Transfer stories.",
+    "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
+    "Audit Project setup/editing against the full current Product Behavior baseline before implementation. Preserve all seven current capability tabs, Quick Note and archive-dismiss/unarchive evidence without treating source free-text clientName, background setup or navigation layout as target authority; do not copy old zero-for-empty allocations or orphan deletion. O-039 governs note text, not Project description; O-049/O-050 govern Project names and rename only.",
     "Complete Space search, Item count, primary media, direct create/details update, template apply/save/manage and archive assignment. Split checklist draft editing from rejected-operation resolution under O-051; preserve the spec's unresolved search-normalization requirement.",
     "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
     "Complete budget definitions versus shared management, card preview/pins, enabled category display, Transaction/Item attribution and edge states. Separate exact receipt completeness from billability, rounding and Item basis under O-008/O-030/O-031.",
@@ -83,7 +83,6 @@
         "space-templates",
         "space-item-assignment",
         "space-archive-assignment",
-        "client-lifecycle",
         "budget-pinning"
       ],
       "workflowKinds": [
@@ -115,10 +114,6 @@
         "business-paid-physical-entry",
         "business-paid-expense-entry",
         "furnishings-additional-requests-overlay",
-        "transaction-taxonomy",
-        "same-client-transfer",
-        "transfer-paired-records",
-        "transfer-budget-reallocation",
         "accounting-entry-routing",
         "invoice-build-edit",
         "invoice-collect",
@@ -132,7 +127,6 @@
         "item-resale",
         "item-project-to-inventory",
         "item-inventory-back-to-source-project",
-        "item-same-client-project-transfer",
         "item-cross-client-through-inventory",
         "item-correction",
         "item-vendor-return",
@@ -384,6 +378,128 @@
       "requiredRisks": [
         "migration_fidelity",
         "media_durability"
+      ]
+    },
+    {
+      "profile": "client_transfer_accounting_write",
+      "storyIds": [
+        "client-correction-merge",
+        "transaction-taxonomy",
+        "same-client-transfer",
+        "transfer-paired-records",
+        "transfer-budget-reallocation",
+        "transfer-picker-confirmation",
+        "transfer-open-allocation",
+        "transfer-paid-allocation",
+        "transfer-sent-invoice-policy",
+        "transfer-additional-requests-policy",
+        "transfer-destination-space-policy",
+        "transfer-reversal-correction",
+        "transfer-later-credit-host"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "accounting"
+      ]
+    },
+    {
+      "profile": "client_identity_migration",
+      "storyIds": [
+        "client-identity-migration"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "auth",
+        "postgres_schema",
+        "rls",
+        "powersync_sync",
+        "migration"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "identity_auth",
+        "database_integrity",
+        "tenant_authorization",
+        "sync_visibility",
+        "migration_fidelity"
+      ]
+    },
+    {
+      "profile": "transaction_compatibility_migration",
+      "storyIds": [
+        "legacy-transaction-interpretation"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "migration",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "migration_fidelity",
+        "accounting"
+      ]
+    },
+    {
+      "profile": "client_commands",
+      "storyIds": [
+        "client-create-select",
+        "client-lifecycle",
+        "client-archive"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "app_mcp_parity"
       ]
     }
   ],
@@ -651,7 +767,6 @@
         "item-resale",
         "item-project-to-inventory",
         "item-inventory-back-to-source-project",
-        "item-same-client-project-transfer",
         "item-cross-client-through-inventory",
         "item-correction",
         "item-vendor-return",
@@ -687,7 +802,7 @@
             "item-resale",
             "item-project-to-inventory",
             "item-inventory-back-to-source-project",
-            "item-same-client-project-transfer",
+            "same-client-transfer",
             "item-cross-client-through-inventory",
             "item-correction",
             "item-vendor-return",
@@ -785,10 +900,17 @@
           "occurrence": 1,
           "disposition": "story",
           "storyIds": [
-            "item-same-client-project-transfer",
             "same-client-transfer",
             "transfer-paired-records",
-            "transfer-budget-reallocation"
+            "transfer-budget-reallocation",
+            "transfer-picker-confirmation",
+            "transfer-open-allocation",
+            "transfer-paid-allocation",
+            "transfer-sent-invoice-policy",
+            "transfer-additional-requests-policy",
+            "transfer-destination-space-policy",
+            "transfer-reversal-correction",
+            "transfer-later-credit-host"
           ]
         },
         {
@@ -855,7 +977,12 @@
             "item-resale",
             "item-project-to-inventory",
             "item-inventory-back-to-source-project",
-            "item-same-client-project-transfer",
+            "same-client-transfer",
+            "transfer-open-allocation",
+            "transfer-paid-allocation",
+            "transfer-sent-invoice-policy",
+            "transfer-reversal-correction",
+            "transfer-later-credit-host",
             "item-cross-client-through-inventory",
             "item-correction",
             "item-vendor-return",
@@ -880,20 +1007,284 @@
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
-      "sourceHash": "7f577bf40401ed29098826498a54631d3962b8266048d58f821bb29f23567f6f",
-      "auditStatus": "partial",
+      "sourceHash": "966b8e62387e63b7853d41dfcfeefbb56f418774716636064fe0a83c377c6442",
+      "auditStatus": "audited",
       "storyIds": [
         "client-identity",
         "client-lifecycle",
+        "client-create-select",
+        "client-archive",
+        "client-correction-merge",
         "transaction-taxonomy",
         "same-client-transfer",
         "transfer-paired-records",
-        "transfer-budget-reallocation"
+        "transfer-budget-reallocation",
+        "transfer-picker-confirmation",
+        "transfer-open-allocation",
+        "transfer-paid-allocation",
+        "transfer-sent-invoice-policy",
+        "transfer-additional-requests-policy",
+        "transfer-destination-space-policy",
+        "transfer-reversal-correction",
+        "transfer-later-credit-host",
+        "client-identity-migration",
+        "legacy-transaction-interpretation"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Client Identity and Project Transfers",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Document title, target status, isolated Supabase/PowerSync implementation boundary and companion-spec links; behavior is mapped under the body headings."
+        },
+        {
+          "heading": "Purpose",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-identity",
+            "same-client-transfer"
+          ]
+        },
+        {
+          "heading": "Confirmed Product Direction",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transaction-taxonomy",
+            "client-identity",
+            "same-client-transfer",
+            "transfer-picker-confirmation",
+            "transfer-paired-records",
+            "transfer-open-allocation",
+            "transfer-paid-allocation"
+          ]
+        },
+        {
+          "heading": "Target Global Transaction Taxonomy",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transaction-taxonomy",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Client Entity",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-identity",
+            "client-create-select",
+            "client-lifecycle",
+            "client-archive",
+            "client-correction-merge"
+          ]
+        },
+        {
+          "heading": "Storage and identity",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-identity"
+          ]
+        },
+        {
+          "heading": "Project relationship",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-identity",
+            "client-create-select",
+            "client-lifecycle",
+            "client-identity-migration"
+          ]
+        },
+        {
+          "heading": "Client lifecycle",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-create-select",
+            "client-lifecycle",
+            "client-archive",
+            "client-correction-merge"
+          ]
+        },
+        {
+          "heading": "Transfer User Experience",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "same-client-transfer",
+            "transfer-picker-confirmation"
+          ]
+        },
+        {
+          "heading": "Entry point",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-picker-confirmation"
+          ]
+        },
+        {
+          "heading": "Destination picker",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-picker-confirmation"
+          ]
+        },
+        {
+          "heading": "Confirmation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-picker-confirmation",
+            "transfer-sent-invoice-policy",
+            "transfer-additional-requests-policy",
+            "transfer-destination-space-policy"
+          ]
+        },
+        {
+          "heading": "Paired Transfer Records",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-paired-records"
+          ]
+        },
+        {
+          "heading": "Item and Accounting Behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "same-client-transfer",
+            "transfer-open-allocation",
+            "transfer-paid-allocation"
+          ]
+        },
+        {
+          "heading": "Current Item state",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "same-client-transfer",
+            "transfer-destination-space-policy"
+          ]
+        },
+        {
+          "heading": "Uncollected Item charge",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-open-allocation",
+            "transfer-sent-invoice-policy"
+          ]
+        },
+        {
+          "heading": "Previously paid Item",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-paid-allocation"
+          ]
+        },
+        {
+          "heading": "Budget Reallocation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-budget-reallocation",
+            "transfer-open-allocation",
+            "transfer-paid-allocation"
+          ]
+        },
+        {
+          "heading": "Uncollected allocation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-open-allocation",
+            "transfer-budget-reallocation"
+          ]
+        },
+        {
+          "heading": "Paid allocation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-paid-allocation",
+            "transfer-budget-reallocation",
+            "transfer-additional-requests-policy"
+          ]
+        },
+        {
+          "heading": "Trusted Atomic Operation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "same-client-transfer",
+            "transfer-paired-records",
+            "transfer-picker-confirmation",
+            "transfer-open-allocation",
+            "transfer-paid-allocation"
+          ]
+        },
+        {
+          "heading": "Migration",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-identity-migration",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Implementation Impact",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Impact inventory only. Source-era Firebase, Firestore and Cloud Functions references describe current evidence; they do not authorize target Firebase Clients, adapters, rules, indexes, Functions or redesigned writers."
+        },
+        {
+          "heading": "Current code reality",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical source-model evidence for isolated target import, compatibility and impact coverage; target implementation uses Postgres handlers/RLS, authorized PowerSync visibility and target app/MCP surfaces."
+        },
+        {
+          "heading": "Decisions Still Required",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transfer-sent-invoice-policy",
+            "transfer-additional-requests-policy",
+            "transfer-destination-space-policy",
+            "transfer-reversal-correction",
+            "transfer-later-credit-host"
+          ]
+        },
+        {
+          "heading": "Acceptance Invariants",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transaction-taxonomy",
+            "client-identity",
+            "same-client-transfer",
+            "transfer-picker-confirmation",
+            "transfer-paired-records",
+            "transfer-open-allocation",
+            "transfer-paid-allocation",
+            "transfer-budget-reallocation"
+          ]
+        }
       ]
     },
     {
       "path": "docs/specs/projects.md",
-      "sourceHash": "ffb0dcb14f52cdb472e87a23bba67391f89663e6c9b4c21eb2d29726ea2dbd76",
+      "sourceHash": "4b3aa49b95a65bf668817995176e0ce3bd48d33ad4e576b90ac83ad57dd03b7b",
       "auditStatus": "partial",
       "storyIds": [
         "project-creation-existing-client",
@@ -1390,7 +1781,11 @@
     "confirmed": [
       {
         "decisionId": "D-001",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transaction-taxonomy",
+          "legacy-transaction-interpretation"
+        ]
       },
       {
         "decisionId": "D-002",
@@ -1401,19 +1796,38 @@
       },
       {
         "decisionId": "D-003",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "same-client-transfer",
+          "transfer-picker-confirmation"
+        ]
       },
       {
         "decisionId": "D-004",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "same-client-transfer",
+          "transfer-paired-records"
+        ]
       },
       {
         "decisionId": "D-005",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "same-client-transfer"
+        ]
       },
       {
         "decisionId": "D-006",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "client-identity",
+          "client-create-select",
+          "client-archive",
+          "client-correction-merge",
+          "client-identity-migration",
+          "transfer-picker-confirmation"
+        ]
       },
       {
         "decisionId": "D-007",
@@ -1490,7 +1904,12 @@
       },
       {
         "decisionId": "D-017",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-budget-reallocation",
+          "transfer-open-allocation",
+          "transfer-paid-allocation"
+        ]
       },
       {
         "decisionId": "D-018",
@@ -1575,7 +1994,10 @@
     "open": [
       {
         "decisionId": "O-002",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-sent-invoice-policy"
+        ]
       },
       {
         "decisionId": "O-003",
@@ -1636,25 +2058,38 @@
         "decisionId": "O-010",
         "auditStatus": "mapped",
         "storyIds": [
+          "transfer-sent-invoice-policy",
           "item-remove-live-invoice",
           "invoice-credit-zero-settlement"
         ]
       },
       {
         "decisionId": "O-011",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-additional-requests-policy"
+        ]
       },
       {
         "decisionId": "O-012",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-destination-space-policy"
+        ]
       },
       {
         "decisionId": "O-013",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-reversal-correction"
+        ]
       },
       {
         "decisionId": "O-014",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-later-credit-host"
+        ]
       },
       {
         "decisionId": "O-015",
@@ -1729,7 +2164,10 @@
       },
       {
         "decisionId": "O-025",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "client-correction-merge"
+        ]
       },
       {
         "decisionId": "O-026",
@@ -1762,7 +2200,14 @@
       },
       {
         "decisionId": "O-032",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "legacy-transaction-interpretation",
+          "accounting-corrections-refunds",
+          "item-vendor-return",
+          "vendor-cash-refund",
+          "transaction-posting-correction"
+        ]
       },
       {
         "decisionId": "O-033",
@@ -1773,7 +2218,12 @@
       },
       {
         "decisionId": "O-034",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "transfer-sent-invoice-policy",
+          "item-remove-live-invoice",
+          "invoice-sent-revision-delivery"
+        ]
       },
       {
         "decisionId": "O-035",
@@ -1811,11 +2261,19 @@
       },
       {
         "decisionId": "O-042",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "client-lifecycle"
+        ]
       },
       {
         "decisionId": "O-043",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "client-lifecycle",
+          "client-create-select",
+          "client-identity-migration"
+        ]
       },
       {
         "decisionId": "O-044",
@@ -2128,18 +2586,18 @@
     {
       "storyId": "client-identity",
       "title": "Use canonical Client identity",
-      "outcome": "Projects and accounting relationships use account-scoped Client identity rather than mutable display names.",
+      "outcome": "Use one opaque account-scoped Client identity with current name, archive state and audit timestamps. Every target Project references a same-Account clientId; display text never authorizes ownership, and frozen paid/report name snapshots survive later Client rename.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
-        "section": "Client Entity"
+        "section": "Storage and identity"
       },
       "milestone": "M3",
       "status": "required"
     },
     {
       "storyId": "client-lifecycle",
-      "title": "Manage Client lifecycle",
-      "outcome": "Client rename, archive, correction, and merge preserve authoritative identity and historical relationships.",
+      "title": "Rename a Client without rewriting history",
+      "outcome": "Edit the Client's name once and update current Project display from that identity; never independently rename the Project's Client text or rewrite frozen Invoices, reports or paid history. Archived/same-value rename and the exact name contract remain gated.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
         "section": "Client lifecycle"
@@ -2148,7 +2606,6 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-025",
           "O-042",
           "O-043"
         ],
@@ -2157,9 +2614,56 @@
       }
     },
     {
+      "storyId": "client-create-select",
+      "title": "Create or select a Client for a Project",
+      "outcome": "Project creation selects an active same-Account Client or creates one, then stores its clientId and derived current display. A new Client name must satisfy one exact app/MCP/Postgres contract.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Client lifecycle"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-043"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "client-archive",
+      "title": "Archive a Client without deleting history",
+      "outcome": "Archive any Client that has Projects or accounting history, hide it from new-Project selection, and preserve its identity and every historical relationship instead of hard-deleting it.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Client lifecycle"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "client-correction-merge",
+      "title": "Correct Project ownership or merge duplicate Clients",
+      "outcome": "Use the approved correction/merge workflow for mistaken Project clientId or duplicate Clients, preserving Transfer eligibility, accounting ownership and frozen history. Never treat ownership reassignment as a text edit.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Client lifecycle"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-025"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
       "storyId": "transaction-taxonomy",
       "title": "Enforce the global Transaction taxonomy",
-      "outcome": "Only scope-relative Purchase, Return, and project-only non-cash Transfer Transactions are canonical.",
+      "outcome": "Write only scope-relative Purchase and Return plus project-only same-Client non-cash Transfer. Pending credits, Fees, Expenses and hidden inventory sale/return occurrences never become extra Transaction types.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
         "section": "Target Global Transaction Taxonomy"
@@ -2170,29 +2674,18 @@
     {
       "storyId": "same-client-transfer",
       "title": "Transfer Items between same-Client Projects",
-      "outcome": "One authorized action atomically creates linked source and destination records and moves exact Item scope without an Inventory hop.",
+      "outcome": "One authorized app/MCP command atomically moves source Items to another active Project in the same Account with the same non-null Client ID, writing both records and current accounting/placement. No Inventory hop or invented cash/demand. Retries return the original result; stale concurrent changes fail closed.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
-        "section": "Transfer User Experience"
+        "section": "Confirmed Product Direction"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-002",
-          "O-011",
-          "O-012",
-          "O-013",
-          "O-014"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      }
+      "status": "required"
     },
     {
       "storyId": "transfer-paired-records",
       "title": "Preserve paired Transfer evidence",
-      "outcome": "Transfer records remain atomically paired, cross-linked, and inseparable across source and destination Projects.",
+      "outcome": "Atomically create inseparable source/destination Transfer records with one correlation ID, exact same-Client and Project roles, counterpart IDs, immutable Item/basis/open-or-paid snapshots, actor/time and later correction provenance.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
         "section": "Paired Transfer Records"
@@ -2203,13 +2696,174 @@
     {
       "storyId": "transfer-budget-reallocation",
       "title": "Reallocate budget through Transfer",
-      "outcome": "Transfer reallocates recognized value between same-Client Projects while remaining Client-wide net zero.",
+      "outcome": "Apply equal negative/positive line-level effects using each Item's open amount or frozen paid basis, decide mixed batches per Item, retain Furnishings and freeze the basis against later price drift. Transfer evidence never double-counts an open charge; Client-wide recognized value stays net zero.",
       "authority": {
         "path": "docs/specs/client-identity-and-project-transfers.md",
         "section": "Budget Reallocation"
       },
       "milestone": "M3",
       "status": "required"
+    },
+    {
+      "storyId": "transfer-picker-confirmation",
+      "title": "Choose and confirm an eligible Transfer destination",
+      "outcome": "Bulk-select source Items and offer only other active same-Account Projects with the exact non-null Client ID; exclude Inventory, source and unresolved/different Clients. Confirm both Projects, Client, Items, live-Invoice changes, budget effects and blocked reasons before one all-or-nothing action.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Transfer User Experience"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "transfer-open-allocation",
+      "title": "Move an uncollected Item obligation between Projects",
+      "outcome": "Move the same open charge, occurrence identity and amount basis from source to destination; remove an exact created-Invoice line and recalculate when applicable. Shift only unpaid budget attribution and create neither a source credit nor a destination purchase/charge duplicate.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Uncollected Item charge"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "transfer-paid-allocation",
+      "title": "Reattribute a paid Item without rewriting payment history",
+      "outcome": "Keep the source paid Invoice, Purchase, frozen line and historical membership unchanged; create no credit, charge or purchase. Paired Transfer lines apply equal negative/positive frozen paid allocations while current placement shows the destination and history retains the source.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Previously paid Item"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "transfer-sent-invoice-policy",
+      "title": "Handle live Invoice edge cases during Transfer",
+      "outcome": "Keep an emptied created/sent source Invoice noncollectible and apply the approved zero-total lifecycle. For sent Invoices, apply the approved removal/recall and revision/delivery policy. Never leave a transferred line on the wrong Project Invoice or collect an invalid revision.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Decisions Still Required"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-002",
+          "O-010",
+          "O-034"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "transfer-additional-requests-policy",
+      "title": "Apply Project-specific Additional Requests state on Transfer",
+      "outcome": "Use the approved preserve, clear or destination-reselection rule for the non-additive Additional Requests tag; never silently treat Project-contextual tag state as ownership identity or extra spend.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Decisions Still Required"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-011"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "transfer-destination-space-policy",
+      "title": "Resolve destination Space during Transfer",
+      "outcome": "Clear the incompatible source Space and apply the approved optional destination-Space assignment policy with exact destination-scope validation; never retain or guess a foreign Space reference.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Decisions Still Required"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-012"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "transfer-reversal-correction",
+      "title": "Correct a completed Transfer as one paired event",
+      "outcome": "Use the approved reversal/correction workflow without deleting or independently mutating either paired record; preserve downstream dependencies, audit provenance and equal/opposite accounting.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Decisions Still Required"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-013"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "transfer-later-credit-host",
+      "title": "Place a later paid-Item credit after Transfers",
+      "outcome": "After one or more same-Client Transfers, use the approved Project to host a later Client credit while tracing its amount/category through the Transfer chain to the original frozen paid line; never rewrite the original payment.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Decisions Still Required"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-014"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "client-identity-migration",
+      "title": "Migrate Project ownership to reviewed Client identities",
+      "outcome": "Import immutable exports into isolated target staging; review name-match suggestions without guessing identity. Preserve source/frozen names, populate reviewed same-Account clientId and disable unresolved Transfers. Target creation, search, pickers, reports, editing and MCP use IDs; no Firebase backfill.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Migration"
+      },
+      "milestone": "M4",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-043"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "legacy-transaction-interpretation",
+      "title": "Interpret legacy Transaction values without extending target writes",
+      "outcome": "Import decodes legacy sale/paymentToBusiness/fee/expense/to-inventory evidence and maps or quarantines it without inventing cash. Target app/MCP present the mapped meaning and write only three canonical types; source interpretation and minimum posting evidence require an approved, reconcilable mapping.",
+      "authority": {
+        "path": "docs/specs/client-identity-and-project-transfers.md",
+        "section": "Target Global Transaction Taxonomy"
+      },
+      "milestone": "M4",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-032"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "accounting-entry-routing",
@@ -2417,28 +3071,6 @@
         "decisionIds": [
           "O-007",
           "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      }
-    },
-    {
-      "storyId": "item-same-client-project-transfer",
-      "title": "Transfer an Item between same-Client Projects",
-      "outcome": "Require the same non-null authoritative Client ID, not matching names. Move directly with paired records and client-wide net-zero attribution; preserve source paid history and move open demand without a purchase or source credit. Invoice, tag, Space, reversal and later-credit policies remain gated.",
-      "authority": {
-        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
-        "section": "Story 8: Transfer between Projects Owned by the Same Client"
-      },
-      "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-002",
-          "O-011",
-          "O-012",
-          "O-013",
-          "O-014"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"

@@ -131,7 +131,9 @@ Projects can be archived by setting `isArchived` to `true`. Archiving is preferr
 - Archived projects appear in the Archived tab
 - All data is preserved (transactions, items, spaces, budget allocations)
 - Projects can be unarchived by setting `isArchived` back to `false`
-- Unarchiving navigates back (dismissed from detail since the project was opened from the archived tab)
+- In the current source, successful archive dismisses detail; successful
+  unarchive keeps detail open. These are current-navigation facts, not a new
+  decision about the redesigned target's navigation.
 
 ## Deletion
 
@@ -180,11 +182,17 @@ User pin preferences are stored at `accounts/{accountId}/users/{userId}/projectP
 
 ## Project Detail
 
+The layout below describes the current source UI, verified against
+`LedgeriOS/LedgeriOS/Views/Projects/ProjectDetailView.swift` on 2026-09-07. It
+corrects the older four-tab/Finances description. Preserve the available
+capabilities in the target; this source description does not independently
+settle target navigation organization or the redesigned Invoicing model.
+
 ### Layout
 
 - Toolbar: project name and client name centered, kebab menu on the right
 - Pinned budgets section at top (always visible across tabs)
-- Segmented picker with 4 tabs: Items, Transactions, Spaces, Finances
+- Scrollable tab bar: Items, Transactions, Spaces, Notes, Budget, Billing, Reports
 - Tab content area below
 
 ### Tabs
@@ -194,9 +202,16 @@ User pin preferences are stored at `accounts/{accountId}/users/{userId}/projectP
 | Items | Item list for this project (see items spec) |
 | Transactions | Transaction list for this project (see transactions spec) |
 | Spaces | Space list for this project (see spaces spec) |
-| Finances | Sub-tabs: Budget and Reports |
+| Notes | Project notes in NotesTabView |
+| Budget | Per-category budget progress |
+| Billing | Current BillingTabView workspace |
+| Reports | Report generation options in AccountingTabView |
 
-The Finances tab contains its own segmented picker with Budget and Reports sub-tabs. Budget shows per-category budget progress (see budget-management.md). Reports shows report generation options (see reports.md).
+Items is the default; an unknown tab ID falls back to Items. The toolbar also
+offers Quick Note for the current Project. Notes are separate records, not the
+Project description. Budget and Reports have their own tabs; see
+budget-management.md and reports.md for their behavior. Target Invoicing
+semantics remain governed by invoice-centered-project-accounting.md.
 
 ### Kebab Menu Actions
 

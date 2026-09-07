@@ -1,9 +1,16 @@
 # Client Identity and Project Transfers
 Status: target-state redesign — core direction approved; accounting details noted where open
-Last updated: 2026-08-31
+Last updated: 2026-09-07
 Program tracker: [../plans/ledger-accounting-redesign/README.md](../plans/ledger-accounting-redesign/README.md)
 Parent accounting model: [invoice-centered-project-accounting.md](invoice-centered-project-accounting.md)
 Item lifecycle: [inventory-item-invoicing-lifecycle.md](inventory-item-invoicing-lifecycle.md)
+
+Implementation boundary: build this redesign only in the separate
+Supabase/PowerSync target. Firebase paths and current-code descriptions below
+are source-model and migration evidence, not instructions to add Firebase
+Clients, readers, rules, indexes, Functions, or redesigned writers. Preserve the
+running Firebase app until an explicitly authorized hard cutover, as specified
+in [Item source migration and cutover](proto-item-capture.md#legacy-proto-item-source-migration).
 
 ## Purpose
 
@@ -73,7 +80,9 @@ without an evidence-backed mapping.
 
 ### Storage and identity
 
-Clients are account-scoped:
+Clients are account-scoped. The following path expresses the logical ownership
+relationship using the source system's notation, not a target Firestore
+collection to create:
 
 ```text
 accounts/{accountId}/clients/{clientId}
@@ -101,8 +110,9 @@ same account.
 
 `project.clientName` may remain temporarily as a denormalized display and legacy
 compatibility field, but it is never identity and never authorizes a Transfer.
-New and updated writers derive it from the selected Client while compatibility
-readers still need it.
+Target writers derive current display from the selected Client; isolated import
+readers retain legacy display evidence where needed. This does not require an
+intermediate Firebase writer or reader update.
 
 Invoices, reports, and paid history preserve the appropriate Client-name
 snapshot for historical display. Renaming a Client updates current project
@@ -317,17 +327,26 @@ history.
 
 ## Migration
 
-Current projects store only `clientName`. Migration must be additive:
+Current source projects store only `clientName`. Build and rehearse the mapping
+in isolated target environments from immutable export fixtures:
 
-1. create the Client collection and tolerant readers;
+1. create the target Client schema and tolerant source-fixture decoders;
 2. generate normalized-name match suggestions for review, but do not make text
    equality an accounting authorization rule;
-3. create/choose Clients and backfill `project.clientId` in reviewed batches;
-4. keep `clientName` as a compatibility snapshot during rollout;
-5. require `clientId` on all newly created projects;
+3. create/choose target Clients and populate target `project.clientId` in
+   reviewed import batches, without backfilling the live Firebase source;
+4. retain source `clientName` as migration/display evidence and preserve frozen
+   historical name snapshots;
+5. require `clientId` on all newly created target projects;
 6. keep Transfer disabled for unresolved projects; and
-7. switch search, pickers, reports, MCP schemas, and project editing to Client
-   identity before removing direct `clientName` editing.
+7. implement target search, pickers, reports, MCP schemas, and project editing
+   against Client identity, with no independent Project-level Client-name edit.
+
+These steps do not authorize production access, source mutation, or cutover.
+Final source freeze, late-writer recovery, import reconciliation and target
+activation follow the separately approved hard-cutover procedure. No Firebase
+Client adapter, dual-write phase, or Firebase v2 accounting implementation is
+required.
 
 Homonyms, spouses/households, trusts/companies, punctuation differences, and
 renamed Clients make blind one-name-one-Client migration unsafe.
@@ -353,24 +372,26 @@ renamed Clients make blind one-name-one-Client migration unsafe.
 - Firestore rules currently give account members broad Project access and have
   no Client collection or paired-Transfer invariant.
 
-These facts make additive Client migration and tolerant Transaction readers
-mandatory. Replacing the enum first would strand existing data and writers.
+These facts require evidence-preserving target import and tolerant legacy
+Transaction decoding at the import boundary. Replacing the running Firebase
+enum first would strand existing data and writers; leave that app unchanged.
 
 At minimum this direction touches:
 
-- Swift and MCP transaction enums, normalization, filters, display, exports,
-  tests, and legacy readers;
+- target Swift and MCP transaction enums, normalization, filters, display,
+  exports, tests, and source-fixture decoders;
 - Invoice collection, which changes target output from `paymentToBusiness` to
   `purchase`;
 - the Project model, creation/edit forms, validation, service protocols, cards,
   search, reports, invoices, and contract setup;
-- a new Client model, repository/context, pickers, archive flow, MCP tools,
-  schema description, rules, and indexes;
+- a target Client model, repository/context, pickers, archive flow, MCP tools,
+  Postgres schema, grants/RLS, indexes, and authorized PowerSync visibility;
 - Item bulk actions and a same-Client destination picker;
 - trusted paired-Transfer creation in iOS/backend/MCP rather than client-side
   independent writes;
 - Invoice live-line recalculation and paid-history preservation;
-- budget calculations and Cloud Function summaries for signed paired effects;
+- target budget calculations and derived summaries for signed paired effects,
+  with one transactional accounting authority rather than Firebase Functions;
 - lineage/provenance, transaction detail, audit, correction, and concurrency
   behavior; and
 - production migration, reconciliation, and stale-client write rejection.
