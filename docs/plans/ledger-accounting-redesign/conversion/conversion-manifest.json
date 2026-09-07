@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T06:42:26.890Z",
+    "lastSynchronizedAt": "2026-09-07T06:55:54.384Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -30455,7 +30455,7 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+        "WORKFLOW-active-space-checklist-item-toggle"
       ],
       "notes": "The store mutates no synchronized Space row and grants no server authority.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
@@ -31853,7 +31853,7 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+        "WORKFLOW-active-space-checklist-item-toggle"
       ],
       "notes": "The backend-neutral AppModel restores typed local projection provenance after restart and settles only from later complete evidence after the operation result baseline.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
@@ -42257,7 +42257,7 @@
         "A-003"
       ],
       "evidence": [
-        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+        "WORKFLOW-active-space-checklist-item-toggle"
       ],
       "notes": "No endpoint, token, key, hosted resource, or production authority is embedded.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
@@ -44181,7 +44181,7 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+        "WORKFLOW-active-space-checklist-item-toggle"
       ],
       "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused cases pass.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
@@ -46210,7 +46210,7 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+        "WORKFLOW-active-space-checklist-item-toggle"
       ],
       "notes": "Uses disposable encrypted databases, synthetic identities, and an intercepted local URL protocol only; six focused cases pass.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"

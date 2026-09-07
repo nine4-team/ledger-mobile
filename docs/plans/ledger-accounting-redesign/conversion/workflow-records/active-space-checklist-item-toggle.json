@@ -3,7 +3,7 @@
   "workflowId": "active-space-checklist-item-toggle",
   "title": "Toggle a checklist item in an active Space",
   "kind": "product_ui",
-  "status": "ci_verification",
+  "status": "complete",
   "outcome": "From represented local detail for one active Project or Business Inventory Space, toggle one existing checklist item with immediate optimistic progress, durable offline acceptance, deterministic replay, conflict recovery, and authoritative readback.",
   "authority": [
     {
@@ -334,9 +334,9 @@
       "summary": "Independent review initially returned NO-GO for restart restoration, rejection/readback ordering, server-ahead clocks, archived-state honesty, and exact post-cleanup replay proof. Root added durable local projection provenance, restart watch reattachment, fresh-evidence settlement ordering, monotonic terminal clocks, exact reconciliation markers, principal binding, corruption tests, and archived wording. Final re-review returned GO with no remaining P0/P1 finding."
     },
     "ci": {
-      "status": "not_run",
-      "commit": null,
-      "run": null
+      "status": "passed",
+      "commit": "5c6c7786667bbc0df5f4c9f13b69f3198a68104e",
+      "run": 34092045643
     }
   }
 }

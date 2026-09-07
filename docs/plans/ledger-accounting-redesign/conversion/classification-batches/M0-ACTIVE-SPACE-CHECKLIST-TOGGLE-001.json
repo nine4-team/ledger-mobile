@@ -3,7 +3,7 @@
   "title": "Toggle one checklist item in an active Space",
   "reviewedAt": "2026-09-06",
   "evidence": [
-    "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001",
+    "WORKFLOW-active-space-checklist-item-toggle",
     "EVID-SPACE-CHECKLIST-REVISION-001",
     "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001",
     "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
@@ -16,7 +16,7 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "evidence": ["WORKFLOW-active-space-checklist-item-toggle"],
       "notes": "The store mutates no synchronized Space row and grants no server authority.",
       "target": {
         "owner": "Active Space Checklist Toggle",
@@ -34,7 +34,7 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-003"],
-      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "evidence": ["WORKFLOW-active-space-checklist-item-toggle"],
       "notes": "No endpoint, token, key, hosted resource, or production authority is embedded.",
       "target": {
         "owner": "Active Space Checklist Toggle",
@@ -52,7 +52,7 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "evidence": ["WORKFLOW-active-space-checklist-item-toggle"],
       "notes": "The backend-neutral AppModel restores typed local projection provenance after restart and settles only from later complete evidence after the operation result baseline.",
       "target": {
         "owner": "Active Space Checklist Toggle",
@@ -70,7 +70,7 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "evidence": ["WORKFLOW-active-space-checklist-item-toggle"],
       "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused cases pass.",
       "target": {
         "owner": "Active Space Checklist Toggle",
@@ -88,7 +88,7 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "evidence": ["WORKFLOW-active-space-checklist-item-toggle"],
       "notes": "Uses disposable encrypted databases, synthetic identities, and an intercepted local URL protocol only; six focused cases pass.",
       "target": {
         "owner": "Active Space Checklist Toggle",
