@@ -25,6 +25,12 @@ the old Transaction-header convention.
 
 ## Budget Categories
 
+Preserve the settings controls: separate active/archived lists, Add/Edit,
+name/type/exclusion fields, behavior explanation, Save/Cancel, archive
+confirmation, restore and drag reorder. Target mutations have visible durable
+outcomes and shared authorization; silent independent source writes are not
+successful target behavior. Protected rows and dependency rules remain O-026.
+
 ### Definition
 
 Budget categories are account-level presets that define spending groupings. They live at `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`.
@@ -45,7 +51,8 @@ A category cannot be both `itemized` and `fee`. These are mutually exclusive.
 
 The field list describes source validation and UI semantics. Final shared
 mutation rules remain under O-026; do not assume that a warning permits changing
-the meaning of used history. Dependencies include open charges/credits,
+the meaning of used history. O-056 governs the conflicting category-name
+validation/uniqueness rules. Dependencies include open charges/credits,
 Expenses, Fees, Invoice lines, frozen allocations and Transfers, not only
 Transactions. Source name validators disagree on accepted characters; reconcile
 that contract before claiming target create/rename completeness.
@@ -255,7 +262,11 @@ than project spend. They use inverted semantics where displayed as revenue:
 
 ## Color Thresholds
 
-**Current implementation:** Uses brand primary color for all progress bars, with red for overage/overflow. The graduated color system below is preserved for potential future use.
+**Verified source behavior:** `BudgetTabView` calls
+`BudgetTrackerCalculations.progressColor` for category and Overall rows, so the
+graduated thresholds below already appear in the source. The “future” heading
+names are historical. They do not choose the target's separate paid/unpaid
+segment colors or negative-credit presentation under O-005.
 
 ### Standard/Itemized Categories (future)
 
@@ -317,6 +328,11 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 **Display order:**
 
+This source-spec order conflicts with the actual Overall pin control and
+personal preview behavior. O-040 decides target Overall eligibility, missing
+versus empty preferences, automatic Furnishings and stale-reference handling.
+Retain both evidence sets rather than treating this list as approved policy.
+
 1. Pinned categories (in user-defined order)
 2. Non-pinned standard/itemized categories (custom order or alphabetical)
 3. Overall Budget (cannot be pinned — always shown here)
@@ -373,6 +389,11 @@ Items in business inventory have no category. Items in a project have a category
 **Existing inventory items with stale categories.** Items currently in inventory that have a non-null `budgetCategoryId` from before the redesign are left as-is. The next time one of them moves (return or sell), the new flow takes over. No backfill is run.
 
 ## Enabled Categories Determination
+
+Target pickers are operation-specific: enforce exact scope, visibility and
+allowed category types/enabled state; show No Category only when that command
+permits it. The generic source picker filters active/non-system rows but does
+not enforce all writer rules. Selection cannot silently enable a category.
 
 A category appears in a project's budget display when it has a `ProjectBudgetCategory` document (i.e., it was explicitly enabled for this project). Budget amount and spend are irrelevant — a category with `budgetCents: 0` and no spend still appears if it has been enabled. Categories without a `ProjectBudgetCategory` document are hidden regardless of spend.
 

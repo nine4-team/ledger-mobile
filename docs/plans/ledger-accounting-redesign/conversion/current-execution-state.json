@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 42,
+  "stateVersion": 43,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -22,11 +22,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Space integration review passed; primary corrected the remaining Budget blank-to-zero source-write ambiguity. Commit this integrated audit checkpoint, use automatic PR CI, and continue the Budget behavior audit.",
-      "Space catalog has 138 stories across eight heading audits/145 headings. O-053 permissions, O-054 manual completion and O-055 checklist/template text/search remain unresolved; O-026 gates template proposals. Spec now explicitly preserves media/review/detail controls. These are audited requirements, not implemented features.",
-      "Budget audit is next. Primary corrected stale Transaction-only/Firebase authority, Fee-demand semantics, unknown category loss and source preview conflict. Review found missing category management/defaults/eligibility, nullable allocation UI, segment/remaining/zero/overflow display, pins/preview and summary/readiness outcomes. Source ProjectsListView lines 139–209 confirms pinned→Furnishings→Overall; O-040 still decides target.",
-      "Complete remaining Budget, receipt, offline/auth/media/financial permissions, reports/import and background/MCP/data-model audits before expanding implementation. Reuse existing controls/checklists, no new process machinery.",
-      "Prior local checklist-toggle workflow remains blocked by O-053 while exact test/CI evidence is retained. Verified complete current behaviors remain 0 of 1919. Reconcile composed workflow evidence only after authority; do not infer product completion from passing tests."
+      "CI 34143428608 on 6edafd8a (Space audit/source-budget boundary) remains in progress. Poll that exact run, no duplicate dispatch.",
+      "Budget now has 41 mapped headings; catalog totals 146 stories and nine audits/186 headings. Primary and independent review passed; commit the integrated audit checkpoint and use automatic PR CI. Duplicate allocation stories merged into project-budget-allocation; category commands require MCP and financial read/export proof now requires RLS/tenant authorization. O-056 records conflicting name rules.",
+      "Receipt design source-only boundary/delivery correction is included but its product audit is still partial. Next split receipt editor/readback/export/parser/line lifecycle/migration and exact arithmetic, preserving O-008/O-030/O-031. Main read complete design and its source-vs-target differences.",
+      "Continue remaining data-model, offline, lineage/return/correction, reports/import audits. Also reconcile target-governing baseline authorities omitted from the target spec index: auth-offline, financial access, billing, search/review and media. Do not duplicate unchanged UI stories already in the exact-control catalog or pretend indexed specs exhaust product authority.",
+      "O-052–O-056 and existing product/hosted gates remain unresolved. Prior checklist tests remain retained while completion is blocked by O-053; verified complete behaviors remain 0 of 1919. No implementation-estimate gain from audit changes."
     ]
   },
   "progress": {
@@ -38,7 +38,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No implementation estimate change for audit work. Project audit CI 34142182215 passed on 08c39765. Space/Budget audit corrections passed review; 138 stories and eight heading audits. O-053 still blocks checklist completion claims; 0 of 1919 current behaviors verified complete, with prior tests preserved."
+    "note": "Budget audit expanded to nine heading audits/186 headings and 146 total stories after merging duplicate allocations. Review passed; no implemented-feature gain. CI 34143428608 on 6edafd8a is running. Prior checklist tests retained; O-053 keeps verified complete behaviors at 0/1919."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
@@ -47,7 +47,8 @@
     "O-051 must be approved before a rejected operation can be retried or acknowledged as resolved; read-only exact recovery may proceed without inventing that policy.",
     "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes.",
     "O-053 Space mutation authorization and O-054 manual Space completion meaning require user decisions; continue independent audit.",
-    "O-055 portable Space checklist/template text and search rules remain unresolved; no invented text bounds or matching policy."
+    "O-055 portable Space checklist/template text and search rules remain unresolved; no invented text bounds or matching policy.",
+    "O-056 category-name validation and uniqueness rules remain unresolved; shared category create/rename and restore collision cannot be silently chosen."
   ],
   "guardrails": [
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",

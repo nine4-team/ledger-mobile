@@ -4,6 +4,16 @@ Status: accepted design direction; implementation and migration pending; no prod
 Date: 2026-08-30
 Program tracker: [Ledger Accounting Redesign](../ledger-accounting-redesign/README.md)
 
+> **Supabase target boundary:** The receipt-line product design remains
+> accepted, but Firebase implementation and short in-place compatibility steps
+> below are historical context. Build this behavior only in the separate
+> Supabase/PowerSync app, shared app/MCP commands and target receipt projections.
+> Do not add redesigned receipt writers, Functions or rules to Firebase. Legacy
+> equations belong in source import/reconciliation tooling, not a second runtime
+> accounting path. Production access, migration and cutover require approval.
+> Canonical Item/Invoice specs supersede the old generated movement-Transaction
+> model; O-008/O-030/O-031 still gate billability, rounding and Item tax basis.
+
 ## Problem
 
 An itemized transaction can contain receipt lines that affect the receipt total
@@ -295,6 +305,11 @@ Production distribution among 326 active-project itemized Purchases/Returns:
 
 ### Consequence
 
+The inventory-mechanics preservation below describes protecting the existing
+Firebase app, not a requirement to recreate those retired movements in the
+target. Target Item charge/credit and frozen payment behavior follows the
+canonical accounting/lifecycle specs, while import retains the source evidence.
+
 Tax does not need special storage for vendor-receipt reconstruction. Store the
 printed tax as a `NonItemReceiptLine`, and remove subtotal/rate from receipt
 completeness.
@@ -310,6 +325,11 @@ rate behavior. In the first implementation:
    into an Item rate, because receipts can have mixed tax treatment.
 
 ### Short migration compatibility
+
+This in-place compatibility proposal is superseded for the separate target.
+The source app stays unchanged; isolated import tooling may understand both
+source shapes, but the new app has one canonical receipt equation and no
+Firebase runtime adapter or legacy subtotal fallback.
 
 During the migration window only:
 
@@ -380,12 +400,11 @@ itemized transactions—are claimed by invoices.
 
 ### Cloud Functions
 
-- Replace the discount subtraction in `computeIsComplete` with signed receipt
-  line aggregation.
-- Recompute when `nonItemReceiptLines`, `itemIds`, linked item prices, or the
-  transaction amount changes.
-- Update item-price-trigger audit patching to preserve receipt-line totals.
-- Update audit/backfill output fields and tests.
+The source `computeIsComplete` and item-price triggers are discovery and
+comparison evidence only. Implement signed receipt aggregation and dependency
+recalculation in target transactional commands/projections with shared app/MCP
+semantics and local-read readiness. Preserve receipt-line totals when Item
+evidence changes; do not create a Firebase implementation of this revision.
 
 ### MCP
 
@@ -402,9 +421,9 @@ itemized transactions—are claimed by invoices.
 
 ### Rules, docs, and tests
 
-- Firestore transaction rules currently allow arbitrary ordinary transaction
-  fields, but movement immutability and any future allowlists must account for
-  the line array.
+- Source Firestore rules are compatibility evidence only. Target constraints,
+  grants/RLS and Sync visibility must validate receipt-line ownership, permitted
+  mutations and frozen history; do not add target allowlists to Firebase.
 - Update the data model, transaction audit/completeness specs, transaction
   creation docs, agent guide, invoice docs, and vendor-credit proposal.
 - Add model encoding, equation, MCP validation, migration, import-parser,
@@ -450,17 +469,19 @@ complete signed equation for each affected transaction.
 
 ## Delivery order
 
-1. Land backward-compatible decoding and the new receipt-line model without
-   enabling new writes.
-2. Implement and test the new completeness equation, audit output, app editor,
-   MCP reads/writes, and migration tooling as one release unit.
-3. Decide and implement billability before broad user-facing creation.
-4. Generate and review the immutable production manifest, with per-transaction
-   backups and complete signed equations.
-5. Deploy the short compatibility branch and new writers, then run the
-   production migration.
-6. Verify every affected equation, item count, checkmark reference, invoice
-   dependency, and `isComplete` result from fresh reads.
-7. Remove legacy vendor `discount`/subtotal completeness code and documentation
-   in the same release window; do not keep a prolonged dual-write period for the
-   single production account.
+1. Implement source-tolerant decoding in isolated import tooling and the new
+   canonical model in the separate target; leave Firebase unchanged.
+2. Implement and test receipt aggregation, audit display, app/MCP editing,
+   authorization, offline durability and import reconciliation as one workflow.
+3. Resolve billability, rounding and Item tax-basis decisions before claiming
+   complete user-facing behavior.
+4. Rehearse deterministic imports with isolated fixtures; after explicit access
+   approval, produce reviewed immutable source manifests/backups and complete
+   per-transaction signed equations.
+5. Prove the target and migration independently before requesting production
+   freeze/migration/cutover authority; there is no receipt-specific Firebase
+   v2 deployment or runtime dual-write stage.
+6. Under the approved cutover procedure, verify every affected equation, physical
+   Item count, marker reference, Invoice dependency and completeness result.
+   Preserve source evidence and rollback material for the approved retention
+   window; do not silently delete it because the target uses a new model.

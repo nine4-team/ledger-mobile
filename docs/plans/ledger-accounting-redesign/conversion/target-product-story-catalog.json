@@ -4,11 +4,11 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "89cf2c86242f903528cded051d7932c974a07e68632eae7d5e88feec6e4895c2"
+    "sourceHash": "ef7e074c3d360d7408ab58626c52e8eb804cf910cce70549107c6de6a372e0ad"
   },
   "completeness": {
     "status": "partial",
-    "reason": "138 stories recorded across eight reviewed heading audits (145 headings). Product choices remain blocked by named decisions. Budget and other spec audits remain partial; counts do not imply implemented features."
+    "reason": "146 stories across nine heading audits (186 headings). Budget primary and independent review passed; other authorities remain partial. Named decisions are unresolved and checklist counts do not imply implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -17,7 +17,7 @@
     "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
     "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
     "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
-    "Budget audit underway: source-only sign tables, movement Transactions, Item-category assumptions and Firebase Functions instructions are explicitly demoted to migration evidence. Still split shared categories, nullable allocation, paid/unpaid display, preview/pins, visibility and edge states; reconcile source controls and companion receipt arithmetic before closing.",
+    "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review pending. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized."
@@ -58,7 +58,8 @@
         "item-intake-vocabulary",
         "item-link-choice-review-cancel",
         "space-browser-search",
-        "space-assignment-picker"
+        "space-assignment-picker",
+        "budget-manage-entry"
       ],
       "workflowKinds": [
         "product_ui"
@@ -125,11 +126,8 @@
         "item-vendor-return",
         "item-accounting-state",
         "item-one-identity",
-        "budget-categories",
-        "project-budget-allocation",
         "budget-progress-calculation",
         "budget-sign-conventions",
-        "budget-offline-conflict",
         "non-item-receipt-lines",
         "receipt-completeness",
         "non-item-line-lifecycle",
@@ -242,7 +240,11 @@
       "storyIds": [
         "client-summary-value-semantics",
         "report-receipt-evidence-sharing",
-        "project-transaction-export-entry"
+        "project-transaction-export-entry",
+        "budget-card-preview",
+        "budget-row-presentation",
+        "budget-readiness-provenance",
+        "budget-category-directory"
       ],
       "workflowKinds": [
         "product_ui"
@@ -252,13 +254,15 @@
         "app_ui",
         "app_mcp",
         "powersync_sync",
-        "accounting"
+        "accounting",
+        "rls"
       ],
       "requiredRisks": [
         "ui_fidelity",
         "app_mcp_parity",
         "sync_visibility",
-        "accounting"
+        "accounting",
+        "tenant_authorization"
       ]
     },
     {
@@ -396,7 +400,11 @@
         "transfer-later-credit-host",
         "project-creation-existing-client",
         "project-creation-new-client",
-        "project-allocation-edit"
+        "budget-default-category-routing",
+        "budget-picker-eligibility",
+        "budget-categories",
+        "project-budget-allocation",
+        "budget-offline-conflict"
       ],
       "workflowKinds": [
         "product_ui"
@@ -523,7 +531,8 @@
         "space-templates",
         "space-command-mcp-parity",
         "space-manual-completion",
-        "space-detail-item-entry"
+        "space-detail-item-entry",
+        "budget-category-order"
       ],
       "workflowKinds": [
         "product_ui"
@@ -553,7 +562,8 @@
       "storyIds": [
         "project-note-actions",
         "project-deletion-policy",
-        "space-archive-assignment"
+        "space-archive-assignment",
+        "budget-category-lifecycle"
       ],
       "workflowKinds": [
         "product_ui"
@@ -1449,7 +1459,6 @@
         "project-unarchive",
         "project-category-selection",
         "project-inline-category-create",
-        "project-allocation-edit",
         "project-hero-media",
         "project-form-navigation",
         "project-transaction-export-entry",
@@ -1547,7 +1556,7 @@
             "project-creation-new-client",
             "project-form-navigation",
             "project-category-selection",
-            "project-allocation-edit",
+            "project-budget-allocation",
             "project-hero-media",
             "project-initial-notes-capture"
           ]
@@ -1579,7 +1588,6 @@
           "occurrence": 1,
           "disposition": "story",
           "storyIds": [
-            "project-allocation-edit",
             "project-budget-allocation"
           ]
         },
@@ -1605,7 +1613,7 @@
             "project-hero-media",
             "client-lifecycle",
             "client-correction-merge",
-            "project-allocation-edit"
+            "project-budget-allocation"
           ]
         },
         {
@@ -1613,7 +1621,6 @@
           "occurrence": 1,
           "disposition": "story",
           "storyIds": [
-            "project-allocation-edit",
             "project-budget-allocation"
           ]
         },
@@ -1746,7 +1753,7 @@
             "project-hero-media",
             "project-inline-category-create",
             "project-category-selection",
-            "project-allocation-edit"
+            "project-budget-allocation"
           ]
         }
       ]
@@ -2351,7 +2358,7 @@
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
-      "sourceHash": "3c7807e797abdb3b3cd10a40d4e67cda60a87ef5245f0251f4a72c0df793ea3b",
+      "sourceHash": "12858b2fa4dce11ef3bac557907c748c9111490c1139bffceeb5ee3d387b2ced",
       "auditStatus": "partial",
       "storyIds": [
         "non-item-receipt-lines",
@@ -2374,15 +2381,407 @@
     },
     {
       "path": "docs/specs/budget-management.md",
-      "sourceHash": "755371c1d376bd0ac3cd2140f7d7d37959e19b01b34c5ac8a0e1c50d94c81824",
-      "auditStatus": "partial",
+      "sourceHash": "3f29810f0ca96ad84f6e5d096c88f4d1a8c2bc3db00418bbfccf52e052110202",
+      "auditStatus": "audited",
       "storyIds": [
         "budget-categories",
         "project-budget-allocation",
         "budget-progress-calculation",
         "budget-sign-conventions",
         "budget-pinning",
-        "budget-offline-conflict"
+        "budget-offline-conflict",
+        "budget-category-directory",
+        "budget-category-lifecycle",
+        "budget-category-order",
+        "budget-default-category-routing",
+        "budget-card-preview",
+        "budget-row-presentation",
+        "budget-picker-eligibility",
+        "budget-readiness-provenance",
+        "budget-manage-entry"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Budget Management",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title and notice distinguish canonical target accounting from source migration evidence; body headings map behaviors."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-progress-calculation",
+            "budget-category-directory"
+          ]
+        },
+        {
+          "heading": "Budget Categories",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-categories",
+            "budget-category-directory",
+            "budget-category-lifecycle"
+          ]
+        },
+        {
+          "heading": "Definition",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-categories",
+            "budget-category-directory"
+          ]
+        },
+        {
+          "heading": "Category Types",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-categories",
+            "budget-row-presentation",
+            "budget-picker-eligibility"
+          ]
+        },
+        {
+          "heading": "Category Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-categories",
+            "budget-category-lifecycle",
+            "budget-readiness-provenance"
+          ]
+        },
+        {
+          "heading": "Default Categories (Seeded on Account Creation)",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-default-category-routing"
+          ]
+        },
+        {
+          "heading": "Account Presets",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-default-category-routing",
+            "budget-category-order"
+          ]
+        },
+        {
+          "heading": "Per-Project Budget Allocation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-budget-allocation",
+            "budget-manage-entry"
+          ]
+        },
+        {
+          "heading": "ProjectBudgetCategory",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-budget-allocation"
+          ]
+        },
+        {
+          "heading": "Project Creation Flow",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-category-selection",
+            "project-budget-allocation",
+            "project-initial-notes-capture"
+          ]
+        },
+        {
+          "heading": "Step 1: Basic Info",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-description-update",
+            "project-hero-media",
+            "project-initial-notes-capture"
+          ]
+        },
+        {
+          "heading": "Step 2: Category Selection",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-category-selection",
+            "project-inline-category-create"
+          ]
+        },
+        {
+          "heading": "Step 3: Budget Amounts",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-budget-allocation"
+          ]
+        },
+        {
+          "heading": "On Create",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-budget-allocation",
+            "project-hero-media"
+          ]
+        },
+        {
+          "heading": "Budget Progress Calculation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-progress-calculation",
+            "budget-row-presentation",
+            "budget-paid-unpaid-progress"
+          ]
+        },
+        {
+          "heading": "Per-Category Spent",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-progress-calculation",
+            "budget-sign-conventions"
+          ]
+        },
+        {
+          "heading": "Per-Category Percentage",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation"
+          ]
+        },
+        {
+          "heading": "Overall Budget Spent",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-progress-calculation",
+            "furnishings-additional-requests-overlay"
+          ]
+        },
+        {
+          "heading": "Overall Budget Total",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-budget-allocation",
+            "budget-progress-calculation"
+          ]
+        },
+        {
+          "heading": "Overall Percentage",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation"
+          ]
+        },
+        {
+          "heading": "Sign Conventions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-sign-conventions",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Sign convention for inventory movement transactions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-sign-conventions",
+            "legacy-transaction-interpretation",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Full table",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-sign-conventions",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Payment / Revenue Category Differences",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation",
+            "fee-demand-lifecycle",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Color Thresholds",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation",
+            "budget-paid-unpaid-progress"
+          ]
+        },
+        {
+          "heading": "Standard/Itemized Categories (future)",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation"
+          ]
+        },
+        {
+          "heading": "Fee Categories (Inverted, future)",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-row-presentation"
+          ]
+        },
+        {
+          "heading": "Project Card Budget Preview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-card-preview",
+            "budget-pinning"
+          ]
+        },
+        {
+          "heading": "Denormalized Budget Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-readiness-provenance",
+            "budget-progress-calculation"
+          ]
+        },
+        {
+          "heading": "What Triggers Recalculation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-readiness-provenance"
+          ]
+        },
+        {
+          "heading": "Summary Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-readiness-provenance"
+          ]
+        },
+        {
+          "heading": "Invariant",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-readiness-provenance",
+            "budget-progress-calculation"
+          ]
+        },
+        {
+          "heading": "User Preferences: Pinning",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-pinning",
+            "budget-card-preview"
+          ]
+        },
+        {
+          "heading": "Transaction Budget Attribution",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-sign-conventions",
+            "budget-picker-eligibility",
+            "accounting-entry-routing",
+            "item-collection-frozen-membership"
+          ]
+        },
+        {
+          "heading": "Item Budget Category Attribution",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-picker-eligibility",
+            "item-accounting-state",
+            "item-cycle-provenance",
+            "furnishings-additional-requests-overlay"
+          ]
+        },
+        {
+          "heading": "Enabled Categories Determination",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-budget-allocation",
+            "budget-picker-eligibility",
+            "budget-category-directory"
+          ]
+        },
+        {
+          "heading": "Offline and Conflict Behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-offline-conflict",
+            "budget-readiness-provenance"
+          ]
+        },
+        {
+          "heading": "Current Firebase behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-offline-conflict",
+            "budget-readiness-provenance"
+          ]
+        },
+        {
+          "heading": "Target requirement",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-offline-conflict",
+            "project-budget-allocation",
+            "budget-categories",
+            "budget-category-order"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "budget-readiness-provenance",
+            "budget-row-presentation",
+            "budget-pinning",
+            "budget-category-lifecycle",
+            "budget-manage-entry"
+          ]
+        }
       ]
     },
     {
@@ -2678,7 +3077,8 @@
         "decisionId": "O-005",
         "auditStatus": "mapped",
         "storyIds": [
-          "budget-paid-unpaid-progress"
+          "budget-paid-unpaid-progress",
+          "budget-row-presentation"
         ]
       },
       {
@@ -2838,7 +3238,10 @@
           "budget-offline-conflict",
           "project-inline-category-create",
           "space-create-from-template",
-          "space-save-as-template"
+          "space-save-as-template",
+          "budget-category-lifecycle",
+          "budget-category-order",
+          "budget-default-category-routing"
         ]
       },
       {
@@ -2930,7 +3333,8 @@
         "decisionId": "O-040",
         "auditStatus": "mapped",
         "storyIds": [
-          "budget-pinning"
+          "budget-pinning",
+          "budget-card-preview"
         ]
       },
       {
@@ -3031,7 +3435,6 @@
           "project-creation-new-client",
           "project-description-update",
           "project-unarchive",
-          "project-allocation-edit",
           "project-hero-media",
           "project-note-actions",
           "project-initial-notes-capture"
@@ -3071,6 +3474,15 @@
           "space-create-from-template",
           "space-save-as-template",
           "space-command-mcp-parity"
+        ]
+      },
+      {
+        "decisionId": "O-056",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "budget-categories",
+          "project-inline-category-create",
+          "budget-category-lifecycle"
         ]
       }
     ]
@@ -4031,8 +4443,8 @@
     },
     {
       "storyId": "budget-categories",
-      "title": "Manage budget categories",
-      "outcome": "System, Account, and Project category meaning and authorization remain stable across app and backend.",
+      "title": "Create and edit budget category definitions",
+      "outcome": "Preserve Add/Edit, name, General/Itemized/Fee, behavior info, Exclude from Overall, Save/Cancel and duplicate feedback. Apply one authorized stable-ID revision-safe command; protect seeded/system meaning and used-history dependencies. Name rules remain O-056; silent source writes are not success.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Budget Categories"
@@ -4041,7 +4453,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-026"
+          "O-026",
+          "O-056"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -4049,8 +4462,8 @@
     },
     {
       "storyId": "project-budget-allocation",
-      "title": "Allocate Project budgets",
-      "outcome": "Per-Project category allocations preserve exact enabled-category and amount semantics.",
+      "title": "Manage enabled Project categories and allocations",
+      "outcome": "Use one shared allocation command from Project setup/edit and Manage Budget. Preserve selected-category inputs, included-overall preview, added/removed/changed and unchanged-skip behavior. Save an exact revision-bound result with absent, enabled-null and explicit-zero semantics; never auto-enable silently.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Per-Project Budget Allocation"
@@ -4089,8 +4502,8 @@
     },
     {
       "storyId": "budget-pinning",
-      "title": "Preserve personal budget pins",
-      "outcome": "Personal ordered Project budget pins use typed targets and explicit absence without implicit shared-data writes.",
+      "title": "Pin and unpin personal budget rows",
+      "outcome": "Preserve Pin/Unpin and ordering for one Principal/Project under O-040, including Overall, absence versus explicit empty, first-view Furnishings, stale/deleted/archived IDs and zero-activity cases. Do not copy the magic sentinel or automatic writes as approved policy.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "User Preferences: Pinning"
@@ -4107,8 +4520,8 @@
     },
     {
       "storyId": "budget-offline-conflict",
-      "title": "Resolve budget edits offline",
-      "outcome": "Offline allocation and category edits preserve accepted intent and expose conflicts without silent last-writer loss.",
+      "title": "Keep budget changes durable and conflict-aware",
+      "outcome": "Keep accepted allocation/category edits and ordering durable across restart; replay once, expose stale/conflicting/rejected results and retain drafts/evidence. One operation cannot report success after partial ordering/setup. Shared and Project permissions remain distinct; recovery uses shared policy.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Offline and Conflict Behavior"
@@ -4820,25 +5233,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-026"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      }
-    },
-    {
-      "storyId": "project-allocation-edit",
-      "title": "Save selected categories and exact allocations",
-      "outcome": "Show selected-category currency inputs and overall preview. Preserve enabled-with-null, explicit zero and disabled states; validate rather than coercing invalid input to zero. Save added/removed/changed allocations through target authority; skip unchanged values and preserve accounting history.",
-      "authority": {
-        "path": "docs/specs/projects.md",
-        "section": "Category Diffing on Save"
-      },
-      "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-052"
+          "O-026",
+          "O-056"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -5184,6 +5580,141 @@
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-category-directory",
+      "title": "Browse category settings",
+      "outcome": "Show authorized active and archived non-system categories separately, ordered active rows, badges, edit/archive/restore entries and distinct empty states. Cached partial data is not complete absence; preserve stable IDs and historic labels without leaking hidden Fee names or totals.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Budget Categories"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-category-lifecycle",
+      "title": "Archive or restore a category safely",
+      "outcome": "Confirm archive or restore an exact category through authorized durable commands. Remove from new selection without losing historical category meaning; protect system rows and all accounting dependencies, not only Transactions. Failed or stale mutations stay visible, never hard-delete used history.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Category Fields"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026",
+          "O-056"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "budget-category-order",
+      "title": "Reorder shared categories atomically",
+      "outcome": "Drag eligible category rows and submit one complete expected-revision order. Disabled rows remain immovable; duplicate/missing IDs, concurrent edits and failures are visible. Apply all-or-nothing across Account readers; do not reproduce independent silent per-row writes.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Account Presets"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "budget-default-category-routing",
+      "title": "Apply defaults only to eligible entry routes",
+      "outcome": "Preserve protected idempotent Account category seeds and an authorized configurable default where selection is permitted. Physical Item demand remains Furnishings and collected payment categories remain frozen allocations; defaults cannot override writer eligibility or create duplicate seeds.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Default Categories (Seeded on Account Creation)"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "budget-card-preview",
+      "title": "Show the intended Project card and pinned header",
+      "outcome": "Display authorized amounts and ordered personal preview rows with honest readiness. Resolve pinned, no-pin, Furnishings/overall fallback and zero-activity behavior under O-040; source UI and old spec differ. A preview cannot hide missing data behind authoritative zero or expose restricted values.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Project Card Budget Preview"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-040"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "budget-row-presentation",
+      "title": "Explain category and overall budget progress",
+      "outcome": "Show each eligible category's paid/unpaid amounts, signed total, remaining/over and zero/null-budget state, plus overall and non-additive overlays. Preserve information affordances and overflow without implying unpaid Fees were received. Negative-credit display remains O-005; expose incomplete data.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Budget Progress Calculation"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-005"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "budget-picker-eligibility",
+      "title": "Choose only categories valid for the operation",
+      "outcome": "Bind category choice to the exact Account/Project and writer's allowed types/visibility/enabled state. Offer No Category only where valid; Close preserves state. Keep stable selection and empty/incomplete/error states; generic source picker options do not authorize invalid category or auto-enablement.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Enabled Categories Determination"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-readiness-provenance",
+      "title": "Explain incomplete and historical budget values",
+      "outcome": "Rebuild projections from canonical contributions with local freshness/completeness and exact category/source evidence. Keep archived history explainable; missing categories or permissions cannot silently drop value. Withhold complete totals when evidence is unresolved, while showing honest allowed partial data.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Denormalized Budget Summary"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-manage-entry",
+      "title": "Open Project budget management from the right context",
+      "outcome": "Preserve Budget-tab no-configuration state, category/overall rows and eligible Manage Budget entry from its host. Open the exact Project's allocation flow without changing selection or writing defaults merely by viewing; capability and local readiness govern availability.",
+      "authority": {
+        "path": "docs/specs/budget-management.md",
+        "section": "Per-Project Budget Allocation"
       },
       "milestone": "M3",
       "status": "required"
