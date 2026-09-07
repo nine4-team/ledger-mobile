@@ -39,6 +39,21 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public private(set) var route: ActiveWorkspaceToSpaceChecklistRoute = .stopped
     public private(set) var isChecklistsExpanded = true
+    public private(set) var directorySegment: ProjectDirectorySegment = .active
+
+    public var directoryProjects: [ProjectDirectoryCoreRow] {
+        directorySegment == .active ? projectBrowser.activeProjects : projectBrowser.archivedProjects
+    }
+
+    public var representedProjectIsAvailable: Bool {
+        representedProjectId.map { isRepresentedProject($0, segment: directorySegment) } == true
+    }
+
+    public func setDirectorySegment(_ segment: ProjectDirectorySegment) {
+        guard case .projectDirectory = route, directorySegment != segment else { return }
+        generation &+= 1
+        directorySegment = segment
+    }
 
     public var representedProjectId: ProjectID? {
         switch route {
@@ -87,6 +102,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         projectEvidenceTask = nil
         self.runtime = nil
         route = .projectDirectory
+        directorySegment = .active
         isChecklistsExpanded = true
 
         oldProjectEvidenceTask?.cancel()
@@ -108,10 +124,12 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
 
     public func selectProject(projectId: ProjectID) async {
+        let segment = directorySegment
+        let lifecycle: DirectoryLifecycleState = segment == .active ? .active : .archived
         guard runtime != nil,
-              projectBrowser.activeProjects.filter({ $0.projectId == projectId }).count == 1,
-              projectBrowser.activeProjects.first(where: { $0.projectId == projectId })?
-                .projectLifecycle == .active else { return }
+              directoryProjects.filter({ $0.projectId == projectId }).count == 1,
+              directoryProjects.first(where: { $0.projectId == projectId })?
+                .projectLifecycle == lifecycle else { return }
 
         generation &+= 1
         let activeGeneration = generation
@@ -119,10 +137,10 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         guard generation == activeGeneration else { return }
         await spaceBrowser.stop()
         guard generation == activeGeneration else { return }
-        await projectBrowser.select(projectId: projectId, segment: .active)
+        await projectBrowser.select(projectId: projectId, segment: segment)
         guard generation == activeGeneration,
               projectBrowser.selectedProjectId == projectId,
-              projectBrowser.selectedProject?.projectLifecycle == .active else { return }
+              projectBrowser.selectedProject?.projectLifecycle == lifecycle else { return }
         route = .projectWorkspace(projectId)
         isChecklistsExpanded = true
     }
@@ -155,7 +173,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     public func openNotesTab() {
         guard runtime != nil,
               case .projectWorkspace(let projectId) = route,
-              isRepresentedActiveProject(projectId) else { return }
+              isRepresentedProject(projectId, segment: directorySegment) else { return }
         generation &+= 1
         route = .projectNotes(projectId)
     }
@@ -294,9 +312,15 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
 
     private func isRepresentedActiveProject(_ projectId: ProjectID) -> Bool {
+        isRepresentedProject(projectId, segment: .active)
+    }
+
+    private func isRepresentedProject(_ projectId: ProjectID, segment: ProjectDirectorySegment) -> Bool {
+        let lifecycle: DirectoryLifecycleState = segment == .active ? .active : .archived
+        let rows = segment == .active ? projectBrowser.activeProjects : projectBrowser.archivedProjects
         guard projectBrowser.selectedProjectId == projectId,
-              projectBrowser.selectedProject?.projectLifecycle == .active,
-              projectBrowser.activeProjects.filter({ $0.projectId == projectId }).count == 1 else {
+              projectBrowser.selectedProject?.projectLifecycle == lifecycle,
+              rows.filter({ $0.projectId == projectId }).count == 1 else {
             return false
         }
         guard let detailState = projectBrowser.detailPresentation?.state else {
@@ -306,8 +330,8 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         case .found(let content), .retryable(cached: .some(let content)),
              .requiredUpdate(cached: .some(let content)):
             return content.projectId == projectId
-                && content.projectLifecycle == .active
-                && content.clientLifecycle == .active
+                && content.projectLifecycle == lifecycle
+                && (content.clientLifecycle == .active || segment == .archived)
         case .waiting, .incomplete,
              .retryable(cached: .none), .requiredUpdate(cached: .none):
             return true
@@ -331,7 +355,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         guard runtime != nil,
               projectObservationGeneration == observationGeneration else { return }
         guard let projectId = representedProjectId,
-              !isRepresentedActiveProject(projectId) else { return }
+              !isRepresentedProject(projectId, segment: directorySegment) else { return }
 
         generation &+= 1
         let revocationGeneration = generation

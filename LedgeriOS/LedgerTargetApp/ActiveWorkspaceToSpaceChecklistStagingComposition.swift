@@ -27,7 +27,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         case .projectNotes(let projectId):
             Section("Project Notes") {
                 backButton
-                if model.representedProjectIsActive,
+                if model.representedProjectIsAvailable,
                    model.projectBrowser.noteHistory.selectedProjectId == projectId {
                     ProjectNoteHistoryStagingExerciseView(model: model.projectBrowser.noteHistory)
                 } else {
@@ -48,22 +48,33 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     }
 
     private var projectDirectory: some View {
-        Section("Active Projects") {
+        Section("Projects") {
+            Picker("Projects", selection: Binding(
+                get: { model.directorySegment },
+                set: { model.setDirectorySegment($0) }
+            )) {
+                Text("Active").tag(ProjectDirectorySegment.active)
+                Text("Archived").tag(ProjectDirectorySegment.archived)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("target-project-directory-segment")
             LabeledContent("Project data", value: model.projectBrowser.directoryStatus)
                 .accessibilityIdentifier("target-active-project-directory-status")
 
-            if model.projectBrowser.activeProjects.isEmpty {
-                if model.projectBrowser.directoryPresentation?.active.isAuthoritativeEmpty == true {
-                    Text("No active Projects.")
+            if model.directoryProjects.isEmpty {
+                if (model.directorySegment == .active
+                    ? model.projectBrowser.directoryPresentation?.active.isAuthoritativeEmpty
+                    : model.projectBrowser.directoryPresentation?.archived.isAuthoritativeEmpty) == true {
+                    Text(model.directorySegment == .active ? "No active Projects." : "No archived Projects.")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("target-active-project-directory-empty")
                 } else {
-                    Text("Active Project data is loading or unavailable.")
+                    Text("Project data is loading or unavailable.")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("target-active-project-directory-unavailable")
                 }
             } else {
-                ForEach(model.projectBrowser.activeProjects, id: \.projectId) { project in
+                ForEach(model.directoryProjects, id: \.projectId) { project in
                     Button {
                         Task { await model.selectProject(projectId: project.projectId) }
                     } label: {
@@ -95,7 +106,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     private func projectWorkspace(_ projectId: ProjectID) -> some View {
         Section("Project Workspace") {
             backButton
-            if model.representedProjectIsActive,
+            if model.representedProjectIsAvailable,
                model.projectBrowser.selectedProjectId == projectId {
                 Text(model.projectBrowser.selectedProjectName ?? "Project name unavailable")
                     .font(.headline)
@@ -107,11 +118,13 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 }
                 LabeledContent("Project data", value: model.projectBrowser.detailStateLabel)
                     .accessibilityIdentifier("target-active-project-workspace-status")
-                Button("Spaces") {
-                    Task { await model.openSpacesTab() }
+                if model.representedProjectIsActive {
+                    Button("Spaces") {
+                        Task { await model.openSpacesTab() }
+                    }
+                    .accessibilityIdentifier("target-active-project-spaces-tab")
+                    .accessibilityHint("Opens Spaces for this Project")
                 }
-                .accessibilityIdentifier("target-active-project-spaces-tab")
-                .accessibilityHint("Opens Spaces for this Project")
                 Button("Notes") { model.openNotesTab() }
                     .accessibilityIdentifier("target-active-project-notes-tab")
                     .accessibilityHint("Opens note history for this Project")

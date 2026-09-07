@@ -2,6 +2,51 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testArchivedProjectHistoryNavigation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let active = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(active.waitForExistence(timeout: 10))
+        #if os(macOS)
+        // Keep this task's own window clear of unrelated always-on-top panels.
+        // Do not dismiss or interact with the user's other applications.
+        let window = app.windows.firstMatch
+        let titlebar = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+            .withOffset(CGVector(dx: 0, dy: 12))
+        titlebar.press(forDuration: 0.1, thenDragTo: titlebar.withOffset(CGVector(
+            dx: 24 - window.frame.minX, dy: 60 - window.frame.minY
+        )))
+        let archivedSegment = app.radioButtons["Archived"]
+        #else
+        let archivedSegment = app.segmentedControls.buttons["Archived"]
+        #endif
+        XCTAssertTrue(archivedSegment.waitForExistence(timeout: 5))
+        if !archivedSegment.isHittable {
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        XCTAssertTrue(archivedSegment.isHittable, app.debugDescription)
+        archivedSegment.tap()
+        let archived = app.buttons["target-active-project-card-project-archived-ui-test"]
+        XCTAssertTrue(archived.waitForExistence(timeout: 5))
+        XCTAssertFalse(active.exists)
+        archived.tap()
+        let notes = app.buttons["target-active-project-notes-tab"]
+        reveal(notes, in: app)
+        XCTAssertTrue(notes.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-active-project-spaces-tab"].exists)
+        notes.tap()
+        XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
+        app.buttons["target-active-workspace-back"].tap()
+        app.buttons["target-active-workspace-back"].tap()
+        XCTAssertTrue(archived.waitForExistence(timeout: 5))
+        XCTAssertFalse(active.exists)
+    }
+
     func testRemovalHidesProtectedWorkspace() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

@@ -187,7 +187,12 @@ function validateWorkflowSafety(lines) {
       line === "        if: always()" &&
       lines[index - 1] === "      - name: Stop isolated local Supabase" &&
       lines[index + 1] === "        run: npx --yes supabase@2.116.0 stop --no-backup";
-    requireCondition(allowedCleanup, "jobs must not conditionally skip or tolerate failures");
+    const allowedDiagnostics =
+      line === "        if: always()" &&
+      lines[index - 1] === "      - name: Preserve native test stall diagnostics" &&
+      lines[index + 1] === "        uses: actions/upload-artifact@v4";
+    requireCondition(allowedCleanup || allowedDiagnostics,
+      "jobs must not conditionally skip or tolerate failures");
   }
 }
 
@@ -251,6 +256,29 @@ function validateTargetJob(lines) {
     /^      - name: Confirm target checks did not rewrite tracked artifacts\s*$/,
     "target read-only diff step",
   );
+  const diagnostics = [
+    "      - name: Preserve native test stall diagnostics",
+    "        if: always()",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: native-test-stall-diagnostics",
+    "          path: ${{ runner.temp }}/ledger-native-diagnostics",
+    "          if-no-files-found: ignore",
+  ];
+  requireCondition(target.join("\n").includes(diagnostics.join("\n") + "\n\n"),
+    "target diagnostics must retain the exact bounded artifact configuration");
+  const wrapper = "          bash scripts/run-target-native-tests-with-diagnostics.sh";
+  requireCondition(target.filter(line => line === wrapper).length === 2,
+    "target diagnostics must wrap exactly two native test commands");
+  for (const selection of [
+    "          --filter ItemSpaceAssignmentPowerSyncStoreTests",
+    "          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'",
+  ]) {
+    const index = target.indexOf(selection);
+    requireCondition(target[index - 2] === wrapper &&
+      target[index - 1] === "          swift test --package-path LedgeriOS --no-parallel",
+    "target diagnostics must wrap the intended native test commands");
+  }
   requireCondition(
     target[guard + 1] === "        run: git diff --exit-code",
     "target job must retain its exact read-only diff guard",

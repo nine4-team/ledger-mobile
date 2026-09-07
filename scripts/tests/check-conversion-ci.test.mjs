@@ -131,6 +131,24 @@ test("workflow rejects conditional skips, execution overrides, and weakened hist
 });
 
 test("target job cannot bypass native, MCP, build, or dependency gates", () => {
+  for (const [original, replacement] of [
+    ["          bash scripts/run-target-native-tests-with-diagnostics.sh\n", ""],
+    ["          path: ${{ runner.temp }}/ledger-native-diagnostics", "          path: /Users"],
+    ["          name: native-test-stall-diagnostics", "          name: arbitrary-files"],
+  ]) {
+    expectFailure(value => {
+      value.workflow = value.workflow.replace(original, replacement);
+    }, /target diagnostics/);
+  }
+  expectFailure(
+    (value) => {
+      value.workflow = value.workflow.replace(
+        "      - name: Preserve native test stall diagnostics\n        if: always()\n        uses: actions/upload-artifact@v4",
+        "      - name: Preserve native test stall diagnostics\n        if: always()\n        run: swift test",
+      );
+    },
+    /must not conditionally skip/,
+  );
   expectFailure(
     (value) => {
       value.workflow = value.workflow.replace("        run: npm run target:staging:ui:test:macos\n", "");

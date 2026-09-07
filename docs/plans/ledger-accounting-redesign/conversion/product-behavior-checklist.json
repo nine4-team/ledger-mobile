@@ -25587,9 +25587,9 @@
           "summary": "Independent scoped GO on runtime, live UI and relaunch denial. Connector admission reviewed GO after adding archive transport-failure retention test. Workspace-owned upload reviewed GO after adding shared-fence single-flight and peer tests: cancellation propagates, owner waits for task settlement before database close, and non-owning peer cannot release its lease. No bounded shutdown time is promised for an uncooperative transport. Verified online removal, authenticated scheduling, media upload ownership, final transaction linearization and native keychain/crash proof remain incomplete."
         },
         "ci": {
-          "status": "not_run",
-          "commit": null,
-          "run": null
+          "status": "passed",
+          "commit": "292b1b572b792b60e4d2be9c96e3f4d2390cb585",
+          "run": 34165447171
         }
       }
     },
@@ -26460,11 +26460,12 @@
     {
       "schemaVersion": 1,
       "workflowId": "active-workspace-to-space-checklist",
-      "title": "Browse active Project Spaces, checklists and note history",
+      "title": "Browse Active/Archived Projects, note history and active Space checklists",
       "kind": "product_ui",
       "status": "implementation",
-      "outcome": "Open a represented active Project by stable identity. Browse its Spaces/checklist path and existing scoped note history with Back navigation, without substituting stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace.",
+      "outcome": "Choose Active or Archived Projects and open a represented Project by stable identity. Browse existing scoped note history with Back preserving the list segment; Spaces/checklist actions remain active-only. Do not substitute stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace or list.",
       "targetStoryIds": [
+        "project-list",
         "project-detail",
         "space-list-to-detail",
         "space-checklist-toggle",
@@ -26857,6 +26858,13 @@
           "status": "passed"
         },
         {
+          "id": "ARCHIVED-PROJECT-HISTORY-NAVIGATION",
+          "risk": "ui_fidelity",
+          "expected": "Active/Archived picker selects only that lifecycle's represented Projects. Archived Project opens scoped Notes but not active-only Spaces. Back returns to the same segment with a renewed directory subscription. This is read navigation, not full cards, restore or history migration.",
+          "command": "20 model tests passed /tmp/ledger-archived-project-route-tests.log. Focused macOS archived navigation passed /tmp/ledger-archived-route-mac-fixed.log (Test-LedgerTargetStaging-2026.09.07_15-29-36--0700.xcresult); all3 iOS workspace interaction tests passed /tmp/ledger-archived-route-ios-fixed.log. Native test found reused cancelled fixture stream; fresh per-subscription snapshots fixed the actual Back round trip. Earlier Mac picker obstruction was an unrelated floating window; test moves only its own window.",
+          "status": "passed"
+        },
+        {
           "id": "ACTIVE-PROJECT-NOTE-HISTORY-ROUTE",
           "risk": "ui_fidelity",
           "expected": "Notes opens existing history for the represented active Project; Back returns to its workspace. Existing note model supplies bounded pages, provenance, unavailable/empty state and cancellation. Native fixture verifies note text and creator; creation/editing and legacy-note display are not claimed.",
@@ -26894,7 +26902,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed."
+          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests."
         },
         "ci": {
           "status": "not_run",

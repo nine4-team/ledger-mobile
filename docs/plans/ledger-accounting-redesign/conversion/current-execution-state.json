@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 76,
+  "stateVersion": 78,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "SPACE-CARDS-AND-OFFLINE-CHOICES-CI-GREEN",
-    "commit": "437bc59de1bb52528d20b7778016e1f990ec1564",
-    "ciRun": 34161647098,
+    "name": "WORKSPACE-REMOVAL-AND-OWNED-UPLOAD-CI-GREEN",
+    "commit": "292b1b572b792b60e4d2be9c96e3f4d2390cb585",
+    "ciRun": 34165447171,
     "ciStatus": "passed",
-    "meaning": "All three automatic CI jobs passed, including real macOS checklist interactions and local provider tests. Finite product audit remains closed. Does not claim full target behavior or hosted authorization."
+    "meaning": "All three automatic jobs passed for exact removal/owned-upload commit, including native target tests/builds/UI and local provider tests. Does not prove authenticated activation/scheduling, media delivery, hosted behavior or full product completion."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Expose existing scoped Project note history from the active Project workspace, preserving Spaces/checklist navigation and removal guards.",
+    "outcome": "Expose Active/Archived Project selection and existing note history, preserving active-only Space/checklist admission and removal guards.",
     "nextActions": [
-      "Audit closed. Notes route ready for checkpoint: existing scoped history, exact Project gates and Back; focused10 tests plus native macOS2/iOS2 passed. Independent final GO after adding route-disappearance test/comment fix; removed vacuous empty-row assertion. Evidence in ACTIVE-PROJECT-NOTE-HISTORY-ROUTE. Conversion/environment checks passed. Commit/push reviewed Notes+CI diagnostics batch, resolve its automatic run; no test replay for continuity.",
-      "Upload owner292b1b572b792b60e4d2be9c96e3f4d2390cb585 pushed; CI34165447171 live. Earlier CI34163409676/34164255824/34164485915 cancelled at20-minute limit at different test/runner points. Exact local remaining-suite726 passed. Added bounded native process sampling wrapper to existing two CI commands, no retries/skip/timeout change; shell0/7 exit and native sample smoke passed (/tmp/ledger-native-diagnostics-test.iJBUTc). Commit this diagnostic with Notes batch after review, use its automatic CI, no redispatch.",
+      "Audit closed. Commit/push reviewed Active/Archived navigation batch and consume its single automatic PR CI run. Notes3e5e96ea CI34166128466 failed diagnostic-artifact allowlist; current checker requires bounded artifact configuration and both wrappers, with negative tests. All5 checker tests, environment and conversion checks passed.",
+      "Archived route reuses existing lists/history. Model20 tests and independent review passed. Native Mac focused archived route and all3 iOS workspace tests passed (/tmp/ledger-archived-route-mac-fixed.log, /tmp/ledger-archived-route-ios-fixed.log). Back test caught cancelled fixture-stream reuse, fixed with fresh snapshot per subscription. No complete Project/Notes outcome claimed. No test process remains running.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
       "After Notes batch, continue the existing Project workspace's required user controls using current models/specs; no new audit/catalog. Complete Notes still needs mutation and legacy-note preservation; full cards still need physical Item/media projections. Do not count a tab route as a complete Project/Notes outcome.",
-      "Next integration: verified online removal evidence and authenticated upload scheduling, media upload ownership, final transaction linearization. Command upload now lifecycle-owned but not connected to a live signed-in session. A007/O057 provider choice asked asynchronously; no provider/hosted access approved. Cross-process ownership/crash-before-record and native keychain restart remain. Retain uncertain work; no recovery bypass. Checkpoint stays437bc59d until exact newer CI green."
+      "Removal/owned upload292b1b57 CI34165447171 all3 jobs passed; current checkpoint. Still needs verified online removal/authenticated scheduling, media upload implementation/ownership, final transaction linearization, native keychain/crash and cross-process proof. A007/O057 provider question pending; no hosted access approved. Retain uncertain work; no recovery bypass. Earlier timeout cause unproven; diagnostics remain in next CI."
     ]
   },
   "blockers": [],

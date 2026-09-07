@@ -68,7 +68,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
     let model: ActiveWorkspaceToSpaceChecklistStagingExercise
     private(set) var acceptedInvocationCount = 0
 
-    private let projectDirectory: UITestFixtureStream<ProjectListSnapshot>
+    private let projectDirectorySnapshot: ProjectListSnapshot
     private let projectDetail = UITestFixtureStream<ProjectCoreDetailsUpdate>()
     private let spaceDirectory: UITestFixtureStream<SpaceListUpdate>
     private let spaceDetail: UITestFixtureStream<SpaceCoreDetailsUpdate>
@@ -105,14 +105,20 @@ private final class ActiveWorkspaceChecklistUITestFixture {
             description: nil,
             lifecycle: .active
         )
+        let archivedProject = try! ProjectSummary(
+            id: ProjectID(validating: "project-archived-ui-test"), accountId: accountId,
+            clientId: client.id, client: client,
+            displayName: ProjectDisplayName(validating: "Archived UI Test Project"),
+            description: nil, lifecycle: .archived
+        )
         let projectSnapshot = try! ProjectListSnapshot(
             accountId: accountId,
             local: ListLocalSnapshot(
                 queryFingerprint: ListQueryFingerprint(
                     validating: String(repeating: "a", count: 64)
                 ),
-                rows: [project],
-                visibleRowCountBeforeFiltering: 1,
+                rows: [project, archivedProject],
+                visibleRowCountBeforeFiltering: 2,
                 isCompleteForQuery: true,
                 quality: .ready,
                 localDataVersion: LocalDataVersion(validating: "ui-test-projects"),
@@ -204,7 +210,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
             candidates: []
         )
 
-        projectDirectory = UITestFixtureStream(initial: projectSnapshot)
+        projectDirectorySnapshot = projectSnapshot
         spaceDirectory = UITestFixtureStream(initial: spaceListUpdate)
         spaceDetail = UITestFixtureStream(initial: detailUpdate)
         emptyRejectedSnapshot = recoverySnapshot
@@ -237,7 +243,11 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         isStarted = true
         await model.start(runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime(
             projectBrowsing: ProjectBrowsingStagingRuntime(
-                watchProjects: { [projectDirectory] in projectDirectory.stream },
+                // Each subscription gets the current snapshot, including after Back.
+                // A cancelled AsyncStream cannot be reused as a new database watch.
+                watchProjects: { [projectDirectorySnapshot] in
+                    AsyncThrowingStream { $0.yield(projectDirectorySnapshot) }
+                },
                 watchProject: { [projectDetail] _ in projectDetail.stream },
                 watchNotes: { request in
                     AsyncThrowingStream { continuation in

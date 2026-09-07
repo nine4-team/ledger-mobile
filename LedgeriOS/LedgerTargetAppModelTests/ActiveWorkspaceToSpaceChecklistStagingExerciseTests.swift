@@ -182,6 +182,41 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         await model.stop()
     }
 
+    @Test("Archived Project selection preserves history but refuses active-only actions")
+    func archivedProjectReadRouteKeepsActiveActionsClosed() async throws {
+        let directory = RouteSource<ProjectListSnapshot>()
+        let model = Self.model()
+        await model.start(runtime: Self.runtime(
+            projectDirectory: directory, projectDetail: RouteSource(),
+            spaceDirectory: RouteSource(), spaceDetail: RouteSource(),
+            projectRequests: RouteRecorder(), listRequests: RouteRecorder(),
+            detailRequests: RouteRecorder()
+        ))
+        let active = try Self.project("active-project")
+        let archived = try Self.project("archived-project", lifecycle: .archived)
+        directory.yield(try Self.projectList([active, archived]))
+        await Self.wait { model.projectBrowser.archivedProjects.count == 1 }
+        #expect(model.directoryProjects.map(\.projectId) == [active.id])
+        model.setDirectorySegment(.archived)
+        #expect(model.directoryProjects.map(\.projectId) == [archived.id])
+        await model.selectProject(projectId: active.id)
+        #expect(model.route == .projectDirectory)
+        await model.selectProject(projectId: archived.id)
+        #expect(model.representedProjectIsAvailable)
+        #expect(!model.representedProjectIsActive)
+        await model.openSpacesTab()
+        #expect(model.route == .projectWorkspace(archived.id))
+        model.openNotesTab()
+        #expect(model.route == .projectNotes(archived.id))
+        model.setDirectorySegment(.active)
+        #expect(model.directorySegment == .archived)
+        await model.back()
+        await model.back()
+        #expect(model.route == .projectDirectory)
+        #expect(model.directorySegment == .archived)
+        await model.stop()
+    }
+
     @Test("Back drains exact routes and restarts an unselected Project directory")
     func backAndStopDrainage() async throws {
         let projectDirectory = RouteSource<ProjectListSnapshot>()
@@ -394,7 +429,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         )
     }
 
-    private static func project(_ id: String, name: String = "Project") throws -> ProjectSummary {
+    private static func project(_ id: String, name: String = "Project", lifecycle: DirectoryLifecycleState = .active) throws -> ProjectSummary {
         let client = try ClientSummary(
             id: ClientID(validating: "client-route"),
             accountId: accountId,
@@ -410,7 +445,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             client: client,
             displayName: ProjectDisplayName(validating: name),
             description: nil,
-            lifecycle: .active
+            lifecycle: lifecycle
         )
     }
 
