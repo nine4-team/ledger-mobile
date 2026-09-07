@@ -69,7 +69,7 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "29fa5828e049e1b93fff81707165b0009f26a2f3373e130343f6471364478fa5"
+    "sourceHash": "a765b49a3e57c3a109d3c08ea73fa822b307d70abba43a2665f2250e10426c22"
   },
   "auditAreas": [
     {
@@ -1951,7 +1951,7 @@
     {
       "path": "docs/specs/authentication-offline-access.md",
       "canonicalTarget": true,
-      "sourceHash": "a003f72b306a844f4c12f3f6b54c3fb9874fe71884009f3ba80abeecebc3429a",
+      "sourceHash": "8d75e7e9fc11aacfb44cf589cd860933647022e6b078fc3954dbfde9e22c2d35",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -23669,7 +23669,7 @@
     {
       "storyId": "offline-unlock-lease-and-account-isolation",
       "title": "Reopen only authorized local work",
-      "outcome": "Reopen the exact environment/Principal/Account downloaded work without time expiry or extra Ledger unlock (2026-09-07 user choice). Do not grant new downloads. Reconnect/revocation, financial scope and pending-work recovery remain under O-058; prevent cross-Account leaks and silent loss.",
+      "outcome": "Reopen exact-scope downloaded work without expiry or extra Ledger unlock. Learned Account removal locks normal access and stops removed-user uploads; retain unsynced work encrypted. Financial-scope reduction and recovery procedure remain under O-058. No new downloads, leaks or silent loss.",
       "authority": {
         "path": "docs/specs/authentication-offline-access.md",
         "section": "Summary"
@@ -25462,6 +25462,102 @@
     }
   ],
   "executionRecords": [
+    {
+      "schemaVersion": 1,
+      "workflowId": "learned-account-removal-enforcement",
+      "title": "Lock a removed Account without losing unsynced work",
+      "kind": "backend_control",
+      "status": "implementation",
+      "outcome": "Persist learned removal before normal reopen, lock existing access and uploads, and retain encrypted pending work. Integration is incomplete; this record does not claim the full offline authorization outcome.",
+      "targetStoryIds": ["offline-unlock-lease-and-account-isolation"],
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/authentication-offline-access.md",
+          "section": "Summary"
+        }
+      ],
+      "baselineJourneyIds": [],
+      "baselineBehaviorRefs": [],
+      "affectedComponents": [
+        "LedgeriOS/LedgerTargetPowerSync",
+        "LedgeriOS/LedgerTargetPowerSyncTests"
+      ],
+      "layers": [
+        "local_offline",
+        "auth",
+        "powersync_sync"
+      ],
+      "riskDomains": [
+        "offline_durability",
+        "identity_auth",
+        "sync_visibility"
+      ],
+      "uiJourneys": [],
+      "acceptanceChecks": [
+        {
+          "id": "REMOVAL-RUNTIME",
+          "risk": "general",
+          "expected": "Runtime lock rejects late finite results, closes safely, and preserves pending media.",
+          "command": "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "status": "passed"
+        },
+        {
+          "id": "REMOVAL-REOPEN",
+          "risk": "offline_durability",
+          "expected": "Persisted removal denies bootstrap before protected resources open; failed persistence keeps current runtime locked and permits retry. Injected storage tests do not prove device keychain behavior.",
+          "command": "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "status": "passed"
+        },
+        {
+          "id": "REMOVAL-INTEGRATION",
+          "risk": "identity_auth",
+          "expected": "Serialized activation/removal, immediate screen invalidation, observer generation fencing, live upload shutdown, and persistence-failure/crash handling prevent retained-data access.",
+          "command": "Pending coordinator and device integration tests",
+          "status": "planned"
+        },
+        {
+          "id": "REMOVAL-CONCURRENT",
+          "risk": "identity_auth",
+          "expected": "Shared removal fence locks peer runtime handles, rejects a late bootstrap result, and denies in-process reopen after persistence failure. This does not prove UI or upload shutdown.",
+          "command": "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "status": "passed"
+        },
+        {
+          "id": "REMOVAL-SYNC",
+          "risk": "sync_visibility",
+          "expected": "Locked runtime gates new yields; coordinator must reject buffered pre-lock updates and stop live upload admission.",
+          "command": "Pending coordinator/upload integration tests",
+          "status": "planned"
+        }
+      ],
+      "deferredBehaviors": [
+        "Recovery procedure and financial permission reduction short of Account removal remain product decisions.",
+        "Device keychain restart proof and complete activation/upload/UI integration remain required; cached membership cannot clear removal."
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {
+          "status": "passed",
+          "commands": [
+            "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+            "npm run target:environment:check",
+            "npm run conversion:check",
+            "git diff --check"
+          ]
+        },
+        "review": {
+          "required": true,
+          "status": "passed",
+          "summary": "Scoped independent GO on runtime batch after fixing public irreversible API and weak-facade watcher leak. Coordinator now weakly tracks lifecycle owners, tested after facade release. Shared fence covers peers and late opens. Buffered UI delivery, live upload/commit fencing, verified removal evidence and native keychain/crash proof remain explicitly outside this batch, not approved as complete."
+        },
+        "ci": {
+          "status": "not_run",
+          "commit": null,
+          "run": null
+        }
+      }
+    },
     {
       "schemaVersion": 1,
       "workflowId": "active-space-checklist-editor",

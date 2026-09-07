@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 64,
+  "stateVersion": 68,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "RENDERED-WORKSPACE-CI-GREEN",
-    "commit": "302153d153c5d798c6a655a0531b888e76e416ac",
-    "ciRun": 34160818067,
+    "name": "SPACE-CARDS-AND-OFFLINE-CHOICES-CI-GREEN",
+    "commit": "437bc59de1bb52528d20b7778016e1f990ec1564",
+    "ciRun": 34161647098,
     "ciStatus": "passed",
     "meaning": "All three automatic CI jobs passed, including real macOS checklist interactions and local provider tests. Finite product audit remains closed. Does not claim full target behavior or hosted authorization."
   },
   "activeWorkflow": {
-    "id": "active-workspace-to-space-checklist",
-    "kind": "product_ui",
-    "status": "local_verification",
+    "id": "learned-account-removal-enforcement",
+    "kind": "backend_control",
+    "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Verify the actual rendered Project-to-Space checklist route and fix accessibility defects, reusing existing coordinator/provider behavior.",
+    "outcome": "Lock a removed Account and prevent reopen without losing encrypted unsynced work; integrate existing runtime with durable removal enforcement.",
     "nextActions": [
-      "Audit closed at bab3b91c/CI34159534807 green; do not reopen. Current UI batch fixes DisclosureGroup accessibility propagation and modern iOS launch-screen metadata, with real rendered interaction tests on macOS and iOS. DEBUG-only in-memory fixture never opens providers or proves durability.",
-      "UI batch302153d/CI34160818067 completed green in all three jobs. No live run remains for that commit; do not re-poll/re-dispatch. Broad Space-browser/toggle outcome completion is not proved by the narrow fixture.",
+      "Audit closed. Uncommitted removal implementation now includes LedgerWorkspaceAccessCoordinator around all bootstrap opens. Shared per-identity fence blocks every peer handle before close scheduling; persisted removal is checked pre-resource, and late opens close/reject after returning from resource creation. Registry uses stable environment/Principal/Account, no manifest/path, no clear API. Internal removal delegates coordinator; lifecycle raw lock only drains/preserves.",
+      "Final31 runtime tests passed, log /tmp/ledger-removal-batch-tests.log. Reviewer found weak-facade watcher leak; coordinator now weakly tracks lifecycle actors and orphaned-watcher test proves both DB closes/vault release after facade deallocation. Independent scoped GO received. Environment/conversion/diff checks passed. Commit current coherent runtime/policy batch and use its automatic CI; no duplicate dispatch. Native keychain proof remains outstanding.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
-      "Uncommitted follow-on: both Space entry paths now share SpaceDirectoryCardLabel, showing checklist progress and explicit unavailable Item/media evidence. Real-click tests passed on macOS(result13-53-26) and iOS(result13-54-47), 2026.09.07 standard LedgerTarget DerivedData Logs/Test. conversion:check, target:environment:check and diff check passed. Do not rerun just for compaction. Full card outcome remains open until authorized Item-count/media projections exist.",
-      "Main review rejected agent's unblocked activation claim; agent confirmed there is no approved activation API. User then chose no offline expiry and normal device unlock without extra Ledger prompt. Recorded in auth spec, O058/A016 and existing outcome; reconnect/revocation, reduced financial scopes and recovery remain open. Do not invent a finite lease or wire bare-ID bootstrap as authorization. Commit current tested cards plus policy/checkpoint changes; use the resulting automatic CI. Then continue approved product work while obtaining remaining access-policy choices; hosted access still requires approval."
+      "Card/policy437bc59d/CI34161647098 completed green and is current verified checkpoint. No CI run is live; do not poll or redispatch it. Full Space-card outcome stays open for Item/media projections.",
+      "Removal boundary is NOT complete: attach verified online removal evidence, immediate UI clearing/observer generation fencing, live command/media upload gating/cancellation, and commit-admission fencing. No live upload owner exists yet. Shared coordinator closes concurrent-open race in current process, not cross-process ownership; persistence failure then crash before durable record still needs startup-safe design/evidence. Actual device-keychain restart proof remains. Retain accepted in-flight work/uncertain results; no recovery bypass or hosted access."
     ]
   },
   "blockers": [],

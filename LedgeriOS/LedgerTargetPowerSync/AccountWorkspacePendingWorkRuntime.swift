@@ -5,6 +5,7 @@ import PowerSync
 public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
     case applicationSupportResolution
     case workspaceLocationResolution
+    case workspaceAccessCheck
     case databaseKeyLoad
     case mediaKeyLoad
     case keyValidation
@@ -194,6 +195,9 @@ struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
 }
 
 struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
+    var accessCoordinator: LedgerWorkspaceAccessCoordinator
+    var requireWorkspaceNotRemoved: @Sendable (LedgerEnvironmentKind, PrincipalID, AccountID) throws -> Void
+    var recordWorkspaceRemoval: @Sendable (LedgerEnvironmentKind, PrincipalID, AccountID) throws -> Void
     var loadDatabaseKey: @Sendable (String, String) throws -> LedgerPowerSyncEncryptionKey
     var loadMediaKeyBytes: @Sendable (String, String) throws -> Data
     var createDirectory: @Sendable (URL) throws -> Void
@@ -316,6 +320,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
     var now: @Sendable () -> Date
 
     static let live = LedgerPowerSyncLocalBootstrapDependencies(
+        accessCoordinator: .shared,
+        requireWorkspaceNotRemoved: { try LedgerWorkspaceRemovalRegistry.requireNotRemoved(
+            environment: $0, principalId: $1, accountId: $2
+        ) },
+        recordWorkspaceRemoval: { try LedgerWorkspaceRemovalRegistry.recordRemoval(
+            environment: $0, principalId: $1, accountId: $2
+        ) },
         loadDatabaseKey: { service, account in
             let keychain = try LedgerPowerSyncKeychain(service: service)
             return try keychain.loadOrCreateKey(principalNamespace: account)
@@ -482,6 +493,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
     case projectNoteQueryConstructed
     case spaceBrowserQueryConstructed
     case lifecycleOwnerConstructed
+    case accessLocked
     case derivedResourcesReleased
     case vaultReleased
     case attachmentDatabaseCloseAttempted
@@ -489,6 +501,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
 }
 
 final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
+    let accessFence: LedgerWorkspaceAccessFence
     let structuredDatabase: any PowerSyncDatabaseProtocol
     let attachmentDatabase: any PowerSyncDatabaseProtocol
     let creationStore: ClientCreationPowerSyncStore
@@ -558,8 +571,10 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         environment: LedgerEnvironmentKind,
         principalId: PrincipalID,
         accountId: AccountID,
-        now: @Sendable @escaping () -> Date
+        now: @Sendable @escaping () -> Date,
+        accessFence: LedgerWorkspaceAccessFence
     ) {
+        self.accessFence = accessFence
         self.structuredDatabase = structuredDatabase
         self.attachmentDatabase = attachmentDatabase
         creationStore = ClientCreationPowerSyncStore(database: structuredDatabase, now: now)
@@ -628,6 +643,9 @@ actor AccountWorkspacePendingWorkRuntime {
     }
 
     private var state: State = .open
+    private var accessLocked = false
+    private let accessFence: LedgerWorkspaceAccessFence
+    private var normalAccessLocked: Bool { accessLocked || accessFence.isRemoved }
     private var resources: AccountWorkspaceRuntimeResources?
     private var finiteLeaseCount = 0
     private var streamTasks: [UUID: Task<Void, Never>] = [:]
@@ -636,6 +654,7 @@ actor AccountWorkspacePendingWorkRuntime {
 
     init(resources: AccountWorkspaceRuntimeResources) {
         self.resources = resources
+        accessFence = resources.accessFence
     }
 
     func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
@@ -1127,6 +1146,14 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func lockAccessPreservingPendingWork() async throws {
+        if !accessLocked {
+            accessLocked = true
+            resources?.lifecycleEvent(.accessLocked)
+        }
+        try await close()
+    }
+
     func close() async throws {
         let task: Task<Result<Void, LedgerOfflineClientRuntimeFailure>, Never>
         switch state {
@@ -1145,17 +1172,24 @@ actor AccountWorkspacePendingWorkRuntime {
         _ operation: AccountWorkspaceRuntimeFiniteOperation,
         body: @Sendable (AccountWorkspaceRuntimeResources) async throws -> Value
     ) async throws -> Value {
-        guard case .open = state, let resources else {
+        guard !normalAccessLocked, case .open = state, let resources else {
             throw LedgerOfflineClientRuntimeFailure.runtimeClosed
         }
         finiteLeaseCount += 1
         do {
             try await resources.finiteOperationCheckpoint(operation)
+            guard !normalAccessLocked else {
+                throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+            }
             let value = try await body(resources)
+            guard !normalAccessLocked else {
+                throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+            }
             releaseFiniteLease()
             return value
         } catch {
             releaseFiniteLease()
+            if normalAccessLocked { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             throw error
         }
     }
@@ -1170,7 +1204,7 @@ actor AccountWorkspacePendingWorkRuntime {
                 AccountWorkspaceRuntimeResources
             ) -> AsyncThrowingStream<Value, Error>
     ) {
-        guard case .open = state, let resources else {
+        guard !normalAccessLocked, case .open = state, let resources else {
             continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
             return
         }
@@ -1192,17 +1226,37 @@ actor AccountWorkspacePendingWorkRuntime {
                 let stream = makeStream(resources)
                 for try await value in stream {
                     try Task.checkCancellation()
-                    if case .terminated = continuation.yield(value) { break }
+                    guard await self.forwardStreamValue(value, to: continuation) else { break }
                 }
                 continuation.finish()
             } catch is CancellationError {
                 continuation.finish(throwing: CancellationError())
             } catch {
-                continuation.finish(throwing: error)
+                await self.finishStream(continuation, error: error)
             }
             await self.streamFinished(id: id)
         }
         streamTasks[id] = task
+    }
+
+    private func forwardStreamValue<Value: Sendable>(
+        _ value: Value,
+        to continuation: AsyncThrowingStream<Value, Error>.Continuation
+    ) -> Bool {
+        guard !normalAccessLocked, case .open = state else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
+            return false
+        }
+        if case .terminated = continuation.yield(value) { return false }
+        return true
+    }
+
+    private func finishStream<Value: Sendable>(
+        _ continuation: AsyncThrowingStream<Value, Error>.Continuation,
+        error: Error
+    ) {
+        continuation.finish(throwing: normalAccessLocked
+            ? LedgerOfflineClientRuntimeFailure.runtimeClosed : error)
     }
 
     private func streamFinished(id: UUID) {
@@ -1325,6 +1379,28 @@ public enum LedgerPowerSyncLocalBootstrap {
         applicationSupportDirectory: URL,
         dependencies: LedgerPowerSyncLocalBootstrapDependencies
     ) async throws -> LedgerOfflineClientRuntime {
+        let identity = try LedgerWorkspaceRemovalRegistry.identity(
+            environment: validatedEnvironment.manifest.environment,
+            principalId: principalId, accountId: accountId
+        )
+        return try await dependencies.accessCoordinator.open(identity: identity) { fence in
+            try await openResources(
+                validatedEnvironment: validatedEnvironment, principalId: principalId,
+                accountId: accountId, applicationSupportDirectory: applicationSupportDirectory,
+                dependencies: dependencies, identity: identity, accessFence: fence
+            )
+        }
+    }
+
+    private static func openResources(
+        validatedEnvironment: ValidatedLedgerEnvironment,
+        principalId: PrincipalID,
+        accountId: AccountID,
+        applicationSupportDirectory: URL,
+        dependencies: LedgerPowerSyncLocalBootstrapDependencies,
+        identity: String,
+        accessFence: LedgerWorkspaceAccessFence
+    ) async throws -> LedgerOfflineClientRuntime {
         var stage: LedgerPowerSyncLocalBootstrapStage = .workspaceLocationResolution
         var structured: AccountWorkspaceOpenedDatabase?
         var attachment: AccountWorkspaceOpenedDatabase?
@@ -1340,6 +1416,11 @@ public enum LedgerPowerSyncLocalBootstrap {
         var runtimeResources: AccountWorkspaceRuntimeResources?
 
         do {
+            stage = .workspaceAccessCheck
+            try dependencies.requireWorkspaceNotRemoved(
+                validatedEnvironment.manifest.environment, principalId, accountId
+            )
+            stage = .workspaceLocationResolution
             let location = try LedgerWorkspaceRuntimeIsolation.resolve(
                 validatedEnvironment: validatedEnvironment,
                 principalId: principalId,
@@ -1526,14 +1607,26 @@ public enum LedgerPowerSyncLocalBootstrap {
                 environment: validatedEnvironment.manifest.environment,
                 principalId: principalId,
                 accountId: accountId,
-                now: dependencies.now
+                now: dependencies.now,
+                accessFence: accessFence
             )
             runtimeResources = madeRuntimeResources
 
+            stage = .workspaceAccessCheck
+            try dependencies.requireWorkspaceNotRemoved(
+                validatedEnvironment.manifest.environment, principalId, accountId
+            )
             stage = .runtimeConstruction
             let owner = try dependencies.makeLifecycleOwner(madeRuntimeResources)
             dependencies.lifecycleEvent(.lifecycleOwnerConstructed)
-            return LedgerOfflineClientRuntime(lifecycleOwner: owner)
+            return LedgerOfflineClientRuntime(lifecycleOwner: owner) {
+                [coordinator = dependencies.accessCoordinator,
+                 record = dependencies.recordWorkspaceRemoval,
+                 environment = validatedEnvironment.manifest.environment] in
+                try await coordinator.remove(identity: identity) {
+                    try record(environment, principalId, accountId)
+                }
+            }
         } catch {
             let hadDerivedResources =
                 runtimeResources != nil

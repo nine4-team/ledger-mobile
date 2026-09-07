@@ -728,6 +728,223 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         closeContext.remove()
     }
 
+    @Test("Removal drains a live watcher even after its runtime facade is released")
+    func removalClosesOrphanedWatcher() async throws {
+        let context = try RuntimeTestContext(suffix: "removal-orphaned-watcher")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let entered = EntryCounter()
+        var dependencies = context.dependencies(events: events)
+        dependencies.streamOperationCheckpoint = { operation in
+            await entered.enter(operation)
+            try await Task.sleep(for: .seconds(30))
+        }
+        var runtime: LedgerOfflineClientRuntime? = try await context.openRuntime(dependencies: dependencies)
+        weak var releasedRuntime = runtime
+        let stream = runtime!.watchClients()
+        let consumer = Task {
+            do {
+                var iterator = stream.makeAsyncIterator()
+                _ = try await iterator.next()
+            } catch { /* Removal cancels the watcher. */ }
+        }
+        await entered.waitUntilEntered(1)
+        runtime = nil
+        for _ in 0..<1000 {
+            if releasedRuntime == nil { break }
+            await Task.yield()
+        }
+        #expect(releasedRuntime == nil)
+        let identity = try LedgerWorkspaceRemovalRegistry.identity(
+            environment: context.environment.manifest.environment,
+            principalId: context.principalId, accountId: context.accountId
+        )
+        try await context.accessCoordinator.remove(identity: identity, persist: {})
+        await consumer.value
+        #expect(events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(events.values.contains(.vaultReleased))
+        context.remove()
+    }
+
+    @Test("Removal locks peer handles and rejects a late concurrent bootstrap")
+    func removalWinsConcurrentOpen() async throws {
+        let first = try RuntimeTestContext(suffix: "removal-first")
+        let peer = try RuntimeTestContext(suffix: "removal-peer")
+        let late = try RuntimeTestContext(suffix: "removal-late")
+        let runtime = try await first.openRuntime()
+        var peerDependencies = peer.dependencies()
+        peerDependencies.accessCoordinator = first.accessCoordinator
+        let peerRuntime = try await peer.openRuntime(dependencies: peerDependencies)
+        let gate = ManualGate()
+        var lateDependencies = late.dependencies()
+        lateDependencies.accessCoordinator = first.accessCoordinator
+        let validate = lateDependencies.validateStructuredDatabase
+        lateDependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            await gate.wait()
+        }
+        let openingDependencies = lateDependencies
+        let opening = Task { try await late.openRuntime(dependencies: openingDependencies) }
+        await gate.waitUntilEntered()
+        try await runtime.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await peerRuntime.pendingWorkSummary()
+        }
+        await gate.release()
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await opening.value
+        }
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await first.openRuntime()
+        }
+        first.remove()
+        peer.remove()
+        late.remove()
+    }
+
+    @Test("Injected persisted removal denies bootstrap before opening protected databases")
+    func persistedRemovalDeniesReopen() async throws {
+        let context = try RuntimeTestContext(suffix: "persisted-removal")
+        let removed = LockedRecorder<String>()
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        var dependencies = context.dependencies(events: events)
+        dependencies.requireWorkspaceNotRemoved = { environment, principal, account in
+            let identity = try LedgerWorkspaceRemovalRegistry.identity(
+                environment: environment, principalId: principal, accountId: account
+            )
+            if removed.values.contains(identity) { throw LedgerWorkspaceRemovalFailure.removed }
+        }
+        dependencies.recordWorkspaceRemoval = { environment, principal, account in
+            removed.append(try LedgerWorkspaceRemovalRegistry.identity(
+                environment: environment, principalId: principal, accountId: account
+            ))
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        _ = try await runtime.captureAttachment(context.capture(id: "pending-removal"))
+        try await runtime.lockAccessPreservingPendingWork()
+        let eventsBeforeReopen = events.values
+        // Simulate a fresh process owner; denial must come from retained store,
+        // not solely from the previous coordinator's in-memory latch.
+        dependencies.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime(dependencies: dependencies)
+        }
+        #expect(events.values == eventsBeforeReopen)
+        context.remove()
+    }
+
+    @Test("Removal-record failure still closes access and can retry without reopening")
+    func removalPersistenceFailureStaysLocked() async throws {
+        let context = try RuntimeTestContext(suffix: "removal-write-failure")
+        let attempts = LockedRecorder<Int>()
+        var dependencies = context.dependencies()
+        dependencies.recordWorkspaceRemoval = { _, _, _ in
+            attempts.append(1)
+            if attempts.values.count == 1 { throw RuntimeInjectedFailure() }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.removalPersistenceFailed) {
+            try await runtime.lockAccessPreservingPendingWork()
+        }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.pendingWorkSummary()
+        }
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime(dependencies: dependencies)
+        }
+        try await runtime.lockAccessPreservingPendingWork()
+        #expect(attempts.values.count == 2)
+        context.remove()
+    }
+
+    @Test("Removal identity separates environment, Principal and Account without ambiguous concatenation")
+    func removalIdentityIsolation() throws {
+        func identity(_ principal: String, _ account: String) throws -> String {
+            try LedgerWorkspaceRemovalRegistry.identity(
+                environment: .targetStaging,
+                principalId: PrincipalID(validating: principal), accountId: AccountID(validating: account)
+            )
+        }
+        #expect(try identity("ab", "c") != identity("a", "bc"))
+        #expect(try identity("a", "b") != identity("b", "a"))
+        #expect(try identity("a", "b") == identity("a", "b"))
+        #expect(try identity("a", "b") != LedgerWorkspaceRemovalRegistry.identity(
+            environment: .targetProduction,
+            principalId: PrincipalID(validating: "a"), accountId: AccountID(validating: "b")
+        ))
+    }
+
+    @Test("Learned-removal lock denies paused read admission and preserves pending media")
+    func removalLockSuppressesLateBytes() async throws {
+        let context = try RuntimeTestContext(suffix: "removal-lock")
+        let gate = ManualGate()
+        let locked = AsyncStream<Void>.makeStream()
+        var dependencies = context.dependencies()
+        dependencies.lifecycleEvent = { event in
+            if event == .accessLocked { locked.continuation.yield(()) }
+        }
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .resolveAttachmentBytes { await gate.wait() }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let capture = try context.capture(id: "retained-after-removal")
+        let receipt = try await runtime.captureAttachment(capture)
+        let resolution = Task { try await runtime.resolveLocalAttachmentBytes(for: receipt) }
+        await gate.waitUntilEntered()
+        let lock = Task { try await runtime.lockAccessPreservingPendingWork() }
+        var notification = locked.stream.makeAsyncIterator()
+        _ = await notification.next()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.pendingWorkSummary()
+        }
+        await gate.release()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await resolution.value
+        }
+        try await lock.value
+        try await runtime.lockAccessPreservingPendingWork()
+        locked.continuation.finish()
+
+        // Storage inspection via the test-only bootstrap proves preservation,
+        // not permission to reactivate a removed Account in the application.
+        var inspectionDependencies = context.dependencies()
+        inspectionDependencies.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+        let inspection = try await context.openRuntime(dependencies: inspectionDependencies)
+        #expect(try await inspection.resolveLocalAttachmentBytes(for: receipt) == capture.bytes)
+        #expect(try await inspection.pendingWorkSummary().unverifiedAttachmentCount == 1)
+        try await inspection.close()
+        context.remove()
+    }
+
+    @Test("Learned-removal lock suppresses a result from an already running read body")
+    func removalLockSuppressesCompletedRead() async throws {
+        let context = try RuntimeTestContext(suffix: "removal-in-read-body")
+        let gate = ManualGate()
+        let locked = AsyncStream<Void>.makeStream()
+        var dependencies = context.dependencies()
+        let makeQuery = dependencies.makePendingWorkQuery
+        dependencies.makePendingWorkQuery = { database, attachments, environment, principal, account, now in
+            let query = try makeQuery(database, attachments, environment, principal, account, now)
+            return SuspendedPendingSummary(query: query, gate: gate)
+        }
+        dependencies.lifecycleEvent = { event in
+            if event == .accessLocked { locked.continuation.yield(()) }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let read = Task { try await runtime.pendingWorkSummary() }
+        await gate.waitUntilEntered()
+        let lock = Task { try await runtime.lockAccessPreservingPendingWork() }
+        var notification = locked.stream.makeAsyncIterator()
+        _ = await notification.next()
+        await gate.release()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await read.value
+        }
+        try await lock.value
+        locked.continuation.finish()
+        context.remove()
+    }
+
     @Test("ATTACHRESOLVE-TEST-005 public runtime resolves the requested receipt and close drains its lease")
     func publicAttachmentResolutionAndCloseDrainage() async throws {
         let successContext = try RuntimeTestContext(suffix: "attachment-resolve-success")
@@ -1837,6 +2054,7 @@ private actor FailingPendingWorkSummary: AccountWorkspacePendingWorkSummarizing 
 
 private final class RuntimeTestContext: @unchecked Sendable {
     let root: URL
+    let accessCoordinator = LedgerWorkspaceAccessCoordinator()
     let environment: ValidatedLedgerEnvironment
     let principalId = try! PrincipalID(validating: "principal-runtime")
     let accountId = try! AccountID(validating: "account-runtime")
@@ -1859,6 +2077,11 @@ private final class RuntimeTestContext: @unchecked Sendable {
         events: LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>? = nil
     ) -> LedgerPowerSyncLocalBootstrapDependencies {
         var dependencies = LedgerPowerSyncLocalBootstrapDependencies.live
+        dependencies.accessCoordinator = accessCoordinator
+        // These tests use injected storage; removal persistence has dedicated
+        // tests below and must not mutate the developer's real keychain.
+        dependencies.requireWorkspaceNotRemoved = { _, _, _ in }
+        dependencies.recordWorkspaceRemoval = { _, _, _ in }
         dependencies.loadDatabaseKey = { [databaseKey] _, _ in databaseKey }
         dependencies.loadMediaKeyBytes = { [mediaKeyBytes] _, _ in mediaKeyBytes }
         dependencies.createDirectory = { directory in
@@ -2035,6 +2258,17 @@ private final class RuntimeTestContext: @unchecked Sendable {
                 forbiddenBundleIdentifiers: []
             )
         )
+    }
+}
+
+private struct SuspendedPendingSummary: AccountWorkspacePendingWorkSummarizing {
+    let query: any AccountWorkspacePendingWorkSummarizing
+    let gate: ManualGate
+
+    func summary() async throws -> PendingLocalWorkSummary {
+        let value = try await query.summary()
+        await gate.wait()
+        return value
     }
 }
 

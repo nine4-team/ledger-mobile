@@ -241,16 +241,21 @@ The exact S5 fixtures and hard failures are defined in the
 
 ## A-016 — Offline-Access Lease
 
-**Status:** partially decided on 2026-09-07; reconnect/access-reduction and recovery policy remain blocked pending approval.
+**Status:** no-expiry, device-unlock and learned Account-removal behavior approved on 2026-09-07; financial access reduction and recovery procedure remain open.
 
 A disconnected device cannot receive membership revocation. The user chose no
 offline time limit for previously downloaded work and the device's normal
 unlock with no additional Ledger biometric/passcode/PIN prompt. Do not add a
 finite authorization lease or treat provider-token expiry as local-data expiry.
 This choice does not authorize new downloads or override revocation learned
-online. Reconnect enforcement, reduced financial scope, and retained pending-work
-recovery still need explicit approval under O-058; the complete activation gate
-is not closed by these two choices alone.
+online. On learned Account removal, immediately lock normal Account reads/edits
+and stop uploads under the removed Principal's permissions. Retain unsynced
+operations and media encrypted for a separately approved recovery process; no
+automatic upload, export, reassignment or recovery access is implied. These
+approved rules can be implemented without choosing a recovery procedure.
+Financial scope reduction short of Account removal and the recovery procedure
+remain open under O-058; full hosted activation/security readiness is not proved
+by this product decision.
 
 The implementation may not claim immediate offline revocation. Logout and local
 account removal must follow the pending-work disposition policy, then clear the

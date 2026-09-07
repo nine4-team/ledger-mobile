@@ -5,6 +5,8 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
     case accountScopeMismatch
     case principalScopeMismatch
     case runtimeClosed
+    case removalPersistenceFailed
+    case removalCloseFailed
     case databaseCloseFailed(
         attachmentDatabase: Bool,
         structuredDatabase: Bool
@@ -15,6 +17,8 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
         case .accountScopeMismatch: "workspace_runtime_account_scope_mismatch"
         case .principalScopeMismatch: "workspace_runtime_principal_scope_mismatch"
         case .runtimeClosed: "workspace_runtime_closed"
+        case .removalPersistenceFailed: "workspace_removal_persistence_failed"
+        case .removalCloseFailed: "workspace_removal_close_failed"
         case .databaseCloseFailed(let attachment, let structured):
             "workspace_runtime_close_failed_\(attachment ? 1 : 0)_\(structured ? 1 : 0)"
         }
@@ -25,10 +29,13 @@ public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
     RejectedOperationRecoveryQuerying, Sendable
 {
-    private let lifecycleOwner: AccountWorkspacePendingWorkRuntime
+    let lifecycleOwner: AccountWorkspacePendingWorkRuntime
+    private let removalHandler: @Sendable () async throws -> Void
 
-    init(lifecycleOwner: AccountWorkspacePendingWorkRuntime) {
+    init(lifecycleOwner: AccountWorkspacePendingWorkRuntime,
+         removalHandler: @Sendable @escaping () async throws -> Void) {
         self.lifecycleOwner = lifecycleOwner
+        self.removalHandler = removalHandler
     }
 
     public func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
@@ -308,6 +315,23 @@ public final class LedgerOfflineClientRuntime:
     /// Destructive cleanup belongs to a later, separately authorized coordinator.
     public func close() async throws {
         try await lifecycleOwner.close()
+    }
+
+    /// Blocks new calls and late finite results, then drains and
+    /// closes without deleting pending operations, media, databases, or keys.
+    /// The consuming coordinator must immediately clear protected presentation
+    /// and fence its observers: values buffered before locking cannot be recalled.
+    /// Persists learned removal outside the Account databases before reporting
+    /// success. Failure leaves this runtime locked and must not be acknowledged
+    /// as durable removal. Activation still requires independent authorization.
+    // Internal until the authorization owner can supply validated removal
+    // evidence; ordinary feature/UI callers must not permanently mark removal.
+    func lockAccessPreservingPendingWork() async throws {
+        try await removalHandler()
+    }
+
+    func lockLocalAccessPreservingPendingWork() async throws {
+        try await lifecycleOwner.lockAccessPreservingPendingWork()
     }
 
     private func trackedStream<Value: Sendable>(

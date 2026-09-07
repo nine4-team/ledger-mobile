@@ -22,10 +22,16 @@ provider token is not itself an expiry timer for the local working set.
 
 An indefinitely disconnected device cannot learn that access was revoked.
 This does not grant new server access or permit ignoring a revocation once
-learned. Exact reconnect enforcement, reduced financial scopes, and protected
-pending-work recovery/retention remain unresolved under O-058. The existing
-no-silent-loss session-ending safeguards continue to apply. Do not introduce a
-finite lease or extra Ledger unlock as an implementation convenience.
+learned. The user also approved the following Account-removal behavior on
+2026-09-07: when Ledger learns the Principal was removed, immediately stop
+normal viewing/editing for that Account and stop uploads under that Principal's
+removed permissions. Preserve unsynced operations and original media encrypted
+on the device; do not silently discard them. Retention is not access permission.
+The approved recovery process for retained work is still to be defined; do not
+invent automatic upload, reassignment, export, or an Owner recovery bypass.
+Reduced financial scopes without Account removal remain unresolved under O-058.
+The existing no-silent-loss session-ending safeguards continue to apply. Do not
+introduce a finite lease or extra Ledger unlock as an implementation convenience.
 
 Users who sign up via Google Sign-In never create a Ledger-specific password.
 A first-time or signed-out authentication cannot depend on an unavailable
