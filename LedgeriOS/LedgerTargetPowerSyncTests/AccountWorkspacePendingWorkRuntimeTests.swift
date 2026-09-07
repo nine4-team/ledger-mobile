@@ -728,6 +728,20 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         closeContext.remove()
     }
 
+    @Test("Removal signal reaches current and late presentation observers without unlocking")
+    func removalSignalIsMonotonic() async {
+        let fence = LedgerWorkspaceAccessFence()
+        var early = fence.watchRemoval().makeAsyncIterator()
+        fence.markRemoved()
+        #expect(await early.next() != nil)
+        #expect(await early.next() == nil)
+        var late = fence.watchRemoval().makeAsyncIterator()
+        #expect(await late.next() != nil)
+        #expect(await late.next() == nil)
+        fence.markRemoved()
+        #expect(fence.isRemoved)
+    }
+
     @Test("Removal drains a live watcher even after its runtime facade is released")
     func removalClosesOrphanedWatcher() async throws {
         let context = try RuntimeTestContext(suffix: "removal-orphaned-watcher")

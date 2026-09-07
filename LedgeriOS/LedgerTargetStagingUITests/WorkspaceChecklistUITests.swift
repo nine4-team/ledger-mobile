@@ -2,6 +2,37 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testRemovalHidesProtectedWorkspace() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let spaces = app.buttons["target-active-project-spaces-tab"]
+        reveal(spaces, in: app)
+        XCTAssertTrue(spaces.waitForExistence(timeout: 5))
+        spaces.tap()
+        let space = app.buttons["target-active-space-card-space-ui-test"]
+        reveal(space, in: app)
+        XCTAssertTrue(space.waitForExistence(timeout: 5))
+        space.tap()
+        let name = app.staticTexts["target-active-space-detail-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        let remove = app.buttons["target-ui-fixture-remove-account"]
+        reveal(remove, in: app, upwards: false)
+        remove.tap()
+        let locked = app.descendants(matching: .any)
+            .matching(identifier: "target-workspace-access-removed").firstMatch
+        XCTAssertTrue(locked.waitForExistence(timeout: 5))
+        XCTAssertFalse(name.exists)
+        XCTAssertFalse(app.buttons["target-active-workspace-back"].exists)
+        XCTAssertFalse(app.buttons["target-active-space-checklist-item-checklist-ui-test-item-ui-test"].exists)
+        XCTAssertFalse(project.exists)
+    }
+
     func testProjectSpaceChecklistInteraction() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

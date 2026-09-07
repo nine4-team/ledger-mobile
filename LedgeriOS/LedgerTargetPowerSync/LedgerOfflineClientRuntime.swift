@@ -317,6 +317,12 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.close()
     }
 
+    /// One monotonic UI-invalidation event for this exact runtime's workspace.
+    /// Late subscribers also receive removal; this never grants access.
+    public func watchAccessRemoval() -> AsyncStream<Void> {
+        lifecycleOwner.watchAccessRemoval()
+    }
+
     /// Blocks new calls and late finite results, then drains and
     /// closes without deleting pending operations, media, databases, or keys.
     /// The consuming coordinator must immediately clear protected presentation

@@ -99,6 +99,13 @@ private struct OfflineProviderSpikeView: View {
     @State private var model = OfflineClientSpikeModel()
 
     var body: some View {
+        WorkspaceAccessGate(access: model.access) {
+            workspaceContent
+        }
+    }
+
+    @ViewBuilder
+    private var workspaceContent: some View {
         Section("Offline Client Creation") {
             TextField("Client name", text: $model.displayName)
                 .textFieldStyle(.roundedBorder)
@@ -161,6 +168,7 @@ private struct OfflineProviderSpikeView: View {
 @MainActor
 @Observable
 private final class OfflineClientSpikeModel {
+    let access = WorkspaceAccessPresentation()
     var displayName = ""
     private(set) var databaseState = "Opening…"
     private(set) var pendingUploadCount = "—"
@@ -320,9 +328,12 @@ private final class OfflineClientSpikeModel {
     }
 
     func start(validatedEnvironment: ValidatedLedgerEnvironment) async {
-        guard runtime == nil, !startInProgress else { return }
+        guard runtime == nil, !startInProgress, !access.isLocked else { return }
         startInProgress = true
-        defer { startInProgress = false }
+        defer {
+            startInProgress = false
+            access.stop()
+        }
         var openedRuntime: LedgerOfflineClientRuntime?
         do {
             let runtime = try await LedgerPowerSyncLocalBootstrap.open(
@@ -331,6 +342,7 @@ private final class OfflineClientSpikeModel {
                 accountId: accountId
             )
             openedRuntime = runtime
+            access.observe(runtime.watchAccessRemoval())
             let cipher = try await runtime.encryptionCipher()
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime

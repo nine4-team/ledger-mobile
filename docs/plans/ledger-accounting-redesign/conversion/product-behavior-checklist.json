@@ -25481,17 +25481,24 @@
       "baselineBehaviorRefs": [],
       "affectedComponents": [
         "LedgeriOS/LedgerTargetPowerSync",
-        "LedgeriOS/LedgerTargetPowerSyncTests"
+        "LedgeriOS/LedgerTargetPowerSyncTests",
+        "LedgeriOS/LedgerTargetAppModel",
+        "LedgeriOS/LedgerTargetAppModelTests",
+        "LedgeriOS/LedgerTargetApp",
+        "LedgeriOS/LedgerTargetStagingUITests",
+        "LedgeriOS/LedgerTarget.xcodeproj"
       ],
       "layers": [
         "local_offline",
         "auth",
-        "powersync_sync"
+        "powersync_sync",
+        "app_ui"
       ],
       "riskDomains": [
         "offline_durability",
         "identity_auth",
-        "sync_visibility"
+        "sync_visibility",
+        "ui_fidelity"
       ],
       "uiJourneys": [],
       "acceptanceChecks": [
@@ -25529,6 +25536,13 @@
           "expected": "Locked runtime gates new yields; coordinator must reject buffered pre-lock updates and stop live upload admission.",
           "command": "Pending coordinator/upload integration tests",
           "status": "planned"
+        },
+        {
+          "id": "REMOVAL-SCREEN",
+          "risk": "ui_fidelity",
+          "expected": "Monotonic runtime removal event locks the workspace presentation; actual Project/Space controls disappear and cannot be revealed by late child updates. Native fixture uses the same gate but does not prove online authorization or provider durability.",
+          "command": "swift test --package-path LedgeriOS --filter 'AccountWorkspacePendingWorkRuntimeTests|WorkspaceAccessPresentationTests' && npm run target:staging:ui:test:macos; iOS WorkspaceChecklistUITests also passed. Logs: /tmp/ledger-access-gate-final-tests.log (34 tests), /tmp/ledger-removal-screen-macos.log (2 tests), /tmp/ledger-removal-screen-ios.log (2 tests). Native xcresults: Test-LedgerTargetStaging-2026.09.07_14-37-20--0700.xcresult and Test-LedgerTargetStaging-2026.09.07_14-38-40--0700.xcresult in LedgerTarget-eptjpfkbqvhdirdzbmfzuvhfoked/Logs/Test.",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
@@ -25549,7 +25563,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Scoped independent GO on runtime batch after fixing public irreversible API and weak-facade watcher leak. Coordinator now weakly tracks lifecycle owners, tested after facade release. Shared fence covers peers and late opens. Buffered UI delivery, live upload/commit fencing, verified removal evidence and native keychain/crash proof remain explicitly outside this batch, not approved as complete."
+          "summary": "Scoped independent GO on runtime batch after fixing public irreversible API and weak-facade watcher leak, and on live in-process UI follow-on: atomic one-shot signal, monotonic presentation, stale-source cancellation and full workspace gate. Native iOS/macOS fixture interactions passed. Fresh-process registry denial still shows generic Unavailable rather than removal-specific UI (no database opens). Verified online removal evidence, live upload/commit fencing and native keychain/crash proof remain outside this batch; full workflow not complete."
         },
         "ci": {
           "status": "not_run",

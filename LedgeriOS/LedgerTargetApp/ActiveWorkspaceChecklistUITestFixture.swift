@@ -26,9 +26,13 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                     Text("Accepted invocations: \(fixture.acceptedInvocationCount)")
                         .accessibilityIdentifier("target-ui-fixture-acceptance-count")
                         .accessibilityValue(String(fixture.acceptedInvocationCount))
+                    Button("Simulate Account removal") { fixture.simulateRemoval() }
+                        .accessibilityIdentifier("target-ui-fixture-remove-account")
                 }
 
-                ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model)
+                WorkspaceAccessGate(access: fixture.access) {
+                    ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model)
+                }
             }
         }
         .task { await fixture.start() }
@@ -41,6 +45,13 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
 @MainActor
 @Observable
 private final class ActiveWorkspaceChecklistUITestFixture {
+    let access = WorkspaceAccessPresentation()
+    private let removals = AsyncStream<Void>.makeStream()
+
+    func simulateRemoval() {
+        removals.continuation.yield(())
+        removals.continuation.finish()
+    }
     private static let observedAt = Date(timeIntervalSince1970: 1_789_500_000)
 
     private let accountId = try! AccountID(validating: "account-ui-test")
@@ -221,6 +232,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
     }
 
     func start() async {
+        access.observe(removals.stream)
         guard !isStarted else { return }
         isStarted = true
         await model.start(runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime(
@@ -250,6 +262,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
     }
 
     func stop() async {
+        access.stop()
         guard isStarted else { return }
         isStarted = false
         await model.stop()

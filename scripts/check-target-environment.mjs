@@ -599,6 +599,7 @@ if (
     "rejectedOperations",
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
+    "watchAccessRemoval",
     "watchBudgetCategories",
     "watchClient",
     "watchClientArchiveOperation",

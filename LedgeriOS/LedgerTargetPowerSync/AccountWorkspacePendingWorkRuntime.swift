@@ -657,6 +657,10 @@ actor AccountWorkspacePendingWorkRuntime {
         accessFence = resources.accessFence
     }
 
+    nonisolated func watchAccessRemoval() -> AsyncStream<Void> {
+        accessFence.watchRemoval()
+    }
+
     func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
         try await withFiniteLease(.createClient) { resources in
             guard command.envelope.accountId == resources.accountId else {

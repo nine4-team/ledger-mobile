@@ -4,8 +4,38 @@ import Foundation
 final class LedgerWorkspaceAccessFence: @unchecked Sendable {
     private let lock = NSLock()
     private var removed = false
+    private var observers: [UUID: AsyncStream<Void>.Continuation] = [:]
     var isRemoved: Bool { lock.withLock { removed } }
-    func markRemoved() { lock.withLock { removed = true } }
+    func markRemoved() {
+        let pending = lock.withLock {
+            removed = true
+            let values = Array(observers.values)
+            observers.removeAll()
+            return values
+        }
+        for observer in pending {
+            observer.yield(())
+            observer.finish()
+        }
+    }
+
+    func watchRemoval() -> AsyncStream<Void> {
+        AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+            let id = UUID()
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { self?.observers.removeValue(forKey: id) }
+            }
+            let alreadyRemoved = lock.withLock {
+                if removed { return true }
+                observers[id] = continuation
+                return false
+            }
+            if alreadyRemoved {
+                continuation.yield(())
+                continuation.finish()
+            }
+        }
+    }
 }
 
 /// Serializes in-process bootstrap/removal for all handles of one stable
