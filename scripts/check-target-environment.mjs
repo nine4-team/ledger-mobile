@@ -604,6 +604,7 @@ if (
     "watchItemSpaceClearingOperation",
     "watchOperation",
     "watchProject",
+    "watchProjectCreationOperation",
     "watchProjectNotes",
     "watchProjects",
     "watchSpaceAssignmentDestinations",

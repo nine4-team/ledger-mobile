@@ -348,6 +348,7 @@
         "swift test --package-path LedgeriOS --no-parallel --skip LedgerWorkspaceRuntimeIsolationTests",
         "npm run target:staging:build:macos",
         "npm run target:staging:build:ios",
+        "npm run target:environment:check",
         "npm run conversion:check"
       ]
     },
