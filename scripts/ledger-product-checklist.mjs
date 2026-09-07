@@ -533,7 +533,13 @@ if (isMainModule()) {
     console.log(JSON.stringify({
       status: projectLegacyStructures(checklist).catalog.completeness.status,
       backgroundSourceCount: scope.sources.length,
-      areas: checklist.auditAreas,
+      areas: checklist.auditAreas.map(({ capabilityDispositions, ...area }) => ({
+        ...area,
+        ...(capabilityDispositions ? {
+          capabilityGroups: capabilityDispositions.length,
+          dispositionedSources: new Set(capabilityDispositions.flatMap((group) => group.sourceIds)).size,
+        } : {}),
+      })),
       unreviewedSpecs: checklist.authorityReviews.filter((review) => review.auditStatus === "partial").map((review) => review.path),
       unreviewedDecisions: Object.values(checklist.decisionReviews).flat().filter((review) => review.auditStatus === "pending").map((review) => review.decisionId),
     }, null, 2));

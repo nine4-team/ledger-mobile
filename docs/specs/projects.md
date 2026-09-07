@@ -268,6 +268,11 @@ keeps the form editable after error acknowledgement, and ordinary Cancel leaves
 the Project unchanged. These controls are recorded in the current Product
 Behavior Catalog; they are not reasons to create a second note-writing model.
 
+MCP also preserves Project-scoped, case-insensitive substring search of note
+text with bounded results. Reuse the same authorized note records, not a second
+search copy or Project-description query; hidden Projects and partial data must
+not be reported as authoritative empty results.
+
 ### Kebab Menu Actions
 
 | Action | Behavior |

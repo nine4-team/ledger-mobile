@@ -82,6 +82,9 @@ loss.
 
 ## Deliberate Non-Goals and Open Gates
 
+The non-goals below apply to discovery/selection itself. Account profile is a
+separate workspace capability defined below; it does not expand discovery rows.
+
 This contract does not decide or implement:
 
 - A-007 identity-provider selection or issuer/subject correlation;
@@ -109,3 +112,27 @@ This contract does not decide or implement:
 - Provider/query failure never becomes a false authoritative-empty snapshot or
   a successful selection.
 
+## Account Business Profile
+
+Preserve the selected Account's business name and logo in Settings and existing
+report headers, using stable Account identity and authorized workspace data.
+The discovery summary remains name-only; it does not acquire logo attachments
+or membership details. Missing logo shows the existing fallback, not a broken
+image or a fabricated profile. Cached profile evidence must remain scoped to
+the active Account and follow the existing offline-readiness policy.
+
+Preserve Edit Business Profile, Business Name, Save/Cancel, and logo selection
+(Photos on iOS, image-file selection on macOS) with visible upload/pending,
+failure/retry and success states. Cancel changes nothing. A failed or rejected
+save must not masquerade as success, and local acceptance must survive restart.
+Name editing does not change Account identity, membership, financial policy or
+currency. Logo changes use the shared attachment lifecycle, including O-023
+retention; uploading bytes alone does not mean the reference was saved.
+
+O-068 must approve actors, valid business-name text (trimming, empty/control/NUL
+handling and a portable UTF-8 bound), and unchanged-name/save semantics before
+target commands/grants are implemented. Choosing Owner-only versus Admin access
+does not settle the text policy. The shipped Owner-only Settings tab and rules rejecting
+Account updates conflict; neither silent failure nor broad member write access
+is target authority. Reuse the shared profile and media operations, not an
+arbitrary Account-field patch or a report-specific profile writer.

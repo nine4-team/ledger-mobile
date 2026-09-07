@@ -9,6 +9,11 @@
 
 ## Target History Contract
 
+The shared reader also serves MCP Project-wide inbound/outbound movement
+history, deduplicated by stable event identity with canonical movement-kind
+filtering. A Project query is not restricted to one Item. It exposes only
+authorized evidence and explicit partial/redacted state, not raw Firestore edges.
+
 Use the canonical Item occurrence and relationship model (O-007/O-015), not
 the source Firestore edge schema, to explain one physical Item's repeated
 acquisition, Project/Inventory, sale, return, resale and correction history.

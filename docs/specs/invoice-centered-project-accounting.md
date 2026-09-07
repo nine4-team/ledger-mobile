@@ -234,6 +234,26 @@ After collection:
   contents; and
 - source edits cannot silently rewrite the paid snapshot.
 
+### Cancel Invoice Demand
+
+Preserve an explicit Invoice-cancellation capability rather than silently
+omitting the source void action. O-070 must decide eligible created/sent states,
+actors, source-membership release, cancellation confirmation and repeat behavior.
+The existing paid boundary remains absolute: ordinary cancellation cannot alter
+paid lines or erase settlement Transactions; paid errors use corrections/refunds.
+Source unrestricted status mutation is not target authority. D-010 retires
+partial line collection: only whole-Invoice collection is a target operation.
+
+## Business Inventory Summary
+
+Preserve MCP/tool-resource Inventory Item count, purchase-value total and status
+breakdown, plus the tool's vendor breakdown, from authorized current Inventory
+Items. This is an Item valuation summary, not vendor Transaction spend, budget
+spend or revenue. O-007/O-015 govern provenance/value basis, O-067 status meaning
+and O-060 monetary visibility. Missing prices/partial evidence are explicit, not
+silently authoritative zero totals. Reuse the Item read model; no Vendor entity
+or new app dashboard is implied.
+
 ## Budget Progress
 
 Each project category shows one progress line composed of two semantic segments:

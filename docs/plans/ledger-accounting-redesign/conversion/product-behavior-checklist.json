@@ -69,39 +69,408 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "5ec22d4bdd02622ce935513882bf0bc1fa8d8dec5de0291981aebe65d5e72bbc"
+    "sourceHash": "cecdc1ba20d91dd20adfd483d94bc952d0057cf147bd1bc1d318ab5fb1a68a8a"
   },
   "auditAreas": [
     {
       "auditAreaId": "current-ui-target-disposition",
       "title": "Current UI behavior and target disposition",
-      "status": "partial",
+      "status": "reviewed",
       "completionRule": "Every inventoried current control, option, transition and meaningful state has one preserved, redesigned or retired target disposition.",
-      "remainingGaps": [
-        "The exact current UI catalog is complete, but target disposition review is not yet complete for every behavior."
-      ]
+      "remainingGaps": [],
+      "reviewNote": "Main and independent reviewer completed all 91 journeys, 1919 exact behaviors and 167 source UI surfaces. Corrected repeated real-Item capture, removal policies, legacy movement groups and Transaction pickers, and implementation-specific presentation assumptions. Source labels remain stable discovery IDs, not target component requirements. Open product decisions remain linked outcome blockers; this is audit closure, not implementation completion.",
+      "evidencePaths": ["docs/specs/app-shell.md", "docs/specs/items.md", "docs/specs/proto-item-capture.md", "docs/specs/return-and-sale-tracking.md", "docs/specs/invoice-centered-project-accounting.md"]
     },
     {
       "auditAreaId": "indexed-specs-and-decisions",
       "title": "Indexed product specs and decisions",
-      "status": "partial",
+      "status": "reviewed",
       "completionRule": "Every indexed canonical product spec and every confirmed/open product decision is reviewed into an outcome, explicit blocker or supported nonproduct disposition.",
-      "remainingGaps": [
-        "Finish the data-model spec review and pending O-038/O-065 dependency review. Authority and decision review rows are the live remaining-work list; earlier audit notes are retained only under migration history."
+      "remainingGaps": [],
+      "reviewNote": "Completed remaining data-model source/target reconciliation and O-038/O-065 dependency review. Added narrow Account profile and supplied MCP metadata owners; O-068/O-069 remain open with blocked outcomes. Main reviewed the source/settings/transactions and independent data-model findings. Open choices are not approvals.",
+      "evidencePaths": [
+        "docs/specs/data-model.md",
+        "docs/specs/account-discovery-and-workspace-selection.md",
+        "docs/specs/needs-review-tab.md",
+        "docs/plans/ledger-accounting-redesign/decision-log.md"
       ]
     },
     {
       "auditAreaId": "background-and-mcp-capabilities",
-      "capabilityDispositions": [],
+      "capabilityDispositions": [
+        {"sourceIds":["FUNCTION-295B190E7ADE","FUNCTION-48B935AA722D","FUNCTION-605DE567BE56","FUNCTION-64DF5B5FA8E6","FUNCTION-6C739413108B","FUNCTION-A1F046859D60","RULE-27D905FAD706","RULE-72EF389823CD","RULE-79E65DCC45A6","RULE-8150996399AA","RULE-B902DC6128E8","FILE-23BF624D3DEF"],"outcomeIds":["auth-online-entry-and-recovery-boundary","account-discovery-authorized","workspace-selection-explicit","invitation-financial-access","team-financial-access-settings","budget-category-directory","account-profile-readback","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-2F49CACBCFB6","RULE-0AD4AC2A568C","RULE-684AA9BB1569","RULE-C40E95B1636E"],"outcomeIds":["project-list","project-detail","project-creation-existing-client","project-creation-new-client","project-edit","project-note-actions","budget-pinning"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-92CE4FD9E25B","RULE-3084F8C3058D","RULE-3211FE38A8F0","RULE-3AB695EA4F67"],"outcomeIds":["space-list-to-detail","space-fields","space-details-edit","space-archive-assignment","space-templates","space-review-notes","space-item-assignment"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-0CBF780A52CC","FUNCTION-8741B9D80FCC","FUNCTION-E58CC96C3CEF","FUNCTION-EE4FDF40EC7B","FUNCMOD-78D697A89342","FUNCMOD-ED4C25A2C78E","RULE-4DD3733CBE59","RULE-D3CFB25D03AD","RULE-FC994C6C2FEA"],"outcomeIds":["item-one-identity","item-accounting-state","item-cycle-provenance","accounting-relationship-provenance","item-everyday-editing","item-intake-atomic-boundary","legacy-proto-item-migration","item-evidence-reconciliation","item-correction","paid-history-boundary"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-0651745EC209","FUNCTION-EBFFD3F950A0","FUNCMOD-1BC6BB701AA3","FUNCMOD-E7CB6889A620","RULE-6852D375E671"],"outcomeIds":["transaction-taxonomy","legacy-transaction-interpretation","transaction-browser-and-detail","transaction-posting-correction","receipt-completeness","needs-review-queue","accounting-relationship-provenance","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-24C086150C5D","FUNCTION-5612C1011897","FUNCTION-AADED40AD19C","RULE-0905373DBB19","RULE-AB3E61BAC3E3","RULE-C4FE7FBE534A"],"outcomeIds":["budget-category-directory","budget-category-lifecycle","project-budget-allocation","budget-progress-calculation","budget-paid-unpaid-progress","budget-readiness-provenance","fee-demand-lifecycle"],"disposition":"redesign"},
+        {"sourceIds":["RULE-9B7212EBB760","RULE-B16FE8CF3DEA","FILE-346E890221AE"],"outcomeIds":["invoice-build-edit","invoice-collect","invoice-sent-revision-delivery","manual-invoice-adjustments","paid-history-boundary","transaction-posting-correction","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["RULE-AFC1D6191232"],"outcomeIds":["vendor-recognition-and-presets"],"disposition":"redesign"},
+        {"sourceIds":["RULE-9FE811BC6DE1","RULE-B77682D589C6","FILE-063B0E6EC659","FILE-2C8D6C14D6CB","FILE-33E69F8B5152","FILE-40E918C46A49","FILE-5D4C249ADCCE","FILE-5D8816D7BB7F","FILE-673F68E2BE08","FILE-A5E6C90AFA0E","FILE-BC248DD1D0EF","FILE-DB2679C54F0C","FILE-FC6420B340AA"],"outcomeIds":["target-environment-isolation","financial-access-no-leak-projections","offline-working-set-readiness","attachment-capture-delivery-verification","attachment-reference-and-byte-retention","cutover-rollback-rehearsal"],"disposition":"redesign"},
+        {"sourceIds":["FUNCTION-FAF99C7D3C5B","RULE-0E3C2A579423","RULE-24D32CA7C3A3","RULE-3D7C7C89C486","RULE-4A287B38B778","RULE-69BC61B1B403","RULE-F75D4EA634AF","RULE-E1C045979A78"],"outcomeIds":["whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FUNCMOD-B42AA317B971","FILE-89E25D7A77D5","FILE-8AA18619A287","FILE-BF6F6537B9D8","FILE-E970DB971AA4"],"outcomeIds":["target-environment-isolation","auth-online-entry-and-recovery-boundary","invitation-financial-access","accounting-entry-routing","budget-progress-calculation","item-intake-atomic-boundary","space-archive-assignment"],"disposition":"redesign"},
+        {"sourceIds":["FILE-008C2AF1A269","FILE-01858E7D6F2F","FILE-0FDA0D22FE61","FILE-1D6E44FA8F89","FILE-2A0F5EACA247","FILE-42005FEF8FD8","FILE-4CBBAFBED6BB","FILE-63127609E244","FILE-666B71D31EE1","FILE-7276A7F79405","FILE-845DA9FA06B6","FILE-87943575B4AD","FILE-9476860F2E0F","FILE-B0DFEF68D8C0","FILE-BD14FF765DF6","FILE-F9A79784D576"],"outcomeIds":["whole-account-migration-reconciliation","legacy-transaction-interpretation","transaction-taxonomy","receipt-completeness","non-item-line-migration","item-credit-after-payment","budget-category-lifecycle","item-evidence-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FILE-8F9B6867A7A9","FILE-9B76F11BD883","FILE-A0F0403EA66A","FILE-CB878013686E","FILE-220AAA67895E","FILE-5B2F34D7EB06","FILE-7E429B142402","FILE-A50BC51BFBA3"],"outcomeIds":["whole-account-migration-reconciliation","item-cycle-provenance","accounting-relationship-provenance","item-evidence-reconciliation","item-correction","project-budget-allocation","budget-readiness-provenance"],"disposition":"redesign"},
+        {"sourceIds":["FILE-7F72D64AB542","FILE-93CD4D9994C1","FILE-AE9A316AEDEF","FILE-B4119B3F03F3","FILE-D1D4EEF7DF08","FILE-DA9A57B158D0"],"outcomeIds":["whole-account-migration-reconciliation","attachment-reference-and-byte-retention","target-environment-isolation"],"disposition":"redesign"},
+        {"sourceIds":["FILE-AA3F04FDF7E2","FILE-D96444FA1D27","FILE-1411B600AD73","FILE-A9F4A74ED736"],"outcomeIds":["signed-app-update-durability","target-environment-isolation","cutover-rollback-rehearsal","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FILE-1DC030E7DE05"],"outcomeIds":["attachment-reference-and-byte-retention","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["FILE-173B5909E4CC","FILE-2484180463B8","FILE-2CEE01D160F2","FILE-35422F4029F9","FILE-3DCBE60029E4","FILE-58B5ED36AB1D","FILE-5EA6862C568C","FILE-6200888CA628","FILE-6325677FFCC9","FILE-953CF1791F7A","FILE-95B4631C73CD","FILE-A5E1BE214B16","FILE-CCEE1B274901","FILE-DE824BF0DB8F","FILE-E2260562EE79","FILE-E29E51B0CDE0","FILE-E9D5488DD76F","FILE-F47E5F16E9BB","FILE-FE79A7FF0888"],"outcomeIds":["whole-account-migration-reconciliation","cutover-rollback-rehearsal","auth-online-entry-and-recovery-boundary","attachment-reference-and-byte-retention","legacy-proto-item-migration","item-cycle-provenance","budget-readiness-provenance"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-00414EA2B411","MCPMOD-2CAC62C341EE","MCPMOD-B4E6A5972565","MCPMOD-A2B6F691FF2E","MCPMOD-E0D43AB307CC"],"outcomeIds":["mcp-public-interface","transaction-taxonomy","item-accounting-state","legacy-proto-item-migration","mcp-transaction-ingestion-metadata-disposition"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-14F6F6559251","MCPMOD-11444B9842C5","MCPMOD-69B08099B8DF","MCPMOD-B4D4B0CAEF8C"],"outcomeIds":["mcp-public-interface","financial-access-no-leak-projections","project-list","project-detail","transaction-browser-and-detail","item-everyday-editing","invoice-report-readback","budget-readiness-provenance","inventory-summary-readback"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-9569EFF075EE","MCPMOD-DAB760104CEE","MCPMOD-5E757BAB490F"],"outcomeIds":["mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-33934129DB02","MCPMOD-38F4B8D34053","MCPMOD-3E4E627EC002","MCPMOD-4938EA5E6169","MCPMOD-B6552C94C033","MCPMOD-C6CA65EAAF8D","MCPMOD-E8F7ED71D93A","MCPMOD-A379AECA88FB","MCPMOD-C52F1FD8A983"],"outcomeIds":["account-discovery-authorized","workspace-selection-explicit","workspace-selection-remembered","workspace-selection-failure-privacy","auth-online-entry-and-recovery-boundary","financial-access-no-leak-projections","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-3330B6FD5A68","MCPMOD-D4D2CD9DBB10","MCPMOD-BB34B27B541A","MCPMOD-D7B37EA0483A"],"outcomeIds":["attachment-capture-delivery-verification","attachment-reference-and-byte-retention","item-capture-mcp-parity","item-everyday-editing"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-E72071DBC337"],"outcomeIds":["attachment-capture-delivery-verification","item-everyday-editing"],"disposition":"preserve"},
+        {"sourceIds":["MCPMOD-1710A9547AEB","MCPMOD-CA75CFB7F29D"],"outcomeIds":["budget-category-directory","budget-category-lifecycle","project-budget-allocation","budget-progress-calculation","budget-sign-conventions","budget-row-presentation","budget-readiness-provenance","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-155A4AB80AC9","MCPMOD-D391DC704D1F"],"outcomeIds":["space-list-to-detail","space-fields","space-details-edit","space-checklist-editor","space-checklist-progress","space-item-assignment","space-command-mcp-parity"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-4305DCB6FD6B","MCPMOD-4B5868CBF5DC"],"outcomeIds":["legacy-transaction-interpretation","item-accounting-state","item-charge-credit-presentation","item-correction","item-cycle-provenance","item-intake-atomic-boundary"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-6B3872A8E6FB"],"outcomeIds":["universal-search-query-results","search-contextual-detail","needs-review-queue","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-ADD33B4FDA16"],"outcomeIds":["transaction-posting-correction","item-correction","accounting-relationship-provenance","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-7774C2CE6D09"],"outcomeIds":["project-note-actions","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-4A73B044281F"],"outcomeIds":["accounting-entry-routing","item-capture-mcp-parity","invoice-import-confirmation","receipt-audit-explanation","receipt-completeness","needs-review-queue","needs-review-contextual-resolution","mcp-transaction-ingestion-metadata-disposition"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-7E2A27F3F12F"],"outcomeIds":["project-invoicing-workspace","invoice-build-edit","manual-invoice-adjustments","invoice-sent-revision-delivery","invoice-collect","invoice-report-readback","invoice-cancellation-policy","partial-invoice-collection-retired","financial-access-policy-and-invoice-visibility","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-82DC4C25B1B8"],"outcomeIds":["item-create-unified-wizard","item-accounting-sections","item-everyday-editing","item-physical-copies","item-correction","item-removal-policy","space-item-assignment","universal-search-query-results","search-contextual-detail","attachment-capture-delivery-verification","attachment-reference-and-byte-retention","item-capture-mcp-parity"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-868A3F35EBC3"],"outcomeIds":["transaction-taxonomy","transaction-browser-and-detail","accounting-entry-routing","transaction-posting-correction","accounting-corrections-refunds","mcp-transaction-ingestion-metadata-disposition","universal-search-query-results","search-contextual-detail","needs-review-queue","attachment-capture-delivery-verification","attachment-reference-and-byte-retention"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-B5A85B82D135","MCPMOD-DFECB1787DB7"],"outcomeIds":["transaction-posting-correction","item-correction","accounting-relationship-provenance","attachment-reference-and-byte-retention"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-8FC7F6247E2F"],"outcomeIds":["project-list","project-detail","project-creation-existing-client","project-creation-new-client","project-initial-notes-capture","project-edit","project-description-update","client-correction-merge","project-archive","project-unarchive","project-budget-allocation","budget-readiness-provenance","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-917C20FEDA6A"],"outcomeIds":["budget-row-presentation","budget-readiness-provenance","inventory-summary-readback","vendor-aggregate-report","needs-review-queue","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-A34D9491FE4F"],"outcomeIds":["item-cycle-provenance","accounting-relationship-provenance","same-client-transfer"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-B1238289755F"],"outcomeIds":["legacy-proto-item-migration","item-create-unified-wizard","item-evidence-reconciliation","item-capture-mcp-parity","needs-review-queue","needs-review-contextual-resolution","mcp-public-interface"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-D14DD1E83CFE"],"outcomeIds":["inventory-destination-planning","item-correction","accounting-entry-routing","transaction-posting-correction"],"disposition":"redesign"},
+        {"sourceIds":["MCPMOD-F5D411967411"],"outcomeIds":["item-inventory-to-project","item-project-to-inventory","item-inventory-back-to-source-project","item-vendor-return","item-remove-before-invoice","item-remove-live-invoice","item-credit-after-payment","same-client-transfer","item-cross-client-through-inventory","accounting-corrections-refunds","item-cycle-provenance","accounting-relationship-provenance"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-031396750B85","CONFIG-0C8B77A5FB08","CONFIG-2F4D7DBFD096","CONFIG-324443A09D94","CONFIG-3F7C92E2669F","CONFIG-50FA673297B2","CONFIG-6899B0DB9A09","CONFIG-6E140F8E16C0","CONFIG-9EF72A31126D","CONFIG-B903A5D5110D","CONFIG-D94C7653FB36","MAN-RELEASE-001"],"outcomeIds":["item-redesign-production-isolation","signed-app-update-durability","target-environment-isolation"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-2439DF7AA062","CONFIG-91C9B311D005","CONFIG-B982A17793ED","CONFIG-C185748A7F0A","CONFIG-D74F97384F03","CONFIG-EA72F3E0CC9F","CONFIG-EF6794568592"],"outcomeIds":["signed-app-update-durability","cutover-rollback-rehearsal"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-3C679B93A305","CONFIG-3FB361C7F0E9","CONFIG-F3494FD36EE5","CONFIG-B2A2BF619303"],"outcomeIds":["mcp-public-interface","item-redesign-production-isolation","target-environment-isolation"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-428FDE11BBE4","CONFIG-C1C61B2D6569","CONFIG-ED6818A70D4E","MAN-INDEX-001"],"outcomeIds":["offline-working-set-readiness","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-5C0EE6600D97","CONFIG-C4677DA3DE5C","MAN-DATA-001","MAN-DATA-002"],"outcomeIds":["whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["MAN-AUTH-001"],"outcomeIds":["auth-online-entry-and-recovery-boundary","whole-account-migration-reconciliation","financial-access-migration"],"disposition":"redesign"},
+        {"sourceIds":["MAN-CUTOVER-001"],"outcomeIds":["stale-client-authority-cutover","item-target-authority-opening","cutover-rollback-rehearsal"],"disposition":"redesign"},
+        {"sourceIds":["MAN-HOSTING-001"],"outcomeIds":["invitation-financial-access","signed-app-update-durability","auth-online-entry-and-recovery-boundary"],"disposition":"redesign"},
+        {"sourceIds":["MAN-LOCAL-001"],"outcomeIds":["session-ending-pending-work","offline-unlock-lease-and-account-isolation","attachment-reference-and-byte-retention"],"disposition":"redesign"},
+        {"sourceIds":["MAN-OBS-001"],"outcomeIds":["mcp-public-interface","offline-command-durability-and-status","whole-account-migration-reconciliation","cutover-rollback-rehearsal"],"disposition":"redesign"},
+        {"sourceIds":["MAN-OFFLINE-001"],"outcomeIds":["offline-working-set-readiness","offline-command-durability-and-status"],"disposition":"redesign"},
+        {"sourceIds":["MAN-REPORT-001"],"outcomeIds":["report-snapshot-and-delivery","whole-account-migration-reconciliation","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["MAN-STORAGE-001"],"outcomeIds":["attachment-capture-delivery-verification","attachment-reference-and-byte-retention","whole-account-migration-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-D861839CD17D"],"outcomeIds":["signed-app-update-durability"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-01C928A8B707","SWIFT-0BE5B00969F4"],"outcomeIds":["transaction-taxonomy","legacy-transaction-interpretation","receipt-completeness","mcp-transaction-ingestion-metadata-disposition","accounting-relationship-provenance"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-08066A63BD11"],"outcomeIds":["legacy-proto-item-migration","item-intake-entry-contexts","item-evidence-reconciliation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-2B5DD377E0BB"],"outcomeIds":["item-one-identity","item-accounting-state","item-cycle-provenance","item-physical-copies","item-link-client-paid","item-link-business-paid"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-31DB4E9B5136"],"outcomeIds":["invoice-build-edit","invoice-collect","invoice-cancellation-policy","invoice-sent-revision-delivery","manual-invoice-adjustments","invoice-credit-zero-settlement"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-279736869F7E","SWIFT-3875BEEAD657"],"outcomeIds":["space-fields","space-checklist-editor","space-templates","space-create-from-template","space-archive-assignment"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-3D3C4156BE8B"],"outcomeIds":["project-note-actions","project-initial-notes-preservation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-7500FDB4FDB6"],"outcomeIds":["project-detail","project-edit","client-identity","project-hero-media","project-archive"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-51D84FD65ADE","SWIFT-8926C720D04A","SWIFT-99CD48FC486A"],"outcomeIds":["budget-category-directory","budget-category-lifecycle","project-budget-allocation","budget-paid-unpaid-progress","fee-demand-lifecycle"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-B6C3B72884E1"],"outcomeIds":["budget-pinning"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-87F9C321FCB3"],"outcomeIds":["vendor-recognition-and-presets"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-901849ED8462"],"outcomeIds":["space-review-notes","space-photo-item-markers"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-9F58549FBE25","SWIFT-F971A5B270E6"],"outcomeIds":["attachment-capture-delivery-verification","attachment-reference-and-byte-retention","space-photo-item-markers"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-BECC3329E3AA","SWIFT-D871AB13C6B1"],"outcomeIds":["team-financial-access-settings","invitation-financial-access","financial-access-migration","auth-online-entry-and-recovery-boundary"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-F84D40FBC375"],"outcomeIds":["account-discovery-authorized","account-profile-readback","account-profile-edit"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-865A6CF9C709","SWIFT-F667CD548CD8"],"outcomeIds":["item-accounting-sections","search-selection-and-action-routing"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-1DA3D2CE9B31"],"outcomeIds":["project-detail","project-note-actions","project-archive","project-deletion-policy","budget-readiness-provenance","offline-working-set-readiness","financial-access-no-leak-projections","offline-command-durability-and-status"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-C05952F542AD"],"outcomeIds":["account-discovery-authorized","workspace-selection-explicit","workspace-selection-remembered","session-ending-pending-work","financial-access-no-leak-projections","offline-working-set-readiness"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-D8ADF0266301"],"outcomeIds":["item-accounting-sections","item-cycle-provenance","inventory-summary-readback","offline-working-set-readiness"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-F26052171FEB"],"outcomeIds":["offline-working-set-readiness","offline-command-durability-and-status"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-C9CE3FC9787D"],"outcomeIds":["auth-online-entry-and-recovery-boundary","session-ending-pending-work","offline-unlock-lease-and-account-isolation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-88C69E26FBA0"],"outcomeIds":["application-shell-and-shared-controls","item-redesign-production-isolation","auth-online-entry-and-recovery-boundary","invitation-financial-access","offline-working-set-readiness"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-4E4F3BC46421","SWIFT-E9529E2899CF","SWIFT-6DA0525DFD44"],"outcomeIds":["report-snapshot-and-delivery","report-receipt-evidence-sharing","space-media-view-print","attachment-reference-and-byte-retention"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-17DA4D1C0ADF","SWIFT-1928FD01B8A1","SWIFT-584D99BC1062","SWIFT-9BA6E6DD44E4","SWIFT-424CEE01EBA6","SWIFT-4A13E5D59F63","SWIFT-5E516B0E78F0","SWIFT-8B02CBB9672C","SWIFT-B11D4234CF01","SWIFT-BD714AB9981F","SWIFT-BFC504E32AFF","SWIFT-C6595DCD62DC","SWIFT-CD75BD4EB9CC","SWIFT-D21A4FBB69CA","SWIFT-E3175033D07C","SWIFT-E8B79C6E043B","SWIFT-F4D687DCD4F1"],"outcomeIds":["application-shell-and-shared-controls"],"disposition":"preserve"},
+        {"sourceIds":["SWIFT-038E6D4248AF","SWIFT-48DE39470AF0"],"outcomeIds":["project-creation-existing-client","project-creation-new-client","project-list","project-edit","project-budget-allocation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-089FDE7D4B0B","SWIFT-E793B24EEB18","SWIFT-F2B00E5AA869"],"outcomeIds":["invoice-build-edit","transaction-posting-correction","legacy-transaction-interpretation"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-0DC9E061596B"],"outcomeIds":["search-selection-and-action-routing","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-14D0C2F1019A","SWIFT-F1FAE8106010","SWIFT-FD51852D673A"],"outcomeIds":["budget-paid-unpaid-progress","budget-progress-calculation","budget-row-presentation","budget-readiness-provenance"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-1BE4CD10F963"],"outcomeIds":["space-photo-item-markers","space-review-notes"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-236679C7D427","SWIFT-4D0D546A02D8","SWIFT-C0ABD9666AE7"],"outcomeIds":["item-everyday-editing","item-correction","item-link-client-paid","item-link-business-paid","item-removal-policy","search-selection-and-action-routing"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-265DE17B71EF"],"outcomeIds":["item-intake-entry-contexts","item-wizard-optional-details"],"disposition":"preserve"},
+        {"sourceIds":["SWIFT-2703ADAB66C5","SWIFT-7B159D426B1D","SWIFT-43DBE441C46B","SWIFT-7C24251C5824","SWIFT-812EB6C0ED72","SWIFT-94EBE4E04058"],"outcomeIds":["application-shell-and-shared-controls"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-3348465E2026"],"outcomeIds":["accounting-entry-routing","transaction-posting-correction"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-34855F53F580","SWIFT-C821F5F10EAE","SWIFT-4C47C0D715F5"],"outcomeIds":["needs-review-queue","needs-review-contextual-resolution","inventory-destination-planning","accounting-corrections-refunds"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-3615734A053E","SWIFT-43F5DBD4F7F3","SWIFT-5BB6D8BE3292"],"outcomeIds":["space-fields","space-list-to-detail","space-browser-search","space-checklist-progress","space-templates"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-37B70FDD1318"],"outcomeIds":["billing-summary-values","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-42D1850CD848"],"outcomeIds":["universal-search-query-results","search-contextual-detail"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-47AEA80908AD"],"outcomeIds":["financial-access-policy-and-invoice-visibility","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-4B46ED85F85E","SWIFT-4CAE3EA7812A","SWIFT-8893ACF03D5F","SWIFT-AABD5ABA3A09","SWIFT-EE7D53A3C3EA"],"outcomeIds":["local-vendor-pdf-review","invoice-import-confirmation","attachment-capture-delivery-verification"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-54042738FD68"],"outcomeIds":["attachment-capture-delivery-verification","attachment-reference-and-byte-retention","space-media-view-print"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-582C58D417AA"],"outcomeIds":["transaction-browser-and-detail","transaction-posting-correction","paid-history-boundary"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-6109B0A97167","SWIFT-63EA86A59559","SWIFT-CB4AC317DF5E"],"outcomeIds":["report-snapshot-and-delivery","project-transaction-export-entry","receipt-line-export","financial-access-no-leak-projections"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-618D86C999C1","SWIFT-B3D2195B0AED","SWIFT-9722B88721CA"],"outcomeIds":["item-accounting-sections","item-charge-credit-presentation","search-selection-and-action-routing"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-736B5D34BF46","SWIFT-9226674CC889"],"outcomeIds":["transaction-taxonomy","transaction-browser-and-detail","item-cycle-provenance"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-7792F727AA52","SWIFT-8BB41184F84B"],"outcomeIds":["accounting-entry-routing","same-client-transfer","item-project-to-inventory","item-cross-client-through-inventory","item-link-choice-review-cancel"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-8BA5197CA887"],"outcomeIds":["item-create-unified-wizard","item-intake-atomic-boundary"],"disposition":"redesign"},
+        {"sourceIds":["SWIFT-9A3A702CA92E"],"outcomeIds":["invoice-build-edit","manual-invoice-adjustments","invoice-collect","paid-history-boundary"],"disposition":"redesign"},
+        {
+          "sourceIds": ["SWIFT-D22F0D6F71E4"],
+          "outcomeIds": ["account-discovery-authorized", "auth-online-entry-and-recovery-boundary", "account-profile-readback", "account-profile-edit"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-8E9B2DFCD775"],
+          "outcomeIds": ["account-discovery-authorized", "team-financial-access-settings", "offline-unlock-lease-and-account-isolation"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-850F643150CE"],
+          "outcomeIds": ["vendor-recognition-and-presets"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-07FE72314E4C"],
+          "outcomeIds": ["item-intake-entry-contexts", "item-wizard-optional-details"],
+          "disposition": "preserve"
+        },
+        {
+          "sourceIds": ["SWIFT-6EB56A9100C3", "SWIFT-8A935E590458", "SWIFT-6AF81DAE53D0", "SWIFT-06586B87FCA4", "SWIFT-A6162BC6046B"],
+          "outcomeIds": ["attachment-capture-delivery-verification", "attachment-reference-and-byte-retention", "offline-unlock-lease-and-account-isolation", "report-snapshot-and-delivery"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-089405BED5D8"],
+          "outcomeIds": ["item-cycle-provenance", "accounting-relationship-provenance", "item-correction"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-093E5E4F8D20"],
+          "outcomeIds": ["budget-pinning", "budget-card-preview"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-0B430AAF3B6E", "SWIFT-8818DB7D6FFB"],
+          "outcomeIds": ["invoice-build-edit", "invoice-collect", "invoice-sent-revision-delivery", "invoice-credit-zero-settlement", "manual-invoice-adjustments", "transaction-posting-correction"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-1178D1E9F474", "SWIFT-57FFA664E36B"],
+          "outcomeIds": ["transaction-browser-and-detail", "accounting-entry-routing", "transaction-posting-correction", "accounting-relationship-provenance"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-17BB6ABA1400"],
+          "outcomeIds": ["vendor-recognition-and-presets"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-1DCA8A4ADE51"],
+          "outcomeIds": ["item-inventory-to-project", "item-project-to-inventory", "item-vendor-return", "item-credit-after-payment", "item-cross-client-through-inventory", "same-client-transfer", "item-correction"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-2208AFCA9830"],
+          "outcomeIds": ["item-redesign-production-isolation"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-27CA6EAC7092", "SWIFT-E1A771F6A409"],
+          "outcomeIds": ["project-list", "project-detail", "project-creation-existing-client", "project-creation-new-client", "project-edit", "project-description-update", "project-archive", "project-unarchive", "project-deletion-policy"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-2CE194E495FF", "SWIFT-FE44BBB4D35B"],
+          "outcomeIds": ["invitation-financial-access", "auth-online-entry-and-recovery-boundary"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-2E174120940E"],
+          "outcomeIds": ["space-templates", "vendor-recognition-and-presets", "invitation-financial-access"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-3D6443DA0A90", "SWIFT-8494F171316C"],
+          "outcomeIds": ["space-list-to-detail", "space-fields", "space-details-edit", "space-archive-assignment", "space-checklist-editor", "space-media-lifecycle"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-4637466F7F73"],
+          "outcomeIds": ["space-templates", "space-save-as-template", "space-create-from-template"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-47AEDE21C63C", "SWIFT-C593225376EB"],
+          "outcomeIds": ["item-create-unified-wizard", "item-accounting-sections", "item-everyday-editing", "item-physical-copies", "item-link-client-paid", "item-link-business-paid", "item-correction", "space-photo-item-markers", "attachment-reference-and-byte-retention"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-5B59D74F6B13", "SWIFT-A3AB0F29E150"],
+          "outcomeIds": ["project-note-actions", "project-initial-notes-preservation"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-6E5F6EAFF883", "SWIFT-9489B0032700", "SWIFT-AAE32021738A"],
+          "outcomeIds": ["offline-working-set-readiness", "offline-command-durability-and-status", "offline-unlock-lease-and-account-isolation"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-8B52C90F1043", "SWIFT-BB61FBAE2B1D"],
+          "outcomeIds": ["legacy-proto-item-migration", "item-create-unified-wizard", "item-intake-entry-contexts", "item-evidence-reconciliation", "attachment-capture-delivery-verification"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-9CF3A4F84903"],
+          "outcomeIds": ["account-discovery-authorized", "team-financial-access-settings", "budget-categories", "project-budget-allocation", "fee-demand-lifecycle"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-AFBB07058144", "SWIFT-BAFED6656104", "SWIFT-C25AEA49443F"],
+          "outcomeIds": ["budget-categories", "budget-category-lifecycle", "project-budget-allocation", "fee-demand-lifecycle", "budget-progress-calculation", "budget-paid-unpaid-progress"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["SWIFT-C11974860D78"],
+          "outcomeIds": ["space-review-notes", "attachment-reference-and-byte-retention"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-1090BA6ACEC9", "MCPTOOL-84506A435FA5"],
+          "outcomeIds": ["account-discovery-authorized", "workspace-selection-explicit", "workspace-selection-remembered", "workspace-selection-failure-privacy", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-7816E5307ACC", "MCPTOOL-7A42BC7172C1", "MCPRESOURCE-115F802C8668", "MCPRESOURCE-DF0AD6E43880"],
+          "outcomeIds": ["mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-FAD77282B988", "MCPTOOL-D0572E06EB6B", "MCPTOOL-5C0CCE378BDA", "MCPRESOURCE-12DDDD1FF641", "MCPRESOURCE-DF8684F8F268"],
+          "outcomeIds": ["project-list", "project-detail", "budget-readiness-provenance", "financial-access-no-leak-projections", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-55857D0737AE", "MCPTOOL-A9FCDED31D3F", "MCPTOOL-921DA05B3330", "MCPTOOL-D7FEF2D5FE3B", "MCPTOOL-C77F4C467B22", "MCPTOOL-9499BE2CC41B"],
+          "outcomeIds": ["project-creation-existing-client", "project-creation-new-client", "project-initial-notes-capture", "project-edit", "project-description-update", "client-correction-merge", "project-archive", "project-unarchive", "project-note-actions"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-063A741737E0", "MCPTOOL-671048CA665A", "MCPTOOL-43389521FF62", "MCPTOOL-9503D6684EDA", "MCPTOOL-DA72457132EF", "MCPTOOL-EDD825A4C317", "MCPRESOURCE-05387AA3B2FB", "MCPRESOURCE-E7354EF7E82B"],
+          "outcomeIds": ["budget-category-directory", "project-budget-allocation", "budget-progress-calculation", "budget-sign-conventions", "budget-row-presentation", "budget-readiness-provenance", "financial-access-no-leak-projections", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-24DFA89A8F44", "MCPTOOL-2B45E68B60F7", "MCPTOOL-7211ECCE184C", "MCPTOOL-7259894A6F1C", "MCPTOOL-16839AD4EE69", "MCPTOOL-EAA4B71CE0F5"],
+          "outcomeIds": ["space-list-to-detail", "space-browser-card-evidence", "space-checklist-progress", "space-fields", "space-details-edit", "space-manual-completion", "space-media-lifecycle", "attachment-reference-and-byte-retention", "space-command-mcp-parity"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-C559C9328A76", "MCPTOOL-296490D2ADA4", "MCPTOOL-3FD3943A21F3", "MCPTOOL-094CE7FB35B1"],
+          "outcomeIds": ["item-accounting-sections", "item-everyday-editing", "universal-search-query-results", "search-contextual-detail", "financial-access-no-leak-projections", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-90873708F7CA", "MCPTOOL-A0EFDDABC6F3", "MCPTOOL-69F70F0D82F2", "MCPTOOL-149B6F08EC7B", "MCPTOOL-FF9A322A83CD"],
+          "outcomeIds": ["item-create-unified-wizard", "item-capture-mcp-parity", "item-physical-copies", "item-everyday-editing", "item-correction", "space-item-assignment", "search-selection-and-action-routing", "item-intake-atomic-boundary"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-D2757741F638"],
+          "outcomeIds": ["item-removal-policy", "search-selection-and-action-routing", "attachment-reference-and-byte-retention"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-648BE9A38A56", "MCPTOOL-CF7AEAE1966B", "MCPTOOL-25AAB317BFEE", "MCPTOOL-35D04B60563F", "MCPTOOL-608B84DDBEA5"],
+          "outcomeIds": ["attachment-capture-delivery-verification", "attachment-reference-and-byte-retention", "item-capture-mcp-parity", "item-everyday-editing"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-06C083E3F645", "MCPTOOL-1159AA7AC389", "MCPTOOL-3FD87C59256C", "MCPTOOL-9ACF50C26A5A", "MCPTOOL-145C17DE8501", "MCPTOOL-A5ACF0F717E8", "MCPTOOL-133576E8F2FF", "MCPTOOL-00ABE6895DBA", "MCPTOOL-28AB94AA6869"],
+          "outcomeIds": ["legacy-proto-item-migration", "item-create-unified-wizard", "item-evidence-reconciliation", "item-capture-mcp-parity", "needs-review-queue", "needs-review-contextual-resolution", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-34FE2AE71BFF", "MCPTOOL-8FA709BDF790", "MCPTOOL-E21155FFADEA", "MCPTOOL-2B4277A2F374"],
+          "outcomeIds": ["transaction-browser-and-detail", "universal-search-query-results", "search-contextual-detail", "needs-review-queue", "financial-access-no-leak-projections", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-88CE4407A0B9", "MCPTOOL-2182ACB9E363", "MCPTOOL-5A34CC142307", "MCPTOOL-DFCD5082BE2F", "MCPTOOL-282034D0C8AF", "MCPTOOL-BBB9B61F2EE8", "MCPTOOL-9D1270611686"],
+          "outcomeIds": ["accounting-entry-routing", "transaction-posting-correction", "accounting-corrections-refunds", "item-correction", "mcp-transaction-ingestion-metadata-disposition"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-188AF292FAFF", "MCPTOOL-34265DD4542A", "MCPTOOL-BC13265D05FD", "MCPTOOL-19127C4032BD", "MCPTOOL-9C8591F5294C"],
+          "outcomeIds": ["accounting-entry-routing", "item-capture-mcp-parity", "invoice-import-confirmation", "receipt-audit-explanation", "receipt-completeness", "needs-review-queue", "needs-review-contextual-resolution", "mcp-transaction-ingestion-metadata-disposition", "attachment-capture-delivery-verification", "attachment-reference-and-byte-retention"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-BDE0436E5E98", "MCPTOOL-1E17B2463089", "MCPTOOL-2B21D2622825", "MCPTOOL-0FC981412C3D", "MCPTOOL-4CF82E3A1594", "MCPTOOL-F01CAFFDE387", "MCPTOOL-B07353E174CA", "MCPTOOL-B87FC2B11214"],
+          "outcomeIds": ["project-invoicing-workspace", "invoice-build-edit", "manual-invoice-adjustments", "invoice-sent-revision-delivery", "invoice-collect", "invoice-report-readback", "financial-access-policy-and-invoice-visibility", "mcp-public-interface"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-03C1DA443F46"],
+          "outcomeIds": ["invoice-cancellation-policy"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-94CE0E801264"],
+          "outcomeIds": ["partial-invoice-collection-retired"],
+          "disposition": "retire"
+        },
+        {
+          "sourceIds": ["MCPTOOL-FCF917D2F4D8"],
+          "outcomeIds": ["contract-derived-project-and-fee-import", "project-creation-existing-client", "project-creation-new-client", "project-initial-notes-capture", "manual-invoice-adjustments", "fee-demand-lifecycle"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-137430AF9A3B", "MCPTOOL-3517FF5089A3", "MCPTOOL-BE6AD578A5CD", "MCPTOOL-044AFFA1EEFB", "MCPTOOL-1E36059850BA"],
+          "outcomeIds": ["item-inventory-to-project", "item-project-to-inventory", "item-inventory-back-to-source-project", "item-vendor-return", "item-remove-before-invoice", "item-remove-live-invoice", "item-credit-after-payment", "same-client-transfer", "item-cross-client-through-inventory", "accounting-corrections-refunds"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-522654D35421", "MCPTOOL-B1DC0447215A"],
+          "outcomeIds": ["item-cycle-provenance", "accounting-relationship-provenance", "same-client-transfer"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-42E5CABFC6F6", "MCPTOOL-4FF3862CBCD5", "MCPTOOL-6E3CE3C31743"],
+          "outcomeIds": ["inventory-destination-planning", "item-correction", "accounting-entry-routing", "transaction-posting-correction"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-F15CC6C9A7AC", "MCPTOOL-93A953185655", "MCPTOOL-556E4BBD4A8C"],
+          "outcomeIds": ["budget-row-presentation", "budget-readiness-provenance", "needs-review-queue", "vendor-aggregate-report"],
+          "disposition": "redesign"
+        },
+        {
+          "sourceIds": ["MCPTOOL-4ED77CBCA500", "MCPRESOURCE-46F41439CD48"],
+          "outcomeIds": ["inventory-summary-readback", "financial-access-no-leak-projections", "mcp-public-interface"],
+          "disposition": "redesign"
+        }
+      ],
       "title": "Background and MCP capability reconciliation",
-      "status": "partial",
+      "status": "reviewed",
       "completionRule": "Every inventoried background and MCP capability is preserved, redesigned or retired, including target-only security, migration and cutover outcomes.",
-      "remainingGaps": [
-        "Account profile and MCP ingestion metadata/triage remain unaudited; no email intake pipeline was found in the inspected source."
-      ]
+      "remainingGaps": [],
+      "reviewedSourceDigest": "16cd254b00f1ff30ab0a13a4804298a2adb1144f3b598b94e2339567d038788f",
+      "reviewedFirebaseCommit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
+      "reviewNote": "All 445 finite source capabilities dispositioned once using unchanged characterization, focused code review and independently reviewed MCP/backend groups. Main corrected URL identity, absent-money formatting, thumbnail failures and preferences mappings; added omitted vendor/Invoice-backfill sources. Source scripts, caches, unused starter/request/profile scaffolds, instrumentation and reverse migration writers are supporting evidence, not target implementation requirements. Whole-account reconciliation, signed updates, environment refusal and rollback have acceptance owners. Open choices block affected outcomes only. No production accessed or Firebase implementation authorized.",
+      "evidencePaths": ["docs/specs/mcp-interface.md", "docs/specs/app-shell.md", "docs/specs/migration-and-release.md", "docs/specs/offline-first.md", "docs/plans/ledger-accounting-redesign/decision-log.md"]
     }
   ],
   "deliveryProfiles": [
+    {
+      "profile": "whole_account_reconciliation",
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "migration",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "media",
+        "accounting",
+        "app_ui",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "migration_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "media_durability",
+        "accounting",
+        "ui_fidelity",
+        "app_mcp_parity"
+      ]
+    },
     {
       "profile": "identity_sync_read",
       "workflowKinds": [
@@ -729,13 +1098,91 @@
         "offline_durability",
         "media_durability"
       ]
+    },
+    {
+      "profile": "secure_profile_read",
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "media"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "media_durability"
+      ]
+    },
+    {
+      "profile": "secure_profile_write",
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "deletion"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "deletion_retention"
+      ]
+    },
+    {
+      "profile": "mcp_accounting_write",
+      "workflowKinds": [
+        "backend_control"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_mcp",
+        "auth",
+        "rls",
+        "accounting",
+        "postgres_schema",
+        "postgres_handler"
+      ],
+      "requiredRisks": [
+        "app_mcp_parity",
+        "identity_auth",
+        "tenant_authorization",
+        "accounting",
+        "database_integrity",
+        "handler_idempotency"
+      ]
     }
   ],
   "authorityReviews": [
     {
+      "path": "docs/specs/migration-and-release.md",
+      "canonicalTarget": true,
+      "sourceHash": "301c339cb900f03a11d2db410845e752f461d9b7ed16fc46194f950d568b4feb",
+      "auditStatus": "audited",
+      "reason": "Whole-account acceptance from the explicit user goal; existing entity migration stories supply detailed rules and proposed architecture remains technical context, not product authorization."
+    },
+    {
       "path": "docs/specs/invoice-centered-project-accounting.md",
       "canonicalTarget": true,
-      "sourceHash": "7c6540cb3c9e968d110bc9580fc51ba90aa3681420fe13bdc2ccb12c85375150",
+      "sourceHash": "4436434d07208f5270714a756a2111148c72bab1c2778d6a4c1746d15088261f",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -789,7 +1236,7 @@
     {
       "path": "docs/specs/projects.md",
       "canonicalTarget": true,
-      "sourceHash": "7b7a2affc58f86a32592b87f80199e0d921ab118a2816d78df87ead886fce1a4",
+      "sourceHash": "687e8d364c921f42f4e77d957628b227309e61af85a2781a5392c5745fc0d976",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -803,7 +1250,7 @@
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
       "canonicalTarget": true,
-      "sourceHash": "ce354f271eb218cef392c0188ef058f423eecf6f3592a90fa96086081ea4b676",
+      "sourceHash": "1cf61a8c065a62a571a9bcc2d545a37b16cce1d5fbf878077ccb1985b40a8cc4",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -844,13 +1291,13 @@
       "path": "docs/specs/data-model.md",
       "canonicalTarget": false,
       "sourceHash": "3992215173aea4ad349d1ee72af74796a11df6019ee12e3c141cf4585cc31b39",
-      "auditStatus": "partial",
-      "reason": "The file describes the current persisted model and must be explicitly reconciled with target entity stories or classified as source-only."
+      "auditStatus": "audited",
+      "reason": "Reviewed as noncanonical source/migration evidence. Existing accounting, budget, Space, media and offline outcomes own target behavior; Account profile, supplied MCP metadata and Inventory planning outcomes cover remaining capabilities. Firestore shapes, caches, movement Transactions and request queues are not target prescriptions."
     },
     {
       "path": "docs/specs/proto-item-capture.md",
       "canonicalTarget": true,
-      "sourceHash": "f55ca651edbd404c1aa2fc15366421a7d67990296901f5f6f40a0a11755db887",
+      "sourceHash": "638deed15574c85d91e71d1d59dc8ecd08c0ff78b4bd7ca6d2582a07366d3576",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -964,7 +1411,7 @@
     {
       "path": "docs/specs/lineage-tracking.md",
       "canonicalTarget": false,
-      "sourceHash": "6ea789d70b1e456e3b974c415caedaaed2231455a8cb75844fcd1c16dcb01459",
+      "sourceHash": "51e9b58adc7455af8e2168438796beb92d988ac5076beb95a54eb051d8afc49b",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -1662,7 +2109,7 @@
     {
       "path": "docs/specs/needs-review-tab.md",
       "canonicalTarget": true,
-      "sourceHash": "5b41a271e65b47b52121635b502fa9afc57c5b8551b719bfae09990f0fc912c9",
+      "sourceHash": "6438f0943fa01b0f98f1572de6ccb514cae551e6921273da82f8d1fff8b66a2a",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -1756,7 +2203,7 @@
     {
       "path": "docs/specs/items.md",
       "canonicalTarget": true,
-      "sourceHash": "a0c8e89d05647fdc3a38d4bebbf3bb8729213d488b299d8c69194c3b4db03a29",
+      "sourceHash": "76f402f04171d4cf0d9e62aeccf26108a653c2a2e5ec31d167413eea98e8d6f9",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -1814,6 +2261,20 @@
           "reason": "Title, source storage/lifecycle mechanics or stale edge-case description; explicit target contracts and linked canonical intake/attachment/history owners prevail. No orphaning, silent upload failure or quantity-based identity shortcut is approved."
         }
       ]
+    },
+    {
+      "path": "docs/specs/mcp-interface.md",
+      "canonicalTarget": true,
+      "sourceHash": "3d2b3a758c59d74a5e1cac17ff79982912afc0757bd0c9a34175028cf48e1415",
+      "auditStatus": "audited",
+      "reason": "Bounded source MCP interface audit and main review; typed discovery, projections, bounded responses, errors, preview/confirmation and telemetry are shared protocol behavior, not new entity tools or provider authority."
+    },
+    {
+      "path": "docs/specs/app-shell.md",
+      "canonicalTarget": true,
+      "sourceHash": "42daaf14839b63e483c43fa99b4a4b6b09f059942d7d62e2cd9b3636871ab519",
+      "auditStatus": "audited",
+      "reason": "Shared navigation and controls preserve user behavior, not provider coupling, sheet wiring or development logging implementation details."
     }
   ],
   "decisionReviews": {
@@ -2074,7 +2535,7 @@
       },
       {
         "decisionId": "O-038",
-        "auditStatus": "pending"
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-039",
@@ -2182,7 +2643,7 @@
       },
       {
         "decisionId": "O-065",
-        "auditStatus": "pending"
+        "auditStatus": "mapped"
       },
       {
         "decisionId": "O-066",
@@ -2191,7 +2652,10 @@
       {
         "decisionId": "O-067",
         "auditStatus": "mapped"
-      }
+      },
+      {"decisionId": "O-068", "auditStatus": "mapped"},
+      {"decisionId": "O-069", "auditStatus": "mapped"},
+      {"decisionId": "O-070", "auditStatus": "mapped"}
     ]
   },
   "currentProduct": {
@@ -2466,8 +2930,8 @@
               },
               {
                 "label": "Delete Project",
-                "result": "Asks for destructive confirmation, hard-deletes only the Project document, and dismisses on success.",
-                "disposition": "retire"
+              "result": "Asks for destructive confirmation, hard-deletes only the Project document, and dismisses on success.",
+              "disposition": "redesign"
               }
             ],
             "action": "Open the trailing ellipsis and select an action.",
@@ -2479,8 +2943,8 @@
             "options": [
               {
                 "label": "Delete",
-                "result": "Deletes the Project document; the current warning mentions orphaned Items only when Items exist.",
-                "disposition": "retire"
+              "result": "Deletes the Project document; the current warning mentions orphaned Items only when Items exist.",
+              "disposition": "redesign"
               },
               {
                 "label": "Dismiss",
@@ -2489,8 +2953,8 @@
               }
             ],
             "action": "Confirm or dismiss destructive deletion.",
-            "result": "Target normal lifecycle must not orphan Project children; physical deletion remains outside this current control’s parity.",
-            "disposition": "retire"
+            "result": "O-024 governs target deletion eligibility and confirmation; preserve the removal capability without orphaning children or copying the source hard-delete writer.",
+            "disposition": "redesign"
           },
           {
             "label": "Archive / Unarchive confirmation",
@@ -2546,7 +3010,7 @@
             "from": "Project detail",
             "event": "Delete succeeds",
             "to": "Project directory",
-            "disposition": "retire"
+            "disposition": "redesign"
           }
         ],
         "states": [
@@ -5217,8 +5681,8 @@
               },
               {
                 "label": "Delete Space",
-                "result": "Confirms and hard-deletes the Space, then dismisses.",
-                "disposition": "retire"
+              "result": "Confirms and hard-deletes the Space, then dismisses.",
+              "disposition": "redesign"
               }
             ],
             "action": "Open the ellipsis menu and choose an action.",
@@ -5281,8 +5745,8 @@
             "options": [
               {
                 "label": "Delete",
-                "result": "Hard-deletes the source Space.",
-                "disposition": "retire"
+              "result": "Hard-deletes the source Space.",
+              "disposition": "redesign"
               },
               {
                 "label": "Dismiss",
@@ -5305,7 +5769,7 @@
             "from": "Space route",
             "event": "One task yield completes",
             "to": "Space detail content",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "from": "Space detail",
@@ -5329,14 +5793,14 @@
             "from": "Space detail",
             "event": "Confirm source Delete Space",
             "to": "Previous page",
-            "disposition": "retire"
+            "disposition": "redesign"
           }
         ],
         "states": [
           {
             "name": "Deferred first frame",
             "expected": "Shows only the background for one task yield before constructing the large detail/context graph.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "Project vs Inventory scope",
@@ -7319,9 +7783,9 @@
                 "disposition": "preserve"
               },
               {
-                "label": "Save & Next",
-                "result": "Writes legacy ProtoItem, queues images, and resets.",
-                "disposition": "retire"
+              "label": "Save & Next",
+              "result": "Writes legacy ProtoItem, queues images, and resets.",
+              "disposition": "redesign"
               },
               {
                 "label": "Done",
@@ -7331,7 +7795,7 @@
             ],
             "action": "Add media, save, or finish.",
             "result": "Legacy second identity is replaced by the unified real-Item flow.",
-            "disposition": "retire"
+            "disposition": "redesign"
           }
         ],
         "transitions": [
@@ -7339,7 +7803,7 @@
             "from": "Quick Add Item",
             "event": "Save & Next",
             "to": "Fresh form after legacy ProtoItem write",
-            "disposition": "retire"
+            "disposition": "redesign"
           },
           {
             "from": "Quick Add Item",
@@ -8862,7 +9326,7 @@
         "states": [
           {
             "name": "Image or PDF tile",
-            "expected": "Images use FirebaseImage with thumbnail-first loading; PDFs show a document icon and two-line filename/default PDF label.",
+            "expected": "Images use thumbnail-first loading; PDFs show a document icon and two-line filename/default PDF label.",
             "disposition": "preserve"
           },
           {
@@ -9110,7 +9574,7 @@
           },
           {
             "name": "FirebaseImage annotations",
-            "expected": "Maps normalized markers through fit/fill geometry and renders them without accepting taps; interactive annotation selection belongs to ZoomableScrollView.",
+            "expected": "Maps normalized markers through fit/fill geometry and renders them without accepting taps; interactive annotation selection belongs to the owning zoomable image surface. The source state name is a discovery identifier, not a required target component.",
             "disposition": "preserve"
           },
           {
@@ -10061,7 +10525,7 @@
       {
         "journeyId": "UIBASE-TRANSACTION-LIST-CARDS-AND-GROUPS-001",
         "sourcePage": "Transaction list host",
-        "targetPage": "Filtered Transaction list, Transaction Detail, movement-group children, or bulk action",
+        "targetPage": "Filtered Transactions or canonical Item/movement provenance; no synthetic movement Transactions",
         "authority": [
           {
             "role": "current_product",
@@ -10214,17 +10678,17 @@
               {
                 "label": "Expand / Collapse",
                 "result": "Shows/hides the grouped child Transaction cards.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               },
               {
                 "label": "Select Group",
                 "result": "When supplied, selects/deselects every child Transaction.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               }
             ],
             "action": "Use a grouped movement summary.",
-            "result": "Changes expansion or selection for Added to, From, Sold to, or Returned to Inventory groups.",
-            "disposition": "preserve"
+            "result": "Explain grouped movement through canonical Item charges and history; no synthetic Transaction selection or accounting authority.",
+            "disposition": "redesign"
           }
         ],
         "transitions": [
@@ -10250,7 +10714,7 @@
             "from": "Movement group",
             "event": "Expand",
             "to": "Child Transactions",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "from": "Grouped production host",
@@ -12490,7 +12954,7 @@
           {
             "name": "All presentations wired",
             "expected": "Every sheet is attached unconditionally; menu calculation decides which controller target can be set. Source: ItemActionSheetsModifier.swift:3-9,24-84.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "Host completion asymmetry",
@@ -13078,7 +13542,7 @@
       {
         "journeyId": "UIBASE-PICK-PENDING-RETURN-TRANSACTION-001",
         "sourcePage": "ReturnTransactionPickerModal",
-        "targetPage": "Item linked to a pending Return Transaction",
+        "targetPage": "Typed return/recovery flow; physical movement, vendor refund and client cash remain distinct",
         "authority": [
           {
             "role": "current_product",
@@ -13101,17 +13565,17 @@
               {
                 "label": "Enter query",
                 "result": "Filters pending Returns by Transaction ID, source, or formatted amount.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               },
               {
                 "label": "Clear query",
                 "result": "Restores all eligible pending Returns.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               }
             ],
             "action": "Search the list.",
             "result": "Shows matching incomplete, non-canceled Return Transactions newest-first. Source: ReturnTransactionPickerModal.swift:14-33,43-54; SearchCalculations.swift:151-167.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "label": "Return Transaction row",
@@ -13119,12 +13583,12 @@
               {
                 "label": "Select row",
                 "result": "Calls onSelect and dismisses; current selection has a checkmark.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               }
             ],
             "action": "Choose a Return.",
             "result": "Returns the selected Transaction to the host. Source: ReturnTransactionPickerModal.swift:57-92.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           }
         ],
         "transitions": [
@@ -13132,25 +13596,25 @@
             "from": "Link Return Transaction",
             "event": "Search",
             "to": "Filtered Return list or no-match state",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "from": "Return list",
             "event": "Select row",
             "to": "Dismissed host with selected Return",
-            "disposition": "preserve"
+            "disposition": "redesign"
           }
         ],
         "states": [
           {
             "name": "No pending returns",
             "expected": "Explains that no incomplete Return Transactions exist in the Project.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "No matching returns",
             "expected": "Shows a search-specific empty state.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "No explicit cancel",
@@ -13645,7 +14109,7 @@
       {
         "journeyId": "UIBASE-PICK-OR-CLEAR-TRANSACTION-001",
         "sourcePage": "TransactionPickerModal",
-        "targetPage": "Selected Transaction association",
+        "targetPage": "Eligible Link or correction with exact scope, type, mutability, readiness and durable acceptance",
         "authority": [
           {
             "role": "current_product",
@@ -13668,17 +14132,17 @@
               {
                 "label": "Enter query",
                 "result": "Filters non-canceled Transactions by ID/source/amount matching.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               },
               {
                 "label": "Clear query",
                 "result": "Restores all non-canceled Transactions.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               }
             ],
             "action": "Search the list.",
             "result": "Shows newest-date-first matches. Source: TransactionPickerModal.swift:12-25,44-54,130-143.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "label": "Transaction choice",
@@ -13691,7 +14155,7 @@
               {
                 "label": "Transaction row",
                 "result": "Calls onSelect with the Transaction and dismisses.",
-                "disposition": "preserve"
+                "disposition": "redesign"
               },
               {
                 "label": "Close",
@@ -13709,13 +14173,13 @@
             "from": "Link Transaction",
             "event": "Search",
             "to": "Filtered list or no-match state",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "from": "Transaction list",
             "event": "Select Transaction",
             "to": "Dismissed host with selection",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "from": "Transaction list",
@@ -13734,7 +14198,7 @@
           {
             "name": "Current selection",
             "expected": "Selected Transaction, or No Transaction when selectedId is nil, shows a checkmark.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "No transactions",
@@ -13744,12 +14208,12 @@
           {
             "name": "No matching transactions",
             "expected": "Shows a search-specific empty state and hides No Transaction while a query is active.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           },
           {
             "name": "Canceled filtering",
             "expected": "Canceled Transactions are never offered.",
-            "disposition": "preserve"
+            "disposition": "redesign"
           }
         ]
       },
@@ -13788,7 +14252,7 @@
               }
             ],
             "action": "Choose where the new Item belongs.",
-            "result": "Resolves the Firestore scope for the host creation flow. Source: DestinationPickerSheet.swift:27-48.",
+            "result": "Resolves the exact Account and Project/Inventory scope for the host creation flow.",
             "disposition": "preserve"
           }
         ],
@@ -18551,7 +19015,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-032"
+          "O-032",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -18727,7 +19192,7 @@
         "section": "Client paid"
       },
       "milestone": "M3",
-      "status": "required",
+      "status": "blocked",
       "deliveryProfile": "item_accounting_media",
       "confirmedDecisionIds": [
         "D-021"
@@ -18760,7 +19225,14 @@
           "heading": "Unaccounted For Item Accounting Route",
           "occurrence": 1
         }
-      ]
+      ],
+      "blocker": {
+        "decisionIds": [
+          "O-065"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "item-link-business-paid",
@@ -18774,7 +19246,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-016"
+          "O-016",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -19560,7 +20033,12 @@
         "section": "Direct client-paid purchases"
       },
       "milestone": "M3",
-      "status": "required",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": ["O-065"],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
       "deliveryProfile": "accounting_offline_write",
       "confirmedDecisionIds": [
         "D-009"
@@ -19593,7 +20071,12 @@
         "section": "1584-paid physical goods"
       },
       "milestone": "M3",
-      "status": "required",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": ["O-065"],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
       "deliveryProfile": "accounting_offline_write",
       "confirmedDecisionIds": [
         "D-008"
@@ -19980,7 +20463,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-032"
+      "O-032",
+      "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -20639,8 +21123,8 @@
     },
     {
       "storyId": "item-cycle-provenance",
-      "title": "Explain the exact sale or return cycle",
-      "outcome": "Retain exact cycle, source/destination and category snapshots, signed amount/price basis, reversed occurrence, Invoice/line membership and open/paid/reversed/corrected state. An Invoice line identifies both Item and occurrence; one mutable transactionId cannot own every relationship.",
+      "title": "Explain Item cycles and Project movement history",
+      "outcome": "Read Item cycles and Project inbound/outbound events with kind filters. Retain source/destination/category, signed amount/price basis, reversal and Invoice/line membership with open/paid/reversed/corrected state. Deduplicate correlated events; expose partial/redacted history honestly.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Data and Integrity Requirements"
@@ -20655,7 +21139,7 @@
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       },
-      "deliveryProfile": "accounting_offline_write",
+      "deliveryProfile": "accounting_read_export",
       "confirmedDecisionIds": [
         "D-014"
       ],
@@ -20851,7 +21335,7 @@
     {
       "storyId": "item-intake-entry-contexts",
       "title": "Seed the same Item flow from each entry point",
-      "outcome": "Project capture starts in that Project with optional Space; Inventory capture has no Project. Transaction capture preselects only an eligible scope/type. Images and MCP extracted fields seed the same real-Item wizard/writer, not a separate product object.",
+      "outcome": "Project capture keeps Project/optional Space; Inventory has no Project. Transaction preselection requires eligible scope/type. Images/MCP fields seed the same real-Item writer. Save & Next resets only after durable acceptance; no duplicate or separate capture object.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Entry contexts"
@@ -21059,7 +21543,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-027"
+          "O-027",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -21092,7 +21577,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-019"
+          "O-019",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -21257,7 +21743,7 @@
     {
       "storyId": "item-intake-atomic-boundary",
       "title": "Make intake and Link safe under retries and competing edits",
-      "outcome": "Validate scope, identity/placement/accounting state, Purchase eligibility, occurrence uniqueness, category, charge price, live Invoice and authority version at commit. Creation/Link/reconciliation leave no partial records or retry duplicates; delete/move/Transfer/collection/price races fail or serialize.",
+      "outcome": "Validate scope, identity/placement/accounting state, Purchase eligibility, occurrence uniqueness, category, project-price floor, live Invoice and authority version. Creation/Link/reconciliation leave no partial records or retry duplicates; delete/move/Transfer/collection/price races fail or serialize.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Atomicity and Concurrency"
@@ -21649,7 +22135,7 @@
     {
       "storyId": "project-note-actions",
       "title": "Capture and manage Project notes",
-      "outcome": "Keep Notes and Quick Note distinct from description: capture multiline text, send, edit stable-ID records and confirm/cancel deletion. Preserve metadata, newest-first notes, input on empty state and attempted text on failure. Share approved app/MCP text rules; never silently drop accepted notes.",
+      "outcome": "Keep Notes/Quick Note distinct from description: multiline capture/send, stable-ID edit, confirmed/canceled deletion and scoped MCP substring search. Preserve metadata, newest-first order, empty-state input and attempted text on failure. Share app/MCP text rules; never drop accepted notes.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Notes and Quick Note"
@@ -24058,7 +24544,8 @@
           "O-029",
           "O-031",
           "O-032",
-          "O-008"
+      "O-008",
+      "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -24350,6 +24837,32 @@
       "companionAuthorityRefs": []
     },
     {
+      "storyId": "inventory-destination-planning",
+      "title": "Resolve Inventory destination planning and preserve its evidence",
+      "outcome": "Account for planning list/follow-up, set/change/clear/resolve/reopen and waiting/partial states. O-038 decides retention and granularity. Preserve raw intent evidence. Planning creates no money or placement; category hints cannot override Furnishings.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Canonical Entry Routing"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": ["O-038"],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "secure_offline_write",
+      "confirmedDecisionIds": ["D-013"],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "heading": "Canonical Entry Routing",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
       "storyId": "vendor-aggregate-report",
       "title": "Resolve and retain vendor reporting capability",
       "outcome": "Account for shipped MCP vendor totals/counts, total ordering and optional Project filter. Implement approved O-041 semantics or explicit retirement, not raw Transaction sums. Use shared authorized reporting with honest partial data and reconciled signs; no new Vendor entity, app screen or writer is implied.",
@@ -24567,6 +25080,381 @@
         {
           "path": "docs/specs/items.md",
           "heading": "Single-Item Actions",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "account-profile-readback",
+      "title": "Read the selected Account business profile",
+      "outcome": "Show authorized Account name/logo in Settings and report headers with absent/loading/stale/media-failure states. Keep stable identity and workspace isolation; discovery stays name-only. No currency feature.",
+      "authority": {
+        "path": "docs/specs/account-discovery-and-workspace-selection.md",
+        "section": "Account Business Profile"
+      },
+      "milestone": "M3",
+      "status": "required",
+      "deliveryProfile": "secure_profile_read",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
+          "heading": "Account Business Profile",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": [
+        {
+          "path": "docs/specs/data-model.md",
+          "heading": "Target Interpretation and Outstanding Coverage",
+          "occurrence": 1
+        }
+      ]
+    },
+    {
+      "storyId": "account-profile-edit",
+      "title": "Edit the Account business name and logo",
+      "outcome": "Preserve Edit Profile, name Save/Cancel and platform logo pickers. Use durable scoped commands/media with pending, error/retry and success; upload alone is not a saved reference. O-068 governs actors; no identity, ownership or currency change.",
+      "authority": {
+        "path": "docs/specs/account-discovery-and-workspace-selection.md",
+        "section": "Account Business Profile"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-068",
+          "O-023"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "secure_profile_write",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
+          "heading": "Account Business Profile",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": [
+        {
+          "path": "docs/specs/data-model.md",
+          "heading": "Target Interpretation and Outstanding Coverage",
+          "occurrence": 1
+        }
+      ]
+    },
+    {
+      "storyId": "mcp-transaction-ingestion-metadata-disposition",
+      "title": "Resolve supplied MCP ingestion metadata and triage",
+      "outcome": "Account for metadata creation/readback, status filters and triage updates. O-069 decides retention/redesign/retirement. Preserve raw evidence; separate manual receiptEmailed and typed Review reasons. Do not invent email intake, matching or deduplication.",
+      "authority": {
+        "path": "docs/specs/needs-review-tab.md",
+        "section": "Caller-Supplied MCP Ingestion Evidence"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-069",
+          "O-063",
+          "O-065",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "mcp_accounting_write",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/needs-review-tab.md",
+          "heading": "Caller-Supplied MCP Ingestion Evidence",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": [
+        {
+          "path": "docs/specs/data-model.md",
+          "heading": "Target Interpretation and Outstanding Coverage",
+          "occurrence": 1
+        }
+      ]
+    },
+    {
+      "storyId": "item-removal-policy",
+      "title": "Remove Items through the approved lifecycle",
+      "outcome": "Preserve single/bulk removal, exact confirmation/cancel and denied/conflict/error outcomes in app/MCP. O-064 decides eligibility, actors and tombstone/restore; O-023 media retention. Revalidate relationships atomically; never erase paid/occurrence evidence.",
+      "authority": {
+        "path": "docs/specs/items.md",
+        "section": "Target Item Removal"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-064",
+          "O-023"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "media_reference_commands",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/items.md",
+          "heading": "Target Item Removal",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "invoice-cancellation-policy",
+      "title": "Cancel an eligible Invoice without erasing payments",
+      "outcome": "Preserve explicit cancellation with confirmation and visible results. O-070 decides created/sent eligibility, actors, source release and repeat behavior. Paid history is immutable; cancellation cannot erase settlement Transactions or replace correction/refund workflows.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Cancel Invoice Demand"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-070"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "client_transfer_accounting_write",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "heading": "Cancel Invoice Demand",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "inventory-summary-readback",
+      "title": "Read the Business Inventory Item summary",
+      "outcome": "Preserve MCP/tool-resource Item count, purchase-value total and status breakdown, plus tool vendor breakdown. Use authorized current Inventory identity with honest missing/partial values; valuation is not Transaction spend or revenue. No new app dashboard.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Business Inventory Summary"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-007",
+          "O-015",
+          "O-067",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "mcp_accounting_read",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "heading": "Business Inventory Summary",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "partial-invoice-collection-retired",
+      "title": "Retire partial Invoice-line collection",
+      "outcome": "Do not expose selected-line collection or accept subset membership in whole-Invoice collection. D-010 requires one whole-Invoice Purchase and frozen complete membership. Preserve source partial-payment evidence only for migration/reconciliation.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Collect"
+      },
+      "milestone": "M3",
+      "status": "retired",
+      "retirementAuthority": {
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Confirmed Decisions",
+        "decisionId": "D-010"
+      },
+      "deliveryProfile": "mcp_accounting_write",
+      "confirmedDecisionIds": [
+        "D-010"
+      ],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "heading": "Collect",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "mcp-public-interface",
+      "title": "Discover and use the authorized MCP interface",
+      "outcome": "Expose implemented typed capabilities, bounded projections/pages and exact-ID results, safe errors, read-only previews and exact human destructive confirmation. Resources share query authority. No raw provider records, hidden grants, unsafe telemetry or duplicate business rules.",
+      "authority": {
+        "path": "docs/specs/mcp-interface.md",
+        "section": "Public Capability Discovery"
+      },
+      "milestone": "M3",
+      "status": "required",
+      "deliveryProfile": "mcp_accounting_read",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/mcp-interface.md",
+          "heading": "Public Capability Discovery",
+          "occurrence": 1
+        },
+        {
+          "path": "docs/specs/mcp-interface.md",
+          "heading": "Authorized Read Shapes",
+          "occurrence": 1
+        },
+        {
+          "path": "docs/specs/mcp-interface.md",
+          "heading": "Commands and Safety",
+          "occurrence": 1
+        },
+        {
+          "path": "docs/specs/mcp-interface.md",
+          "heading": "Telemetry Safety",
+          "occurrence": 1
+        },
+        {
+          "path": "docs/specs/mcp-interface.md",
+          "heading": "Acceptance Examples",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "application-shell-and-shared-controls",
+      "title": "Navigate the app and use shared controls",
+      "outcome": "Preserve adaptive sections, commands, scoped navigation, menus, forms, selection, keyboard and accessibility. Distinguish loading, empty, pending and failure. Reuse controls without provider-specific UI or frozen implementation mechanics.",
+      "authority": {
+        "path": "docs/specs/app-shell.md",
+        "section": "Navigation and Shared Interaction"
+      },
+      "milestone": "M3",
+      "status": "required",
+      "deliveryProfile": "identity_sync_read",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/app-shell.md",
+          "heading": "Navigation and Shared Interaction",
+          "occurrence": 1
+        },
+        {
+          "path": "docs/specs/app-shell.md",
+          "heading": "Implementation and Verification",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "signed-app-update-durability",
+      "title": "Install a signed update without losing offline work",
+      "outcome": "Preserve macOS update checks and automatic-update preference on isolated signed channels. Verify compatible local upgrades or actionable recovery without losing accepted operations/media. Build success never authorizes publishing or changing backend authority.",
+      "authority": {
+        "path": "docs/specs/app-shell.md",
+        "section": "Signed App Updates"
+      },
+      "milestone": "M4",
+      "status": "required",
+      "deliveryProfile": "session_ending_control",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/app-shell.md",
+          "heading": "Signed App Updates",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "whole-account-migration-reconciliation",
+      "title": "Reconcile the entire migrated Account",
+      "outcome": "Deterministically import and reconcile every source class, identity, relationship, amount, setting, note, Space and media reference. Preserve evidence, quarantine ambiguities, and prove dry-run/resume/retry with app/MCP readback. Reuse detailed entity migration evidence.",
+      "authority": {
+        "path": "docs/specs/migration-and-release.md",
+        "section": "Whole-Account Migration and Reconciliation"
+      },
+      "milestone": "M4",
+      "status": "required",
+      "deliveryProfile": "whole_account_reconciliation",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/migration-and-release.md",
+          "heading": "Whole-Account Migration and Reconciliation",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "cutover-rollback-rehearsal",
+      "title": "Rehearse cutover failure and recovery",
+      "outcome": "Rehearse the exact candidate, final-source boundary, restore, rejection/recovery and authority opening. Preserve target-only accepted work after activation; no blind return to Firebase. Hosted/production access and activation need explicit authorization.",
+      "authority": {
+        "path": "docs/specs/migration-and-release.md",
+        "section": "Isolated Rehearsal and Rollback"
+      },
+      "milestone": "M5",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-018",
+          "O-020",
+          "O-022"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      },
+      "deliveryProfile": "cutover_control",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/migration-and-release.md",
+          "heading": "Isolated Rehearsal and Rollback",
+          "occurrence": 1
+        }
+      ],
+      "companionAuthorityRefs": []
+    },
+    {
+      "storyId": "target-environment-isolation",
+      "title": "Refuse cross-wired target environments before startup",
+      "outcome": "Validate one complete app/MCP, Supabase, PowerSync, Auth and Storage environment before SDK or local state opens. Isolate installation, database, keys and media; visibly refuse missing/cross-wired configuration without production fallback or Firebase state reuse.",
+      "authority": {
+        "path": "docs/specs/migration-and-release.md",
+        "section": "Target Environment Isolation"
+      },
+      "milestone": "M3",
+      "status": "required",
+      "deliveryProfile": "offline_authorization",
+      "confirmedDecisionIds": [],
+      "authorityHeadingRefs": [
+        {
+          "path": "docs/specs/migration-and-release.md",
+          "heading": "Target Environment Isolation",
           "occurrence": 1
         }
       ],

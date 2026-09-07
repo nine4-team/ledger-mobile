@@ -69,6 +69,16 @@ mutation, O-064 Item deletion, and O-047 vendor selection. Media add/view/primar
 pin/remove composes the existing durable attachment/reference-retention contract
 (O-023), with visible failures instead of source fire-and-forget cleanup.
 
+## Target Item Removal
+
+Preserve single/bulk Item removal entry points in app and MCP, but not the
+source unconditional hard delete. O-064 owns eligible Item/accounting states,
+actors, confirmation, tombstone/restore and retained-history behavior. O-023
+owns shared/pending media retention. The owning command revalidates exact Items
+and relationships atomically; selection/search merely invokes it. Paid history
+and shared images cannot be silently erased. Keep cancel/denied/conflict/error
+outcomes visible.
+
 ## Target Physical Copies
 
 Preserve Make Copies in its existing detail/Transaction contexts, the 1–20

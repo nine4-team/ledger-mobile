@@ -17,6 +17,9 @@ migration mechanics.
 | [client-identity-and-project-transfers.md](client-identity-and-project-transfers.md) | Canonical target Client identity, global three-type Transaction taxonomy, and paired same-Client Transfers |
 | [projects.md](projects.md) | Canonical target Project identity, Client relationship, optional details, archive-first lifecycle, and offline readiness; Firebase mechanics below the target-state notice remain migration evidence |
 | [account-discovery-and-workspace-selection.md](account-discovery-and-workspace-selection.md) | Canonical target Account discovery, explicit workspace selection, remembered-scope validation, and privacy-preserving failure behavior |
+| [mcp-interface.md](mcp-interface.md) | Canonical target MCP capability discovery, authorized bounded reads, shared typed commands, structured failures, previews, destructive confirmation, and telemetry safety |
+| [app-shell.md](app-shell.md) | Adaptive application navigation and shared controls, scope-safe state and interaction verification |
+| [migration-and-release.md](migration-and-release.md) | Whole-Account migration fidelity, isolated rehearsal and rollback acceptance; no production authorization |
 | [session-ending-pending-work.md](session-ending-pending-work.md) | Canonical target logout, account-removal, pending-operation, and durable local-work safety behavior |
 | [data-model.md](data-model.md) | All entities, relationships, canonical lookups, and validation rules |
 | [proto-item-capture.md](proto-item-capture.md) | Canonical target unified Item wizard, accounting Link, and hard-cutover legacy capture import |

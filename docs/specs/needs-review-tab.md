@@ -40,6 +40,28 @@ workflow's verification. It does not require Review-specific backend writers.
 Financial resolution context remains subject to O-060.
 
 ## Summary
+### Caller-Supplied MCP Ingestion Evidence
+
+Account for existing MCP Transaction metadata readback, exact ingestion-status
+filtering, metadata supplied at creation, and status updates during triage.
+Source fields include origin/status, email ID/subject/inbox, confidence/reason,
+order number and related Transaction IDs. The inspected source has no email
+intake, matching or deduplication service; none is implied by these fields.
+
+Preserve raw imported values as correlated source evidence. O-069 decides
+preserve/redesign/retire for the supplied-metadata capability. O-063 decides which
+typed reasons and transitions belong in target review; O-065 governs ordinary
+Transaction mutations and O-060 financial visibility. Untrusted caller claims
+such as `auto_matched` or confidence cannot establish canonical relationships,
+authorization or accounting completeness. Related IDs must not disclose hidden
+Transactions. Target read/filter/write parity remains blocked on those decisions;
+it must not disappear under the separate vendor-PDF import workflow.
+
+The manually set `receiptEmailed` fact is separate from ingestion provenance.
+Preserve it through the ordinary Transaction workflow, with one canonical field;
+the source `hasEmailReceipt` alias is compatibility evidence, not a second value.
+
+### Historical Summary
 The Review tab surfaces work needing attention. The older proposal below asks
 for richer context and grouping, but its flat-list diagnosis is obsolete and
 its ProtoItem model is superseded. The Target Review Contract takes precedence.

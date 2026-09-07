@@ -74,6 +74,12 @@ Saving after the minimum portion creates the same real Item identity that later
 detail and Link operations update. Continuing through optional details must not
 create a second Item or replace the first Item's ID.
 
+Preserve the existing Save & Next capture loop within this same wizard: after
+durable acceptance of one real Item and its pending media, reset the per-Item
+draft for the next capture. Do not reset on validation or acceptance failure,
+and do not create duplicates on repeated submission. Retiring the ProtoItem
+writer does not retire repeated capture or create a second target writer.
+
 ### Entry contexts
 
 - From a project, the Item starts in that project and may receive a Space.
@@ -82,6 +88,14 @@ create a second Item or replace the first Item's ID.
   scope and type are eligible; the user still sees the same Item wizard.
 - From images or an MCP capture tool, imported media and extracted fields seed
   the same wizard/writer rather than creating a separate product object.
+
+Preserve existing on-device photo/barcode/text extraction as capture assistance.
+An empty SKU may receive the selected candidate; an existing different SKU is
+retained with the candidate available for review, never overwritten by stronger
+OCR confidence. Retain extraction provenance separately from user-authored
+notes and canonical relationships. Extraction failure must not invent a value
+or require a network service to save the original capture. Reuse the existing
+local extraction logic rather than implementing a new hosted recognition system.
 
 ## Accounting-State Rule
 

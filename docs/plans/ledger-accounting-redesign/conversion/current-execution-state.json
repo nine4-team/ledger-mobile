@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 55,
+  "stateVersion": 60,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "TRANSACTION-WORKSPACE-AUDIT-CI-GREEN",
-    "commit": "25e95c33a8bb827ecbc9cd51db76ab51e6702398",
-    "ciRun": 34150509730,
+    "name": "SIMPLIFIED-MANAGEMENT-CI-GREEN",
+    "commit": "ffcff090c685949edeb5b490e3f398c87103992f",
+    "ciRun": 34154928737,
     "ciStatus": "passed",
-    "meaning": "Last committed baseline before management simplification; GitHub success reverified. Does not claim new app behavior."
+    "meaning": "Management simplification committed and pushed; all three automatic PR CI jobs passed, including local Supabase, native tests and both staging builds. Does not claim new app behavior."
   },
   "activeWorkflow": {
-    "id": "simplify-implementation-management",
+    "id": "finish-product-audit",
     "kind": "selection",
     "status": "planning",
     "recordPath": null,
-    "outcome": "Replace overlapping maintenance with one detailed behavior checklist and compact state, preserve authority and evidence, define audit completion and verify the simpler workflow. App implementation is parked, not complete.",
+    "outcome": "Product audit complete; verify and save the coherent audit batch, then resume app workflow implementation without reopening completed reviews.",
     "nextActions": [
-      "Simplification is locally implemented. One product-behavior-checklist.json owns current UI, target outcomes, audit gaps and execution evidence; old files stay historical. Direct authority/profile/decision fields derive inverse maps and audit summaries. Method v4 and AGENTS describe this process.",
-      "Integrated local checks pass: current-state 29 negative/8 positive tests, loader/conservation (1919 behaviors,183 outcomes,5 records), source omission 4 negative/2 positive, CI safety 5 tests, source snapshots, target environment isolation. Checks do not rewrite tracked artifacts; --migrate refuses overwrite. No app implementation was added.",
-      "Independent final review GO (no P0-P2 findings): finite background/MCP disposition+source-digest closure, migrated-record preservation, exact historical/new CI payload checks and resumeAfterWorkflowId verified. Unfinished contents remain editable; original Git evidence stays immutable. Runtime test/build CI jobs are unchanged; redundant metadata commands are legacy-namespaced.",
-      "Next: finish independent review, commit/push this integrated diff on the existing Supabase branch, inspect its single automatic PR CI run, and correct real failures. Do not repeat legacy metadata gates or dispatch duplicate CI. No simplification commit/run yet.",
-      "After simplification goal is verified complete, the app audit is still partial. Read `node scripts/ledger-product-checklist.mjs --audit`; use --outcome ID / --workflow ID / --audit-sources KIND for focused context. resumeAfterWorkflowId preserves the parked app workflow; finish finite audit before expanding app implementation."
+      "Audit complete in unified checklist:91 journeys/1919 behaviors, all445 background sources,31 authority reviews,27 confirmed/69 open decisions. Open choices block only affected outcomes. Do not repeat audit or maintain historical trackers. Main independently reviewed delegated MCP/backend findings; exact coverage and source checks pass.",
+      "Finish audit batch commit/push on this Supabase branch and use its one automatic PR CI run. Focused conversion:check, checklist --self-test, compact --audit read-only/count assertions and git diff --check passed. Only specs/checklist/resume and compact CLI output changed; no runtime code or production access.",
+      "After batch CI, resume active-workspace-to-space-checklist. Inspect the existing acceptance evidence and actual app path; do not claim broad stories from narrow compilation/helper tests. Reuse verified underlying capabilities; complete missing UI interaction/integration evidence and then deliver the next approved coherent workflow.",
+      "New explicit owners include shared app/MCP behavior, Account profile, Item/Invoice removal, Inventory summary/planning, whole-account migration, signed updates and target startup isolation. O068 actors/name policy, O069 supplied ingestion metadata, O070 Invoice cancellation remain unresolved. Existing architecture spike/hosted authorization gates still apply.",
+      "Identify hosted Supabase/PowerSync validation prerequisites and request authorization before provisioning/access; continue independent local work. Keep one checklist and compact state, use focused tests and one automatic integration CI per completed batch."
     ]
   },
   "blockers": [],
