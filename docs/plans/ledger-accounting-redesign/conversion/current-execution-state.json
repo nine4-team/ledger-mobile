@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 19,
+  "stateVersion": 20,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,22 +9,22 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "SPACE-LIST-QUERY-CONTROLS-GREEN",
-    "commit": "82bcb075e62f53bcedfdcc74587a83fd7244b0a8",
-    "ciRun": 34068138170,
+    "name": "CURRENT-APP-UI-CONTROL-FLOW-BASELINE-GREEN",
+    "commit": "8c5640728e539366ed4e3d2210339ca2cda81b9f",
+    "ciRun": 34078157416,
     "ciStatus": "passed",
-    "meaning": "The active Space browser integrity contract, synchronized query controls, and frozen historical evidence passed all three CI jobs."
+    "meaning": "The source-verified 91-journey behavior catalog covers all 167 current UI surfaces and passed independent review, local controls, isolated target builds/tests, and disposable local Supabase checks."
   },
   "activeWorkflow": {
     "id": "current-app-ui-control-flow-baseline",
     "kind": "coverage_audit",
-    "status": "ci_verification",
+    "status": "complete",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/current-app-ui-control-flow-baseline.json",
     "outcome": "Create the durable page-by-page baseline of every current Ledger UI control, option, transition, and visible state before resuming target product UI implementation.",
     "nextActions": [
-      "Commit the locally verified process simplification and 91-journey product-behavior baseline without changing target application code.",
-      "Push the Supabase branch and observe automatic pull-request CI for that exact checkpoint.",
-      "After CI passes, record the immutable checkpoint, mark the baseline complete, and resume target product UI implementation from named baseline journeys."
+      "Select the next user-meaningful workflow using the implementation tracker and open product decisions.",
+      "Create one compact workflow record that cites every applicable baseline journey and product authority section.",
+      "Implement and verify the workflow end to end without reviving per-surface dossier or promotion ceremony."
     ]
   },
   "progress": {

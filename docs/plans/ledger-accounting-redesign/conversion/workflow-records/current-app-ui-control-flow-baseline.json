@@ -3,7 +3,7 @@
   "workflowId": "current-app-ui-control-flow-baseline",
   "title": "Current App UI and Control-Flow Baseline",
   "kind": "coverage_audit",
-  "status": "ci_verification",
+  "status": "complete",
   "outcome": "Produce the page-by-page checklist of everything a person can see and do in the current Ledger app, with each behavior explicitly preserved, redesigned, or retired for the Supabase implementation.",
   "authority": [
     {
@@ -2348,9 +2348,9 @@
       "summary": "Independent cross-review split the original aggregate buckets, verified all 91 journeys against source/spec authority, and drove corrections until the project/Space, inventory/billing, action-modal, shared-control, and media batches each returned GO. The final catalog contains 167 unique covered surface IDs, 0 uncovered IDs, 299 control groups, 927 named options, 292 transitions, and 396 visible or edge states."
     },
     "ci": {
-      "status": "not_run",
-      "commit": null,
-      "run": null
+      "status": "passed",
+      "commit": "8c5640728e539366ed4e3d2210339ca2cda81b9f",
+      "run": 34078157416
     }
   }
 }

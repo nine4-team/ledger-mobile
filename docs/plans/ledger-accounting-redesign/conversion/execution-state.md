@@ -5665,3 +5665,24 @@ on 2026-09-06:
   equal-value/no-change behavior. Local work can reach implemented only; hosted
   authenticated PowerSync authorization/revocation remains required for
   verified. No hosted/Firebase/production/migration/cutover action is authorized.
+
+Current-app behavior baseline checkpoint later on 2026-09-06:
+
+- a source-verified product catalog now records 91 user journeys spanning all
+  167 current Swift UI surfaces, with 299 control groups, 927 named options,
+  292 transitions and 396 visible or edge states;
+- each behavior is explicitly marked preserve, redesign or retire, including
+  navigation, hidden side effects, asynchronous failure behavior, known source
+  defects and source/spec disagreements;
+- independent project/Space, inventory/billing, action-modal, shared-control
+  and media reviews drove corrections until every batch returned GO and no UI
+  surface remained uncovered;
+- two macOS CI attempts exposed a suite-transition stall after native
+  PowerSync/SQLCipher tests. The gate now runs the four workspace-isolation
+  tests in their own process and the other 657 tests in a second process,
+  preserving full coverage without weakening the timeout; and
+- exact checkpoint `8c5640728e539366ed4e3d2210339ca2cda81b9f`
+  passed all three immutable jobs in Actions run `34078157416`. Future product
+  UI workflows must cite the applicable catalog journey IDs before
+  implementation. No Firebase, hosted resource, production data, migration,
+  release or cutover action was touched or authorized.
