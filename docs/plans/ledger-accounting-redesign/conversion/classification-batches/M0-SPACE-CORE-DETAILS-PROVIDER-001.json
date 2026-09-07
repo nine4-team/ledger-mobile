@@ -120,7 +120,7 @@
     },
     {
       "id": "SWIFT-C99453DE8B49",
-      "acknowledgeSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
+      "acknowledgeSourceHash": "e7870dc94d970675219c503c88ccc907f4253e42f7e435ad049c8e32ebc5c03c",
       "currentBehavior": "Executable thin adapter forwards only the typed close-aware exact-Space runtime watch.",
       "disposition": "redesign",
       "status": "implemented",
@@ -138,7 +138,7 @@
     },
     {
       "id": "SWIFT-058F3155F97F",
-      "acknowledgeSourceHash": "4b997ebe16d8097f68d50a019ce52a1fde1c5dce34a51cc2ec1b1c32cc04d6f2",
+      "acknowledgeSourceHash": "3dcbf37e3cc24571018f5cde8d4b6d655ac9ec03fa23a179f594c51ec7fba789",
       "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states, honest checklist progress, immediate toggle controls, and launches the separately owned full checklist editor sheet.",
       "disposition": "redesign",
       "status": "implemented",

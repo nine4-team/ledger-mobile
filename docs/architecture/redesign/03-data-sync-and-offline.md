@@ -364,6 +364,12 @@ that offers:
 3. **Remove from this device and discard local pending work**, which names the
    exact operation/media counts and requires explicit destructive confirmation.
 
+O-051 remains the product gate for how one rejected operation becomes
+explicitly resolved after a corrective retry and whether an evidence-retaining
+**Do Not Retry** acknowledgment exists. Until it is approved, feature workflows
+may recover and display immutable rejection evidence but may not dismiss it,
+link a replacement as its resolution, or remove it from the unresolved count.
+
 The third path is the only permitted exception to “no lost locally accepted
 operation.” It deletes the queue, unuploaded bytes, database, and key; it cannot
 claim those operations reached the server. Closing the dialog, provider token

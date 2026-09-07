@@ -72,6 +72,7 @@ let package = Package(
             name: "LedgerTargetPowerSyncTests",
             dependencies: [
                 "LedgerTargetCore",
+                "LedgerTargetAppModel",
                 "LedgerTargetPowerSync",
                 .product(name: "PowerSync", package: "powersync-swift")
             ],

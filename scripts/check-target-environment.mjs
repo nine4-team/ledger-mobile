@@ -492,15 +492,16 @@ if (description) {
     const dependencies = new Set(powerSyncTests.target_dependencies ?? []);
     const products = new Set(powerSyncTests.product_dependencies ?? []);
     if (
-      dependencies.size !== 2 ||
+      dependencies.size !== 3 ||
       !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetAppModel") ||
       !dependencies.has("LedgerTargetPowerSync") ||
       products.size !== 1 ||
       !products.has("PowerSync")
     ) {
       fail(
         "target_powersync_test_dependency_boundary",
-        "LedgerTargetPowerSyncTests may depend only on LedgerTargetCore, LedgerTargetPowerSync, and PowerSync.",
+        "LedgerTargetPowerSyncTests may depend only on LedgerTargetCore, LedgerTargetAppModel, LedgerTargetPowerSync, and PowerSync.",
       );
     }
   }
@@ -595,6 +596,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "rejectedOperations",
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
     "watchBudgetCategories",
@@ -608,6 +610,7 @@ if (
     "watchProjectCreationOperation",
     "watchProjectNotes",
     "watchProjects",
+    "watchRejectedOperations",
     "watchSpaceAssignmentDestinations",
     "watchSpaceChecklistRevisionOperation",
     "watchSpaceCoreDetails",
@@ -2856,7 +2859,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,Sendable",
     )
   ) {
     fail(
@@ -3168,7 +3171,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,Sendable",
     )
   ) {
     fail(

@@ -2,7 +2,7 @@
 
 Status: active crosswalk; product authority remains external
 Architecture version: 0.1
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-07
 
 ## Purpose
 
@@ -102,6 +102,7 @@ is still open.
 | O-048 | Project rename lifecycle and unchanged-save semantics | Archived-Project edit eligibility; same-value result/revision/timestamp/audit behavior; operation result, offline overlay and concurrency; proposed contract is in the [combined O-048/O-049/O-050 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-048-O-049-O-050-project-rename-boundary.md) | Approved archived eligibility and unchanged-save policy plus active/archived, same-value, revision-boundary, replay, audit, offline and concurrency tests |
 | O-049 | Project display-name cross-runtime boundary | One exact creation-and-rename edge-trim, unsafe-control/NUL, Unicode-preservation and UTF-8-size contract across app, MCP, PostgreSQL, PowerSync and migration; proposed contract is in the [combined Project rename packet](../../plans/ledger-accounting-redesign/decision-packets/O-048-O-049-O-050-project-rename-boundary.md) | Approved scalar/control/trim/byte rule plus shared create/rename vectors, zero-dispatch invalid-input tests and lossless migration/quarantine proof |
 | O-050 | Project rename authorization | Exact active-membership role/capability, actor binding, trusted-command-only mutation and non-enumerating denial order; proposed contract is in the [combined Project rename packet](../../plans/ledger-accounting-redesign/decision-packets/O-048-O-049-O-050-project-rename-boundary.md) | Approved command capability plus positive, denied-role, revoked, forged-actor, direct-DML, cross-tenant, RLS, Sync and RPC tests |
+| O-051 | Rejected offline-operation recovery | Durable unresolved-rejection review, corrective-retry linkage, pending-work responsibility, optional do-not-retry acknowledgment and immutable audit retention; proposed contract is in the [O-051 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-051-rejected-operation-recovery-resolution.md) | Approved resolution point and reason codes plus encrypted restart, exact-command recovery, foreign/corrupt refusal, replacement-chain, duplicate-retry, logout-blocking and no-evidence-deletion tests |
 
 ## Traceability Enforcement
 

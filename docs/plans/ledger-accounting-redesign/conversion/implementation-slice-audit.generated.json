@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-07T07:48:49.118Z",
+  "generatedFromManifestSync": "2026-09-07T09:06:41.342Z",
   "totals": {
     "slices": 99,
     "claimedTargetSurfaces": 329,
-    "unclaimedTargetSurfaces": 436,
-    "implementationAdvancedTargetSurfaces": 255
+    "unclaimedTargetSurfaces": 438,
+    "implementationAdvancedTargetSurfaces": 257
   },
   "statusCounts": {
     "draft": 5,

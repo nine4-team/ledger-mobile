@@ -39,7 +39,9 @@ enum SpaceChecklistRevisionPowerSyncStoreCheckpoint: Equatable, Sendable {
     case afterCommit
 }
 
-actor SpaceChecklistRevisionPowerSyncStore: SpaceChecklistRevising {
+actor SpaceChecklistRevisionPowerSyncStore:
+    SpaceChecklistRevising, RejectedOperationRecoveryQuerying
+{
     private let database: any PowerSyncDatabaseProtocol
     private let accountId: AccountID
     private let principalId: PrincipalID
@@ -199,7 +201,6 @@ actor SpaceChecklistRevisionPowerSyncStore: SpaceChecklistRevising {
                 guard ownership == .unclaimed else {
                     throw SpaceChecklistRevisionPowerSyncFailure.malformedLocalEvidence
                 }
-
                 let space = try transaction.getOptional(
                     sql: """
                     SELECT lifecycle, revision
@@ -410,6 +411,86 @@ actor SpaceChecklistRevisionPowerSyncStore: SpaceChecklistRevising {
         }
     }
 
+    nonisolated func watchRejectedOperations(
+        _ request: RejectedOperationRecoveryRequest
+    ) -> AsyncThrowingStream<RejectedOperationRecoverySnapshot, Error> {
+        do {
+            try Self.validateRecoveryRequest(
+                request,
+                accountId: accountId,
+                principalId: principalId
+            )
+        } catch {
+            return AsyncThrowingStream { $0.finish(throwing: error) }
+        }
+        return AsyncThrowingStream { continuation in
+            let id = UUID()
+            let handle = SpaceChecklistRevisionWatchHandle()
+            let registration = Task { await watchRegistry.register(id: id, handle: handle) }
+            let task = Task {
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
+                    continuation.finish()
+                    if admitted { await watchRegistry.finished(id: id) }
+                    return
+                }
+                do {
+                    let rows = try database.watch(
+                        sql: Self.recoveryWatchSQL,
+                        parameters: [
+                            request.accountId.rawValue,
+                            request.actorPrincipalId.rawValue,
+                            request.subject.id.rawValue
+                        ]
+                    ) { try SpaceChecklistRecoveryEvidence(cursor: $0) }
+                    for try await evidence in rows {
+                        try Task.checkCancellation()
+                        let candidates = try evidence.map {
+                            try $0.candidate(request: request)
+                        }
+                        continuation.yield(try RejectedOperationRecoverySnapshot(
+                            request: request,
+                            candidates: candidates
+                        ))
+                    }
+                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: CancellationError())
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                await watchRegistry.finished(id: id)
+            }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
+        }
+    }
+
+    func rejectedOperations(
+        _ request: RejectedOperationRecoveryRequest
+    ) async throws -> RejectedOperationRecoverySnapshot {
+        guard !isClosed else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+        try Self.validateRecoveryRequest(
+            request,
+            accountId: accountId,
+            principalId: principalId
+        )
+        try Task.checkCancellation()
+        let evidence = try await database.getAll(
+            sql: Self.recoveryWatchSQL,
+            parameters: [
+                request.accountId.rawValue,
+                request.actorPrincipalId.rawValue,
+                request.subject.id.rawValue
+            ]
+        ) { try SpaceChecklistRecoveryEvidence(cursor: $0) }
+        try Task.checkCancellation()
+        return try RejectedOperationRecoverySnapshot(
+            request: request,
+            candidates: evidence.map { try $0.candidate(request: request) }
+        )
+    }
+
     func cancelAndDrainWatches() async {
         isClosed = true
         await watchRegistry.cancelAndDrain()
@@ -512,6 +593,42 @@ actor SpaceChecklistRevisionPowerSyncStore: SpaceChecklistRevising {
          AND authoritative.id = operation.subject_id
         WHERE operation.id = ?
         """
+
+    private static let recoveryWatchSQL = """
+        SELECT source.id, source.account_id, source.actor_principal_id,
+               source.contract_version, source.fingerprint, source.subject_id,
+               source.local_state, source.accepted_at_ms, source.updated_at_ms,
+               source.command_type, source.command_expected_revision,
+               source.command_envelope_json, source.terminal_phase,
+               source.terminal_result_code, source.terminal_error_code,
+               source.terminal_envelope_sha256, source.terminal_request_sha256,
+               source.terminal_server_received_at_ms,
+               source.terminal_completed_at_ms, source.checklist_readback_revision
+        FROM \(LedgerPowerSyncTable.localOperations) AS source
+        WHERE source.account_id = ? AND source.actor_principal_id = ?
+          AND source.subject_id = ?
+          AND source.command_type = 'revise_space_checklists'
+          AND source.local_state = 'rejected'
+        ORDER BY source.terminal_completed_at_ms DESC,
+                 source.accepted_at_ms DESC, source.id ASC
+        """
+
+    private nonisolated static func validateRecoveryRequest(
+        _ request: RejectedOperationRecoveryRequest,
+        accountId: AccountID,
+        principalId: PrincipalID
+    ) throws {
+        guard request.accountId == accountId else {
+            throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+        }
+        guard request.actorPrincipalId == principalId else {
+            throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+        }
+        guard request.family == .reviseSpaceChecklists,
+              request.subject.kind == .space else {
+            throw RejectedOperationRecoveryFailure.invalidRequest
+        }
+    }
 }
 
 private struct SpaceChecklistRevisionOperationEvidence {
@@ -622,6 +739,139 @@ private struct SpaceChecklistRevisionOperationEvidence {
                 throw SpaceChecklistRevisionPowerSyncFailure.malformedLocalEvidence
             }
         }
+    }
+}
+
+private struct SpaceChecklistRecoveryEvidence {
+    let id: String
+    let operation: SpaceChecklistRevisionOperationEvidence
+
+    init(cursor: any SqlCursor) throws {
+        id = try cursor.getString(name: "id")
+        operation = try SpaceChecklistRevisionOperationEvidence(cursor: cursor)
+    }
+
+    func candidate(
+        request: RejectedOperationRecoveryRequest
+    ) throws -> RejectedOperationRecoveryCandidate {
+        guard let operationId = try? OperationID(validating: id),
+              SpaceChecklistRevisionOperationIdentity.isValid(
+                  operationId,
+                  accountId: request.accountId
+              ),
+              operation.localState == LocalOperationState.rejected.rawValue,
+              let envelopeJSON = operation.envelopeJSON,
+              let envelopeData = envelopeJSON.data(using: .utf8),
+              let envelope = try? OperationContractCodec.decode(
+                  OperationEnvelope<ReviseSpaceChecklistsPayload>.self,
+                  from: envelopeData
+              ),
+              (try? OperationContractCodec.encode(envelope)) == envelopeData,
+              let expectedRevisionText = operation.expectedRevision,
+              let expectedRevision = UInt64(expectedRevisionText),
+              String(expectedRevision) == expectedRevisionText,
+              expectedRevision > 0,
+              expectedRevision < UInt64(Int64.max),
+              let accepted = try? Self.exactDate(operation.acceptedAtMilliseconds),
+              let updated = try? Self.exactDate(operation.updatedAtMilliseconds),
+              let rejectedMilliseconds = operation.terminalCompletedAtMilliseconds,
+              let rejected = try? Self.exactDate(rejectedMilliseconds),
+              let errorCode = operation.terminalErrorCode,
+              SupabaseSpaceChecklistRevisionRPC.isKnownRejectionCode(errorCode)
+        else {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+
+        let draft: SpaceChecklistRevisionDraft
+        let command: ReviseSpaceChecklistsCommand
+        do {
+            draft = try SpaceChecklistRevisionDraft(
+                accountId: envelope.accountId,
+                actorPrincipalId: envelope.actorPrincipalId,
+                operationContractVersion: envelope.contractVersion,
+                spaceId: envelope.payload.spaceId,
+                collection: envelope.payload.collection,
+                expectedRevision: ExpectedSpaceRevision(expectedRevision),
+                capturedAt: envelope.clientCreatedAt
+            )
+            command = try ReviseSpaceChecklistsCommand(
+                operationId: operationId,
+                draft: draft
+            )
+            try operation.validate(command: command, envelopeJSON: envelopeJSON)
+        } catch {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+
+        let uploadRequest: SpaceChecklistRevisionUploadRequest
+        do {
+            uploadRequest = SpaceChecklistRevisionUploadRequest(
+                operationId: operationId.rawValue,
+                accountId: envelope.accountId.rawValue,
+                actorPrincipalId: envelope.actorPrincipalId.rawValue,
+                contractVersion: envelope.contractVersion.rawValue,
+                clientCreatedAtMilliseconds:
+                    try SpaceChecklistRevisionPowerSyncStore.milliseconds(
+                        envelope.clientCreatedAt
+                    ),
+                spaceId: envelope.payload.spaceId.rawValue,
+                expectedRevision: expectedRevisionText,
+                collectionJSON:
+                    try SpaceChecklistRevisionPowerSyncStore.canonicalJSON(
+                        envelope.payload.collection
+                    ),
+                fingerprint: command.fingerprint.sha256,
+                envelopeJSON: envelopeJSON
+            )
+        } catch {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+        guard operation.terminalRequestSHA256
+                == LedgerPowerSyncUploadConnector
+                    .spaceChecklistRevisionRequestSHA256(uploadRequest) else {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+
+        let isConflict = errorCode.contains("conflict")
+            || errorCode.contains("revision")
+        let subject = command.subject
+        let rejection: OperationRejection
+        do {
+            rejection = OperationRejection(
+                error: ApplicationErrorSummary(
+                    code: try ApplicationErrorCode(validating: errorCode),
+                    category: errorCode == "contract_unsupported"
+                        ? .unsupportedContract
+                        : (isConflict ? .conflict : .validation),
+                    retryDisposition: errorCode == "contract_unsupported"
+                        ? .afterClientUpdate
+                        : (isConflict ? .afterUserCorrection : .never)
+                ),
+                rejectedAt: rejected,
+                conflictingEntities: isConflict ? [subject] : []
+            )
+            return try RejectedOperationRecoveryCandidate(
+                command: .reviseSpaceChecklists(command),
+                acceptedAt: accepted,
+                updatedAt: updated,
+                rejection: rejection
+            ).validating(request: request)
+        } catch {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+    }
+
+    private static func exactDate(_ milliseconds: Int64) throws -> Date {
+        guard milliseconds >= 0 else {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+        let date = SpaceChecklistRevisionPowerSyncStore.date(milliseconds)
+        let roundTrip = date.timeIntervalSince1970 * 1_000
+        guard roundTrip.isFinite,
+              Int64(exactly: roundTrip.rounded()) == milliseconds else {
+            throw RejectedOperationRecoveryFailure.localEvidenceMalformed
+        }
+        return date
     }
 }
 

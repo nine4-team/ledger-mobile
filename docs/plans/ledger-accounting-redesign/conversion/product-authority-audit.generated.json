@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-07T07:48:49.118Z",
+  "generatedFromManifestSync": "2026-09-07T09:06:41.342Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1027,
-    "targetRelevantSurfaces": 765,
+    "surfaces": 1029,
+    "targetRelevantSurfaces": 767,
     "batches": 47,
-    "productScopeSurfaces": 836,
+    "productScopeSurfaces": 838,
     "technicalControlSurfaces": 191
   },
   "canonicalTargetCoverage": [
@@ -114,8 +114,8 @@
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 219,
-      "targetRelevantSurfaceCount": 213
+      "surfaceCount": 221,
+      "targetRelevantSurfaceCount": 215
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -416,8 +416,8 @@
       "title": "Edit one active Space checklist collection",
       "scope": "product",
       "rationale": "The isolated target workflow edits one represented active Space's complete checklist collection through the already verified revision command and offline coordinator. It preserves stable identities and untouched order, implements every claimed editor control, and changes no Space details, completion, Item placement, media, template, accounting, Firebase, production data, or cutover authority.",
-      "surfaceCount": 3,
-      "targetRelevantSurfaceCount": 3,
+      "surfaceCount": 5,
+      "targetRelevantSurfaceCount": 5,
       "authorities": [
         {
           "path": "docs/specs/spaces.md",
@@ -463,6 +463,8 @@
       "surfaceIds": [
         "SWIFT-22ED13ABCFFB",
         "SWIFT-5486352D7A0C",
+        "SWIFT-D19D3DA98BD3",
+        "TEST-24D7DA26A307",
         "TEST-8BB9E9DC7C1A"
       ]
     },

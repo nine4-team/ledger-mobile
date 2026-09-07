@@ -12,7 +12,9 @@ struct SpaceChecklistEditorStagingExerciseView: View {
                     ContentUnavailableView(
                         "No Checklists",
                         systemImage: "checklist",
-                        description: Text("Add a checklist or cancel without changing the Space.")
+                        description: Text(model.isReviewingRejectedDraft
+                            ? "This rejected save contained no checklists. Close to keep it unresolved."
+                            : "Add a checklist or cancel without changing the Space.")
                     )
                     .accessibilityIdentifier("target-space-checklist-editor-empty")
                 } else {
@@ -48,13 +50,15 @@ struct SpaceChecklistEditorStagingExerciseView: View {
                                 .deleteDisabled(!model.canMutateDraft)
                                 .moveDisabled(!model.canMutateDraft)
 
-                                Button("Add Item", systemImage: "plus") {
-                                    model.addItem(to: checklist.id)
+                                if !model.isReviewingRejectedDraft {
+                                    Button("Add Item", systemImage: "plus") {
+                                        model.addItem(to: checklist.id)
+                                    }
+                                    .disabled(!model.canMutateDraft)
+                                    .accessibilityIdentifier(
+                                        "target-space-checklist-editor-add-item-\(checklist.id.rawValue)"
+                                    )
                                 }
-                                .disabled(!model.canMutateDraft)
-                                .accessibilityIdentifier(
-                                    "target-space-checklist-editor-add-item-\(checklist.id.rawValue)"
-                                )
                             } header: {
                                 let checklistDeleteLabel = checklist.name.isEmpty
                                     ? "Delete untitled checklist"
@@ -85,33 +89,53 @@ struct SpaceChecklistEditorStagingExerciseView: View {
                                         "\(checklist.completedItemCount) of \(checklist.items.count) complete"
                                     )
 
-                                    Button(role: .destructive) {
-                                        model.deleteChecklist(id: checklist.id)
-                                    } label: {
-                                        Image(systemName: "trash")
+                                    if !model.isReviewingRejectedDraft {
+                                        Button(role: .destructive) {
+                                            model.deleteChecklist(id: checklist.id)
+                                        } label: {
+                                            Image(systemName: "trash")
+                                        }
+                                        .buttonStyle(.plain)
+                                        .disabled(!model.canMutateDraft)
+                                        .accessibilityIdentifier(
+                                            "target-space-checklist-editor-delete-checklist-\(checklist.id.rawValue)"
+                                        )
+                                        .accessibilityLabel(checklistDeleteLabel)
                                     }
-                                    .buttonStyle(.plain)
-                                    .disabled(!model.canMutateDraft)
-                                    .accessibilityIdentifier(
-                                        "target-space-checklist-editor-delete-checklist-\(checklist.id.rawValue)"
-                                    )
-                                    .accessibilityLabel(checklistDeleteLabel)
                                 }
                             }
                         }
                     }
 #if canImport(UIKit)
-                    .environment(\.editMode, .constant(.active))
+                    .environment(
+                        \.editMode,
+                        .constant(model.isReviewingRejectedDraft ? .inactive : .active)
+                    )
 #endif
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
+                    if model.isReviewingRejectedDraft {
+                        Text(
+                            "These rejected checklist changes are preserved exactly. "
+                                + "Closing this review does not discard or resolve them."
+                        )
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier(
+                            "target-space-checklist-editor-recovery-read-only"
+                        )
+                    }
+
                     HStack {
-                        Button("Add Checklist", systemImage: "plus.circle.fill") {
-                            model.addChecklist()
+                        if !model.isReviewingRejectedDraft {
+                            Button("Add Checklist", systemImage: "plus.circle.fill") {
+                                model.addChecklist()
+                            }
+                            .disabled(!model.canMutateDraft)
+                            .accessibilityIdentifier(
+                                "target-space-checklist-editor-add-checklist"
+                            )
                         }
-                        .disabled(!model.canMutateDraft)
-                        .accessibilityIdentifier("target-space-checklist-editor-add-checklist")
 
                         Spacer()
 
@@ -146,22 +170,32 @@ struct SpaceChecklistEditorStagingExerciseView: View {
                     }
 
                     HStack {
-                        Button("Cancel") { model.cancel() }
+                        Button(model.isReviewingRejectedDraft ? "Close" : "Cancel") {
+                            model.cancel()
+                        }
                             .disabled(!model.canCancel)
-                            .accessibilityIdentifier("target-space-checklist-editor-cancel")
+                            .accessibilityIdentifier(model.isReviewingRejectedDraft
+                                ? "target-space-checklist-editor-recovery-close"
+                                : "target-space-checklist-editor-cancel")
 
                         Spacer()
 
-                        Button("Save") {
-                            Task { await model.save() }
+                        if !model.isReviewingRejectedDraft {
+                            Button("Save") {
+                                Task { await model.save() }
+                            }
+                            .disabled(!model.canSave)
+                            .accessibilityIdentifier("target-space-checklist-editor-save")
                         }
-                        .disabled(!model.canSave)
-                        .accessibilityIdentifier("target-space-checklist-editor-save")
                     }
                 }
                 .padding()
             }
-            .navigationTitle("Edit Checklists")
+            .navigationTitle(
+                model.isReviewingRejectedDraft
+                    ? "Rejected Checklist Changes"
+                    : "Edit Checklists"
+            )
         }
         .interactiveDismissDisabled(model.isPresented && !model.canCancel)
 #if os(macOS)

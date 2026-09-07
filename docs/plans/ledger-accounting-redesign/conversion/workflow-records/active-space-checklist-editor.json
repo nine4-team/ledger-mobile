@@ -3,7 +3,7 @@
   "workflowId": "active-space-checklist-editor",
   "title": "Edit an active Space checklist collection",
   "kind": "product_ui",
-  "status": "implementation",
+  "status": "blocked",
   "outcome": "Open an isolated draft for one represented active Project or Business Inventory Space, edit its complete checklist structure and text, then cancel without mutation or save one durable revision-bound replacement with conflict recovery.",
   "authority": [
     {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Redesign Requirements"},
@@ -12,7 +12,9 @@
     {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklist Progress"},
     {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Core Principle"},
     {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Rule 2: Optimistic UI"},
-    {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Sync Status Indicators"}
+    {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Sync Status Indicators"},
+    {"role": "canonical_target", "path": "docs/specs/session-ending-pending-work.md", "section": "Session-Ending Safety Contract"},
+    {"role": "decision_authority", "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions"}
   ],
   "baselineJourneyIds": ["UIBASE-SPACE-DETAIL-001"],
   "baselineBehaviorRefs": [
@@ -29,10 +31,12 @@
   "affectedComponents": [
     "LedgeriOS/LedgerTargetCore",
     "LedgeriOS/LedgerTargetCoreTests",
+    "LedgeriOS/Package.swift",
     "LedgeriOS/LedgerTargetAppModel",
     "LedgeriOS/LedgerTargetAppModelTests",
     "LedgeriOS/LedgerTargetApp",
     "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+    "LedgeriOS/LedgerTargetPowerSync",
     "LedgeriOS/LedgerTargetPowerSyncTests",
     "scripts"
   ],
@@ -46,7 +50,9 @@
       "authority": [
         {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklists"},
         {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklist Structure"},
-        {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Rule 2: Optimistic UI"}
+        {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Rule 2: Optimistic UI"},
+        {"role": "canonical_target", "path": "docs/specs/session-ending-pending-work.md", "section": "Session-Ending Safety Contract"},
+        {"role": "decision_authority", "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions"}
       ],
       "sourceSurfaceIds": ["SWIFT-B5661A312D65", "SWIFT-DDFAC91775DA"],
       "controls": [
@@ -110,32 +116,47 @@
         },
         {
           "label": "Cancel",
-          "options": [{"label": "Discard draft", "result": "Dismisses the editor and dispatches no operation.", "disposition": "preserve"}],
-          "action": "Cancel editing.",
-          "result": "Represented Space state is unchanged.",
+          "options": [{"label": "Discard never-submitted draft", "result": "Dismisses a local editor draft that was never durably accepted and dispatches no operation.", "disposition": "preserve"}],
+          "action": "Cancel editing before local acceptance.",
+          "result": "Represented Space state is unchanged; Cancel is not a rejection-discard action.",
           "disposition": "preserve"
+        },
+        {
+          "label": "Review Rejected Draft",
+          "options": [{"label": "Open exact preserved command", "result": "Opens the rejected command's complete checklist collection as a read-only review, including after an encrypted database and app-model restart and without requiring current detail to reconstruct the draft.", "disposition": "redesign"}],
+          "action": "Open the recovery action shown for the selected Space.",
+          "result": "The exact rejected collection is visible, all mutations and Save are disabled, and no retry, replacement, discard or resolution operation is dispatched.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Close",
+          "options": [{"label": "Close read-only review", "result": "Closes the recovered-draft presentation while retaining the original rejected operation and its evidence as unresolved local pending work.", "disposition": "redesign"}],
+          "action": "Close a rejected-draft review.",
+          "result": "No operation is dispatched and Review Rejected Draft remains discoverable. O-051 owns any future resolution or acknowledgment behavior.",
+          "disposition": "redesign"
         }
       ],
       "transitions": [
         {"from": "Represented active exact-Space detail", "event": "Tap Edit", "to": "Isolated checklist draft", "disposition": "redesign"},
         {"from": "Isolated checklist draft", "event": "Cancel", "to": "Unchanged Space detail", "disposition": "preserve"},
         {"from": "Isolated checklist draft", "event": "Save", "to": "Durably accepted optimistic Space detail", "disposition": "redesign"},
-        {"from": "Rejected save", "event": "Refresh exact Space evidence", "to": "Actionable conflict draft eligible for explicit retry", "disposition": "redesign"}
+        {"from": "Rejected save", "event": "Restart encrypted database, runtime, coordinator and editor", "to": "Exact persistent read-only rejected-draft review is available", "disposition": "redesign"},
+        {"from": "Read-only rejected-draft review", "event": "Close", "to": "Unchanged unresolved rejection with review still discoverable", "disposition": "redesign"}
       ],
       "states": [
         {"name": "Waiting, incomplete, unavailable, absent, or archived detail", "expected": "Edit cannot open and Save cannot dispatch.", "disposition": "redesign"},
         {"name": "Empty collection", "expected": "Editor can add a checklist or save the complete empty collection when it represents a semantic change.", "disposition": "redesign"},
         {"name": "Zero-item checklist", "expected": "Checklist remains valid and may receive an item later.", "disposition": "redesign"},
         {"name": "Queued or applying save", "expected": "Draft result remains visible, duplicate Save is disabled, and pending state survives restart.", "disposition": "redesign"},
-        {"name": "Rejected or revision-conflicted save", "expected": "Unsupported optimism settles only against refreshed complete detail and the actionable draft is not silently lost.", "disposition": "redesign"}
+        {"name": "Rejected or revision-conflicted save", "expected": "Unsupported optimism settles only against refreshed complete detail, while the exact accepted command remains durably recoverable for read-only review across restart. Retry linkage, resolution and optional acknowledgment remain blocked by O-051.", "disposition": "redesign"}
       ]
     }
   ],
   "acceptanceChecks": [
-    {"id": "SPACE-CHECKLIST-EDITOR-E2E", "risk": "general", "expected": "Open, every catalogued draft action, Cancel, Save, pending, rejection and readback traverse one shared complete-replacement workflow.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"},
-    {"id": "SPACE-CHECKLIST-EDITOR-UI", "risk": "ui_fidelity", "expected": "Every claimed editor control and accessibility identity compiles, while model tests exercise its enabled/disabled rule, transition, empty state, and conflict behavior; full simulator interaction remains a release gate rather than a package-test claim.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"},
-    {"id": "SPACE-CHECKLIST-EDITOR-OFFLINE", "risk": "offline_durability", "expected": "Save reuses atomic encrypted acceptance, exact replay, restart restoration, rejection recovery and authoritative readback without duplicate commands.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests", "status": "planned"},
-    {"id": "SPACE-CHECKLIST-EDITOR-SYNC", "risk": "sync_visibility", "expected": "Only exact represented Space and operation evidence can settle the editor save; stale, foreign, malformed and incomplete evidence fails closed.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"}
+    {"id": "SPACE-CHECKLIST-EDITOR-E2E", "risk": "general", "expected": "Open, every catalogued draft action, pre-acceptance Cancel, Save, pending, rejection, exact read-only recovery, Close and readback traverse one shared complete-replacement workflow without inventing rejection resolution.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "passed"},
+    {"id": "SPACE-CHECKLIST-EDITOR-UI", "risk": "ui_fidelity", "expected": "Every claimed editor control and accessibility identity compiles, while model tests exercise its enabled/disabled rule, transition, empty state, and conflict behavior; full simulator interaction remains a release gate rather than a package-test claim.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "passed"},
+    {"id": "SPACE-CHECKLIST-EDITOR-OFFLINE", "risk": "offline_durability", "expected": "Save reuses atomic encrypted acceptance, exact replay, restart restoration, and exact rejected-command recovery through a fresh store, coordinator and editor without dispatching duplicate, retry, discard or resolution commands.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests", "status": "passed"},
+    {"id": "SPACE-CHECKLIST-EDITOR-SYNC", "risk": "sync_visibility", "expected": "Only exact represented Space and operation evidence can settle the editor save; stale, foreign, malformed and incomplete evidence fails closed.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "passed"}
   ],
   "deferredBehaviors": [
     "The duplicate Space Options launcher is not claimed by this bounded section workflow.",
@@ -143,11 +164,12 @@
     "Hosted authenticated Supabase/PowerSync upload and revocation proof remains gated by A-003/A-004."
   ],
   "blockers": [
-    "A rejected checklist operation retains its complete command envelope in the encrypted local operation journal, and the mounted editor now preserves it across either event ordering. Full editor recovery after both coordinator and app restart still requires a general rejected-operation recovery/read-and-disposition port; this workflow must not be marked complete until that port is implemented and restart-tested."
+    "The read-only portion is implemented and tested: a rejected checklist operation retains its complete command envelope in the encrypted local operation journal, survives encrypted database/store and fresh coordinator/editor restart, and remains reviewable without mutation or another write.",
+    "O-051 blocks retry-resolution, replacement linkage and any evidence-retaining do-not-retry acknowledgment. Until approved, recovered rejection review is non-mutating; Cancel, close, navigation and restart leave it unresolved, no feature-level discard exists, and this workflow cannot be marked complete."
   ],
   "verification": {
-    "local": {"status": "not_run", "commands": []},
-    "review": {"required": true, "status": "not_run", "summary": "Review will focus on draft preservation, exact text and identity semantics, duplicate admission, conflict recovery, and complete catalog control coverage."},
+    "local": {"status": "passed", "commands": ["swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests", "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests", "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests", "swift test --package-path LedgeriOS --no-parallel", "npm run conversion:check", "node scripts/check-target-environment.mjs", "npm run target:staging:build:macos", "npm run target:staging:build:ios", "git diff --check"]},
+    "review": {"required": true, "status": "passed", "summary": "Independent review initially rejected unsafe empty recovery defaults, a contradictory explicit-retry workflow transition, missing recovery controls, misleading recovered-empty copy, absent cross-layer restart proof, stale guard assertions, state mismatch and missing authority citations. All findings were corrected. Final re-review returned GO with no P0-P3 findings after 37 focused tests, standalone environment/state/conversion gates, source-batch synchronization and exact authority checks passed."},
     "ci": {"status": "not_run", "commit": null, "run": null}
   }
 }

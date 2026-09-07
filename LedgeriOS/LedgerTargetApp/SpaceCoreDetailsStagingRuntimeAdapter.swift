@@ -24,7 +24,9 @@ enum SpaceChecklistItemToggleStagingRuntimeAdapter {
             reviseChecklists: { try await runtime.reviseChecklists($0) },
             watchOperation: {
                 runtime.watchSpaceChecklistRevisionOperation($0)
-            }
+            },
+            rejectedOperations: { try await runtime.rejectedOperations($0) },
+            watchRejectedOperations: { runtime.watchRejectedOperations($0) }
         )
     }
 }

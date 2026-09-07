@@ -39,9 +39,10 @@ public final class SpaceChecklistEditorStagingExercise {
     public private(set) var isSaving = false
     public private(set) var checklists: [SpaceChecklistEditorChecklist] = []
     public private(set) var diagnostic: String?
+    public private(set) var isReviewingRejectedDraft = false
 
     public var hasPreservedConflictDraft: Bool {
-        submittedCollection != nil
+        submittedCollection != nil || coordinator.rejectedRecoveryCollection != nil
     }
 
     public var canOpen: Bool {
@@ -56,12 +57,12 @@ public final class SpaceChecklistEditorStagingExercise {
         !isPresented
             && !isSaving
             && hasPreservedConflictDraft
-            && coordinator.canSubmitCompleteDraft
-            && editableUpdate != nil
+            && !coordinator.hasActiveSubmission
     }
 
     public var canSave: Bool {
         guard isPresented,
+              !isReviewingRejectedDraft,
               !isSaving,
               coordinator.canSubmitCompleteDraft,
               let sourceUpdate = editorSourceUpdate,
@@ -78,7 +79,10 @@ public final class SpaceChecklistEditorStagingExercise {
     }
 
     public var canMutateDraft: Bool {
-        isPresented && !isSaving && !coordinator.hasActiveSubmission
+        isPresented
+            && !isSaving
+            && !isReviewingRejectedDraft
+            && !coordinator.hasActiveSubmission
     }
 
     public var canCancel: Bool {
@@ -174,18 +178,31 @@ public final class SpaceChecklistEditorStagingExercise {
         checklists = Self.project(preparation.draft)
         submittedCollection = nil
         diagnostic = nil
+        isReviewingRejectedDraft = false
         isPresented = true
     }
 
     public func reviewPreservedConflict() {
-        guard canReviewPreservedConflict, let update = editableUpdate else { return }
-        editorSourceUpdate = update
+        guard canReviewPreservedConflict,
+              let collection = coordinator.rejectedRecoveryCollection
+                ?? submittedCollection else { return }
+        editorSourceUpdate = editableUpdate
+        checklists = Self.project(collection)
         diagnostic = nil
+        isReviewingRejectedDraft = true
         isPresented = true
     }
 
     public func cancel() {
         guard canCancel else { return }
+        if isReviewingRejectedDraft {
+            isPresented = false
+            isReviewingRejectedDraft = false
+            editorSourceUpdate = nil
+            checklists = []
+            diagnostic = nil
+            return
+        }
         clearDraft()
     }
 
@@ -433,6 +450,7 @@ public final class SpaceChecklistEditorStagingExercise {
         editorSourceUpdate = nil
         submittedCollection = nil
         diagnostic = nil
+        isReviewingRejectedDraft = false
     }
 }
 

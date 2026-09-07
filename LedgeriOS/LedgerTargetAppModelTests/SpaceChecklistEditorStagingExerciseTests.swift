@@ -189,8 +189,8 @@ struct SpaceChecklistEditorStagingExerciseTests {
         await harness.stop()
     }
 
-    @Test("Rejected save preserves its draft and retries against refreshed revision")
-    func rejectionPreservesDraft() async throws {
+    @Test("Rejected save remains exact and review-only until recovery policy is approved")
+    func rejectionPreservesReadOnlyDraft() async throws {
         let harness = try await Self.harness(operationIds: [
             "editor-operation-rejected",
             "editor-operation-retry",
@@ -220,15 +220,89 @@ struct SpaceChecklistEditorStagingExerciseTests {
 
         harness.editor.reviewPreservedConflict()
         #expect(harness.editor.isPresented)
-        #expect(harness.editor.canSave)
+        #expect(harness.editor.isReviewingRejectedDraft)
+        #expect(!harness.editor.canSave)
+        #expect(!harness.editor.canMutateDraft)
+        harness.editor.renameChecklist(id: Self.installationId, name: "Must Not Replace")
+        #expect(harness.editor.checklists[0].name == "Preserved Draft")
         await harness.editor.save()
-        let commands = await harness.acceptance.commands()
-        #expect(commands.count == 2)
-        #expect(commands[0].envelope.operationId.rawValue == "editor-operation-rejected")
-        #expect(commands[1].envelope.operationId.rawValue == "editor-operation-retry")
-        #expect(commands[1].draft.expectedRevision == ExpectedSpaceRevision(8))
-        #expect(commands[1].draft.collection.checklists[0].id == Self.installationId)
-        #expect(commands[1].draft.collection.checklists[0].name.rawValue == "Preserved Draft")
+        #expect((await harness.acceptance.commands()).count == 1)
+        harness.editor.cancel()
+        #expect(!harness.editor.isPresented)
+        #expect(harness.editor.hasPreservedConflictDraft)
+        #expect(harness.editor.canReviewPreservedConflict)
+        await harness.stop()
+    }
+
+    @Test("Fresh coordinator and editor recover the exact rejected command without detail")
+    func freshRuntimeRecoversRejectedDraft() async throws {
+        let recoveredCollection = try Self.collection(
+            firstChecklistName: "Recovered After Restart"
+        )
+        let candidate = try Self.rejectedCandidate(collection: recoveredCollection)
+        guard case .reviseSpaceChecklists(let rejectedCommand) = candidate.command else {
+            Issue.record("Expected checklist recovery command")
+            return
+        }
+        let harness = try await Self.harness(
+            operationIds: ["editor-operation-unused"],
+            recoveryCandidates: [candidate]
+        )
+
+        await harness.coordinator.receiveDetailUpdate(nil, selectedSpaceId: Self.spaceA)
+        await harness.editor.receiveDetailUpdate(nil, selectedSpaceId: Self.spaceA)
+
+        #expect(harness.coordinator.isRejectedRecoveryReady)
+        #expect(harness.coordinator.rejectedRecovery?.operationId ==
+            rejectedCommand.envelope.operationId)
+        #expect(harness.editor.hasPreservedConflictDraft)
+        #expect(!harness.editor.canOpen)
+        #expect(harness.editor.canReviewPreservedConflict)
+
+        harness.editor.reviewPreservedConflict()
+        #expect(harness.editor.isPresented)
+        #expect(harness.editor.isReviewingRejectedDraft)
+        #expect(harness.editor.checklists.map(\.id) ==
+            recoveredCollection.checklists.map(\.id))
+        #expect(harness.editor.checklists[0].name == "Recovered After Restart")
+        #expect(harness.editor.checklists[0].items.map(\.id) ==
+            recoveredCollection.checklists[0].items.map(\.id))
+        #expect(harness.editor.checklists[0].items.map(\.isChecked) ==
+            recoveredCollection.checklists[0].items.map(\.isChecked))
+        #expect(!harness.editor.canSave)
+        #expect(!harness.editor.canMutateDraft)
+        harness.editor.cancel()
+        #expect(harness.editor.hasPreservedConflictDraft)
+        #expect((await harness.acceptance.commands()).isEmpty)
+        await harness.stop()
+    }
+
+    @Test("A recovered rejection cannot disappear and silently re-enable writes")
+    func recoveryDisappearanceFailsClosed() async throws {
+        let candidate = try Self.rejectedCandidate(collection: Self.collection())
+        let harness = try await Self.harness(
+            operationIds: ["editor-operation-unused"],
+            recoveryCandidates: [candidate],
+            recoveryWatchDropsEvidence: true
+        )
+        await harness.coordinator.receiveDetailUpdate(
+            try Self.update(collection: Self.collection(), revision: 8),
+            selectedSpaceId: Self.spaceA
+        )
+        await harness.editor.receiveDetailUpdate(
+            try Self.update(collection: Self.collection(), revision: 8),
+            selectedSpaceId: Self.spaceA
+        )
+        await Self.waitUntil {
+            harness.coordinator.rejectedRecoveryDiagnostic ==
+                "space_checklist_rejected_recovery_invalid"
+        }
+
+        #expect(harness.coordinator.rejectedRecovery?.operationId == candidate.operationId)
+        #expect(!harness.coordinator.isRejectedRecoveryReady)
+        #expect(!harness.editor.canOpen)
+        #expect(harness.editor.canReviewPreservedConflict)
+        #expect((await harness.acceptance.commands()).isEmpty)
         await harness.stop()
     }
 
@@ -382,10 +456,16 @@ struct SpaceChecklistEditorStagingExerciseTests {
             "target-space-checklist-editor-delete-item-",
             "target-space-checklist-editor-delete-checklist-",
             ".onMove",
-            ".environment(\\.editMode, .constant(.active))",
+            ".constant(model.isReviewingRejectedDraft ? .inactive : .active)",
             "target-space-checklist-editor-save",
             "target-space-checklist-editor-cancel",
             "target-space-checklist-editor-review-conflict",
+            "target-space-checklist-rejected-recovery",
+            "target-space-checklist-recovery-diagnostic",
+            "target-space-checklist-editor-recovery-read-only",
+            "target-space-checklist-editor-recovery-close",
+            "Rejected Checklist Changes",
+            "This rejected save contained no checklists. Close to keep it unresolved.",
             "target-space-checklist-editor-retry-acceptance",
         ] {
             #expect(source.contains(token), "Missing editor UI token: \(token)")
@@ -412,7 +492,9 @@ struct SpaceChecklistEditorStagingExerciseTests {
         operationIds: [String],
         checklistIds: [String] = [],
         itemIds: [String] = [],
-        acceptance: EditorAcceptanceProbe? = nil
+        acceptance: EditorAcceptanceProbe? = nil,
+        recoveryCandidates: [RejectedOperationRecoveryCandidate] = [],
+        recoveryWatchDropsEvidence: Bool = false
     ) async throws -> EditorHarness {
         let acceptance = acceptance ?? EditorAcceptanceProbe(
             behaviors: operationIds.map { _ in .success(.queued) }
@@ -443,7 +525,31 @@ struct SpaceChecklistEditorStagingExerciseTests {
         )
         await coordinator.start(runtime: SpaceChecklistItemToggleStagingRuntime(
             reviseChecklists: { try await acceptance.revise($0) },
-            watchOperation: { operations.watch($0) }
+            watchOperation: { operations.watch($0) },
+            rejectedOperations: { request in
+                try RejectedOperationRecoverySnapshot(
+                    request: request,
+                    candidates: recoveryCandidates
+                )
+            },
+            watchRejectedOperations: { request in
+                AsyncThrowingStream { continuation in
+                    do {
+                        continuation.yield(try RejectedOperationRecoverySnapshot(
+                            request: request,
+                            candidates: recoveryCandidates
+                        ))
+                        if recoveryWatchDropsEvidence {
+                            continuation.yield(try RejectedOperationRecoverySnapshot(
+                                request: request,
+                                candidates: []
+                            ))
+                        }
+                    } catch {
+                        continuation.finish(throwing: error)
+                    }
+                }
+            }
         ))
         await editor.start()
         return EditorHarness(
@@ -454,11 +560,13 @@ struct SpaceChecklistEditorStagingExerciseTests {
         )
     }
 
-    private static func collection() throws -> SpaceChecklistCollection {
+    private static func collection(
+        firstChecklistName: String = "Installation"
+    ) throws -> SpaceChecklistCollection {
         try SpaceChecklistCollection(checklists: [
             SpaceChecklistState(
                 id: installationId,
-                name: SpaceChecklistName(validating: "Installation"),
+                name: SpaceChecklistName(validating: firstChecklistName),
                 presentationOrder: 5,
                 items: [
                     SpaceChecklistItemState(
@@ -482,6 +590,29 @@ struct SpaceChecklistEditorStagingExerciseTests {
                 items: []
             ),
         ])
+    }
+
+    private static func rejectedCandidate(
+        collection: SpaceChecklistCollection
+    ) throws -> RejectedOperationRecoveryCandidate {
+        let command = try ReviseSpaceChecklistsCommand(
+            operationId: OperationID(validating: "editor-operation-before-restart"),
+            draft: SpaceChecklistRevisionDraft(
+                accountId: accountId,
+                actorPrincipalId: principalId,
+                operationContractVersion: contractVersion,
+                spaceId: spaceA,
+                collection: collection,
+                expectedRevision: ExpectedSpaceRevision(7),
+                capturedAt: capturedAt
+            )
+        )
+        return try RejectedOperationRecoveryCandidate(
+            command: .reviseSpaceChecklists(command),
+            acceptedAt: capturedAt,
+            updatedAt: capturedAt.addingTimeInterval(2),
+            rejection: rejection()
+        )
     }
 
     private static func update(

@@ -11,7 +11,7 @@
   "surfaces": [
     {
       "id": "SWIFT-84575506886A",
-      "acknowledgeSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
+      "acknowledgeSourceHash": "825ed43e8d345ba6f8737f93428eb741a7683d20811c3278435ebbc958ea76be",
       "currentBehavior": "Atomically accepts one exact Account-bound Space checklist replacement into encrypted local operation, insert-only command, and optimistic-overlay evidence; exact replay, restart, observation, rejection cleanup, and authoritative-readback cleanup remain deterministic.",
       "disposition": "redesign",
       "status": "implemented",
@@ -47,7 +47,7 @@
     },
     {
       "id": "SWIFT-8FE0D1AD0744",
-      "acknowledgeSourceHash": "e89983d3451671d8fb66b6166f57ac82c4dbbc47ef546a2f52d9f3492c15671f",
+      "acknowledgeSourceHash": "87b9381bd2da13503c3618a640fefd3fb685405d6969c2d0584e3aa07876499f",
       "currentBehavior": "Owns the shared exact-Space checklist-revision coordinator used by immediate toggles and full editor drafts: one frozen optimistic submission, byte-identical uncertain-acceptance retry, operation observation, encrypted restart restoration, conflict recovery, selection/lifecycle drainage, and exact authoritative-readback settlement.",
       "disposition": "redesign",
       "status": "implemented",
@@ -65,7 +65,7 @@
     },
     {
       "id": "TEST-37FF8615DAB5",
-      "acknowledgeSourceHash": "0438691375a06aa64ed6ea71bec8572841e436658beb9390a199b62504ffae29",
+      "acknowledgeSourceHash": "ce5b7c5ba6529c1c97025dca041a503e73a33157247b300da0b153d1671ea14f",
       "currentBehavior": "Runs the deterministic active-Space checklist-toggle application and source-bound UI contract matrix, including disabled states, empty and archived presentation, exact command freezing, ambiguous retry, rejection recovery, local-overlay refusal, authoritative readback, reselection, and stop drainage.",
       "disposition": "redesign",
       "status": "implemented",
@@ -83,7 +83,7 @@
     },
     {
       "id": "TEST-6C3784A08B93",
-      "acknowledgeSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
+      "acknowledgeSourceHash": "aa95e5608589cda0ecb97bfb428ef378b35ac907d8a9102a9f06720bcaf0ebbb",
       "currentBehavior": "Runs the deterministic encrypted PowerSync and scoped Supabase RPC matrix for Account-bound identity, interrupted rollback, exact replay, restart, optimistic projection, transient retry, rejection, readback, strict terminal validation, scoped headers, request shape, credential refusal, and watch drainage.",
       "disposition": "redesign",
       "status": "implemented",

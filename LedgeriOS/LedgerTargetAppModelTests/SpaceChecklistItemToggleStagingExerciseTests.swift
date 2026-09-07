@@ -199,7 +199,7 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
             updatedAt: Self.capturedAt.addingTimeInterval(2)
         ))
         await Self.waitUntil { model.operationState == .rejected && model.optimisticCollection == nil }
-        #expect(model.operationStatus == "rejected — refreshed evidence is available")
+        #expect(model.operationStatus == "rejected — review required")
         await model.stop()
     }
 
@@ -325,8 +325,8 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
         await model.stop()
     }
 
-    @Test("Rejected optimism waits for later evidence and retry receives a new identity")
-    func rejectedRefreshAndNewIdentity() async throws {
+    @Test("Rejected optimism becomes durable review-only work after refreshed evidence")
+    func rejectedRefreshRemainsUnresolved() async throws {
         let acceptance = ChecklistRevisionAcceptanceProbe(
             behaviors: [.success(.queued), .success(.queued)]
         )
@@ -353,7 +353,7 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
         await Self.waitUntil { model.operationState == .rejected }
 
         #expect(model.optimisticCollection != nil)
-        #expect(model.operationStatus == "rejected — awaiting refreshed evidence")
+        #expect(model.operationStatus == "rejected — review required")
         await model.toggle(checklistId: Self.checklistId, itemId: Self.firstItemId)
         #expect((await acceptance.recordedCommands()).count == 1)
 
@@ -389,16 +389,15 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
             selectedSpaceId: Self.spaceA
         )
         #expect(model.optimisticCollection == nil)
-        #expect(model.operationStatus == "rejected — refreshed evidence is available")
-        #expect(model.canToggle(checklistId: Self.checklistId, itemId: Self.firstItemId))
+        #expect(model.operationStatus == "rejected — review required")
+        #expect(model.rejectedRecovery?.operationId == first.envelope.operationId)
+        #expect(!model.canToggle(checklistId: Self.checklistId, itemId: Self.firstItemId))
         await Self.waitUntil { firstStream.terminationCount == 1 }
 
         await model.toggle(checklistId: Self.checklistId, itemId: Self.firstItemId)
         let commands = await acceptance.recordedCommands()
-        #expect(commands.count == 2)
+        #expect(commands.count == 1)
         #expect(commands[0].envelope.operationId.rawValue == "checklist-operation-rejected")
-        #expect(commands[1].envelope.operationId.rawValue == "checklist-operation-retry")
-        #expect(commands[1].draft.expectedRevision == ExpectedSpaceRevision(8))
         await model.stop()
     }
 
@@ -545,7 +544,23 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
     ) -> SpaceChecklistItemToggleStagingRuntime {
         SpaceChecklistItemToggleStagingRuntime(
             reviseChecklists: { try await acceptance.revise($0) },
-            watchOperation: { operations.watch($0) }
+            watchOperation: { operations.watch($0) },
+            rejectedOperations: { request in
+                try RejectedOperationRecoverySnapshot(request: request, candidates: [])
+            },
+            watchRejectedOperations: { request in
+                AsyncThrowingStream { continuation in
+                    do {
+                        continuation.yield(try RejectedOperationRecoverySnapshot(
+                            request: request,
+                            candidates: []
+                        ))
+                        continuation.finish()
+                    } catch {
+                        continuation.finish(throwing: error)
+                    }
+                }
+            }
         )
     }
 

@@ -1,7 +1,7 @@
 # Product Decision Packets
 
 Status: proposed recommendations; not product authority
-Last reviewed: 2026-09-05
+Last reviewed: 2026-09-07
 
 These packets turn exact conversion blockers into reviewable senior-level
 choices. They exist so the implementation does not guess product behavior or
@@ -77,6 +77,7 @@ recommendation alone does not reduce the residual count.
 | O-018/O-019/O-020/O-022 | [Proto migration and authority cutover](O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Proposed: deterministic Item/review mapping and hard freeze/import/reconcile/activate |
 | O-024/O-025 | [Project and Client lifecycle](O-024-O-025-project-and-client-lifecycle.md) | Proposed: archive-only Projects, pre-history Client correction, audited Client merge |
 | O-028 | [Vendor adjustment and credit balance](O-028-vendor-adjustment-and-credit-balance.md) | Proposed: non-Transaction adjustment, conserved balance, Return only for actual cash |
+| O-051 | [Rejected offline-operation recovery](O-051-rejected-operation-recovery-resolution.md) | Proposed: immutable rejection evidence, auditable replacement responsibility, optional evidence-retaining do-not-retry acknowledgment |
 
 O-021 is intentionally not a packet or schema gate. It is the UI-only choice
 between one expandable screen and two steps; the shared `CreateItem` domain

@@ -175,6 +175,20 @@ struct SpaceCoreDetailsStagingExerciseView: View {
                         .accessibilityIdentifier("target-space-checklist-admission")
                 }
 
+                if checklistToggle.rejectedRecovery != nil {
+                    Text("Rejected checklist changes are preserved for review.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier(
+                            "target-space-checklist-rejected-recovery"
+                        )
+                } else if let recoveryDiagnostic = checklistToggle.rejectedRecoveryDiagnostic {
+                    Text(recoveryDiagnostic)
+                        .foregroundStyle(.red)
+                        .accessibilityIdentifier(
+                            "target-space-checklist-recovery-diagnostic"
+                        )
+                }
+
                 if checklistToggle.canRetryAmbiguousAcceptance {
                     Button("Retry local acceptance") {
                         Task { await checklistToggle.retryAmbiguousAcceptance() }

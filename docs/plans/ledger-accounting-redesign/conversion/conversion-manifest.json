@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T07:48:49.118Z",
+    "lastSynchronizedAt": "2026-09-07T09:06:41.342Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -141,10 +141,10 @@
           "path": "LedgeriOS/Package.swift"
         }
       ],
-      "observedSourceHash": "418a9f6a70448b8b37442fc573b816e5f8650fcf493801ac0cc99d3005d896be",
-      "acknowledgedSourceHash": "418a9f6a70448b8b37442fc573b816e5f8650fcf493801ac0cc99d3005d896be",
+      "observedSourceHash": "5cc5268f97345594af82c91e87ad78fe326047aaa924fffa77d1af929010ba3a",
+      "acknowledgedSourceHash": "5cc5268f97345594af82c91e87ad78fe326047aaa924fffa77d1af929010ba3a",
       "metadata": {},
-      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product. The migration test target now copies one exact READY-scaffold-only FirebaseSource fixture directory while both new migration-safety Swift leaves remain comment-only.",
+      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product. The PowerSync test target may import AppModel only to prove cross-layer local-provider-to-presentation recovery while neither production layer depends on the other. The migration test target copies one exact READY-scaffold-only FirebaseSource fixture directory while both migration-safety Swift leaves remain comment-only.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -2101,10 +2101,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
-      "acknowledgedSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
+      "observedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "acknowledgedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
       "metadata": {},
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target production layers remain isolated; exact dependencies and adapters hold; the PowerSync test target's sole extra target dependency is provider-free AppModel for cross-layer recovery proof; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -6667,10 +6667,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
-      "acknowledgedSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
+      "observedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "acknowledgedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; admits AppModel only into the PowerSync test target for cross-layer recovery proof while production dependency direction remains unchanged; enforces exact Account-workspace recovery methods and nominal ports plus lexical, bounded pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19210,8 +19210,8 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "4b997ebe16d8097f68d50a019ce52a1fde1c5dce34a51cc2ec1b1c32cc04d6f2",
-      "acknowledgedSourceHash": "4b997ebe16d8097f68d50a019ce52a1fde1c5dce34a51cc2ec1b1c32cc04d6f2",
+      "observedSourceHash": "3dcbf37e3cc24571018f5cde8d4b6d655ac9ec03fa23a179f594c51ec7fba789",
+      "acknowledgedSourceHash": "3dcbf37e3cc24571018f5cde8d4b6d655ac9ec03fa23a179f594c51ec7fba789",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -22097,12 +22097,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistEditorStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "8633f246001c92fb9c6432ed95b01bbb6180bbb7b6015369947161269233c078",
-      "acknowledgedSourceHash": "8633f246001c92fb9c6432ed95b01bbb6180bbb7b6015369947161269233c078",
+      "observedSourceHash": "f1b38086094f4af873d0f6078650e83d866964587275320739df9dddf551e009",
+      "acknowledgedSourceHash": "f1b38086094f4af873d0f6078650e83d866964587275320739df9dddf551e009",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Owns one isolated active-Space checklist editor draft, every catalogued structure/text/check/reorder action, stable identity and presentation-order preservation, exact validation, Cancel, complete-replacement Save, uncertain retry, accepted optimism adoption, rejection/conflict preservation, and lifecycle drainage.",
+      "currentBehavior": "Owns one isolated active-Space checklist editor draft, every catalogued structure/text/check/reorder action, stable identity and presentation-order preservation, exact validation, pre-acceptance Cancel, complete-replacement Save, uncertain-acceptance replay, accepted optimism adoption, exact read-only rejected-command recovery, and lifecycle drainage. Rejected-operation retry, dismissal and resolution are absent.",
       "disposition": "redesign",
       "target": {
         "owner": "Active Space Checklist Editor",
@@ -22131,11 +22131,13 @@
         ]
       },
       "status": "implemented",
-      "blockers": [],
+      "blockers": [
+        "O-051"
+      ],
       "evidence": [
         "WORKFLOW-active-space-checklist-editor"
       ],
-      "notes": "The editor contains no backend-specific logic and delegates one typed draft to the shared verified revision coordinator.",
+      "notes": "The editor contains no backend-specific logic and delegates one typed draft to the shared verified revision coordinator. O-051 blocks rejected-operation retry linkage, acknowledgment and resolution, but not exact read-only recovery.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
     },
     {
@@ -26388,12 +26390,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceChecklistEditorStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "0ef07399af2a211d38570d01f2592a965f607c062e2bc04cba074e22a02bd39d",
-      "acknowledgedSourceHash": "0ef07399af2a211d38570d01f2592a965f607c062e2bc04cba074e22a02bd39d",
+      "observedSourceHash": "ae79ee0a4e03242712875f4f0f60baf65d78ef65eb7e88129bf11438f887c795",
+      "acknowledgedSourceHash": "ae79ee0a4e03242712875f4f0f60baf65d78ef65eb7e88129bf11438f887c795",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Renders the isolated active-Space checklist draft editor with every catalogued text, check, add, delete, reorder, Save, Cancel, retry, validation, progress, and accessibility control.",
+      "currentBehavior": "Renders the isolated active-Space checklist draft editor with every catalogued text, check, add, delete, reorder, Save, pre-acceptance Cancel, uncertain-acceptance replay, validation, progress and accessibility control, plus an exact read-only rejected-draft review whose Close action retains unresolved evidence. Recovery mode exposes no mutation, Save, retry, discard or resolution control.",
       "disposition": "redesign",
       "target": {
         "owner": "Active Space Checklist Editor",
@@ -26424,7 +26426,9 @@
         ]
       },
       "status": "implemented",
-      "blockers": [],
+      "blockers": [
+        "O-051"
+      ],
       "evidence": [
         "WORKFLOW-active-space-checklist-editor"
       ],
@@ -26442,8 +26446,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "a3025ddcb2b40925244c4e0b9c02e0aac4b639a98fbe40a1729b5e8274c6c194",
-      "acknowledgedSourceHash": "a3025ddcb2b40925244c4e0b9c02e0aac4b639a98fbe40a1729b5e8274c6c194",
+      "observedSourceHash": "eeef0cdc848e65350108c80000d712a8cbbbcb87b41166ea59a5df2a694a00ee",
+      "acknowledgedSourceHash": "eeef0cdc848e65350108c80000d712a8cbbbcb87b41166ea59a5df2a694a00ee",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -29091,8 +29095,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "1cdf8e1b0714edc0135485cb2323c2fb475cee7ef247ea007723b19fcb86f146",
-      "acknowledgedSourceHash": "1cdf8e1b0714edc0135485cb2323c2fb475cee7ef247ea007723b19fcb86f146",
+      "observedSourceHash": "211b315227a01096c68d31fa03a0e20fd93aab34ace44c72623446a817a37ed6",
+      "acknowledgedSourceHash": "211b315227a01096c68d31fa03a0e20fd93aab34ace44c72623446a817a37ed6",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -30526,8 +30530,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SpaceChecklistRevisionPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
-      "acknowledgedSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
+      "observedSourceHash": "825ed43e8d345ba6f8737f93428eb741a7683d20811c3278435ebbc958ea76be",
+      "acknowledgedSourceHash": "825ed43e8d345ba6f8737f93428eb741a7683d20811c3278435ebbc958ea76be",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -31926,8 +31930,8 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistItemToggleStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "e89983d3451671d8fb66b6166f57ac82c4dbbc47ef546a2f52d9f3492c15671f",
-      "acknowledgedSourceHash": "e89983d3451671d8fb66b6166f57ac82c4dbbc47ef546a2f52d9f3492c15671f",
+      "observedSourceHash": "87b9381bd2da13503c3618a640fefd3fb685405d6969c2d0584e3aa07876499f",
+      "acknowledgedSourceHash": "87b9381bd2da13503c3618a640fefd3fb685405d6969c2d0584e3aa07876499f",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
@@ -37187,8 +37191,8 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
-      "acknowledgedSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
+      "observedSourceHash": "e7870dc94d970675219c503c88ccc907f4253e42f7e435ad049c8e32ebc5c03c",
+      "acknowledgedSourceHash": "e7870dc94d970675219c503c88ccc907f4253e42f7e435ad049c8e32ebc5c03c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -37963,6 +37967,65 @@
       ],
       "notes": "Target-only technical-control surface. It does not activate Auth, a workspace, Sync Streams, hosted resources, or concrete navigation UI.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-D19D3DA98BD3",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift"
+        }
+      ],
+      "observedSourceHash": "589c306a4053249969228611b559e82855362e4b208098679e420d9b88a2d3a0",
+      "acknowledgedSourceHash": "589c306a4053249969228611b559e82855362e4b208098679e420d9b88a2d3a0",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines the provider-free, Account/Principal/family/contract/subject-bound query contract for reconstructing exact terminally rejected commands from durable local evidence. Recovery candidates retain the typed original command, acceptance/update clocks and rejection evidence, order deterministically, and expose no retry, discard, acknowledgment or resolution mutation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Rejected Operation Recovery Contracts",
+        "surfaces": [
+          "exact rejected-operation recovery request",
+          "typed immutable recovery candidate",
+          "deterministic recovery snapshot",
+          "one-shot and observed recovery query port"
+        ],
+        "securityRequirements": [
+          "Caller binds Account, Principal, command family, contract version and exact subject before any rejected command is returned",
+          "Malformed, duplicate, foreign or mismatched recovery evidence fails closed"
+        ],
+        "syncRequirements": [
+          "Recovery represents encrypted local terminal evidence and does not imply remote settlement or authoritative resolution"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve the exact locally accepted command and rejection evidence across target-app restart; perform no Firebase write or source behavior change.",
+        "reconciliation": [
+          "Any future retry or acknowledgment must preserve immutable rejection provenance under the approved O-051 policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests",
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "Only exactly scoped, typed and deterministically ordered rejected-operation evidence is constructible"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "O-051"
+      ],
+      "evidence": [
+        "WORKFLOW-active-space-checklist-editor"
+      ],
+      "notes": "Read-only recovery only. O-051 blocks retry linkage, resolution and optional evidence-retaining acknowledgment.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
     },
     {
       "id": "SWIFT-D21A4FBB69CA",
@@ -43641,6 +43704,62 @@
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
+      "id": "TEST-24D7DA26A307",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/RejectedOperationRecoveryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/RejectedOperationRecoveryTests.swift"
+        }
+      ],
+      "observedSourceHash": "6cbea16d4f5b1befc626a7032a4e895d1320b1b893e7ac0d459c6e5a46e253cb",
+      "acknowledgedSourceHash": "6cbea16d4f5b1befc626a7032a4e895d1320b1b893e7ac0d459c6e5a46e253cb",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Proves rejected-operation recovery request scope, deterministic newest-first ordering, exact typed command preservation, and refusal of duplicate, foreign, mismatched or malformed evidence at the provider-free contract boundary.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Rejected Operation Recovery Contracts",
+        "surfaces": [
+          "recovery contract validation tests",
+          "scope and ordering tests",
+          "malformed-evidence refusal tests"
+        ],
+        "securityRequirements": [
+          "Tests cover exact Account, Principal, family, contract and subject scope plus duplicate refusal"
+        ],
+        "syncRequirements": [
+          "Tests claim local evidence reconstruction only, not retry or remote resolution"
+        ]
+      },
+      "migration": {
+        "rule": "Use as target-only verification; no source Firebase adapter or mutation is introduced.",
+        "reconciliation": [
+          "Cross-layer encrypted-restart proof remains in the Space checklist PowerSync vertical-slice suite"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests"
+        ],
+        "acceptance": [
+          "All invalid recovery snapshots fail construction and valid snapshots preserve exact immutable evidence"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "O-051"
+      ],
+      "evidence": [
+        "WORKFLOW-active-space-checklist-editor"
+      ],
+      "notes": "Does not authorize retry, discard, acknowledgment or resolution behavior.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
+    },
+    {
       "id": "TEST-2599CE350D13",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/NavigationRouteResolutionTests.swift",
@@ -44255,8 +44374,8 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistItemToggleStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "0438691375a06aa64ed6ea71bec8572841e436658beb9390a199b62504ffae29",
-      "acknowledgedSourceHash": "0438691375a06aa64ed6ea71bec8572841e436658beb9390a199b62504ffae29",
+      "observedSourceHash": "ce5b7c5ba6529c1c97025dca041a503e73a33157247b300da0b153d1671ea14f",
+      "acknowledgedSourceHash": "ce5b7c5ba6529c1c97025dca041a503e73a33157247b300da0b153d1671ea14f",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -46281,8 +46400,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceChecklistRevisionPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
-      "acknowledgedSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
+      "observedSourceHash": "aa95e5608589cda0ecb97bfb428ef378b35ac907d8a9102a9f06720bcaf0ebbb",
+      "acknowledgedSourceHash": "aa95e5608589cda0ecb97bfb428ef378b35ac907d8a9102a9f06720bcaf0ebbb",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -47437,12 +47556,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistEditorStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "5a700a94df03a4b46ceeaf773fdcf434da1f51d3406cb72f22856a060951339b",
-      "acknowledgedSourceHash": "5a700a94df03a4b46ceeaf773fdcf434da1f51d3406cb72f22856a060951339b",
+      "observedSourceHash": "74179699f9df5cc467866d0f3312387739e4a2f50993ef4d98e0e41ec37a2a42",
+      "acknowledgedSourceHash": "74179699f9df5cc467866d0f3312387739e4a2f50993ef4d98e0e41ec37a2a42",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs twelve deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, offline cached admission, active-only admission, exact uncertain retry, recreated-editor conflict recovery, both rejection/detail event orders, selection cancellation, accessibility, and scope exclusions.",
+      "currentBehavior": "Runs fourteen deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, pre-acceptance Cancel, empty/zero-item states, offline cached admission, active-only admission, exact uncertain-acceptance replay, recreated-editor conflict preservation, both rejection/detail event orders, fresh read-only recovery without detail, disappearing-evidence refusal, selection cancellation, accessibility, and scope exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Active Space Checklist Editor",
@@ -47467,11 +47586,13 @@
           "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"
         ],
         "acceptance": [
-          "All twelve focused cases pass"
+          "All fourteen focused cases pass"
         ]
       },
       "status": "implemented",
-      "blockers": [],
+      "blockers": [
+        "O-051"
+      ],
       "evidence": [
         "WORKFLOW-active-space-checklist-editor"
       ],

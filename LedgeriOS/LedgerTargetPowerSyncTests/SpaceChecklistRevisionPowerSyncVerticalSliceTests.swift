@@ -1,4 +1,5 @@
 import Foundation
+import LedgerTargetAppModel
 import LedgerTargetCore
 import PowerSync
 import Testing
@@ -313,6 +314,293 @@ struct SpaceChecklistRevisionPowerSyncVerticalSliceTests {
         }
     }
 
+    @Test("Rejected full commands survive encrypted restart and order deterministically")
+    func rejectedRecoveryRestartAndOrdering() async throws {
+        let fixture = try ChecklistRevisionDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seedAuthority(database)
+        let first = try Self.command(id: "first")
+        let second = try Self.command(id: "second", collection: Self.uncheckedCollection)
+
+        _ = try await Self.store(database).reviseChecklists(first)
+        try await Self.connector(
+            applier: ChecklistRevisionResultApplier(
+                phase: "rejected",
+                errorCode: "space_checklist_revision_conflict"
+            )
+        ).uploadData(database: database)
+        _ = try await Self.store(database).reviseChecklists(second)
+        try await Self.connector(
+            applier: ChecklistRevisionResultApplier(
+                phase: "rejected",
+                errorCode: "space_checklist_revision_payload_invalid"
+            )
+        ).uploadData(database: database)
+        _ = try await database.execute(
+            sql: """
+            UPDATE spike_local_operations
+            SET updated_at_ms = updated_at_ms + 1000,
+                terminal_completed_at_ms = terminal_completed_at_ms + 1000
+            WHERE id = ?
+            """,
+            parameters: [second.envelope.operationId.rawValue]
+        )
+
+        let request = try Self.recoveryRequest()
+        let beforeRestart = try await Self.store(database).rejectedOperations(request)
+        #expect(beforeRestart.candidates.map(\.operationId) == [
+            second.envelope.operationId, first.envelope.operationId
+        ])
+        guard case .reviseSpaceChecklists(let recoveredSecond) =
+                beforeRestart.candidates[0].command else {
+            Issue.record("Expected typed checklist command recovery")
+            return
+        }
+        #expect(recoveredSecond == second)
+        #expect(beforeRestart.candidates[0].rejection.error.code.rawValue ==
+            "space_checklist_revision_payload_invalid")
+        #expect(try await database.get(
+            "SELECT count(*) FROM spike_local_operations WHERE local_state = 'rejected'"
+        ) { try $0.getInt64(index: 0) } == 2)
+
+        try await database.close(deleteDatabase: false)
+        let encryptedBytes = try Data(contentsOf: fixture.databaseURL)
+        #expect(!String(decoding: encryptedBytes, as: UTF8.self).contains("Verify lighting"))
+        let reopened = try fixture.open()
+        let reopenedStore = Self.store(reopened)
+        let recovered = try await reopenedStore.rejectedOperations(request)
+        #expect(recovered == beforeRestart)
+
+        var watch = reopenedStore.watchRejectedOperations(request).makeAsyncIterator()
+        #expect(try await watch.next() == recovered)
+        await reopenedStore.cancelAndDrainWatches()
+        do {
+            #expect(try await watch.next() == nil)
+        } catch is CancellationError {
+            // An admitted recovery watch may terminate with cancellation while draining.
+        }
+        var refused = reopenedStore.watchRejectedOperations(request).makeAsyncIterator()
+        #expect(try await refused.next() == nil)
+        try await reopened.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
+    @MainActor
+    @Test("A fresh coordinator and editor recover the exact rejected draft after encrypted restart")
+    func rejectedRecoveryReachesFreshEditorAfterRestart() async throws {
+        let fixture = try ChecklistRevisionDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seedAuthority(database)
+        let command = try Self.command(id: "second")
+        _ = try await Self.store(database).reviseChecklists(command)
+        try await Self.connector(
+            applier: ChecklistRevisionResultApplier(
+                phase: "rejected",
+                errorCode: "space_checklist_revision_conflict"
+            )
+        ).uploadData(database: database)
+        #expect(try await Self.crudCount(database) == 0)
+
+        try await database.close(deleteDatabase: false)
+        let reopened = try fixture.open()
+        let reopenedStore = Self.store(reopened)
+        let request = try SpaceCoreDetailsRequest(
+            accountId: Self.accountId,
+            spaceId: Self.spaceId
+        )
+        let rows = try await PowerSyncSpaceCoreDetailsLocalReader(
+            database: reopened
+        ).readRows(request: request, principalId: Self.principalId)
+        let snapshot = try SpaceCoreDetailsPowerSyncQuery.localSnapshot(
+            request: request,
+            rows: rows,
+            streamCompletionReported: true,
+            hasLastSyncedAt: true,
+            asOf: Self.asOf
+        )
+        let update = try SpaceCoreDetailsUpdate(
+            request: request,
+            state: .snapshot(snapshot)
+        )
+        let coordinator = SpaceChecklistItemToggleStagingExercise(
+            accountId: Self.accountId,
+            actorPrincipalId: Self.principalId,
+            operationContractVersion: command.envelope.contractVersion,
+            makeIdentity: {
+                SpaceChecklistItemToggleSubmissionIdentity(
+                    operationId: try SpaceChecklistRevisionOperationIdentity.make(
+                        accountId: Self.accountId,
+                        uuid: UUID(uuidString: "99999999-9999-4999-8999-999999999999")!
+                    )
+                )
+            },
+            now: { Self.asOf }
+        )
+        let editor = SpaceChecklistEditorStagingExercise(
+            coordinator: coordinator,
+            makeChecklistId: { try SpaceChecklistID(validating: "unused-checklist") },
+            makeItemId: { try SpaceChecklistItemID(validating: "unused-item") }
+        )
+        let runtime = SpaceChecklistItemToggleStagingRuntime(
+            reviseChecklists: { try await reopenedStore.reviseChecklists($0) },
+            watchOperation: { reopenedStore.watchOperation($0) },
+            rejectedOperations: { try await reopenedStore.rejectedOperations($0) },
+            watchRejectedOperations: { reopenedStore.watchRejectedOperations($0) }
+        )
+
+        await coordinator.start(runtime: runtime)
+        await editor.start()
+        await coordinator.receiveDetailUpdate(update, selectedSpaceId: Self.spaceId)
+        await editor.receiveDetailUpdate(update, selectedSpaceId: Self.spaceId)
+        for _ in 0..<200 where !coordinator.isRejectedRecoveryReady {
+            await Task.yield()
+        }
+
+        #expect(coordinator.isRejectedRecoveryReady)
+        #expect(coordinator.rejectedRecovery?.operationId == command.envelope.operationId)
+        #expect(coordinator.rejectedRecoveryCollection == command.draft.collection)
+        #expect(!coordinator.canSubmitCompleteDraft)
+        #expect(editor.canReviewPreservedConflict)
+
+        editor.reviewPreservedConflict()
+        #expect(editor.isReviewingRejectedDraft)
+        #expect(editor.checklists.first?.name == "Installation")
+        #expect(editor.checklists.first?.items.first?.text == "Verify lighting")
+        #expect(!editor.canMutateDraft)
+        #expect(!editor.canSave)
+        editor.renameChecklist(
+            id: try SpaceChecklistID(validating: "installation"),
+            name: "Must remain unchanged"
+        )
+        #expect(editor.checklists.first?.name == "Installation")
+
+        editor.cancel()
+        #expect(!editor.isPresented)
+        #expect(editor.canReviewPreservedConflict)
+        #expect(coordinator.rejectedRecovery?.operationId == command.envelope.operationId)
+        #expect(try await Self.crudCount(reopened) == 0)
+
+        await editor.stop()
+        await coordinator.stop()
+        await reopenedStore.cancelAndDrainWatches()
+        try await reopened.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
+    @Test("Recovery is exactly scoped to Principal, Account, Space, family, and contract")
+    func rejectedRecoveryExactScope() async throws {
+        let fixture = try ChecklistRevisionDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seedAuthority(database)
+        let command = try Self.command(id: "first")
+        _ = try await Self.store(database).reviseChecklists(command)
+        try await Self.connector(
+            applier: ChecklistRevisionResultApplier(
+                phase: "rejected",
+                errorCode: "space_checklist_revision_conflict"
+            )
+        ).uploadData(database: database)
+        let store = Self.store(database)
+
+        let pendingCommand = try Self.command(id: "second", collection: Self.uncheckedCollection)
+        _ = try await store.reviseChecklists(pendingCommand)
+        #expect(try await store.rejectedOperations(Self.recoveryRequest()).candidates.map(\.operationId) == [
+            command.envelope.operationId
+        ])
+
+        let wrongAccount = try RejectedOperationRecoveryRequest(
+            accountId: AccountID(validating: "another-account"),
+            actorPrincipalId: Self.principalId,
+            family: .reviseSpaceChecklists,
+            expectedContractVersion: OperationContractVersion(
+                validating: "space-checklist-revision-v1"
+            ),
+            subject: command.subject
+        )
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            _ = try await store.rejectedOperations(wrongAccount)
+        }
+
+        let otherSpace = try RejectedOperationRecoveryRequest(
+            accountId: Self.accountId,
+            actorPrincipalId: Self.principalId,
+            family: .reviseSpaceChecklists,
+            expectedContractVersion: OperationContractVersion(
+                validating: "space-checklist-revision-v1"
+            ),
+            subject: LedgerEntityReference(
+                kind: .space,
+                id: EntityID(validating: "another-space")
+            )
+        )
+        #expect(try await store.rejectedOperations(otherSpace).candidates.isEmpty)
+
+        let wrongContract = try Self.recoveryRequest(
+            contract: "space-checklist-revision-v2"
+        )
+        await #expect(throws: RejectedOperationRecoveryFailure.localEvidenceMalformed) {
+            _ = try await store.rejectedOperations(wrongContract)
+        }
+
+        let wrongPrincipal = try RejectedOperationRecoveryRequest(
+            accountId: Self.accountId,
+            actorPrincipalId: PrincipalID(validating: "another-principal"),
+            family: .reviseSpaceChecklists,
+            expectedContractVersion: OperationContractVersion(
+                validating: "space-checklist-revision-v1"
+            ),
+            subject: command.subject
+        )
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.principalScopeMismatch) {
+            _ = try await store.rejectedOperations(wrongPrincipal)
+        }
+
+        await store.cancelAndDrainWatches()
+        try await database.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
+    @Test("Malformed persisted command or terminal integrity fails recovery closed")
+    func rejectedRecoveryCorruptionFailsClosed() async throws {
+        for corruption in ["fingerprint", "request_hash", "envelope"] {
+            let fixture = try ChecklistRevisionDatabaseFixture()
+            let database = try fixture.open()
+            try await Self.seedAuthority(database)
+            let command = try Self.command(id: "first")
+            _ = try await Self.store(database).reviseChecklists(command)
+            try await Self.connector(
+                applier: ChecklistRevisionResultApplier(
+                    phase: "rejected",
+                    errorCode: "space_checklist_revision_conflict"
+                )
+            ).uploadData(database: database)
+            switch corruption {
+            case "fingerprint":
+                _ = try await database.execute(
+                    sql: "UPDATE spike_local_operations SET fingerprint = ? WHERE id = ?",
+                    parameters: [String(repeating: "0", count: 64), command.envelope.operationId.rawValue]
+                )
+            case "request_hash":
+                _ = try await database.execute(
+                    sql: "UPDATE spike_local_operations SET terminal_request_sha256 = ? WHERE id = ?",
+                    parameters: [String(repeating: "0", count: 64), command.envelope.operationId.rawValue]
+                )
+            default:
+                _ = try await database.execute(
+                    sql: "UPDATE spike_local_operations SET command_envelope_json = '{}' WHERE id = ?",
+                    parameters: [command.envelope.operationId.rawValue]
+                )
+            }
+            await #expect(throws: RejectedOperationRecoveryFailure.localEvidenceMalformed) {
+                _ = try await Self.store(database).rejectedOperations(
+                    Self.recoveryRequest()
+                )
+            }
+            try await database.close(deleteDatabase: true)
+            fixture.remove()
+        }
+    }
+
     @Test("Operation watches cancel and drain, and strict result validation rejects malformed terminals")
     func cancellationDrainAndStrictResultValidation() async throws {
         let fixture = try ChecklistRevisionDatabaseFixture()
@@ -521,6 +809,21 @@ struct SpaceChecklistRevisionPowerSyncVerticalSliceTests {
             accountId: accountId,
             principalId: principalId,
             now: { acceptedAt }
+        )
+    }
+
+    private static func recoveryRequest(
+        contract: String = "space-checklist-revision-v1"
+    ) throws -> RejectedOperationRecoveryRequest {
+        try RejectedOperationRecoveryRequest(
+            accountId: accountId,
+            actorPrincipalId: principalId,
+            family: .reviseSpaceChecklists,
+            expectedContractVersion: OperationContractVersion(validating: contract),
+            subject: LedgerEntityReference(
+                kind: .space,
+                id: EntityID(validating: spaceId.rawValue)
+            )
         )
     }
 

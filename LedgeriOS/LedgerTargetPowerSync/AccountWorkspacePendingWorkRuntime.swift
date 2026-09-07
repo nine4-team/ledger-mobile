@@ -109,7 +109,7 @@ protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
 extension ProjectArchivePowerSyncStore: AccountWorkspaceProjectArchiveStoring {}
 
 protocol AccountWorkspaceSpaceChecklistRevisionStoring:
-    SpaceChecklistRevising, Sendable
+    SpaceChecklistRevising, RejectedOperationRecoveryQuerying, Sendable
 {
     func watchOperation(
         _ operationId: OperationID
@@ -150,6 +150,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createProject
     case archiveProject
     case reviseSpaceChecklists
+    case rejectedOperationRecoverySnapshot
     case archiveClient
     case assignItemsToSpace
     case clearItemSpaceAssignments
@@ -173,6 +174,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case projectCreationOperation
     case projectArchiveOperation
     case spaceChecklistRevisionOperation
+    case rejectedOperationRecovery
     case clientArchiveOperation
     case itemSpaceAssignmentOperation
     case itemSpaceClearingOperation
@@ -660,6 +662,15 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func rejectedOperations(
+        _ request: RejectedOperationRecoveryRequest
+    ) async throws -> RejectedOperationRecoverySnapshot {
+        try await withFiniteLease(.rejectedOperationRecoverySnapshot) { resources in
+            try await resources.spaceChecklistRevisionStore
+                .rejectedOperations(request)
+        }
+    }
+
     func archiveClient(_ command: ArchiveClientCommand) async throws -> OperationReceipt {
         try await withFiniteLease(.archiveClient) { resources in
             guard command.envelope.accountId == resources.accountId else {
@@ -971,6 +982,24 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in },
             makeStream: { resources in
                 resources.spaceChecklistRevisionStore.watchOperation(operationId)
+            }
+        )
+    }
+
+    func startRejectedOperationRecoveryWatch(
+        id: UUID,
+        request: RejectedOperationRecoveryRequest,
+        continuation:
+            AsyncThrowingStream<RejectedOperationRecoverySnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .rejectedOperationRecovery,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.spaceChecklistRevisionStore
+                    .watchRejectedOperations(request)
             }
         )
     }

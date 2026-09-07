@@ -68,8 +68,8 @@
     {
       "id": "CONFIG-031396750B85",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "418a9f6a70448b8b37442fc573b816e5f8650fcf493801ac0cc99d3005d896be",
-      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product. The migration test target now copies one exact READY-scaffold-only FirebaseSource fixture directory while both new migration-safety Swift leaves remain comment-only.",
+      "acknowledgeSourceHash": "5cc5268f97345594af82c91e87ad78fe326047aaa924fffa77d1af929010ba3a",
+      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product. The PowerSync test target may import AppModel only to prove cross-layer local-provider-to-presentation recovery while neither production layer depends on the other. The migration test target copies one exact READY-scaffold-only FirebaseSource fixture directory while both migration-safety Swift leaves remain comment-only.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -123,8 +123,8 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
+      "acknowledgeSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "currentBehavior": "Fails closed unless target production layers remain isolated; exact dependencies and adapters hold; the PowerSync test target's sole extra target dependency is provider-free AppModel for cross-layer recovery proof; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -374,8 +374,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "64a233d5c3506cc13b6db9e48dffb87759fcc8618ed3abae110d9a49d619c060",
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
+      "acknowledgeSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; admits AppModel only into the PowerSync test target for cross-layer recovery proof while production dependency direction remains unchanged; enforces exact Account-workspace recovery methods and nominal ports plus lexical, bounded pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],

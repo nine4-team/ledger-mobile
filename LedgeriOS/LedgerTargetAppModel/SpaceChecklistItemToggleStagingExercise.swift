@@ -2,21 +2,33 @@ import Foundation
 import LedgerTargetCore
 import Observation
 
-public struct SpaceChecklistItemToggleStagingRuntime: SpaceChecklistRevising, Sendable {
+public struct SpaceChecklistItemToggleStagingRuntime:
+    SpaceChecklistRevising, RejectedOperationRecoveryQuerying, Sendable
+{
     public typealias Revise = @Sendable (ReviseSpaceChecklistsCommand) async throws
         -> OperationReceipt
     public typealias OperationWatch = @Sendable (OperationID)
         -> AsyncThrowingStream<OperationSnapshot, Error>
+    public typealias RejectedRecoveryRead = @Sendable (RejectedOperationRecoveryRequest)
+        async throws -> RejectedOperationRecoverySnapshot
+    public typealias RejectedRecoveryWatch = @Sendable (RejectedOperationRecoveryRequest)
+        -> AsyncThrowingStream<RejectedOperationRecoverySnapshot, Error>
 
     private let reviseOperation: Revise
     private let operationWatch: OperationWatch
+    private let rejectedRecoveryRead: RejectedRecoveryRead
+    private let rejectedRecoveryWatch: RejectedRecoveryWatch
 
     public init(
         reviseChecklists: @escaping Revise,
-        watchOperation: @escaping OperationWatch
+        watchOperation: @escaping OperationWatch,
+        rejectedOperations: @escaping RejectedRecoveryRead,
+        watchRejectedOperations: @escaping RejectedRecoveryWatch
     ) {
         reviseOperation = reviseChecklists
         operationWatch = watchOperation
+        rejectedRecoveryRead = rejectedOperations
+        rejectedRecoveryWatch = watchRejectedOperations
     }
 
     public func reviseChecklists(
@@ -29,6 +41,18 @@ public struct SpaceChecklistItemToggleStagingRuntime: SpaceChecklistRevising, Se
         _ operationId: OperationID
     ) -> AsyncThrowingStream<OperationSnapshot, Error> {
         operationWatch(operationId)
+    }
+
+    public func rejectedOperations(
+        _ request: RejectedOperationRecoveryRequest
+    ) async throws -> RejectedOperationRecoverySnapshot {
+        try await rejectedRecoveryRead(request)
+    }
+
+    public func watchRejectedOperations(
+        _ request: RejectedOperationRecoveryRequest
+    ) -> AsyncThrowingStream<RejectedOperationRecoverySnapshot, Error> {
+        rejectedRecoveryWatch(request)
     }
 }
 
@@ -92,6 +116,17 @@ public final class SpaceChecklistItemToggleStagingExercise {
     public private(set) var diagnostic: String?
     public private(set) var isSubmitting = false
     public private(set) var optimisticCollection: SpaceChecklistCollection?
+    public private(set) var rejectedRecovery: RejectedOperationRecoveryCandidate?
+    public private(set) var isRejectedRecoveryReady = false
+    public private(set) var rejectedRecoveryDiagnostic: String?
+
+    public var rejectedRecoveryCollection: SpaceChecklistCollection? {
+        guard let rejectedRecovery,
+              case .reviseSpaceChecklists(let command) = rejectedRecovery.command else {
+            return nil
+        }
+        return command.draft.collection
+    }
 
     public var displayedCollection: SpaceChecklistCollection? {
         optimisticCollection ?? Self.row(from: currentUpdate)?.checklists
@@ -110,6 +145,9 @@ public final class SpaceChecklistItemToggleStagingExercise {
     public var operationStatus: String {
         if isSubmitting {
             return "accepting locally"
+        }
+        if rejectedRecovery != nil {
+            return "rejected — review required"
         }
         guard let operationState else {
             return ambiguousSubmission == nil ? "not submitted" : "acceptance uncertain"
@@ -147,6 +185,8 @@ public final class SpaceChecklistItemToggleStagingExercise {
             && !isSubmitting
             && frozenSubmission == nil
             && ambiguousSubmission == nil
+            && isRejectedRecoveryReady
+            && rejectedRecovery == nil
             && admission.permitsToggle
     }
 
@@ -162,6 +202,7 @@ public final class SpaceChecklistItemToggleStagingExercise {
     private var frozenSubmission: FrozenSubmission?
     private var ambiguousSubmission: FrozenSubmission?
     private var operationObservationTask: Task<Void, Never>?
+    private var rejectedRecoveryObservationTask: Task<Void, Never>?
     private var lifecycleGeneration = UUID()
     private var selectionGeneration = UUID()
     private var evidenceSequence: UInt64 = 0
@@ -186,10 +227,14 @@ public final class SpaceChecklistItemToggleStagingExercise {
         selectionGeneration = UUID()
         let activeLifecycle = lifecycleGeneration
         let oldTask = operationObservationTask
+        let oldRecoveryTask = rejectedRecoveryObservationTask
         operationObservationTask = nil
+        rejectedRecoveryObservationTask = nil
         self.runtime = nil
         oldTask?.cancel()
+        oldRecoveryTask?.cancel()
         await oldTask?.value
+        await oldRecoveryTask?.value
         guard lifecycleGeneration == activeLifecycle else { return }
 
         self.runtime = runtime
@@ -201,6 +246,9 @@ public final class SpaceChecklistItemToggleStagingExercise {
         operationState = nil
         operationIdLabel = nil
         diagnostic = nil
+        rejectedRecovery = nil
+        isRejectedRecoveryReady = false
+        rejectedRecoveryDiagnostic = nil
         isSubmitting = false
         admission = .waiting
         evidenceSequence = 0
@@ -306,21 +354,21 @@ public final class SpaceChecklistItemToggleStagingExercise {
         operationState = nil
         operationIdLabel = nil
         diagnostic = nil
+        rejectedRecovery = nil
+        isRejectedRecoveryReady = false
+        rejectedRecoveryDiagnostic = nil
         isSubmitting = false
         admission = .stopped
         evidenceSequence = 0
         await cancelAndDrainOperationObservation()
+        await cancelAndDrainRejectedRecoveryObservation()
     }
 
     public func canToggle(
         checklistId: SpaceChecklistID,
         itemId: SpaceChecklistItemID
     ) -> Bool {
-        guard runtime != nil,
-              !isSubmitting,
-              frozenSubmission == nil,
-              ambiguousSubmission == nil,
-              admission.permitsToggle,
+        guard canSubmitCompleteDraft,
               let collection = displayedCollection,
               let checklist = collection.checklists.first(where: { $0.id == checklistId }) else {
             return false
@@ -583,6 +631,17 @@ public final class SpaceChecklistItemToggleStagingExercise {
                         return
                     }
                 case .rejected:
+                    do {
+                        try preserveRejectedSubmission(
+                            submission,
+                            snapshot: snapshot
+                        )
+                    } catch {
+                        rejectedRecovery = nil
+                        isRejectedRecoveryReady = false
+                        rejectedRecoveryDiagnostic =
+                            "space_checklist_rejected_recovery_invalid"
+                    }
                     diagnostic = Self.rejectionDiagnostic(snapshot)
                     if evidenceSequence > submission.settlementEvidenceSequence,
                        Self.isSettledDetailEvidence(currentUpdate) {
@@ -625,6 +684,8 @@ public final class SpaceChecklistItemToggleStagingExercise {
 
     private func replaceSelection(with newSelection: SpaceID?) async {
         selectionGeneration = UUID()
+        let activeLifecycle = lifecycleGeneration
+        let activeSelection = selectionGeneration
         selectedSpaceId = newSelection
         currentUpdate = nil
         frozenSubmission = nil
@@ -633,9 +694,39 @@ public final class SpaceChecklistItemToggleStagingExercise {
         operationState = nil
         operationIdLabel = nil
         diagnostic = nil
+        rejectedRecovery = nil
+        isRejectedRecoveryReady = newSelection == nil
+        rejectedRecoveryDiagnostic = nil
         admission = newSelection == nil ? .waiting : .incomplete
         evidenceSequence = 0
         await cancelAndDrainOperationObservation()
+        await cancelAndDrainRejectedRecoveryObservation()
+        guard let newSelection, let runtime,
+              lifecycleGeneration == activeLifecycle,
+              selectionGeneration == activeSelection else { return }
+        do {
+            let request = try recoveryRequest(spaceId: newSelection)
+            let snapshot = try await runtime.rejectedOperations(request)
+            guard lifecycleGeneration == activeLifecycle,
+                  selectionGeneration == activeSelection,
+                  selectedSpaceId == newSelection else { return }
+            try applyRecoverySnapshot(snapshot, expected: request)
+            isRejectedRecoveryReady = true
+            await beginRejectedRecoveryObservation(
+                request: request,
+                runtime: runtime,
+                lifecycleGeneration: activeLifecycle,
+                selectionGeneration: activeSelection
+            )
+        } catch is CancellationError {
+            return
+        } catch {
+            guard lifecycleGeneration == activeLifecycle,
+                  selectionGeneration == activeSelection else { return }
+            rejectedRecovery = nil
+            isRejectedRecoveryReady = false
+            rejectedRecoveryDiagnostic = "space_checklist_rejected_recovery_unavailable"
+        }
     }
 
     private func settleSubmission(clearDiagnostic: Bool) {
@@ -647,9 +738,120 @@ public final class SpaceChecklistItemToggleStagingExercise {
         }
     }
 
+    private func preserveRejectedSubmission(
+        _ submission: FrozenSubmission,
+        snapshot: OperationSnapshot
+    ) throws {
+        guard case .rejected(let rejection) = snapshot.state,
+              let command = submission.execution?.command else { return }
+        let request = try recoveryRequest(spaceId: command.draft.spaceId)
+        let candidate = try RejectedOperationRecoveryCandidate(
+            command: .reviseSpaceChecklists(command),
+            acceptedAt: snapshot.acceptedAt,
+            updatedAt: snapshot.updatedAt,
+            rejection: rejection
+        )
+        _ = try candidate.validating(request: request)
+        rejectedRecovery = candidate
+        isRejectedRecoveryReady = true
+        rejectedRecoveryDiagnostic = nil
+    }
+
     private func cancelAndDrainOperationObservation() async {
         let oldTask = operationObservationTask
         operationObservationTask = nil
+        oldTask?.cancel()
+        await oldTask?.value
+    }
+
+    private func recoveryRequest(
+        spaceId: SpaceID
+    ) throws -> RejectedOperationRecoveryRequest {
+        try RejectedOperationRecoveryRequest(
+            accountId: accountId,
+            actorPrincipalId: actorPrincipalId,
+            family: .reviseSpaceChecklists,
+            expectedContractVersion: operationContractVersion,
+            subject: LedgerEntityReference(
+                kind: .space,
+                id: EntityID(validating: spaceId.rawValue)
+            )
+        )
+    }
+
+    private func applyRecoverySnapshot(
+        _ snapshot: RejectedOperationRecoverySnapshot,
+        expected request: RejectedOperationRecoveryRequest
+    ) throws {
+        guard snapshot.request == request else {
+            throw RejectedOperationRecoveryFailure.invalidRequest
+        }
+        if let existing = rejectedRecovery,
+           !snapshot.candidates.contains(where: {
+               $0.operationId == existing.operationId
+           }) {
+            throw RejectedOperationRecoveryFailure.invalidCandidate
+        }
+        rejectedRecovery = snapshot.candidates.first
+        rejectedRecoveryDiagnostic = nil
+    }
+
+    private func beginRejectedRecoveryObservation(
+        request: RejectedOperationRecoveryRequest,
+        runtime: SpaceChecklistItemToggleStagingRuntime,
+        lifecycleGeneration: UUID,
+        selectionGeneration: UUID
+    ) async {
+        await cancelAndDrainRejectedRecoveryObservation()
+        guard self.lifecycleGeneration == lifecycleGeneration,
+              self.selectionGeneration == selectionGeneration else { return }
+        rejectedRecoveryObservationTask = Task { [weak self] in
+            await self?.observeRejectedRecovery(
+                request: request,
+                runtime: runtime,
+                lifecycleGeneration: lifecycleGeneration,
+                selectionGeneration: selectionGeneration
+            )
+        }
+    }
+
+    private func observeRejectedRecovery(
+        request: RejectedOperationRecoveryRequest,
+        runtime: SpaceChecklistItemToggleStagingRuntime,
+        lifecycleGeneration: UUID,
+        selectionGeneration: UUID
+    ) async {
+        var iterator = runtime.watchRejectedOperations(request).makeAsyncIterator()
+        defer {
+            if self.lifecycleGeneration == lifecycleGeneration,
+               self.selectionGeneration == selectionGeneration {
+                rejectedRecoveryObservationTask = nil
+            }
+        }
+        do {
+            while let snapshot = try await iterator.next() {
+                try Task.checkCancellation()
+                guard self.lifecycleGeneration == lifecycleGeneration,
+                      self.selectionGeneration == selectionGeneration else { return }
+                try applyRecoverySnapshot(snapshot, expected: request)
+                isRejectedRecoveryReady = true
+            }
+            guard !Task.isCancelled,
+                  self.lifecycleGeneration == lifecycleGeneration,
+                  self.selectionGeneration == selectionGeneration else { return }
+        } catch is CancellationError {
+            return
+        } catch {
+            guard self.lifecycleGeneration == lifecycleGeneration,
+                  self.selectionGeneration == selectionGeneration else { return }
+            isRejectedRecoveryReady = false
+            rejectedRecoveryDiagnostic = "space_checklist_rejected_recovery_invalid"
+        }
+    }
+
+    private func cancelAndDrainRejectedRecoveryObservation() async {
+        let oldTask = rejectedRecoveryObservationTask
+        rejectedRecoveryObservationTask = nil
         oldTask?.cancel()
         await oldTask?.value
     }
