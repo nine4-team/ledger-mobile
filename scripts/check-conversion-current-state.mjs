@@ -106,6 +106,33 @@ function requireString(value, field) {
   );
 }
 
+function baselineTransitionReference(transition) {
+  return `${transition.from} | ${transition.event} | ${transition.to}`;
+}
+
+function catalogBehaviorKey(journeyId, kind, ...parts) {
+  return [journeyId, kind, ...parts].join("::");
+}
+
+function catalogBehaviorKeys(baseline) {
+  const keys = new Set();
+  for (const journey of baseline?.uiJourneys ?? []) {
+    for (const control of journey.controls ?? []) {
+      keys.add(catalogBehaviorKey(journey.journeyId, "control", control.label));
+      for (const option of control.options ?? []) {
+        keys.add(catalogBehaviorKey(journey.journeyId, "option", control.label, option.label));
+      }
+    }
+    for (const transition of journey.transitions ?? []) {
+      keys.add(catalogBehaviorKey(journey.journeyId, "transition", baselineTransitionReference(transition)));
+    }
+    for (const state of journey.states ?? []) {
+      keys.add(catalogBehaviorKey(journey.journeyId, "state", state.name));
+    }
+  }
+  return keys;
+}
+
 function repositoryEntry(value, field, { fileOnly = false } = {}) {
   requireString(value, field);
   if (typeof value !== "string" || value.length === 0) return undefined;
@@ -338,13 +365,19 @@ function validateWorkflowRecord(record, relativePath) {
       Array.isArray(journey?.controls) && journey.controls.length > 0,
       `${journeyPrefix}.controls must not be empty.`,
     );
+    const controlLabels = new Set();
     for (const [controlIndex, control] of (journey?.controls ?? []).entries()) {
       const controlPrefix = `${journeyPrefix}.controls[${controlIndex}]`;
       requireString(control?.label, `${controlPrefix}.label`);
+      requireCondition(!controlLabels.has(control?.label), `${controlPrefix}.label is duplicated in the journey.`);
+      controlLabels.add(control?.label);
       requireCondition(Array.isArray(control?.options), `${controlPrefix}.options must be an array.`);
+      const optionLabels = new Set();
       for (const [optionIndex, option] of (control?.options ?? []).entries()) {
         const optionPrefix = `${controlPrefix}.options[${optionIndex}]`;
         requireString(option?.label, `${optionPrefix}.label`);
+        requireCondition(!optionLabels.has(option?.label), `${optionPrefix}.label is duplicated in the control.`);
+        optionLabels.add(option?.label);
         requireString(option?.result, `${optionPrefix}.result`);
         requireCondition(
           ["preserve", "redesign", "retire"].includes(option?.disposition),
@@ -362,11 +395,15 @@ function validateWorkflowRecord(record, relativePath) {
       Array.isArray(journey?.transitions) && journey.transitions.length > 0,
       `${journeyPrefix}.transitions must not be empty.`,
     );
+    const transitionReferences = new Set();
     for (const [transitionIndex, transition] of (journey?.transitions ?? []).entries()) {
       const transitionPrefix = `${journeyPrefix}.transitions[${transitionIndex}]`;
       requireString(transition?.from, `${transitionPrefix}.from`);
       requireString(transition?.event, `${transitionPrefix}.event`);
       requireString(transition?.to, `${transitionPrefix}.to`);
+      const transitionReference = baselineTransitionReference(transition);
+      requireCondition(!transitionReferences.has(transitionReference), `${transitionPrefix} is duplicated in the journey.`);
+      transitionReferences.add(transitionReference);
       requireCondition(
         ["preserve", "redesign", "retire"].includes(transition?.disposition),
         `${transitionPrefix}.disposition is not allowed.`,
@@ -376,10 +413,13 @@ function validateWorkflowRecord(record, relativePath) {
       Array.isArray(journey?.states) && journey.states.length > 0,
       `${journeyPrefix}.states must not be empty.`,
     );
+    const stateNames = new Set();
     for (const [stateIndex, state] of (journey?.states ?? []).entries()) {
       const statePrefix = `${journeyPrefix}.states[${stateIndex}]`;
       requireString(state?.name, `${statePrefix}.name`);
       requireString(state?.expected, `${statePrefix}.expected`);
+      requireCondition(!stateNames.has(state?.name), `${statePrefix}.name is duplicated in the journey.`);
+      stateNames.add(state?.name);
       requireCondition(
         ["preserve", "redesign", "retire"].includes(state?.disposition),
         `${statePrefix}.disposition is not allowed.`,
@@ -394,6 +434,10 @@ function validateWorkflowRecord(record, relativePath) {
         .map((surface) => surface.id),
     );
     requireCondition(record?.uiCoverage?.scope === "all_current_app_ui", `${prefix}: UI coverage scope is invalid.`);
+    requireCondition(
+      record?.catalogRole === "authoritative_current_behavior_checklist",
+      `${prefix}: coverage audit must declare the Product Behavior Catalog role.`,
+    );
     requireCondition(record?.uiCoverage?.expectedSurfaceCount === allUiSurfaceIds.size, `${prefix}: expected UI surface count is stale.`);
     requireStrings(record?.uiCoverage?.uncoveredSurfaceIds, `${prefix}: uiCoverage.uncoveredSurfaceIds`, { allowEmpty: true });
     const uncovered = new Set(record?.uiCoverage?.uncoveredSurfaceIds ?? []);
@@ -512,20 +556,133 @@ function validateWorkflowSet(records) {
   const baselineJourneyIds = new Set(
     (completedUiBaseline?.uiJourneys ?? []).map((journey) => journey.journeyId),
   );
+  const baselineJourneys = new Map(
+    (completedUiBaseline?.uiJourneys ?? []).map((journey) => [journey.journeyId, journey]),
+  );
+  const claimedBehaviorKeys = new Set();
+  const verifiedBehaviorKeys = new Set();
   for (const record of records) {
-    if (record.kind !== "product_ui" || ["planning", "blocked"].includes(record.status)) continue;
+    if (record.kind !== "product_ui") continue;
     requireCondition(
       Boolean(completedUiBaseline),
-      `${record.workflowId}: product UI implementation requires the completed current-app UI baseline.`,
+      `${record.workflowId}: product UI work requires the Product Behavior Catalog.`,
     );
     requireStrings(record.baselineJourneyIds, `${record.workflowId}: baselineJourneyIds`);
+    requireCondition(
+      new Set(record.baselineJourneyIds ?? []).size === (record.baselineJourneyIds ?? []).length,
+      `${record.workflowId}: baselineJourneyIds contains duplicates.`,
+    );
     for (const journeyId of record.baselineJourneyIds ?? []) {
       requireCondition(
         baselineJourneyIds.has(journeyId),
         `${record.workflowId}: unknown baseline journey ${journeyId}.`,
       );
     }
+
+    requireCondition(
+      Array.isArray(record.baselineBehaviorRefs) && record.baselineBehaviorRefs.length > 0,
+      `${record.workflowId}: baselineBehaviorRefs must identify exact catalog behavior, not only broad journeys.`,
+    );
+    const referencedJourneyIds = new Set();
+    const recordBehaviorKeys = new Set();
+    for (const [referenceIndex, reference] of (record.baselineBehaviorRefs ?? []).entries()) {
+      const referencePrefix = `${record.workflowId}: baselineBehaviorRefs[${referenceIndex}]`;
+      requireString(reference?.journeyId, `${referencePrefix}.journeyId`);
+      requireCondition(
+        !referencedJourneyIds.has(reference?.journeyId),
+        `${referencePrefix}: journey is referenced twice.`,
+      );
+      referencedJourneyIds.add(reference?.journeyId);
+      const journey = baselineJourneys.get(reference?.journeyId);
+      requireCondition(Boolean(journey), `${referencePrefix}: unknown journey ${reference?.journeyId}.`);
+
+      requireCondition(Array.isArray(reference?.controls), `${referencePrefix}.controls must be an array.`);
+      requireStrings(reference?.transitions, `${referencePrefix}.transitions`, { allowEmpty: true });
+      requireStrings(reference?.states, `${referencePrefix}.states`, { allowEmpty: true });
+      let referenceBehaviorCount = 0;
+      const referencedControls = new Set();
+      for (const [controlIndex, controlReference] of (reference?.controls ?? []).entries()) {
+        const controlPrefix = `${referencePrefix}.controls[${controlIndex}]`;
+        requireString(controlReference?.label, `${controlPrefix}.label`);
+        requireCondition(
+          typeof controlReference?.includeControl === "boolean",
+          `${controlPrefix}.includeControl must be boolean.`,
+        );
+        requireStrings(controlReference?.options, `${controlPrefix}.options`, { allowEmpty: true });
+        requireCondition(
+          !referencedControls.has(controlReference?.label),
+          `${controlPrefix}: control is referenced twice.`,
+        );
+        referencedControls.add(controlReference?.label);
+        const catalogControl = (journey?.controls ?? []).find(
+          (candidate) => candidate.label === controlReference?.label,
+        );
+        requireCondition(Boolean(catalogControl), `${controlPrefix}: unknown catalog control ${controlReference?.label}.`);
+        if (controlReference?.includeControl) {
+          const key = catalogBehaviorKey(reference.journeyId, "control", controlReference.label);
+          requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate behavior claim.`);
+          recordBehaviorKeys.add(key);
+          referenceBehaviorCount += 1;
+        }
+        const optionLabels = new Set((catalogControl?.options ?? []).map((option) => option.label));
+        const referencedOptions = new Set();
+        for (const option of controlReference?.options ?? []) {
+          requireCondition(optionLabels.has(option), `${controlPrefix}: unknown option ${option}.`);
+          requireCondition(!referencedOptions.has(option), `${controlPrefix}: option ${option} is referenced twice.`);
+          referencedOptions.add(option);
+          const key = catalogBehaviorKey(reference.journeyId, "option", controlReference.label, option);
+          requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate option behavior claim.`);
+          recordBehaviorKeys.add(key);
+          referenceBehaviorCount += 1;
+        }
+      }
+
+      const transitionKeys = new Set(
+        (journey?.transitions ?? []).map((transition) => baselineTransitionReference(transition)),
+      );
+      const referencedTransitions = new Set();
+      for (const transition of reference?.transitions ?? []) {
+        requireCondition(transitionKeys.has(transition), `${referencePrefix}: unknown transition ${transition}.`);
+        requireCondition(!referencedTransitions.has(transition), `${referencePrefix}: transition is referenced twice.`);
+        referencedTransitions.add(transition);
+        const key = catalogBehaviorKey(reference.journeyId, "transition", transition);
+        requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate transition behavior claim.`);
+        recordBehaviorKeys.add(key);
+        referenceBehaviorCount += 1;
+      }
+
+      const stateNames = new Set((journey?.states ?? []).map((state) => state.name));
+      const referencedStates = new Set();
+      for (const stateName of reference?.states ?? []) {
+        requireCondition(stateNames.has(stateName), `${referencePrefix}: unknown state ${stateName}.`);
+        requireCondition(!referencedStates.has(stateName), `${referencePrefix}: state is referenced twice.`);
+        referencedStates.add(stateName);
+        const key = catalogBehaviorKey(reference.journeyId, "state", stateName);
+        requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate state behavior claim.`);
+        recordBehaviorKeys.add(key);
+        referenceBehaviorCount += 1;
+      }
+      requireCondition(referenceBehaviorCount > 0, `${referencePrefix}: no catalog behavior is claimed.`);
+    }
+
+    requireCondition(
+      referencedJourneyIds.size === (record.baselineJourneyIds ?? []).length &&
+        (record.baselineJourneyIds ?? []).every((journeyId) => referencedJourneyIds.has(journeyId)),
+      `${record.workflowId}: baselineJourneyIds and baselineBehaviorRefs journeys must match exactly.`,
+    );
+    for (const key of recordBehaviorKeys) {
+      claimedBehaviorKeys.add(key);
+      if (record.status === "complete") verifiedBehaviorKeys.add(key);
+    }
   }
+
+  const totalBehaviorKeys = catalogBehaviorKeys(completedUiBaseline);
+  return {
+    journeys: baselineJourneyIds.size,
+    total: totalBehaviorKeys.size,
+    claimed: claimedBehaviorKeys.size,
+    verified: verifiedBehaviorKeys.size,
+  };
 }
 
 function runSelfTests() {
@@ -540,6 +697,7 @@ function runSelfTests() {
     title: "Self-test UI baseline",
     kind: "coverage_audit",
     status: "implementation",
+    catalogRole: "authoritative_current_behavior_checklist",
     outcome: "Exercise workflow validation without changing repository state.",
     authority: [
       { role: "current_product", path: "docs/specs/README.md", section: "Spec Index" },
@@ -620,6 +778,14 @@ function runSelfTests() {
     authority: [{ role: "canonical_target", path: "docs/specs/projects.md", section: "Creation Flow" }],
     uiJourneys: [journey],
     baselineJourneyIds: ["self-journey"],
+    baselineBehaviorRefs: [
+      {
+        journeyId: "self-journey",
+        controls: [{ label: "Control", includeControl: true, options: ["Option"] }],
+        transitions: ["A | Act | B"],
+        states: ["Ready"],
+      },
+    ],
     verification: {
       local: { status: "not_run", commands: [] },
       review: { required: false, status: "not_required", summary: "UI-only self-test." },
@@ -627,7 +793,17 @@ function runSelfTests() {
     },
   };
   delete product.uiCoverage;
-  expectFailure("missing completed baseline", () => validateWorkflowSet([baseCoverage, product]), /requires the completed current-app UI baseline/);
+  expectFailure("missing completed baseline", () => validateWorkflowSet([baseCoverage, product]), /requires the Product Behavior Catalog/);
+
+  expectFailure("journey-only product coverage", () => {
+    const value = structuredClone(product);
+    delete value.baselineBehaviorRefs;
+    const completeBaseline = structuredClone(baseCoverage);
+    completeBaseline.status = "complete";
+    completeBaseline.uiCoverage.uncoveredSurfaceIds = [];
+    completeBaseline.uiJourneys = [{ ...structuredClone(journey), sourceSurfaceIds: allUiIds }];
+    validateWorkflowSet([completeBaseline, value]);
+  }, /must identify exact catalog behavior/);
 
   expectFailure("fake CI commit", () => {
     const value = structuredClone(baseCoverage);
@@ -648,7 +824,7 @@ function runSelfTests() {
     validateDerivedLayers(value, ["supabase/migrations/example.sql"], value.workflowId);
   }, /requires layer postgres_schema/);
 
-  console.log("Conversion current-state self-tests passed: 6 negative cases.");
+  console.log("Conversion current-state self-tests passed: 7 negative cases.");
 }
 
 if (process.argv[2] === "--self-test") {
@@ -786,7 +962,7 @@ try {
   errors.push(`Unable to validate workflow records: ${error.message}`);
 }
 
-validateWorkflowSet(workflowRecords);
+const productBehaviorSummary = validateWorkflowSet(workflowRecords);
 
 if (state?.activeWorkflow?.kind !== "selection" && /^[0-9a-f]{40}$/.test(state?.verifiedCheckpoint?.commit ?? "")) {
   const activeRecord = workflowRecords.find((record) => record.workflowId === state.activeWorkflow.id);
@@ -834,4 +1010,8 @@ if (errors.length > 0) {
 
 console.log(
   `Conversion current state is valid: ${state.activeWorkflow.id} at ${state.verifiedCheckpoint.commit.slice(0, 8)}.`,
+);
+console.log(
+  `Product Behavior Catalog: ${productBehaviorSummary.journeys} journeys, ${productBehaviorSummary.total} exact behaviors; ` +
+    `${productBehaviorSummary.claimed} claimed by target workflows, ${productBehaviorSummary.verified} verified complete.`,
 );

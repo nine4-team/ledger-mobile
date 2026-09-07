@@ -62,6 +62,8 @@ active workflow and, after selection, its durable record under
 - applicable risk domains;
 - the source and target pages in the journey, every visible control and option,
   each resulting transition or operation, and loading/empty/error/offline states;
+- exact behavior-level references into the current-product catalog—not merely a
+  page, source file, or broad journey ID;
 - exact spec or decision-log headings that govern each UI journey;
 - affected technical components, at component level rather than an exhaustive
   file allowlist;
@@ -80,16 +82,16 @@ view. A completed row should say what works, what remains excluded, and identify
 the implementation commit and CI run. It should not narrate every intermediate
 type or control-plane transition.
 
-The exhaustive conversion catalog remains the coverage backstop. It currently
+The exhaustive code-surface catalog remains the coverage backstop. It currently
 includes the discovered UI components and views as well as services, state,
 queries, MCP tools, tests, and operational surfaces. Workflow planning groups
 those detailed surfaces into a journey; it does not discard them. Before a
 workflow is complete, its UI coverage must be checked against both the catalog
 and the current app so every control, menu choice, sheet, navigation result,
 disabled rule, and visible data state has an explicit preserve, redesign, or
-retire outcome. The active record names the stable source-surface IDs used for
-that check, so grouping work into a journey never makes the underlying coverage
-anonymous.
+retire outcome. That code inventory answers **where the implementation lives**.
+The Product Behavior Catalog answers **what a person can see, choose, do, and
+observe**. Neither substitutes for the other.
 
 Risk domains use a fixed vocabulary, and every selected risk must have at least
 one matching acceptance check in addition to the general end-to-end check. UI
@@ -101,10 +103,14 @@ accounting, authentication, media, deletion, migration, app UI, or MCP paths.
 Human judgment may add risks; it may not remove the derived minimum.
 free-form “tested” claims are insufficient.
 
-### Complete Current-App UI Baseline
+### Product Behavior Catalog
 
-Before additional product UI implementation, complete one dedicated baseline
-record covering all 167 currently discovered Swift UI components and views.
+The durable record
+`workflow-records/current-app-ui-control-flow-baseline.json` is Ledger's Product
+Behavior Catalog. It covers all 167 currently discovered Swift UI components
+and views. The historical filename remains stable so links and CI evidence do
+not churn; its role is not a code inventory or a one-time audit.
+
 For every page or shared component it records:
 
 - its stable surface IDs and source/target page names;
@@ -115,12 +121,20 @@ For every page or shared component it records:
 - whether the behavior is preserved, redesigned, or retired, with the governing
   spec or decision.
 
-The baseline record maintains explicit covered and uncovered surface sets. Its
+The catalog maintains explicit covered and uncovered source-surface sets. Its
 completion gate requires their union to equal the manifest's complete UI set,
 with no duplicates and no uncovered IDs. Later product workflows reference the
-baseline journeys they implement and may add newly discovered details. This is
-the durable answer to “did we preserve every control flow?”; file-level surface
-discovery alone is not sufficient.
+exact catalog controls, options, transitions, and states they implement—not just
+the containing journey—and may add newly discovered details. The state checker
+derives a concise claimed/verified behavior count from those references. A
+workflow can therefore implement one control on a large page without pretending
+the entire page is complete. This is the durable answer to “did we reproduce
+what the app does?”; file-level surface discovery alone is not sufficient.
+
+Before cutover readiness, every catalog behavior must be accounted for by a
+completed target workflow as preserved, deliberately redesigned, or explicitly
+retired. Open or deferred behavior remains visibly unverified rather than being
+hidden inside a page-level completion claim.
 
 ## When a Separate Design Note Is Worth It
 
@@ -151,7 +165,8 @@ immutable audit history; do not create new ones for ordinary workflow delivery.
    two-file abstraction or a source file family.
 2. **Check authority.** Read only the relevant target-spec sections and confirmed
    decisions. Put their paths and headings in `activeWorkflow.authority`.
-3. **Write acceptance checks.** State the happy path and the applicable negative,
+3. **Write acceptance checks.** Cite the exact catalog behavior elements in
+   `baselineBehaviorRefs`, then state the happy path and the applicable negative,
    offline, replay, security, accounting, and reconciliation cases in concise
    testable language. Record the page-by-page UI journey, including controls,
    options, transitions, loading/empty/error/offline states and accessibility.
@@ -187,7 +202,7 @@ through its implemented layers. Add the following only when applicable:
 | Media | durable-byte lifecycle, retry, orphan/reference and retention behavior |
 | Migration | deterministic transform, quarantine, counts, relationships, money, provenance, resumability |
 | App and MCP | both invoke the same typed authority and return compatible results |
-| UI journey | every inventoried control/option/transition/state is preserved, deliberately redesigned, or explicitly retired; interaction and accessibility tests cover the target result |
+| UI journey | every specifically claimed catalog control/option/transition/state is preserved, deliberately redesigned, or explicitly retired; interaction and accessibility tests cover the target result; unclaimed behavior remains visibly outstanding |
 
 Compilation or a named test plan is not proof. A workflow is verified only when
 the applicable executable checks pass.

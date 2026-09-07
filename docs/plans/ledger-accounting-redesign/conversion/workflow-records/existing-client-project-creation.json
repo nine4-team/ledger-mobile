@@ -39,6 +39,125 @@
     "UIBASE-SHARED-FORM-TEXT-FIELD-001",
     "UIBASE-LIST-CONTROL-BARS-001"
   ],
+  "baselineBehaviorRefs": [
+    {
+      "journeyId": "UIBASE-PROJECT-DIRECTORY-001",
+      "controls": [
+        {
+          "label": "Create Project notification action",
+          "includeControl": true,
+          "options": []
+        }
+      ],
+      "transitions": [
+        "Projects directory | Receive createProject | New Project sheet"
+      ],
+      "states": []
+    },
+    {
+      "journeyId": "UIBASE-NEW-PROJECT-001",
+      "controls": [
+        {
+          "label": "Step 1 — Basic information",
+          "includeControl": true,
+          "options": [
+            "Project name *",
+            "Client name *",
+            "Description",
+            "Next",
+            "Cancel"
+          ]
+        },
+        {
+          "label": "Step 2 — Select budget categories",
+          "includeControl": true,
+          "options": [
+            "Category row",
+            "Next",
+            "Back"
+          ]
+        },
+        {
+          "label": "Step 3 — Set budget amounts",
+          "includeControl": true,
+          "options": [
+            "Category amount",
+            "Create Project",
+            "Back"
+          ]
+        }
+      ],
+      "transitions": [
+        "Basic information | Valid Next | Category selection",
+        "Category selection | At least one category and Next | Budget amounts",
+        "Budget amounts | Create Project succeeds synchronously | Dismissed sheet plus background budget writes and queued hero upload"
+      ],
+      "states": [
+        "Invalid basic information",
+        "No budget categories",
+        "All active categories preselected once",
+        "No selected categories",
+        "Missing Account ID",
+        "Invisible creation or budget failure"
+      ]
+    },
+    {
+      "journeyId": "UIBASE-SHARED-MULTI-STEP-FORM-SHELL-001",
+      "controls": [
+        {
+          "label": "Forwarded form actions",
+          "includeControl": true,
+          "options": [
+            "Primary",
+            "Secondary",
+            "Close"
+          ]
+        }
+      ],
+      "transitions": [
+        "Step N | Host primary/secondary action | Host-defined Step N±1, result, or dismissal"
+      ],
+      "states": [
+        "Step indicator",
+        "Inherited form states"
+      ]
+    },
+    {
+      "journeyId": "UIBASE-SHARED-FORM-TEXT-FIELD-001",
+      "controls": [
+        {
+          "label": "Text input",
+          "includeControl": true,
+          "options": [
+            "Edit"
+          ]
+        }
+      ],
+      "transitions": [
+        "Current text | Edit | Updated text binding and host validation"
+      ],
+      "states": [
+        "Normal",
+        "Error",
+        "Helper",
+        "Disabled"
+      ]
+    },
+    {
+      "journeyId": "UIBASE-LIST-CONTROL-BARS-001",
+      "controls": [
+        {
+          "label": "Native list bar",
+          "includeControl": false,
+          "options": [
+            "Add"
+          ]
+        }
+      ],
+      "transitions": [],
+      "states": []
+    }
+  ],
   "affectedComponents": [
     "LedgeriOS/LedgerTargetCore/ProjectSetupOperation.swift",
     "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",

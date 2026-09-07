@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "active-space-checklist-item-toggle",
+  "title": "Toggle a checklist item in an active Space",
+  "kind": "product_ui",
+  "status": "implementation",
+  "outcome": "From represented local detail for one active Project or Business Inventory Space, toggle one existing checklist item with immediate optimistic progress, durable offline acceptance, deterministic replay, conflict recovery, and authoritative readback.",
+  "authority": [
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements"
+    },
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/spaces.md",
+      "section": "Checklists"
+    },
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/spaces.md",
+      "section": "Checklist Progress"
+    },
+    {
+      "role": "architecture_authority",
+      "path": "docs/specs/offline-first.md",
+      "section": "Core Principle"
+    },
+    {
+      "role": "architecture_authority",
+      "path": "docs/specs/offline-first.md",
+      "section": "Sync Status Indicators"
+    },
+    {
+      "role": "decision_authority",
+      "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "section": "Confirmed Decisions"
+    }
+  ],
+  "baselineJourneyIds": [
+    "UIBASE-SPACE-DETAIL-001",
+    "UIBASE-SHARED-COLLAPSIBLE-SECTION-001"
+  ],
+  "baselineBehaviorRefs": [
+    {
+      "journeyId": "UIBASE-SPACE-DETAIL-001",
+      "controls": [
+        {
+          "label": "CHECKLISTS",
+          "includeControl": true,
+          "options": [
+            "Expand / Collapse",
+            "Checklist item"
+          ]
+        }
+      ],
+      "transitions": [],
+      "states": [
+        "Invisible persistence failure"
+      ]
+    },
+    {
+      "journeyId": "UIBASE-SHARED-COLLAPSIBLE-SECTION-001",
+      "controls": [
+        {
+          "label": "Section header",
+          "includeControl": true,
+          "options": [
+            "Expand",
+            "Collapse"
+          ]
+        }
+      ],
+      "transitions": [
+        "Collapsed section | Tap header | Expanded content"
+      ],
+      "states": [
+        "Expanded / collapsed",
+        "Optional badges"
+      ]
+    }
+  ],
+  "affectedComponents": [
+    "LedgeriOS/LedgerTargetCore",
+    "LedgeriOS/LedgerTargetCoreTests",
+    "LedgeriOS/LedgerTargetAppModel",
+    "LedgeriOS/LedgerTargetAppModelTests",
+    "LedgeriOS/LedgerTargetApp",
+    "LedgeriOS/LedgerTargetPowerSync",
+    "LedgeriOS/LedgerTargetPowerSyncTests",
+    "supabase/migrations",
+    "supabase/tests",
+    "supabase/config.toml",
+    "scripts",
+    "package.json"
+  ],
+  "layers": [
+    "domain",
+    "app_ui",
+    "postgres_schema",
+    "postgres_handler",
+    "rls",
+    "powersync_sync",
+    "local_offline"
+  ],
+  "riskDomains": [
+    "ui_fidelity",
+    "offline_durability",
+    "tenant_authorization",
+    "sync_visibility",
+    "database_integrity",
+    "handler_idempotency"
+  ],
+  "uiJourneys": [
+    {
+      "journeyId": "TARGET-ACTIVE-SPACE-CHECKLIST-TOGGLE-001",
+      "sourcePage": "SpaceDetailView checklist section and CollapsibleSection",
+      "targetPage": "Target exact-Space detail checklist section",
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/spaces.md",
+          "section": "Target Redesign Requirements"
+        },
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/spaces.md",
+          "section": "Checklist Progress"
+        },
+        {
+          "role": "architecture_authority",
+          "path": "docs/specs/offline-first.md",
+          "section": "Sync Status Indicators"
+        }
+      ],
+      "sourceSurfaceIds": [
+        "SWIFT-DDFAC91775DA",
+        "SWIFT-A9422A32A60C"
+      ],
+      "controls": [
+        {
+          "label": "Checklists section",
+          "options": [
+            {
+              "label": "Expand",
+              "result": "Shows exact represented checklist names, items, per-checklist progress, and aggregate progress.",
+              "disposition": "preserve"
+            },
+            {
+              "label": "Collapse",
+              "result": "Hides checklist content without changing checklist or operation state.",
+              "disposition": "preserve"
+            }
+          ],
+          "action": "Tap the checklist section header.",
+          "result": "Only presentation expansion changes; no writer is invoked.",
+          "disposition": "preserve"
+        },
+        {
+          "label": "Checklist item",
+          "options": [
+            {
+              "label": "Unchecked",
+              "result": "Tapping requests checked state and immediately projects the updated item and progress after durable local acceptance.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Checked",
+              "result": "Tapping requests unchecked state and immediately projects the updated item and progress after durable local acceptance.",
+              "disposition": "redesign"
+            }
+          ],
+          "action": "Toggle one represented item in one represented checklist.",
+          "result": "Submits one complete ordered checklist replacement bound to the current Space revision; it never changes Space completion, placement, media, templates, or accounting.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Checklist synchronization status",
+          "options": [
+            {
+              "label": "Queued or applying",
+              "result": "Shows the optimistic checked state and an explicit pending status without inviting duplicate submission.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Applied",
+              "result": "Retains the result until matching authoritative checklist readback reconciles the optimistic operation.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Rejected",
+              "result": "Shows a recoverable conflict/error, removes unsupported optimism when authoritative evidence settles, and requires refreshed evidence plus a new identity for another toggle.",
+              "disposition": "redesign"
+            }
+          ],
+          "action": "Observe the accepted operation while connectivity changes.",
+          "result": "Local truth remains explicit across queued, applying, applied, rejected, restart, and readback states.",
+          "disposition": "redesign"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "Represented active exact-Space detail",
+          "event": "Tap represented checklist item",
+          "to": "Durably accepted optimistic item state with queued operation",
+          "disposition": "redesign"
+        },
+        {
+          "from": "Queued or applying optimistic state",
+          "event": "Matching authoritative operation result and Space readback arrive",
+          "to": "Reconciled authoritative checklist state",
+          "disposition": "redesign"
+        },
+        {
+          "from": "Queued or applying optimistic state",
+          "event": "Authoritative rejection or revision conflict arrives",
+          "to": "Rejected state retaining actionable evidence until refreshed Space detail settles",
+          "disposition": "redesign"
+        }
+      ],
+      "states": [
+        {
+          "name": "Waiting, incomplete, unavailable, or absent detail",
+          "expected": "Checklist items are not writable and tapping dispatches no operation.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Active represented stale detail",
+          "expected": "A toggle may be durably accepted using its exact revision, remains visibly conflict-prone, and never pretends to be authoritative readback.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "No checklists",
+          "expected": "Shows ‘No checklists.’ and exposes no toggle control.",
+          "disposition": "preserve"
+        },
+        {
+          "name": "Archived Space",
+          "expected": "Existing checklist evidence remains readable but toggle admission is disabled; archived editing is outside this workflow.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Runtime restart with pending toggle",
+          "expected": "The exact optimistic collection and queued operation reopen from encrypted local state and continue replay without duplicate acceptance.",
+          "disposition": "redesign"
+        }
+      ]
+    }
+  ],
+  "acceptanceChecks": [
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-E2E",
+      "risk": "general",
+      "expected": "Both checked directions traverse represented Space detail, one shared application command, local provider acceptance, operation observation, and authoritative readback without unrelated mutations.",
+      "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-UI",
+      "risk": "ui_fidelity",
+      "expected": "The compiled target UI exposes section expansion, stable checklist/item controls, honest progress, pending/rejected status, disabled admission, empty state, and accessible labels wired to AppModel actions.",
+      "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-OFFLINE",
+      "risk": "offline_durability",
+      "expected": "Atomic local acceptance, encrypted restart, byte-identical replay, rejection rollback, refreshed retry identity, readback reconciliation, and lifecycle drainage pass.",
+      "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-SYNC",
+      "risk": "sync_visibility",
+      "expected": "Only exact Account/Space checklist rows and exact operation results drive the local projection; wrong-scope, malformed, revoked, and incomplete evidence fail closed.",
+      "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-RLS",
+      "risk": "tenant_authorization",
+      "expected": "Active same-Account membership can invoke the trusted handler while anonymous, inactive, forged-actor, cross-Account, wrong-parent, and direct table writes fail without enumeration.",
+      "command": "npm run target:supabase:test:db",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-DATABASE",
+      "risk": "database_integrity",
+      "expected": "The handler atomically replaces the full ordered hierarchy, increments Space revision once, preserves immutable scope and unrelated rows, and leaves no partial mutation on failure.",
+      "command": "npm run target:supabase:test:db",
+      "status": "planned"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-IDEMPOTENCY",
+      "risk": "handler_idempotency",
+      "expected": "Exact OperationID and fingerprint replay returns the immutable original result while a changed-payload replay, stale revision, and concurrent revision race mutate nothing.",
+      "command": "npm run target:supabase:test:rpc",
+      "status": "planned"
+    }
+  ],
+  "blockers": [],
+  "verification": {
+    "local": {
+      "status": "not_run",
+      "commands": []
+    },
+    "review": {
+      "required": true,
+      "status": "not_run",
+      "summary": "Required independent review will cover offline durability, handler/RLS security, optimistic reconciliation, and UI behavior fidelity."
+    },
+    "ci": {
+      "status": "not_run",
+      "commit": null,
+      "run": null
+    }
+  }
+}
