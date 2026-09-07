@@ -80,6 +80,14 @@ jobs:
           swift test --package-path LedgeriOS --no-parallel
           --filter LedgerWorkspaceRuntimeIsolationTests
 
+      - name: Test Item-to-Space local durability contracts
+        # Keep this native PowerSync/SQLCipher suite in its own process. An exact
+        # commit passed the suite locally and in 20 consecutive focused runs but
+        # a shared CI process later stalled while entering its replay test.
+        run: >-
+          swift test --package-path LedgeriOS --no-parallel
+          --filter ItemSpaceAssignmentPowerSyncStoreTests
+
       - name: Test remaining isolated target contracts
         # Swift Testing's `.serialized` trait is suite-local, so independent
         # PowerSync/SQLCipher integration suites can otherwise open and close
@@ -87,7 +95,7 @@ jobs:
         # Runtime-level concurrency remains exercised inside the focused tests.
         run: >-
           swift test --package-path LedgeriOS --no-parallel
-          --skip LedgerWorkspaceRuntimeIsolationTests
+          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'
 
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos
