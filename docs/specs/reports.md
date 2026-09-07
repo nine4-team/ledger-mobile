@@ -133,6 +133,22 @@ evidence. Server rendering is optional infrastructure, not report authority.
   cancellation/failure cleans only owned scratch files. Startup recovery cleans
   abandoned report scratch files, never original evidence or user-saved exports.
 
+## Vendor Aggregate Reporting
+
+The shipped MCP `spending_by_vendor` capability returns vendor-labelled totals
+and Transaction counts, sorted by total, with an optional Project filter. Keep
+that capability visible in the parity checklist; do not silently omit it because
+it has no dedicated app screen. O-041 decides whether to preserve/redesign or
+retire it and what its amounts, payer perspective, date/currency basis and
+vendor grouping mean. Its decision packet is a proposal, not approval.
+
+Do not copy raw noncanceled Transaction sums into the target. Once approved,
+use the existing authorized accounting/report projection, distinguish partial
+data from zero, and reconcile included/excluded records and signed amounts.
+O-028 owns non-cash vendor credit and O-032 posting evidence; O-060 controls
+financial visibility. No new Vendor entity, app screen or report-specific
+writer is implied by preserving this MCP capability.
+
 ## Navigation and Presentation
 
 Preserve Project entry to Invoice, Client Summary and Property Management

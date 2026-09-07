@@ -8,7 +8,7 @@
   },
   "completeness": {
     "status": "partial",
-    "reason": "179 stories across nineteen heading audits (343 headings); reports/billing/import/search/review independent integrated review passed. Remaining data/lineage/return/correction audits and unresolved decisions remain explicit. Counts are not implemented features."
+    "reason": "180 stories; nineteen heading audits/344 headings. Reports/import/search/review reviewed; vendor reporting corrections independently accepted. Data-model and lineage/return/reassign remain partial until remaining capabilities are traced. Counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -19,7 +19,7 @@
     "Offline/auth heading crosswalk complete (35 headings), primary and independent integrated review passed. Six shared outcomes cover cached readiness, durable edits/status, media delivery/retention, online entry/onboarding and bounded local access; existing session-ending stories are reused. O-057/O-058 cross-reference unchanged A-007/A-016 choices; O-023/O-051 remain open. Options A/B/C are alternatives, not approved features.",
     "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review passed. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reports/billing/import heading audit complete, independent review passed after corrections: typed complete snapshots, actual Invoice routing, Property Management, canonical Client Summary dependencies, billing summary and composed contract commands. Preserve local PDF parse/review independent of O-061 expanded/quantity/duplicate decisions; O-062 gates separate Closeout. Receipt sharing and financial policy remain separate.",
-    "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
+    "O-038 Inventory destination planning still requires target disposition. O-041 vendor reporting is mapped but unapproved. Data-model audit exposed missing ordinary Item/Transaction/Inventory workspace, Account profile and email-ingestion ownership; reuse existing workflow entries where possible. Three lineage/return/reassign target contracts passed bounded review, but their full checklist mapping is still partial.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
     "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance.",
     "Financial heading audit covers policy/whole-Invoice visibility, no-leak read paths, member settings, invitation lifecycle and migration. O-059 preserves unresolved ownership/self-lockout/role-change authority; O-060 mixed payments, no-revenue Invoices, archived grants and Project overrides. O-057/O-058 and O-009 remain distinct. Primary and independent integrated review passed; source fail-open fallback is not target policy.",
@@ -256,6 +256,28 @@
         "sync_visibility",
         "accounting",
         "tenant_authorization"
+      ]
+    },
+    {
+      "profile": "mcp_accounting_read",
+      "storyIds": [
+        "vendor-aggregate-report"
+      ],
+      "workflowKinds": [
+        "backend_control"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_mcp",
+        "auth",
+        "rls",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "app_mcp_parity",
+        "identity_auth",
+        "tenant_authorization",
+        "accounting"
       ]
     },
     {
@@ -2141,7 +2163,7 @@
     },
     {
       "path": "docs/specs/data-model.md",
-      "sourceHash": "906047fa73e941b18aa576bb07f7291f6734f6a48b2244b0a28b5bf3eb3c3c77",
+      "sourceHash": "d01c30844ea72759d7ea0e70e52c1ffc8892471b6cf0ae27dc32ee76587ab181",
       "auditStatus": "partial",
       "reason": "The file describes the current persisted model and must be explicitly reconciled with target entity stories or classified as source-only."
     },
@@ -3437,13 +3459,13 @@
     },
     {
       "path": "docs/specs/lineage-tracking.md",
-      "sourceHash": "27392bdb19d46e919e66c1eaf29b2c1d5d868b08e5a23016b5de35418e1335f1",
+      "sourceHash": "6ea789d70b1e456e3b974c415caedaaed2231455a8cb75844fcd1c16dcb01459",
       "auditStatus": "partial",
       "reason": "Its candidate provenance foundation remains subject to O-007 and O-015 and needs explicit target-story disposition."
     },
     {
       "path": "docs/specs/return-and-sale-tracking.md",
-      "sourceHash": "9e68dbe194ec49793487ca4227498b3d251d7530df6f67a3c55f45e57ee40a23",
+      "sourceHash": "f174ccec2c8ef42cdf2143b7c4a272775243a952aa7bfe0a96aba38a5ca6ec51",
       "auditStatus": "partial",
       "reason": "Retained return-status/recovery behavior must be separated from obsolete Firebase and two-hop mechanics."
     },
@@ -3461,19 +3483,20 @@
     },
     {
       "path": "docs/specs/reassign-vs-sell.md",
-      "sourceHash": "1c9e7d5c4fb03ef8ebfcbf8b6c4a05296a7ccd4fe5f9488dd10fdce6945e4f30",
+      "sourceHash": "ebbc40e32fcaafa019777a44a92b4e8cadd32035cd1668188caf2e72f2e492ad",
       "auditStatus": "partial",
       "reason": "Correct/Move intent and action-visibility stories remain to be added while stale two-hop terminology is excluded."
     },
     {
       "path": "docs/specs/reports.md",
-      "sourceHash": "01c5230bc6a53632983741dcf90fda9e85c1b573730063556b87ebf55d19164c",
+      "sourceHash": "1c44119a8770dea6415349097bf25b8d05514a1a5da690087227c87e6dc85d0f",
       "auditStatus": "audited",
       "storyIds": [
         "report-snapshot-and-delivery",
         "invoice-report-readback",
         "property-management-report",
-        "client-summary-report-readback"
+        "client-summary-report-readback",
+        "vendor-aggregate-report"
       ],
       "headingCoverage": [
         {
@@ -3568,6 +3591,14 @@
             "report-snapshot-and-delivery",
             "financial-access-no-leak-projections",
             "report-receipt-evidence-sharing"
+          ]
+        },
+        {
+          "heading": "Vendor Aggregate Reporting",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "vendor-aggregate-report"
           ]
         },
         {
@@ -4952,7 +4983,8 @@
         "auditStatus": "mapped",
         "storyIds": [
           "accounting-corrections-refunds",
-          "vendor-noncash-adjustment"
+          "vendor-noncash-adjustment",
+          "vendor-aggregate-report"
         ]
       },
       {
@@ -4965,7 +4997,8 @@
           "receipt-command-mcp-parity",
           "contract-derived-project-and-fee-import",
           "invoice-import-confirmation",
-          "search-selection-and-action-routing"
+          "search-selection-and-action-routing",
+          "vendor-aggregate-report"
         ]
       },
       {
@@ -5000,7 +5033,8 @@
           "receipt-command-mcp-parity",
           "invoice-import-confirmation",
           "needs-review-queue",
-          "needs-review-contextual-resolution"
+          "needs-review-contextual-resolution",
+          "vendor-aggregate-report"
         ]
       },
       {
@@ -5067,7 +5101,10 @@
       },
       {
         "decisionId": "O-041",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "vendor-aggregate-report"
+        ]
       },
       {
         "decisionId": "O-042",
@@ -5261,7 +5298,8 @@
           "needs-review-queue",
           "invoice-report-readback",
           "search-contextual-detail",
-          "needs-review-contextual-resolution"
+          "needs-review-contextual-resolution",
+          "vendor-aggregate-report"
         ]
       },
       {
@@ -8087,6 +8125,28 @@
       },
       "milestone": "M3",
       "status": "required"
+    },
+    {
+      "storyId": "vendor-aggregate-report",
+      "title": "Resolve and retain vendor reporting capability",
+      "outcome": "Account for shipped MCP vendor totals/counts, total ordering and optional Project filter. Implement approved O-041 semantics or explicit retirement, not raw Transaction sums. Use shared authorized reporting with honest partial data and reconciled signs; no new Vendor entity, app screen or writer is implied.",
+      "authority": {
+        "path": "docs/specs/reports.md",
+        "section": "Vendor Aggregate Reporting"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-041",
+          "O-028",
+          "O-032",
+          "O-060",
+          "O-029"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     }
   ]
 }

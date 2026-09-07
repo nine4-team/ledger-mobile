@@ -11,7 +11,43 @@
 > the current persisted model until that migration ships. See
 > [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
 
-This document defines every Firestore entity, its fields, and all cross-entity relationships used by Ledger. It is the canonical reference for how data is shaped, linked, and computed. Platform-agnostic: no language types, no file paths, no component names.
+This document inventories the source Firestore entities and relationships. It
+is not a target Postgres schema prescription. Canonical redesign specs and
+confirmed decisions override every conflicting source field or algorithm below.
+
+## Target Interpretation and Outstanding Coverage
+
+Preserve capabilities, not accidental source storage shapes:
+
+- Account-scoped Items, Transactions and Spaces must remain reachable through
+  the Business Inventory workspace. Inventory is not a synthetic Project.
+- Ordinary Item lists/cards/details, editable physical fields, status/bookmark,
+  search/sort/filter/selection and bulk actions need explicit end-to-end coverage;
+  creation, Search and accounting sections alone do not prove that coverage.
+- Ordinary Transaction lists/cards/details and creation/edit/cancel flows likewise
+  need coverage through the shared accounting entry and correction workflows.
+- Account name/logo viewing, editing and report consumption still need an owning
+  profile workflow and supported mutation authority. The phrase "currency input"
+  in Item specs means a monetary amount input; it does not authorize a new
+  Account currency selector or multi-currency feature. Reuse canonical Money
+  semantics and preserve the existing formatting behavior.
+- Email ingestion, matching confidence/reasons, confirmation and linked shipments
+  need an explicit target disposition. Existing local vendor-PDF import is not
+  evidence that email ingestion is preserved, redesigned or retired.
+- Inventory destination planning is O-038, including its set/change/clear versus
+  resolve/reopen distinction. Preserve raw source intent as migration evidence;
+  do not approve the packet's proposed Item-level planning by copying it here.
+
+Use shared canonical owners for Client identity, Item acquisition/placement/
+Invoice/paid history, financial visibility, attachment references and budget
+readiness. Source `clientName`, cached budget summaries, raw attachment URLs,
+`transactionId`/`itemIds`, reimbursement/handling flags and mutable vendor strings
+cannot substitute for those relationships or authorize data access. Legacy proto
+capture is migration-only. Request documents and Cloud Function completeness
+are source implementation evidence, not new target queues or review semantics.
+
+These gaps remain open in the conversion checklist until traced and reviewed.
+This section does not approve new features, migration rules, actors or currencies.
 
 ---
 

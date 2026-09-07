@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 49,
+  "stateVersion": 50,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -22,10 +22,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Reports/billing/import/search/review audit accepted after two bounded independent re-reviews. 179 stories, 19 heading audits/343 headings. Routing uses shared owning workflows, local import review has no backend writer requirement, Client Summary physical content is explicit. Integrate and push this documentation batch once.",
-      "Finish data-model/lineage/return/reassign authority audit; read-only ui_baseline_projects_spaces reviews data-model. Main has now read all return-and-sale-tracking.md plus lineage/reassign (prior summary); target boundary still needs explicit same-Client Transfer and distinct physical/vendor/cash/correction semantics.",
-      "Cross-check remaining unindexed source specs and background/MCP capabilities, including pending O-038 Inventory planning and O-041 vendor-spend report. Do not claim the four indexed partial docs are the whole remaining scope.",
-      "O-061 import expansion/quantity/new-document duplicates, O-062 separate Closeout scope, O-063 Review reasons/grouping and O-064 Item deletion remain unapproved. Async import/Closeout scope questions unanswered; continue independent audit."
+      "CI 34148852490 for pushed 65af330e6bdfcba1434d66e31d975eef3a3947f1 remains live; poll same run, no duplicate dispatch. This next source-boundary/vendor-report documentation batch passed bounded review and needs its single commit/push.",
+      "180 stories, 19 heading audits/344 headings. Vendor MCP reporting now maps O-041 without new UI/Sync/writer requirements. O-038 Inventory planning remains pending; neither decision packet is approved.",
+      "Three lineage/return/reassign target contracts passed independent review: precise Link purpose, preparatory status versus applied reversal, exact occurrence/Invoice states and correlated Transfers. Authority entries remain partial until their full control/history mapping is accounted for; do not invent one new story per source spec.",
+      "Next: finish ordinary Item/Transaction/Inventory workspace behavior using existing stories, then Account profile and email ingestion. Data-model reviewer identified these gaps; main checked source fields/spec sections. Currency input does NOT authorize a multi-currency feature. Read items.md and transaction-creation.md plus exact UI baseline/source controls; update existing owners where possible.",
+      "O-061 import expansion/quantity/new-document duplicate semantics, O-062 separate Closeout, O-063 Review and O-064 Item deletion remain unapproved; prior async scope questions unanswered. Continue independent audit and preserve all source UI obligations."
     ]
   },
   "progress": {
@@ -37,7 +38,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No feature gain. 179 target stories; 19 heading audits/343 headings. Reports/import/search/review passed bounded independent re-review. 0/1919 verified product behaviors. Prior 326ec53 CI passed; current documentation batch awaits its automatic PR run."
+    "note": "No feature gain. 180 target stories; 19 heading audits/344 headings. Vendor reporting and three source-boundary sections passed bounded review; ordinary Item/Transaction/Inventory/profile/email coverage still incomplete. 0/1919 verified behaviors. CI 34148852490 remains live."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",

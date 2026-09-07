@@ -6,6 +6,53 @@
 > [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md).
 > Treat Transaction-specific mechanics below as current implementation behavior.
 
+## Target Return and Recovery Contract
+
+Preserve the user-visible status picker (including clearing where available),
+single/bulk marking for return, physical return choices, exact selected Item
+identity, confirmation/cancel and visible pending/error/recovery states. Status
+is a workflow label, not proof of cash, Invoice collection or completed physical
+movement. Changing a label cannot create a refund or bypass frozen history.
+
+Clearing a preparatory return marking has no accounting effect. It cannot undo
+an already-applied vendor refund, client credit or occurrence; those require the
+owning audited reversal/correction workflow. The source raw-value conflict
+between `to-purchase` and `to purchase` must be resolved at canonical write/import
+boundaries with lossless source preservation, not silently treated as two states
+or guessed away during migration.
+
+Route each intent through its existing canonical workflow:
+
+- Project to Inventory: remove unpaid demand or create the linked paid client
+  credit using the exact occurrence and approved origin-aware amount basis.
+- Vendor return: retain physical disposition separately from an actual vendor
+  cash refund and any Project client credit. Refund posting remains O-032;
+  non-cash vendor adjustments and client cash settlement are separate stories.
+- Same-Client Project transfer: use paired Transfer records, not an Inventory
+  detour. A different-Client sale uses the canonical Inventory-mediated workflow.
+- Mistake/correction: repair only approved open relationships or use an explicit
+  paid-history correction. A replacement physical object gets a new Item identity.
+
+The source incomplete-return query is diagnostic source evidence, not the target
+definition of a failed operation. Target recovery explains whether work is only
+marked, locally pending, applied or rejected using the durable operation and
+canonical relationships. Completing or undoing a marking routes to the owning
+command; leaving a marking for later never acknowledges or discards rejected
+work. O-063 owns Review membership; O-051 owns rejected-operation resolution.
+
+Retry, partial selections and repeated cycles must not duplicate a refund,
+credit or occurrence. Missing amount/origin evidence blocks the affected action
+with an explanation; it is not a zero-valued return. Confirmation cancellation
+does not persist preparatory prices or accounting changes. The approved shared
+commands own atomicity, authorization, offline durability and accounting tests.
+
+## Shipped Source Evidence
+
+The remaining source request documents, Firestore batches, Return coalescing,
+movement Transaction signs, automatic manual credit lines and duplicated
+client/server edges are not target implementation instructions. Canonical Item
+charges/credits, Invoice collection and distinct refund workflows supersede them.
+
 ## Overview
 
 This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the origin-aware project-to-inventory flow: items that came from inventory go home through a Return, while project-originated items enter inventory through a Sale-to-Inventory transaction.

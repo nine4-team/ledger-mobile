@@ -7,6 +7,49 @@
 > The redesign must preserve repeated sale/return cycles, exact price bases, and
 > corrections even when no project movement Transaction is created.
 
+## Target History Contract
+
+Use the canonical Item occurrence and relationship model (O-007/O-015), not
+the source Firestore edge schema, to explain one physical Item's repeated
+acquisition, Project/Inventory, sale, return, resale and correction history.
+Preserve Item, Transaction and Project history queries, chronological evidence,
+actor/time, exact source/destination and category/price snapshots, and references
+to the occurrence and Invoice line being reversed. A historical amount must not
+be recalculated from the Item's current purchase price.
+
+Show each occurrence's open/paid/reversed/corrected state and its Invoice and
+Invoice-line membership, not only reversal references. Present paired same-Client
+Transfer records as one correlated logical event while retaining both source and
+destination records and their exact evidence.
+
+History readers must work from authorized local evidence. The Inventory working
+set includes the occurrence/lineage evidence needed to explain each downloaded
+Item's current origin and its retained sale/return cycles; an optional historical
+subscription may extend that history, but missing older evidence is explicitly
+partial, not an empty or complete history. Do not download unauthorized Project
+or financial details merely to resolve an Inventory relationship. Use the shared
+financial visibility policy and explicit unavailable/redacted evidence.
+
+One accepted operation produces one correlated, retry-safe business history.
+The source's client intent edge plus server association trigger is not a target
+requirement to duplicate events. Same-Client Transfer has no Inventory hop;
+different-Client sales retain the two economic legs without fake movement
+Transactions. Corrections preserve original evidence and identify what changed.
+Imported ambiguous or missing history remains unresolved, never reconstructed
+from mutable labels or current prices. Item deletion is subject to O-064 and
+cannot silently erase paid or occurrence evidence.
+
+Acceptance composes the existing Item-cycle/provenance, financial-visibility,
+offline-working-set and migration workflows: repeated cycles, exact reversal,
+retry without duplicate history, partial/offline readback and hidden evidence.
+No separate lineage-specific writer or Firebase trigger implementation is needed.
+
+## Shipped Source Evidence
+
+Everything below describes source storage and algorithms, not the target schema,
+command topology or SDK/query limitations. The target contract above and the
+canonical accounting/Item lifecycle specs take precedence.
+
 ## Overview
 
 Lineage tracking maintains a complete audit trail of item movements across transactions and projects. Every time an item is linked to a transaction, sold between scopes, returned, or corrected, a lineage edge is created. These edges form a directed graph that shows the full history of every item.
