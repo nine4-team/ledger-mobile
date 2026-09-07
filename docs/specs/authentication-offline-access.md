@@ -1,6 +1,6 @@
 # Authentication & Offline Access
 Status: [modify]
-Last updated: 2026-08-31
+Last updated: 2026-09-07
 
 > **Target-state notice:** Ledger is now explicitly being redesigned as an
 > offline-first Supabase/PowerSync application. The open problem is no longer
@@ -13,6 +13,20 @@ Last updated: 2026-08-31
 > identity/onboarding and offline-access choices; they are not new approvals.
 
 ## Summary
+Product choices confirmed by the user on 2026-09-07: previously downloaded
+Ledger data must not expire merely because the device has been offline for a
+duration. The device's normal unlock is sufficient; Ledger must not add a
+separate biometric/passcode/PIN prompt for reopening offline data. These choices
+apply to returning users, not first sign-in or new downloads. Expiration of a
+provider token is not itself an expiry timer for the local working set.
+
+An indefinitely disconnected device cannot learn that access was revoked.
+This does not grant new server access or permit ignoring a revocation once
+learned. Exact reconnect enforcement, reduced financial scopes, and protected
+pending-work recovery/retention remain unresolved under O-058. The existing
+no-silent-loss session-ending safeguards continue to apply. Do not introduce a
+finite lease or extra Ledger unlock as an implementation convenience.
+
 Users who sign up via Google Sign-In never create a Ledger-specific password.
 A first-time or signed-out authentication cannot depend on an unavailable
 network/provider if the product promises a fallback. Separately, a returning
@@ -63,8 +77,10 @@ data adapters or changes to production identities.
 
 ## Offline Access Alternatives
 
-The following alternatives remain unresolved under O-058/A-016 and, for
-provider/recovery mechanisms, O-057/A-007.
+The following are historical alternatives, not three approved implementations.
+The 2026-09-07 choices in Summary rule out a required extra local credential or
+offline expiry timer. Provider/recovery mechanisms remain under O-057/A-007;
+reconnect and access-reduction details remain under O-058/A-016.
 
 ### Option A: Prompt Google Users to Set a Backup Password
 After signing up via Google, prompt the user to create a Ledger email/password credential as a backup. This could happen during onboarding (a "set a backup password" step) or later via a nudge in account settings. The user would then have two ways to sign in — Google or email/password — and could fall back to the latter when Google is unavailable.
@@ -108,15 +124,13 @@ identity provider, offline-access lease, and final interface copy remain open:
   same Principal's protected local data may be reopened.
 
 These requirements define the durable safety contract, not the final wording,
-button layout, identity provider, offline unlock method, lease duration,
+button layout, identity provider,
 revocation retention policy, or platform-specific secure-storage mechanism.
 
 ## Open Questions
 
-- What is the approved offline authorization lease duration and what conditions
-  force online reauthorization?
-- Does local unlock use device authentication/biometrics, a Ledger PIN, or only
-  the retained provider session?
+- Which reconnect conditions require online reauthorization, without imposing
+  an offline expiry timer on previously downloaded work?
 - Is a backup password still required for Google-origin identities, or does the
   chosen target identity provider support another recovery/linking mechanism?
 - Which cached financial scopes remain available while authorization freshness

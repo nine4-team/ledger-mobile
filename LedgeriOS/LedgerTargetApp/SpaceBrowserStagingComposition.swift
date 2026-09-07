@@ -3,6 +3,34 @@ import LedgerTargetCore
 import LedgerTargetPowerSync
 import SwiftUI
 
+/// Both entry paths render the same available Space evidence. Item/media
+/// projections are not wired yet; absence must not look like an empty Space.
+struct SpaceDirectoryCardLabel: View {
+    let space: SpaceDirectoryRowPresentation
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "photo")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(space.displayName.rawValue)
+                Text("Checklist: \(space.completedChecklistItemCount) of \(space.totalChecklistItemCount) complete")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Item count unavailable • Image unavailable")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    var accessibilitySummary: String {
+        "\(space.completedChecklistItemCount) of \(space.totalChecklistItemCount) checklist items complete; item count unavailable; image unavailable"
+    }
+}
+
 enum SpaceBrowserStagingRuntimeAdapter {
   static func adapt(
     _ runtime: LedgerOfflineClientRuntime
@@ -50,18 +78,7 @@ struct SpaceBrowserStagingExerciseView: View {
             Task { await model.select(spaceId: space.id) }
           } label: {
             HStack {
-              VStack(alignment: .leading, spacing: 4) {
-                Text(space.displayName.rawValue)
-                Text(
-                  "Checklist: \(space.completedChecklistItemCount) of "
-                    + "\(space.totalChecklistItemCount) complete"
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                Text("Item count unavailable")
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
+              SpaceDirectoryCardLabel(space: space)
               Spacer()
               if model.selectedSpaceId == space.id {
                 Image(systemName: "checkmark")
@@ -72,9 +89,7 @@ struct SpaceBrowserStagingExerciseView: View {
           .accessibilityIdentifier("target-space-row-\(space.id.rawValue)")
           .accessibilityLabel(space.displayName.rawValue)
           .accessibilityValue(
-            "\(space.completedChecklistItemCount) of "
-              + "\(space.totalChecklistItemCount) checklist items complete; "
-              + "item count unavailable"
+            SpaceDirectoryCardLabel(space: space).accessibilitySummary
           )
           .accessibilityHint("Opens this Space")
         }

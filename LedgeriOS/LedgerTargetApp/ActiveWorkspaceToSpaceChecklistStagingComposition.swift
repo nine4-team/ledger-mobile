@@ -134,11 +134,11 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     Button {
                         Task { await model.selectSpace(spaceId: space.id) }
                     } label: {
-                        Text(space.displayName.rawValue)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        SpaceDirectoryCardLabel(space: space)
                     }
                     .accessibilityIdentifier("target-active-space-card-\(space.id.rawValue)")
                     .accessibilityLabel(space.displayName.rawValue)
+                    .accessibilityValue(SpaceDirectoryCardLabel(space: space).accessibilitySummary)
                     .accessibilityHint("Opens this Space")
                 }
             }

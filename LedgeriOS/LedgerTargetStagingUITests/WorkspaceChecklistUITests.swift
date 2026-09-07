@@ -21,6 +21,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let space = app.buttons["target-active-space-card-space-ui-test"]
         reveal(space, in: app)
         XCTAssertTrue(space.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertEqual(space.value as? String,
+                       "0 of 1 checklist items complete; item count unavailable; image unavailable")
         space.tap()
 
         let section = app.descendants(matching: .any)

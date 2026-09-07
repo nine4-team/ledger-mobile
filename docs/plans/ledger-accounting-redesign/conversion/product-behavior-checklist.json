@@ -69,7 +69,7 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "cecdc1ba20d91dd20adfd483d94bc952d0057cf147bd1bc1d318ab5fb1a68a8a"
+    "sourceHash": "29fa5828e049e1b93fff81707165b0009f26a2f3373e130343f6471364478fa5"
   },
   "auditAreas": [
     {
@@ -1951,7 +1951,7 @@
     {
       "path": "docs/specs/authentication-offline-access.md",
       "canonicalTarget": true,
-      "sourceHash": "30b2dbbbb3fd2e491ee0e5e2a6897887935c5b3eae573266360ceba04313353f",
+      "sourceHash": "a003f72b306a844f4c12f3f6b54c3fb9874fe71884009f3ba80abeecebc3429a",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -23669,7 +23669,7 @@
     {
       "storyId": "offline-unlock-lease-and-account-isolation",
       "title": "Reopen only authorized local work",
-      "outcome": "Open only the approved environment/Principal/Account working set under bounded offline authorization and local unlock. Local access neither refreshes server authority nor authorizes new downloads. Apply approved expiry/revocation, financial scope and recovery rules without cross-Account leakage or silent loss.",
+      "outcome": "Reopen the exact environment/Principal/Account downloaded work without time expiry or extra Ledger unlock (2026-09-07 user choice). Do not grant new downloads. Reconnect/revocation, financial scope and pending-work recovery remain under O-058; prevent cross-Account leaks and silent loss.",
       "authority": {
         "path": "docs/specs/authentication-offline-access.md",
         "section": "Summary"
@@ -26715,14 +26715,14 @@
         {
           "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-RENDERED-MAC",
           "risk": "ui_fidelity",
-          "expected": "XCUITest taps real Project and Space cards, collapses/expands CHECKLISTS, toggles the exact item, observes Checked and one queued acceptance, then Back removes detail controls. DEBUG-only in-memory fixture proves rendered interactions, not provider durability.",
+          "expected": "XCUITest taps real Project and Space cards, verifies card checklist progress and unavailable Item/media evidence, collapses/expands CHECKLISTS, toggles the exact item, observes Checked and one queued acceptance, then Back removes detail controls. DEBUG-only in-memory fixture proves rendered interactions, not provider durability.",
           "command": "npm run target:staging:ui:test:macos",
           "status": "passed"
         },
         {
           "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-RENDERED-IOS",
           "risk": "ui_fidelity",
-          "expected": "The same real-view route passes on iOS Simulator, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
+          "expected": "The same real-view route passes on iOS Simulator, including card progress and unavailable Item/media evidence, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
           "command": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=iOS Simulator,id=75D871BB-35DB-4559-92EF-6B0116B4E8D1' CODE_SIGNING_ALLOWED=NO -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
           "status": "passed"
         }

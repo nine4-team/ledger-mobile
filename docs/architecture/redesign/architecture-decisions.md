@@ -241,12 +241,16 @@ The exact S5 fixtures and hard failures are defined in the
 
 ## A-016 — Offline-Access Lease
 
-**Status:** blocked pending product/security approval.
+**Status:** partially decided on 2026-09-07; reconnect/access-reduction and recovery policy remain blocked pending approval.
 
-A disconnected device cannot receive membership revocation. Ledger must define
-how long previously synchronized sensitive data remains accessible without a
-successful online authorization refresh. The policy must balance job-site
-offline use, device theft, membership revocation, and user expectations.
+A disconnected device cannot receive membership revocation. The user chose no
+offline time limit for previously downloaded work and the device's normal
+unlock with no additional Ledger biometric/passcode/PIN prompt. Do not add a
+finite authorization lease or treat provider-token expiry as local-data expiry.
+This choice does not authorize new downloads or override revocation learned
+online. Reconnect enforcement, reduced financial scope, and retained pending-work
+recovery still need explicit approval under O-058; the complete activation gate
+is not closed by these two choices alone.
 
 The implementation may not claim immediate offline revocation. Logout and local
 account removal must follow the pending-work disposition policy, then clear the
@@ -256,8 +260,8 @@ the offline architecture.
 
 S3/S4 of the
 [isolated vertical-spike protocol](../../plans/ledger-accounting-redesign/vertical-spike-protocol.md)
-collect enforcement evidence. They cannot choose the lease duration or recovery
-copy without explicit product/security approval.
+collect enforcement evidence. They must honor the approved no-expiry/device-unlock
+choices and cannot decide remaining recovery policy or copy without approval.
 
 ## A-017 — Firebase Is a Migration Source Only
 

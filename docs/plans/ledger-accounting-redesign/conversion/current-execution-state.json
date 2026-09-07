@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 62,
+  "stateVersion": 64,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PRODUCT-AUDIT-CI-GREEN",
-    "commit": "bab3b91c206fa19bd7e82586c34803359d068c72",
-    "ciRun": 34159534807,
+    "name": "RENDERED-WORKSPACE-CI-GREEN",
+    "commit": "302153d153c5d798c6a655a0531b888e76e416ac",
+    "ciRun": 34160818067,
     "ciStatus": "passed",
-    "meaning": "Finite UI/spec/background audit complete; corrected progress-independent negative fixtures. All three automatic CI jobs passed. Does not claim full target behavior."
+    "meaning": "All three automatic CI jobs passed, including real macOS checklist interactions and local provider tests. Finite product audit remains closed. Does not claim full target behavior or hosted authorization."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -24,10 +24,10 @@
     "outcome": "Verify the actual rendered Project-to-Space checklist route and fix accessibility defects, reusing existing coordinator/provider behavior.",
     "nextActions": [
       "Audit closed at bab3b91c/CI34159534807 green; do not reopen. Current UI batch fixes DisclosureGroup accessibility propagation and modern iOS launch-screen metadata, with real rendered interaction tests on macOS and iOS. DEBUG-only in-memory fixture never opens providers or proves durability.",
-      "Both platform UI tests passed: macOS result13-38-45 and final iOS result13-46-19 on2026.09.07 in standard LedgerTarget DerivedData Logs/Test. Four focused coordinator tests passed. Main independently reviewed fixture and exact actor/revision/contract/one-acceptance checks; CI now requires macOS UI test with local ad-hoc signing.",
-      "Commit/push this coherent UI batch after final guards and use its automatic CI, no duplicate dispatch. Existing workflow records exact rendered checks and concrete app_ui files, but does not claim broad Space-browser/toggle outcome completion from a narrow fixture.",
+      "UI batch302153d/CI34160818067 completed green in all three jobs. No live run remains for that commit; do not re-poll/re-dispatch. Broad Space-browser/toggle outcome completion is not proved by the narrow fixture.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
-      "After exact CI result, continue approved independent app workflow rather than more audit/testing infrastructure. Reuse current domain/provider implementation and close real product gaps. Request explicit authority before hosted provisioning/access; never touch Firebase checkout or production."
+      "Uncommitted follow-on: both Space entry paths now share SpaceDirectoryCardLabel, showing checklist progress and explicit unavailable Item/media evidence. Real-click tests passed on macOS(result13-53-26) and iOS(result13-54-47), 2026.09.07 standard LedgerTarget DerivedData Logs/Test. conversion:check, target:environment:check and diff check passed. Do not rerun just for compaction. Full card outcome remains open until authorized Item-count/media projections exist.",
+      "Main review rejected agent's unblocked activation claim; agent confirmed there is no approved activation API. User then chose no offline expiry and normal device unlock without extra Ledger prompt. Recorded in auth spec, O058/A016 and existing outcome; reconnect/revocation, reduced financial scopes and recovery remain open. Do not invent a finite lease or wire bare-ID bootstrap as authorization. Commit current tested cards plus policy/checkpoint changes; use the resulting automatic CI. Then continue approved product work while obtaining remaining access-policy choices; hosted access still requires approval."
     ]
   },
   "blockers": [],
