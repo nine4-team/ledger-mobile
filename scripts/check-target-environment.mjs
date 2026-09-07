@@ -2969,7 +2969,8 @@ if (
     ],
     [
       path.join(powerSyncRoot, "LedgerPowerSyncUploadConnector.swift"),
-      "c04167a28de8654e8ada0cef5a05390f9bdee9b5fec88750fe30924f883e5b07",
+      // Reviewed Account-removal admission/ownership; clearing dispatch remains unchanged.
+      "85c6a327a0f3073c3223843302300dfe8a006d55e96a795cc731f26df205452a",
     ],
     [
       path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),

@@ -6,6 +6,72 @@ import Testing
 
 @Suite("Ledger PowerSync Client vertical slice", .serialized)
 struct LedgerPowerSyncVerticalSliceTests {
+    @Test("Removed workspace cannot upload queued work or obtain credentials")
+    func removedWorkspaceKeepsQueuedWork() async throws {
+        let fixture = try DatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.command()
+        _ = try await ClientCreationPowerSyncStore(database: database).create(command)
+        let fence = LedgerWorkspaceAccessFence()
+        let applier = RecordingClientCreationApplier()
+        let connector = LedgerPowerSyncUploadConnector(
+            accessFence: fence,
+            credentialProvider: { Issue.record("Removed connector requested credentials"); return nil },
+            clientCreationApplier: applier
+        )
+        fence.markRemoved()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await connector.uploadData(database: database)
+        }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await connector.fetchCredentials()
+        }
+        #expect(await applier.requests.isEmpty)
+        #expect(try await database.getNextCrudTransaction() != nil)
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Removal during a server request retains its uncertain queued operation")
+    func removalDuringApplyPreservesQueue() async throws {
+        let fixture = try DatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.command()
+        _ = try await ClientCreationPowerSyncStore(database: database).create(command)
+        let fence = LedgerWorkspaceAccessFence()
+        let applier = RecordingClientCreationApplier(onApply: { fence.markRemoved() })
+        let connector = LedgerPowerSyncUploadConnector(
+            accessFence: fence,
+            credentialProvider: { nil },
+            clientCreationApplier: applier
+        )
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await connector.uploadData(database: database)
+        }
+        #expect(await applier.requests.count == 1)
+        #expect(try await database.getNextCrudTransaction() != nil)
+        let state = try await database.get(
+            sql: "SELECT local_state FROM spike_local_operations WHERE id = ?",
+            parameters: [command.envelope.operationId.rawValue]
+        ) { try $0.getString(name: "local_state") }
+        #expect(state == "queued")
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Removal during credential refresh prevents returning credentials")
+    func removalDuringCredentialRefresh() async throws {
+        let fence = LedgerWorkspaceAccessFence()
+        let connector = LedgerPowerSyncUploadConnector(
+            accessFence: fence,
+            credentialProvider: { fence.markRemoved(); return nil },
+            clientCreationApplier: RecordingClientCreationApplier()
+        )
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await connector.fetchCredentials()
+        }
+    }
+
     @Test("Schema is valid and the database rejects unsafe path or key input")
     func schemaAndDatabaseInputValidation() throws {
         try LedgerPowerSyncSchema.schema.validate()
@@ -125,6 +191,7 @@ struct LedgerPowerSyncVerticalSliceTests {
 
         let applier = RecordingClientCreationApplier()
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: applier,
             now: { Self.observedAt }
@@ -375,6 +442,7 @@ struct LedgerPowerSyncVerticalSliceTests {
         let command = try Self.command()
         _ = try await ClientCreationPowerSyncStore(database: database).create(command)
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: RejectingClientCreationApplier(),
             now: { Self.observedAt }
@@ -564,9 +632,15 @@ private final class DatabaseFixture: @unchecked Sendable {
 
 private actor RecordingClientCreationApplier: ClientCreationCommandApplying {
     private(set) var requests: [ClientCreationUploadRequest] = []
+    private let onApply: @Sendable () -> Void
+
+    init(onApply: @escaping @Sendable () -> Void = {}) {
+        self.onApply = onApply
+    }
 
     func apply(_ request: ClientCreationUploadRequest) async throws -> ClientCreationServerResult {
         requests.append(request)
+        onApply()
         return ClientCreationServerResult(
             operationId: request.operationId,
             accountId: request.accountId,

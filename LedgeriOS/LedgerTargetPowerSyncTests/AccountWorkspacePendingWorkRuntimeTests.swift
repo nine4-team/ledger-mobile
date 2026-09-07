@@ -886,6 +886,78 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Owned command upload completes using the workspace database")
+    func ownedUploadCompletesThroughWorkspace() async throws {
+        let context = try RuntimeTestContext(suffix: "owned-upload-success")
+        let runtime = try await context.openRuntime()
+        _ = try await runtime.createClient(context.clientCommand(id: "upload-success"))
+        let gate = ManualGate()
+        await gate.release()
+        let cancelled = AsyncStream<Void>.makeStream()
+        try await runtime.uploadPendingCommands(using: LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation)
+        ))
+        #expect(try await runtime.pendingWorkSummary().queuedOperationCount == 0)
+        try await runtime.close()
+        context.remove()
+    }
+
+    @Test("Workspace close and removal cancel uploads and drain before closing databases", arguments: [false, true])
+    func ownedUploadDrainsBeforeClose(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "owned-upload-drain-\(removing)")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(dependencies: context.dependencies(events: events))
+        _ = try await runtime.createClient(context.clientCommand(id: "upload-drain"))
+        let peerContext = try RuntimeTestContext(suffix: "owned-upload-peer-\(removing)")
+        var peerDependencies = peerContext.dependencies()
+        peerDependencies.accessCoordinator = context.accessCoordinator
+        let peer = try await peerContext.openRuntime(dependencies: peerDependencies)
+        let gate = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let appliers = LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation)
+        )
+        let upload = Task { try await runtime.uploadPendingCommands(using: appliers) }
+        await gate.waitUntilEntered()
+        await #expect(throws: LedgerPowerSyncUploadFailure.uploadAlreadyRunning) {
+            try await runtime.uploadPendingCommands(using: appliers)
+        }
+        await #expect(throws: LedgerPowerSyncUploadFailure.uploadAlreadyRunning) {
+            try await peer.uploadPendingCommands(using: appliers)
+        }
+        let close = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        var signal = cancelled.stream.makeAsyncIterator()
+        _ = await signal.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.uploadPendingCommands(using: appliers)
+        }
+        await gate.release()
+        do {
+            try await upload.value
+            Issue.record("Closing workspace must not acknowledge cancelled upload")
+        } catch {
+            if removing { #expect(error as? LedgerOfflineClientRuntimeFailure == .runtimeClosed) }
+            else { #expect(error is CancellationError) }
+        }
+        try await close.value
+        #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+        if !removing {
+            let reopened = try await context.openRuntime()
+            #expect(try await reopened.pendingWorkSummary().queuedOperationCount == 1)
+            try await reopened.close()
+            // A finished cancelled upload releases shared admission for peers.
+            try await peer.uploadPendingCommands(using: appliers)
+        }
+        try await peer.close()
+        peerContext.remove()
+        context.remove()
+    }
+
     @Test("Removal identity separates environment, Principal and Account without ambiguous concatenation")
     func removalIdentityIsolation() throws {
         func identity(_ principal: String, _ account: String) throws -> String {
@@ -2332,6 +2404,24 @@ private final class WeakVaultRecorder: @unchecked Sendable {
         lock.lock()
         storage = vault
         lock.unlock()
+    }
+}
+
+private struct RuntimeGatedClientApplier: ClientCreationCommandApplying {
+    let gate: ManualGate
+    let cancelled: AsyncStream<Void>.Continuation
+
+    func apply(_ request: ClientCreationUploadRequest) async throws -> ClientCreationServerResult {
+        await withTaskCancellationHandler {
+            // Intentionally ignores cancellation until released, as an already
+            // dispatched request may do. The owner must retain its database.
+            await gate.wait()
+        } onCancel: { cancelled.yield(()) }
+        return ClientCreationServerResult(
+            operationId: request.operationId, accountId: request.accountId,
+            commandFingerprint: request.fingerprint, subjectId: request.clientId,
+            phase: "applied", resultCode: "client_created", errorCode: nil
+        )
     }
 }
 

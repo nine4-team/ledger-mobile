@@ -25550,6 +25550,20 @@
           "expected": "Confirmed stored removal and in-process removal produce the specific bootstrap denial consumed by the existing workspace gate; unavailable registry fails closed without claiming removal. Injected restart evidence does not prove native keychain persistence.",
           "command": "swift test --package-path LedgeriOS --filter 'AccountWorkspacePendingWorkRuntimeTests|WorkspaceAccessPresentationTests' (36 passed, /tmp/ledger-removal-relaunch-tests.log); npm run target:staging:build:macos (passed, /tmp/ledger-removal-relaunch-build.log)",
           "status": "passed"
+        },
+        {
+          "id": "REMOVAL-CONNECTOR-ADMISSION",
+          "risk": "offline_durability",
+          "expected": "Connector requires an explicit shared fence; removed workspace cannot acquire credentials or start an upload. Removal during Client apply retains queued work; archive transport failure after removal retains applying evidence, CRUD and overlay. Live owner wiring, transport cancellation and final transaction linearization remain outside this check.",
+          "command": "swift test --package-path LedgeriOS --filter 'LedgerPowerSyncVerticalSliceTests|ProjectPowerSyncVerticalSliceTests|ClientArchivePowerSyncVerticalSliceTests|ProjectArchivePowerSyncVerticalSliceTests|SpaceChecklistRevisionPowerSyncVerticalSliceTests' (60 passed, /tmp/ledger-removal-upload-final-tests.log). Earlier59-test run had intermittent Project database-open error; isolated14-test Project recheck and final combined60 passed; cause remains unproven.",
+          "status": "passed"
+        },
+        {
+          "id": "REMOVAL-OWNED-UPLOAD",
+          "risk": "offline_durability",
+          "expected": "Runtime constructs command connector with its own database and shared fence; success updates queue. Shared-identity single-flight prevents competing handles. Caller cancellation, close and removal cancel the owned task; even an uncooperative applier must settle before databases close. Uncertain queue survives normal close/reopen. No authenticated scheduler, media-upload ownership, cross-process lock or final transaction linearization is claimed.",
+          "command": "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests (35 tests passed, including parameterized normal-close/removal drainage and peer admission; /tmp/ledger-owned-upload-tests.log); npm run target:environment:check; npm run target:staging:build:macos (/tmp/ledger-owned-upload-build.log)",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
@@ -25570,7 +25584,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Scoped independent GO on runtime batch and live UI follow-on: atomic one-shot signal, monotonic presentation, stale-source cancellation and full workspace gate. Native iOS/macOS fixture interactions passed. Relaunch follow-on independently reviewed GO: specific bootstrap removal denial retains cleanup, unavailable registry cannot falsely report removal, and UI locks before asynchronous drainage. Verified online removal evidence, live upload/commit fencing and native keychain/crash proof remain outside this batch; full workflow not complete."
+          "summary": "Independent scoped GO on runtime, live UI and relaunch denial. Connector admission reviewed GO after adding archive transport-failure retention test. Workspace-owned upload reviewed GO after adding shared-fence single-flight and peer tests: cancellation propagates, owner waits for task settlement before database close, and non-owning peer cannot release its lease. No bounded shutdown time is promised for an uncooperative transport. Verified online removal, authenticated scheduling, media upload ownership, final transaction linearization and native keychain/crash proof remain incomplete."
         },
         "ci": {
           "status": "not_run",

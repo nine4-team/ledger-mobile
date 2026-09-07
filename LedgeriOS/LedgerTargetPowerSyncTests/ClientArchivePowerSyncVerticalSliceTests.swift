@@ -100,6 +100,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
 
         let order = ClientArchiveApplyOrder()
         let fifo = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             projectCreationApplier: ClientArchiveOrderedProjectApplier(order: order),
@@ -109,6 +110,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         try await fifo.uploadData(database: database)
         #expect(await order.values == ["create_project"])
         let transient = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveThrowingApplier(),
@@ -156,6 +158,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         let rejected = try Self.command(id: "rejected", revision: 9)
         _ = try await Self.store(database).archive(rejected)
         let rejectConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveResultApplier(phase: "rejected"),
@@ -263,6 +266,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         )
 
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveResultApplier(phase: "applied"),
@@ -508,6 +512,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         let command = try Self.command(id: "setup-readback", revision: 7)
         _ = try await Self.store(database).archive(command)
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveResultApplier(phase: "applied"),
@@ -580,6 +585,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         let command = try Self.command(id: "negative-time", revision: 7)
         _ = try await Self.store(database).archive(command)
         let invalidConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveNegativeTimestampApplier(),
@@ -592,6 +598,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         #expect(try await database.getNextCrudTransaction() != nil)
 
         let validConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             clientArchiveApplier: ClientArchiveResultApplier(phase: "applied"),
@@ -664,6 +671,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         _ = try await Self.store(clientDatabase).archive(archive)
         let clientOrder = ClientArchiveApplyOrder()
         let clientConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveRejectingClientCreationApplier(order: clientOrder),
             clientArchiveApplier: ClientArchiveOrderedApplier(
@@ -691,6 +699,7 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         _ = try await Self.store(projectDatabase).archive(afterProject)
         let projectOrder = ClientArchiveApplyOrder()
         let projectConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ClientArchiveUnusedClientApplier(),
             projectCreationApplier: ClientArchiveRejectingProjectApplier(order: projectOrder),

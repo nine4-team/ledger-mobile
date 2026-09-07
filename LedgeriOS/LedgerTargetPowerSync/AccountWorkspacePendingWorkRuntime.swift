@@ -503,6 +503,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
 
 final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let accessFence: LedgerWorkspaceAccessFence
+    let now: @Sendable () -> Date
     let structuredDatabase: any PowerSyncDatabaseProtocol
     let attachmentDatabase: any PowerSyncDatabaseProtocol
     let creationStore: ClientCreationPowerSyncStore
@@ -576,6 +577,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         accessFence: LedgerWorkspaceAccessFence
     ) {
         self.accessFence = accessFence
+        self.now = now
         self.structuredDatabase = structuredDatabase
         self.attachmentDatabase = attachmentDatabase
         creationStore = ClientCreationPowerSyncStore(database: structuredDatabase, now: now)
@@ -650,6 +652,7 @@ actor AccountWorkspacePendingWorkRuntime {
     private var resources: AccountWorkspaceRuntimeResources?
     private var finiteLeaseCount = 0
     private var streamTasks: [UUID: Task<Void, Never>] = [:]
+    private var commandUploadTask: Task<Void, Error>?
     private var cancelledBeforeStart: Set<UUID> = []
     private var drainWaiters: [CheckedContinuation<Void, Never>] = []
 
@@ -1159,6 +1162,48 @@ actor AccountWorkspacePendingWorkRuntime {
         try await close()
     }
 
+    /// One upload transaction, bound to this workspace's database and fence.
+    /// The authenticated session owner will schedule these; no network session
+    /// is created here and no caller receives an unowned database/connector.
+    func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
+        try resources.accessFence.beginCommandUpload()
+        let connector = LedgerPowerSyncUploadConnector(
+            accessFence: resources.accessFence,
+            credentialProvider: { nil },
+            clientCreationApplier: appliers.clientCreation,
+            projectCreationApplier: appliers.projectCreation,
+            projectArchiveApplier: appliers.projectArchive,
+            clientArchiveApplier: appliers.clientArchive,
+            spaceChecklistRevisionApplier: appliers.spaceChecklistRevision,
+            now: resources.now
+        )
+        let task = Task {
+            try await connector.uploadData(database: resources.structuredDatabase)
+        }
+        commandUploadTask = task
+        defer {
+            commandUploadTask = nil
+            resources.accessFence.endCommandUpload()
+            resumeDrainWaitersIfDrained()
+        }
+        do {
+            try await withTaskCancellationHandler {
+                try await task.value
+            } onCancel: {
+                task.cancel()
+            }
+            guard !normalAccessLocked else {
+                throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+            }
+        } catch {
+            if normalAccessLocked { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            throw error
+        }
+    }
+
     func close() async throws {
         let task: Task<Result<Void, LedgerOfflineClientRuntimeFailure>, Never>
         switch state {
@@ -1277,6 +1322,7 @@ actor AccountWorkspacePendingWorkRuntime {
 
     private func performClose() async -> Result<Void, LedgerOfflineClientRuntimeFailure> {
         for task in streamTasks.values { task.cancel() }
+        commandUploadTask?.cancel()
         await waitUntilDrained()
 
         guard let resources else {
@@ -1338,14 +1384,14 @@ actor AccountWorkspacePendingWorkRuntime {
     }
 
     private func waitUntilDrained() async {
-        guard finiteLeaseCount != 0 || !streamTasks.isEmpty else { return }
+        guard finiteLeaseCount != 0 || !streamTasks.isEmpty || commandUploadTask != nil else { return }
         await withCheckedContinuation { continuation in
             drainWaiters.append(continuation)
         }
     }
 
     private func resumeDrainWaitersIfDrained() {
-        guard finiteLeaseCount == 0, streamTasks.isEmpty else { return }
+        guard finiteLeaseCount == 0, streamTasks.isEmpty, commandUploadTask == nil else { return }
         let waiters = drainWaiters
         drainWaiters.removeAll(keepingCapacity: false)
         for waiter in waiters { waiter.resume() }

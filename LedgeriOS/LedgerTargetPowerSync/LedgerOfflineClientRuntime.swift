@@ -30,6 +30,9 @@ public final class LedgerOfflineClientRuntime:
     RejectedOperationRecoveryQuerying, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
+    func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
+        try await lifecycleOwner.uploadPendingCommands(using: appliers)
+    }
     private let removalHandler: @Sendable () async throws -> Void
 
     init(lifecycleOwner: AccountWorkspacePendingWorkRuntime,

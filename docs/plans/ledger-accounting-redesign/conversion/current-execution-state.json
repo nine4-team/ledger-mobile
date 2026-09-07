@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 72,
+  "stateVersion": 75,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Lock a removed Account and prevent reopen without losing encrypted unsynced work; integrate existing runtime with durable removal enforcement.",
     "nextActions": [
-      "Audit closed. Runtime removal batch76981147569dabdab8e1269d6f05fff72460bebe is committed/pushed. Automatic CI34163409676 is live; poll exact run, no duplicate dispatch. Shared per-identity fence gates all handles; registry checked pre-open and late opens rejected. Stable environment/Principal/Account identity, no clear API. Internal removal delegates coordinator, which tracks lifecycle actors rather than weak facades.",
-      "UI batch8723eacc881c5e22b8df3af636b1ae7064c66fa5 pushed; automatic CI34164255824 live. Relaunch correction checkpoint distinguishes workspaceAccessRemoved from unavailable access check and shows same gate before cleanup. Focused36 tests, macOS build, conversion/environment checks passed; scoped independent review GO. All local processes terminal. Evidence in REMOVAL-REOPEN-PRESENTATION. Resolve automatic CI for the relaunch commit after push; no manual dispatch or repeated prior native tests for continuity.",
+      "Audit closed. Runtime76981147569dabdab8e1269d6f05fff72460bebe/CI34163409676 ended cancelled at20-minute job limit; other2 jobs passed. Remaining-suite log ends at Target Environment Isolation suite start. Local exact reproduction PASSED726 tests104 suites in33.445sec /tmp/ledger-removal-integration-reproduce.log; exec35759 terminal0. Cause unproven, do not restart CI or increase timeout. Reviewer investigating read-only. Later CI34164255824 live in remaining tests; CI34164485915 live in Item-to-Space suite. Inspect terminal results before diagnostic changes.",
+      "Consolidated connector+workspace-owned upload batch ready to commit: explicit shared fence, conservative queue retention, shared-identity single-flight, owned task cancellation/drainage before DB close. Connector60 and runtime35 tests passed; macOS build/environment checks passed. Independent review GO including archive-failure and peer tests. Full local remaining-suite726 passed before owner addition. Evidence in REMOVAL-CONNECTOR-ADMISSION/REMOVAL-OWNED-UPLOAD. Commit/push once and resolve its automatic CI; no duplicate run.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
       "Card/policy437bc59d/CI34161647098 completed green and is current verified checkpoint. No CI run is live; do not poll or redispatch it. Full Space-card outcome stays open for Item/media projections.",
-      "Next integration: verified online removal evidence, live command/media upload gating/cancellation and final commit fencing; no live upload owner yet. A007/O057 Supabase Auth vs temporary Firebase Auth decision asked asynchronously; no provider chosen or hosted access authorized. Provider-to-screen integration is not proven by fixture. Cross-process ownership/crash-before-record and native keychain restart remain. Retain uncertain work; no recovery bypass. Checkpoint stays437bc59d until runtime CI green."
+      "Next integration: verified online removal evidence and authenticated upload scheduling, media upload ownership, final transaction linearization. Command upload now lifecycle-owned but not connected to a live signed-in session. A007/O057 provider choice asked asynchronously; no provider/hosted access approved. Cross-process ownership/crash-before-record and native keychain restart remain. Retain uncertain work; no recovery bypass. Checkpoint stays437bc59d until exact newer CI green."
     ]
   },
   "blockers": [],

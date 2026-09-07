@@ -124,6 +124,31 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         fixture.remove()
     }
 
+    @Test("Removal during archive transport failure retains applying evidence and queue")
+    func removalDuringArchiveFailurePreservesApplying() async throws {
+        let fixture = try ArchiveDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seedAuthority(database, revision: 7)
+        let command = try Self.command(id: "conflict", revision: 7)
+        _ = try await Self.store(database).archive(command)
+        let fence = LedgerWorkspaceAccessFence()
+        let connector = LedgerPowerSyncUploadConnector(
+            accessFence: fence,
+            credentialProvider: { nil },
+            clientCreationApplier: ArchiveUnusedClientApplier(),
+            projectArchiveApplier: ArchiveRemovingApplier(fence: fence),
+            now: { Self.capturedAt }
+        )
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await connector.uploadData(database: database)
+        }
+        #expect(try await Self.localState(command, database) == "applying")
+        #expect(try await database.getNextCrudTransaction() != nil)
+        #expect(try await Self.count(LedgerPowerSyncTable.projectArchiveOverlays, database) == 1)
+        try await database.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
     @Test("Transient failure retains work; rejection rolls back exact optimism; retry reconciles once")
     func rejectionRetryAndReadbackReconciliation() async throws {
         let fixture = try ArchiveDatabaseFixture()
@@ -153,6 +178,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         )
 
         let transientConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectArchiveApplier: ArchiveTransientApplier(),
@@ -172,6 +198,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         } == 1)
 
         let rejectedConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectArchiveApplier: ArchiveResultApplier(phase: "rejected"),
@@ -194,6 +221,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         let retry = try Self.command(id: "retry", revision: 7)
         _ = try await Self.store(database).archive(retry)
         let appliedConnector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectArchiveApplier: ArchiveResultApplier(phase: "applied"),
@@ -293,6 +321,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
 
         let order = ArchiveApplyOrder()
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectCreationApplier: OrderedProjectCreationApplier(order: order),
@@ -479,6 +508,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
             _ = try await operationStore.archive(command)
         }
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectArchiveApplier: ArchiveResultApplier(phase: "applied"),
@@ -501,6 +531,7 @@ struct ProjectArchivePowerSyncVerticalSliceTests {
         let command = try Self.command(id: "terminal-durable", revision: 7)
         _ = try await Self.store(database).archive(command)
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ArchiveUnusedClientApplier(),
             projectArchiveApplier: ArchiveResultApplier(
@@ -858,6 +889,14 @@ private struct ArchiveInjectedFailure: Error {}
 
 private struct ArchiveUnusedClientApplier: ClientCreationCommandApplying {
     func apply(_ request: ClientCreationUploadRequest) async throws -> ClientCreationServerResult { throw ArchiveInjectedFailure() }
+}
+
+private struct ArchiveRemovingApplier: ProjectArchiveCommandApplying {
+    let fence: LedgerWorkspaceAccessFence
+    func apply(_ request: ProjectArchiveUploadRequest) async throws -> ProjectArchiveServerResult {
+        fence.markRemoved()
+        throw ArchiveInjectedFailure()
+    }
 }
 
 private struct ArchiveTransientApplier: ProjectArchiveCommandApplying {

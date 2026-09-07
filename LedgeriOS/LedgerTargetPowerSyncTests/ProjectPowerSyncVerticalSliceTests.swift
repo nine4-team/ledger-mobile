@@ -87,6 +87,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         #expect(queued.state.localState == .queued)
 
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: UnusedClientCreationApplier(),
             projectCreationApplier: RecordingProjectCreationApplier(),
@@ -338,6 +339,7 @@ struct ProjectPowerSyncVerticalSliceTests {
 
         let applier = RecordingProjectCreationApplier()
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: UnusedClientCreationApplier(),
             projectCreationApplier: applier,
@@ -667,6 +669,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         let command = try Self.newClientCommand()
         _ = try await ProjectSetupPowerSyncStore(database: database).create(command)
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: UnusedClientCreationApplier(),
             projectCreationApplier: RejectingProjectCreationApplier(),
@@ -703,6 +706,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         let clientApplier = RecordingClientApplier()
         let projectApplier = RecordingProjectCreationApplier()
         let connector = LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: clientApplier,
             projectCreationApplier: projectApplier

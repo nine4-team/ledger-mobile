@@ -4,8 +4,23 @@ import Foundation
 final class LedgerWorkspaceAccessFence: @unchecked Sendable {
     private let lock = NSLock()
     private var removed = false
+    private var commandUploadInProgress = false
     private var observers: [UUID: AsyncStream<Void>.Continuation] = [:]
     var isRemoved: Bool { lock.withLock { removed } }
+
+    func beginCommandUpload() throws {
+        try lock.withLock {
+            guard !removed else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            guard !commandUploadInProgress else {
+                throw LedgerPowerSyncUploadFailure.uploadAlreadyRunning
+            }
+            commandUploadInProgress = true
+        }
+    }
+
+    func endCommandUpload() {
+        lock.withLock { commandUploadInProgress = false }
+    }
     func markRemoved() {
         let pending = lock.withLock {
             removed = true

@@ -832,6 +832,7 @@ struct SpaceChecklistRevisionPowerSyncVerticalSliceTests {
         now: Date = asOf
     ) -> LedgerPowerSyncUploadConnector {
         LedgerPowerSyncUploadConnector(
+            accessFence: LedgerWorkspaceAccessFence(),
             credentialProvider: { nil },
             clientCreationApplier: ChecklistRevisionUnusedClientApplier(),
             spaceChecklistRevisionApplier: applier,

@@ -261,10 +261,21 @@ public protocol SpaceChecklistRevisionCommandApplying: Sendable {
     ) async throws -> SpaceChecklistRevisionServerResult
 }
 
+/// Resolved command transports only. This does not grant workspace access or
+/// choose an authentication provider; the lifecycle owns admission and drainage.
+struct LedgerPowerSyncCommandAppliers: Sendable {
+    let clientCreation: any ClientCreationCommandApplying
+    var projectCreation: (any ProjectCreationCommandApplying)? = nil
+    var projectArchive: (any ProjectArchiveCommandApplying)? = nil
+    var clientArchive: (any ClientArchiveCommandApplying)? = nil
+    var spaceChecklistRevision: (any SpaceChecklistRevisionCommandApplying)? = nil
+}
+
 final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @unchecked Sendable {
     public typealias CredentialProvider = @Sendable () async throws -> PowerSyncCredentials?
 
     private let credentialProvider: CredentialProvider
+    private let accessFence: LedgerWorkspaceAccessFence
     private let clientCreationApplier: any ClientCreationCommandApplying
     private let projectCreationApplier: (any ProjectCreationCommandApplying)?
     private let projectArchiveApplier: (any ProjectArchiveCommandApplying)?
@@ -274,6 +285,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let now: @Sendable () -> Date
 
     init(
+        accessFence: LedgerWorkspaceAccessFence,
         credentialProvider: @escaping CredentialProvider,
         clientCreationApplier: any ClientCreationCommandApplying,
         projectCreationApplier: (any ProjectCreationCommandApplying)? = nil,
@@ -284,6 +296,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         now: @Sendable @escaping () -> Date = Date.init
     ) {
         self.credentialProvider = credentialProvider
+        self.accessFence = accessFence
         self.clientCreationApplier = clientCreationApplier
         self.projectCreationApplier = projectCreationApplier
         self.projectArchiveApplier = projectArchiveApplier
@@ -293,11 +306,23 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     }
 
     public func fetchCredentials() async throws -> PowerSyncCredentials? {
-        try await credentialProvider()
+        try requireAccess()
+        let credentials = try await credentialProvider()
+        try requireAccess()
+        return credentials
+    }
+
+    private func requireAccess() throws {
+        try Task.checkCancellation()
+        guard !accessFence.isRemoved else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
     }
 
     public func uploadData(database: any PowerSyncDatabaseProtocol) async throws {
+        try requireAccess()
         guard let transaction = try await database.getNextCrudTransaction() else { return }
+        try requireAccess()
         guard transaction.crud.count == 1, let entry = transaction.crud.first else {
             throw LedgerPowerSyncUploadFailure.invalidTransactionShape
         }
@@ -305,6 +330,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         case LedgerPowerSyncTable.clientCommands:
             let request = try Self.clientCreationRequest(from: transaction.crud)
             let result = try await clientCreationApplier.apply(request)
+            try requireAccess()
             guard result.operationId == request.operationId,
                   result.accountId == request.accountId,
                   result.commandFingerprint == request.fingerprint,
@@ -323,6 +349,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             }
             let request = try Self.projectCreationRequest(from: transaction.crud)
             let result = try await projectCreationApplier.apply(request)
+            try requireAccess()
             guard result.operationId == request.operationId,
                   result.accountId == request.accountId,
                   result.commandFingerprint == request.fingerprint,
@@ -343,11 +370,14 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             try await markArchiveApplying(request, database: database)
             let result: ProjectArchiveServerResult
             do {
+                try requireAccess()
                 result = try await projectArchiveApplier.apply(request)
+                try requireAccess()
                 guard Self.isValidArchiveResult(result, request: request) else {
                     throw LedgerPowerSyncUploadFailure.invalidServerResult
                 }
             } catch {
+                try requireAccess()
                 try? await resetArchiveAfterTransientFailure(request, database: database)
                 throw error
             }
@@ -360,11 +390,14 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             try await markClientArchiveApplying(request, database: database)
             let result: ClientArchiveServerResult
             do {
+                try requireAccess()
                 result = try await clientArchiveApplier.apply(request)
+                try requireAccess()
                 guard Self.isValidClientArchiveResult(result, request: request) else {
                     throw LedgerPowerSyncUploadFailure.invalidServerResult
                 }
             } catch {
+                try requireAccess()
                 try? await resetClientArchiveAfterTransientFailure(
                     request, database: database
                 )
@@ -379,11 +412,14 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             try await markSpaceChecklistRevisionApplying(request, database: database)
             let result: SpaceChecklistRevisionServerResult
             do {
+                try requireAccess()
                 result = try await spaceChecklistRevisionApplier.apply(request)
+                try requireAccess()
                 guard Self.isValidSpaceChecklistRevisionResult(result, request: request) else {
                     throw LedgerPowerSyncUploadFailure.invalidServerResult
                 }
             } catch {
+                try requireAccess()
                 try? await resetSpaceChecklistRevisionAfterTransientFailure(
                     request,
                     database: database
@@ -398,6 +434,9 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         default:
             throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
         }
+        // A request may already have reached the server when removal is learned.
+        // Keep its queue entry for authorized reconciliation, never discard it.
+        try requireAccess()
         try await transaction.complete()
     }
 
@@ -1913,6 +1952,7 @@ private struct ClientArchiveOverlayEvidence {
 }
 
 public enum LedgerPowerSyncUploadFailure: Error, Equatable, Sendable {
+    case uploadAlreadyRunning
     case invalidTransactionShape
     case missingCommandField(String)
     case invalidClientCreatedAt
