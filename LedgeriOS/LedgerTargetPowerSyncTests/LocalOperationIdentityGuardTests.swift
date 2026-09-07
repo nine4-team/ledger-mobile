@@ -23,13 +23,15 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.pendingProjectCategoryAllocations,
             LedgerPowerSyncTable.projectArchiveOverlays,
             LedgerPowerSyncTable.clientArchiveOverlays,
+            LedgerPowerSyncTable.spaceChecklistRevisionOverlays,
             LedgerPowerSyncTable.itemSpaceAssignmentCommands,
             LedgerPowerSyncTable.itemSpaceClearingCommands
         ]))
         #expect(LocalOperationIdentityGuard.insertOnlyCommandTables == [
             LedgerPowerSyncTable.clientCommands, LedgerPowerSyncTable.projectCommands,
             LedgerPowerSyncTable.projectArchiveCommands,
-            LedgerPowerSyncTable.clientArchiveCommands
+            LedgerPowerSyncTable.clientArchiveCommands,
+            LedgerPowerSyncTable.spaceChecklistRevisionCommands
         ])
         #expect(LocalOperationIdentityGuard.forbiddenMutationTables == [
             LedgerPowerSyncTable.operationResults
@@ -461,6 +463,15 @@ struct LocalOperationIdentityGuardTests {
                     #expect(try await Self.count(LedgerPowerSyncTable.localOperations, database) == 0)
                     try await database.close(deleteDatabase: true)
                     fixture.remove()
+                    pairIndex += 1
+                    continue
+                }
+                // Account-bound command families intentionally cannot share an
+                // operation ID. Their cross-family rejection is covered by each
+                // family's identity-contract tests rather than the shared-ID race.
+                if pair.contains(.reviseSpaceChecklists)
+                    && (pair.contains(.archiveProject) || pair.contains(.archiveClient))
+                {
                     pairIndex += 1
                     continue
                 }
@@ -975,6 +986,15 @@ struct LocalOperationIdentityGuardTests {
                  client_id, expected_revision, fingerprint, envelope_json)
                 VALUES (?, 'account', 'principal', 'contract', 1, 'client', '1', ?, ?)
                 """, parameters: [id, fingerprint, envelope])
+        case .reviseSpaceChecklists:
+            _ = try await database.execute(sql: """
+                INSERT INTO \(LedgerPowerSyncTable.spaceChecklistRevisionCommands)
+                (id, account_id, actor_principal_id, contract_version,
+                 client_created_at_ms, space_id, expected_revision,
+                 collection_json, fingerprint, envelope_json)
+                VALUES (?, 'account', 'principal', 'contract', 1, 'space', '1',
+                        '{"checklists":[]}', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .assignItemsToSpace:
             _ = try await database.execute(sql: """
                 INSERT INTO \(LedgerPowerSyncTable.itemSpaceAssignmentCommands)
@@ -1030,6 +1050,15 @@ struct LocalOperationIdentityGuardTests {
                 (id, account_id, actor_principal_id, client_id, operation_id, fingerprint,
                  expected_revision, projected_revision, lifecycle, accepted_at_ms)
                 VALUES (?, 'account', 'principal', 'client', ?, ?, '1', 2, 'archived', 100)
+                """, parameters: [id, id, fingerprint])
+        case .reviseSpaceChecklists:
+            _ = try await database.execute(sql: """
+                INSERT INTO \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays)
+                (id, account_id, actor_principal_id, space_id, operation_id,
+                 fingerprint, expected_revision, projected_revision,
+                 collection_json, accepted_at_ms)
+                VALUES (?, 'account', 'principal', 'space', ?, ?, '1', 2,
+                        '{"checklists":[]}', 100)
                 """, parameters: [id, id, fingerprint])
         case .assignItemsToSpace, .clearItemSpaceAssignments:
             break
@@ -1156,7 +1185,7 @@ struct LocalOperationIdentityGuardTests {
         switch family {
         case .createClient, .archiveClient: "client"
         case .createProject, .archiveProject: "project"
-        case .assignItemsToSpace: "space"
+        case .assignItemsToSpace, .reviseSpaceChecklists: "space"
         case .clearItemSpaceAssignments: "account"
         }
     }
@@ -1745,6 +1774,12 @@ struct LocalOperationIdentityGuardTests {
                 uuid: checkpointUUID(index: index)
             )
         }
+        if families.contains(.reviseSpaceChecklists) {
+            return try SpaceChecklistRevisionOperationIdentity.make(
+                accountId: guardAccountId,
+                uuid: checkpointUUID(index: index)
+            )
+        }
         return try OperationID(validating: "concurrent-guard-\(index)")
     }
 
@@ -1754,6 +1789,9 @@ struct LocalOperationIdentityGuardTests {
     ) async throws {
         if families.contains(.archiveProject) { try await seedArchiveProject(database) }
         if families.contains(.archiveClient) { try await seedArchiveClient(database) }
+        if families.contains(.reviseSpaceChecklists) {
+            try await seedChecklistSpace(database)
+        }
     }
 
     private static func submit(
@@ -1780,6 +1818,11 @@ struct LocalOperationIdentityGuardTests {
                 database: database, accountId: guardAccountId,
                 principalId: guardPrincipalId, now: { guardAcceptedAt }
             ).archive(clientArchiveCommand(operationId: operationId))
+        case .reviseSpaceChecklists:
+            return try await SpaceChecklistRevisionPowerSyncStore(
+                database: database, accountId: guardAccountId,
+                principalId: guardPrincipalId, now: { guardAcceptedAt }
+            ).reviseChecklists(checklistRevisionCommand(operationId: operationId))
         case .assignItemsToSpace:
             return try await ItemSpaceAssignmentPowerSyncStore(
                 database: database, accountId: guardAccountId,
@@ -1909,6 +1952,31 @@ struct LocalOperationIdentityGuardTests {
                 database: database, accountId: guardAccountId,
                 principalId: guardPrincipalId, now: { guardAcceptedAt }
             ).archive(command)
+        case .reviseSpaceChecklists:
+            let base = try checklistRevisionCommand(operationId: operationId)
+            let command = try ReviseSpaceChecklistsCommand(
+                operationId: operationId,
+                draft: SpaceChecklistRevisionDraft(
+                    accountId: base.envelope.accountId,
+                    actorPrincipalId: base.envelope.actorPrincipalId,
+                    operationContractVersion: base.envelope.contractVersion,
+                    spaceId: base.draft.spaceId,
+                    collection: SpaceChecklistCollection(checklists: [
+                        SpaceChecklistState(
+                            id: SpaceChecklistID(validating: "changed-checklist"),
+                            name: SpaceChecklistName(validating: "Changed"),
+                            presentationOrder: 1,
+                            items: []
+                        )
+                    ]),
+                    expectedRevision: base.draft.expectedRevision,
+                    capturedAt: base.draft.capturedAt
+                )
+            )
+            return try await SpaceChecklistRevisionPowerSyncStore(
+                database: database, accountId: guardAccountId,
+                principalId: guardPrincipalId, now: { guardAcceptedAt }
+            ).reviseChecklists(command)
         case .assignItemsToSpace:
             let base = try assignmentCommand(id: operationId.rawValue)
             let command = try AssignItemsToSpaceCommand(
@@ -1979,6 +2047,36 @@ struct LocalOperationIdentityGuardTests {
                 guardProjectId.rawValue, guardAccountId.rawValue,
                 guardClientId.rawValue, guardPrincipalId.rawValue
             ])
+    }
+
+    private static func seedChecklistSpace(
+        _ database: any PowerSyncDatabaseProtocol
+    ) async throws {
+        _ = try await database.execute(sql: """
+            INSERT OR IGNORE INTO \(LedgerPowerSyncTable.spaces) (
+              id, account_id, scope_kind, project_id, display_name, lifecycle, revision
+            ) VALUES ('space-guard', ?, 'business_inventory', NULL,
+                      'Guard Space', 'active', 1)
+            """, parameters: [guardAccountId.rawValue])
+    }
+
+    private static func checklistRevisionCommand(
+        operationId: OperationID
+    ) throws -> ReviseSpaceChecklistsCommand {
+        try ReviseSpaceChecklistsCommand(
+            operationId: operationId,
+            draft: SpaceChecklistRevisionDraft(
+                accountId: guardAccountId,
+                actorPrincipalId: guardPrincipalId,
+                operationContractVersion: OperationContractVersion(
+                    validating: "space-checklist-revision-v1"
+                ),
+                spaceId: SpaceID(validating: "space-guard"),
+                collection: SpaceChecklistCollection(checklists: []),
+                expectedRevision: ExpectedSpaceRevision(1),
+                capturedAt: guardAcceptedAt
+            )
+        )
     }
 
     private static func seedArchiveClient(

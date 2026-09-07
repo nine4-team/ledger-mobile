@@ -4,6 +4,8 @@ import SwiftUI
 
 struct SpaceCoreDetailsStagingExerciseView: View {
     @Bindable var model: SpaceCoreDetailsStagingExercise
+    @Bindable var checklistToggle: SpaceChecklistItemToggleStagingExercise
+    @State private var isChecklistsExpanded = true
 
     var body: some View {
         Section("Space Core Details") {
@@ -27,10 +29,25 @@ struct SpaceCoreDetailsStagingExerciseView: View {
                     Text(notes)
                         .accessibilityIdentifier("target-space-core-details-notes")
                 }
-                if model.progressCountsAreAuthoritative {
+                if checklistToggle.isProgressOptimistic {
                     LabeledContent(
-                        "Checklist progress",
-                        value: "\(model.completedItemCount) / \(model.totalItemCount)"
+                        "Pending checklist progress",
+                        value: "\(checklistToggle.completedItemCount) / \(checklistToggle.totalItemCount)"
+                    )
+                    .accessibilityIdentifier("target-space-core-details-progress")
+                } else if checklistToggle.admission == .ready
+                            || checklistToggle.admission == .archived {
+                    LabeledContent(
+                        checklistToggle.admission == .archived
+                            ? "Archived checklist progress"
+                            : "Checklist progress",
+                        value: "\(checklistToggle.completedItemCount) / \(checklistToggle.totalItemCount)"
+                    )
+                    .accessibilityIdentifier("target-space-core-details-progress")
+                } else if checklistToggle.admission == .retryableStale {
+                    LabeledContent(
+                        "Cached checklist progress",
+                        value: "\(checklistToggle.completedItemCount) / \(checklistToggle.totalItemCount)"
                     )
                     .accessibilityIdentifier("target-space-core-details-progress")
                 } else {
@@ -41,24 +58,110 @@ struct SpaceCoreDetailsStagingExerciseView: View {
                         )
                 }
 
-                ForEach(row.checklists.checklists, id: \.id.rawValue) { checklist in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(checklist.name.rawValue).font(.headline)
-                        if model.progressCountsAreAuthoritative {
-                            Text(
-                                "\(checklist.completedItemCount) / \(checklist.totalItemCount)"
-                            )
-                            .font(.caption)
+                DisclosureGroup(isExpanded: $isChecklistsExpanded) {
+                    if let collection = checklistToggle.displayedCollection {
+                        if collection.checklists.isEmpty,
+                           checklistToggle.admission.permitsToggle
+                            || checklistToggle.isProgressOptimistic {
+                            Text("No checklists.")
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("target-space-checklists-empty")
+                        } else {
+                            ForEach(collection.checklists, id: \.id.rawValue) { checklist in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text(checklist.name.rawValue).font(.headline)
+                                        Spacer()
+                                        Text(
+                                            "\(checklist.completedItemCount) / \(checklist.totalItemCount)"
+                                        )
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .accessibilityLabel(
+                                            "\(checklist.name.rawValue) progress"
+                                        )
+                                        .accessibilityValue(
+                                            "\(checklist.completedItemCount) of \(checklist.totalItemCount) complete"
+                                        )
+                                    }
+
+                                    ForEach(checklist.items, id: \.id.rawValue) { item in
+                                        Button {
+                                            Task {
+                                                await checklistToggle.toggle(
+                                                    checklistId: checklist.id,
+                                                    itemId: item.id
+                                                )
+                                            }
+                                        } label: {
+                                            Label(
+                                                item.text.rawValue,
+                                                systemImage: item.isChecked
+                                                    ? "checkmark.circle.fill"
+                                                    : "circle"
+                                            )
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .disabled(!checklistToggle.canToggle(
+                                            checklistId: checklist.id,
+                                            itemId: item.id
+                                        ))
+                                        .accessibilityIdentifier(
+                                            "target-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
+                                        )
+                                        .accessibilityLabel(item.text.rawValue)
+                                        .accessibilityValue(
+                                            item.isChecked ? "Checked" : "Not checked"
+                                        )
+                                        .accessibilityHint(
+                                            item.isChecked
+                                                ? "Marks this checklist item incomplete"
+                                                : "Marks this checklist item complete"
+                                        )
+                                    }
+                                }
+                                .accessibilityIdentifier(
+                                    "target-space-checklist-\(checklist.id.rawValue)"
+                                )
+                            }
+                        }
+                    } else {
+                        Text(checklistToggle.admission.explanation)
                             .foregroundStyle(.secondary)
-                        }
-                        ForEach(checklist.items, id: \.id.rawValue) { item in
-                            Label(
-                                item.text.rawValue,
-                                systemImage: item.isChecked ? "checkmark.circle.fill" : "circle"
-                            )
-                        }
+                            .accessibilityIdentifier("target-space-checklists-unavailable")
                     }
-                    .accessibilityIdentifier("target-space-core-details-checklist")
+                } label: {
+                    HStack {
+                        Text("Checklists")
+                        Spacer()
+                        Text(
+                            "\(checklistToggle.completedItemCount) / \(checklistToggle.totalItemCount)"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("target-space-checklists-section")
+                .accessibilityValue(isChecklistsExpanded ? "Expanded" : "Collapsed")
+
+                LabeledContent(
+                    "Checklist synchronization",
+                    value: checklistToggle.operationStatus
+                )
+                .accessibilityIdentifier("target-space-checklist-operation-status")
+
+                if !checklistToggle.admission.permitsToggle {
+                    Text(checklistToggle.admission.explanation)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-space-checklist-admission")
+                }
+
+                if checklistToggle.canRetryAmbiguousAcceptance {
+                    Button("Retry local acceptance") {
+                        Task { await checklistToggle.retryAmbiguousAcceptance() }
+                    }
+                    .accessibilityIdentifier("target-space-checklist-retry-acceptance")
                 }
             }
 
@@ -67,6 +170,18 @@ struct SpaceCoreDetailsStagingExerciseView: View {
                     .foregroundStyle(.red)
                     .accessibilityIdentifier("target-space-core-details-diagnostic")
             }
+
+            if let diagnostic = checklistToggle.diagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-space-checklist-diagnostic")
+            }
+        }
+        .task(id: model.evidenceSequence) {
+            await checklistToggle.receiveDetailUpdate(
+                model.currentUpdate,
+                selectedSpaceId: model.selectedSpaceId
+            )
         }
     }
 

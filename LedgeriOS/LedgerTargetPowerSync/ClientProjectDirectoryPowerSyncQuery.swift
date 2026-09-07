@@ -796,6 +796,72 @@ final class ClientProjectDirectoryPowerSyncQuery:
 }
 
 enum PowerSyncOverlayReconciler {
+    static func reconcileSpaceChecklistRevision(
+        database: any PowerSyncDatabaseProtocol,
+        candidate: SpaceChecklistRevisionReconciliationCandidate
+    ) async throws {
+        try await database.writeTransaction { transaction in
+            _ = try transaction.execute(
+                sql: """
+                UPDATE \(LedgerPowerSyncTable.localOperations)
+                SET checklist_readback_revision = ?
+                WHERE id = ? AND account_id = ? AND subject_id = ?
+                  AND fingerprint = ? AND local_state = 'applied'
+                  AND command_type = 'revise_space_checklists'
+                  AND checklist_readback_revision IS NULL
+                  AND EXISTS (
+                    SELECT 1
+                    FROM \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays) AS overlay
+                    WHERE overlay.operation_id = \(LedgerPowerSyncTable.localOperations).id
+                      AND overlay.account_id = \(LedgerPowerSyncTable.localOperations).account_id
+                      AND overlay.actor_principal_id = \(LedgerPowerSyncTable.localOperations).actor_principal_id
+                      AND overlay.space_id = \(LedgerPowerSyncTable.localOperations).subject_id
+                      AND overlay.fingerprint = \(LedgerPowerSyncTable.localOperations).fingerprint
+                      AND overlay.projected_revision = ?
+                  )
+                  AND EXISTS (
+                    SELECT 1 FROM \(LedgerPowerSyncTable.spaces) AS authoritative
+                    WHERE authoritative.account_id = \(LedgerPowerSyncTable.localOperations).account_id
+                      AND authoritative.id = \(LedgerPowerSyncTable.localOperations).subject_id
+                      AND authoritative.revision >= ?
+                  )
+                """,
+                parameters: [
+                    candidate.projectedRevision,
+                    candidate.operationId,
+                    candidate.accountId,
+                    candidate.spaceId,
+                    candidate.fingerprint,
+                    candidate.projectedRevision,
+                    candidate.projectedRevision
+                ]
+            )
+            _ = try transaction.execute(
+                sql: """
+                DELETE FROM \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays)
+                WHERE operation_id = ? AND account_id = ? AND space_id = ?
+                  AND fingerprint = ? AND projected_revision = ?
+                  AND EXISTS (
+                    SELECT 1 FROM \(LedgerPowerSyncTable.localOperations) AS operation
+                    WHERE operation.id = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).operation_id
+                      AND operation.account_id = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).account_id
+                      AND operation.actor_principal_id = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).actor_principal_id
+                      AND operation.fingerprint = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).fingerprint
+                      AND operation.subject_id = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).space_id
+                      AND operation.checklist_readback_revision = \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays).projected_revision
+                  )
+                """,
+                parameters: [
+                    candidate.operationId,
+                    candidate.accountId,
+                    candidate.spaceId,
+                    candidate.fingerprint,
+                    candidate.projectedRevision
+                ]
+            )
+        }
+    }
+
     static func reconcileClient(
         database: any PowerSyncDatabaseProtocol,
         clientId: String,

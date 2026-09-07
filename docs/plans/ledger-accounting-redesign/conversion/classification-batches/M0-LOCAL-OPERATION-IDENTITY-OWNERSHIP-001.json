@@ -9,7 +9,7 @@
   "surfaces": [
     {
       "id": "SWIFT-142941D87D78",
-      "acknowledgeSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
+      "acknowledgeSourceHash": "22ac3dfbab3553012e1aed838d24276082c755af59687a1bf0dd560769fd68cd",
       "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all six current accepting stores, including an exact downloaded terminal-result race for Project creation only; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "status": "verified",
@@ -27,7 +27,7 @@
     },
     {
       "id": "TEST-5272CB2301DE",
-      "acknowledgeSourceHash": "cffed10344bbbb3bbf842c5fb3f50cc58d7858cb2f9a6fa6fb5e52aeb35a8119",
+      "acknowledgeSourceHash": "b9aa818fe627d5b119c7be1324cea63ccb242356ca0fb68601c06c0a3c4f55c8",
       "currentBehavior": "Verified encrypted-local matrix covers current-family pairs, orphan/corrupt evidence, concurrency, lifecycle replay and drainage, injected failures, and restart; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "status": "verified",

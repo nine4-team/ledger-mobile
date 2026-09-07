@@ -3,7 +3,7 @@
   "workflowId": "active-space-checklist-item-toggle",
   "title": "Toggle a checklist item in an active Space",
   "kind": "product_ui",
-  "status": "implementation",
+  "status": "ci_verification",
   "outcome": "From represented local detail for one active Project or Business Inventory Space, toggle one existing checklist item with immediate optimistic progress, durable offline acceptance, deterministic replay, conflict recovery, and authoritative readback.",
   "authority": [
     {
@@ -100,6 +100,7 @@
     "postgres_schema",
     "postgres_handler",
     "rls",
+    "auth",
     "powersync_sync",
     "local_offline"
   ],
@@ -107,6 +108,7 @@
     "ui_fidelity",
     "offline_durability",
     "tenant_authorization",
+    "identity_auth",
     "sync_visibility",
     "database_integrity",
     "handler_idempotency"
@@ -253,61 +255,83 @@
       "risk": "general",
       "expected": "Both checked directions traverse represented Space detail, one shared application command, local provider acceptance, operation observation, and authoritative readback without unrelated mutations.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
-      "status": "planned"
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-UI",
       "risk": "ui_fidelity",
       "expected": "The compiled target UI exposes section expansion, stable checklist/item controls, honest progress, pending/rejected status, disabled admission, empty state, and accessible labels wired to AppModel actions.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
-      "status": "planned"
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-OFFLINE",
       "risk": "offline_durability",
       "expected": "Atomic local acceptance, encrypted restart, byte-identical replay, rejection rollback, refreshed retry identity, readback reconciliation, and lifecycle drainage pass.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
-      "status": "planned"
+      "status": "passed"
+    },
+    {
+      "id": "SPACE-CHECKLIST-TOGGLE-IDENTITY",
+      "risk": "identity_auth",
+      "expected": "The local writer, queued evidence, authenticated user RPC, actor claim, and server result remain bound to one exact Account-derived operation identity; service-role credentials and forged identities fail closed.",
+      "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-SYNC",
       "risk": "sync_visibility",
       "expected": "Only exact Account/Space checklist rows and exact operation results drive the local projection; wrong-scope, malformed, revoked, and incomplete evidence fail closed.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
-      "status": "planned"
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-RLS",
       "risk": "tenant_authorization",
       "expected": "Active same-Account membership can invoke the trusted handler while anonymous, inactive, forged-actor, cross-Account, wrong-parent, and direct table writes fail without enumeration.",
       "command": "npm run target:supabase:test:db",
-      "status": "planned"
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-DATABASE",
       "risk": "database_integrity",
       "expected": "The handler atomically replaces the full ordered hierarchy, increments Space revision once, preserves immutable scope and unrelated rows, and leaves no partial mutation on failure.",
       "command": "npm run target:supabase:test:db",
-      "status": "planned"
+      "status": "passed"
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-IDEMPOTENCY",
       "risk": "handler_idempotency",
       "expected": "Exact OperationID and fingerprint replay returns the immutable original result while a changed-payload replay, stale revision, and concurrent revision race mutate nothing.",
-      "command": "npm run target:supabase:test:rpc",
-      "status": "planned"
+      "command": "npm run target:supabase:test:db",
+      "status": "passed"
     }
   ],
   "blockers": [],
   "verification": {
     "local": {
-      "status": "not_run",
-      "commands": []
+      "status": "passed",
+      "commands": [
+        "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
+        "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
+        "swift test --package-path LedgeriOS --no-parallel",
+        "npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning",
+        "npm run target:supabase:test:db",
+        "npm run target:supabase:test:space-assignment-destination-read",
+        "npm run target:supabase:test:project-note-read",
+        "npm run target:supabase:test:rpc",
+        "npm run target:contracts:check",
+        "npm run target:mcp:test",
+        "npm run target:environment:check",
+        "npm run conversion:check",
+        "npm run target:staging:build:macos",
+        "npm run target:staging:build:ios"
+      ]
     },
     "review": {
       "required": true,
-      "status": "not_run",
-      "summary": "Required independent review will cover offline durability, handler/RLS security, optimistic reconciliation, and UI behavior fidelity."
+      "status": "passed",
+      "summary": "Independent review initially returned NO-GO for restart restoration, rejection/readback ordering, server-ahead clocks, archived-state honesty, and exact post-cleanup replay proof. Root added durable local projection provenance, restart watch reattachment, fresh-evidence settlement ordering, monotonic terminal clocks, exact reconciliation markers, principal binding, corruption tests, and archived wording. Final re-review returned GO with no remaining P0/P1 finding."
     },
     "ci": {
       "status": "not_run",

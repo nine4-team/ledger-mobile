@@ -7,6 +7,7 @@ import LedgerTargetCore
 enum AccountBoundOperationFamily: String, Sendable {
     case projectArchive = "project-archive"
     case clientArchive = "client-archive"
+    case spaceChecklistRevision = "space-checklist-revision"
 }
 
 enum AccountBoundOperationIdentity {

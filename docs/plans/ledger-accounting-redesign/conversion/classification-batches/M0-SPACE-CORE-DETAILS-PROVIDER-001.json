@@ -48,7 +48,7 @@
     },
     {
       "id": "SWIFT-B762FCFD8525",
-      "acknowledgeSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
+      "acknowledgeSourceHash": "b73ec6a348b2f863938da452983f988050222288ed96e1edb05e1ec1cb26d524",
       "currentBehavior": "Executable internal Account-bound PowerSync query reconstructs exact Space details with causal current-process completeness and fail-closed validation.",
       "disposition": "redesign",
       "status": "implemented",
@@ -66,7 +66,7 @@
     },
     {
       "id": "TEST-33D5654E41CA",
-      "acknowledgeSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
+      "acknowledgeSourceHash": "413629d267f21c10dd8b80d8ef18dfd33c4f300a32628996333e6557ca333236",
       "currentBehavior": "Executable controlled-source and encrypted-local suite proves reconstruction, startup order, causal reread, restart reset, revocation, malformed refusal and drainage.",
       "disposition": "redesign",
       "status": "implemented",
@@ -84,7 +84,7 @@
     },
     {
       "id": "SWIFT-2335BBE3E8FD",
-      "acknowledgeSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
+      "acknowledgeSourceHash": "436741936d4363e0fe7d4577a7db88a169b09f819c4ec43a3b1f720cf227df18",
       "currentBehavior": "Executable Core-only exact-Space presenter owns selection generations and honest waiting/partial/stale/ready/absence/failure state.",
       "disposition": "redesign",
       "status": "implemented",
@@ -120,7 +120,7 @@
     },
     {
       "id": "SWIFT-C99453DE8B49",
-      "acknowledgeSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
+      "acknowledgeSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
       "currentBehavior": "Executable thin adapter forwards only the typed close-aware exact-Space runtime watch.",
       "disposition": "redesign",
       "status": "implemented",
@@ -138,7 +138,7 @@
     },
     {
       "id": "SWIFT-058F3155F97F",
-      "acknowledgeSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
+      "acknowledgeSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
       "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states and only authoritative checklist progress.",
       "disposition": "redesign",
       "status": "implemented",

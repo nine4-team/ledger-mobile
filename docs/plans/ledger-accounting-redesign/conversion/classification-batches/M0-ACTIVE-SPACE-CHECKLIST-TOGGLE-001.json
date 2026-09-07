@@ -1,0 +1,103 @@
+{
+  "batchId": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001",
+  "title": "Toggle one checklist item in an active Space",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001",
+    "EVID-SPACE-CHECKLIST-REVISION-001",
+    "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001",
+    "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-84575506886A",
+      "acknowledgeSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
+      "currentBehavior": "Atomically accepts one exact Account-bound Space checklist replacement into encrypted local operation, insert-only command, and optimistic-overlay evidence; exact replay, restart, observation, rejection cleanup, and authoritative-readback cleanup remain deterministic.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "notes": "The store mutates no synchronized Space row and grants no server authority.",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": ["encrypted Space-checklist revision acceptance, overlay, replay, observation, and reconciliation"],
+        "securityRequirements": ["Bind command, overlay, actor, Account, Space, fingerprint, expected revision, and Account-derived OperationID exactly"],
+        "syncRequirements": ["Retain accepted optimism across restart and upload until rejection or matching newer authoritative readback"]
+      },
+      "migration": {"rule": "Create no Firebase adapter or dual-write path.", "reconciliation": ["Only exact authoritative Space checklist evidence may clear applied optimism"]},
+      "verification": {"tests": ["SpaceChecklistRevisionPowerSyncVerticalSliceTests"], "acceptance": ["Atomic acceptance, replay, restart, rejection, readback, and drainage pass"]}
+    },
+    {
+      "id": "SWIFT-FF03A6E032AA",
+      "acknowledgeSourceHash": "24f70f9783dd0230e1cbc690dbe98bd3b557ff1698dc0aba4d3e9fa82b4b5346",
+      "currentBehavior": "Posts the exact checklist-revision command to the isolated Supabase RPC with an injected publishable key and scoped user token, refusing service-role credentials and mismatched terminal results.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "notes": "No endpoint, token, key, hosted resource, or production authority is embedded.",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": ["scoped-user Supabase Space-checklist revision RPC adapter"],
+        "securityRequirements": ["Use only injected publishable-key and authenticated user-token authority", "Reject wrong Account-derived identity, unknown rejection code, hash, subject, or timestamp result evidence"],
+        "syncRequirements": ["Preserve canonical full checklist hierarchy and exact decimal revision evidence"]
+      },
+      "migration": {"rule": "Use only a validated isolated target environment.", "reconciliation": ["Canonical request bytes bind local command and trusted handler"]},
+      "verification": {"tests": ["SpaceChecklistRevisionPowerSyncVerticalSliceTests"], "acceptance": ["RPC path, ten fields, scoped headers, credential refusal, and strict result validation pass"]}
+    },
+    {
+      "id": "SWIFT-8FE0D1AD0744",
+      "acknowledgeSourceHash": "e909862933ca2031fe0092d2381f5051c0a4aed093de9223452fa8f7c6f9957d",
+      "currentBehavior": "Owns exact-Space checklist-toggle admission, one frozen optimistic submission, byte-identical uncertain-acceptance retry, operation observation, encrypted restart restoration, conflict recovery, selection/lifecycle drainage, and exact authoritative-readback settlement.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "notes": "The backend-neutral AppModel restores typed local projection provenance after restart and settles only from later complete evidence after the operation result baseline.",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": ["active exact-Space checklist-toggle application state and operation reconciliation"],
+        "securityRequirements": ["Consume only typed Account/Space-bound evidence and bounded diagnostics"],
+        "syncRequirements": ["Never treat optimistic overlay, incomplete evidence, or stale selection as authoritative readback"]
+      },
+      "migration": {"rule": "Compose target Core contracts only.", "reconciliation": ["Applied or rejected state clears only on later complete exact-Space evidence with no local projection"]},
+      "verification": {"tests": ["SpaceChecklistItemToggleStagingExerciseTests"], "acceptance": ["Admission, toggle, retry, restart restoration, rejection ordering, local-overlay refusal, authoritative readback, and drainage pass"]}
+    },
+    {
+      "id": "TEST-37FF8615DAB5",
+      "acknowledgeSourceHash": "ad03d06b07745757315f73bcd06372a4c2aaa56706828f667a22770a0249adeb",
+      "currentBehavior": "Runs the deterministic active-Space checklist-toggle application and source-bound UI contract matrix, including disabled states, empty and archived presentation, exact command freezing, ambiguous retry, rejection recovery, local-overlay refusal, authoritative readback, reselection, and stop drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused cases pass.",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": ["deterministic AppModel and compiled-source UI behavior matrix"],
+        "securityRequirements": ["Wrong operation and wrong detail evidence fail closed"],
+        "syncRequirements": ["Optimistic and authoritative progress remain visibly distinct until exact readback"]
+      },
+      "migration": {"rule": "Use synthetic target-only fixtures.", "reconciliation": ["Both checked directions preserve ordered stable checklist identities"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests"], "acceptance": ["All ten focused cases pass"]}
+    },
+    {
+      "id": "TEST-6C3784A08B93",
+      "acknowledgeSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
+      "currentBehavior": "Runs the deterministic encrypted PowerSync and scoped Supabase RPC matrix for Account-bound identity, interrupted rollback, exact replay, restart, optimistic projection, transient retry, rejection, readback, strict terminal validation, scoped headers, request shape, credential refusal, and watch drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"],
+      "notes": "Uses disposable encrypted databases, synthetic identities, and an intercepted local URL protocol only; six focused cases pass.",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": ["deterministic Space-checklist PowerSync and Supabase RPC verification matrix"],
+        "securityRequirements": ["Cross-Account identity, malformed terminal evidence, unknown rejection, and service-role credentials fail closed"],
+        "syncRequirements": ["Prove atomic durability, restart, replay, upload lifecycle, rejection cleanup, readback cleanup, and drainage"]
+      },
+      "migration": {"rule": "Use no Firebase export or production data.", "reconciliation": ["Exact accepted bytes and projected checklist state survive encrypted reopen"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests"], "acceptance": ["All six focused cases pass"]}
+    }
+  ]
+}

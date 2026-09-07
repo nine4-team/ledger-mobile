@@ -14,7 +14,7 @@ protocol SpaceCoreDetailsLocalReading: Sendable {
     func watchRows(request: SpaceCoreDetailsRequest, principalId: PrincipalID) throws -> AsyncThrowingStream<[SpaceCoreDetailsPowerSyncRow], Error>
 }
 
-private final class PowerSyncSpaceCoreDetailsLocalReader: SpaceCoreDetailsLocalReading, @unchecked Sendable {
+final class PowerSyncSpaceCoreDetailsLocalReader: SpaceCoreDetailsLocalReading, @unchecked Sendable {
     private let database: any PowerSyncDatabaseProtocol
     init(database: any PowerSyncDatabaseProtocol) { self.database = database }
     var hasLastSyncedAt: Bool { database.currentStatus.lastSyncedAt != nil }
@@ -32,7 +32,13 @@ private final class PowerSyncSpaceCoreDetailsLocalReader: SpaceCoreDetailsLocalR
     }
 
     private static func parameters(_ request: SpaceCoreDetailsRequest, _ principalId: PrincipalID) -> [any Sendable] {
-        [request.accountId.rawValue, principalId.rawValue, request.accountId.rawValue, request.spaceId.rawValue]
+        [
+            request.accountId.rawValue,
+            principalId.rawValue,
+            request.accountId.rawValue,
+            request.spaceId.rawValue,
+            principalId.rawValue
+        ]
     }
 
     private static let sql = """
@@ -63,7 +69,27 @@ private final class PowerSyncSpaceCoreDetailsLocalReader: SpaceCoreDetailsLocalR
                item.space_id AS item_space_id,
                item.checklist_id AS item_checklist_id, item.item_id,
                item.item_text, item.is_checked,
-               item.presentation_order AS item_order
+               item.presentation_order AS item_order,
+               overlay.operation_id AS overlay_operation_id,
+               overlay.account_id AS overlay_account_id,
+               overlay.actor_principal_id AS overlay_actor_principal_id,
+               overlay.space_id AS overlay_space_id,
+               overlay.fingerprint AS overlay_fingerprint,
+               overlay.expected_revision AS overlay_expected_revision,
+               overlay.projected_revision AS overlay_projected_revision,
+               overlay.collection_json AS overlay_collection_json,
+               overlay.accepted_at_ms AS overlay_accepted_at_ms,
+               overlay_operation.account_id AS overlay_operation_account_id,
+               overlay_operation.actor_principal_id
+                 AS overlay_operation_actor_principal_id,
+               overlay_operation.contract_version
+                 AS overlay_operation_contract_version,
+               overlay_operation.fingerprint AS overlay_operation_fingerprint,
+               overlay_operation.subject_id AS overlay_operation_subject_id,
+               overlay_operation.local_state AS overlay_operation_local_state,
+               overlay_operation.command_type AS overlay_operation_command_type,
+               overlay_operation.command_expected_revision
+                 AS overlay_operation_expected_revision
         FROM scope
         LEFT JOIN selected_space AS space ON scope.is_active
         LEFT JOIN \(LedgerPowerSyncTable.spaceCoreDetails) AS detail
@@ -74,6 +100,12 @@ private final class PowerSyncSpaceCoreDetailsLocalReader: SpaceCoreDetailsLocalR
           ON item.account_id = checklist.account_id
          AND item.space_id = checklist.space_id
          AND item.checklist_id = checklist.checklist_id
+        LEFT JOIN \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays) AS overlay
+          ON overlay.account_id = space.account_id
+         AND overlay.space_id = space.id
+         AND overlay.actor_principal_id = ?
+        LEFT JOIN \(LedgerPowerSyncTable.localOperations) AS overlay_operation
+          ON overlay_operation.id = overlay.operation_id
         ORDER BY checklist.presentation_order, checklist.checklist_id,
                  item.presentation_order, item.item_id
         """
@@ -228,11 +260,15 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
         AccountID, SpaceID,
         @escaping @Sendable (SpaceCoreDetailsFreshnessEvent) async throws -> Void
     ) async throws -> Void
+    private typealias OverlayReconciliation = @Sendable (
+        SpaceChecklistRevisionReconciliationCandidate
+    ) async throws -> Void
 
     private let localReader: any SpaceCoreDetailsLocalReading
     private let principalId: PrincipalID
     private let boundAccountId: AccountID
     private let freshnessObservation: FreshnessObservation
+    private let overlayReconciliation: OverlayReconciliation
     private let now: @Sendable () -> Date
     private let watchRegistry = SpaceCoreDetailsWatchRegistry()
 
@@ -249,6 +285,12 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
             accountId: accountId,
             freshnessObservation: { account, space, receive in
                 try await freshness.observe(accountId: account, spaceId: space, receive: receive)
+            },
+            overlayReconciliation: { candidate in
+                try await PowerSyncOverlayReconciler.reconcileSpaceChecklistRevision(
+                    database: database,
+                    candidate: candidate
+                )
             },
             now: now
         )
@@ -278,6 +320,7 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
                 }
                 try Task.checkCancellation()
             },
+            overlayReconciliation: { _ in },
             now: now
         )
     }
@@ -287,12 +330,14 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
         principalId: PrincipalID,
         accountId: AccountID,
         freshnessObservation: @escaping FreshnessObservation,
+        overlayReconciliation: @escaping OverlayReconciliation,
         now: @Sendable @escaping () -> Date
     ) {
         self.localReader = localReader
         self.principalId = principalId
         boundAccountId = accountId
         self.freshnessObservation = freshnessObservation
+        self.overlayReconciliation = overlayReconciliation
         self.now = now
     }
 
@@ -391,6 +436,10 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
                     hasLastSyncedAt: localReader.hasLastSyncedAt,
                     asOf: now()
                 )
+                if completionEpoch != nil,
+                   let candidate = try Self.reconciliationCandidate(rows: latest) {
+                    try await overlayReconciliation(candidate)
+                }
                 let update = try SpaceCoreDetailsUpdate(request: request, state: .snapshot(snapshot))
                 guard update != last else { continue }
                 last = update
@@ -417,7 +466,10 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
         asOf: Date
     ) throws -> SpaceCoreDetailsLocalSnapshot {
         let evidence = try scope(rows)
-        let represented = evidence.spaceIsVisible ? [try reconstruct(request: request, rows: rows)] : []
+        let reconstruction = evidence.spaceIsVisible
+            ? try reconstruct(request: request, rows: rows)
+            : nil
+        let represented = reconstruction.map { [$0.snapshot] } ?? []
         let complete = evidence.isActive && streamCompletionReported
         let quality: ListSnapshotQuality = complete ? .ready : (evidence.isActive && hasLastSyncedAt ? .stale : .partial)
         return try SpaceCoreDetailsLocalSnapshot(
@@ -431,9 +483,11 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
                 scope: evidence,
                 streamIsComplete: streamCompletionReported,
                 quality: quality,
-                rows: represented
+                rows: represented,
+                checklistRevisionProjection: reconstruction?.projection
             ),
-            asOf: asOf
+            asOf: asOf,
+            checklistRevisionProjection: reconstruction?.projection
         )
     }
 
@@ -462,7 +516,7 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
     private static func reconstruct(
         request: SpaceCoreDetailsRequest,
         rows: [SpaceCoreDetailsPowerSyncRow]
-    ) throws -> SpaceCoreDetailsSnapshot {
+    ) throws -> ReconstructedSpaceCoreDetails {
         guard let first = rows.first,
               let spaceId = first.spaceId, spaceId == request.spaceId.rawValue,
               let accountId = first.accountId, accountId == request.accountId.rawValue,
@@ -555,20 +609,58 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
                 }
             )
         }
+        let authoritativeCollection = try SpaceChecklistCollection(
+            checklists: checklists
+        )
+        let overlay = try first.checklistRevisionOverlay(
+            accountId: accountId,
+            spaceId: spaceId
+        )
+        let effectiveRevision: UInt64
+        let effectiveCollection: SpaceChecklistCollection
+        if let overlay {
+            guard UInt64(revision) >= overlay.expectedRevision else {
+                throw SpaceCoreDetailsPowerSyncFailure.malformedSpaceRow
+            }
+            if UInt64(revision) == overlay.expectedRevision,
+               lifecycle == .active {
+                effectiveRevision = overlay.projectedRevision
+                effectiveCollection = overlay.collection
+            } else {
+                if UInt64(revision) == overlay.projectedRevision,
+                   authoritativeCollection != overlay.collection {
+                    throw SpaceCoreDetailsPowerSyncFailure.malformedSpaceRow
+                }
+                effectiveRevision = UInt64(revision)
+                effectiveCollection = authoritativeCollection
+            }
+        } else {
+            effectiveRevision = UInt64(revision)
+            effectiveCollection = authoritativeCollection
+        }
         let createdAtDate = try exactDate(milliseconds: createdAt)
         let updatedAtDate = try exactDate(milliseconds: updatedAt)
-        return try SpaceCoreDetailsSnapshot(
+        let snapshot = try SpaceCoreDetailsSnapshot(
             id: SpaceID(validating: spaceId),
             accountId: AccountID(validating: accountId),
             scope: scope,
             displayName: canonicalDisplayName,
             notes: canonicalNotes,
             lifecycle: lifecycle,
-            revision: UInt64(revision),
+            revision: effectiveRevision,
             createdAt: createdAtDate,
             updatedAt: updatedAtDate,
-            checklists: try SpaceChecklistCollection(checklists: checklists)
+            checklists: effectiveCollection
         )
+        let projection: SpaceChecklistRevisionLocalProjection?
+        if let overlay,
+           UInt64(revision) == overlay.expectedRevision,
+           lifecycle == .active {
+            projection = try overlay.localProjection()
+        } else {
+            projection = nil
+        }
+        return ReconstructedSpaceCoreDetails(snapshot: snapshot, projection: projection)
     }
 
     private static func exactDate(milliseconds: Int64) throws -> Date {
@@ -582,21 +674,49 @@ final class SpaceCoreDetailsPowerSyncQuery: SpaceCoreDetailsQuerying, @unchecked
         return date
     }
 
+    private static func reconciliationCandidate(
+        rows: [SpaceCoreDetailsPowerSyncRow]
+    ) throws -> SpaceChecklistRevisionReconciliationCandidate? {
+        guard let first = rows.first,
+              let accountId = first.accountId,
+              let spaceId = first.spaceId,
+              let revision = first.revision else {
+            return nil
+        }
+        guard let overlay = try first.checklistRevisionOverlay(
+            accountId: accountId,
+            spaceId: spaceId
+        ), overlay.localState == .applied,
+           revision >= 0,
+           UInt64(revision) >= overlay.projectedRevision else {
+            return nil
+        }
+        return SpaceChecklistRevisionReconciliationCandidate(
+            operationId: overlay.operationId.rawValue,
+            accountId: overlay.accountId.rawValue,
+            spaceId: overlay.spaceId.rawValue,
+            fingerprint: overlay.fingerprint.sha256,
+            projectedRevision: Int64(overlay.projectedRevision)
+        )
+    }
+
     private static func localDataVersion(
         request: SpaceCoreDetailsRequest,
         scope: SpaceCoreDetailsScopeEvidence,
         streamIsComplete: Bool,
         quality: ListSnapshotQuality,
-        rows: [SpaceCoreDetailsSnapshot]
+        rows: [SpaceCoreDetailsSnapshot],
+        checklistRevisionProjection: SpaceChecklistRevisionLocalProjection?
     ) throws -> LocalDataVersion {
         let basis = SpaceCoreDetailsLocalVersionBasis(
-            contractVersion: "space-core-details-local-v1",
+            contractVersion: "space-core-details-local-v2",
             requestFingerprint: request.queryFingerprint,
             scopeIsActive: scope.isActive,
             spaceIsVisible: scope.spaceIsVisible,
             streamIsComplete: streamIsComplete,
             quality: quality,
-            rows: rows
+            rows: rows,
+            checklistRevisionProjection: checklistRevisionProjection
         )
         let digest = SHA256.hash(data: try OperationContractCodec.encode(basis)).map { String(format: "%02x", $0) }.joined()
         return try LocalDataVersion(validating: "space-core-details-\(digest)")
@@ -620,6 +740,12 @@ private struct SpaceCoreDetailsLocalVersionBasis: Codable {
     let streamIsComplete: Bool
     let quality: ListSnapshotQuality
     let rows: [SpaceCoreDetailsSnapshot]
+    let checklistRevisionProjection: SpaceChecklistRevisionLocalProjection?
+}
+
+private struct ReconstructedSpaceCoreDetails: Equatable, Sendable {
+    let snapshot: SpaceCoreDetailsSnapshot
+    let projection: SpaceChecklistRevisionLocalProjection?
 }
 
 private struct ChecklistHeader: Equatable, Sendable {
@@ -640,6 +766,44 @@ private struct ItemBuilder: Equatable, Sendable {
 private struct ChecklistBuilder: Equatable, Sendable {
     let header: ChecklistHeader
     var items: [ItemBuilder]
+}
+
+private struct SpaceChecklistRevisionOverlayProjection: Equatable, Sendable {
+    let operationId: OperationID
+    let accountId: AccountID
+    let actorPrincipalId: PrincipalID
+    let contractVersion: OperationContractVersion
+    let fingerprint: OperationFingerprint
+    let spaceId: SpaceID
+    let expectedRevision: UInt64
+    let projectedRevision: UInt64
+    let collection: SpaceChecklistCollection
+    let acceptedAt: Date
+    let localState: LocalOperationState
+
+    func localProjection() throws -> SpaceChecklistRevisionLocalProjection {
+        try SpaceChecklistRevisionLocalProjection(
+            operationId: operationId,
+            accountId: accountId,
+            actorPrincipalId: actorPrincipalId,
+            contractVersion: contractVersion,
+            fingerprint: fingerprint,
+            spaceId: spaceId,
+            expectedRevision: expectedRevision,
+            projectedRevision: projectedRevision,
+            collection: collection,
+            acceptedAt: acceptedAt,
+            localState: localState
+        )
+    }
+}
+
+struct SpaceChecklistRevisionReconciliationCandidate: Equatable, Sendable {
+    let operationId: String
+    let accountId: String
+    let spaceId: String
+    let fingerprint: String
+    let projectedRevision: Int64
 }
 
 struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
@@ -671,6 +835,23 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
     let itemText: String?
     let itemIsChecked: Int64?
     let itemOrder: Int64?
+    let overlayOperationId: String?
+    let overlayAccountId: String?
+    let overlayActorPrincipalId: String?
+    let overlaySpaceId: String?
+    let overlayFingerprint: String?
+    let overlayExpectedRevision: String?
+    let overlayProjectedRevision: Int64?
+    let overlayCollectionJSON: String?
+    let overlayAcceptedAtMilliseconds: Int64?
+    let overlayOperationAccountId: String?
+    let overlayOperationActorPrincipalId: String?
+    let overlayOperationContractVersion: String?
+    let overlayOperationFingerprint: String?
+    let overlayOperationSubjectId: String?
+    let overlayOperationLocalState: String?
+    let overlayOperationCommandType: String?
+    let overlayOperationExpectedRevision: String?
 
     init(
         scopeIsActive: Int64, visibleCount: Int64, spaceId: String? = nil,
@@ -684,7 +865,21 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
         itemRowId: String? = nil, itemAccountId: String? = nil,
         itemSpaceId: String? = nil, itemChecklistId: String? = nil,
         itemId: String? = nil, itemText: String? = nil,
-        itemIsChecked: Int64? = nil, itemOrder: Int64? = nil
+        itemIsChecked: Int64? = nil, itemOrder: Int64? = nil,
+        overlayOperationId: String? = nil, overlayAccountId: String? = nil,
+        overlayActorPrincipalId: String? = nil, overlaySpaceId: String? = nil,
+        overlayFingerprint: String? = nil, overlayExpectedRevision: String? = nil,
+        overlayProjectedRevision: Int64? = nil,
+        overlayCollectionJSON: String? = nil,
+        overlayAcceptedAtMilliseconds: Int64? = nil,
+        overlayOperationAccountId: String? = nil,
+        overlayOperationActorPrincipalId: String? = nil,
+        overlayOperationContractVersion: String? = nil,
+        overlayOperationFingerprint: String? = nil,
+        overlayOperationSubjectId: String? = nil,
+        overlayOperationLocalState: String? = nil,
+        overlayOperationCommandType: String? = nil,
+        overlayOperationExpectedRevision: String? = nil
     ) {
         self.scopeIsActive = scopeIsActive; self.visibleCount = visibleCount
         self.spaceId = spaceId; self.accountId = accountId; self.scopeKind = scopeKind
@@ -698,6 +893,23 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
         self.itemAccountId = itemAccountId; self.itemSpaceId = itemSpaceId
         self.itemChecklistId = itemChecklistId; self.itemId = itemId
         self.itemText = itemText; self.itemIsChecked = itemIsChecked; self.itemOrder = itemOrder
+        self.overlayOperationId = overlayOperationId
+        self.overlayAccountId = overlayAccountId
+        self.overlayActorPrincipalId = overlayActorPrincipalId
+        self.overlaySpaceId = overlaySpaceId
+        self.overlayFingerprint = overlayFingerprint
+        self.overlayExpectedRevision = overlayExpectedRevision
+        self.overlayProjectedRevision = overlayProjectedRevision
+        self.overlayCollectionJSON = overlayCollectionJSON
+        self.overlayAcceptedAtMilliseconds = overlayAcceptedAtMilliseconds
+        self.overlayOperationAccountId = overlayOperationAccountId
+        self.overlayOperationActorPrincipalId = overlayOperationActorPrincipalId
+        self.overlayOperationContractVersion = overlayOperationContractVersion
+        self.overlayOperationFingerprint = overlayOperationFingerprint
+        self.overlayOperationSubjectId = overlayOperationSubjectId
+        self.overlayOperationLocalState = overlayOperationLocalState
+        self.overlayOperationCommandType = overlayOperationCommandType
+        self.overlayOperationExpectedRevision = overlayOperationExpectedRevision
     }
 
     init(cursor: any SqlCursor) throws {
@@ -729,6 +941,49 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
         itemText = try cursor.getStringOptional(name: "item_text")
         itemIsChecked = try cursor.getInt64Optional(name: "is_checked")
         itemOrder = try cursor.getInt64Optional(name: "item_order")
+        overlayOperationId = try cursor.getStringOptional(name: "overlay_operation_id")
+        overlayAccountId = try cursor.getStringOptional(name: "overlay_account_id")
+        overlayActorPrincipalId = try cursor.getStringOptional(
+            name: "overlay_actor_principal_id"
+        )
+        overlaySpaceId = try cursor.getStringOptional(name: "overlay_space_id")
+        overlayFingerprint = try cursor.getStringOptional(name: "overlay_fingerprint")
+        overlayExpectedRevision = try cursor.getStringOptional(
+            name: "overlay_expected_revision"
+        )
+        overlayProjectedRevision = try cursor.getInt64Optional(
+            name: "overlay_projected_revision"
+        )
+        overlayCollectionJSON = try cursor.getStringOptional(
+            name: "overlay_collection_json"
+        )
+        overlayAcceptedAtMilliseconds = try cursor.getInt64Optional(
+            name: "overlay_accepted_at_ms"
+        )
+        overlayOperationAccountId = try cursor.getStringOptional(
+            name: "overlay_operation_account_id"
+        )
+        overlayOperationActorPrincipalId = try cursor.getStringOptional(
+            name: "overlay_operation_actor_principal_id"
+        )
+        overlayOperationContractVersion = try cursor.getStringOptional(
+            name: "overlay_operation_contract_version"
+        )
+        overlayOperationFingerprint = try cursor.getStringOptional(
+            name: "overlay_operation_fingerprint"
+        )
+        overlayOperationSubjectId = try cursor.getStringOptional(
+            name: "overlay_operation_subject_id"
+        )
+        overlayOperationLocalState = try cursor.getStringOptional(
+            name: "overlay_operation_local_state"
+        )
+        overlayOperationCommandType = try cursor.getStringOptional(
+            name: "overlay_operation_command_type"
+        )
+        overlayOperationExpectedRevision = try cursor.getStringOptional(
+            name: "overlay_operation_expected_revision"
+        )
     }
 
     var isExactSentinel: Bool {
@@ -736,7 +991,7 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
             && displayName == nil && lifecycle == nil && revision == nil
             && detailId == nil && detailAccountId == nil && notes == nil
             && createdAtMilliseconds == nil && updatedAtMilliseconds == nil
-            && hasNoChecklistOrItem
+            && hasNoChecklistOrItem && hasNoChecklistRevisionOverlay
     }
     var hasNoChecklistOrItem: Bool {
         checklistRowId == nil && checklistAccountId == nil && checklistSpaceId == nil
@@ -747,6 +1002,21 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
             && itemChecklistId == nil && itemId == nil && itemText == nil
             && itemIsChecked == nil && itemOrder == nil
     }
+    var hasNoChecklistRevisionOverlay: Bool {
+        overlayOperationId == nil && overlayAccountId == nil
+            && overlayActorPrincipalId == nil && overlaySpaceId == nil
+            && overlayFingerprint == nil && overlayExpectedRevision == nil
+            && overlayProjectedRevision == nil && overlayCollectionJSON == nil
+            && overlayAcceptedAtMilliseconds == nil
+            && overlayOperationAccountId == nil
+            && overlayOperationActorPrincipalId == nil
+            && overlayOperationContractVersion == nil
+            && overlayOperationFingerprint == nil
+            && overlayOperationSubjectId == nil
+            && overlayOperationLocalState == nil
+            && overlayOperationCommandType == nil
+            && overlayOperationExpectedRevision == nil
+    }
     func sameParent(as other: Self) -> Bool {
         spaceId == other.spaceId && accountId == other.accountId && scopeKind == other.scopeKind
             && projectId == other.projectId && displayName == other.displayName
@@ -754,6 +1024,108 @@ struct SpaceCoreDetailsPowerSyncRow: Equatable, Sendable {
             && detailId == other.detailId && detailAccountId == other.detailAccountId
             && notes == other.notes && createdAtMilliseconds == other.createdAtMilliseconds
             && updatedAtMilliseconds == other.updatedAtMilliseconds
+            && overlayOperationId == other.overlayOperationId
+            && overlayAccountId == other.overlayAccountId
+            && overlayActorPrincipalId == other.overlayActorPrincipalId
+            && overlaySpaceId == other.overlaySpaceId
+            && overlayFingerprint == other.overlayFingerprint
+            && overlayExpectedRevision == other.overlayExpectedRevision
+            && overlayProjectedRevision == other.overlayProjectedRevision
+            && overlayCollectionJSON == other.overlayCollectionJSON
+            && overlayAcceptedAtMilliseconds == other.overlayAcceptedAtMilliseconds
+            && overlayOperationAccountId == other.overlayOperationAccountId
+            && overlayOperationActorPrincipalId
+                == other.overlayOperationActorPrincipalId
+            && overlayOperationContractVersion
+                == other.overlayOperationContractVersion
+            && overlayOperationFingerprint == other.overlayOperationFingerprint
+            && overlayOperationSubjectId == other.overlayOperationSubjectId
+            && overlayOperationLocalState == other.overlayOperationLocalState
+            && overlayOperationCommandType == other.overlayOperationCommandType
+            && overlayOperationExpectedRevision
+                == other.overlayOperationExpectedRevision
+    }
+
+    fileprivate func checklistRevisionOverlay(
+        accountId expectedAccountId: String,
+        spaceId expectedSpaceId: String
+    ) throws -> SpaceChecklistRevisionOverlayProjection? {
+        if hasNoChecklistRevisionOverlay { return nil }
+        guard let overlayOperationId,
+              let overlayAccountId,
+              let overlayActorPrincipalId,
+              let overlaySpaceId,
+              let overlayFingerprint,
+              let overlayExpectedRevision,
+              let overlayProjectedRevision,
+              let overlayCollectionJSON,
+              let overlayAcceptedAtMilliseconds,
+              let overlayOperationAccountId,
+              let overlayOperationActorPrincipalId,
+              let overlayOperationContractVersion,
+              let overlayOperationFingerprint,
+              let overlayOperationSubjectId,
+              let overlayOperationLocalState,
+              let overlayOperationCommandType,
+              let overlayOperationExpectedRevision,
+              overlayAccountId == expectedAccountId,
+              overlaySpaceId == expectedSpaceId,
+              overlayOperationAccountId == overlayAccountId,
+              overlayOperationActorPrincipalId == overlayActorPrincipalId,
+              overlayOperationFingerprint == overlayFingerprint,
+              overlayOperationSubjectId == overlaySpaceId,
+              overlayOperationCommandType == "revise_space_checklists",
+              overlayOperationExpectedRevision == overlayExpectedRevision,
+              ["queued", "applying", "applied"].contains(
+                  overlayOperationLocalState
+              ),
+              let fingerprint = try? OperationFingerprint(
+                  validating: overlayFingerprint
+              ),
+              let operationId = try? OperationID(validating: overlayOperationId),
+              let accountId = try? AccountID(validating: overlayAccountId),
+              let actorPrincipalId = try? PrincipalID(validating: overlayActorPrincipalId),
+              let contractVersion = try? OperationContractVersion(
+                  validating: overlayOperationContractVersion
+              ),
+              let spaceId = try? SpaceID(validating: overlaySpaceId),
+              let localState = LocalOperationState(rawValue: overlayOperationLocalState),
+              let expectedRevision = UInt64(overlayExpectedRevision),
+              expectedRevision > 0,
+              expectedRevision < UInt64(Int64.max),
+              String(expectedRevision) == overlayExpectedRevision,
+              overlayProjectedRevision == Int64(expectedRevision) + 1,
+              overlayAcceptedAtMilliseconds >= 0,
+              SpaceChecklistRevisionPowerSyncStore.date(
+                  overlayAcceptedAtMilliseconds
+              ).timeIntervalSinceReferenceDate.isFinite,
+              let collectionData = overlayCollectionJSON.data(using: .utf8),
+              let collection = try? OperationContractCodec.decode(
+                  SpaceChecklistCollection.self,
+                  from: collectionData
+              ),
+              (try? OperationContractCodec.encode(collection)) == collectionData,
+              SpaceChecklistRevisionOperationIdentity.isValid(
+                  operationId,
+                  accountId: accountId
+              ) else {
+            throw SpaceCoreDetailsPowerSyncFailure.malformedSpaceRow
+        }
+        return SpaceChecklistRevisionOverlayProjection(
+            operationId: operationId,
+            accountId: accountId,
+            actorPrincipalId: actorPrincipalId,
+            contractVersion: contractVersion,
+            fingerprint: fingerprint,
+            spaceId: spaceId,
+            expectedRevision: expectedRevision,
+            projectedRevision: UInt64(overlayProjectedRevision),
+            collection: collection,
+            acceptedAt: SpaceChecklistRevisionPowerSyncStore.date(
+                overlayAcceptedAtMilliseconds
+            ),
+            localState: localState
+        )
     }
 }
 

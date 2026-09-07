@@ -259,7 +259,8 @@ public struct SpaceChecklistEditingPresentation: Codable, Equatable, Sendable {
         case .snapshot(let snapshot):
             if snapshot.local.quality == .ready,
                snapshot.local.isCompleteForQuery,
-               snapshot.local.rows.count == 1 {
+               snapshot.local.rows.count == 1,
+               snapshot.row?.lifecycle == .active {
                 .editableCurrent
             } else if snapshot.isAuthoritativeAbsence {
                 .authoritativeAbsence
@@ -276,7 +277,8 @@ public struct SpaceChecklistEditingPresentation: Codable, Equatable, Sendable {
                 if let cached,
                    cached.local.quality == .ready,
                    cached.local.isCompleteForQuery,
-                   cached.local.rows.count == 1 {
+                   cached.local.rows.count == 1,
+                   cached.row?.lifecycle == .active {
                     .editableStale
                 } else {
                     .incomplete(cached?.local.quality.readiness ?? .loading)
@@ -288,11 +290,13 @@ public struct SpaceChecklistEditingPresentation: Codable, Equatable, Sendable {
     fileprivate static func admittedRow(
         from state: SpaceCoreDetailsUpdateState
     ) -> SpaceCoreDetailsSnapshot? {
+        let row: SpaceCoreDetailsSnapshot?
         switch state {
-        case .snapshot(let snapshot): snapshot.row
-        case .failed(.retryable, let cached): cached?.row
-        case .waiting, .failed: nil
+        case .snapshot(let snapshot): row = snapshot.row
+        case .failed(.retryable, let cached): row = cached?.row
+        case .waiting, .failed: row = nil
         }
+        return row?.lifecycle == .active ? row : nil
     }
 
     fileprivate static func semanticFingerprint(
@@ -1031,19 +1035,40 @@ private struct StrictSpaceCoreDetailsLocalSnapshot: Decodable {
     let value: SpaceCoreDetailsLocalSnapshot
 
     init(from decoder: Decoder) throws {
-        try SpaceChecklistEditingCoding.requireExactKeys(
-            decoder,
-            allowed: ["request", "local"],
-            failure: .invalidEncodedPresentation
+        let unbounded = try decoder.container(
+            keyedBy: SpaceChecklistEditingCoding.AnyCodingKey.self
         )
+        let keys = Set(unbounded.allKeys.map(\.stringValue))
+        let baseKeys: Set<String> = ["request", "local"]
+        let projectionKeys = baseKeys.union(["checklistRevisionProjection"])
+        guard keys == baseKeys || keys == projectionKeys else {
+            throw SpaceChecklistEditingFailure.invalidEncodedPresentation
+        }
         let container = try decoder.container(keyedBy: Keys.self)
+        let projection: SpaceChecklistRevisionLocalProjection?
+        if keys.contains(Keys.checklistRevisionProjection.rawValue) {
+            guard try !container.decodeNil(forKey: .checklistRevisionProjection) else {
+                throw SpaceChecklistEditingFailure.invalidEncodedPresentation
+            }
+            projection = try container.decode(
+                SpaceChecklistRevisionLocalProjection.self,
+                forKey: .checklistRevisionProjection
+            )
+        } else {
+            projection = nil
+        }
         value = try SpaceCoreDetailsLocalSnapshot(
             request: container.decode(StrictSpaceCoreDetailsRequest.self, forKey: .request).value,
-            local: container.decode(StrictSpaceCoreLocalList.self, forKey: .local).value
+            local: container.decode(StrictSpaceCoreLocalList.self, forKey: .local).value,
+            checklistRevisionProjection: projection
         )
     }
 
-    private enum Keys: String, CodingKey { case request, local }
+    private enum Keys: String, CodingKey {
+        case request
+        case local
+        case checklistRevisionProjection
+    }
 }
 
 private struct StrictSpaceCoreLocalList: Decodable {

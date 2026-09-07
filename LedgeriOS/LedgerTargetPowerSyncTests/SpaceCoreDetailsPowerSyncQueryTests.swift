@@ -603,7 +603,24 @@ private final class EncryptedSpaceDetailsReader:
                item.space_id AS item_space_id,
                item.checklist_id AS item_checklist_id, item.item_id,
                item.item_text, item.is_checked,
-               item.presentation_order AS item_order
+               item.presentation_order AS item_order,
+               NULL AS overlay_operation_id,
+               NULL AS overlay_account_id,
+               NULL AS overlay_actor_principal_id,
+               NULL AS overlay_space_id,
+               NULL AS overlay_fingerprint,
+               NULL AS overlay_expected_revision,
+               NULL AS overlay_projected_revision,
+               NULL AS overlay_collection_json,
+               NULL AS overlay_accepted_at_ms,
+               NULL AS overlay_operation_account_id,
+               NULL AS overlay_operation_actor_principal_id,
+               NULL AS overlay_operation_contract_version,
+               NULL AS overlay_operation_fingerprint,
+               NULL AS overlay_operation_subject_id,
+               NULL AS overlay_operation_local_state,
+               NULL AS overlay_operation_command_type,
+               NULL AS overlay_operation_expected_revision
         FROM scope
         LEFT JOIN selected_space AS space ON scope.is_active
         LEFT JOIN spike_space_core_details AS detail

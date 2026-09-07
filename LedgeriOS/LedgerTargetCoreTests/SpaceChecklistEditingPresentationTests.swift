@@ -19,10 +19,10 @@ struct SpaceChecklistEditingPresentationTests {
         ))
 
         #expect(current.state == .editableCurrent)
-        #expect(archivedInventory.state == .editableCurrent)
+        #expect(archivedInventory.state == .incomplete(.ready))
         #expect(stale.state == .editableStale)
         #expect(try current.prepare().draft.collection() == project.checklists)
-        #expect(try archivedInventory.prepare().draft.collection() == inventory.checklists)
+        #expect(Self.failure { try archivedInventory.prepare() } == .sourceNotEditable)
         #expect(try stale.prepare().draft.collection() == project.checklists)
 
         let noneditable: [(SpaceCoreDetailsUpdateState, SpaceChecklistEditingPresentationState)] = try [
@@ -917,10 +917,10 @@ struct SpaceChecklistEditingPresentationTests {
             Self.update(itemOrder: 40),
             Self.update(empty: true)
         ]
-        for conflict in conflicts {
+        for (index, conflict) in conflicts.enumerated() {
             #expect(Self.failure {
                 try Self.command(draft, validating: conflict)
-            } == .semanticBaseMismatch)
+            } == (index == 4 ? .sourceNotEditable : .semanticBaseMismatch))
         }
         let unsafe = try [
             Self.update(state: .partial),

@@ -62,6 +62,8 @@ public final class SpaceCoreDetailsStagingExercise {
     public private(set) var presentation: SpaceCoreDetailsStagingPresentation =
         .waiting(.notRequested)
     public private(set) var selectedSpaceId: SpaceID?
+    public private(set) var currentUpdate: SpaceCoreDetailsUpdate?
+    public private(set) var evidenceSequence: UInt64 = 0
 
     public var row: SpaceCoreDetailsSnapshot? { presentation.row }
     public var status: String { presentation.status }
@@ -102,6 +104,8 @@ public final class SpaceCoreDetailsStagingExercise {
         let oldTask = observationTask
         observationTask = nil
         selectedSpaceId = spaceId
+        currentUpdate = nil
+        evidenceSequence &+= 1
         presentation = .waiting(.loading)
         oldTask?.cancel()
         await oldTask?.value
@@ -132,6 +136,8 @@ public final class SpaceCoreDetailsStagingExercise {
         let oldTask = observationTask
         observationTask = nil
         selectedSpaceId = nil
+        currentUpdate = nil
+        evidenceSequence &+= 1
         presentation = .waiting(.notRequested)
         oldTask?.cancel()
         await oldTask?.value
@@ -142,6 +148,8 @@ public final class SpaceCoreDetailsStagingExercise {
         let oldTask = observationTask
         observationTask = nil
         selectedSpaceId = nil
+        currentUpdate = nil
+        evidenceSequence &+= 1
         presentation = .waiting(.blocked)
         oldTask?.cancel()
         await oldTask?.value
@@ -158,6 +166,8 @@ public final class SpaceCoreDetailsStagingExercise {
                 guard self.generation == generation,
                       selectedSpaceId == request.spaceId else { return }
                 let validated = try update.validating(request: request)
+                currentUpdate = validated
+                evidenceSequence &+= 1
                 presentation = try Self.project(validated.state)
             }
             guard !Task.isCancelled,
@@ -213,6 +223,8 @@ public final class SpaceCoreDetailsStagingExercise {
     }
 
     private func failClosed(_ diagnosticCode: String) {
+        currentUpdate = nil
+        evidenceSequence &+= 1
         presentation = .failure(SpaceCoreDetailsStagingFailure(
             diagnosticCode: diagnosticCode,
             cached: nil

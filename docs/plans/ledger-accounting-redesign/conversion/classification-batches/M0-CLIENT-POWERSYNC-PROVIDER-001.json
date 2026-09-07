@@ -88,7 +88,7 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
+      "acknowledgeSourceHash": "8b2a9494b99459e7df4bcbd24b09fcc4a751fa563210e150aeeb17a7ffc54144",
       "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, the local-only Item-to-Space assignment command evidence table, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
@@ -121,7 +121,7 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "3723579f2cbe5942e58de6c77186bb12100850fec90b2353aa52226144a59d14",
+      "acknowledgeSourceHash": "a3025ddcb2b40925244c4e0b9c02e0aac4b639a98fbe40a1729b5e8274c6c194",
       "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Project-creation, archive, Space-destination and Item-assignment operation watches, and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including exact full-receipt local-byte resolution, both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
@@ -143,7 +143,7 @@
     {
       "id": "SWIFT-A9F7D22095F8",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+      "acknowledgeSourceHash": "c04167a28de8654e8ada0cef5a05390f9bdee9b5fec88750fe30924f883e5b07",
       "currentBehavior": "Dispatches one insert-only Client, Project, Project-archive or Client-archive command per PowerSync transaction, validates exact local operation/command/optimistic linkage and strict terminal evidence, calls the matching trusted handler and drains only matching applied or durable rejected results.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The concrete connector is module-internal and lifecycle-owned. Both archive families preserve dependency FIFO and validate exact overlay/terminal evidence. Credentials and command appliers are injected; no production endpoint is embedded.",

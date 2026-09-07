@@ -15,7 +15,7 @@
   "surfaces": [
     {
       "id": "SWIFT-B23F91245E50",
-      "acknowledgeSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
+      "acknowledgeSourceHash": "1452e8a7be358b192b04cd2cbbde0c7c0ee4d60c91bfeadc3c09a54e24b405fa",
       "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions, and owns a close-aware registry that cancels and joins every outer and nested observation before SQLite closes.",
       "disposition": "redesign",
       "status": "implemented",

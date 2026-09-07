@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 25,
+  "stateVersion": 26,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -18,26 +18,26 @@
   "activeWorkflow": {
     "id": "active-space-checklist-item-toggle",
     "kind": "product_ui",
-    "status": "implementation",
+    "status": "ci_verification",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-space-checklist-item-toggle.json",
     "outcome": "Toggle one represented checklist item in an active Project or Business Inventory Space with immediate optimistic progress, durable offline acceptance, deterministic replay, rejection recovery, and authoritative readback.",
     "nextActions": [
-      "Implement the trusted transactional Supabase checklist-replacement handler with explicit grants, RLS-compatible authorization, idempotency, concurrency, and negative tests.",
-      "Implement the encrypted PowerSync checklist operation, optimistic overlay, upload/result reconciliation, restart/replay, rejection, and runtime drainage.",
-      "Compose the active-only checklist toggle through the existing exact-Space detail AppModel and SwiftUI with honest pending, rejected, incomplete, empty, and archived states.",
-      "Independently review the integrated security/offline/UI diff, run one complete local gate, and verify one automatic exact-commit CI run."
+      "Commit and push the independently reviewed checklist-toggle implementation without changing the Firebase checkout or any hosted resource.",
+      "Verify the exact implementation commit through all automatic CI jobs and record its immutable run.",
+      "Keep A-003/A-004 and hosted Auth/PowerSync rehearsal blocked until the user separately authorizes hosted resources and credentials.",
+      "Select the next behavior-catalog workflow using product value, dependency readiness, and bounded implementation risk after this exact checkpoint is verified."
     ]
   },
   "progress": {
     "practicalCompletionEstimatePercent": {
-      "low": 13,
-      "center": 16,
-      "high": 19
+      "low": 14,
+      "center": 17,
+      "high": 20
     },
-    "locallyWorkingProviderWorkflows": 12,
+    "locallyWorkingProviderWorkflows": 13,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "Workflow counts measure product progress. The surface catalog is a passive completeness audit, not a completion percentage."
+    "note": "Workflow counts measure product progress. The active checklist toggle passes complete local verification and independent review but awaits exact-commit CI; the surface catalog is a passive completeness audit, not a completion percentage."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",

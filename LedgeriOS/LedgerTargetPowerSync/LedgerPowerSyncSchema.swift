@@ -24,6 +24,8 @@ public enum LedgerPowerSyncTable {
     public static let clientArchiveOverlays = "spike_client_archive_overlays"
     public static let itemSpaceAssignmentCommands = "spike_item_space_assignment_commands"
     public static let itemSpaceClearingCommands = "spike_item_space_clearing_commands"
+    public static let spaceChecklistRevisionCommands = "spike_space_checklist_revision_commands"
+    public static let spaceChecklistRevisionOverlays = "spike_space_checklist_revision_overlays"
     public static let localOperations = "spike_local_operations"
     public static let pendingWorkObservations = "spike_pending_work_observations"
     public static let operationResults = "spike_operation_results"
@@ -366,6 +368,38 @@ public enum LedgerPowerSyncSchema {
             localOnly: true
         ),
         Table(
+            name: LedgerPowerSyncTable.spaceChecklistRevisionCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .integer("client_created_at_ms"),
+                .text("space_id"), .text("expected_revision"),
+                .text("collection_json"), .text("fingerprint"),
+                .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.spaceChecklistRevisionOverlays,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("space_id"), .text("operation_id"),
+                .text("fingerprint"), .text("expected_revision"),
+                .integer("projected_revision"), .text("collection_json"),
+                .integer("accepted_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "space_checklist_revision_overlay_account_space",
+                    columns: ["account_id", "space_id"]
+                ),
+                .ascending(
+                    name: "space_checklist_revision_overlay_operation",
+                    columns: ["operation_id"]
+                )
+            ],
+            localOnly: true
+        ),
+        Table(
             name: LedgerPowerSyncTable.localOperations,
             columns: [
                 .text("account_id"), .text("actor_principal_id"),
@@ -377,7 +411,8 @@ public enum LedgerPowerSyncSchema {
                 .text("terminal_result_code"), .text("terminal_error_code"),
                 .text("terminal_envelope_sha256"), .text("terminal_request_sha256"),
                 .integer("terminal_server_received_at_ms"),
-                .integer("terminal_completed_at_ms")
+                .integer("terminal_completed_at_ms"),
+                .integer("checklist_readback_revision")
             ],
             indexes: [
                 .ascending(name: "local_operation_account", columns: ["account_id"]),

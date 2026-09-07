@@ -54,7 +54,7 @@ struct SpaceChecklistRevisionUseCaseTests {
         ] {
             let reviser = RecordingSpaceChecklistReviser(response: .matching(.queued))
             let operationID = try OperationID(validating: "operation-both-\(suffix)")
-            let receipt = try await Self.useCase(reviser).execute(
+            let result = try await Self.useCase(reviser).execute(
                 draft: draft,
                 currentUpdate: update,
                 operationId: operationID,
@@ -65,10 +65,14 @@ struct SpaceChecklistRevisionUseCaseTests {
                 capturedAt: Self.t5
             )
 
-            #expect(receipt == OperationReceipt(operationId: operationID, localState: .queued))
+            #expect(result.receipt == OperationReceipt(
+                operationId: operationID,
+                localState: .queued
+            ))
             let commands = await reviser.recordedCommands()
             #expect(commands.count == 1)
             let command = try #require(commands.first)
+            #expect(result.command == command)
             #expect(command.draft.accountId.rawValue == "account-one")
             #expect(command.draft.spaceId.rawValue == "space-one")
             #expect(command.draft.expectedRevision == ExpectedSpaceRevision(71))
@@ -140,9 +144,8 @@ struct SpaceChecklistRevisionUseCaseTests {
             ProjectID(validating: "project-one")
         )
         for (scope, lifecycle, semanticsSuffix) in [
-            (projectScope, DirectoryLifecycleState.archived, "archived-project"),
-            (.businessInventory, .active, "active-inventory"),
-            (.businessInventory, .archived, "archived-inventory")
+            (projectScope, DirectoryLifecycleState.active, "active-project"),
+            (.businessInventory, .active, "active-inventory")
         ] {
             for (mode, modeSuffix) in [
                 (UpdateMode.current, "current"),
@@ -218,7 +221,7 @@ struct SpaceChecklistRevisionUseCaseTests {
                 )
                 Issue.record("Changed semantic base dispatched")
             } catch let failure as SpaceChecklistEditingFailure {
-                #expect(failure == .semanticBaseMismatch)
+                #expect(failure == (index == 3 ? .sourceNotEditable : .semanticBaseMismatch))
             }
             #expect(await reviser.recordedCommands().isEmpty)
         }
@@ -686,7 +689,7 @@ struct SpaceChecklistRevisionUseCaseTests {
                 validating: "space-checklist-use-case-v1"
             ),
             capturedAt: t5
-        )
+        ).receipt
     }
 
     private static func draft(

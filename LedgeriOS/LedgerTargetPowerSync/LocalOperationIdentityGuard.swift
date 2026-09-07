@@ -9,6 +9,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
     case archiveClient = "archive_client"
     case assignItemsToSpace = "assign_items_to_space"
     case clearItemSpaceAssignments = "clear_item_space_assignments"
+    case reviseSpaceChecklists = "revise_space_checklists"
 
     var insertOnlyCommandTable: String? {
         switch self {
@@ -16,6 +17,8 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
         case .createProject: LedgerPowerSyncTable.projectCommands
         case .archiveProject: LedgerPowerSyncTable.projectArchiveCommands
         case .archiveClient: LedgerPowerSyncTable.clientArchiveCommands
+        case .reviseSpaceChecklists:
+            LedgerPowerSyncTable.spaceChecklistRevisionCommands
         case .assignItemsToSpace, .clearItemSpaceAssignments: nil
         }
     }
@@ -46,6 +49,7 @@ enum LocalOperationIdentityGuard {
         LedgerPowerSyncTable.pendingProjectCategoryAllocations,
         LedgerPowerSyncTable.projectArchiveOverlays,
         LedgerPowerSyncTable.clientArchiveOverlays,
+        LedgerPowerSyncTable.spaceChecklistRevisionOverlays,
         LedgerPowerSyncTable.itemSpaceAssignmentCommands,
         LedgerPowerSyncTable.itemSpaceClearingCommands
     ]
@@ -53,7 +57,8 @@ enum LocalOperationIdentityGuard {
         LedgerPowerSyncTable.clientCommands,
         LedgerPowerSyncTable.projectCommands,
         LedgerPowerSyncTable.projectArchiveCommands,
-        LedgerPowerSyncTable.clientArchiveCommands
+        LedgerPowerSyncTable.clientArchiveCommands,
+        LedgerPowerSyncTable.spaceChecklistRevisionCommands
     ]
     static let forbiddenMutationTables = [LedgerPowerSyncTable.operationResults]
     static let acceptingProviders = [
@@ -62,7 +67,8 @@ enum LocalOperationIdentityGuard {
         "ProjectArchivePowerSyncStore",
         "ClientArchivePowerSyncStore",
         "ItemSpaceAssignmentPowerSyncStore",
-        "ItemSpaceClearingPowerSyncStore"
+        "ItemSpaceClearingPowerSyncStore",
+        "SpaceChecklistRevisionPowerSyncStore"
     ]
 
     static func inspect(
@@ -102,6 +108,12 @@ enum LocalOperationIdentityGuard {
         let clientOverlays = try transaction.getAll(sql: clientOverlaySQL, parameters: [id]) {
             try ArchiveOverlayRow(cursor: $0, subjectColumn: "client_id")
         }
+        let checklistOverlays = try transaction.getAll(
+            sql: checklistOverlaySQL,
+            parameters: [id]
+        ) {
+            try ArchiveOverlayRow(cursor: $0, subjectColumn: "space_id")
+        }
         let assignments = try transaction.getAll(sql: assignmentSQL, parameters: [id]) {
             try AssignmentRow(cursor: $0)
         }
@@ -116,7 +128,8 @@ enum LocalOperationIdentityGuard {
         let hasEvidence = !operations.isEmpty || !results.isEmpty || !crudRows.isEmpty
             || !pendingClients.isEmpty || !pendingProjects.isEmpty
             || !pendingAllocations.isEmpty || !projectOverlays.isEmpty
-            || !clientOverlays.isEmpty || !assignments.isEmpty
+            || !clientOverlays.isEmpty || !checklistOverlays.isEmpty
+            || !assignments.isEmpty
             || !clearings.isEmpty || malformedCrudClaimsID
         guard hasEvidence else { return .unclaimed }
         guard !malformedCrudClaimsID else {
@@ -136,6 +149,7 @@ enum LocalOperationIdentityGuard {
         guard commandCrud.count <= 1, results.count <= 1,
               pendingClients.count <= 1, pendingProjects.count <= 1,
               projectOverlays.count <= 1, clientOverlays.count <= 1,
+              checklistOverlays.count <= 1,
               assignments.count <= 1, clearings.count <= 1 else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
         }
@@ -195,6 +209,12 @@ enum LocalOperationIdentityGuard {
             }
             families.insert(.archiveClient)
         }
+        for row in checklistOverlays {
+            guard row.matches(operation: operation) else {
+                throw LocalOperationIdentityGuardFailure.malformedEvidence
+            }
+            families.insert(.reviseSpaceChecklists)
+        }
         for row in assignments {
             guard row.matches(operation: operation) else {
                 throw LocalOperationIdentityGuardFailure.malformedEvidence
@@ -214,7 +234,9 @@ enum LocalOperationIdentityGuard {
                 results: results, pendingClients: pendingClients,
                 pendingProjects: pendingProjects, pendingAllocations: pendingAllocations,
                 projectOverlays: projectOverlays,
-                clientOverlays: clientOverlays, assignments: assignments,
+                clientOverlays: clientOverlays,
+                checklistOverlays: checklistOverlays,
+                assignments: assignments,
                 clearings: clearings
               ) else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
@@ -236,9 +258,14 @@ enum LocalOperationIdentityGuard {
         pendingAllocations: [PendingAllocationRow],
         projectOverlays: [ArchiveOverlayRow],
         clientOverlays: [ArchiveOverlayRow],
+        checklistOverlays: [ArchiveOverlayRow],
         assignments: [AssignmentRow],
         clearings: [ClearingRow]
     ) -> Bool {
+        guard family == .reviseSpaceChecklists
+                || operation.checklistReadbackRevision == nil else {
+            return false
+        }
         let commandCount = commandCrud.filter { $0.table == family.insertOnlyCommandTable }.count
         switch operation.state {
         case "queued", "applying":
@@ -246,7 +273,8 @@ enum LocalOperationIdentityGuard {
             switch family {
             case .createProject:
                 resultCountIsValid = results.count <= 1
-            case .createClient, .archiveProject, .archiveClient, .assignItemsToSpace,
+            case .createClient, .archiveProject, .archiveClient,
+                 .reviseSpaceChecklists, .assignItemsToSpace,
                  .clearItemSpaceAssignments:
                 resultCountIsValid = results.isEmpty
             }
@@ -258,32 +286,45 @@ enum LocalOperationIdentityGuard {
                     && pendingClients[0].clientId == operation.subjectId
                     && pendingProjects.isEmpty && pendingAllocations.isEmpty
                     && projectOverlays.isEmpty
-                    && clientOverlays.isEmpty && assignments.isEmpty
+                    && clientOverlays.isEmpty && checklistOverlays.isEmpty
+                    && assignments.isEmpty
                     && clearings.isEmpty
             case .createProject:
                 return commandCount == 1 && pendingProjects.count == 1
                     && projectOverlays.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty && clearings.isEmpty
+                    && checklistOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .archiveProject:
                 return commandCount == 1 && projectOverlays.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty && clearings.isEmpty
+                    && checklistOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .archiveClient:
                 return commandCount == 1 && clientOverlays.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && assignments.isEmpty && clearings.isEmpty
+                    && checklistOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
+            case .reviseSpaceChecklists:
+                return commandCount == 1 && checklistOverlays.count == 1
+                    && operation.checklistReadbackRevision == nil
+                    && pendingClients.isEmpty && pendingProjects.isEmpty
+                    && pendingAllocations.isEmpty && projectOverlays.isEmpty
+                    && clientOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .assignItemsToSpace:
                 return commandCrud.isEmpty && assignments.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && clientOverlays.isEmpty && clearings.isEmpty
+                    && clientOverlays.isEmpty && checklistOverlays.isEmpty
+                    && clearings.isEmpty
             case .clearItemSpaceAssignments:
                 return commandCrud.isEmpty && clearings.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && clientOverlays.isEmpty && assignments.isEmpty
+                    && clientOverlays.isEmpty && checklistOverlays.isEmpty
+                    && assignments.isEmpty
             }
         case "applied", "rejected", "superseded", "resolved":
             switch family {
@@ -292,18 +333,41 @@ enum LocalOperationIdentityGuard {
                       operation.commandType == family.rawValue,
                       operation.hasNoTerminalEvidence else { return false }
                 return commandCount <= 1 && projectOverlays.isEmpty
-                    && clientOverlays.isEmpty && assignments.isEmpty
+                    && clientOverlays.isEmpty && checklistOverlays.isEmpty
+                    && assignments.isEmpty
                     && clearings.isEmpty
             case .archiveProject:
                 return operation.hasCompleteTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty && clearings.isEmpty
+                    && checklistOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .archiveClient:
                 return operation.hasCompleteTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && assignments.isEmpty && clearings.isEmpty
+                    && checklistOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
+            case .reviseSpaceChecklists:
+                let expectedReadbackRevision = operation.commandExpectedRevision
+                    .flatMap(Int64.init)
+                    .flatMap { $0 < Int64.max ? $0 + 1 : nil }
+                let checklistEvidenceIsValid: Bool
+                if operation.state == "applied", checklistOverlays.count == 1 {
+                    checklistEvidenceIsValid = operation.checklistReadbackRevision == nil
+                } else if operation.state == "applied", checklistOverlays.isEmpty {
+                    checklistEvidenceIsValid = operation.checklistReadbackRevision
+                        == expectedReadbackRevision
+                } else {
+                    checklistEvidenceIsValid = checklistOverlays.isEmpty
+                        && operation.checklistReadbackRevision == nil
+                }
+                return operation.hasCompleteTerminalEvidence && commandCount <= 1
+                    && pendingClients.isEmpty && pendingProjects.isEmpty
+                    && pendingAllocations.isEmpty && projectOverlays.isEmpty
+                    && clientOverlays.isEmpty && checklistEvidenceIsValid
+                    && assignments.isEmpty
+                    && clearings.isEmpty
             case .assignItemsToSpace, .clearItemSpaceAssignments:
                 return false
             }
@@ -342,10 +406,12 @@ enum LocalOperationIdentityGuard {
         let accountId: String; let principalId: String; let contractVersion: String
         let fingerprint: String; let subjectId: String; let state: String
         let acceptedAt: Int64; let updatedAt: Int64; let commandType: String?
+        let commandExpectedRevision: String?
         let envelopeJSON: String?; let terminalPhase: String?
         let terminalResultCode: String?; let terminalErrorCode: String?
         let terminalEnvelopeSHA256: String?; let terminalRequestSHA256: String?
         let terminalServerReceivedAt: Int64?; let terminalCompletedAt: Int64?
+        let checklistReadbackRevision: Int64?
         init(cursor: any SqlCursor) throws {
             accountId = try cursor.getString(name: "account_id")
             principalId = try cursor.getString(name: "actor_principal_id")
@@ -356,6 +422,9 @@ enum LocalOperationIdentityGuard {
             acceptedAt = try cursor.getInt64(name: "accepted_at_ms")
             updatedAt = try cursor.getInt64(name: "updated_at_ms")
             commandType = try cursor.getStringOptional(name: "command_type")
+            commandExpectedRevision = try cursor.getStringOptional(
+                name: "command_expected_revision"
+            )
             envelopeJSON = try cursor.getStringOptional(name: "command_envelope_json")
             terminalPhase = try cursor.getStringOptional(name: "terminal_phase")
             terminalResultCode = try cursor.getStringOptional(name: "terminal_result_code")
@@ -364,6 +433,9 @@ enum LocalOperationIdentityGuard {
             terminalRequestSHA256 = try cursor.getStringOptional(name: "terminal_request_sha256")
             terminalServerReceivedAt = try cursor.getInt64Optional(name: "terminal_server_received_at_ms")
             terminalCompletedAt = try cursor.getInt64Optional(name: "terminal_completed_at_ms")
+            checklistReadbackRevision = try cursor.getInt64Optional(
+                name: "checklist_readback_revision"
+            )
         }
         var isStructurallyValid: Bool {
             let ownershipShape = commandType == nil
@@ -372,6 +444,7 @@ enum LocalOperationIdentityGuard {
             return acceptedAt >= 0 && updatedAt >= 0 && !accountId.isEmpty
                 && !principalId.isEmpty && !contractVersion.isEmpty
                 && !fingerprint.isEmpty && !subjectId.isEmpty && ownershipShape
+                && (checklistReadbackRevision.map { $0 > 0 } ?? true)
         }
         var hasNoTerminalEvidence: Bool {
             terminalPhase == nil && terminalResultCode == nil && terminalErrorCode == nil
@@ -611,9 +684,11 @@ enum LocalOperationIdentityGuard {
                COALESCE(local_state, '') AS local_state,
                COALESCE(accepted_at_ms, -1) AS accepted_at_ms,
                COALESCE(updated_at_ms, -1) AS updated_at_ms, command_type,
+               command_expected_revision,
                command_envelope_json, terminal_phase, terminal_result_code,
                terminal_error_code, terminal_envelope_sha256, terminal_request_sha256,
-               terminal_server_received_at_ms, terminal_completed_at_ms
+               terminal_server_received_at_ms, terminal_completed_at_ms,
+               checklist_readback_revision
         FROM \(LedgerPowerSyncTable.localOperations) WHERE id = ?
         """
     private static let resultSQL = """
@@ -644,6 +719,8 @@ enum LocalOperationIdentityGuard {
                    THEN json_extract(data, '$.data.client_id')
                  WHEN '\(LedgerPowerSyncTable.clientArchiveCommands)'
                    THEN json_extract(data, '$.data.client_id')
+                 WHEN '\(LedgerPowerSyncTable.spaceChecklistRevisionCommands)'
+                   THEN json_extract(data, '$.data.space_id')
                  ELSE json_extract(data, '$.data.project_id')
                END AS subject_id
         FROM ps_crud
@@ -654,6 +731,7 @@ enum LocalOperationIdentityGuard {
               '\(LedgerPowerSyncTable.projectCommands)',
               '\(LedgerPowerSyncTable.projectArchiveCommands)',
               '\(LedgerPowerSyncTable.clientArchiveCommands)',
+              '\(LedgerPowerSyncTable.spaceChecklistRevisionCommands)',
               '\(LedgerPowerSyncTable.operationResults)'
             )
             OR (
@@ -704,6 +782,15 @@ enum LocalOperationIdentityGuard {
                COALESCE(operation_id, '') AS operation_id,
                COALESCE(fingerprint, '') AS fingerprint
         FROM \(LedgerPowerSyncTable.clientArchiveOverlays) WHERE operation_id = ?
+        """
+    private static let checklistOverlaySQL = """
+        SELECT COALESCE(account_id, '') AS account_id,
+               COALESCE(actor_principal_id, '') AS actor_principal_id,
+               COALESCE(space_id, '') AS space_id,
+               COALESCE(operation_id, '') AS operation_id,
+               COALESCE(fingerprint, '') AS fingerprint
+        FROM \(LedgerPowerSyncTable.spaceChecklistRevisionOverlays)
+        WHERE operation_id = ?
         """
     private static let assignmentSQL = """
         SELECT COALESCE(account_id, '') AS account_id,

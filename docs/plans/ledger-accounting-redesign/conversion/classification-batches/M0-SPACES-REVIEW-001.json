@@ -1543,7 +1543,7 @@
     {
       "id": "SWIFT-02BF0EA3C433",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
+      "acknowledgeSourceHash": "44f29f13eef8dd88a4cd5e992428925a7e98a7e39f163ea44ba7527463ec3369",
       "currentBehavior": "Defines the implemented provider-free request, validated core Space snapshot, explicit local readiness/absence evidence, bounded update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
       "status": "verified",
@@ -1638,7 +1638,7 @@
     {
       "id": "SWIFT-A9BCA70B7F9C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
+      "acknowledgeSourceHash": "700fcf1f79d8f23475cd2ff44afc20a590f0f8ab886a1d79421a93be8a2943bf",
       "currentBehavior": "Implements provider-free Space checklist update-state projection, raw restart-safe stable-identity editing, canonical evidence fingerprints and semantic-base-revalidated derivation of the verified complete-replacement checklist command.",
       "disposition": "redesign",
       "status": "verified",
@@ -1685,7 +1685,7 @@
     {
       "id": "TEST-94F32F5E9219",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
+      "acknowledgeSourceHash": "bb3b9c9b46b0f67e9a89a77a40ce61b1ad71c3c487bac9f85cea8db5bde641d1",
       "currentBehavior": "Provides six focused Space checklist editing presentation tests covering the complete admission matrix, stable raw edits, order-token behavior, exact command forwarding, semantic refresh/conflict, recursive strict restart, fingerprints, diagnostics and scope exclusions.",
       "disposition": "redesign",
       "status": "verified",
@@ -1915,7 +1915,7 @@
     {
       "id": "SWIFT-1FDB27E18B95",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
+      "acknowledgeSourceHash": "97a0aa7dc43c64cbedc5b5410ac8cf0c961faa97c44e9ed99b2f8464924be1c9",
       "currentBehavior": "Implements provider-free Space checklist edit submission through the verified editing and revision-operation contracts.",
       "disposition": "redesign",
       "status": "verified",
@@ -1961,7 +1961,7 @@
     {
       "id": "TEST-674E6F23E5BE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
+      "acknowledgeSourceHash": "24dc4d4fcc42303bc1690d431ec97336355a738f2de2b458ec36062e01422650",
       "currentBehavior": "Implements executable reciprocal Space checklist revision use-case verification.",
       "disposition": "redesign",
       "status": "verified",

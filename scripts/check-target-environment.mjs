@@ -596,6 +596,7 @@ if (
     "pendingUploadCount",
     "pendingWorkSummary",
     "resolveLocalAttachmentBytes",
+    "reviseChecklists",
     "watchBudgetCategories",
     "watchClient",
     "watchClientArchiveOperation",
@@ -608,6 +609,7 @@ if (
     "watchProjectNotes",
     "watchProjects",
     "watchSpaceAssignmentDestinations",
+    "watchSpaceChecklistRevisionOperation",
     "watchSpaceCoreDetails",
     "watchTransferDestinations",
   ];
@@ -1269,6 +1271,7 @@ if (
       "LedgerPowerSyncTable.spaceCoreDetails",
       "LedgerPowerSyncTable.spaceChecklists",
       "LedgerPowerSyncTable.spaceChecklistItems",
+      "LedgerPowerSyncTable.spaceChecklistRevisionOverlays",
       "cancelAndDrainWatches()",
     ]) {
       if (!provider.includes(required)) {
@@ -1295,17 +1298,27 @@ if (
     if (!adapter.includes("runtime.watchSpaceCoreDetails(spaceId: spaceId)")) {
       fail("target_space_core_details_adapter_incomplete", relative(spaceCoreDetailsFiles.adapter));
     }
+    for (const required of [
+      "SpaceChecklistItemToggleStagingRuntimeAdapter",
+      "runtime.reviseChecklists($0)",
+      "runtime.watchSpaceChecklistRevisionOperation($0)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_space_checklist_toggle_adapter_incomplete", required);
+      }
+    }
     if (/PowerSync|SQL|Supabase|Firebase|Firestore|credential|authorization/i.test(model)) {
       fail("target_space_core_details_model_boundary_escape", relative(spaceCoreDetailsFiles.model));
     }
     if (/PowerSyncDatabaseProtocol|\bSQL\b|Supabase|Firebase|Firestore|credential|authorization/i.test(adapter)) {
       fail("target_space_core_details_adapter_boundary_escape", relative(spaceCoreDetailsFiles.adapter));
     }
-    if (/\bButton\s*\(|SpaceDetailView|MCP|Firebase|Firestore|Supabase|PowerSyncDatabaseProtocol|\bSQL\b/.test(view)) {
+    if (/SpaceDetailView|MCP|Firebase|Firestore|Supabase|PowerSyncDatabaseProtocol|\bSQL\b|\bTextField\s*\(|\bDelete\b|\bReorder\b/.test(view)) {
       fail("target_space_core_details_view_scope_escape", relative(spaceCoreDetailsFiles.view));
     }
     if (
-      !view.includes("if model.progressCountsAreAuthoritative") ||
+      !view.includes("checklistToggle.admission == .ready") ||
+      !view.includes("checklistToggle.admission == .retryableStale") ||
       !view.includes("target-space-core-details-progress-incomplete")
     ) {
       fail(
@@ -1335,8 +1348,11 @@ if (
       fail("target_space_core_details_lifecycle_filter", "exact detail cannot exclude archived Space or Project evidence");
     }
     for (const required of [
-      "SpaceCoreDetailsStagingExerciseView(model: model.spaceDetails)",
+      "SpaceCoreDetailsStagingExerciseView(",
+      "checklistToggle: model.spaceChecklistToggle",
       "SpaceCoreDetailsStagingRuntimeAdapter(runtime)",
+      "SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)",
+      "await spaceChecklistToggle.stop()",
       "syntheticSpaceId",
     ]) {
       if (!stagingAppSource.includes(required)) {
@@ -2360,6 +2376,7 @@ const localOperationAcceptingStores = [
   ["ClientArchivePowerSyncStore", "ClientArchivePowerSyncStore.swift", "archiveClient"],
   ["ItemSpaceAssignmentPowerSyncStore", "ItemSpaceAssignmentPowerSyncStore.swift", "assignItemsToSpace"],
   ["ItemSpaceClearingPowerSyncStore", "ItemSpaceClearingPowerSyncStore.swift", "clearItemSpaceAssignments"],
+  ["SpaceChecklistRevisionPowerSyncStore", "SpaceChecklistRevisionPowerSyncStore.swift", "reviseSpaceChecklists"],
 ];
 if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
   fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
@@ -2375,6 +2392,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     'casearchiveClient="archive_client"',
     'caseassignItemsToSpace="assign_items_to_space"',
     'caseclearItemSpaceAssignments="clear_item_space_assignments"',
+    'casereviseSpaceChecklists="revise_space_checklists"',
   ];
   for (const familyCase of familyCases) {
     if (!guardCompact.includes(familyCase)) {
@@ -2387,8 +2405,8 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   const expectedRelations = [
     "localOperations", "operationResults", "pendingClients", "pendingProjects",
     "pendingProjectCategoryAllocations", "projectArchiveOverlays",
-    "clientArchiveOverlays", "itemSpaceAssignmentCommands",
-    "itemSpaceClearingCommands",
+    "clientArchiveOverlays", "spaceChecklistRevisionOverlays",
+    "itemSpaceAssignmentCommands", "itemSpaceClearingCommands",
   ];
   const registeredRelations = [
     ...relationBlock.matchAll(/LedgerPowerSyncTable\.([A-Za-z]+)/g),
@@ -2398,6 +2416,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
+    "spaceChecklistRevisionCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,
@@ -2782,7 +2801,7 @@ if (
     ],
     [
       path.join(powerSyncRoot, "LedgerPowerSyncUploadConnector.swift"),
-      "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+      "96de991c6bb4da0becbfe2c6aeab2cf5ddb855a1eb98e0f342e6ecad7a6222cc",
     ],
     [
       path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),
@@ -2837,7 +2856,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,Sendable",
     )
   ) {
     fail(
@@ -3149,7 +3168,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,Sendable",
     )
   ) {
     fail(
@@ -3736,5 +3755,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  "target-environment: isolated LedgerTargetCore, reviewed PowerSync/encrypted-SQLite provider lane, separate migration-control/test-support/composition tooling, and local-spike app graph validated; fixed staging identity and no runtime toggle, tooling app link, premature composition link, source-provider import, or Firebase-project contamination detected\n",
+  "target-environment: isolated LedgerTargetCore, reviewed PowerSync/encrypted-SQLite provider lane, separate migration-control/test-support/composition tooling, and local-spike app graph validated; fixed staging identity and no unauthorized environment toggle, tooling app link, premature composition link, source-provider import, or Firebase-project contamination detected\n",
 );

@@ -14,7 +14,7 @@
   "surfaces": [
     {
       "id": "SWIFT-35D653A39618",
-      "acknowledgeSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
+      "acknowledgeSourceHash": "d1acb5a6034c578ad03cb86f04afcaf71b140166827ba029f54d922bc68e0d76",
       "currentBehavior": "Implements generic Account-bound operation identity construction and validation for Client archive while preserving the existing Project archive operation bytes.",
       "disposition": "redesign",
       "status": "implemented",

@@ -15,3 +15,16 @@ struct SpaceCoreDetailsStagingRuntimeAdapter: SpaceCoreDetailsStagingRuntime {
         runtime.watchSpaceCoreDetails(spaceId: spaceId)
     }
 }
+
+enum SpaceChecklistItemToggleStagingRuntimeAdapter {
+    static func adapt(
+        _ runtime: LedgerOfflineClientRuntime
+    ) -> SpaceChecklistItemToggleStagingRuntime {
+        SpaceChecklistItemToggleStagingRuntime(
+            reviseChecklists: { try await runtime.reviseChecklists($0) },
+            watchOperation: {
+                runtime.watchSpaceChecklistRevisionOperation($0)
+            }
+        )
+    }
+}

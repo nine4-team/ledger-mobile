@@ -108,6 +108,19 @@ protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
 
 extension ProjectArchivePowerSyncStore: AccountWorkspaceProjectArchiveStoring {}
 
+protocol AccountWorkspaceSpaceChecklistRevisionStoring:
+    SpaceChecklistRevising, Sendable
+{
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error>
+    func cancelAndDrainWatches() async
+}
+
+extension SpaceChecklistRevisionPowerSyncStore:
+    AccountWorkspaceSpaceChecklistRevisionStoring
+{}
+
 protocol AccountWorkspaceItemSpaceAssignmentStoring: ItemSpaceAssigning, Sendable {
     func watchOperation(
         _ operationId: OperationID
@@ -136,6 +149,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
     case archiveProject
+    case reviseSpaceChecklists
     case archiveClient
     case assignItemsToSpace
     case clearItemSpaceAssignments
@@ -158,6 +172,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case transferDestinations
     case projectCreationOperation
     case projectArchiveOperation
+    case spaceChecklistRevisionOperation
     case clientArchiveOperation
     case itemSpaceAssignmentOperation
     case itemSpaceClearingOperation
@@ -454,6 +469,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
     let projectSetupStore: any AccountWorkspaceProjectSetupStoring
     let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
+    let spaceChecklistRevisionStore:
+        any AccountWorkspaceSpaceChecklistRevisionStoring
     let itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring
     let itemSpaceClearingStore: any AccountWorkspaceItemSpaceClearingStoring
     let clientArchiveStore: ClientArchivePowerSyncStore
@@ -526,6 +543,12 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         )
         self.projectSetupStore = projectSetupStore
         self.projectArchiveStore = projectArchiveStore
+        spaceChecklistRevisionStore = SpaceChecklistRevisionPowerSyncStore(
+            database: structuredDatabase,
+            accountId: accountId,
+            principalId: principalId,
+            now: now
+        )
         self.itemSpaceAssignmentStore = itemSpaceAssignmentStore
         self.itemSpaceClearingStore = itemSpaceClearingStore
         clientArchiveStore = ClientArchivePowerSyncStore(
@@ -619,6 +642,21 @@ actor AccountWorkspacePendingWorkRuntime {
                 throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
             }
             return try await resources.projectArchiveStore.archive(command)
+        }
+    }
+
+    func reviseSpaceChecklists(
+        _ command: ReviseSpaceChecklistsCommand
+    ) async throws -> OperationReceipt {
+        try await withFiniteLease(.reviseSpaceChecklists) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.spaceChecklistRevisionStore
+                .reviseChecklists(command)
         }
     }
 
@@ -921,6 +959,22 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startSpaceChecklistRevisionOperationWatch(
+        id: UUID,
+        operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .spaceChecklistRevisionOperation,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.spaceChecklistRevisionStore.watchOperation(operationId)
+            }
+        )
+    }
+
     func startClientArchiveOperationWatch(
         id: UUID,
         operationId: OperationID,
@@ -1088,6 +1142,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.itemSpaceClearingStore.cancelAndDrainWatches()
         await resources.projectSetupStore.cancelAndDrainWatches()
         await resources.projectArchiveStore.cancelAndDrainWatches()
+        await resources.spaceChecklistRevisionStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()
 
         var attachmentFailed = false

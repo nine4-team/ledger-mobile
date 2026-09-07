@@ -198,6 +198,7 @@ public struct SpaceCoreDetailsSnapshot: Codable, Equatable, Sendable {
 public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
     public let request: SpaceCoreDetailsRequest
     public let local: ListLocalSnapshot<SpaceCoreDetailsSnapshot>
+    public let checklistRevisionProjection: SpaceChecklistRevisionLocalProjection?
 
     public var row: SpaceCoreDetailsSnapshot? { local.rows.first }
 
@@ -216,7 +217,8 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
         isCompleteForQuery: Bool,
         quality: ListSnapshotQuality,
         localDataVersion: LocalDataVersion,
-        asOf: Date
+        asOf: Date,
+        checklistRevisionProjection: SpaceChecklistRevisionLocalProjection? = nil
     ) throws {
         do {
             let local = try ListLocalSnapshot(
@@ -228,7 +230,11 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
                 localDataVersion: localDataVersion,
                 asOf: asOf
             )
-            try self.init(request: request, local: local)
+            try self.init(
+                request: request,
+                local: local,
+                checklistRevisionProjection: checklistRevisionProjection
+            )
         } catch let failure as SpaceCoreDetailsFailure {
             throw failure
         } catch ListQueryContractFailure.invalidVisibleRowCount {
@@ -242,7 +248,8 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
 
     public init(
         request: SpaceCoreDetailsRequest,
-        local: ListLocalSnapshot<SpaceCoreDetailsSnapshot>
+        local: ListLocalSnapshot<SpaceCoreDetailsSnapshot>,
+        checklistRevisionProjection: SpaceChecklistRevisionLocalProjection? = nil
     ) throws {
         guard local.asOf.timeIntervalSinceReferenceDate.isFinite else {
             throw SpaceCoreDetailsFailure.invalidSnapshotAsOf
@@ -262,8 +269,19 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
         guard local.rows.allSatisfy({ $0.id == request.spaceId }) else {
             throw SpaceCoreDetailsFailure.spaceIdentityMismatch
         }
+        if let projection = checklistRevisionProjection {
+            guard projection.accountId == request.accountId,
+                  projection.spaceId == request.spaceId,
+                  local.rows.count == 1,
+                  local.rows[0].lifecycle == .active,
+                  local.rows[0].revision == projection.projectedRevision,
+                  local.rows[0].checklists == projection.collection else {
+                throw SpaceCoreDetailsFailure.invalidEncodedLocalSnapshot
+            }
+        }
         self.request = request
         self.local = local
+        self.checklistRevisionProjection = checklistRevisionProjection
     }
 
     public init(from decoder: Decoder) throws {
@@ -274,6 +292,10 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
                 local: container.decode(
                     ListLocalSnapshot<SpaceCoreDetailsSnapshot>.self,
                     forKey: .local
+                ),
+                checklistRevisionProjection: container.decodeIfPresent(
+                    SpaceChecklistRevisionLocalProjection.self,
+                    forKey: .checklistRevisionProjection
                 )
             )
         } catch let failure as SpaceCoreDetailsFailure {
@@ -290,6 +312,79 @@ public struct SpaceCoreDetailsLocalSnapshot: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case request
         case local
+        case checklistRevisionProjection
+    }
+}
+
+/// Backend-neutral evidence that the displayed checklist collection is an accepted
+/// local operation overlay rather than authoritative server readback.
+public struct SpaceChecklistRevisionLocalProjection: Codable, Equatable, Sendable {
+    public let operationId: OperationID
+    public let accountId: AccountID
+    public let actorPrincipalId: PrincipalID
+    public let contractVersion: OperationContractVersion
+    public let fingerprint: OperationFingerprint
+    public let spaceId: SpaceID
+    public let expectedRevision: UInt64
+    public let projectedRevision: UInt64
+    public let collection: SpaceChecklistCollection
+    public let acceptedAt: Date
+    public let localState: LocalOperationState
+
+    public init(
+        operationId: OperationID,
+        accountId: AccountID,
+        actorPrincipalId: PrincipalID,
+        contractVersion: OperationContractVersion,
+        fingerprint: OperationFingerprint,
+        spaceId: SpaceID,
+        expectedRevision: UInt64,
+        projectedRevision: UInt64,
+        collection: SpaceChecklistCollection,
+        acceptedAt: Date,
+        localState: LocalOperationState
+    ) throws {
+        guard expectedRevision > 0,
+              expectedRevision < UInt64.max,
+              projectedRevision == expectedRevision + 1,
+              acceptedAt.timeIntervalSinceReferenceDate.isFinite,
+              [.queued, .applying, .applied].contains(localState) else {
+            throw SpaceCoreDetailsFailure.invalidEncodedLocalSnapshot
+        }
+        self.operationId = operationId
+        self.accountId = accountId
+        self.actorPrincipalId = actorPrincipalId
+        self.contractVersion = contractVersion
+        self.fingerprint = fingerprint
+        self.spaceId = spaceId
+        self.expectedRevision = expectedRevision
+        self.projectedRevision = projectedRevision
+        self.collection = collection
+        self.acceptedAt = acceptedAt
+        self.localState = localState
+    }
+
+    public init(from decoder: Decoder) throws {
+        do {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            try self.init(
+                operationId: container.decode(OperationID.self, forKey: .operationId),
+                accountId: container.decode(AccountID.self, forKey: .accountId),
+                actorPrincipalId: container.decode(PrincipalID.self, forKey: .actorPrincipalId),
+                contractVersion: container.decode(OperationContractVersion.self, forKey: .contractVersion),
+                fingerprint: container.decode(OperationFingerprint.self, forKey: .fingerprint),
+                spaceId: container.decode(SpaceID.self, forKey: .spaceId),
+                expectedRevision: container.decode(UInt64.self, forKey: .expectedRevision),
+                projectedRevision: container.decode(UInt64.self, forKey: .projectedRevision),
+                collection: container.decode(SpaceChecklistCollection.self, forKey: .collection),
+                acceptedAt: container.decode(Date.self, forKey: .acceptedAt),
+                localState: container.decode(LocalOperationState.self, forKey: .localState)
+            )
+        } catch let failure as SpaceCoreDetailsFailure {
+            throw failure
+        } catch {
+            throw SpaceCoreDetailsFailure.invalidEncodedLocalSnapshot
+        }
     }
 }
 

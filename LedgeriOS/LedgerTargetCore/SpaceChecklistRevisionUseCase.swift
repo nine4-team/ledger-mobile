@@ -1,5 +1,18 @@
 import Foundation
 
+public struct SpaceChecklistRevisionExecutionResult: Equatable, Sendable {
+    public let command: ReviseSpaceChecklistsCommand
+    public let receipt: OperationReceipt
+
+    public init(
+        command: ReviseSpaceChecklistsCommand,
+        receipt: OperationReceipt
+    ) {
+        self.command = command
+        self.receipt = receipt
+    }
+}
+
 /// Application-layer orchestration for one complete Space-checklist replacement.
 public struct SpaceChecklistRevisionUseCase<Reviser: SpaceChecklistRevising>: Sendable {
     private let reviser: Reviser
@@ -15,7 +28,7 @@ public struct SpaceChecklistRevisionUseCase<Reviser: SpaceChecklistRevising>: Se
         actorPrincipalId: PrincipalID,
         operationContractVersion: OperationContractVersion,
         capturedAt: Date
-    ) async throws -> OperationReceipt {
+    ) async throws -> SpaceChecklistRevisionExecutionResult {
         let command = try draft.command(
             validating: currentUpdate,
             operationId: operationId,
@@ -37,6 +50,9 @@ public struct SpaceChecklistRevisionUseCase<Reviser: SpaceChecklistRevising>: Se
             throw SpaceChecklistRevisionFailure.localAcceptanceFailed
         }
 
-        return try command.validate(receipt)
+        return SpaceChecklistRevisionExecutionResult(
+            command: command,
+            receipt: try command.validate(receipt)
+        )
     }
 }

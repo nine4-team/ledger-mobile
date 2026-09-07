@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T04:36:28.371Z",
+    "lastSynchronizedAt": "2026-09-07T06:37:54.729Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2101,8 +2101,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "50029f8658d4e634a3cf548b61c23ef44895719efa6f8803bc55b5708e3f60f1",
-      "acknowledgedSourceHash": "50029f8658d4e634a3cf548b61c23ef44895719efa6f8803bc55b5708e3f60f1",
+      "observedSourceHash": "bfce3838e7f3a09f5751723951e9e798587dda0fa132b720fa43fcb24f434629",
+      "acknowledgedSourceHash": "bfce3838e7f3a09f5751723951e9e798587dda0fa132b720fa43fcb24f434629",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6667,8 +6667,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "50029f8658d4e634a3cf548b61c23ef44895719efa6f8803bc55b5708e3f60f1",
-      "acknowledgedSourceHash": "50029f8658d4e634a3cf548b61c23ef44895719efa6f8803bc55b5708e3f60f1",
+      "observedSourceHash": "bfce3838e7f3a09f5751723951e9e798587dda0fa132b720fa43fcb24f434629",
+      "acknowledgedSourceHash": "bfce3838e7f3a09f5751723951e9e798587dda0fa132b720fa43fcb24f434629",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -18951,8 +18951,8 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift"
         }
       ],
-      "observedSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
-      "acknowledgedSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
+      "observedSourceHash": "44f29f13eef8dd88a4cd5e992428925a7e98a7e39f163ea44ba7527463ec3369",
+      "acknowledgedSourceHash": "44f29f13eef8dd88a4cd5e992428925a7e98a7e39f163ea44ba7527463ec3369",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
@@ -19210,8 +19210,8 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
-      "acknowledgedSourceHash": "006069088f11ab7862b28cb83a88321dd081c9f5d34bb7e2ca7d40c3deac8ff2",
+      "observedSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
+      "acknowledgedSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -19263,8 +19263,8 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "1a27a5d7d502a5f4876250521117f3c93d1810ee9ef60dfe7e9c8b58be0a89e2",
-      "acknowledgedSourceHash": "1a27a5d7d502a5f4876250521117f3c93d1810ee9ef60dfe7e9c8b58be0a89e2",
+      "observedSourceHash": "7d1dea673d1dff5955e7094f34b5a22c893663ddd60f6510319dd84f29e8e334",
+      "acknowledgedSourceHash": "7d1dea673d1dff5955e7094f34b5a22c893663ddd60f6510319dd84f29e8e334",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20848,8 +20848,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift"
         }
       ],
-      "observedSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
-      "acknowledgedSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
+      "observedSourceHash": "22ac3dfbab3553012e1aed838d24276082c755af59687a1bf0dd560769fd68cd",
+      "acknowledgedSourceHash": "22ac3dfbab3553012e1aed838d24276082c755af59687a1bf0dd560769fd68cd",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
@@ -21462,8 +21462,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
-      "acknowledgedSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
+      "observedSourceHash": "8b2a9494b99459e7df4bcbd24b09fcc4a751fa563210e150aeeb17a7ffc54144",
+      "acknowledgedSourceHash": "8b2a9494b99459e7df4bcbd24b09fcc4a751fa563210e150aeeb17a7ffc54144",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -21995,8 +21995,8 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionUseCase.swift"
         }
       ],
-      "observedSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
-      "acknowledgedSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
+      "observedSourceHash": "97a0aa7dc43c64cbedc5b5410ac8cf0c961faa97c44e9ed99b2f8464924be1c9",
+      "acknowledgedSourceHash": "97a0aa7dc43c64cbedc5b5410ac8cf0c961faa97c44e9ed99b2f8464924be1c9",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -22094,8 +22094,8 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceCoreDetailsStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
-      "acknowledgedSourceHash": "b841d407ff295f711056ddef4f6ab925fdd7984da229f128cfe8bd1aad8b8c19",
+      "observedSourceHash": "436741936d4363e0fe7d4577a7db88a169b09f819c4ec43a3b1f720cf227df18",
+      "acknowledgedSourceHash": "436741936d4363e0fe7d4577a7db88a169b09f819c4ec43a3b1f720cf227df18",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -23254,8 +23254,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountBoundOperationIdentity.swift"
         }
       ],
-      "observedSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
-      "acknowledgedSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
+      "observedSourceHash": "d1acb5a6034c578ad03cb86f04afcaf71b140166827ba029f54d922bc68e0d76",
+      "acknowledgedSourceHash": "d1acb5a6034c578ad03cb86f04afcaf71b140166827ba029f54d922bc68e0d76",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -26333,8 +26333,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "3723579f2cbe5942e58de6c77186bb12100850fec90b2353aa52226144a59d14",
-      "acknowledgedSourceHash": "3723579f2cbe5942e58de6c77186bb12100850fec90b2353aa52226144a59d14",
+      "observedSourceHash": "a3025ddcb2b40925244c4e0b9c02e0aac4b639a98fbe40a1729b5e8274c6c194",
+      "acknowledgedSourceHash": "a3025ddcb2b40925244c4e0b9c02e0aac4b639a98fbe40a1729b5e8274c6c194",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -28982,8 +28982,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "0f32f52886bacbea0e1b9a7887cd10cc62bafa3a5fa1e8efbcb36ae90e3740ef",
-      "acknowledgedSourceHash": "0f32f52886bacbea0e1b9a7887cd10cc62bafa3a5fa1e8efbcb36ae90e3740ef",
+      "observedSourceHash": "1cdf8e1b0714edc0135485cb2323c2fb475cee7ef247ea007723b19fcb86f146",
+      "acknowledgedSourceHash": "1cdf8e1b0714edc0135485cb2323c2fb475cee7ef247ea007723b19fcb86f146",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -30407,6 +30407,60 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-84575506886A",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SpaceChecklistRevisionPowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SpaceChecklistRevisionPowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
+      "acknowledgedSourceHash": "7e5feb7da852ef5f3ddaa1a66a2a135b75e1365c16099675c5da7cbc7581017a",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Atomically accepts one exact Account-bound Space checklist replacement into encrypted local operation, insert-only command, and optimistic-overlay evidence; exact replay, restart, observation, rejection cleanup, and authoritative-readback cleanup remain deterministic.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": [
+          "encrypted Space-checklist revision acceptance, overlay, replay, observation, and reconciliation"
+        ],
+        "securityRequirements": [
+          "Bind command, overlay, actor, Account, Space, fingerprint, expected revision, and Account-derived OperationID exactly"
+        ],
+        "syncRequirements": [
+          "Retain accepted optimism across restart and upload until rejection or matching newer authoritative readback"
+        ]
+      },
+      "migration": {
+        "rule": "Create no Firebase adapter or dual-write path.",
+        "reconciliation": [
+          "Only exact authoritative Space checklist evidence may clear applied optimism"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceChecklistRevisionPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "Atomic acceptance, replay, restart, rejection, readback, and drainage pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+      ],
+      "notes": "The store mutates no synchronized Space row and grants no server authority.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+    },
+    {
       "id": "SWIFT-8494F171316C",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/SpacesService.swift",
@@ -31751,6 +31805,58 @@
       ],
       "notes": "Target must make multi-account discovery deterministic and enforce member update permissions server-side/RLS. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
       "classificationBatch": "M0-BACKEND-AUTH-001"
+    },
+    {
+      "id": "SWIFT-8FE0D1AD0744",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistItemToggleStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistItemToggleStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "e909862933ca2031fe0092d2381f5051c0a4aed093de9223452fa8f7c6f9957d",
+      "acknowledgedSourceHash": "e909862933ca2031fe0092d2381f5051c0a4aed093de9223452fa8f7c6f9957d",
+      "metadata": {
+        "firebaseCoupling": "api_reference"
+      },
+      "currentBehavior": "Owns exact-Space checklist-toggle admission, one frozen optimistic submission, byte-identical uncertain-acceptance retry, operation observation, encrypted restart restoration, conflict recovery, selection/lifecycle drainage, and exact authoritative-readback settlement.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": [
+          "active exact-Space checklist-toggle application state and operation reconciliation"
+        ],
+        "securityRequirements": [
+          "Consume only typed Account/Space-bound evidence and bounded diagnostics"
+        ],
+        "syncRequirements": [
+          "Never treat optimistic overlay, incomplete evidence, or stale selection as authoritative readback"
+        ]
+      },
+      "migration": {
+        "rule": "Compose target Core contracts only.",
+        "reconciliation": [
+          "Applied or rejected state clears only on later complete exact-Space evidence with no local projection"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceChecklistItemToggleStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Admission, toggle, retry, restart restoration, rejection ordering, local-overlay refusal, authoritative readback, and drainage pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+      ],
+      "notes": "The backend-neutral AppModel restores typed local projection provenance after restart and settles only from later complete evidence after the operation result baseline.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
     },
     {
       "id": "SWIFT-901849ED8462",
@@ -34071,8 +34177,8 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift"
         }
       ],
-      "observedSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
-      "acknowledgedSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
+      "observedSourceHash": "700fcf1f79d8f23475cd2ff44afc20a590f0f8ab886a1d79421a93be8a2943bf",
+      "acknowledgedSourceHash": "700fcf1f79d8f23475cd2ff44afc20a590f0f8ab886a1d79421a93be8a2943bf",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -34131,8 +34237,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncUploadConnector.swift"
         }
       ],
-      "observedSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
-      "acknowledgedSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+      "observedSourceHash": "c04167a28de8654e8ada0cef5a05390f9bdee9b5fec88750fe30924f883e5b07",
+      "acknowledgedSourceHash": "c04167a28de8654e8ada0cef5a05390f9bdee9b5fec88750fe30924f883e5b07",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -34840,8 +34946,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
-      "acknowledgedSourceHash": "4f83b184f11a373b8ea0381eca5442fb936a5142a375a6801d6eb33c3450f1c2",
+      "observedSourceHash": "1452e8a7be358b192b04cd2cbbde0c7c0ee4d60c91bfeadc3c09a54e24b405fa",
+      "acknowledgedSourceHash": "1452e8a7be358b192b04cd2cbbde0c7c0ee4d60c91bfeadc3c09a54e24b405fa",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -35426,8 +35532,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SpaceCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
-      "acknowledgedSourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
+      "observedSourceHash": "b73ec6a348b2f863938da452983f988050222288ed96e1edb05e1ec1cb26d524",
+      "acknowledgedSourceHash": "b73ec6a348b2f863938da452983f988050222288ed96e1edb05e1ec1cb26d524",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -36971,8 +37077,8 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
-      "acknowledgedSourceHash": "ce4ea1130194c0db24ee083f86729e723ec478074944d44c28856e071917790a",
+      "observedSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
+      "acknowledgedSourceHash": "0f65693dadc819499bba0ca324c25bfdb5be5f2716ecdcaaa58fd3ba123583c5",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -42102,6 +42208,61 @@
       "classificationBatch": "M0-BACKEND-AUTH-001"
     },
     {
+      "id": "SWIFT-FF03A6E032AA",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SupabaseSpaceChecklistRevisionRPC.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SupabaseSpaceChecklistRevisionRPC.swift"
+        }
+      ],
+      "observedSourceHash": "24f70f9783dd0230e1cbc690dbe98bd3b557ff1698dc0aba4d3e9fa82b4b5346",
+      "acknowledgedSourceHash": "24f70f9783dd0230e1cbc690dbe98bd3b557ff1698dc0aba4d3e9fa82b4b5346",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Posts the exact checklist-revision command to the isolated Supabase RPC with an injected publishable key and scoped user token, refusing service-role credentials and mismatched terminal results.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": [
+          "scoped-user Supabase Space-checklist revision RPC adapter"
+        ],
+        "securityRequirements": [
+          "Use only injected publishable-key and authenticated user-token authority",
+          "Reject wrong Account-derived identity, unknown rejection code, hash, subject, or timestamp result evidence"
+        ],
+        "syncRequirements": [
+          "Preserve canonical full checklist hierarchy and exact decimal revision evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use only a validated isolated target environment.",
+        "reconciliation": [
+          "Canonical request bytes bind local command and trusted handler"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceChecklistRevisionPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "RPC path, ten fields, scoped headers, credential refusal, and strict result validation pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+      ],
+      "notes": "No endpoint, token, key, hosted resource, or production authority is embedded.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+    },
+    {
       "id": "TEST-0126A06E52D0",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetAppModelTests/SpaceAssignmentDestinationStagingExerciseTests.swift",
@@ -43812,8 +43973,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCoreDetailsPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
-      "acknowledgedSourceHash": "9d7c519428ed77c099612c256b0ee4d72761552c426d19dff7bb3358f1254fff",
+      "observedSourceHash": "413629d267f21c10dd8b80d8ef18dfd33c4f300a32628996333e6557ca333236",
+      "acknowledgedSourceHash": "413629d267f21c10dd8b80d8ef18dfd33c4f300a32628996333e6557ca333236",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -43972,6 +44133,58 @@
       ],
       "notes": "Verified tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-37FF8615DAB5",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistItemToggleStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistItemToggleStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "ad03d06b07745757315f73bcd06372a4c2aaa56706828f667a22770a0249adeb",
+      "acknowledgedSourceHash": "ad03d06b07745757315f73bcd06372a4c2aaa56706828f667a22770a0249adeb",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Runs the deterministic active-Space checklist-toggle application and source-bound UI contract matrix, including disabled states, empty and archived presentation, exact command freezing, ambiguous retry, rejection recovery, local-overlay refusal, authoritative readback, reselection, and stop drainage.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": [
+          "deterministic AppModel and compiled-source UI behavior matrix"
+        ],
+        "securityRequirements": [
+          "Wrong operation and wrong detail evidence fail closed"
+        ],
+        "syncRequirements": [
+          "Optimistic and authoritative progress remain visibly distinct until exact readback"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only fixtures.",
+        "reconciliation": [
+          "Both checked directions preserve ordered stable checklist identities"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests"
+        ],
+        "acceptance": [
+          "All ten focused cases pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+      ],
+      "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused cases pass.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
     },
     {
       "id": "TEST-3885FE2E9453",
@@ -44895,8 +45108,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift"
         }
       ],
-      "observedSourceHash": "cffed10344bbbb3bbf842c5fb3f50cc58d7858cb2f9a6fa6fb5e52aeb35a8119",
-      "acknowledgedSourceHash": "cffed10344bbbb3bbf842c5fb3f50cc58d7858cb2f9a6fa6fb5e52aeb35a8119",
+      "observedSourceHash": "b9aa818fe627d5b119c7be1324cea63ccb242356ca0fb68601c06c0a3c4f55c8",
+      "acknowledgedSourceHash": "b9aa818fe627d5b119c7be1324cea63ccb242356ca0fb68601c06c0a3c4f55c8",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -45747,8 +45960,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
-      "acknowledgedSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
+      "observedSourceHash": "24dc4d4fcc42303bc1690d431ec97336355a738f2de2b458ec36062e01422650",
+      "acknowledgedSourceHash": "24dc4d4fcc42303bc1690d431ec97336355a738f2de2b458ec36062e01422650",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -45946,6 +46159,61 @@
       ],
       "notes": "Generate typed domain/read-model fixtures with fixed clocks/IDs. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-6C3784A08B93",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceChecklistRevisionPowerSyncVerticalSliceTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceChecklistRevisionPowerSyncVerticalSliceTests.swift"
+        }
+      ],
+      "observedSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
+      "acknowledgedSourceHash": "180c0c5ac7ef65ad2e598d8466ff20adc20f6da69eb5f728084335b758d9359f",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Runs the deterministic encrypted PowerSync and scoped Supabase RPC matrix for Account-bound identity, interrupted rollback, exact replay, restart, optimistic projection, transient retry, rejection, readback, strict terminal validation, scoped headers, request shape, credential refusal, and watch drainage.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Toggle",
+        "surfaces": [
+          "deterministic Space-checklist PowerSync and Supabase RPC verification matrix"
+        ],
+        "securityRequirements": [
+          "Cross-Account identity, malformed terminal evidence, unknown rejection, and service-role credentials fail closed"
+        ],
+        "syncRequirements": [
+          "Prove atomic durability, restart, replay, upload lifecycle, rejection cleanup, readback cleanup, and drainage"
+        ]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or production data.",
+        "reconciliation": [
+          "Exact accepted bytes and projected checklist state survive encrypted reopen"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "All six focused cases pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
+      ],
+      "notes": "Uses disposable encrypted databases, synthetic identities, and an intercepted local URL protocol only; six focused cases pass.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
     },
     {
       "id": "TEST-6EF1C0BA2957",
@@ -47343,8 +47611,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
-      "acknowledgedSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
+      "observedSourceHash": "bb3b9c9b46b0f67e9a89a77a40ce61b1ad71c3c487bac9f85cea8db5bde641d1",
+      "acknowledgedSourceHash": "bb3b9c9b46b0f67e9a89a77a40ce61b1ad71c3c487bac9f85cea8db5bde641d1",
       "metadata": {
         "firebaseCoupled": true
       },
