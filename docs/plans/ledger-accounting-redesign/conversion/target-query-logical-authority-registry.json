@@ -1,10 +1,54 @@
 {
-  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
+  "inventoryDigest": "73bf69c0e1094fd715582a52fcdce8f9cb8e733cf38b08a8ffce955253324357",
   "physicalPlanes": {
     "postgres": {"status": "deferred", "decision": "A-003"},
     "local": {"status": "deferred", "decision": "A-004"}
   },
   "rows": [
+    {
+      "tqueryId": "TQUERY-4C5E3CDFC666",
+      "expectedSignatureHash": "00c87ece40c0fa1ac45074bc86e757b8e51038674576f32ac65b8d5b480ef99e",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/session-ending-pending-work.md", "section": "Session-Ending Safety Contract"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Logout and Local Pending Work"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CHECKLIST-REVISION-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Current validated runtime environment plus exact Account, Principal, rejected-operation family, contract version, and subject."},
+        "result": {"state": "reviewed", "value": "A complete immutable snapshot of exact terminally rejected commands with acceptance clocks, rejection clocks, bounded rejection evidence, and no retry, discard, acknowledgment, or resolution mutation."},
+        "ordering": {"state": "reviewed", "value": "Rejection time descending, acceptance time descending, then stable Operation ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged exact-scope local snapshot."},
+        "readiness": {"state": "reviewed", "value": "The request returns one validated complete local snapshot or fails closed; malformed, duplicate, foreign, non-rejected, or contract-mismatched evidence cannot become absence."},
+        "authorization": {"state": "reviewed", "value": "The request only narrows an already environment-, Account-, and Principal-bound local runtime and never grants authority by local evidence presence."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "multi_domain_local_journal_and_authoritative_outcomes"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-B6E5580863D9",
+      "expectedSignatureHash": "f98f3ecaed56af88185673b57576c6008cd3a9166a3faaab3f4e6328eb586c9d",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/session-ending-pending-work.md", "section": "Session-Ending Safety Contract"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Logout and Local Pending Work"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CHECKLIST-REVISION-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Current validated runtime environment plus exact Account, Principal, rejected-operation family, contract version, and subject."},
+        "result": {"state": "reviewed", "value": "A live sequence of complete immutable snapshots of exact terminally rejected commands with acceptance clocks, rejection clocks, bounded rejection evidence, and no retry, discard, acknowledgment, or resolution mutation."},
+        "ordering": {"state": "reviewed", "value": "Every emission uses rejection time descending, acceptance time descending, then stable Operation ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged exact-scope local observation."},
+        "readiness": {"state": "reviewed", "value": "Each emission is a validated complete local snapshot; source failure, malformed, duplicate, foreign, non-rejected, disappearing, or contract-mismatched evidence fails closed and cannot silently reopen writes."},
+        "authorization": {"state": "reviewed", "value": "The observation only narrows an already environment-, Account-, and Principal-bound local runtime and never grants authority by local evidence presence."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "multi_domain_local_journal_and_authoritative_outcomes"}
+      ],
+      "unresolvedAxes": []
+    },
     {
       "tqueryId": "TQUERY-C7BD4AEAAB98",
       "expectedSignatureHash": "24169668e287e28a867b1813983c3145d349f60701cdce5c46eac3e4794a259c",

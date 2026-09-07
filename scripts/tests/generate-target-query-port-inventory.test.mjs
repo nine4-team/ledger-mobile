@@ -62,18 +62,27 @@ function tempArtifacts() {
   };
 }
 
-test("repository baseline is exactly the reviewed 17-owner, 17-protocol, 19-method inventory", () => {
+test("repository baseline is exactly the reviewed 18-owner, 18-protocol, 21-method inventory", () => {
   const inventory = buildRepositoryInventory(ROOT);
   assert.deepEqual(inventory.totals, {
-    ownerSurfaces: 17,
-    protocols: 17,
-    methods: 19,
-    observationMethods: 19,
-    requestResponseMethods: 0,
+    ownerSurfaces: 18,
+    protocols: 18,
+    methods: 21,
+    observationMethods: 20,
+    requestResponseMethods: 1,
   });
-  assert.ok(inventory.methods.every((method) => method.selector.startsWith("watch")));
-  assert.ok(inventory.methods.every((method) => method.category === "observation"));
-  assert.equal(new Set(inventory.methods.map((method) => method.id)).size, 19);
+  assert.ok(
+    inventory.methods
+      .filter((method) => method.category === "observation")
+      .every((method) => method.selector.startsWith("watch")),
+  );
+  assert.deepEqual(
+    inventory.methods
+      .filter((method) => method.category === "request_response")
+      .map((method) => method.selector),
+    ["rejectedOperations"],
+  );
+  assert.equal(new Set(inventory.methods.map((method) => method.id)).size, 21);
   assert.ok(inventory.methods.every((method) => /^TQUERY-[A-F0-9]{12}$/.test(method.id)));
   assert.ok(inventory.methods.every((method) => /^[a-f0-9]{64}$/.test(method.signatureHash)));
 
@@ -91,6 +100,10 @@ test("repository baseline is exactly the reviewed 17-owner, 17-protocol, 19-meth
   assert.deepEqual(multiMethod, {
     ClientProjectDirectoryQuerying: ["watchClients", "watchProjects"],
     OperationQuerying: ["watchOperation", "watchUnresolvedOperations"],
+    RejectedOperationRecoveryQuerying: [
+      "rejectedOperations",
+      "watchRejectedOperations",
+    ],
   });
 });
 

@@ -5,12 +5,12 @@
 
 ## Result
 
-- Inventory digest: `1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941`
-- Implemented-or-later owner surfaces: 17
-- Public exact-suffix `Querying` protocols: 17
-- Direct instance methods: 19
-- Observation methods: 19
-- Request/response methods: 0
+- Inventory digest: `73bf69c0e1094fd715582a52fcdce8f9cb8e733cf38b08a8ffce955253324357`
+- Implemented-or-later owner surfaces: 18
+- Public exact-suffix `Querying` protocols: 18
+- Direct instance methods: 21
+- Observation methods: 20
+- Request/response methods: 1
 
 ## Protocols
 
@@ -31,6 +31,7 @@
 | `SWIFT-B3DBE3375ACE` | `ProjectNoteQuerying` | 1 | `LedgeriOS/LedgerTargetCore/ProjectNoteData.swift` |
 | `SWIFT-C1B994920894` | `AccountQuerying` | 1 | `LedgeriOS/LedgerTargetCore/AccountDiscoveryAndSelection.swift` |
 | `SWIFT-C6AE96622805` | `ProjectPreferenceQuerying` | 1 | `LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift` |
+| `SWIFT-D19D3DA98BD3` | `RejectedOperationRecoveryQuerying` | 2 | `LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift` |
 | `SWIFT-D7F3D08FA568` | `ClientCoreDetailsQuerying` | 1 | `LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift` |
 | `SWIFT-E084EBB4EBFF` | `ProjectCategoryConfigurationQuerying` | 1 | `LedgeriOS/LedgerTargetCore/ProjectCategoryConfigurationData.swift` |
 
@@ -55,6 +56,8 @@
 | `TQUERY-2932CD350E5E` | `SWIFT-B3DBE3375ACE` | `verified` | `ProjectNoteQuerying` | `watchNotes` | observation | `7d5f9f4afbec603fdfaceed47da70841a0f9090ac28cab9883ede6408ab3c209` | `func watchNotes ( _ request : ProjectNotePageRequest ) -> AsyncThrowingStream < ProjectNotePage , Error >` |
 | `TQUERY-4C3A96B8C83F` | `SWIFT-C1B994920894` | `verified` | `AccountQuerying` | `watchAuthorizedAccounts` | observation | `88b08881e92b63a1a7f645770b000a8b76e077ae5d56623510043fcb6c01c2fe` | `func watchAuthorizedAccounts ( environment : LedgerEnvironmentKind , principalId : PrincipalID ) -> AsyncThrowingStream < AuthorizedAccountDiscoveryUpdate , Error >` |
 | `TQUERY-87E07EB9A4B3` | `SWIFT-C6AE96622805` | `verified` | `ProjectPreferenceQuerying` | `watchProjectPreferences` | observation | `f639640392c2cc999f544474defb0487b54f6038d33e5fe790225e3079d639fa` | `func watchProjectPreferences ( _ request : ProjectPreferenceDirectoryRequest ) -> AsyncThrowingStream < ProjectPreferenceDirectorySnapshot , Error >` |
+| `TQUERY-4C5E3CDFC666` | `SWIFT-D19D3DA98BD3` | `implemented` | `RejectedOperationRecoveryQuerying` | `rejectedOperations` | request_response | `00c87ece40c0fa1ac45074bc86e757b8e51038674576f32ac65b8d5b480ef99e` | `func rejectedOperations ( _ request : RejectedOperationRecoveryRequest ) async throws -> RejectedOperationRecoverySnapshot` |
+| `TQUERY-B6E5580863D9` | `SWIFT-D19D3DA98BD3` | `implemented` | `RejectedOperationRecoveryQuerying` | `watchRejectedOperations` | observation | `f98f3ecaed56af88185673b57576c6008cd3a9166a3faaab3f4e6328eb586c9d` | `func watchRejectedOperations ( _ request : RejectedOperationRecoveryRequest ) -> AsyncThrowingStream < RejectedOperationRecoverySnapshot , Error >` |
 | `TQUERY-136644A3C02A` | `SWIFT-D7F3D08FA568` | `verified` | `ClientCoreDetailsQuerying` | `watchClientCoreDetails` | observation | `c90bdaf7f57251c6fa31ee56208ae5d6a82b33f5d65b49be03b102f2da7fdc50` | `func watchClientCoreDetails ( _ request : ClientCoreDetailsRequest ) -> AsyncThrowingStream < ClientCoreDetailsUpdate , Error >` |
 | `TQUERY-9FA1EEF3437A` | `SWIFT-E084EBB4EBFF` | `verified` | `ProjectCategoryConfigurationQuerying` | `watchProjectCategoryConfiguration` | observation | `38669ee6e5578023a4658a531cb6afbffb62a068932875c91bfc787b8681ea5c` | `func watchProjectCategoryConfiguration ( accountId : AccountID , projectId : ProjectID ) -> AsyncThrowingStream < ProjectCategoryConfigurationSnapshot , Error >` |
 

@@ -15199,9 +15199,9 @@
   },
   "sourceRegistry": "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
   "targetAuthority": {
-    "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
+    "inventoryDigest": "73bf69c0e1094fd715582a52fcdce8f9cb8e733cf38b08a8ffce955253324357",
     "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-crosswalk.generated.json",
-    "sha256": "9effa187e948004a511731239be2ed47ae6f4de393033551c978609a754b0022"
+    "sha256": "3af50b3abc243280baa21fb2f6805d39f4ddc7bee1f7542aa996d4f54b60d514"
   },
   "totals": {
     "authorityBlocked": {

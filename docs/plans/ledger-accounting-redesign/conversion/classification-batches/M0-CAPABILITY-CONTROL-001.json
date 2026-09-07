@@ -77,8 +77,8 @@
     },
     {
       "id": "CONFIG-C1C61B2D6569",
-      "acknowledgeSourceHash": "4327c4b2111da008aa5be151eba4c64dd1fa506cd644df9efed220a61b8b1c75",
-      "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 17-owner/17-protocol/19-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
+      "acknowledgeSourceHash": "006f8bab3a1d6398b21c827af8b2cbb5abe58e115119c3ef1490f9c163e910d3",
+      "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 18-owner/18-protocol/21-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration. Observation methods retain the watch-prefix contract while the exact rejected-operation recovery snapshot selector is explicitly classified as request-response.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -118,8 +118,8 @@
     },
     {
       "id": "CONFIG-5422E6C6A047",
-      "acknowledgeSourceHash": "7d4c99000839df4e7510b1385008ecf298d10eae94e8200444d104c038f41440",
-      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over all 19 generated TQUERY rows. It validates exact implemented-or-later input lifecycle while omitting lifecycle from logical output, so status-only promotion preserves TACCESS, mapping hashes and crosswalk bytes. It binds the reviewed Space-list row and retains the existing closed-schema, deterministic, filesystem-safe and no-semantic-inference guarantees.",
+      "acknowledgeSourceHash": "bbb6abbc02fd6af1001b58cb93303cae5ef90a240b6467b3931c1c8f8e93eca5",
+      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over all 21 generated TQUERY rows. It validates exact implemented-or-later input lifecycle while omitting lifecycle from logical output, so status-only promotion preserves TACCESS, mapping hashes and crosswalk bytes. It binds the rejected-operation recovery snapshot and observation methods to the session-ending safety contract, binds the reviewed Space-list row, and retains the existing closed-schema, deterministic, filesystem-safe and no-semantic-inference guarantees.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -163,8 +163,8 @@
     },
     {
       "id": "CONFIG-ED6818A70D4E",
-      "acknowledgeSourceHash": "9d3f3f6ca8874fb9f178c92651c7fca08367e4ed676fed058a05d7566f6c4f94",
-      "currentBehavior": "Executable 24-test JSON-only logical-authority structural suite covering the fully derived 19-row upstream inventory, exact implemented-or-later lifecycle inputs, lifecycle-neutral output stability, Space-list scope/readiness mapping, registry schemas, review-class consistency, authority/filesystem safety, stable identities and mapping hashes, deterministic bytes, read-only checking, CLI/package/CI topology and no semantic inference.",
+      "acknowledgeSourceHash": "303a992188418b6f4abf2faa48ffc378302c087d4dce5e705e1121b1038397c3",
+      "currentBehavior": "Executable 24-test JSON-only logical-authority structural suite covering the fully derived 21-row upstream inventory, exact implemented-or-later lifecycle inputs, lifecycle-neutral output stability, rejected-operation recovery authority, Space-list scope/readiness mapping, registry schemas, review-class consistency, authority/filesystem safety, stable identities and mapping hashes, deterministic bytes, read-only checking, CLI/package/CI topology and no semantic inference. Fixture selection is semantic rather than dependent on registry row position.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -207,7 +207,7 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "58d2d546a9d571fadd4de1d776cdc111db1aa294fb44cdfc2549b3a78df91ae4",
+      "acknowledgeSourceHash": "a96d5455c7df65c1994d31a084d865593964ab0056fe6cbe4bb00aab708eaaa8",
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It preserves deterministic classification, retirement and evidence checks while validating one automatic pull-request CI gate rather than a duplicate manual trigger.",
       "disposition": "redesign",
       "target": {

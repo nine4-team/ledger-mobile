@@ -82,14 +82,14 @@ const INVENTORIED_OWNER_STATUSES = Object.freeze([
   "cutover_ready",
 ]);
 const EXPECTED_COUNTS = Object.freeze({
-  ownerSurfaces: 17,
-  protocols: 17,
-  methods: 19,
-  observationMethods: 19,
-  requestResponseMethods: 0,
+  ownerSurfaces: 18,
+  protocols: 18,
+  methods: 21,
+  observationMethods: 20,
+  requestResponseMethods: 1,
 });
 const EXPECTED_REVIEW_COUNTS = Object.freeze({
-  mapped: 7,
+  mapped: 9,
   mapped_with_unresolved_axes: 11,
   decision_blocked: 1,
 });

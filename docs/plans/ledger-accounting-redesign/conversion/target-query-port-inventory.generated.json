@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "generator": "scripts/generate-target-query-port-inventory.mjs",
   "sourceRoot": "LedgeriOS/LedgerTargetCore",
-  "inventoryDigest": "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941",
+  "inventoryDigest": "73bf69c0e1094fd715582a52fcdce8f9cb8e733cf38b08a8ffce955253324357",
   "totals": {
-    "ownerSurfaces": 17,
-    "protocols": 17,
-    "methods": 19,
-    "observationMethods": 19,
-    "requestResponseMethods": 0
+    "ownerSurfaces": 18,
+    "protocols": 18,
+    "methods": 21,
+    "observationMethods": 20,
+    "requestResponseMethods": 1
   },
   "protocols": [
     {
@@ -100,6 +100,12 @@
       "ownerSurfaceId": "SWIFT-C6AE96622805",
       "ownerPath": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift",
       "methodCount": 1
+    },
+    {
+      "name": "RejectedOperationRecoveryQuerying",
+      "ownerSurfaceId": "SWIFT-D19D3DA98BD3",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift",
+      "methodCount": 2
     },
     {
       "name": "ClientCoreDetailsQuerying",
@@ -301,6 +307,28 @@
       "category": "observation",
       "signature": "func watchProjectPreferences ( _ request : ProjectPreferenceDirectoryRequest ) -> AsyncThrowingStream < ProjectPreferenceDirectorySnapshot , Error >",
       "signatureHash": "f639640392c2cc999f544474defb0487b54f6038d33e5fe790225e3079d639fa"
+    },
+    {
+      "id": "TQUERY-4C5E3CDFC666",
+      "ownerSurfaceId": "SWIFT-D19D3DA98BD3",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift",
+      "ownerStatus": "implemented",
+      "protocol": "RejectedOperationRecoveryQuerying",
+      "selector": "rejectedOperations",
+      "category": "request_response",
+      "signature": "func rejectedOperations ( _ request : RejectedOperationRecoveryRequest ) async throws -> RejectedOperationRecoverySnapshot",
+      "signatureHash": "00c87ece40c0fa1ac45074bc86e757b8e51038674576f32ac65b8d5b480ef99e"
+    },
+    {
+      "id": "TQUERY-B6E5580863D9",
+      "ownerSurfaceId": "SWIFT-D19D3DA98BD3",
+      "ownerPath": "LedgeriOS/LedgerTargetCore/RejectedOperationRecovery.swift",
+      "ownerStatus": "implemented",
+      "protocol": "RejectedOperationRecoveryQuerying",
+      "selector": "watchRejectedOperations",
+      "category": "observation",
+      "signature": "func watchRejectedOperations ( _ request : RejectedOperationRecoveryRequest ) -> AsyncThrowingStream < RejectedOperationRecoverySnapshot , Error >",
+      "signatureHash": "f98f3ecaed56af88185673b57576c6008cd3a9166a3faaab3f4e6328eb586c9d"
     },
     {
       "id": "TQUERY-136644A3C02A",

@@ -77,6 +77,14 @@ function replaceObject(target, value) {
   Object.assign(target, value);
 }
 
+function rowIndexWithUnresolvedAxes(minimumCount = 1) {
+  const index = REGISTRY.rows.findIndex(
+    (row) => (row.unresolvedAxes?.length ?? 0) >= minimumCount,
+  );
+  assert.notEqual(index, -1, `fixture requires a row with at least ${minimumCount} unresolved axes`);
+  return index;
+}
+
 function reverseObjectKeys(value) {
   if (Array.isArray(value)) return value.map(reverseObjectKeys);
   if (value === null || typeof value !== "object") return value;
@@ -110,7 +118,7 @@ function makeFixtureRepository() {
   return root;
 }
 
-test("repository crosswalk is exactly the reviewed 19-row logical-authority baseline", () => {
+test("repository crosswalk is exactly the reviewed 21-row logical-authority baseline", () => {
   const crosswalk = buildRepositoryCrosswalk(ROOT);
   assert.equal(crosswalk.inventoryDigest, INVENTORY.inventoryDigest);
   assert.deepEqual(crosswalk.physicalPlanes, {
@@ -118,12 +126,12 @@ test("repository crosswalk is exactly the reviewed 19-row logical-authority base
     local: { status: "deferred", decision: "A-004" },
   });
   assert.deepEqual(crosswalk.totals, {
-    queries: 19,
-    mapped: 7,
+    queries: 21,
+    mapped: 9,
     mappedWithUnresolvedAxes: 11,
     decisionBlocked: 1,
   });
-  assert.equal(new Set(crosswalk.queries.map((query) => query.tqueryId)).size, 19);
+  assert.equal(new Set(crosswalk.queries.map((query) => query.tqueryId)).size, 21);
   assert.ok(crosswalk.queries.every((query) => /^TACCESS-[A-F0-9]{12}$/.test(query.taccessId)));
   assert.ok(crosswalk.queries.every((query) => /^[a-f0-9]{64}$/.test(query.mappingHash)));
   assert.ok(
@@ -385,6 +393,7 @@ test("review classes are structurally consistent even when aggregate counts are 
 });
 
 test("unresolved axes enforce exact names, states, references, blockers, and uniqueness", () => {
+  const rowIndex = rowIndexWithUnresolvedAxes(2);
   const cases = [
     [
       { axis: "invented", state: "decision_blocked", blockerIds: ["O-040"] },
@@ -411,16 +420,19 @@ test("unresolved axes enforce exact names, states, references, blockers, and uni
   ];
   for (const [axis, pattern] of cases) {
     const registry = clone(REGISTRY);
-    replaceObject(registry.rows[0].unresolvedAxes[1], axis);
+    replaceObject(registry.rows[rowIndex].unresolvedAxes[1], axis);
     expectFailure(() => validate(registry), pattern);
   }
 
   const duplicate = clone(REGISTRY);
-  duplicate.rows[0].unresolvedAxes.push(clone(duplicate.rows[0].unresolvedAxes[1]));
+  duplicate.rows[rowIndex].unresolvedAxes.push(
+    clone(duplicate.rows[rowIndex].unresolvedAxes[1]),
+  );
   expectFailure(() => validate(duplicate), /unresolvedAxes contains duplicate/);
 });
 
 test("exact review, authority, state, domain, unresolved, and decision allowlists reject additions", () => {
+  const rowIndex = rowIndexWithUnresolvedAxes();
   assert.deepEqual(REVIEW_CLASSES, ["mapped", "mapped_with_unresolved_axes", "decision_blocked"]);
   assert.deepEqual(AUTHORITY_ROLES, [
     "canonical_target",
@@ -449,11 +461,14 @@ test("exact review, authority, state, domain, unresolved, and decision allowlist
   ]);
 
   const mutations = [
-    [(r) => (r.rows[0].reviewClass = "approved"), /reviewClass.*approved/],
-    [(r) => (r.rows[0].authorityRefs[0].role = "source"), /role.*source/],
-    [(r) => (r.rows[0].proposedDataDomains[0].state = "implemented"), /must equal/],
-    [(r) => (r.rows[0].proposedDataDomains[0].value = "inventory"), /unsupported value inventory/],
-    [(r) => (r.rows[0].unresolvedAxes[0].blockerIds = ["O-999"]), /unsupported value O-999/],
+    [(r) => (r.rows[rowIndex].reviewClass = "approved"), /reviewClass.*approved/],
+    [(r) => (r.rows[rowIndex].authorityRefs[0].role = "source"), /role.*source/],
+    [(r) => (r.rows[rowIndex].proposedDataDomains[0].state = "implemented"), /must equal/],
+    [(r) => (r.rows[rowIndex].proposedDataDomains[0].value = "inventory"), /unsupported value inventory/],
+    [
+      (r) => (r.rows[rowIndex].unresolvedAxes[0].blockerIds = ["O-999"]),
+      /unsupported value O-999/,
+    ],
   ];
   for (const [mutate, pattern] of mutations) {
     const registry = clone(REGISTRY);
@@ -690,15 +705,15 @@ test("invalid repository input fails before generate overwrites an existing arti
   assert.equal(fs.readFileSync(generatedPath, "utf8"), "sentinel\n");
 });
 
-test("repository generated artifact is current and contains all 19 reviewed rows", () => {
+test("repository generated artifact is current and contains all 21 reviewed rows", () => {
   const expected = renderArtifact(buildRepositoryCrosswalk(ROOT));
   const filePath = path.join(ROOT, ARTIFACT_RELATIVE);
   assert.doesNotThrow(() => checkArtifact(expected, filePath, { root: ROOT }));
   const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  assert.equal(parsed.queries.length, 19);
+  assert.equal(parsed.queries.length, 21);
   assert.deepEqual(parsed.totals, {
-    queries: 19,
-    mapped: 7,
+    queries: 21,
+    mapped: 9,
     mappedWithUnresolvedAxes: 11,
     decisionBlocked: 1,
   });
