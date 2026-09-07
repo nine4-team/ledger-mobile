@@ -8,7 +8,7 @@
   },
   "completeness": {
     "status": "partial",
-    "reason": "146 stories across nine heading audits (186 headings). Budget primary and independent review passed; other authorities remain partial. Named decisions are unresolved and checklist counts do not imply implemented features."
+    "reason": "152 stories across ten reviewed heading audits (207 headings). Other authorities remain partial; product decisions and verification gaps are explicit, and counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -16,11 +16,12 @@
     "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
     "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
     "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
-    "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
+    "Offline audit started: spec now distinguishes durable local acceptance from remote application, cached data from complete history, transient retry from permanent rejection, and local/session policy from provider network effects. Still catalog the full working-set, media, sync-status, lease/auth and fault-case requirements; source fire-and-forget and request documents are not target mechanisms.",
     "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review pending. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
-    "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized."
+    "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
+    "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Integrated review pending."
   ],
   "deliveryRequirements": [
     {
@@ -171,21 +172,6 @@
       ]
     },
     {
-      "profile": "migration",
-      "storyIds": [
-        "non-item-line-migration"
-      ],
-      "workflowKinds": [
-        "migration"
-      ],
-      "requiredLayers": [
-        "migration"
-      ],
-      "requiredRisks": [
-        "migration_fidelity"
-      ]
-    },
-    {
       "profile": "cutover_control",
       "storyIds": [
         "stale-client-authority-cutover",
@@ -244,7 +230,10 @@
         "budget-card-preview",
         "budget-row-presentation",
         "budget-readiness-provenance",
-        "budget-category-directory"
+        "budget-category-directory",
+        "receipt-audit-explanation",
+        "receipt-line-export",
+        "receipt-line-readback"
       ],
       "workflowKinds": [
         "product_ui"
@@ -308,7 +297,8 @@
         "item-link-client-paid",
         "item-link-business-paid",
         "item-evidence-reconciliation",
-        "item-intake-atomic-boundary"
+        "item-intake-atomic-boundary",
+        "receipt-parser-preservation"
       ],
       "workflowKinds": [
         "product_ui"
@@ -404,7 +394,9 @@
         "budget-picker-eligibility",
         "budget-categories",
         "project-budget-allocation",
-        "budget-offline-conflict"
+        "budget-offline-conflict",
+        "receipt-line-editor",
+        "receipt-command-mcp-parity"
       ],
       "workflowKinds": [
         "product_ui"
@@ -661,6 +653,26 @@
         "ui_fidelity",
         "sync_visibility",
         "media_durability"
+      ]
+    },
+    {
+      "profile": "receipt_migration",
+      "storyIds": [
+        "non-item-line-migration"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "domain",
+        "migration",
+        "media",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "migration_fidelity",
+        "media_durability",
+        "accounting"
       ]
     }
   ],
@@ -2358,13 +2370,229 @@
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
-      "sourceHash": "12858b2fa4dce11ef3bac557907c748c9111490c1139bffceeb5ee3d387b2ced",
-      "auditStatus": "partial",
+      "sourceHash": "e6f903e0548981208ae9e8e901bdbe87ce744eb860261d66c732514df4651187",
+      "auditStatus": "audited",
       "storyIds": [
         "non-item-receipt-lines",
         "receipt-completeness",
         "non-item-line-lifecycle",
-        "non-item-line-migration"
+        "non-item-line-migration",
+        "receipt-line-editor",
+        "receipt-audit-explanation",
+        "receipt-line-export",
+        "receipt-parser-preservation",
+        "receipt-command-mcp-parity",
+        "receipt-line-readback"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Non-Item Receipt Lines",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title/status and target boundary preserve accepted product design without authorizing Firebase v2 or production cutover."
+        },
+        {
+          "heading": "Problem",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-receipt-lines",
+            "receipt-command-mcp-parity"
+          ]
+        },
+        {
+          "heading": "Decision",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-receipt-lines",
+            "receipt-line-editor"
+          ]
+        },
+        {
+          "heading": "Coordinated revision",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-receipt-lines",
+            "receipt-completeness",
+            "receipt-audit-explanation",
+            "non-item-line-migration",
+            "receipt-component-treatment"
+          ]
+        },
+        {
+          "heading": "Canonical shape",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-receipt-lines",
+            "receipt-line-readback"
+          ]
+        },
+        {
+          "heading": "Accounting and completeness",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-completeness",
+            "receipt-audit-explanation"
+          ]
+        },
+        {
+          "heading": "Tax and subtotal are not completeness inputs",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-completeness",
+            "receipt-audit-explanation",
+            "receipt-component-treatment"
+          ]
+        },
+        {
+          "heading": "Production receipt reconstructions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-completeness",
+            "receipt-audit-explanation",
+            "non-item-line-migration"
+          ]
+        },
+        {
+          "heading": "Current field-interaction audit",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-audit-explanation",
+            "receipt-line-export",
+            "receipt-command-mcp-parity",
+            "non-item-line-migration",
+            "receipt-component-treatment"
+          ]
+        },
+        {
+          "heading": "Consequence",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-completeness",
+            "receipt-component-treatment",
+            "non-item-line-migration"
+          ]
+        },
+        {
+          "heading": "Short migration compatibility",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-line-migration",
+            "item-redesign-production-isolation"
+          ]
+        },
+        {
+          "heading": "Lifecycle and inventory behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-line-lifecycle",
+            "receipt-evidence-ownership",
+            "receipt-line-readback"
+          ]
+        },
+        {
+          "heading": "Billing decision that must remain explicit",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-component-treatment",
+            "receipt-line-editor"
+          ]
+        },
+        {
+          "heading": "Product and code surfaces",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-line-editor",
+            "receipt-parser-preservation",
+            "receipt-command-mcp-parity",
+            "receipt-line-export",
+            "receipt-audit-explanation"
+          ]
+        },
+        {
+          "heading": "Swift app",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-line-editor",
+            "receipt-audit-explanation",
+            "receipt-line-export",
+            "receipt-parser-preservation",
+            "receipt-line-readback"
+          ]
+        },
+        {
+          "heading": "Cloud Functions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-completeness",
+            "receipt-audit-explanation",
+            "item-redesign-production-isolation"
+          ]
+        },
+        {
+          "heading": "MCP",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-command-mcp-parity",
+            "receipt-audit-explanation",
+            "receipt-line-readback"
+          ]
+        },
+        {
+          "heading": "Rules, docs, and tests",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "receipt-line-editor",
+            "receipt-command-mcp-parity",
+            "non-item-line-migration"
+          ]
+        },
+        {
+          "heading": "Interaction with vendor refunds and non-cash credits",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "vendor-noncash-adjustment",
+            "vendor-cash-refund",
+            "non-item-receipt-lines"
+          ]
+        },
+        {
+          "heading": "Production migration scope",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-line-migration"
+          ]
+        },
+        {
+          "heading": "Delivery order",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "non-item-line-migration",
+            "receipt-line-editor",
+            "receipt-completeness",
+            "receipt-component-treatment",
+            "item-redesign-production-isolation"
+          ]
+        }
       ]
     },
     {
@@ -2375,7 +2603,7 @@
     },
     {
       "path": "docs/specs/offline-first.md",
-      "sourceHash": "a57e3186002256370b0839741d68aa94622df888088dbf15020c6deef21c6c8f",
+      "sourceHash": "8938ac024cf82f0d7effa10483e2511273f1db6144701623312a4e5b872350ad",
       "auditStatus": "partial",
       "reason": "Target optimistic-work, attachment lifecycle, retention, sync feedback, and offline-capability stories remain to be added."
     },
@@ -2956,7 +3184,16 @@
       },
       {
         "decisionId": "D-016",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "non-item-receipt-lines",
+          "receipt-completeness",
+          "receipt-line-editor",
+          "non-item-line-lifecycle",
+          "non-item-line-migration",
+          "receipt-audit-explanation",
+          "receipt-line-readback"
+        ]
       },
       {
         "decisionId": "D-017",
@@ -3085,7 +3322,9 @@
         "decisionId": "O-006",
         "auditStatus": "mapped",
         "storyIds": [
-          "expense-edit-lifecycle"
+          "expense-edit-lifecycle",
+          "receipt-line-editor",
+          "receipt-command-mcp-parity"
         ]
       },
       {
@@ -3102,7 +3341,13 @@
       },
       {
         "decisionId": "O-008",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "non-item-line-migration",
+          "receipt-component-treatment",
+          "receipt-line-editor",
+          "receipt-command-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-009",
@@ -3255,19 +3500,38 @@
       },
       {
         "decisionId": "O-028",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "accounting-corrections-refunds",
+          "vendor-noncash-adjustment"
+        ]
       },
       {
         "decisionId": "O-029",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "accounting-corrections-refunds",
+          "transaction-posting-correction",
+          "receipt-line-editor",
+          "receipt-command-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-030",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "receipt-completeness",
+          "non-item-line-migration"
+        ]
       },
       {
         "decisionId": "O-031",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "receipt-completeness",
+          "non-item-line-migration",
+          "receipt-component-treatment"
+        ]
       },
       {
         "decisionId": "O-032",
@@ -3276,8 +3540,11 @@
           "legacy-transaction-interpretation",
           "accounting-corrections-refunds",
           "item-vendor-return",
+          "non-item-line-migration",
           "vendor-cash-refund",
-          "transaction-posting-correction"
+          "transaction-posting-correction",
+          "receipt-line-editor",
+          "receipt-command-mcp-parity"
         ]
       },
       {
@@ -4540,7 +4807,7 @@
     {
       "storyId": "non-item-receipt-lines",
       "title": "Represent nonphysical receipt lines",
-      "outcome": "Nonphysical receipt amounts remain typed embedded evidence rather than fake Items or a fourth Transaction type.",
+      "outcome": "Represent ordered receipt lines with stable unique UUIDs, source description, positive line-total magnitude, increase/decrease effect and optional quantity evidence. Reject empty descriptions/invalid magnitudes/duplicate IDs. Quantity does not redefine totals; no fixed cost taxonomy or fake physical Items.",
       "authority": {
         "path": "docs/plans/non-item-receipt-lines/design.md",
         "section": "Canonical shape"
@@ -4551,7 +4818,7 @@
     {
       "storyId": "receipt-completeness",
       "title": "Reconcile receipt completeness exactly",
-      "outcome": "Items and non-Item lines explain source receipt totals without hidden tolerance or invented allocation.",
+      "outcome": "Determine final-amount completeness from qualifying physical Item evidence plus signed receipt lines, not subtotal/rate or percentage tolerance. Keep exact residual visible for Purchase and Return; the one-cent verdict and physical tax basis await O-030/O-031. Billability is a separate decision.",
       "authority": {
         "path": "docs/plans/non-item-receipt-lines/design.md",
         "section": "Accounting and completeness"
@@ -4560,7 +4827,6 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-008",
           "O-030",
           "O-031"
         ],
@@ -4571,32 +4837,34 @@
     {
       "storyId": "non-item-line-lifecycle",
       "title": "Preserve non-Item line lifecycle",
-      "outcome": "Non-Item receipt evidence remains distinguishable through billing, return, credit, and correction flows.",
+      "outcome": "Keep each line on its original Transaction or Expense receipt owner through physical Item movement. Never create Item IDs, Space/status/media/lineage or automatically copy lines into another Project/Invoice. Preserve order/references and frozen history; billing and non-cash adjustments use separate stories.",
       "authority": {
         "path": "docs/plans/non-item-receipt-lines/design.md",
         "section": "Lifecycle and inventory behavior"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-008",
-          "O-028"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      }
+      "status": "required"
     },
     {
       "storyId": "non-item-line-migration",
       "title": "Migrate non-Item receipt evidence",
-      "outcome": "Source receipt values migrate or enter explicit review without manufacturing physical Items.",
+      "outcome": "Complete canonical receipt import/readiness under approved treatment, basis and posting rules. Retain raw source/media, signed equations, parent/Invoice/marker references and explicit quarantine; reruns duplicate neither lines nor media. Preservation/quarantine checks may proceed before final promotion.",
       "authority": {
         "path": "docs/plans/non-item-receipt-lines/design.md",
         "section": "Production migration scope"
       },
       "milestone": "M4",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-008",
+          "O-030",
+          "O-031",
+          "O-032"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "accounting-scope-owner-boundary",
@@ -4751,7 +5019,6 @@
       "blocker": {
         "decisionIds": [
           "O-008",
-          "O-030",
           "O-031"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
@@ -5715,6 +5982,92 @@
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Per-Project Budget Allocation"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "receipt-line-editor",
+      "title": "Edit Other receipt lines",
+      "outcome": "Save Other receipt lines on eligible Transaction/Expense parents under approved locks and authorization: wording, effect, amount, optional quantity, stable edit/remove and order. Preserve unaccepted draft/cancel and failed input; accepted app/MCP saves survive restart. Read-only detail is separate.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "Swift app"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-008",
+          "O-029",
+          "O-032",
+          "O-006"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "receipt-audit-explanation",
+      "title": "Explain the exact receipt equation",
+      "outcome": "Show physical Item sum separately from increase/decrease/net line totals, reconstructed final amount and exact signed residual, in audit/next steps and MCP. Tax/no-tax never requires a positive tax rate or inferred subtotal. Distinguish unknown basis/history from numerical zero; verdict is separate.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "Accounting and completeness"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "receipt-line-export",
+      "title": "Export receipt-line evidence",
+      "outcome": "Export authorized Transaction/Expense receipt evidence as readable and structured ordered lines, with applicable audit totals. Preserve identity, source wording, sign, magnitude and quantity; never flatten away details or present hidden/incomplete evidence as complete. Client sharing is separate.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "Swift app"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "receipt-parser-preservation",
+      "title": "Preserve parsed receipt adjustments",
+      "outcome": "Preserve parsed shipping/tax/refunds/warranties/discounts/credits with stable source/candidate provenance and order through review. Retrying must not duplicate canonical lines or media. Ambiguity remains reviewable, never a fake Item; posting uses the approved parent workflow.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "Swift app"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "receipt-command-mcp-parity",
+      "title": "Use the same receipt model in app and MCP",
+      "outcome": "Complete app/MCP receipt saves share validation, Transaction/Expense authorization/locks and durable outcomes. Readers retain ordered lines on editable and frozen parents plus applicable audit totals. Retire target discount arguments and advice to create fake Items; unaccepted drafts remain separate.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "MCP"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-008",
+          "O-029",
+          "O-032",
+          "O-006"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "receipt-line-readback",
+      "title": "Read ordered receipt details without edit permission",
+      "outcome": "Show ordered individual lines on authorized Transaction and Expense detail, including posted/read-only/frozen parents: exact source wording, signed magnitudes, optional quantity and stable identity. Distinguish a known empty line array from missing/unmigrated/partial evidence; edit permission is not required.",
+      "authority": {
+        "path": "docs/plans/non-item-receipt-lines/design.md",
+        "section": "Canonical shape"
       },
       "milestone": "M3",
       "status": "required"

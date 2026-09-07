@@ -19,16 +19,25 @@ Never block the UI on server acknowledgment. If local or cached data exists, sho
 
 ### Rule 2: Optimistic UI
 
-Navigate and update state immediately after a write. Don't wait for server confirmation before showing the result. When a user saves a transaction, they should see the updated data and be navigated to the next screen instantly.
+Update the UI after durable local acceptance, without waiting for server
+confirmation. A failed local save is a visible failure, not optimistic success.
+Accepted work survives restart and remains visibly pending until its
+authoritative outcome arrives. Navigation must not race ahead of local storage.
 
 ### Rule 3: Only Block on Actual Uploads
 
-The only operations that require connectivity are:
+Connectivity is required for remote effects such as:
 
 - **File uploads**: Actual file bytes (images, PDFs) need a network connection
-- **Authentication operations**: Sign-in, sign-out, token refresh
+- **Authentication operations**: First sign-in, provider recovery and server
+  token refresh; local unlock and session ending follow their separate policies
+- **Server processing**: Authoritative command execution and remote parsing
 
-All database reads and writes must work offline.
+The required working set and supported edits must be usable offline through
+authorized local reads and durable queued intent. Uncached data cannot be read
+without downloading it, and queued intent is not a completed server effect.
+Neither case permits presenting missing/partial data as authoritative empty
+state. Offline authorization remains gated by the approved access lease.
 
 ## Current Firebase Database Behavior
 
@@ -134,10 +143,11 @@ The app should communicate sync state to users without blocking them:
 |-------|-----------|-------------|
 | Online, synced | No indicator (or subtle green dot) | Normal operation |
 | Online, syncing | Subtle sync animation | Normal operation — data is being sent |
-| Offline | Yellow banner: "Offline — changes will sync when connected" | Normal operation — all features work |
-| Sync error | Red banner: "Sync error — retrying..." | Normal operation — SDK auto-retries |
+| Offline | Offline/pending status | Continue supported cached work; uncached data and remote effects remain visibly unavailable/pending |
+| Transient sync error | Actionable retry status | Continue unrelated work while bounded retries preserve operation identity |
+| Permanent operation rejection | Explicit rejected-work state | Review exact retained intent; recovery/resolution follows O-051, not endless retry or silent discard |
 | Attachment queued | Pending-media count/progress | Continue working; retry or inspect when needed |
-| Attachment rejected | Actionable failed-media state | Retry after correction, export, or explicitly discard |
+| Attachment rejected | Actionable failed-media state | Preserve bytes and evidence; correction/export/removal must follow approved recovery, retention and session-ending rules |
 
 ## What Works Offline
 
@@ -156,7 +166,7 @@ The app should communicate sync state to users without blocking them:
 | Sign in/recover account | No | First sign-in and provider recovery require connectivity |
 | Log out/remove local account | Conditional | Pending-work disposition applies before destructive local cleanup |
 | Invoice import (PDF parsing) | No | Requires server-side processing |
-| Request document processing | Partial | Document created offline, processed when online |
+| Complex command processing | Partial | Target durable intent is accepted offline; authoritative processing waits for connectivity. Request documents are source mechanics only |
 
 ## Current Firebase Conflict Behavior
 
@@ -181,7 +191,10 @@ The historical rationale was:
 
 ### Why not await writes?
 
-Awaiting database writes in UI code creates a bad offline experience: the user would see a spinner until connectivity returns (which could be hours). By treating writes as fire-and-forget, the UI stays responsive regardless of connectivity.
+Waiting for a remote acknowledgment can block for hours offline. The target
+awaits only durable local acceptance before showing success-shaped pending
+state; it must not copy the source fire-and-forget pattern that hides local
+failures. Remote application/rejection remains observable independently.
 
 ### Why separate structured and media queues?
 
@@ -193,4 +206,7 @@ SDK callbacks.
 
 ### Why local cache over server-first?
 
-Interior designers and project managers frequently work in locations with poor connectivity (construction sites, warehouses, remote properties). A server-first architecture would make the app unusable in these scenarios. Cache-first ensures data is always available.
+Interior designers and project managers work in locations with poor
+connectivity. Local-first access keeps downloaded, authorized working data
+available under the approved lease; it does not guarantee that uncached media
+or incomplete history already exists on the device.

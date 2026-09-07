@@ -42,8 +42,11 @@ balance.
 
 ## Decision
 
-Add an embedded `NonItemReceiptLine` value to `Transaction`. This is not a new
-top-level Firestore collection, a new transaction type, or an item subtype.
+Add an embedded `NonItemReceiptLine` value to the actual receipt owner:
+Transaction, or a 1584-paid Expense where embedded non-item details apply under
+the canonical accounting spec. This is not a separate Receipt entity, a new
+transaction type, or an item subtype. The Transaction shape below illustrates
+the shared value; it does not exclude Expense receipt details.
 
 Product language:
 
@@ -129,6 +132,11 @@ Rules:
   the printed tax or tax refund as another non-item receipt line. Transactions
   without tax simply have no tax line.
 - Empty descriptions, zero/negative magnitudes, and duplicate IDs are invalid.
+- Authorized read-only and frozen parent detail still shows ordered individual
+  lines, not only aggregate totals. Editing permission is not reading permission.
+- Expense details use the same receipt-line value when present, with their own
+  parent/Invoice locks. This does not impose itemized-Transaction completeness
+  on every non-itemized Expense or manufacture physical Items for its costs.
 
 Examples:
 
@@ -348,13 +356,13 @@ branch is removed after production verification.
 
 Non-item receipt lines:
 
-- belong to exactly one transaction;
+- belong to exactly one original Transaction or Expense receipt owner;
 - never appear in `itemIds`;
 - never get an `Item` document;
 - never receive a space, status, SKU, image gallery, market value, bookmark, or
   inventory lineage;
 - do not move when physical items are returned, sold, or reassigned;
-- remain on the original receipt transaction as historical financial evidence;
+- remain on the original receipt owner as historical financial evidence;
 - are not copied automatically across inventory-to-project movements. Partial
   allocation across projects would require an explicit allocation design and
   must not be guessed.
@@ -387,14 +395,17 @@ itemized transactions—are claimed by invoices.
 
 - `Models/Transaction.swift`: replace `Discount` with the new line array and
   remove tax/subtotal fields from completeness inputs.
-- Transaction creation and detail: add an **Other receipt lines** editor with
-  increase/decrease controls; show the reconciled equation.
+- Transaction creation/detail and eligible Expense detail use **Other receipt
+  lines** with increase/decrease controls and their respective parent locks.
+  Itemized Transaction audit shows the reconciled equation; ordered line
+  readback remains available on authorized read-only/frozen parent detail.
 - Transaction audit panel and next steps: display physical items separately
   from non-item receipt lines and show exact residuals.
 - Item entry: never create or suggest an Item for a nonphysical receipt line.
 - Invoice creation, billing summaries, client reports, and financial access:
   implement the explicit billing decision above.
-- Transaction export: include a readable line summary and structured fields.
+- Authorized Transaction/Expense export preserves a readable line summary and
+  structured ordered details; client sharing still follows its separate policy.
 - Amazon/Wayfair invoice parsing: preserve parsed shipping, credits, discounts,
   and other adjustments instead of discarding them after parse summaries.
 
@@ -410,7 +421,9 @@ evidence changes; do not create a Firebase implementation of this revision.
 
 - Add the line schema to `Transaction`, `create_transaction`,
   `update_transaction`, and `create_transaction_with_items`.
-- Return the lines and their audit totals from transaction readers.
+- Return ordered lines on authorized Transaction/Expense readers and include
+  applicable audit totals. Expense writes share its canonical lock rules;
+  a Transaction-only schema must not silently discard Expense receipt details.
 - Replace diagnostic advice that says to add an Item to close a variance.
 - Explicitly instruct agents that shipping, protection, warranty, labor,
   discounts, credits, and similar nonphysical receipt lines must never become

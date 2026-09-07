@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 43,
+  "stateVersion": 45,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,11 +9,11 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "PROJECT-BEHAVIOR-AUDIT-CI-GREEN",
-    "commit": "08c39765472f56c6902ae37d3e7cf3d646069d49",
-    "ciRun": 34142182215,
+    "name": "BUDGET-BEHAVIOR-AUDIT-CI-GREEN",
+    "commit": "b156fec30e74bbee23d348d2dbb4c3f6bab11433",
+    "ciRun": 34144141800,
     "ciStatus": "passed",
-    "meaning": "Exact-commit Project audit CI succeeded. This validates that checkpoint's tests and catalog checks, not the newer Space/Budget corrections or overall product completeness. Later O-053 review blocks the local checklist-toggle completion claim without discarding its prior tests."
+    "meaning": "All three exact-commit CI jobs passed for Budget audit and receipt source/target boundary guidance. No new implemented behavior is claimed; product decisions remain open. Newer receipt/offline audit edits require their own integrated verification."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -22,11 +22,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "CI 34143428608 on 6edafd8a (Space audit/source-budget boundary) remains in progress. Poll that exact run, no duplicate dispatch.",
-      "Budget now has 41 mapped headings; catalog totals 146 stories and nine audits/186 headings. Primary and independent review passed; commit the integrated audit checkpoint and use automatic PR CI. Duplicate allocation stories merged into project-budget-allocation; category commands require MCP and financial read/export proof now requires RLS/tenant authorization. O-056 records conflicting name rules.",
-      "Receipt design source-only boundary/delivery correction is included but its product audit is still partial. Next split receipt editor/readback/export/parser/line lifecycle/migration and exact arithmetic, preserving O-008/O-030/O-031. Main read complete design and its source-vs-target differences.",
-      "Continue remaining data-model, offline, lineage/return/correction, reports/import audits. Also reconcile target-governing baseline authorities omitted from the target spec index: auth-offline, financial access, billing, search/review and media. Do not duplicate unchanged UI stories already in the exact-control catalog or pretend indexed specs exhaust product authority.",
-      "O-052–O-056 and existing product/hosted gates remain unresolved. Prior checklist tests remain retained while completion is blocked by O-053; verified complete behaviors remain 0 of 1919. No implementation-estimate gain from audit changes."
+      "Integrate reviewed receipt checklist and offline guidance corrections; run conversion checks and commit/push one batch. Budget CI 34144141800 passed all three jobs on b156fec3.",
+      "Receipt audit reviewed: 10 owned stories/21 headings; totals 152 stories, 10 audits/207 headings. Shared Transaction/Expense value, parent locks, ordered readback, parser/migration provenance and idempotency mapped; billability/rounding/tax-basis/posting decisions remain open.",
+      "Offline-first doc corrections are included: durable local acceptance before success, honest uncached/partial state, remote effects, transient versus permanent failure, no feature-level discard bypass. Full offline/media/authorization audit remains next; main read offline-first.md and authentication-offline-access.md completely.",
+      "Reconcile target-governing auth-offline/financial/billing/search/review/media authorities omitted from target index, preserving existing current-control coverage without duplicate stories. Finish data-model, lineage/return/correction and reports/import audits before expanding implementation.",
+      "Product/hosted decisions remain open, including A-007 identity/A-016 offline lease. Do not invent provider fallback, lease duration or revocation retention. O-053 blocks prior checklist product completion; no implementation estimate gain and 0/1919 verified complete behaviors."
     ]
   },
   "progress": {
@@ -38,7 +38,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "Budget audit expanded to nine heading audits/186 headings and 146 total stories after merging duplicate allocations. Review passed; no implemented-feature gain. CI 34143428608 on 6edafd8a is running. Prior checklist tests retained; O-053 keeps verified complete behaviors at 0/1919."
+    "note": "No feature gain: 152 target stories, 10 reviewed heading audits/207 headings. Receipt independent review passed after Expense/readback/provenance corrections. Budget CI 34144141800 passed. Prior checklist tests retained but O-053 blocks product completion; 0/1919 current behaviors verified complete."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
