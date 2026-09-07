@@ -408,6 +408,12 @@ private final class OfflineClientSpikeModel {
         } catch is CancellationError {
             await closeAfterFailedStart(openedRuntime)
             databaseState = "Closed"
+        } catch let failure as LedgerPowerSyncLocalBootstrapFailure
+            where failure.stage == .workspaceAccessRemoved {
+            access.showRemoval()
+            await closeAfterFailedStart(openedRuntime)
+            databaseState = "Access removed"
+            diagnostic = failure.diagnosticCode
         } catch {
             await closeAfterFailedStart(openedRuntime)
             databaseState = "Unavailable"

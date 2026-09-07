@@ -25543,6 +25543,13 @@
           "expected": "Monotonic runtime removal event locks the workspace presentation; actual Project/Space controls disappear and cannot be revealed by late child updates. Native fixture uses the same gate but does not prove online authorization or provider durability.",
           "command": "swift test --package-path LedgeriOS --filter 'AccountWorkspacePendingWorkRuntimeTests|WorkspaceAccessPresentationTests' && npm run target:staging:ui:test:macos; iOS WorkspaceChecklistUITests also passed. Logs: /tmp/ledger-access-gate-final-tests.log (34 tests), /tmp/ledger-removal-screen-macos.log (2 tests), /tmp/ledger-removal-screen-ios.log (2 tests). Native xcresults: Test-LedgerTargetStaging-2026.09.07_14-37-20--0700.xcresult and Test-LedgerTargetStaging-2026.09.07_14-38-40--0700.xcresult in LedgerTarget-eptjpfkbqvhdirdzbmfzuvhfoked/Logs/Test.",
           "status": "passed"
+        },
+        {
+          "id": "REMOVAL-REOPEN-PRESENTATION",
+          "risk": "ui_fidelity",
+          "expected": "Confirmed stored removal and in-process removal produce the specific bootstrap denial consumed by the existing workspace gate; unavailable registry fails closed without claiming removal. Injected restart evidence does not prove native keychain persistence.",
+          "command": "swift test --package-path LedgeriOS --filter 'AccountWorkspacePendingWorkRuntimeTests|WorkspaceAccessPresentationTests' (36 passed, /tmp/ledger-removal-relaunch-tests.log); npm run target:staging:build:macos (passed, /tmp/ledger-removal-relaunch-build.log)",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
@@ -25563,7 +25570,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Scoped independent GO on runtime batch after fixing public irreversible API and weak-facade watcher leak, and on live in-process UI follow-on: atomic one-shot signal, monotonic presentation, stale-source cancellation and full workspace gate. Native iOS/macOS fixture interactions passed. Fresh-process registry denial still shows generic Unavailable rather than removal-specific UI (no database opens). Verified online removal evidence, live upload/commit fencing and native keychain/crash proof remain outside this batch; full workflow not complete."
+          "summary": "Scoped independent GO on runtime batch and live UI follow-on: atomic one-shot signal, monotonic presentation, stale-source cancellation and full workspace gate. Native iOS/macOS fixture interactions passed. Relaunch follow-on independently reviewed GO: specific bootstrap removal denial retains cleanup, unavailable registry cannot falsely report removal, and UI locks before asynchronous drainage. Verified online removal evidence, live upload/commit fencing and native keychain/crash proof remain outside this batch; full workflow not complete."
         },
         "ci": {
           "status": "not_run",

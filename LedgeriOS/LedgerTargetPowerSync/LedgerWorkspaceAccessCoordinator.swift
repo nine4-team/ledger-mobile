@@ -55,14 +55,14 @@ actor LedgerWorkspaceAccessCoordinator {
     ) async throws -> LedgerOfflineClientRuntime {
         let fence = fence(for: identity)
         guard !fence.isRemoved else {
-            throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)
+            throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)
         }
         let runtime = try await body(fence)
         // The actor is reentrant while opening databases. Removal wins even
         // when that opening ignores cancellation or has already passed a check.
         if fence.isRemoved {
             try? await runtime.lockLocalAccessPreservingPendingWork()
-            throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)
+            throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)
         }
         if Task.isCancelled {
             try? await runtime.close()

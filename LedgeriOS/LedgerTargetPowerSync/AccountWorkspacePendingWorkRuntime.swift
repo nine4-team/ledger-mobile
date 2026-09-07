@@ -6,6 +6,7 @@ public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
     case applicationSupportResolution
     case workspaceLocationResolution
     case workspaceAccessCheck
+    case workspaceAccessRemoved
     case databaseKeyLoad
     case mediaKeyLoad
     case keyValidation
@@ -1670,7 +1671,8 @@ public enum LedgerPowerSyncLocalBootstrap {
             )
             structured = nil
             throw LedgerPowerSyncLocalBootstrapFailure(
-                stage: stage,
+                stage: (error as? LedgerWorkspaceRemovalFailure) == .removed
+                    ? .workspaceAccessRemoved : stage,
                 attachmentDatabaseCleanup: attachmentCleanup,
                 structuredDatabaseCleanup: structuredCleanup
             )

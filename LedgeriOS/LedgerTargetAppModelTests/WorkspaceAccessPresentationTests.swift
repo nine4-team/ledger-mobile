@@ -4,6 +4,15 @@ import Testing
 @Suite("Workspace removal presentation")
 @MainActor
 struct WorkspaceAccessPresentationTests {
+    @Test("Confirmed bootstrap removal locks without opening a runtime or subscribing")
+    func bootstrapRemovalStaysLocked() {
+        let model = WorkspaceAccessPresentation()
+        model.showRemoval()
+        model.stop()
+        model.observe(AsyncStream { $0.finish() })
+        #expect(model.isLocked)
+    }
+
     @Test("Buffered removal locks before any later observer data can reveal the workspace")
     func bufferedRemovalStaysLocked() async {
         let events = AsyncStream<Void>.makeStream()

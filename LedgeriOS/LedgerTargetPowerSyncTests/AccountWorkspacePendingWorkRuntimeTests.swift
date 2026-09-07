@@ -805,10 +805,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             _ = try await peerRuntime.pendingWorkSummary()
         }
         await gate.release()
-        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
             _ = try await opening.value
         }
-        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
             _ = try await first.openRuntime()
         }
         first.remove()
@@ -840,11 +840,26 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         // Simulate a fresh process owner; denial must come from retained store,
         // not solely from the previous coordinator's in-memory latch.
         dependencies.accessCoordinator = LedgerWorkspaceAccessCoordinator()
-        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
             _ = try await context.openRuntime(dependencies: dependencies)
         }
         #expect(events.values == eventsBeforeReopen)
         context.remove()
+    }
+
+    @Test("Unavailable removal registry fails closed without falsely reporting removal")
+    func unavailableRemovalRegistryIsNotRemoval() async throws {
+        let context = try RuntimeTestContext(suffix: "removal-read-unavailable")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        var dependencies = context.dependencies(events: events)
+        dependencies.requireWorkspaceNotRemoved = { _, _, _ in
+            throw LedgerWorkspaceRemovalFailure.unavailable
+        }
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime(dependencies: dependencies)
+        }
+        #expect(events.values.isEmpty)
     }
 
     @Test("Removal-record failure still closes access and can retry without reopening")
@@ -863,7 +878,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
             _ = try await runtime.pendingWorkSummary()
         }
-        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
             _ = try await context.openRuntime(dependencies: dependencies)
         }
         try await runtime.lockAccessPreservingPendingWork()

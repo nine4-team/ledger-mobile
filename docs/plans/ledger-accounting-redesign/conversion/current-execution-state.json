@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 71,
+  "stateVersion": 72,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -24,10 +24,10 @@
     "outcome": "Lock a removed Account and prevent reopen without losing encrypted unsynced work; integrate existing runtime with durable removal enforcement.",
     "nextActions": [
       "Audit closed. Runtime removal batch76981147569dabdab8e1269d6f05fff72460bebe is committed/pushed. Automatic CI34163409676 is live; poll exact run, no duplicate dispatch. Shared per-identity fence gates all handles; registry checked pre-open and late opens rejected. Stable environment/Principal/Account identity, no clear API. Internal removal delegates coordinator, which tracks lifecycle actors rather than weak facades.",
-      "UI follow-on ready for commit: one-shot shared removal signal, monotonic WorkspaceAccessPresentation and whole-workspace gate. Combined34 runtime/presentation tests, macOS2 and iOS2 rendered fixture tests passed; sessions terminal exit0. Scoped independent GO. Evidence is in unified REMOVAL-SCREEN check. No repeat tests for context recovery. Commit/push reviewed batch and use its single automatic CI run.",
+      "UI batch8723eacc881c5e22b8df3af636b1ae7064c66fa5 pushed; automatic CI34164255824 live. Relaunch correction checkpoint distinguishes workspaceAccessRemoved from unavailable access check and shows same gate before cleanup. Focused36 tests, macOS build, conversion/environment checks passed; scoped independent review GO. All local processes terminal. Evidence in REMOVAL-REOPEN-PRESENTATION. Resolve automatic CI for the relaunch commit after push; no manual dispatch or repeated prior native tests for continuity.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
       "Card/policy437bc59d/CI34161647098 completed green and is current verified checkpoint. No CI run is live; do not poll or redispatch it. Full Space-card outcome stays open for Item/media projections.",
-      "Next removal seam: durable bootstrap denial should present Account Access Removed after relaunch (currently generic Unavailable, no data opened). Still needs verified online removal evidence, live command/media upload gating/cancellation and final commit fencing; no live upload owner yet. Provider-to-screen integration is not proven by fixture. Cross-process ownership/crash-before-record and native keychain restart remain. Retain uncertain work; no recovery bypass/hosted access. Checkpoint stays437bc59d until runtime CI green."
+      "Next integration: verified online removal evidence, live command/media upload gating/cancellation and final commit fencing; no live upload owner yet. A007/O057 Supabase Auth vs temporary Firebase Auth decision asked asynchronously; no provider chosen or hosted access authorized. Provider-to-screen integration is not proven by fixture. Cross-process ownership/crash-before-record and native keychain restart remain. Retain uncertain work; no recovery bypass. Checkpoint stays437bc59d until runtime CI green."
     ]
   },
   "blockers": [],

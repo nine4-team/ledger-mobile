@@ -12,12 +12,18 @@ public final class WorkspaceAccessPresentation {
 
     public init() {}
 
+    /// Presentation only: called for a confirmed runtime/bootstrap denial, not
+    /// for an arbitrary connection or keychain failure. Does not mutate access.
+    public func showRemoval() {
+        isLocked = true
+    }
+
     public func observe(_ removals: AsyncStream<Void>) {
         guard observation == nil, !isLocked else { return }
         observation = Task { [weak self] in
             for await _ in removals {
                 guard !Task.isCancelled else { return }
-                self?.isLocked = true
+                self?.showRemoval()
                 return
             }
         }
