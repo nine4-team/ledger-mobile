@@ -2801,7 +2801,7 @@ if (
     ],
     [
       path.join(powerSyncRoot, "LedgerPowerSyncUploadConnector.swift"),
-      "96de991c6bb4da0becbfe2c6aeab2cf5ddb855a1eb98e0f342e6ecad7a6222cc",
+      "c04167a28de8654e8ada0cef5a05390f9bdee9b5fec88750fe30924f883e5b07",
     ],
     [
       path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),
