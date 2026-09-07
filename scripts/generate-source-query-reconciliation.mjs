@@ -155,6 +155,7 @@ const INTEGRATION_SCRIPTS = Object.freeze({
     "node --test scripts/tests/generate-source-query-reconciliation.test.mjs",
 });
 const CONVERSION_CONTROL_COMMANDS = Object.freeze([
+  "node scripts/check-conversion-current-state.mjs --self-test",
   "npm run target:query-ports:test",
   "npm run target:query-ports:check",
   "npm run target:query-authority:test",
