@@ -80,6 +80,7 @@ jobs:
         # commit passed the suite locally and in 20 consecutive focused runs but
         # a shared CI process later stalled while entering its replay test.
         run: >-
+          bash scripts/run-target-native-tests-with-diagnostics.sh
           swift test --package-path LedgeriOS --no-parallel
           --filter ItemSpaceAssignmentPowerSyncStoreTests
 
@@ -89,8 +90,17 @@ jobs:
         # native database runtimes concurrently on the shared CI process.
         # Runtime-level concurrency remains exercised inside the focused tests.
         run: >-
+          bash scripts/run-target-native-tests-with-diagnostics.sh
           swift test --package-path LedgeriOS --no-parallel
           --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'
+
+      - name: Preserve native test stall diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-test-stall-diagnostics
+          path: ${{ runner.temp }}/ledger-native-diagnostics
+          if-no-files-found: ignore
 
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos

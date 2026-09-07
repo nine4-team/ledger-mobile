@@ -84,6 +84,13 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         #expect(projectRequests.values[0].projectId == selectedProject.id)
         #expect(model.route == .projectWorkspace(selectedProject.id))
 
+        model.openNotesTab()
+        #expect(model.route == .projectNotes(selectedProject.id))
+        #expect(model.representedProjectId == selectedProject.id)
+        #expect(model.projectBrowser.noteHistory.selectedProjectId == selectedProject.id)
+        await model.back()
+        #expect(model.route == .projectWorkspace(selectedProject.id))
+
         await model.openSpacesTab()
         await Self.wait { listRequests.values.count == 1 }
         #expect(listRequests.values[0].accountId == Self.accountId)
@@ -146,6 +153,33 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         #expect(projectDirectory.terminationCount == 1)
         #expect(spaceDirectory.terminationCount == 1)
         #expect(spaceDetail.terminationCount == 1)
+    }
+
+    @Test("Notes route closes and cannot reopen when its Project disappears")
+    func notesRouteClosesWhenProjectDisappears() async throws {
+        let directory = RouteSource<ProjectListSnapshot>()
+        let model = Self.model()
+        await model.start(runtime: Self.runtime(
+            projectDirectory: directory, projectDetail: RouteSource(),
+            spaceDirectory: RouteSource(), spaceDetail: RouteSource(),
+            projectRequests: RouteRecorder(), listRequests: RouteRecorder(),
+            detailRequests: RouteRecorder()
+        ))
+        let project = try Self.project("notes-project")
+        directory.yield(try Self.projectList([project]))
+        await Self.wait { model.projectBrowser.activeProjects.count == 1 }
+        await model.selectProject(projectId: project.id)
+        model.openNotesTab()
+        #expect(model.route == .projectNotes(project.id))
+        directory.yield(try Self.projectList([]))
+        await Self.wait {
+            model.route == .projectWorkspace(project.id)
+                && model.projectBrowser.noteHistory.selectedProjectId == nil
+        }
+        #expect(!model.representedProjectIsActive)
+        model.openNotesTab()
+        #expect(model.route == .projectWorkspace(project.id))
+        await model.stop()
     }
 
     @Test("Back drains exact routes and restarts an unselected Project directory")

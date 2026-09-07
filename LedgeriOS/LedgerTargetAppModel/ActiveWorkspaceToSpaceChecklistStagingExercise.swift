@@ -21,12 +21,13 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
 public enum ActiveWorkspaceToSpaceChecklistRoute: Equatable, Sendable {
     case projectDirectory
     case projectWorkspace(ProjectID)
+    case projectNotes(ProjectID)
     case projectSpaces(ProjectID)
     case spaceDetail(projectId: ProjectID, spaceId: SpaceID)
     case stopped
 }
 
-/// Coordinates only the catalogued Project -> Spaces -> Space checklist path.
+/// Coordinates Project -> Spaces -> checklist and read-only Project Notes paths.
 /// Data validation and operation ownership remain in the existing browser and
 /// checklist models; this type adds route identity and cross-model drainage.
 @MainActor
@@ -41,7 +42,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public var representedProjectId: ProjectID? {
         switch route {
-        case .projectWorkspace(let projectId), .projectSpaces(let projectId):
+        case .projectWorkspace(let projectId), .projectSpaces(let projectId), .projectNotes(let projectId):
             projectId
         case .spaceDetail(let projectId, _):
             projectId
@@ -151,6 +152,14 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         isChecklistsExpanded = true
     }
 
+    public func openNotesTab() {
+        guard runtime != nil,
+              case .projectWorkspace(let projectId) = route,
+              isRepresentedActiveProject(projectId) else { return }
+        generation &+= 1
+        route = .projectNotes(projectId)
+    }
+
     public func selectSpace(spaceId: SpaceID) async {
         guard case .projectSpaces(let projectId) = route,
               isRepresentedActiveProject(projectId),
@@ -234,6 +243,9 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         let activeGeneration = generation
 
         switch route {
+        case .projectNotes(let projectId):
+            route = .projectWorkspace(projectId)
+
         case .spaceDetail(let projectId, _):
             route = .projectSpaces(projectId)
             isChecklistsExpanded = true

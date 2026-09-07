@@ -26460,11 +26460,12 @@
     {
       "schemaVersion": 1,
       "workflowId": "active-workspace-to-space-checklist",
-      "title": "Open an active Project Space and use its checklist",
+      "title": "Browse active Project Spaces, checklists and note history",
       "kind": "product_ui",
-      "status": "local_verification",
-      "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
+      "status": "implementation",
+      "outcome": "Open a represented active Project by stable identity. Browse its Spaces/checklist path and existing scoped note history with Back navigation, without substituting stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace.",
       "targetStoryIds": [
+        "project-detail",
         "space-list-to-detail",
         "space-checklist-toggle",
         "space-checklist-progress"
@@ -26474,6 +26475,11 @@
           "role": "canonical_target",
           "path": "docs/specs/projects.md",
           "section": "Project List"
+        },
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/projects.md",
+          "section": "Notes and Quick Note"
         },
         {
           "role": "canonical_target",
@@ -26851,6 +26857,13 @@
           "status": "passed"
         },
         {
+          "id": "ACTIVE-PROJECT-NOTE-HISTORY-ROUTE",
+          "risk": "ui_fidelity",
+          "expected": "Notes opens existing history for the represented active Project; Back returns to its workspace. Existing note model supplies bounded pages, provenance, unavailable/empty state and cancellation. Native fixture verifies note text and creator; creation/editing and legacy-note display are not claimed.",
+          "command": "Focused10 model tests passed /tmp/ledger-project-notes-route-tests.log including authoritative disappearance. Native macOS2/iOS2 passed /tmp/ledger-project-notes-route-ui.log and /tmp/ledger-project-notes-route-ios.log; xcresults Test-LedgerTargetStaging-2026.09.07_15-09-45--0700.xcresult and Test-LedgerTargetStaging-2026.09.07_15-11-01--0700.xcresult. Existing history presentation/query reused; no new provider implementation.",
+          "status": "passed"
+        },
+        {
           "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-RENDERED-IOS",
           "risk": "ui_fidelity",
           "expected": "The same real-view route passes on iOS Simulator, including card progress and unavailable Item/media evidence, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
@@ -26860,7 +26873,7 @@
       ],
       "deferredBehaviors": [
         "This workflow claims only the Project-to-Space-to-checklist path, not the Business Inventory entry path already covered by the scoped Space browser workflow.",
-        "Other Project tabs, Project setup/edit/archive, Space search/create/edit/archive, checklist collection editing, Items, media, notes, budgets, accounting, MCP, hosted Sync/Auth, migration, production and cutover remain separate workflows.",
+        "Other Project tabs, Project setup/edit/archive, Space search/create/edit/archive, checklist collection editing, Items, media, note mutation/legacy migration, budgets, accounting, MCP, hosted Sync/Auth, production and cutover remain separate workflows.",
         "No broad Project directory or Project detail story is claimed from this narrow path.",
         "Live checklist mutation authorization remains subject to O-053. The user has been asked specifically about check/uncheck actors; the UI fixture grants no production permission and does not settle other Space command roles."
       ],
@@ -26881,7 +26894,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Primary integration review found that the initial composition displaced existing staging workflows and failed to revoke or drain child Space/checklist authority when its Project disappeared. The composition was isolated, existing entry paths were restored, parent evidence gained an explicit lifecycle stream, exact-parent and exact-scope gates were added, and tests now exercise the composed toggle and automatic disappearance cleanup. Independent re-review returned GO with no P0-P2 findings; only non-blocking adversarial timing coverage remains. Rendered macOS review caught section accessibility modifiers replacing child Item IDs/checked values. Moving them to the label restored native child semantics; XCUITest now exercises actual taps. Main reviewed delegated fixture and exact command guards; fixture acceptance is explicitly in-memory."
+          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed."
         },
         "ci": {
           "status": "not_run",

@@ -238,7 +238,33 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         await model.start(runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime(
             projectBrowsing: ProjectBrowsingStagingRuntime(
                 watchProjects: { [projectDirectory] in projectDirectory.stream },
-                watchProject: { [projectDetail] _ in projectDetail.stream }
+                watchProject: { [projectDetail] _ in projectDetail.stream },
+                watchNotes: { request in
+                    AsyncThrowingStream { continuation in
+                        do {
+                            let note = try ProjectNoteSnapshot(
+                                id: ProjectNoteID(validating: "note-ui-test"),
+                                accountId: request.accountId, projectId: request.projectId,
+                                content: .visible(ProjectNoteText(validating: "Measure the entry before delivery.")),
+                                source: ProjectNoteSource(validating: "text"),
+                                createdByPrincipalId: PrincipalID(validating: "principal-ui-test"),
+                                creatorDisplayName: ProjectNoteCreatorDisplayName(validating: "Test Designer"),
+                                createdAt: Date(timeIntervalSince1970: 1_789_500_000), revision: 1
+                            )
+                            continuation.yield(try ProjectNotePage(
+                                request: request,
+                                local: ListLocalSnapshot(
+                                    queryFingerprint: request.queryFingerprint, rows: [note],
+                                    visibleRowCountBeforeFiltering: 1, isCompleteForQuery: true,
+                                    quality: .ready, localDataVersion: LocalDataVersion(validating: "ui-notes-1"),
+                                    asOf: Date(timeIntervalSince1970: 1_789_500_000)
+                                ),
+                                isCompleteForProjectHistory: true, nextCursor: nil
+                            ))
+                            continuation.finish()
+                        } catch { continuation.finish(throwing: error) }
+                    }
+                }
             ),
             spaceBrowsing: SpaceBrowserStagingRuntime(
                 listQuery: UITestFixtureSpaceListQuery(source: spaceDirectory),

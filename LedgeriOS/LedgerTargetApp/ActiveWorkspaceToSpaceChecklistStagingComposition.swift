@@ -24,6 +24,16 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             projectDirectory
         case .projectWorkspace(let projectId):
             projectWorkspace(projectId)
+        case .projectNotes(let projectId):
+            Section("Project Notes") {
+                backButton
+                if model.representedProjectIsActive,
+                   model.projectBrowser.noteHistory.selectedProjectId == projectId {
+                    ProjectNoteHistoryStagingExerciseView(model: model.projectBrowser.noteHistory)
+                } else {
+                    Text("Project note history is unavailable.")
+                }
+            }
         case .projectSpaces(let projectId):
             projectSpaces(projectId)
         case .spaceDetail(let projectId, let spaceId):
@@ -102,6 +112,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 }
                 .accessibilityIdentifier("target-active-project-spaces-tab")
                 .accessibilityHint("Opens Spaces for this Project")
+                Button("Notes") { model.openNotesTab() }
+                    .accessibilityIdentifier("target-active-project-notes-tab")
+                    .accessibilityHint("Opens note history for this Project")
             } else {
                 Text("The represented Project is unavailable.")
                     .foregroundStyle(.secondary)

@@ -45,6 +45,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10))
         project.tap()
+        let notes = app.buttons["target-active-project-notes-tab"]
+        reveal(notes, in: app)
+        XCTAssertTrue(notes.waitForExistence(timeout: 5))
+        notes.tap()
+        XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Test Designer"].exists)
+        XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
+        app.buttons["target-active-workspace-back"].tap()
+        XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))
         let spaces = app.buttons["target-active-project-spaces-tab"]
         reveal(spaces, in: app)
         XCTAssertTrue(spaces.waitForExistence(timeout: 5), app.debugDescription)
