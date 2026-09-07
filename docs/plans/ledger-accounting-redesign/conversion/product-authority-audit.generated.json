@@ -176,6 +176,54 @@
       "targetRelevantSurfaceCount": 45
     },
     {
+      "path": "docs/specs/reports.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
+      "path": "docs/specs/project-closeout-report.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
+      "path": "docs/specs/billing-invoicing.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
+      "path": "docs/specs/invoice-import.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
+      "path": "docs/specs/search-results.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
+      "path": "docs/specs/needs-review-tab.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
       "path": "docs/plans/non-item-receipt-lines/design.md",
       "batchIds": [
         "M0-APP-SHELL-PRESENTATION-001",
@@ -573,6 +621,30 @@
       "surfaceCount": 121,
       "targetRelevantSurfaceCount": 45,
       "authorities": [
+        {
+          "path": "docs/specs/reports.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/project-closeout-report.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/billing-invoicing.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/invoice-import.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/search-results.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/needs-review-tab.md",
+          "role": "canonical_target"
+        },
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
           "role": "canonical_target"

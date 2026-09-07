@@ -14,6 +14,12 @@
     "docs/specs/offline-first.md",
     "docs/specs/authentication-offline-access.md",
     "docs/specs/financial-access-controls.md",
+    "docs/specs/reports.md",
+    "docs/specs/project-closeout-report.md",
+    "docs/specs/billing-invoicing.md",
+    "docs/specs/invoice-import.md",
+    "docs/specs/search-results.md",
+    "docs/specs/needs-review-tab.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -21,6 +27,12 @@
       "scope": "product",
       "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
       "authorities": [
+        { "path": "docs/specs/reports.md", "role": "canonical_target" },
+        { "path": "docs/specs/project-closeout-report.md", "role": "canonical_target" },
+        { "path": "docs/specs/billing-invoicing.md", "role": "canonical_target" },
+        { "path": "docs/specs/invoice-import.md", "role": "canonical_target" },
+        { "path": "docs/specs/search-results.md", "role": "canonical_target" },
+        { "path": "docs/specs/needs-review-tab.md", "role": "canonical_target" },
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
         { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
         { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },

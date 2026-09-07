@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 48,
+  "stateVersion": 49,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,11 +9,11 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "BUDGET-BEHAVIOR-AUDIT-CI-GREEN",
-    "commit": "b156fec30e74bbee23d348d2dbb4c3f6bab11433",
-    "ciRun": 34144141800,
+    "name": "OFFLINE-AUTH-FINANCIAL-AUDIT-CI-GREEN",
+    "commit": "326ec53efe8e13a9e4c2c43cb83ea20e251ec690",
+    "ciRun": 34146723781,
     "ciStatus": "passed",
-    "meaning": "All three exact-commit CI jobs passed for Budget audit and receipt source/target boundary guidance. No new implemented behavior is claimed; product decisions remain open. Newer receipt/offline audit edits require their own integrated verification."
+    "meaning": "Exact prior offline/auth/financial audit commit passed CI, rechecked with gh run view. No new implemented behavior. Reports/import/search/review is the current independently reviewed documentation batch."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -22,11 +22,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Offline/auth/financial batch independently reviewed: 163 stories, 13 heading audits/257 headings. Integrate one batch with central O-057–O-060 cross-references; full checker self-test and conversion check before push.",
-      "CI 34145869153 on d9758d70: traceability and local provider jobs passed; isolated environment job building iOS Simulator. Poll exact run; no duplicate dispatch.",
-      "Next audit: reports + billing + invoice import. Main read reports.md, invoice-import.md, project-closeout-report.md and full billing-invoicing.md. Source vendor import is PDF-only LOCAL Amazon/Wayfair parsing, contrary to old spec's required server processing; preserve offline capability and record unimplemented capture/editor scope separately.",
-      "Search/review bounded read-only audit running with next_workflow_selection; inspect returned source/spec pointers before integrating. Remaining data-model/lineage/return/correction and background/MCP gaps stay open.",
-      "O-057/O-058 reference unchanged A-007/A-016 choices; O-059 team/ownership permission matrix and O-060 mixed-payment confidentiality are explicit unresolved choices. No production/hosted access or new approval inferred."
+      "Reports/billing/import/search/review audit accepted after two bounded independent re-reviews. 179 stories, 19 heading audits/343 headings. Routing uses shared owning workflows, local import review has no backend writer requirement, Client Summary physical content is explicit. Integrate and push this documentation batch once.",
+      "Finish data-model/lineage/return/reassign authority audit; read-only ui_baseline_projects_spaces reviews data-model. Main has now read all return-and-sale-tracking.md plus lineage/reassign (prior summary); target boundary still needs explicit same-Client Transfer and distinct physical/vendor/cash/correction semantics.",
+      "Cross-check remaining unindexed source specs and background/MCP capabilities, including pending O-038 Inventory planning and O-041 vendor-spend report. Do not claim the four indexed partial docs are the whole remaining scope.",
+      "O-061 import expansion/quantity/new-document duplicates, O-062 separate Closeout scope, O-063 Review reasons/grouping and O-064 Item deletion remain unapproved. Async import/Closeout scope questions unanswered; continue independent audit."
     ]
   },
   "progress": {
@@ -38,7 +37,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No feature gain: 163 stories; 13 reviewed heading audits/257 headings. Offline/auth/financial review passed, product choices remain blocked. d9758d70 CI has two jobs passed and iOS build running; Budget remains last verified green checkpoint. 0/1919 verified product behaviors."
+    "note": "No feature gain. 179 target stories; 19 heading audits/343 headings. Reports/import/search/review passed bounded independent re-review. 0/1919 verified product behaviors. Prior 326ec53 CI passed; current documentation batch awaits its automatic PR run."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
@@ -50,7 +49,8 @@
     "O-055 portable Space checklist/template text and search rules remain unresolved; no invented text bounds or matching policy.",
     "O-056 category-name validation and uniqueness rules remain unresolved; shared category create/rename and restore collision cannot be silently chosen.",
     "O-057/O-058 cross-reference A-007 identity/onboarding and A-016 offline lease/unlock/revocation choices; no provider, fallback, duration or retention policy approved.",
-    "O-059 member/invite ownership and role/access safety matrix, and O-060 mixed collected-payment confidentiality/archived grants/Project overrides require product approval."
+    "O-059 member/invite ownership and role/access safety matrix, and O-060 mixed collected-payment confidentiality/archived grants/Project overrides require product approval.",
+    "O-061 import scope/quantity/duplicate documents, O-062 separate Closeout, O-063 Review reasons/grouping/navigation and O-064 Item deletion/retention require product decisions; unrelated audit can continue."
   ],
   "guardrails": [
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",

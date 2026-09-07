@@ -2,6 +2,16 @@
 Status: new
 Last updated: 2026-05-26
 
+> **Target reconciliation:** This is a proposed report, not evidence that a
+> separate Closeout feature shipped or that it replaces Client Summary. O-062
+> owns target release scope and the open presentation/data questions below.
+> If included, O-035 governs financial labels, O-036 evidence sharing, O-060
+> visibility and canonical accounting governs amounts. Project price is not
+> automatically money collected; Additional Requests is a non-additive overlay,
+> not another spend category. Missing market prices are not known savings, and
+> a current allocation is not proof of an original agreed budget. Do not add
+> collection payments again to source values or invent new manual adjustments.
+
 ## Summary
 A polished, client-facing report generated at the end of a project that tells the full financial story: what was spent across all categories, how much the client saved on furnishings vs. market value, the total project cost including everything, and any outstanding payments still owed. The report's goal is to make the client feel they received incredible value, stayed within budget, and that the design team went above and beyond.
 

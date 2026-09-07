@@ -23,8 +23,9 @@ which delivered render revisions are retained.
 
 **Data Sources:**
 - Project details (name, client name, address)
-- Invoice lines (`sourceType: item | transaction | manual`)
-- Items and transactions referenced by source-backed lines when rendering draft/live previews
+- Canonical Item charges/credits, Expenses, Fees and approved adjustments for
+  live Invoices; immutable frozen contents for collected Invoices
+- Actual payment evidence linked for explanation, not added again to demand
 - Budget categories for grouping
 
 **Structure:**
@@ -42,8 +43,11 @@ for each invoice line:
 overallTotal = sum of signedAmount
 ```
 
-**Display price:** the normalized `projectPriceCents`. Every item write maintains `projectPriceCents >= purchasePriceCents`; report readers defensively use `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` for legacy records.
-For manual New Charge lines, use the line's stored `snapshotName` and `amountCents`.
+**Display price:** the authoritative live source value or frozen collected line,
+not a renderer-side repair using current Item price. The old
+`max(projectPriceCents, purchasePriceCents)` fallback and raw manual-line shape
+are source compatibility evidence only. Imported ambiguous amounts remain
+explicitly unresolved; O-009 governs manual adjustments and O-031 receipt basis.
 
 ### 2. Client Summary Report
 
@@ -97,13 +101,17 @@ evidence. Server rendering is optional infrastructure, not report authority.
 ## Edge Cases
 
 1. **No items/transactions:** Show empty report with message "No data for this report"
-2. **Items without prices:** Include in report with "No Price" or $0.00
+2. **Items without prices:** Preserve an explicit unknown-price state; a known
+   zero and missing evidence are different. Financial summaries must not silently
+   treat missing amounts as known zero; O-035 owns Client Summary semantics.
 3. **Offline generation:** Works fully offline only when the required report
    snapshot reports complete readiness. A partial synchronized working set must
    not render a deceptively complete report.
 4. **Collection evidence:** The one collected Project Purchase proves payment
    but is not counted again on top of frozen source allocations.
-5. **Canceled transactions:** Excluded from all reports
+5. **Canceled/returned records:** Apply the report kind's canonical eligibility
+   and signed/frozen history. The source blanket canceled-Transaction filter
+   cannot erase valid paid or correction evidence from target reporting.
 6. **Shared receipt evidence:** O-036 controls eligibility and delivery. A PDF
    must never contain a private object path or expiring bearer download URL.
 
@@ -121,3 +129,30 @@ evidence. Server rendering is optional infrastructure, not report authority.
 - Local temporary files use collision-safe names and protected storage, report
   failures visibly, and are removed under an explicit retention policy after
   share/download handoff.
+  Keep generated scratch bytes until the system confirms handoff completion;
+  cancellation/failure cleans only owned scratch files. Startup recovery cleans
+  abandoned report scratch files, never original evidence or user-saved exports.
+
+## Navigation and Presentation
+
+Preserve Project entry to Invoice, Client Summary and Property Management
+reports and their report-specific empty/populated states. Invoice review shows
+business/Project/Client/date/status, grouped charges and credits, net amount and
+optional notes. Client Summary keeps its physical Item/category/Space detail
+while O-035 replaces misleading financial labels. Property Management preserves
+Space grouping plus No Space, Item name/SKU/value and count/value footer.
+
+The Project Reports Invoice entry must lead to selection/opening of an actual
+Invoice using the existing Invoice browser. The source generic aggregate of
+Project arrays is not an Invoice and cannot be presented as one; preserve the
+entry affordance without inventing a new aggregate demand record.
+
+Preserve Invoice Download and Client Summary/Property Management Share, with
+visible generation/loading/failure and system handoff. Receipt actions are
+governed by O-036, not preserved bearer links. Logo and receipt bytes must be
+authorized and resolved before rendering; missing assets and incomplete data
+are visible, not silent success. O-060 governs hidden financial evidence.
+
+The separate proposed Project Closeout report is not silently equivalent to
+Client Summary. Its release scope and remaining presentation/data decisions
+must be resolved explicitly before implementation.

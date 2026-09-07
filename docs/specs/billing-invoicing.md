@@ -12,6 +12,36 @@ Implementation plan: [../plans/billing-invoicing-canonical-implementation.md](..
 > allocations. This document remains the
 > reference for current behavior until the staged migration is implemented.
 
+## Target Billing and Contract Requirements
+
+Preserve the existing Invoicing/Invoice controls and MCP capabilities through
+canonical Item/Expense/Fee demand, whole-Invoice collection and frozen paid
+history. The source examples below do not authorize line-level collection,
+per-category payment splitting, direct manual-line substitutes or a Firebase
+implementation of the redesign. Existing paid-without-payment evidence belongs
+to migration/reconciliation, never an invented target cash event.
+
+Billing summaries must distinguish demand, open/unbilled value and actual
+collection using current live versus frozen paid sources. Preserve the visible
+summary capability, with explicit readiness and signed credit treatment; no
+fallback to incomplete arrays, missing-price zero or paid-status-only payment
+inference. Use canonical paid/unpaid arithmetic, not the old physical purchase-
+cost plus non-itemized-Transaction formula. O-003/O-004/O-010 govern credit/zero
+settlement, O-033 collection amount and O-035 client-facing financial labels;
+O-060 applies before hidden values enter any summary.
+
+Preserve contract-derived Project details and planned Fee schedules through
+reviewable use of the shared Project/Fee/Invoice commands, including optional
+created Invoice membership. Contract extraction does not itself authorize a
+write, prove cash moved, or create a new Contract accounting entity. Repeated
+delivery must not duplicate Fees or Invoice membership; failures and partial
+progress remain observable. Apply O-052 Project permissions, O-029 financial
+validation and O-034 sent revision rules where those operations are requested.
+
+The remaining sections document source behavior and historical proposals.
+Their useful controls are preserved in the exact UI checklist; conflicting
+data shapes and collection algorithms are superseded by canonical specs.
+
 ## Summary
 
 Billing is the boundary between money the business requests and money that has

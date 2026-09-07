@@ -34,7 +34,11 @@ migration mechanics.
 | [vendor-credits.md](vendor-credits.md) | Vendor cancellation credits and other vendor-issued purchase offsets; distinct from physical returns |
 | [reassign-vs-sell.md](reassign-vs-sell.md) | Correct/Move (no financial impact) vs Sell (scope change with budget impact) vs Return (vendor or inventory). UI menu labels and visibility rules. |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |
+| [project-closeout-report.md](project-closeout-report.md) | Proposed closeout narrative and explicit release/presentation decisions; canonical financial meanings take precedence |
+| [billing-invoicing.md](billing-invoicing.md) | Preserved billing-summary and contract-ingestion capabilities; old settlement shapes/algorithms remain source evidence only |
 | [invoice-import.md](invoice-import.md) | PDF/image extraction, vendor parsing, and draft transaction creation |
+| [search-results.md](search-results.md) | Offline text/SKU/amount search, contextual detail and selection; mutations use owning workflows |
+| [needs-review-tab.md](needs-review-tab.md) | Contextual review and resolution; target reason/grouping policy remains open and legacy proto conversion is migration-only |
 
 The canonical target-state specs above override conflicting future-design
 language in current or superseded Firebase-era specs. Confirmed decisions in

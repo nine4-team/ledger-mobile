@@ -165,7 +165,7 @@ The app should communicate sync state to users without blocking them:
 | Download never-cached media | No | Requires authorized network access |
 | Sign in/recover account | No | First sign-in and provider recovery require connectivity |
 | Log out/remove local account | Conditional | Pending-work disposition applies before destructive local cleanup |
-| Invoice import (PDF parsing) | No | Requires server-side processing |
+| Invoice import | Conditional | Supported Amazon/Wayfair text-PDF parsing and review work locally; remote OCR/parsing, uploads and authoritative application require connectivity |
 | Complex command processing | Partial | Target durable intent is accepted offline; authoritative processing waits for connectivity. Request documents are source mechanics only |
 
 ## Current Firebase Conflict Behavior

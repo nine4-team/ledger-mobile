@@ -4,11 +4,11 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "70c81a4e402ae0ee309cb732068a0e2863de494f0e7fae23cc226f7c0a3480c2"
+    "sourceHash": "e40d9ebabffcdb9743f6cd1b71aa7840b38d11c1affd0ce47ebd8349dc8bfd36"
   },
   "completeness": {
     "status": "partial",
-    "reason": "163 stories across thirteen reviewed heading audits (257 headings). Remaining authority audits stay partial and open choices are blocked. Counts are not implemented features."
+    "reason": "179 stories across nineteen heading audits (343 headings); reports/billing/import/search/review independent integrated review passed. Remaining data/lineage/return/correction audits and unresolved decisions remain explicit. Counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -18,11 +18,12 @@
     "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
     "Offline/auth heading crosswalk complete (35 headings), primary and independent integrated review passed. Six shared outcomes cover cached readiness, durable edits/status, media delivery/retention, online entry/onboarding and bounded local access; existing session-ending stories are reused. O-057/O-058 cross-reference unchanged A-007/A-016 choices; O-023/O-051 remain open. Options A/B/C are alternatives, not approved features.",
     "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review passed. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
-    "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
+    "Reports/billing/import heading audit complete, independent review passed after corrections: typed complete snapshots, actual Invoice routing, Property Management, canonical Client Summary dependencies, billing summary and composed contract commands. Preserve local PDF parse/review independent of O-061 expanded/quantity/duplicate decisions; O-062 gates separate Closeout. Receipt sharing and financial policy remain separate.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
     "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance.",
-    "Financial heading audit covers policy/whole-Invoice visibility, no-leak read paths, member settings, invitation lifecycle and migration. O-059 preserves unresolved ownership/self-lockout/role-change authority; O-060 mixed payments, no-revenue Invoices, archived grants and Project overrides. O-057/O-058 and O-009 remain distinct. Primary and independent integrated review passed; source fail-open fallback is not target policy."
+    "Financial heading audit covers policy/whole-Invoice visibility, no-leak read paths, member settings, invitation lifecycle and migration. O-059 preserves unresolved ownership/self-lockout/role-change authority; O-060 mixed payments, no-revenue Invoices, archived grants and Project overrides. O-057/O-058 and O-009 remain distinct. Primary and independent integrated review passed; source fail-open fallback is not target policy.",
+    "Search/review heading audit complete, independent review passed after corrections: text/SKU/amount matching, readiness, context/selection/owning actions and typed review workflow. Source counter-only search refresh, inferred payer, generic assignment and recurring proto promotion are not target behavior. O-063 gates queue reasons/grouping/navigation; existing domain/financial gates remain. The source completeness spec is explicitly source-only."
   ],
   "deliveryRequirements": [
     {
@@ -55,7 +56,6 @@
         "space-list-to-detail",
         "space-checklist-progress",
         "client-identity",
-        "project-invoicing-workspace",
         "item-charge-credit-presentation",
         "item-intake-vocabulary",
         "item-link-choice-review-cancel",
@@ -234,7 +234,10 @@
         "budget-category-directory",
         "receipt-audit-explanation",
         "receipt-line-export",
-        "receipt-line-readback"
+        "receipt-line-readback",
+        "invoice-report-readback",
+        "billing-summary-values",
+        "project-invoicing-workspace"
       ],
       "workflowKinds": [
         "product_ui"
@@ -300,7 +303,8 @@
         "item-link-business-paid",
         "item-evidence-reconciliation",
         "item-intake-atomic-boundary",
-        "receipt-parser-preservation"
+        "receipt-parser-preservation",
+        "invoice-import-confirmation"
       ],
       "workflowKinds": [
         "product_ui"
@@ -398,7 +402,8 @@
         "project-budget-allocation",
         "budget-offline-conflict",
         "receipt-line-editor",
-        "receipt-command-mcp-parity"
+        "receipt-command-mcp-parity",
+        "contract-derived-project-and-fee-import"
       ],
       "workflowKinds": [
         "product_ui"
@@ -527,7 +532,8 @@
         "space-manual-completion",
         "space-detail-item-entry",
         "budget-category-order",
-        "offline-command-durability-and-status"
+        "offline-command-durability-and-status",
+        "vendor-recognition-and-presets"
       ],
       "workflowKinds": [
         "product_ui"
@@ -682,7 +688,9 @@
     {
       "profile": "offline_working_set_read",
       "storyIds": [
-        "offline-working-set-readiness"
+        "offline-working-set-readiness",
+        "search-selection-and-action-routing",
+        "needs-review-contextual-resolution"
       ],
       "workflowKinds": [
         "product_ui"
@@ -765,7 +773,10 @@
       "profile": "financial_visibility",
       "storyIds": [
         "financial-access-policy-and-invoice-visibility",
-        "financial-access-no-leak-projections"
+        "financial-access-no-leak-projections",
+        "universal-search-query-results",
+        "search-contextual-detail",
+        "needs-review-queue"
       ],
       "workflowKinds": [
         "product_ui"
@@ -820,6 +831,68 @@
         "sync_visibility",
         "migration_fidelity",
         "accounting"
+      ]
+    },
+    {
+      "profile": "report_delivery",
+      "storyIds": [
+        "report-snapshot-and-delivery",
+        "property-management-report",
+        "project-closeout-report",
+        "client-summary-report-readback"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "accounting",
+        "deletion"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "accounting",
+        "deletion_retention"
+      ]
+    },
+    {
+      "profile": "local_document_review",
+      "storyIds": [
+        "local-vendor-pdf-review",
+        "invoice-import-expanded-capabilities"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability"
       ]
     }
   ],
@@ -2750,7 +2823,7 @@
     },
     {
       "path": "docs/specs/offline-first.md",
-      "sourceHash": "8938ac024cf82f0d7effa10483e2511273f1db6144701623312a4e5b872350ad",
+      "sourceHash": "3840c29a84a08f1e8dc51e15c7353293f12b892ceb5a577d5172806b8596f276",
       "auditStatus": "audited",
       "storyIds": [
         "offline-working-set-readiness",
@@ -3394,15 +3467,263 @@
     },
     {
       "path": "docs/specs/reports.md",
-      "sourceHash": "f8bc160cae8025d8b5c0c704ce9daacc8503cf3749cc6cb75abe16d9ed74e844",
-      "auditStatus": "partial",
-      "reason": "Invoice, Client Summary, property-management, generation, delivery, and vendor-spend stories remain to be added."
+      "sourceHash": "01c5230bc6a53632983741dcf90fda9e85c1b573730063556b87ebf55d19164c",
+      "auditStatus": "audited",
+      "storyIds": [
+        "report-snapshot-and-delivery",
+        "invoice-report-readback",
+        "property-management-report",
+        "client-summary-report-readback"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Reports",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery"
+          ]
+        },
+        {
+          "heading": "Report Types",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery",
+            "invoice-report-readback",
+            "property-management-report",
+            "client-summary-value-semantics",
+            "client-summary-report-readback"
+          ]
+        },
+        {
+          "heading": "1. Invoice Report",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-report-readback",
+            "report-snapshot-and-delivery"
+          ]
+        },
+        {
+          "heading": "2. Client Summary Report",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-summary-value-semantics",
+            "report-receipt-evidence-sharing",
+            "report-snapshot-and-delivery",
+            "client-summary-report-readback"
+          ]
+        },
+        {
+          "heading": "3. Property Management Report",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "property-management-report",
+            "report-snapshot-and-delivery"
+          ]
+        },
+        {
+          "heading": "Generation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery"
+          ]
+        },
+        {
+          "heading": "Output Formats",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery",
+            "invoice-report-readback",
+            "property-management-report",
+            "client-summary-value-semantics",
+            "report-receipt-evidence-sharing",
+            "client-summary-report-readback"
+          ]
+        },
+        {
+          "heading": "Target Export and Delivery Rules",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery",
+            "financial-access-no-leak-projections",
+            "report-receipt-evidence-sharing"
+          ]
+        },
+        {
+          "heading": "Navigation and Presentation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "report-snapshot-and-delivery",
+            "invoice-report-readback",
+            "property-management-report",
+            "client-summary-value-semantics",
+            "project-closeout-report",
+            "client-summary-report-readback"
+          ]
+        }
+      ]
     },
     {
       "path": "docs/specs/invoice-import.md",
-      "sourceHash": "8f8f545b9a9c6e56b4e6ddf2d5090787f72a717da68396b9816d861fa27914a8",
-      "auditStatus": "partial",
-      "reason": "Capture/parse, review, commit, and vendor-recognition stories remain to be added."
+      "sourceHash": "97cdbe1ba13ed72f2b0e4d9302d6bc30f540deb361e753dba78d5bd07db4c767",
+      "auditStatus": "audited",
+      "storyIds": [
+        "local-vendor-pdf-review",
+        "invoice-import-expanded-capabilities",
+        "invoice-import-confirmation",
+        "vendor-recognition-and-presets"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Invoice Import",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Target Import Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities",
+            "invoice-import-confirmation",
+            "vendor-recognition-and-presets",
+            "receipt-parser-preservation",
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Historical and Proposed Import Description",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-import-expanded-capabilities",
+            "invoice-import-confirmation"
+          ]
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-confirmation"
+          ]
+        },
+        {
+          "heading": "Flow",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-confirmation"
+          ]
+        },
+        {
+          "heading": "Step 1: Document Capture",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities"
+          ]
+        },
+        {
+          "heading": "Step 2: Upload and Parse",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities"
+          ]
+        },
+        {
+          "heading": "Step 3: Review and Edit",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities"
+          ]
+        },
+        {
+          "heading": "Step 4: Import",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-import-confirmation"
+          ]
+        },
+        {
+          "heading": "Vendor Recognition",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "vendor-recognition-and-presets"
+          ]
+        },
+        {
+          "heading": "Parser Limitations",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities"
+          ]
+        },
+        {
+          "heading": "Offline Behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-confirmation",
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities",
+            "invoice-import-confirmation"
+          ]
+        },
+        {
+          "heading": "Design Decision: Why Server-Side Parsing?",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "local-vendor-pdf-review",
+            "invoice-import-expanded-capabilities"
+          ]
+        }
+      ]
     },
     {
       "path": "docs/specs/authentication-offline-access.md",
@@ -3671,6 +3992,504 @@
           ]
         }
       ]
+    },
+    {
+      "path": "docs/specs/billing-invoicing.md",
+      "sourceHash": "6286ed174185c1ba9f37469948ca48c531734b719e405ef7d070b773fadcc37e",
+      "auditStatus": "audited",
+      "storyIds": [
+        "billing-summary-values",
+        "contract-derived-project-and-fee-import"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Billing & Invoicing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Target Billing and Contract Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-invoicing-workspace",
+            "billing-summary-values",
+            "contract-derived-project-and-fee-import"
+          ]
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-invoicing-workspace",
+            "invoice-build-edit",
+            "fee-demand-lifecycle"
+          ]
+        },
+        {
+          "heading": "Core Model",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Transactions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transaction-taxonomy",
+            "legacy-transaction-interpretation"
+          ]
+        },
+        {
+          "heading": "Invoices",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-build-edit",
+            "invoice-collect",
+            "invoice-sent-revision-delivery"
+          ]
+        },
+        {
+          "heading": "Invoice Lines",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-build-edit",
+            "paid-history-boundary",
+            "manual-invoice-adjustments"
+          ]
+        },
+        {
+          "heading": "Billable Pool",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-invoicing-workspace",
+            "invoice-build-edit",
+            "fee-demand-lifecycle"
+          ]
+        },
+        {
+          "heading": "Invoice Workflows",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-build-edit"
+          ]
+        },
+        {
+          "heading": "Ad-Hoc Invoice",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-build-edit"
+          ]
+        },
+        {
+          "heading": "Fee Invoice",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "fee-demand-lifecycle",
+            "invoice-build-edit"
+          ]
+        },
+        {
+          "heading": "Manual Adjustment",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "manual-invoice-adjustments"
+          ]
+        },
+        {
+          "heading": "Mixed Invoice",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-build-edit",
+            "invoice-collect"
+          ]
+        },
+        {
+          "heading": "Collection Behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "invoice-collect",
+            "invoice-credit-zero-settlement"
+          ]
+        },
+        {
+          "heading": "Purchase-from-Inventory Category Corrections",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "transaction-posting-correction",
+            "item-correction"
+          ]
+        },
+        {
+          "heading": "Derived States and Reporting",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "billing-summary-values",
+            "paid-history-boundary"
+          ]
+        },
+        {
+          "heading": "Returns and Credits",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-credit-cash-settlement",
+            "item-credit-after-payment"
+          ]
+        },
+        {
+          "heading": "MCP and Contract Ingestion",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "contract-derived-project-and-fee-import",
+            "invoice-build-edit",
+            "fee-demand-lifecycle"
+          ]
+        },
+        {
+          "heading": "Implementation Notes",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Historical Context",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        }
+      ]
+    },
+    {
+      "path": "docs/specs/search-results.md",
+      "sourceHash": "4f56ab6808712d69f137db09a8c36f31edfaaf1a2ed222be0abb741b03f017ec",
+      "auditStatus": "audited",
+      "storyIds": [
+        "universal-search-query-results",
+        "search-contextual-detail",
+        "search-selection-and-action-routing"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Search Results & Item Detail — Contextual Details",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Target Search Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "universal-search-query-results",
+            "search-contextual-detail",
+            "search-selection-and-action-routing"
+          ]
+        },
+        {
+          "heading": "Shipped Source Evidence",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Scope",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "How It Should Work",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Search Result Row",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Item Detail View (click into an item)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "What's Changing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Staying the Same",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Changing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Adding",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Removing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Open Questions",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        }
+      ]
+    },
+    {
+      "path": "docs/specs/needs-review-tab.md",
+      "sourceHash": "5b41a271e65b47b52121635b502fa9afc57c5b8551b719bfae09990f0fc912c9",
+      "auditStatus": "audited",
+      "storyIds": [
+        "needs-review-queue",
+        "needs-review-contextual-resolution"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Needs Review Tab",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Target Review Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "needs-review-queue",
+            "needs-review-contextual-resolution",
+            "legacy-proto-item-migration",
+            "session-ending-pending-work"
+          ]
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "needs-review-queue",
+            "needs-review-contextual-resolution"
+          ]
+        },
+        {
+          "heading": "Current Behavior (What Exists Today)",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "needs-review-queue",
+            "needs-review-contextual-resolution"
+          ]
+        },
+        {
+          "heading": "What's Changing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Staying the Same",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Changing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Adding",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Removing",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "How It Works",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "The Needs Review List (Grouped View)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Item Detail View (With Breadcrumb)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Assigning Unassigned Items",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Open Questions",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        },
+        {
+          "heading": "Implementation Notes",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Historical shipped evidence or superseded proposal, not target instructions. Target contract above owns preserved/redesigned outcomes; no proto promotion, payer fallback or generic assignment is authorized here."
+        }
+      ]
+    },
+    {
+      "path": "docs/specs/project-closeout-report.md",
+      "sourceHash": "3ecf697b4a5ed422f4911ea666eed50bd364bb4cab218ecb5904767a444a8beb",
+      "auditStatus": "audited",
+      "storyIds": [
+        "project-closeout-report"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Project Closeout Report",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, source-era implementation or superseded proposal context only. The explicit target boundary and mapped canonical stories govern; old data shapes, payer inference and Firebase mechanics are not approved target behavior."
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "The Story the Report Tells",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Report Sections",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Section 1: Furnishings Breakdown",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Section 2: Project Total",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Section 3: Outstanding Payments",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Section 4 (Optional): Budget Comparison",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "What the Report Does NOT Include",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Generating the Report",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Open Questions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        },
+        {
+          "heading": "Implementation Notes",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-closeout-report"
+          ]
+        }
+      ]
     }
   ],
   "decisionCoverage": {
@@ -3910,7 +4729,8 @@
         "storyIds": [
           "accounting-corrections-refunds",
           "invoice-credit-zero-settlement",
-          "client-credit-cash-settlement"
+          "client-credit-cash-settlement",
+          "billing-summary-values"
         ]
       },
       {
@@ -3919,7 +4739,8 @@
         "storyIds": [
           "accounting-corrections-refunds",
           "invoice-credit-zero-settlement",
-          "client-credit-cash-settlement"
+          "client-credit-cash-settlement",
+          "billing-summary-values"
         ]
       },
       {
@@ -3958,7 +4779,8 @@
           "non-item-line-migration",
           "receipt-component-treatment",
           "receipt-line-editor",
-          "receipt-command-mcp-parity"
+          "receipt-command-mcp-parity",
+          "invoice-import-confirmation"
         ]
       },
       {
@@ -3967,7 +4789,9 @@
         "storyIds": [
           "manual-invoice-adjustments",
           "financial-access-policy-and-invoice-visibility",
-          "financial-access-migration"
+          "financial-access-migration",
+          "invoice-report-readback",
+          "project-closeout-report"
         ]
       },
       {
@@ -3976,7 +4800,8 @@
         "storyIds": [
           "transfer-sent-invoice-policy",
           "item-remove-live-invoice",
-          "invoice-credit-zero-settlement"
+          "invoice-credit-zero-settlement",
+          "billing-summary-values"
         ]
       },
       {
@@ -4016,14 +4841,17 @@
           "item-inventory-back-to-source-project",
           "item-cross-client-through-inventory",
           "accounting-relationship-provenance",
-          "item-cycle-provenance"
+          "item-cycle-provenance",
+          "search-selection-and-action-routing",
+          "search-contextual-detail"
         ]
       },
       {
         "decisionId": "O-016",
         "auditStatus": "mapped",
         "storyIds": [
-          "item-link-business-paid"
+          "item-link-business-paid",
+          "invoice-import-confirmation"
         ]
       },
       {
@@ -4105,7 +4933,8 @@
           "space-save-as-template",
           "budget-category-lifecycle",
           "budget-category-order",
-          "budget-default-category-routing"
+          "budget-default-category-routing",
+          "vendor-recognition-and-presets"
         ]
       },
       {
@@ -4114,7 +4943,8 @@
         "storyIds": [
           "item-create-unified-wizard",
           "item-unaccounted-real-shape",
-          "item-capture-mcp-parity"
+          "item-capture-mcp-parity",
+          "invoice-import-confirmation"
         ]
       },
       {
@@ -4132,7 +4962,10 @@
           "accounting-corrections-refunds",
           "transaction-posting-correction",
           "receipt-line-editor",
-          "receipt-command-mcp-parity"
+          "receipt-command-mcp-parity",
+          "contract-derived-project-and-fee-import",
+          "invoice-import-confirmation",
+          "search-selection-and-action-routing"
         ]
       },
       {
@@ -4149,7 +4982,8 @@
         "storyIds": [
           "receipt-completeness",
           "non-item-line-migration",
-          "receipt-component-treatment"
+          "receipt-component-treatment",
+          "invoice-import-confirmation"
         ]
       },
       {
@@ -4163,14 +4997,18 @@
           "vendor-cash-refund",
           "transaction-posting-correction",
           "receipt-line-editor",
-          "receipt-command-mcp-parity"
+          "receipt-command-mcp-parity",
+          "invoice-import-confirmation",
+          "needs-review-queue",
+          "needs-review-contextual-resolution"
         ]
       },
       {
         "decisionId": "O-033",
         "auditStatus": "mapped",
         "storyIds": [
-          "invoice-collect"
+          "invoice-collect",
+          "billing-summary-values"
         ]
       },
       {
@@ -4179,21 +5017,25 @@
         "storyIds": [
           "transfer-sent-invoice-policy",
           "item-remove-live-invoice",
-          "invoice-sent-revision-delivery"
+          "invoice-sent-revision-delivery",
+          "invoice-report-readback"
         ]
       },
       {
         "decisionId": "O-035",
         "auditStatus": "mapped",
         "storyIds": [
-          "client-summary-value-semantics"
+          "client-summary-value-semantics",
+          "project-closeout-report",
+          "billing-summary-values"
         ]
       },
       {
         "decisionId": "O-036",
         "auditStatus": "mapped",
         "storyIds": [
-          "report-receipt-evidence-sharing"
+          "report-receipt-evidence-sharing",
+          "project-closeout-report"
         ]
       },
       {
@@ -4274,7 +5116,10 @@
       },
       {
         "decisionId": "O-047",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "vendor-recognition-and-presets"
+        ]
       },
       {
         "decisionId": "O-048",
@@ -4323,7 +5168,8 @@
           "project-unarchive",
           "project-hero-media",
           "project-note-actions",
-          "project-initial-notes-capture"
+          "project-initial-notes-capture",
+          "contract-derived-project-and-fee-import"
         ]
       },
       {
@@ -4340,7 +5186,8 @@
           "space-media-lifecycle",
           "space-photo-item-markers",
           "space-review-notes",
-          "space-manual-completion"
+          "space-manual-completion",
+          "search-selection-and-action-routing"
         ]
       },
       {
@@ -4359,7 +5206,8 @@
           "space-browser-search",
           "space-create-from-template",
           "space-save-as-template",
-          "space-command-mcp-parity"
+          "space-command-mcp-parity",
+          "universal-search-query-results"
         ]
       },
       {
@@ -4406,7 +5254,44 @@
           "financial-access-no-leak-projections",
           "team-financial-access-settings",
           "invitation-financial-access",
-          "financial-access-migration"
+          "financial-access-migration",
+          "project-closeout-report",
+          "billing-summary-values",
+          "universal-search-query-results",
+          "needs-review-queue",
+          "invoice-report-readback",
+          "search-contextual-detail",
+          "needs-review-contextual-resolution"
+        ]
+      },
+      {
+        "decisionId": "O-061",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "invoice-import-expanded-capabilities",
+          "invoice-import-confirmation"
+        ]
+      },
+      {
+        "decisionId": "O-062",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-closeout-report"
+        ]
+      },
+      {
+        "decisionId": "O-063",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "needs-review-queue",
+          "needs-review-contextual-resolution"
+        ]
+      },
+      {
+        "decisionId": "O-064",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "search-selection-and-action-routing"
         ]
       }
     ]
@@ -5011,7 +5896,7 @@
     {
       "storyId": "project-invoicing-workspace",
       "title": "Browse the Project Invoicing workspace",
-      "outcome": "Browse Items (charges and credits), Expenses, Fees and Invoices. Keep sale/return occurrences as audit provenance rather than a user-facing Item Movement record type.",
+      "outcome": "Browse canonical Items/credits, Expenses, Fees and Invoices with disclosure, query, eligible source/status filters, pipeline/detail routes and empty/readiness states. Use owning commands for lifecycle actions; summary values are separate. Movement records remain provenance, not a user-facing source type.",
       "authority": {
         "path": "docs/specs/invoice-centered-project-accounting.md",
         "section": "Project Invoicing Workspace"
@@ -6914,6 +7799,294 @@
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       }
+    },
+    {
+      "storyId": "report-snapshot-and-delivery",
+      "title": "Preview and deliver a complete authorized report",
+      "outcome": "Preserve per-kind entry, preview and PDF/print/share/CSV/MCP delivery from one complete authorized versioned/as-of snapshot. Resolve assets before pure rendering; show unknown/missing/error states. Use deterministic rows and protected scratch files cleaned after confirmed handoff, never original/user exports.",
+      "authority": {
+        "path": "docs/specs/reports.md",
+        "section": "Target Export and Delivery Rules"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "invoice-report-readback",
+      "title": "Render the selected Invoice and its actual evidence",
+      "outcome": "Route the Invoice report entry through the existing Invoice browser. Render exact live or frozen paid contents, signed groups/totals, status, notes and revision evidence. A linked Purchase explains payment without adding demand again; never substitute generic Project arrays or current Item price repairs.",
+      "authority": {
+        "path": "docs/specs/reports.md",
+        "section": "1. Invoice Report"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-034",
+          "O-009",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "property-management-report",
+      "title": "Hand off Items grouped by Space",
+      "outcome": "Preserve Property Management preview/share with Project/address/date, Space groups plus No Space, Item name/SKU/market value, count/value footer and meaningful empty/failure states. Use current physical identities once, explicit unknown prices and complete authorized local evidence.",
+      "authority": {
+        "path": "docs/specs/reports.md",
+        "section": "3. Property Management Report"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-closeout-report",
+      "title": "Resolve and deliver the proposed Closeout report",
+      "outcome": "If approved for this release, render the agreed furnishings/savings, services, total, outstanding and optional original-budget narrative. Include the approved Item population and format; distinguish paid/open value and unknown evidence. Do not duplicate Client Summary or assume current budget is original.",
+      "authority": {
+        "path": "docs/specs/project-closeout-report.md",
+        "section": "Summary"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-062",
+          "O-035",
+          "O-036",
+          "O-060",
+          "O-009"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "billing-summary-values",
+      "title": "Explain demand, collection and outstanding value",
+      "outcome": "Preserve billing summary information using canonical signed live/frozen demand and real collection evidence, with no double counting, paid-status-only fallback or missing-price zero. Distinguish open/unbilled, invoiced, collected and outstanding; apply approved credit, amount, label and visibility rules.",
+      "authority": {
+        "path": "docs/specs/billing-invoicing.md",
+        "section": "Target Billing and Contract Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-003",
+          "O-004",
+          "O-010",
+          "O-033",
+          "O-035",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "contract-derived-project-and-fee-import",
+      "title": "Apply reviewed contract-derived details and Fee schedules",
+      "outcome": "Review contract-derived Project fields and planned Fee schedules; use shared Project/Fee/Invoice commands for approved updates and optional created Invoice membership. Keep progress/failure observable and retries idempotent. Extraction is neither write authorization, a cash event nor a new accounting entity.",
+      "authority": {
+        "path": "docs/specs/billing-invoicing.md",
+        "section": "Target Billing and Contract Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052",
+          "O-029"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "local-vendor-pdf-review",
+      "title": "Parse and review supported vendor PDFs offline",
+      "outcome": "Preserve local Amazon/Wayfair PDF selection, extraction/errors, summaries/warnings, include/exclude, description/quantity/unit-price edits, category, change/cancel and authorized debug controls. Keep source/row provenance and exact thumbnail binding; supported local review does not wait for expanded scope.",
+      "authority": {
+        "path": "docs/specs/invoice-import.md",
+        "section": "Target Import Contract"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "invoice-import-expanded-capabilities",
+      "title": "Resolve expanded document capture and review scope",
+      "outcome": "Implement camera/image OCR, broader vendor/date editing, adding/removing/searching rows or tax-included controls only if approved for this release. Expose unsupported, no-row, large/multipage and uncertain parse states honestly; do not force network parsing onto the supported local PDF path.",
+      "authority": {
+        "path": "docs/specs/invoice-import.md",
+        "section": "Historical and Proposed Import Description"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-061"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "invoice-import-confirmation",
+      "title": "Commit reviewed imports with canonical accounting",
+      "outcome": "Confirm exact reviewed rows through approved payer/ownership, quantity, pricing and receipt rules. Durably accept intent/bytes/relationships before dismissal, retain pending/applied/rejected state and prevent duplicate records/media on retry. A vendor invoice is not automatically a project Client payment.",
+      "authority": {
+        "path": "docs/specs/invoice-import.md",
+        "section": "Target Import Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-061",
+          "O-016",
+          "O-027",
+          "O-029",
+          "O-031",
+          "O-032",
+          "O-008"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "vendor-recognition-and-presets",
+      "title": "Suggest vendors without changing source evidence",
+      "outcome": "Use approved Account-scoped vendor suggestions while preserving original source wording and honest unknown/archived/incomplete state. Shared preset mutation requires its own approved authority; adding a name neither installs a parser nor silently makes an unsupported invoice importable.",
+      "authority": {
+        "path": "docs/specs/invoice-import.md",
+        "section": "Vendor Recognition"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-047",
+          "O-026"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "universal-search-query-results",
+      "title": "Search authorized local text, SKUs and amounts",
+      "outcome": "Preserve focused/debounced query/Clear, Items/Transactions/Spaces counts and useful segment selection. Match documented text, normalized SKUs and magnitude dollar prefixes, refreshing on value changes. Distinguish initial/no-match/partial/stale/error, omit retired proto results and never leak hidden data.",
+      "authority": {
+        "path": "docs/specs/search-results.md",
+        "section": "Target Search Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-055",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "search-contextual-detail",
+      "title": "Open a search result in its real context",
+      "outcome": "Show Project/Inventory context and open exact Item/Transaction/Space identity through canonical detail readers, or entity-specific unavailable state. Preserve current Client/Space/accounting relationships and visibility-safe history; unknown payer is not inferred from placement.",
+      "authority": {
+        "path": "docs/specs/search-results.md",
+        "section": "Target Search Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-015",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "search-selection-and-action-routing",
+      "title": "Select results and use owning operations",
+      "outcome": "Preserve exclusive Item/Transaction selection, segment-change clearing, counts/eligible totals, Copy ID(s) and Clear. Route status, Link/clear, Space, correction/movement and deletion through fresh approved owning commands; never implement a second Search writer or bypass paid/retention rules.",
+      "authority": {
+        "path": "docs/specs/search-results.md",
+        "section": "Target Search Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-029",
+          "O-053",
+          "O-015",
+          "O-064"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "needs-review-queue",
+      "title": "Browse an explainable contextual review queue",
+      "outcome": "Preserve Review, contextual groups/counts, local query, eight sort choices and find scrolling. Use approved typed reasons and scope/grouping, not source isComplete or empty Item arrays. Distinguish globally caught-up, group-empty, query-no-match, incomplete/stale and unavailable evidence.",
+      "authority": {
+        "path": "docs/specs/needs-review-tab.md",
+        "section": "Target Review Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-063",
+          "O-032",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "needs-review-contextual-resolution",
+      "title": "Resolve review work through its owning workflow",
+      "outcome": "Open exact review identity with reason and canonical context. Use approved breadcrumb destinations and owning Link/placement/receipt/accounting commands, never generic Assign, proto promotion or silent rejection dismissal. Legacy capture migration and O-051 rejected-work resolution remain separate.",
+      "authority": {
+        "path": "docs/specs/needs-review-tab.md",
+        "section": "Target Review Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-063",
+          "O-032",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "client-summary-report-readback",
+      "title": "Read and share the Client Summary's physical detail",
+      "outcome": "Preserve Project entry, business/Project/Client metadata, physical Items with category/Space detail, empty/populated/loading/failure and Share. Compose shared report delivery; financial meanings and receipt actions remain separate O-035/O-036 outcomes, not reasons to omit physical content.",
+      "authority": {
+        "path": "docs/specs/reports.md",
+        "section": "Navigation and Presentation"
+      },
+      "milestone": "M3",
+      "status": "required"
     }
   ]
 }
