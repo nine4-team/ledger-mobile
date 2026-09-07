@@ -12,6 +12,8 @@
     "docs/specs/session-ending-pending-work.md",
     "docs/specs/budget-management.md",
     "docs/specs/offline-first.md",
+    "docs/specs/authentication-offline-access.md",
+    "docs/specs/financial-access-controls.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -25,7 +27,7 @@
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
         { "path": "docs/specs/offline-first.md", "role": "canonical_target" },
-        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "canonical_target" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
         { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
@@ -72,7 +74,7 @@
       "rationale": "Identity, membership, invite, and MCP principal surfaces support authoritative Client relationships and approved offline/security behavior.",
       "authorities": [
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
-        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "canonical_target" },
         { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
         { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }

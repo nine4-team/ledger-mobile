@@ -160,6 +160,22 @@
       "targetRelevantSurfaceCount": 45
     },
     {
+      "path": "docs/specs/authentication-offline-access.md",
+      "batchIds": [
+        "M0-BACKEND-AUTH-001"
+      ],
+      "surfaceCount": 10,
+      "targetRelevantSurfaceCount": 10
+    },
+    {
+      "path": "docs/specs/financial-access-controls.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
       "path": "docs/plans/non-item-receipt-lines/design.md",
       "batchIds": [
         "M0-APP-SHELL-PRESENTATION-001",
@@ -583,7 +599,7 @@
         },
         {
           "path": "docs/specs/financial-access-controls.md",
-          "role": "current_product"
+          "role": "canonical_target"
         },
         {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
@@ -861,7 +877,7 @@
         },
         {
           "path": "docs/specs/authentication-offline-access.md",
-          "role": "current_product"
+          "role": "canonical_target"
         },
         {
           "path": "docs/specs/financial-access-controls.md",

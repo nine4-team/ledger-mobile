@@ -9,6 +9,8 @@ Last updated: 2026-08-31
 > switching, pending work, and destructive logout behave. Architecture A-007
 > (target identity provider/bridge) and A-016 (offline authorization lease)
 > remain open.
+> O-057 and O-058 in the central product decision log cross-reference those same
+> identity/onboarding and offline-access choices; they are not new approvals.
 
 ## Summary
 Users who sign up via Google Sign-In never create a Ledger-specific password.
@@ -25,6 +27,44 @@ This is especially problematic if the app has (or will have) any offline capabil
 
 ## How It Should Work
 The user needs a workaround so that Google-only users aren't permanently locked out when Google auth is unavailable. Several approaches could address this:
+
+The options below are alternatives, not a requirement to implement all three.
+An additional online password does not by itself unlock offline local data.
+
+## Target Online Entry and Account Onboarding
+
+Preserve the current entry capabilities unless an explicit product decision
+replaces them: Sign In/Create Account modes, email/password with matching
+confirmation on signup, and Google sign-in/signup. Retain input/error/loading
+states and prevent duplicate submission. Changing modes clears confirmation
+and local error, not the user's entered email/password. Provider diagnostics
+must not disclose credentials, tokens or another Account's existence.
+
+Preserve invite-link loading, invited-email display, password confirmation,
+invalid/used/failed invite states and Back to Sign In. An invite must confer
+only the intended membership to the authenticated intended identity; identity
+creation alone is not accepted membership. Interrupted or repeated acceptance
+must not grant twice or invent a different Account/role. Provider linking and
+existing-email recovery are part of O-057, not guessed fallback paths.
+
+When complete authorized discovery proves zero memberships, preserve the
+Create Account action and visible progress/failure. Account creation and its
+initial ownership must reconcile without duplicate Accounts after retry. It
+does not run merely because cached discovery is missing or incomplete.
+After signup, invite acceptance or Account creation, use canonical explicit
+Account selection and separately authorized activation; do not copy the source
+automatic selection. Session ending always uses its dedicated safety contract.
+
+First sign-in, signed-out reauthentication and provider recovery require
+connectivity. Offline unlock is a separate bounded capability, not a simulated
+provider login or permission to fetch new data. O-057/A-007 gates the complete
+target identity/onboarding implementation; it does not authorize Firebase
+data adapters or changes to production identities.
+
+## Offline Access Alternatives
+
+The following alternatives remain unresolved under O-058/A-016 and, for
+provider/recovery mechanisms, O-057/A-007.
 
 ### Option A: Prompt Google Users to Set a Backup Password
 After signing up via Google, prompt the user to create a Ledger email/password credential as a backup. This could happen during onboarding (a "set a backup password" step) or later via a nudge in account settings. The user would then have two ways to sign in — Google or email/password — and could fall back to the latter when Google is unavailable.

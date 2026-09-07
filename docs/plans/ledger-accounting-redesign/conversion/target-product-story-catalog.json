@@ -4,11 +4,11 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "ef7e074c3d360d7408ab58626c52e8eb804cf910cce70549107c6de6a372e0ad"
+    "sourceHash": "70c81a4e402ae0ee309cb732068a0e2863de494f0e7fae23cc226f7c0a3480c2"
   },
   "completeness": {
     "status": "partial",
-    "reason": "155 stories; ten authorities have reviewed heading audits (207 headings). Offline shared outcomes added, but its full crosswalk and auth/financial/other authority audits remain partial. Counts are not implemented features."
+    "reason": "163 stories across thirteen reviewed heading audits (257 headings). Remaining authority audits stay partial and open choices are blocked. Counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -16,12 +16,13 @@
     "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
     "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
     "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
-    "Offline review identified three shared outcomes now mapped: authorized cached readiness, durable command acceptance/status/conflicts, and protected attachment capture/upload/verification. Session-ending stories are reused. Auth provider/recovery and offline unlock/lease outcomes remain partial under A-007/A-016; O-023 deletion and O-051 rejected-work resolution stay independent.",
+    "Offline/auth heading crosswalk complete (35 headings), primary and independent integrated review passed. Six shared outcomes cover cached readiness, durable edits/status, media delivery/retention, online entry/onboarding and bounded local access; existing session-ending stories are reused. O-057/O-058 cross-reference unchanged A-007/A-016 choices; O-023/O-051 remain open. Options A/B/C are alternatives, not approved features.",
     "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review passed. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
-    "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance."
+    "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance.",
+    "Financial heading audit covers policy/whole-Invoice visibility, no-leak read paths, member settings, invitation lifecycle and migration. O-059 preserves unresolved ownership/self-lockout/role-change authority; O-060 mixed payments, no-revenue Invoices, archived grants and Project overrides. O-057/O-058 and O-009 remain distinct. Primary and independent integrated review passed; source fail-open fallback is not target policy."
   ],
   "deliveryRequirements": [
     {
@@ -607,7 +608,8 @@
       "profile": "media_reference_commands",
       "storyIds": [
         "space-media-lifecycle",
-        "space-review-notes"
+        "space-review-notes",
+        "attachment-reference-and-byte-retention"
       ],
       "workflowKinds": [
         "product_ui"
@@ -699,6 +701,125 @@
         "tenant_authorization",
         "sync_visibility",
         "offline_durability"
+      ]
+    },
+    {
+      "profile": "identity_onboarding",
+      "storyIds": [
+        "auth-online-entry-and-recovery-boundary",
+        "team-financial-access-settings",
+        "invitation-financial-access"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "auth",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "identity_auth",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility"
+      ]
+    },
+    {
+      "profile": "offline_authorization",
+      "storyIds": [
+        "offline-unlock-lease-and-account-isolation"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "deletion"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "deletion_retention"
+      ]
+    },
+    {
+      "profile": "financial_visibility",
+      "storyIds": [
+        "financial-access-policy-and-invoice-visibility",
+        "financial-access-no-leak-projections"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "accounting"
+      ]
+    },
+    {
+      "profile": "financial_visibility_migration",
+      "storyIds": [
+        "financial-access-migration"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "app_mcp",
+        "auth",
+        "postgres_schema",
+        "rls",
+        "powersync_sync",
+        "migration",
+        "accounting"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "app_mcp_parity",
+        "identity_auth",
+        "database_integrity",
+        "tenant_authorization",
+        "sync_visibility",
+        "migration_fidelity",
+        "accounting"
       ]
     }
   ],
@@ -2630,12 +2751,204 @@
     {
       "path": "docs/specs/offline-first.md",
       "sourceHash": "8938ac024cf82f0d7effa10483e2511273f1db6144701623312a4e5b872350ad",
-      "auditStatus": "partial",
-      "reason": "Shared cached-readiness, durable-edit/status and complete capture/upload/verification outcomes added after bounded review. Final heading audit awaits authentication/lease and retention crosswalk; do not treat conditional supported operations as role approval.",
+      "auditStatus": "audited",
       "storyIds": [
         "offline-working-set-readiness",
         "offline-command-durability-and-status",
-        "attachment-capture-delivery-verification"
+        "attachment-capture-delivery-verification",
+        "attachment-reference-and-byte-retention"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Offline-First Architecture",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, boundary or rationale; product obligations are mapped in the child headings."
+        },
+        {
+          "heading": "Core Principle",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness",
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Three Rules",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness",
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Rule 1: No Spinners of Doom",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness"
+          ]
+        },
+        {
+          "heading": "Rule 2: Optimistic UI",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Rule 3: Only Block on Actual Uploads",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness",
+            "offline-command-durability-and-status",
+            "attachment-capture-delivery-verification",
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Current Firebase Database Behavior",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source implementation evidence only; no Firebase adapter, fire-and-forget, request-document or provider fallback implementation is authorized."
+        },
+        {
+          "heading": "Current Firebase Write Patterns",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source implementation evidence only; no Firebase adapter, fire-and-forget, request-document or provider fallback implementation is authorized."
+        },
+        {
+          "heading": "Fire-and-Forget (Most Writes)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source implementation evidence only; no Firebase adapter, fire-and-forget, request-document or provider fallback implementation is authorized."
+        },
+        {
+          "heading": "Request Documents (Multi-Document Operations)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source implementation evidence only; no Firebase adapter, fire-and-forget, request-document or provider fallback implementation is authorized."
+        },
+        {
+          "heading": "Target Attachment Lifecycle",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Stage 1: Local Capture",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Stage 2: Local Metadata and Structured Sync",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Stage 3: Upload",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Stage 4: Verification and Reconciliation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification"
+          ]
+        },
+        {
+          "heading": "Offline Display",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification",
+            "attachment-reference-and-byte-retention",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Sync Status Indicators",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness",
+            "offline-command-durability-and-status",
+            "attachment-capture-delivery-verification",
+            "session-ending-pending-work"
+          ]
+        },
+        {
+          "heading": "What Works Offline",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness",
+            "offline-command-durability-and-status",
+            "attachment-capture-delivery-verification",
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation",
+            "session-clean-logout",
+            "session-destructive-removal"
+          ]
+        },
+        {
+          "heading": "Current Firebase Conflict Behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Design Decisions",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, boundary or rationale; product obligations are mapped in the child headings."
+        },
+        {
+          "heading": "Why not await writes?",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Why separate structured and media queues?",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "attachment-capture-delivery-verification",
+            "offline-command-durability-and-status"
+          ]
+        },
+        {
+          "heading": "Why local cache over server-first?",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-working-set-readiness"
+          ]
+        }
       ]
     },
     {
@@ -3093,15 +3406,271 @@
     },
     {
       "path": "docs/specs/authentication-offline-access.md",
-      "sourceHash": "f5e0fc533b3f454b760f61483026729ac24f117aab74cb7cbc77430bcf8ee71b",
-      "auditStatus": "partial",
-      "reason": "Previously omitted governing authority. Returning-device access/recovery still requires explicit coverage; A-007 identity and A-016 lease/unlock remain open. Reuse dedicated session-ending stories."
+      "sourceHash": "30b2dbbbb3fd2e491ee0e5e2a6897887935c5b3eae573266360ceba04313353f",
+      "auditStatus": "audited",
+      "storyIds": [
+        "auth-online-entry-and-recovery-boundary",
+        "offline-unlock-lease-and-account-isolation"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Authentication & Offline Access",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title, boundary or rationale; product obligations are mapped in the child headings."
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "The Problem",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "How It Should Work",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Target Online Entry and Account Onboarding",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "workspace-selection-explicit"
+          ]
+        },
+        {
+          "heading": "Offline Access Alternatives",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Option A: Prompt Google Users to Set a Backup Password",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Option B: Cached Session / Persistent Login",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Option C: Offline-Aware Auth with Local Credential",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Target Session-Ending Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "session-ending-pending-work",
+            "session-pending-work-summary",
+            "session-clean-logout",
+            "session-sync-then-logout",
+            "session-destructive-removal",
+            "session-cancel-ending",
+            "session-interrupted-cleanup"
+          ]
+        },
+        {
+          "heading": "Open Questions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "auth-online-entry-and-recovery-boundary",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        },
+        {
+          "heading": "Implementation Notes",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source implementation evidence only; no Firebase adapter, fire-and-forget, request-document or provider fallback implementation is authorized."
+        }
+      ]
     },
     {
       "path": "docs/specs/financial-access-controls.md",
-      "sourceHash": "22185cb6ed9f465a046d9224bdf4ffdc8eb7e8cc7afd3767a0c6053871f74fcf",
-      "auditStatus": "partial",
-      "reason": "Previously omitted governing authority. Preserve revenue confidentiality/no leaks across app, downloads, local cache and MCP. Mixed collected-payment allocation visibility, access reductions and legacy open questions require reconciliation before target delivery."
+      "sourceHash": "67182918899ec8ed119475f17ac651b260440cbe6d2e95ca03ea948912a6ab06",
+      "auditStatus": "audited",
+      "storyIds": [
+        "financial-access-policy-and-invoice-visibility",
+        "financial-access-no-leak-projections",
+        "team-financial-access-settings",
+        "invitation-financial-access",
+        "financial-access-migration"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Financial Access Controls",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title/source implementation status is not target implementation authority; target behavior is reconciled explicitly and Firebase work is not authorized."
+        },
+        {
+          "heading": "Summary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-no-leak-projections"
+          ]
+        },
+        {
+          "heading": "Implementation Status",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title/source implementation status is not target implementation authority; target behavior is reconciled explicitly and Firebase work is not authorized."
+        },
+        {
+          "heading": "Principles",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-no-leak-projections",
+            "team-financial-access-settings"
+          ]
+        },
+        {
+          "heading": "Target Visibility and Management Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-no-leak-projections",
+            "team-financial-access-settings",
+            "invitation-financial-access",
+            "financial-access-migration"
+          ]
+        },
+        {
+          "heading": "Roles",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "team-financial-access-settings",
+            "invitation-financial-access"
+          ]
+        },
+        {
+          "heading": "Company Financial Access",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "team-financial-access-settings",
+            "invitation-financial-access"
+          ]
+        },
+        {
+          "heading": "Company Revenue Visibility",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-no-leak-projections"
+          ]
+        },
+        {
+          "heading": "Invoice Visibility",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-no-leak-projections"
+          ]
+        },
+        {
+          "heading": "Manual New Charge Lines",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "financial-access-migration",
+            "manual-invoice-adjustments"
+          ]
+        },
+        {
+          "heading": "Access UI",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "team-financial-access-settings",
+            "invitation-financial-access"
+          ]
+        },
+        {
+          "heading": "Restricted Surfaces",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-no-leak-projections"
+          ]
+        },
+        {
+          "heading": "Server and Tooling",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-no-leak-projections",
+            "team-financial-access-settings",
+            "invitation-financial-access"
+          ]
+        },
+        {
+          "heading": "Backfill",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-migration"
+          ]
+        },
+        {
+          "heading": "Open Questions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "financial-access-policy-and-invoice-visibility",
+            "team-financial-access-settings",
+            "invitation-financial-access",
+            "financial-access-no-leak-projections",
+            "offline-unlock-lease-and-account-isolation"
+          ]
+        }
+      ]
     }
   ],
   "decisionCoverage": {
@@ -3396,7 +3965,9 @@
         "decisionId": "O-009",
         "auditStatus": "mapped",
         "storyIds": [
-          "manual-invoice-adjustments"
+          "manual-invoice-adjustments",
+          "financial-access-policy-and-invoice-visibility",
+          "financial-access-migration"
         ]
       },
       {
@@ -3501,7 +4072,12 @@
       },
       {
         "decisionId": "O-023",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-media-lifecycle",
+          "space-review-notes",
+          "attachment-reference-and-byte-retention"
+        ]
       },
       {
         "decisionId": "O-024",
@@ -3793,6 +4369,44 @@
           "budget-categories",
           "project-inline-category-create",
           "budget-category-lifecycle"
+        ]
+      },
+      {
+        "decisionId": "O-057",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "auth-online-entry-and-recovery-boundary",
+          "offline-unlock-lease-and-account-isolation",
+          "invitation-financial-access",
+          "financial-access-migration"
+        ]
+      },
+      {
+        "decisionId": "O-058",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "offline-unlock-lease-and-account-isolation",
+          "financial-access-no-leak-projections"
+        ]
+      },
+      {
+        "decisionId": "O-059",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "team-financial-access-settings",
+          "invitation-financial-access",
+          "financial-access-migration"
+        ]
+      },
+      {
+        "decisionId": "O-060",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "financial-access-policy-and-invoice-visibility",
+          "financial-access-no-leak-projections",
+          "team-financial-access-settings",
+          "invitation-financial-access",
+          "financial-access-migration"
         ]
       }
     ]
@@ -6147,6 +6761,159 @@
       },
       "milestone": "M3",
       "status": "required"
+    },
+    {
+      "storyId": "auth-online-entry-and-recovery-boundary",
+      "title": "Sign in, join an Account and recover access",
+      "outcome": "Preserve email/Google signup/sign-in and error/loading controls, invite acceptance and zero-membership Account creation with safe retry. Use explicit Account selection after success. Network-only identity/recovery cannot masquerade as offline unlock; provider/linking policy remains O-057.",
+      "authority": {
+        "path": "docs/specs/authentication-offline-access.md",
+        "section": "Target Online Entry and Account Onboarding"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-057"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "offline-unlock-lease-and-account-isolation",
+      "title": "Reopen only authorized local work",
+      "outcome": "Open only the approved environment/Principal/Account working set under bounded offline authorization and local unlock. Local access neither refreshes server authority nor authorizes new downloads. Apply approved expiry/revocation, financial scope and recovery rules without cross-Account leakage or silent loss.",
+      "authority": {
+        "path": "docs/specs/authentication-offline-access.md",
+        "section": "Summary"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-057",
+          "O-058"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "attachment-reference-and-byte-retention",
+      "title": "Remove media without destroying shared or pending evidence",
+      "outcome": "Separate removing a parent reference from deleting bytes. Apply approved retention, authoritative shared-reference checks and recoverable quarantine before permanent deletion; preserve pending capture and history. Ordinary cleanup, retry and logout cannot bypass explicit pending-work disposition.",
+      "authority": {
+        "path": "docs/specs/offline-first.md",
+        "section": "Offline Display"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-023"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "financial-access-policy-and-invoice-visibility",
+      "title": "Apply approved Fee and whole-Invoice visibility",
+      "outcome": "Use approved full/limited/none grants and explicit Fee IDs; unknown revenue fails closed. Whole Invoices hide when any protected Fee is unavailable; never partially redact. Classify target Invoicing sources, not legacy payment types or all Expenses. Mixed payments and manual adjustments remain gated.",
+      "authority": {
+        "path": "docs/specs/financial-access-controls.md",
+        "section": "Target Visibility and Management Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-060",
+          "O-009"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "financial-access-no-leak-projections",
+      "title": "Keep hidden financial data out of every read path",
+      "outcome": "Enforce one approved visibility policy before server reads, sync downloads, local data/media, search/review, budgets, reports/exports and MCP. Hidden amounts/counts/names/Invoice IDs/provenance cannot leak. Reduce online grants promptly; offline cache and retained work follow O-058, not immediate revocation.",
+      "authority": {
+        "path": "docs/specs/financial-access-controls.md",
+        "section": "Target Visibility and Management Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-060",
+          "O-058"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "team-financial-access-settings",
+      "title": "Manage member roles and financial access safely",
+      "outcome": "Show authorized member directory/badges and Access editor: Role, Full/Limited/None, conditional Fee checklist, Invoice explanation, Save/progress/error/Cancel/empty states. Apply exact member/revision changes together under approved ownership/self-lockout rules; never silently drop archived Fee grants.",
+      "authority": {
+        "path": "docs/specs/financial-access-controls.md",
+        "section": "Target Visibility and Management Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-059",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "invitation-financial-access",
+      "title": "Invite and revoke with the intended grant",
+      "outcome": "Preserve validated email, Employee/Admin and financial-access choices, Limited Fee checklist, pending invitation rows, Copy Link and confirmed Revoke. Show sending/revoking/failure without silent success. Apply approved actor/role/grant policy and safely reconcile acceptance through target identity.",
+      "authority": {
+        "path": "docs/specs/financial-access-controls.md",
+        "section": "Target Visibility and Management Contract"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-057",
+          "O-059",
+          "O-060"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "financial-access-migration",
+      "title": "Import financial grants and visibility evidence faithfully",
+      "outcome": "Preserve source member/invite grants and derive target Fee/Invoice/frozen visibility evidence without broadening access or duplicating invites on rerun. Retain original provenance and authorized unresolved-classification reports; unknown revenue stays full-only. Final promotion uses approved target policy.",
+      "authority": {
+        "path": "docs/specs/financial-access-controls.md",
+        "section": "Backfill"
+      },
+      "milestone": "M4",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-057",
+          "O-059",
+          "O-060",
+          "O-009"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     }
   ]
 }
