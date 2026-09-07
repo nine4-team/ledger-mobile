@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,9 @@ const statePath = join(repositoryRoot, stateRelativePath);
 const workflowRecordsRelative =
   "docs/plans/ledger-accounting-redesign/conversion/workflow-records";
 const workflowRecordsPath = join(repositoryRoot, workflowRecordsRelative);
+const targetStoryCatalogRelative =
+  "docs/plans/ledger-accounting-redesign/conversion/target-product-story-catalog.json";
+const targetStoryCatalogPath = join(repositoryRoot, targetStoryCatalogRelative);
 const manifest = JSON.parse(
   readFileSync(
     join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json"),
@@ -25,6 +29,11 @@ const authorityCrosswalk = JSON.parse(
 );
 const surfacesById = new Map((manifest.surfaces ?? []).map((surface) => [surface.id, surface]));
 const canonicalTargetSpecs = new Set(authorityCrosswalk.canonicalTargetSpecs ?? []);
+const targetStoryCatalog = JSON.parse(readFileSync(targetStoryCatalogPath, "utf8"));
+const targetStoriesById = new Map(
+  (targetStoryCatalog.stories ?? []).map((story) => [story.storyId, story]),
+);
+const targetDeliveryRequirementsByStory = new Map();
 const errors = [];
 
 const workflowStatuses = new Set([
@@ -93,6 +102,40 @@ const specialistReviewRisks = new Set([
   "deletion_retention",
   "database_integrity",
   "handler_idempotency",
+]);
+const productMilestoneRanks = new Map([["M3", 3], ["M4", 4], ["M5", 5]]);
+const requestedProductGate = process.argv[2] === "--gate" ? process.argv[3] : undefined;
+const allowedSourceOnlyAuthorities = new Set([
+  "docs/specs/write-tiers.md",
+  "docs/specs/canonical-sales.md",
+  "docs/specs/transaction-audit.md",
+  "docs/specs/vendor-credits.md",
+]);
+const completionWorkflowPath = ".github/workflows/supabase-conversion-control.yml";
+
+const layerEvidencePredicates = new Map([
+  ["domain", (path) => path.startsWith("LedgeriOS/LedgerTargetCore/")],
+  ["app_ui", (path) =>
+    path.startsWith("LedgeriOS/LedgerTargetApp/") ||
+    path.startsWith("LedgeriOS/LedgerTargetAppModel/")],
+  ["app_mcp", (path) => path.startsWith("LedgerTargetMCP/")],
+  ["postgres_schema", (path) => path.startsWith("supabase/migrations/")],
+  ["postgres_handler", (path) => path.startsWith("supabase/migrations/")],
+  ["rls", (path) =>
+    path.startsWith("supabase/migrations/") || path.startsWith("supabase/tests/")],
+  ["powersync_sync", (path) => path.startsWith("LedgeriOS/LedgerTargetPowerSync/")],
+  ["local_offline", (path) => path.startsWith("LedgeriOS/LedgerTargetPowerSync/")],
+  ["accounting", (path) =>
+    /(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/i.test(path)],
+  ["media", (path) => /(attachment|media|image|photo|receipt)/i.test(path)],
+  ["migration", (path) =>
+    path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
+    /(^|\/)(migration|migrations)(\/|$)/i.test(path)],
+  ["auth", (path) =>
+    /(auth|principal|session|keychain|identity)/i.test(path) ||
+    /^LedgeriOS\/LedgerTargetPowerSync\/Supabase.+RPC\.swift$/.test(path)],
+  ["deletion", (path) => /(delete|deletion|retention)/i.test(path)],
+  ["observability", (path) => /(observability|telemetry|metric|reconciliation|cutover|health)/i.test(path)],
 ]);
 
 function requireCondition(condition, message) {
@@ -219,6 +262,109 @@ function hasHeading(filePath, heading) {
     );
 }
 
+function sha256(filePath) {
+  return createHash("sha256").update(readFileSync(filePath)).digest("hex");
+}
+
+function markdownHeadingInventory(filePath) {
+  const occurrences = new Map();
+  return readFileSync(filePath, "utf8")
+    .split(/\r?\n/)
+    .flatMap((line) => {
+      const match = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+      if (!match) return [];
+      const heading = match[2].trim();
+      const occurrence = (occurrences.get(heading) ?? 0) + 1;
+      occurrences.set(heading, occurrence);
+      return [{ heading, occurrence }];
+    });
+}
+
+function headingInventoryKey(entry) {
+  return `${entry.heading}::${entry.occurrence}`;
+}
+
+function pathSupportsLayer(path, layer) {
+  return layerEvidencePredicates.get(layer)?.(path) ?? false;
+}
+
+function originGithubRepository() {
+  const origin = execFileSync("git", ["remote", "get-url", "origin"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  }).trim();
+  const match = origin.match(/github\.com[/:]([^/\s]+\/[^/\s]+?)(?:\.git)?$/);
+  if (!match) throw new Error(`origin is not a GitHub repository: ${origin}`);
+  return match[1];
+}
+
+function validateGithubCompletionRun(commit, runId, prefix) {
+  try {
+    const repository = originGithubRepository();
+    const run = JSON.parse(
+      execFileSync("gh", ["api", `repos/${repository}/actions/runs/${runId}`], {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }),
+    );
+    requireCondition(run.head_sha === commit, `${prefix}: CI run ${runId} did not execute commit ${commit}.`);
+    requireCondition(run.status === "completed", `${prefix}: CI run ${runId} is not completed.`);
+    requireCondition(run.conclusion === "success", `${prefix}: CI run ${runId} did not succeed.`);
+    requireCondition(run.path === completionWorkflowPath, `${prefix}: CI run ${runId} did not execute ${completionWorkflowPath}.`);
+    requireCondition(["pull_request", "push"].includes(run.event), `${prefix}: CI run ${runId} has unsupported event ${run.event}.`);
+    const jobs = JSON.parse(
+      execFileSync("gh", ["api", `repos/${repository}/actions/runs/${runId}/jobs`, "--paginate"], {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }),
+    );
+    const jobConclusions = new Map((jobs.jobs ?? []).map((job) => [job.name, job.conclusion]));
+    for (const requiredJob of [
+      "Conversion state and traceability",
+      "Isolated target environment",
+      "Local Supabase provider slices",
+    ]) {
+      requireCondition(
+        jobConclusions.get(requiredJob) === "success",
+        `${prefix}: CI run ${runId} lacks successful required job ${requiredJob}.`,
+      );
+    }
+  } catch (error) {
+    errors.push(`${prefix}: unable to verify GitHub CI run ${runId}: ${error.message}`);
+  }
+}
+
+function remoteBranchCommit(branch, prefix) {
+  try {
+    const output = execFileSync(
+      "git",
+      ["ls-remote", "--heads", "origin", `refs/heads/${branch}`],
+      { cwd: repositoryRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    ).trim();
+    const commit = output.split(/\s+/)[0];
+    if (!/^[0-9a-f]{40}$/.test(commit ?? "")) {
+      errors.push(`${prefix}: origin/${branch} did not resolve to an exact commit.`);
+      return undefined;
+    }
+    return commit;
+  } catch (error) {
+    errors.push(`${prefix}: unable to resolve origin/${branch}: ${error.message}`);
+    return undefined;
+  }
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value).sort().map((key) => [key, canonicalJson(value[key])]),
+    );
+  }
+  return value;
+}
+
 function requireStrings(values, field, { allowEmpty = false } = {}) {
   requireCondition(
     Array.isArray(values) && (allowEmpty || values.length > 0),
@@ -266,6 +412,355 @@ function validateAuthority(entries, prefix, kind) {
   }
 }
 
+function markdownSectionLines(filePath, section) {
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+  const escaped = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const headingPattern = new RegExp(`^(#{1,6})\\s+${escaped}\\s*$`);
+  const start = lines.findIndex((line) => headingPattern.test(line));
+  if (start < 0) return [];
+  const level = lines[start].match(/^#+/)?.[0].length ?? 6;
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const match = lines[index].match(/^(#{1,6})\s+/);
+    if (match && match[1].length <= level) {
+      end = index;
+      break;
+    }
+  }
+  return lines.slice(start + 1, end);
+}
+
+function decisionRowExists(filePath, section, decisionId) {
+  return markdownSectionLines(filePath, section)
+    .some((line) => line.startsWith(`| ${decisionId} |`));
+}
+
+function decisionIdsInSection(filePath, section, prefix) {
+  const ids = markdownSectionLines(filePath, section)
+    .map((line) => line.match(/^\|\s+([DO]-[0-9]{3})\s+\|/)?.[1])
+    .filter(Boolean);
+  requireCondition(ids.length > 0, `${prefix}: no decision rows found in ${section}.`);
+  requireCondition(new Set(ids).size === ids.length, `${prefix}: duplicate decision IDs in ${section}.`);
+  return new Set(ids);
+}
+
+function indexedSpecPaths(indexPath) {
+  const markdown = readFileSync(indexPath, "utf8");
+  const indexSection = markdownSectionLines(indexPath, "Spec Index");
+  const paths = [];
+  for (const line of indexSection) {
+    const link = line.match(/^\|\s*\[[^\]]+\]\(([^)#]+\.md)(?:#[^)]+)?\)\s*\|/)?.[1];
+    if (!link) continue;
+    const resolved = resolve(dirname(indexPath), link);
+    const repositoryPath = relative(repositoryRoot, resolved).replaceAll("\\", "/");
+    requireCondition(!repositoryPath.startsWith("../"), `${targetStoryCatalogRelative}: indexed spec escapes repository: ${link}.`);
+    paths.push(repositoryPath);
+  }
+  requireCondition(markdown.includes("## Spec Index"), `${targetStoryCatalogRelative}: authority index lacks Spec Index.`);
+  requireCondition(new Set(paths).size === paths.length, `${targetStoryCatalogRelative}: authority index contains duplicate spec paths.`);
+  return new Set(paths);
+}
+
+function workflowEvidencePayload(record) {
+  const payload = structuredClone(record);
+  delete payload.status;
+  if (payload.verification) delete payload.verification.ci;
+  return payload;
+}
+
+function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative) {
+  requireCondition(catalog?.schemaVersion === 1, `${prefix}: schemaVersion must equal 1.`);
+  requireCondition(catalog?.catalogId === "ledger-target-product-stories", `${prefix}: catalogId is invalid.`);
+  requireCondition(catalog?.authorityIndex === "docs/specs/README.md", `${prefix}: authorityIndex must be docs/specs/README.md.`);
+  repositoryFile(catalog?.authorityIndex, `${prefix}: authorityIndex`);
+  requireCondition(
+    catalog?.decisionLog?.path === "docs/plans/ledger-accounting-redesign/decision-log.md",
+    `${prefix}: decisionLog.path must be the redesign decision log.`,
+  );
+  const catalogDecisionLogPath = repositoryFile(catalog?.decisionLog?.path, `${prefix}: decisionLog.path`);
+  requireCondition(/^[0-9a-f]{64}$/.test(catalog?.decisionLog?.sourceHash ?? ""), `${prefix}: decisionLog.sourceHash must be SHA-256.`);
+  if (catalogDecisionLogPath && /^[0-9a-f]{64}$/.test(catalog?.decisionLog?.sourceHash ?? "")) {
+    requireCondition(
+      sha256(catalogDecisionLogPath) === catalog.decisionLog.sourceHash,
+      `${prefix}: decisionLog.sourceHash is stale; re-audit decision mappings after the log changed.`,
+    );
+  }
+  requireCondition(
+    ["partial", "complete"].includes(catalog?.completeness?.status),
+    `${prefix}: completeness.status must be partial or complete.`,
+  );
+  requireString(catalog?.completeness?.reason, `${prefix}: completeness.reason`);
+  requireCondition(Array.isArray(catalog?.stories) && catalog.stories.length > 0, `${prefix}: stories must not be empty.`);
+
+  const storyIds = new Set();
+  const catalogStoriesById = new Map();
+  for (const [index, story] of (catalog?.stories ?? []).entries()) {
+    const storyPrefix = `${prefix}: stories[${index}]`;
+    requireCondition(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(story?.storyId ?? ""),
+      `${storyPrefix}.storyId must be lower-kebab-case.`,
+    );
+    requireCondition(!storyIds.has(story?.storyId), `${storyPrefix}.storyId is duplicated.`);
+    storyIds.add(story?.storyId);
+    catalogStoriesById.set(story?.storyId, story);
+    requireString(story?.title, `${storyPrefix}.title`);
+    requireString(story?.outcome, `${storyPrefix}.outcome`);
+    requireCondition(
+      typeof story?.outcome !== "string" || story.outcome.length <= 320,
+      `${storyPrefix}.outcome must remain concise.`,
+    );
+    requireCondition(productMilestoneRanks.has(story?.milestone), `${storyPrefix}.milestone must be M3, M4, or M5.`);
+    requireCondition(["required", "blocked", "retired"].includes(story?.status), `${storyPrefix}.status is invalid.`);
+
+    const authority = story?.authority ?? {};
+    const authorityPath = repositoryFile(authority.path, `${storyPrefix}.authority.path`);
+    requireString(authority.section, `${storyPrefix}.authority.section`);
+    requireCondition(
+      canonicalTargetSpecs.has(authority.path),
+      `${storyPrefix}.authority.path is not a registered canonical target spec.`,
+    );
+    if (authorityPath && typeof authority.section === "string") {
+      requireCondition(hasHeading(authorityPath, authority.section), `${storyPrefix}.authority.section does not exist.`);
+    }
+
+    if (story?.status === "blocked") {
+      const blocker = story?.blocker ?? {};
+      requireStrings(blocker.decisionIds, `${storyPrefix}.blocker.decisionIds`);
+      requireCondition(
+        new Set(blocker.decisionIds ?? []).size === (blocker.decisionIds ?? []).length,
+        `${storyPrefix}.blocker.decisionIds contains duplicates.`,
+      );
+      requireCondition(
+        blocker.path === "docs/plans/ledger-accounting-redesign/decision-log.md",
+        `${storyPrefix}.blocker.path must be the decision log.`,
+      );
+      const blockerPath = repositoryFile(blocker.path, `${storyPrefix}.blocker.path`);
+      requireString(blocker.section, `${storyPrefix}.blocker.section`);
+      requireCondition(
+        blocker.section === "Open Product Decisions",
+        `${storyPrefix}.blocker.section must be Open Product Decisions.`,
+      );
+      if (blockerPath && typeof blocker.section === "string") {
+        requireCondition(hasHeading(blockerPath, blocker.section), `${storyPrefix}.blocker.section does not exist.`);
+        for (const decisionId of blocker.decisionIds ?? []) {
+          requireCondition(/^O-[0-9]{3}$/.test(decisionId), `${storyPrefix}: blocker decision ${decisionId} is not open.`);
+          requireCondition(decisionRowExists(blockerPath, blocker.section, decisionId), `${storyPrefix}: blocker decision ${decisionId} is not present in ${blocker.section}.`);
+        }
+      }
+      requireCondition(story.retirementAuthority === undefined, `${storyPrefix}: blocked story cannot have retirementAuthority.`);
+    } else if (story?.status === "retired") {
+      const retirement = story?.retirementAuthority ?? {};
+      requireCondition(
+        retirement.path === "docs/plans/ledger-accounting-redesign/decision-log.md",
+        `${storyPrefix}.retirementAuthority.path must be the decision log.`,
+      );
+      const retirementPath = repositoryFile(retirement.path, `${storyPrefix}.retirementAuthority.path`);
+      requireString(retirement.section, `${storyPrefix}.retirementAuthority.section`);
+      requireCondition(
+        retirement.section === "Confirmed Decisions",
+        `${storyPrefix}.retirementAuthority.section must be Confirmed Decisions.`,
+      );
+      requireString(retirement.decisionId, `${storyPrefix}.retirementAuthority.decisionId`);
+      if (retirementPath && typeof retirement.section === "string") {
+        requireCondition(hasHeading(retirementPath, retirement.section), `${storyPrefix}.retirementAuthority.section does not exist.`);
+        requireCondition(/^D-[0-9]{3}$/.test(retirement.decisionId ?? ""), `${storyPrefix}: retirement requires a confirmed D- decision.`);
+        requireCondition(decisionRowExists(retirementPath, retirement.section, retirement.decisionId), `${storyPrefix}: retirement decision ${retirement.decisionId} is not present in ${retirement.section}.`);
+      }
+      requireCondition(story.blocker === undefined, `${storyPrefix}: retired story cannot have blocker.`);
+    } else {
+      requireCondition(story.blocker === undefined, `${storyPrefix}: required story cannot have blocker.`);
+      requireCondition(story.retirementAuthority === undefined, `${storyPrefix}: required story cannot have retirementAuthority.`);
+    }
+  }
+
+  requireCondition(Array.isArray(catalog?.deliveryRequirements), `${prefix}: deliveryRequirements must be an array.`);
+  const deliveryProfiles = new Set();
+  const deliveryStoryIds = new Set();
+  for (const [index, requirement] of (catalog?.deliveryRequirements ?? []).entries()) {
+    const requirementPrefix = `${prefix}: deliveryRequirements[${index}]`;
+    requireString(requirement?.profile, `${requirementPrefix}.profile`);
+    requireCondition(!deliveryProfiles.has(requirement?.profile), `${requirementPrefix}.profile is duplicated.`);
+    deliveryProfiles.add(requirement?.profile);
+    requireStrings(requirement?.storyIds, `${requirementPrefix}.storyIds`);
+    requireStrings(requirement?.workflowKinds, `${requirementPrefix}.workflowKinds`);
+    requireStrings(requirement?.requiredLayers, `${requirementPrefix}.requiredLayers`);
+    requireStrings(requirement?.requiredRisks, `${requirementPrefix}.requiredRisks`);
+    for (const kind of requirement?.workflowKinds ?? []) {
+      requireCondition(["product_ui", "backend_control", "migration"].includes(kind), `${requirementPrefix}: invalid workflow kind ${kind}.`);
+    }
+    for (const layer of requirement?.requiredLayers ?? []) {
+      requireCondition(layers.has(layer), `${requirementPrefix}: invalid layer ${layer}.`);
+    }
+    for (const risk of requirement?.requiredRisks ?? []) {
+      requireCondition(risks.has(risk) && risk !== "none", `${requirementPrefix}: invalid risk ${risk}.`);
+    }
+    for (const storyId of requirement?.storyIds ?? []) {
+      requireCondition(storyIds.has(storyId), `${requirementPrefix}: unknown story ${storyId}.`);
+      requireCondition(!deliveryStoryIds.has(storyId), `${requirementPrefix}: story ${storyId} has more than one delivery requirement.`);
+      deliveryStoryIds.add(storyId);
+      targetDeliveryRequirementsByStory.set(storyId, requirement);
+    }
+  }
+  requireCondition(
+    deliveryStoryIds.size === storyIds.size && [...storyIds].every((storyId) => deliveryStoryIds.has(storyId)),
+    `${prefix}: every target story must have exactly one delivery requirement.`,
+  );
+
+  const authorityIndexPath = join(repositoryRoot, catalog.authorityIndex);
+  const indexedAuthorities = indexedSpecPaths(authorityIndexPath);
+  requireCondition(Array.isArray(catalog.authorityCoverage), `${prefix}: authorityCoverage must be an array.`);
+  const authorityPaths = new Set();
+  const coveredStoryIds = new Set();
+  let incompleteAuthorityCount = 0;
+  for (const [index, entry] of (catalog.authorityCoverage ?? []).entries()) {
+    const entryPrefix = `${prefix}: authorityCoverage[${index}]`;
+    requireString(entry?.path, `${entryPrefix}.path`);
+    requireCondition(!authorityPaths.has(entry?.path), `${entryPrefix}.path is duplicated.`);
+    authorityPaths.add(entry?.path);
+    requireCondition(indexedAuthorities.has(entry?.path), `${entryPrefix}.path is not in the authority index.`);
+    const authorityFile = repositoryFile(entry?.path, `${entryPrefix}.path`);
+    requireCondition(/^[0-9a-f]{64}$/.test(entry?.sourceHash ?? ""), `${entryPrefix}.sourceHash must be SHA-256.`);
+    if (authorityFile && /^[0-9a-f]{64}$/.test(entry?.sourceHash ?? "")) {
+      requireCondition(
+        sha256(authorityFile) === entry.sourceHash,
+        `${entryPrefix}: sourceHash is stale; re-audit this authority after its content changed.`,
+      );
+    }
+    requireCondition(
+      ["audited", "partial", "source_only"].includes(entry?.auditStatus),
+      `${entryPrefix}.auditStatus must be audited, partial, or source_only.`,
+    );
+    if (entry?.storyIds !== undefined) {
+      requireStrings(entry.storyIds, `${entryPrefix}.storyIds`, { allowEmpty: true });
+    }
+    if (entry?.auditStatus === "source_only") {
+      requireCondition(allowedSourceOnlyAuthorities.has(entry.path), `${entryPrefix}: source_only is not approved for this authority.`);
+      requireCondition((entry.storyIds ?? []).length === 0, `${entryPrefix}: source_only authority cannot claim target stories.`);
+      requireString(entry?.reason, `${entryPrefix}.reason`);
+    } else {
+      requireCondition((entry.storyIds ?? []).length > 0 || entry.auditStatus === "partial", `${entryPrefix}: audited authority must map at least one story.`);
+      if (entry.auditStatus === "partial") incompleteAuthorityCount += 1;
+    }
+    if (entry?.auditStatus === "audited") {
+      requireCondition(Array.isArray(entry.headingCoverage), `${entryPrefix}: audited authority requires headingCoverage.`);
+      const expectedHeadings = authorityFile ? markdownHeadingInventory(authorityFile) : [];
+      const expectedHeadingKeys = new Set(expectedHeadings.map(headingInventoryKey));
+      const recordedHeadingKeys = new Set();
+      const headingStoryIds = new Set();
+      for (const [headingIndex, headingEntry] of (entry.headingCoverage ?? []).entries()) {
+        const headingPrefix = `${entryPrefix}.headingCoverage[${headingIndex}]`;
+        requireString(headingEntry?.heading, `${headingPrefix}.heading`);
+        requireCondition(Number.isInteger(headingEntry?.occurrence) && headingEntry.occurrence > 0, `${headingPrefix}.occurrence must be positive.`);
+        requireCondition(["story", "supporting_or_nonproduct"].includes(headingEntry?.disposition), `${headingPrefix}.disposition is invalid.`);
+        const key = headingInventoryKey(headingEntry ?? {});
+        requireCondition(!recordedHeadingKeys.has(key), `${headingPrefix}: heading occurrence is duplicated.`);
+        recordedHeadingKeys.add(key);
+        requireCondition(expectedHeadingKeys.has(key), `${headingPrefix}: heading occurrence is not in the current authority file.`);
+        if (headingEntry?.disposition === "story") {
+          requireStrings(headingEntry?.storyIds, `${headingPrefix}.storyIds`);
+          for (const storyId of headingEntry?.storyIds ?? []) {
+            requireCondition((entry.storyIds ?? []).includes(storyId), `${headingPrefix}: story ${storyId} is not mapped by its authority entry.`);
+            requireCondition(catalogStoriesById.get(storyId)?.authority?.path === entry.path, `${headingPrefix}: story ${storyId} belongs to another authority.`);
+            headingStoryIds.add(storyId);
+          }
+          requireCondition(headingEntry?.reason === undefined, `${headingPrefix}: story disposition cannot use a reason instead of storyIds.`);
+        } else {
+          requireString(headingEntry?.reason, `${headingPrefix}.reason`);
+          requireCondition((headingEntry?.storyIds ?? []).length === 0, `${headingPrefix}: supporting_or_nonproduct cannot claim stories.`);
+        }
+      }
+      requireCondition(
+        recordedHeadingKeys.size === expectedHeadingKeys.size &&
+          [...expectedHeadingKeys].every((key) => recordedHeadingKeys.has(key)),
+        `${entryPrefix}: headingCoverage must account for every current Markdown heading exactly once.`,
+      );
+      for (const storyId of entry.storyIds ?? []) {
+        requireCondition(headingStoryIds.has(storyId), `${entryPrefix}: audited story ${storyId} is absent from headingCoverage.`);
+      }
+    } else {
+      requireCondition(entry?.headingCoverage === undefined, `${entryPrefix}: headingCoverage is allowed only after the authority is audited.`);
+    }
+    for (const storyId of entry?.storyIds ?? []) {
+      requireCondition(!coveredStoryIds.has(storyId), `${entryPrefix}: story ${storyId} is mapped by more than one authority entry.`);
+      coveredStoryIds.add(storyId);
+      const story = catalogStoriesById.get(storyId);
+      requireCondition(Boolean(story), `${entryPrefix}: unknown story ${storyId}.`);
+      requireCondition(story?.authority?.path === entry.path, `${entryPrefix}: story ${storyId} authority path does not match.`);
+    }
+  }
+  requireCondition(
+    authorityPaths.size === indexedAuthorities.size && [...indexedAuthorities].every((path) => authorityPaths.has(path)),
+    `${prefix}: authorityCoverage must account for every indexed spec exactly once.`,
+  );
+  requireCondition(
+    coveredStoryIds.size === storyIds.size && [...storyIds].every((storyId) => coveredStoryIds.has(storyId)),
+    `${prefix}: every target story must appear exactly once in authorityCoverage.`,
+  );
+
+  const decisionLogPath = join(repositoryRoot, "docs/plans/ledger-accounting-redesign/decision-log.md");
+  const expectedDecisionSets = new Map([
+    ["confirmed", decisionIdsInSection(decisionLogPath, "Confirmed Decisions", prefix)],
+    ["open", decisionIdsInSection(decisionLogPath, "Open Product Decisions", prefix)],
+  ]);
+  const openDecisionStoryLinks = new Map();
+  const openDecisionEntriesById = new Map();
+  let pendingDecisionCount = 0;
+  for (const [group, expectedIds] of expectedDecisionSets) {
+    const entries = catalog?.decisionCoverage?.[group];
+    requireCondition(Array.isArray(entries), `${prefix}: decisionCoverage.${group} must be an array.`);
+    const recordedIds = new Set();
+    for (const [index, entry] of (entries ?? []).entries()) {
+      const entryPrefix = `${prefix}: decisionCoverage.${group}[${index}]`;
+      requireString(entry?.decisionId, `${entryPrefix}.decisionId`);
+      requireCondition(!recordedIds.has(entry?.decisionId), `${entryPrefix}.decisionId is duplicated.`);
+      recordedIds.add(entry?.decisionId);
+      requireCondition(expectedIds.has(entry?.decisionId), `${entryPrefix}.decisionId is not in the declared decision-log section.`);
+      if (group === "open") openDecisionEntriesById.set(entry.decisionId, entry);
+      requireCondition(["mapped", "pending"].includes(entry?.auditStatus), `${entryPrefix}.auditStatus must be mapped or pending.`);
+      if (entry?.storyIds !== undefined) {
+        requireStrings(entry.storyIds, `${entryPrefix}.storyIds`, { allowEmpty: true });
+      }
+      if (entry?.auditStatus === "mapped") {
+        requireCondition((entry.storyIds ?? []).length > 0, `${entryPrefix}: mapped decision requires storyIds.`);
+        for (const storyId of entry.storyIds ?? []) {
+          requireCondition(storyIds.has(storyId), `${entryPrefix}: unknown story ${storyId}.`);
+          if (group === "open") {
+            const story = catalogStoriesById.get(storyId);
+            requireCondition(story?.status === "blocked", `${entryPrefix}: open decision may map only to a blocked story.`);
+            requireCondition(
+              (story?.blocker?.decisionIds ?? []).includes(entry.decisionId),
+              `${entryPrefix}: blocked story ${storyId} does not declare ${entry.decisionId}.`,
+            );
+            if (!openDecisionStoryLinks.has(entry.decisionId)) openDecisionStoryLinks.set(entry.decisionId, new Set());
+            openDecisionStoryLinks.get(entry.decisionId).add(storyId);
+          }
+        }
+      } else {
+        pendingDecisionCount += 1;
+      }
+    }
+    requireCondition(
+      recordedIds.size === expectedIds.size && [...expectedIds].every((id) => recordedIds.has(id)),
+      `${prefix}: decisionCoverage.${group} must account for every ${group} decision exactly once.`,
+    );
+  }
+  for (const story of catalog?.stories ?? []) {
+    if (story.status !== "blocked") continue;
+    for (const decisionId of story.blocker?.decisionIds ?? []) {
+      const decisionEntry = openDecisionEntriesById.get(decisionId);
+      requireCondition(
+        decisionEntry?.auditStatus === "pending" ||
+          (openDecisionStoryLinks.get(decisionId)?.has(story.storyId) ?? false),
+        `${prefix}: blocked story ${story.storyId} lacks reverse mapped decisionCoverage.open evidence for ${decisionId}.`,
+      );
+    }
+  }
+  if (catalog?.completeness?.status === "complete") {
+    requireCondition(incompleteAuthorityCount === 0, `${prefix}: complete catalog cannot contain partial authority audits.`);
+    requireCondition(pendingDecisionCount === 0, `${prefix}: complete catalog cannot contain pending decision audits.`);
+  }
+}
+
 function validateWorkflowRecord(record, relativePath) {
   const prefix = relativePath;
   requireCondition(record?.schemaVersion === 1, `${prefix}: schemaVersion must equal 1.`);
@@ -292,6 +787,29 @@ function validateWorkflowRecord(record, relativePath) {
     `${prefix}: affectedComponents must not contain duplicates.`,
   );
 
+  if (record?.implementationEvidence !== undefined) {
+    requireCondition(Array.isArray(record.implementationEvidence), `${prefix}: implementationEvidence must be an array.`);
+  }
+  const evidenceLayers = new Set();
+  for (const [index, evidence] of (record?.implementationEvidence ?? []).entries()) {
+    const evidencePrefix = `${prefix}: implementationEvidence[${index}]`;
+    requireCondition(layers.has(evidence?.layer), `${evidencePrefix}.layer is invalid.`);
+    requireCondition(!evidenceLayers.has(evidence?.layer), `${evidencePrefix}.layer is duplicated.`);
+    evidenceLayers.add(evidence?.layer);
+    requireStrings(evidence?.paths, `${evidencePrefix}.paths`);
+    requireCondition(new Set(evidence?.paths ?? []).size === (evidence?.paths ?? []).length, `${evidencePrefix}.paths contains duplicates.`);
+    for (const [pathIndex, path] of (evidence?.paths ?? []).entries()) {
+      repositoryFile(path, `${evidencePrefix}.paths[${pathIndex}]`);
+      requireCondition(
+        (record?.affectedComponents ?? []).some(
+          (component) => path === component || path.startsWith(`${component}/`),
+        ),
+        `${evidencePrefix}: ${path} is outside affectedComponents.`,
+      );
+      requireCondition(pathSupportsLayer(path, evidence?.layer), `${evidencePrefix}: ${path} is not concrete evidence for ${evidence?.layer}.`);
+    }
+  }
+
   requireStrings(record?.layers, `${prefix}: layers`);
   for (const layer of record?.layers ?? []) {
     requireCondition(layers.has(layer), `${prefix}: unknown layer ${layer}.`);
@@ -300,6 +818,15 @@ function validateWorkflowRecord(record, relativePath) {
     new Set(record?.layers ?? []).size === (record?.layers ?? []).length,
     `${prefix}: layers must not contain duplicates.`,
   );
+  for (const evidenceLayer of evidenceLayers) {
+    requireCondition((record?.layers ?? []).includes(evidenceLayer), `${prefix}: implementationEvidence declares undeclared layer ${evidenceLayer}.`);
+  }
+  if (record?.status === "complete" && (record?.targetStoryIds ?? []).length > 0) {
+    requireCondition((record?.implementationEvidence ?? []).length > 0, `${prefix}: completed target stories require concrete implementationEvidence.`);
+    for (const layer of record?.layers ?? []) {
+      requireCondition(evidenceLayers.has(layer), `${prefix}: completed target workflow lacks concrete file evidence for layer ${layer}.`);
+    }
+  }
 
   requireStrings(record?.riskDomains, `${prefix}: riskDomains`);
   for (const risk of record?.riskDomains ?? []) {
@@ -477,6 +1004,20 @@ function validateWorkflowRecord(record, relativePath) {
       ["planned", "passed", "failed"].includes(check?.status),
       `${checkPrefix}.status is not allowed.`,
     );
+    if (check?.coversBehaviorRefs !== undefined) {
+      requireStrings(check.coversBehaviorRefs, `${checkPrefix}.coversBehaviorRefs`, { allowEmpty: true });
+      requireCondition(
+        new Set(check.coversBehaviorRefs).size === check.coversBehaviorRefs.length,
+        `${checkPrefix}.coversBehaviorRefs contains duplicates.`,
+      );
+    }
+    if (check?.coversStoryIds !== undefined) {
+      requireStrings(check.coversStoryIds, `${checkPrefix}.coversStoryIds`, { allowEmpty: true });
+      requireCondition(
+        new Set(check.coversStoryIds).size === check.coversStoryIds.length,
+        `${checkPrefix}.coversStoryIds contains duplicates.`,
+      );
+    }
     if (typeof check?.risk === "string") coveredRisks.add(check.risk);
   }
   requireCondition(coveredRisks.has("general"), `${prefix}: general acceptance proof is required.`);
@@ -539,20 +1080,71 @@ function validateWorkflowRecord(record, relativePath) {
           cwd: repositoryRoot,
           stdio: "ignore",
         });
+        execFileSync("git", ["merge-base", "--is-ancestor", verification.ci.commit, "HEAD"], {
+          cwd: repositoryRoot,
+          stdio: "ignore",
+        });
+        if (requestedProductGate) {
+          const committedRecord = JSON.parse(
+            execFileSync("git", ["show", `${verification.ci.commit}:${relativePath}`], {
+              cwd: repositoryRoot,
+              encoding: "utf8",
+            }),
+          );
+          requireCondition(
+            JSON.stringify(canonicalJson(workflowEvidencePayload(committedRecord))) ===
+              JSON.stringify(canonicalJson(workflowEvidencePayload(record))),
+            `${prefix}: completion evidence changed since its exact CI commit; rerun CI for the amended workflow.`,
+          );
+          validateGithubCompletionRun(verification.ci.commit, verification.ci.run, prefix);
+        }
       } catch {
-        errors.push(`${prefix}: verification.ci.commit does not exist in Git.`);
+        errors.push(`${prefix}: verification.ci.commit is missing, not an ancestor of HEAD, or does not contain this workflow record.`);
       }
     }
   }
 }
 
-function validateWorkflowSet(records) {
-  const completedUiBaseline = records.find(
+function validateWorkflowSet(
+  records,
+  storiesById = targetStoriesById,
+  baselineExpectation = {
+    workflowId: "current-app-ui-control-flow-baseline",
+    journeys: 91,
+    behaviors: 1_919,
+  },
+) {
+  const authoritativeBaselines = records.filter(
     (record) =>
       record.kind === "coverage_audit" &&
       record.status === "complete" &&
-      record.uiCoverage?.scope === "all_current_app_ui",
+      record.uiCoverage?.scope === "all_current_app_ui" &&
+      record.catalogRole === "authoritative_current_behavior_checklist",
   );
+  requireCondition(
+    authoritativeBaselines.length === 1 &&
+      authoritativeBaselines[0]?.workflowId === baselineExpectation.workflowId,
+    `Exactly one authoritative Product Behavior Catalog must exist with workflowId ${baselineExpectation.workflowId}.`,
+  );
+  const completedUiBaseline = authoritativeBaselines[0];
+  requireCondition(
+    completedUiBaseline?.sourceBaseline?.branch === "firebase",
+    "Product Behavior Catalog sourceBaseline.branch must be firebase.",
+  );
+  requireCondition(
+    /^[0-9a-f]{40}$/.test(completedUiBaseline?.sourceBaseline?.commit ?? ""),
+    "Product Behavior Catalog sourceBaseline.commit must be exact.",
+  );
+  if (/^[0-9a-f]{40}$/.test(completedUiBaseline?.sourceBaseline?.commit ?? "")) {
+    try {
+      execFileSync("git", ["cat-file", "-e", `${completedUiBaseline.sourceBaseline.commit}^{commit}`], {
+        cwd: repositoryRoot,
+        stdio: "ignore",
+      });
+    } catch {
+      errors.push("Product Behavior Catalog sourceBaseline.commit is missing from local Git history.");
+    }
+  }
   const baselineJourneyIds = new Set(
     (completedUiBaseline?.uiJourneys ?? []).map((journey) => journey.journeyId),
   );
@@ -561,115 +1153,230 @@ function validateWorkflowSet(records) {
   );
   const claimedBehaviorKeys = new Set();
   const verifiedBehaviorKeys = new Set();
+  const claimedStoryIds = new Set();
+  const verifiedStoryIds = new Set();
+
+  // Target stories may be delivered by UI, backend/control, or migration
+  // workflows. Current-product behavior obligations remain UI-only.
+  for (const record of records) {
+    if (record.kind === "coverage_audit") continue;
+    const hasTargetStories = record.targetStoryIds !== undefined;
+    if (record.kind === "product_ui" || hasTargetStories) {
+      requireStrings(record.targetStoryIds, `${record.workflowId}: targetStoryIds`);
+      requireCondition(
+        new Set(record.targetStoryIds ?? []).size === (record.targetStoryIds ?? []).length,
+        `${record.workflowId}: targetStoryIds contains duplicates.`,
+      );
+    }
+    const recordTargetStoryIds = new Set(record.targetStoryIds ?? []);
+    for (const storyId of recordTargetStoryIds) {
+      requireCondition(storiesById.has(storyId), `${record.workflowId}: unknown target story ${storyId}.`);
+      claimedStoryIds.add(storyId);
+      if (record.status === "complete") {
+        const story = storiesById.get(storyId);
+        requireCondition(story?.status !== "blocked", `${record.workflowId}: complete workflow cites blocked target story ${storyId}.`);
+        requireCondition(story?.status !== "retired", `${record.workflowId}: complete workflow must not implement retired target story ${storyId}.`);
+        const requirement = targetDeliveryRequirementsByStory.get(storyId);
+        const kindMatches = requirement?.workflowKinds?.includes(record.kind) ?? false;
+        const missingLayers = (requirement?.requiredLayers ?? []).filter(
+          (layer) => !(record.layers ?? []).includes(layer),
+        );
+        const missingRisks = (requirement?.requiredRisks ?? []).filter(
+          (risk) => !(record.riskDomains ?? []).includes(risk),
+        );
+        const evidenceLayers = new Set(
+          (record.implementationEvidence ?? []).map((entry) => entry.layer),
+        );
+        const missingLayerEvidence = (requirement?.requiredLayers ?? []).filter(
+          (layer) => !evidenceLayers.has(layer),
+        );
+        const missingRiskEvidence = (requirement?.requiredRisks ?? []).filter(
+          (risk) => !(record.acceptanceChecks ?? []).some(
+            (check) =>
+              check.status === "passed" &&
+              check.risk === risk &&
+              (check.coversStoryIds ?? []).includes(storyId),
+          ),
+        );
+        requireCondition(kindMatches, `${record.workflowId}: target story ${storyId} requires workflow kind ${(requirement?.workflowKinds ?? []).join(" or ")}.`);
+        requireCondition(missingLayers.length === 0, `${record.workflowId}: target story ${storyId} lacks required layers: ${missingLayers.join(", ")}.`);
+        requireCondition(missingRisks.length === 0, `${record.workflowId}: target story ${storyId} lacks required risks: ${missingRisks.join(", ")}.`);
+        requireCondition(missingLayerEvidence.length === 0, `${record.workflowId}: target story ${storyId} lacks concrete file evidence for layers: ${missingLayerEvidence.join(", ")}.`);
+        requireCondition(missingRiskEvidence.length === 0, `${record.workflowId}: target story ${storyId} lacks passed story-specific checks for risks: ${missingRiskEvidence.join(", ")}.`);
+        if (
+          story?.status === "required" &&
+          kindMatches &&
+          missingLayers.length === 0 &&
+          missingRisks.length === 0 &&
+          missingLayerEvidence.length === 0 &&
+          missingRiskEvidence.length === 0
+        ) {
+          verifiedStoryIds.add(storyId);
+        }
+      }
+    }
+    const passedStoryCoverage = new Set();
+    for (const check of record.acceptanceChecks ?? []) {
+      for (const storyId of check.coversStoryIds ?? []) {
+        requireCondition(recordTargetStoryIds.has(storyId), `${record.workflowId}: acceptance check ${check.id} covers unclaimed story ${storyId}.`);
+        if (check.status === "passed") passedStoryCoverage.add(storyId);
+      }
+    }
+    if (record.status === "complete") {
+      for (const storyId of recordTargetStoryIds) {
+        requireCondition(passedStoryCoverage.has(storyId), `${record.workflowId}: completed workflow target story lacks passed acceptance coverage: ${storyId}.`);
+      }
+    }
+  }
+
   for (const record of records) {
     if (record.kind !== "product_ui") continue;
     requireCondition(
       Boolean(completedUiBaseline),
       `${record.workflowId}: product UI work requires the Product Behavior Catalog.`,
     );
-    requireStrings(record.baselineJourneyIds, `${record.workflowId}: baselineJourneyIds`);
+    const recordTargetStoryIds = new Set(record.targetStoryIds ?? []);
+    const hasBaselineBehavior =
+      Array.isArray(record.baselineBehaviorRefs) && record.baselineBehaviorRefs.length > 0;
+    const hasNoCurrentBaselineReason =
+      typeof record.noCurrentBaselineReason === "string" && record.noCurrentBaselineReason.trim().length > 0;
     requireCondition(
-      new Set(record.baselineJourneyIds ?? []).size === (record.baselineJourneyIds ?? []).length,
-      `${record.workflowId}: baselineJourneyIds contains duplicates.`,
-    );
-    for (const journeyId of record.baselineJourneyIds ?? []) {
-      requireCondition(
-        baselineJourneyIds.has(journeyId),
-        `${record.workflowId}: unknown baseline journey ${journeyId}.`,
-      );
-    }
-
-    requireCondition(
-      Array.isArray(record.baselineBehaviorRefs) && record.baselineBehaviorRefs.length > 0,
-      `${record.workflowId}: baselineBehaviorRefs must identify exact catalog behavior, not only broad journeys.`,
+      hasBaselineBehavior !== hasNoCurrentBaselineReason,
+      `${record.workflowId}: provide exact baselineBehaviorRefs or one explicit noCurrentBaselineReason, but not both.`,
     );
     const referencedJourneyIds = new Set();
     const recordBehaviorKeys = new Set();
-    for (const [referenceIndex, reference] of (record.baselineBehaviorRefs ?? []).entries()) {
-      const referencePrefix = `${record.workflowId}: baselineBehaviorRefs[${referenceIndex}]`;
-      requireString(reference?.journeyId, `${referencePrefix}.journeyId`);
+    if (hasBaselineBehavior) {
+      requireStrings(record.baselineJourneyIds, `${record.workflowId}: baselineJourneyIds`);
       requireCondition(
-        !referencedJourneyIds.has(reference?.journeyId),
-        `${referencePrefix}: journey is referenced twice.`,
+        new Set(record.baselineJourneyIds ?? []).size === (record.baselineJourneyIds ?? []).length,
+        `${record.workflowId}: baselineJourneyIds contains duplicates.`,
       );
-      referencedJourneyIds.add(reference?.journeyId);
-      const journey = baselineJourneys.get(reference?.journeyId);
-      requireCondition(Boolean(journey), `${referencePrefix}: unknown journey ${reference?.journeyId}.`);
+      for (const journeyId of record.baselineJourneyIds ?? []) {
+        requireCondition(
+          baselineJourneyIds.has(journeyId),
+          `${record.workflowId}: unknown baseline journey ${journeyId}.`,
+        );
+      }
 
-      requireCondition(Array.isArray(reference?.controls), `${referencePrefix}.controls must be an array.`);
-      requireStrings(reference?.transitions, `${referencePrefix}.transitions`, { allowEmpty: true });
-      requireStrings(reference?.states, `${referencePrefix}.states`, { allowEmpty: true });
-      let referenceBehaviorCount = 0;
-      const referencedControls = new Set();
-      for (const [controlIndex, controlReference] of (reference?.controls ?? []).entries()) {
-        const controlPrefix = `${referencePrefix}.controls[${controlIndex}]`;
-        requireString(controlReference?.label, `${controlPrefix}.label`);
+      for (const [referenceIndex, reference] of (record.baselineBehaviorRefs ?? []).entries()) {
+        const referencePrefix = `${record.workflowId}: baselineBehaviorRefs[${referenceIndex}]`;
+        requireString(reference?.journeyId, `${referencePrefix}.journeyId`);
         requireCondition(
-          typeof controlReference?.includeControl === "boolean",
-          `${controlPrefix}.includeControl must be boolean.`,
+          !referencedJourneyIds.has(reference?.journeyId),
+          `${referencePrefix}: journey is referenced twice.`,
         );
-        requireStrings(controlReference?.options, `${controlPrefix}.options`, { allowEmpty: true });
-        requireCondition(
-          !referencedControls.has(controlReference?.label),
-          `${controlPrefix}: control is referenced twice.`,
+        referencedJourneyIds.add(reference?.journeyId);
+        const journey = baselineJourneys.get(reference?.journeyId);
+        requireCondition(Boolean(journey), `${referencePrefix}: unknown journey ${reference?.journeyId}.`);
+
+        requireCondition(Array.isArray(reference?.controls), `${referencePrefix}.controls must be an array.`);
+        requireStrings(reference?.transitions, `${referencePrefix}.transitions`, { allowEmpty: true });
+        requireStrings(reference?.states, `${referencePrefix}.states`, { allowEmpty: true });
+        let referenceBehaviorCount = 0;
+        const referencedControls = new Set();
+        for (const [controlIndex, controlReference] of (reference?.controls ?? []).entries()) {
+          const controlPrefix = `${referencePrefix}.controls[${controlIndex}]`;
+          requireString(controlReference?.label, `${controlPrefix}.label`);
+          requireCondition(
+            typeof controlReference?.includeControl === "boolean",
+            `${controlPrefix}.includeControl must be boolean.`,
+          );
+          requireStrings(controlReference?.options, `${controlPrefix}.options`, { allowEmpty: true });
+          requireCondition(
+            !referencedControls.has(controlReference?.label),
+            `${controlPrefix}: control is referenced twice.`,
+          );
+          referencedControls.add(controlReference?.label);
+          const catalogControl = (journey?.controls ?? []).find(
+            (candidate) => candidate.label === controlReference?.label,
+          );
+          requireCondition(Boolean(catalogControl), `${controlPrefix}: unknown catalog control ${controlReference?.label}.`);
+          if (controlReference?.includeControl) {
+            const key = catalogBehaviorKey(reference.journeyId, "control", controlReference.label);
+            requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate behavior claim.`);
+            recordBehaviorKeys.add(key);
+            referenceBehaviorCount += 1;
+          }
+          const optionLabels = new Set((catalogControl?.options ?? []).map((option) => option.label));
+          const referencedOptions = new Set();
+          for (const option of controlReference?.options ?? []) {
+            requireCondition(optionLabels.has(option), `${controlPrefix}: unknown option ${option}.`);
+            requireCondition(!referencedOptions.has(option), `${controlPrefix}: option ${option} is referenced twice.`);
+            referencedOptions.add(option);
+            const key = catalogBehaviorKey(reference.journeyId, "option", controlReference.label, option);
+            requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate option behavior claim.`);
+            recordBehaviorKeys.add(key);
+            referenceBehaviorCount += 1;
+          }
+        }
+
+        const transitionKeys = new Set(
+          (journey?.transitions ?? []).map((transition) => baselineTransitionReference(transition)),
         );
-        referencedControls.add(controlReference?.label);
-        const catalogControl = (journey?.controls ?? []).find(
-          (candidate) => candidate.label === controlReference?.label,
-        );
-        requireCondition(Boolean(catalogControl), `${controlPrefix}: unknown catalog control ${controlReference?.label}.`);
-        if (controlReference?.includeControl) {
-          const key = catalogBehaviorKey(reference.journeyId, "control", controlReference.label);
-          requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate behavior claim.`);
+        const referencedTransitions = new Set();
+        for (const transition of reference?.transitions ?? []) {
+          requireCondition(transitionKeys.has(transition), `${referencePrefix}: unknown transition ${transition}.`);
+          requireCondition(!referencedTransitions.has(transition), `${referencePrefix}: transition is referenced twice.`);
+          referencedTransitions.add(transition);
+          const key = catalogBehaviorKey(reference.journeyId, "transition", transition);
+          requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate transition behavior claim.`);
           recordBehaviorKeys.add(key);
           referenceBehaviorCount += 1;
         }
-        const optionLabels = new Set((catalogControl?.options ?? []).map((option) => option.label));
-        const referencedOptions = new Set();
-        for (const option of controlReference?.options ?? []) {
-          requireCondition(optionLabels.has(option), `${controlPrefix}: unknown option ${option}.`);
-          requireCondition(!referencedOptions.has(option), `${controlPrefix}: option ${option} is referenced twice.`);
-          referencedOptions.add(option);
-          const key = catalogBehaviorKey(reference.journeyId, "option", controlReference.label, option);
-          requireCondition(!recordBehaviorKeys.has(key), `${controlPrefix}: duplicate option behavior claim.`);
+
+        const stateNames = new Set((journey?.states ?? []).map((state) => state.name));
+        const referencedStates = new Set();
+        for (const stateName of reference?.states ?? []) {
+          requireCondition(stateNames.has(stateName), `${referencePrefix}: unknown state ${stateName}.`);
+          requireCondition(!referencedStates.has(stateName), `${referencePrefix}: state is referenced twice.`);
+          referencedStates.add(stateName);
+          const key = catalogBehaviorKey(reference.journeyId, "state", stateName);
+          requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate state behavior claim.`);
           recordBehaviorKeys.add(key);
           referenceBehaviorCount += 1;
         }
+        requireCondition(referenceBehaviorCount > 0, `${referencePrefix}: no catalog behavior is claimed.`);
       }
 
-      const transitionKeys = new Set(
-        (journey?.transitions ?? []).map((transition) => baselineTransitionReference(transition)),
+      requireCondition(
+        referencedJourneyIds.size === (record.baselineJourneyIds ?? []).length &&
+          (record.baselineJourneyIds ?? []).every((journeyId) => referencedJourneyIds.has(journeyId)),
+        `${record.workflowId}: baselineJourneyIds and baselineBehaviorRefs journeys must match exactly.`,
       );
-      const referencedTransitions = new Set();
-      for (const transition of reference?.transitions ?? []) {
-        requireCondition(transitionKeys.has(transition), `${referencePrefix}: unknown transition ${transition}.`);
-        requireCondition(!referencedTransitions.has(transition), `${referencePrefix}: transition is referenced twice.`);
-        referencedTransitions.add(transition);
-        const key = catalogBehaviorKey(reference.journeyId, "transition", transition);
-        requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate transition behavior claim.`);
-        recordBehaviorKeys.add(key);
-        referenceBehaviorCount += 1;
-      }
-
-      const stateNames = new Set((journey?.states ?? []).map((state) => state.name));
-      const referencedStates = new Set();
-      for (const stateName of reference?.states ?? []) {
-        requireCondition(stateNames.has(stateName), `${referencePrefix}: unknown state ${stateName}.`);
-        requireCondition(!referencedStates.has(stateName), `${referencePrefix}: state is referenced twice.`);
-        referencedStates.add(stateName);
-        const key = catalogBehaviorKey(reference.journeyId, "state", stateName);
-        requireCondition(!recordBehaviorKeys.has(key), `${referencePrefix}: duplicate state behavior claim.`);
-        recordBehaviorKeys.add(key);
-        referenceBehaviorCount += 1;
-      }
-      requireCondition(referenceBehaviorCount > 0, `${referencePrefix}: no catalog behavior is claimed.`);
+    } else {
+      requireCondition(
+        !Array.isArray(record.baselineJourneyIds) || record.baselineJourneyIds.length === 0,
+        `${record.workflowId}: target-only workflow cannot cite baselineJourneyIds.`,
+      );
+      requireCondition(
+        !Array.isArray(record.baselineBehaviorRefs) || record.baselineBehaviorRefs.length === 0,
+        `${record.workflowId}: target-only workflow cannot cite baselineBehaviorRefs.`,
+      );
     }
 
-    requireCondition(
-      referencedJourneyIds.size === (record.baselineJourneyIds ?? []).length &&
-        (record.baselineJourneyIds ?? []).every((journeyId) => referencedJourneyIds.has(journeyId)),
-      `${record.workflowId}: baselineJourneyIds and baselineBehaviorRefs journeys must match exactly.`,
-    );
+    const passedBehaviorCoverage = new Set();
+    const passedStoryCoverage = new Set();
+    for (const check of record.acceptanceChecks ?? []) {
+      for (const key of check.coversBehaviorRefs ?? []) {
+        requireCondition(recordBehaviorKeys.has(key), `${record.workflowId}: acceptance check ${check.id} covers unclaimed behavior ${key}.`);
+        if (check.status === "passed") passedBehaviorCoverage.add(key);
+      }
+      for (const storyId of check.coversStoryIds ?? []) {
+        requireCondition(recordTargetStoryIds.has(storyId), `${record.workflowId}: acceptance check ${check.id} covers unclaimed story ${storyId}.`);
+        if (check.status === "passed") passedStoryCoverage.add(storyId);
+      }
+    }
+
+    if (record.status === "complete") {
+      for (const key of recordBehaviorKeys) {
+        requireCondition(passedBehaviorCoverage.has(key), `${record.workflowId}: completed workflow behavior lacks passed acceptance coverage: ${key}.`);
+      }
+      for (const storyId of recordTargetStoryIds) {
+        requireCondition(passedStoryCoverage.has(storyId), `${record.workflowId}: completed workflow target story lacks passed acceptance coverage: ${storyId}.`);
+      }
+    }
+
     for (const key of recordBehaviorKeys) {
       claimedBehaviorKeys.add(key);
       if (record.status === "complete") verifiedBehaviorKeys.add(key);
@@ -677,12 +1384,57 @@ function validateWorkflowSet(records) {
   }
 
   const totalBehaviorKeys = catalogBehaviorKeys(completedUiBaseline);
+  requireCondition(
+    baselineJourneyIds.size === baselineExpectation.journeys &&
+      totalBehaviorKeys.size === baselineExpectation.behaviors,
+    `Product Behavior Catalog baseline changed from the reviewed ${baselineExpectation.journeys} journeys / ${baselineExpectation.behaviors} exact behaviors; re-audit and deliberately update the checker threshold.`,
+  );
   return {
     journeys: baselineJourneyIds.size,
     total: totalBehaviorKeys.size,
     claimed: claimedBehaviorKeys.size,
     verified: verifiedBehaviorKeys.size,
+    claimedBehaviorKeys,
+    verifiedBehaviorKeys,
+    claimedStoryIds,
+    verifiedStoryIds,
+    sourceBaseline: completedUiBaseline?.sourceBaseline,
   };
+}
+
+function productGateBlockers(summary, catalog, requestedMilestone) {
+  const requestedRank = productMilestoneRanks.get(requestedMilestone);
+  if (!requestedRank) return [`Unknown product milestone ${requestedMilestone}.`];
+  const blockers = [];
+  if (summary?.sourceBaseline?.branch !== "firebase" || !/^[0-9a-f]{40}$/.test(summary?.sourceBaseline?.commit ?? "")) {
+    blockers.push("Product Behavior Catalog lacks an exact Firebase source baseline.");
+  } else {
+    const currentFirebaseCommit = remoteBranchCommit("firebase", "Product Behavior Catalog");
+    if (!currentFirebaseCommit) {
+      blockers.push("Unable to verify the current Firebase source baseline; retry when the remote can be read.");
+    }
+    if (currentFirebaseCommit && currentFirebaseCommit !== summary.sourceBaseline.commit) {
+      blockers.push(
+        `Product Behavior Catalog covers Firebase ${summary.sourceBaseline.commit}, but origin/firebase is ${currentFirebaseCommit}; refresh and re-review current behavior.`,
+      );
+    }
+  }
+  if (catalog?.completeness?.status !== "complete") {
+    blockers.push(`Target story catalog is ${catalog?.completeness?.status ?? "invalid"}, not complete.`);
+  }
+  if (summary.verified !== summary.total) {
+    blockers.push(`Product Behavior Catalog is ${summary.verified}/${summary.total} verified.`);
+  }
+  for (const story of catalog?.stories ?? []) {
+    if ((productMilestoneRanks.get(story.milestone) ?? Infinity) > requestedRank) continue;
+    if (story.status === "retired") continue;
+    if (story.status === "blocked") {
+      blockers.push(`${story.storyId} is blocked by ${(story.blocker?.decisionIds ?? []).join(", ") || "an unresolved decision"}.`);
+    } else if (!summary.verifiedStoryIds.has(story.storyId)) {
+      blockers.push(`${story.storyId} is not verified by a complete workflow.`);
+    }
+  }
+  return blockers;
 }
 
 function runSelfTests() {
@@ -698,6 +1450,10 @@ function runSelfTests() {
     kind: "coverage_audit",
     status: "implementation",
     catalogRole: "authoritative_current_behavior_checklist",
+    sourceBaseline: {
+      branch: "firebase",
+      commit: "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
+    },
     outcome: "Exercise workflow validation without changing repository state.",
     authority: [
       { role: "current_product", path: "docs/specs/README.md", section: "Spec Index" },
@@ -750,6 +1506,11 @@ function runSelfTests() {
       throw new Error(`${label} did not fail as expected: ${messages.join(" | ")}`);
     }
   };
+  const validateSelfWorkflowSet = (records) => validateWorkflowSet(
+    records,
+    targetStoriesById,
+    { workflowId: "self-test-ui-baseline", journeys: 1, behaviors: 4 },
+  );
 
   expectFailure("duplicate UI coverage", () => {
     const value = structuredClone(baseCoverage);
@@ -777,6 +1538,7 @@ function runSelfTests() {
     kind: "product_ui",
     authority: [{ role: "canonical_target", path: "docs/specs/projects.md", section: "Creation Flow" }],
     uiJourneys: [journey],
+    targetStoryIds: ["space-checklist-toggle"],
     baselineJourneyIds: ["self-journey"],
     baselineBehaviorRefs: [
       {
@@ -793,7 +1555,7 @@ function runSelfTests() {
     },
   };
   delete product.uiCoverage;
-  expectFailure("missing completed baseline", () => validateWorkflowSet([baseCoverage, product]), /requires the Product Behavior Catalog/);
+  expectFailure("missing completed baseline", () => validateSelfWorkflowSet([baseCoverage, product]), /requires the Product Behavior Catalog/);
 
   expectFailure("journey-only product coverage", () => {
     const value = structuredClone(product);
@@ -802,8 +1564,163 @@ function runSelfTests() {
     completeBaseline.status = "complete";
     completeBaseline.uiCoverage.uncoveredSurfaceIds = [];
     completeBaseline.uiJourneys = [{ ...structuredClone(journey), sourceSurfaceIds: allUiIds }];
-    validateWorkflowSet([completeBaseline, value]);
-  }, /must identify exact catalog behavior/);
+    validateSelfWorkflowSet([completeBaseline, value]);
+  }, /provide exact baselineBehaviorRefs or one explicit noCurrentBaselineReason/);
+
+  const completeBaseline = structuredClone(baseCoverage);
+  completeBaseline.status = "complete";
+  completeBaseline.uiCoverage.uncoveredSurfaceIds = [];
+  completeBaseline.uiJourneys = [{ ...structuredClone(journey), sourceSurfaceIds: allUiIds }];
+
+  expectFailure("completed workflow uncovered claim", () => {
+    const value = structuredClone(product);
+    value.status = "complete";
+    value.acceptanceChecks.forEach((check) => { check.status = "passed"; });
+    validateSelfWorkflowSet([completeBaseline, value]);
+  }, /completed workflow behavior lacks passed acceptance coverage/);
+
+  expectFailure("target-only workflow missing reason", () => {
+    const value = structuredClone(product);
+    delete value.baselineJourneyIds;
+    delete value.baselineBehaviorRefs;
+    validateSelfWorkflowSet([completeBaseline, value]);
+  }, /explicit noCurrentBaselineReason/);
+
+  {
+    const start = errors.length;
+    const value = structuredClone(product);
+    delete value.baselineJourneyIds;
+    delete value.baselineBehaviorRefs;
+    value.noCurrentBaselineReason = "This target-only workflow has no shipped control or state.";
+    validateSelfWorkflowSet([completeBaseline, value]);
+    const messages = errors.splice(start);
+    if (messages.length > 0) {
+      throw new Error(`target-only workflow with reason failed unexpectedly: ${messages.join(" | ")}`);
+    }
+  }
+
+  expectFailure("migration cannot satisfy UI story", () => {
+    const migrationWorkflow = {
+      workflowId: "self-test-wrong-kind-story",
+      kind: "migration",
+      status: "complete",
+      targetStoryIds: ["space-checklist-toggle"],
+      layers: ["domain", "app_ui", "postgres_schema", "postgres_handler", "rls", "powersync_sync", "local_offline"],
+      riskDomains: ["ui_fidelity", "database_integrity", "handler_idempotency", "tenant_authorization", "sync_visibility", "offline_durability"],
+      acceptanceChecks: [{ id: "SELF-WRONG-KIND", status: "passed", coversStoryIds: ["space-checklist-toggle"] }],
+    };
+    validateSelfWorkflowSet([completeBaseline, migrationWorkflow]);
+  }, /requires workflow kind product_ui/);
+
+  expectFailure("duplicate authoritative baseline", () => {
+    const duplicate = structuredClone(completeBaseline);
+    duplicate.workflowId = "self-test-ui-baseline-duplicate";
+    validateSelfWorkflowSet([completeBaseline, duplicate]);
+  }, /Exactly one authoritative Product Behavior Catalog/);
+
+  expectFailure("complete catalog with pending audits", () => {
+    const value = structuredClone(targetStoryCatalog);
+    value.completeness.status = "complete";
+    validateTargetStoryCatalog(value, "self-test-incomplete-target-catalog");
+  }, /complete catalog cannot contain partial authority audits/);
+
+  expectFailure("blocked story uses wrong decision section", () => {
+    const value = structuredClone(targetStoryCatalog);
+    const blocked = value.stories.find((story) => story.status === "blocked");
+    blocked.blocker.section = "Confirmed Decisions";
+    validateTargetStoryCatalog(value, "self-test-wrong-decision-section");
+  }, /blocker.section must be Open Product Decisions/);
+
+  {
+    const blockers = productGateBlockers(
+      { total: 1, verified: 1, verifiedStoryIds: new Set(["m4-story"]) },
+      {
+        completeness: { status: "complete" },
+        stories: [
+          { storyId: "m3-story", milestone: "M3", status: "required" },
+          { storyId: "m4-story", milestone: "M4", status: "required" },
+        ],
+      },
+      "M4",
+    );
+    if (!blockers.some((message) => /m3-story is not verified/.test(message))) {
+      throw new Error("M4 failed to accumulate the unverified M3 story.");
+    }
+  }
+
+  {
+    const start = errors.length;
+    const migrationWorkflow = {
+      workflowId: "self-test-migration-story",
+      kind: "migration",
+      status: "complete",
+      targetStoryIds: ["non-item-line-migration"],
+      layers: ["migration"],
+      riskDomains: ["migration_fidelity"],
+      implementationEvidence: [{
+        layer: "migration",
+        paths: ["supabase/migrations/20260907050142_active_space_checklist_item_toggle.sql"],
+      }],
+      acceptanceChecks: [{
+        id: "SELF-MIGRATION-STORY",
+        risk: "migration_fidelity",
+        status: "passed",
+        coversStoryIds: ["non-item-line-migration"],
+      }],
+    };
+    const summary = validateSelfWorkflowSet([completeBaseline, migrationWorkflow]);
+    const messages = errors.splice(start);
+    if (messages.length > 0 || !summary.verifiedStoryIds.has("non-item-line-migration")) {
+      throw new Error(`non-UI target-story workflow failed unexpectedly: ${messages.join(" | ")}`);
+    }
+  }
+
+  expectFailure("unauthorized retirement", () => {
+    validateTargetStoryCatalog({
+      schemaVersion: 1,
+      catalogId: "ledger-target-product-stories",
+      authorityIndex: "docs/specs/README.md",
+      completeness: { status: "complete", reason: "Self-test fixture." },
+      stories: [{
+        storyId: "retired-without-authority",
+        title: "Retired without authority",
+        outcome: "This intentionally malformed story proves retirement cannot be asserted without authority.",
+        authority: { path: "docs/specs/projects.md", section: "Creation Flow" },
+        milestone: "M3",
+        status: "retired",
+      }],
+    }, "self-test-target-story-catalog");
+  }, /retirementAuthority/);
+
+  {
+    const incompleteSummary = {
+      total: 1,
+      verified: 0,
+      verifiedStoryIds: new Set(),
+    };
+    const surfaceOnlyBlockers = productGateBlockers(
+      incompleteSummary,
+      { completeness: { status: "complete" }, stories: [] },
+      "M3",
+    );
+    if (!surfaceOnlyBlockers.some((message) => /Product Behavior Catalog is 0\/1 verified/.test(message))) {
+      throw new Error("surface-only M3 did not fail on incomplete product behavior.");
+    }
+  }
+
+  {
+    const uncitedStoryBlockers = productGateBlockers(
+      { total: 1, verified: 1, verifiedStoryIds: new Set() },
+      {
+        completeness: { status: "complete" },
+        stories: [{ storyId: "uncited-story", milestone: "M3", status: "required" }],
+      },
+      "M3",
+    );
+    if (!uncitedStoryBlockers.some((message) => /uncited-story is not verified/.test(message))) {
+      throw new Error("uncited target story did not block M3.");
+    }
+  }
 
   expectFailure("fake CI commit", () => {
     const value = structuredClone(baseCoverage);
@@ -817,17 +1734,79 @@ function runSelfTests() {
       ci: { status: "passed", commit: "0000000000000000000000000000000000000000", run: 1 },
     };
     validateWorkflowRecord(value, `${workflowRecordsRelative}/${value.workflowId}.json`);
-  }, /does not exist in Git/);
+  }, /missing, not an ancestor of HEAD, or does not contain this workflow record/);
+
+  expectFailure("open decision mapped to unrelated story", () => {
+    const value = structuredClone(targetStoryCatalog);
+    const decision = value.decisionCoverage.open.find((entry) => entry.decisionId === "O-002");
+    decision.auditStatus = "mapped";
+    decision.storyIds = ["project-list"];
+    validateTargetStoryCatalog(value, "self-test-unrelated-open-decision");
+  }, /open decision may map only to a blocked story/);
+
+  expectFailure("stale authority source hash", () => {
+    const value = structuredClone(targetStoryCatalog);
+    value.authorityCoverage[0].sourceHash = "0".repeat(64);
+    validateTargetStoryCatalog(value, "self-test-stale-authority-hash");
+  }, /sourceHash is stale/);
+
+  expectFailure("stale decision-log source hash", () => {
+    const value = structuredClone(targetStoryCatalog);
+    value.decisionLog.sourceHash = "0".repeat(64);
+    validateTargetStoryCatalog(value, "self-test-stale-decision-log-hash");
+  }, /decisionLog.sourceHash is stale/);
+
+  expectFailure("declared layers without concrete files", () => {
+    const value = {
+      workflowId: "self-test-label-only-layers",
+      kind: "product_ui",
+      status: "complete",
+      targetStoryIds: ["space-checklist-toggle"],
+      layers: ["domain", "app_ui", "postgres_schema", "postgres_handler", "rls", "powersync_sync", "local_offline"],
+      riskDomains: ["ui_fidelity", "database_integrity", "handler_idempotency", "tenant_authorization", "sync_visibility", "offline_durability"],
+      acceptanceChecks: [{
+        id: "SELF-LABEL-ONLY",
+        risk: "ui_fidelity",
+        status: "passed",
+        coversStoryIds: ["space-checklist-toggle"],
+      }],
+    };
+    validateSelfWorkflowSet([completeBaseline, value]);
+  }, /lacks concrete file evidence for layers/);
+
+  {
+    const planned = structuredClone(baseCoverage);
+    const completed = structuredClone(baseCoverage);
+    completed.acceptanceChecks.forEach((check) => { check.status = "passed"; });
+    completed.verification.local = { status: "passed", commands: ["self-general", "self-ui"] };
+    completed.verification.review = { required: true, status: "passed", summary: "Passed." };
+    if (JSON.stringify(workflowEvidencePayload(planned)) === JSON.stringify(workflowEvidencePayload(completed))) {
+      throw new Error("completion evidence normalization erased local, review, or acceptance proof.");
+    }
+  }
+
+  {
+    const left = { b: [{ z: 1, a: 2 }], a: true };
+    const right = { a: true, b: [{ a: 2, z: 1 }] };
+    if (JSON.stringify(canonicalJson(left)) !== JSON.stringify(canonicalJson(right))) {
+      throw new Error("canonical JSON comparison remains sensitive to object-key order.");
+    }
+  }
 
   expectFailure("undeclared database risks", () => {
     const value = structuredClone(baseCoverage);
     validateDerivedLayers(value, ["supabase/migrations/example.sql"], value.workflowId);
   }, /requires layer postgres_schema/);
 
-  console.log("Conversion current-state self-tests passed: 7 negative cases.");
+  console.log("Conversion current-state self-tests passed: 20 negative cases and 5 positive/cumulative cases.");
 }
 
+validateTargetStoryCatalog(targetStoryCatalog);
+
 if (process.argv[2] === "--self-test") {
+  if (errors.length > 0) {
+    throw new Error(`Target story catalog is invalid before self-tests: ${errors.join(" | ")}`);
+  }
   runSelfTests();
   process.exit(0);
 }
@@ -1006,6 +1985,20 @@ if (errors.length > 0) {
   console.error("Conversion current-state check failed:");
   for (const error of errors) console.error(`- ${error}`);
   process.exit(1);
+}
+
+if (process.argv[2] === "--gate" && !productMilestoneRanks.has(requestedProductGate)) {
+  console.error("Product gate requires M3, M4, or M5.");
+  process.exit(1);
+}
+if (requestedProductGate) {
+  const gateBlockers = productGateBlockers(productBehaviorSummary, targetStoryCatalog, requestedProductGate);
+  if (gateBlockers.length > 0) {
+    console.error(`${requestedProductGate} product gate BLOCKED: ${gateBlockers.length} blockers`);
+    for (const blocker of gateBlockers) console.error(`- ${blocker}`);
+    process.exit(1);
+  }
+  console.log(`${requestedProductGate} product gate PASS.`);
 }
 
 console.log(

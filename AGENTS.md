@@ -20,8 +20,10 @@
   current-state record, exact Git checkpoint and current diff. Do not run the
   complete conversion suite merely to recover context.
 - Treat `docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json`
-  as the conversion-coverage source of truth. Product specs and the redesign
-  decision log remain product authority.
+  as the code-surface coverage source of truth only. The Product Behavior
+  Catalog is the current-product parity checklist,
+  `target-product-story-catalog.json` is the redesigned-outcome checklist, and
+  product specs plus the redesign decision log remain product authority.
 - Run `node scripts/supabase-conversion-ledger.mjs check` after changing
   conversion coverage and at the integrated workflow boundary. The surface
   catalog is a passive omission audit, not the unit of implementation progress.
@@ -41,10 +43,11 @@
   integrated workflow. Use the automatic pull-request run; do not manually
   dispatch the same commit. Use a separate short design note and specialist
   review only for the high-risk boundaries listed by the implementation method.
-- Before additional product UI implementation, complete the current-app UI
-  baseline covering all 167 inventoried UI components/views. Keep every
-  completed workflow record so control/option/transition/state coverage remains
-  cumulative rather than being overwritten by current state.
+- The current-app UI baseline covers all 167 inventoried UI components/views.
+  Every product workflow must claim exact controls/options/transitions/states
+  from that baseline and only the target story IDs it fully implements. Keep
+  every completed workflow record so both current behavior and redesigned-story
+  coverage remain cumulative rather than being overwritten by current state.
 - Use no more than two disjoint write-capable subagents concurrently. Delegate
   a complete independently testable outcome, give each worker only the current
   state, exact authority references and owned paths, and have workers
@@ -63,3 +66,11 @@
   recovery, and retained rollback evidence.
 - Do not mark a workflow verified from compilation or prose alone, and do not
   authorize production migration from these files without explicit user approval.
+- Never treat mapped, converted, promoted, or verified code surfaces as proof of
+  product completion. M3, M4, and M5 also require the exhaustive target-story
+  audit, passed story coverage, and passed coverage of every current Product
+  Behavior Catalog obligation.
+- A completed target story must cite exact implementation files for every
+  required layer and passed story-specific checks for every required risk. At
+  M3/M4/M5, its exact CI commit and run must be verified against GitHub Actions;
+  declared labels or locally edited CI metadata are not completion evidence.

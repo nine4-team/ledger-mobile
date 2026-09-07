@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A7C2D194B8E63F5012A9CD4 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E615B02A7948DCF41B6E90 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */; };
 		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
 		24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */; };
@@ -41,6 +42,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C3E615B02A7948DCF41B6E90 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
 		0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingExerciseView.swift; sourceTree = "<group>"; };
 		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 		309154BA717CE8384C3E73D8 /* LedgerTargetApp */ = {
 			isa = PBXGroup;
 			children = (
+				C3E615B02A7948DCF41B6E90 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */,
 				BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */,
 				130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */,
 				9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */,
@@ -207,6 +210,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A7C2D194B8E63F5012A9CD4 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */,
 				DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */,
 				D93205BA1256BA6E7CDE6110 /* AccountPendingWorkStagingExerciseView.swift in Sources */,
 				D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */,

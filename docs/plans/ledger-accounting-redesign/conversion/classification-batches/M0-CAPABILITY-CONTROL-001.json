@@ -20,8 +20,8 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "e85e928c641a0172e58347c67ce523063c928aa5913cfcde273be8352bde3d05",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, applies classification batches, detects disappearance and live drift, validates product authority and historical dossier integrity, emits passive completeness audits, and enforces cumulative M0-M5 gates. New method-v3 workflow implementation does not require a new dossier or per-surface lifecycle promotion.",
+      "acknowledgeSourceHash": "c195cf80166b19acb36766891e148879848f585a301ea99da9d9b785ab536a86",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, applies classification batches, detects disappearance and live drift, validates product authority and historical dossier integrity, emits passive completeness audits, and enforces cumulative M0-M5 gates. M3-M5 additionally invoke the current-state checker so surface status cannot substitute for exhaustive current behavior and redesigned target-story coverage. New method-v3 workflow implementation does not require a new dossier or per-surface lifecycle promotion.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
@@ -30,7 +30,7 @@
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "Historical dossiers remain internally valid while new workflow delivery is tracked in current execution state", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Project category-configuration revision migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership."
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This re-acknowledgment adds the composite M3-M5 product gate: exact current behaviors and exhaustively audited target stories require passed completed-workflow coverage in addition to the existing surface controls."
     },
     {
       "id": "CONFIG-9B16CFCB67A4",

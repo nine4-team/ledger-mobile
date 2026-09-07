@@ -21,7 +21,7 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "dd3cc14dd778c0ef00ee526a1719e2cd1ff4559bb8260eba038bb56f4905f5c5",
+      "acknowledgeSourceHash": "a1fcc60535f19e014fab4379d5d08fb98da528495a0c07f689e4d159b84dc4aa",
       "currentBehavior": "Automatically runs one pull-request CI gate per exact workflow commit: conversion traceability and query controls on Linux, disposable local Supabase schema/RLS/RPC/Data-API tests on Ubuntu, and target isolation, contracts, MCP/Swift tests, and macOS/iOS Simulator builds on macOS 26, all with clean-diff enforcement. Manual duplicate dispatch is intentionally absent.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -123,7 +123,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
+      "acknowledgeSourceHash": "808a6c9606b5b2a75b894a5b6e0db7f5309c1eec2a117c745bc97f1a3b8dc86d",
       "currentBehavior": "Fails closed unless target production layers remain isolated; exact dependencies and adapters hold; the PowerSync test target's sole extra target dependency is provider-free AppModel for cross-layer recovery proof; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -184,8 +184,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "86ff94308bf8c97ede2650a72094e19463eba146809e18da9b30c08db0d59fd0",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and every currently implemented target-app source, including the separately compiled active-Space checklist editor view.",
+      "acknowledgeSourceHash": "1a82fc2c2549908b615d181f42fcb2dfcee9844af1a282814c1dacc7ced2953d",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and every currently implemented target-app source, including the composed Active Project to Space checklist staging workflow.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -319,8 +319,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b5a905444b8168d515db7c0f6171049fb175aa5a86c4c9e3527e157c13325a14",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, represented-Project and Business-Inventory Space-browser entry, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "dd6f000f4fd740d7c572d7e9404ea8a98852aec4550c043cf92c7f5acdbc1724",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, the composed Active Project to exact-Space checklist path, represented-Project and Business-Inventory Space-browser entry, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -374,7 +374,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
+      "acknowledgeSourceHash": "808a6c9606b5b2a75b894a5b6e0db7f5309c1eec2a117c745bc97f1a3b8dc86d",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; admits AppModel only into the PowerSync test target for cross-layer recovery proof while production dependency direction remains unchanged; enforces exact Account-workspace recovery methods and nominal ports plus lexical, bounded pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -4096,6 +4096,24 @@
           "Self-tests prove stable type separation, exact same-currency arithmetic, deterministic restart encoding and atomic invalid/cross-currency/overflow refusal without external dependencies"
         ]
       }
+    },
+    {
+      "id": "SWIFT-C00A169E9D19",
+      "acknowledgeSourceHash": "64232084b60d05427116a76eea1306cde87ed14e948d5e2971b25e87a3142c85",
+      "currentBehavior": "Renders the composed Active Projects to exact Project Space checklist staging path with stable controls, honest evidence states, durable-toggle lifecycle status and explicit back navigation while retaining the existing independent staging workflows.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PLATFORM-CONTROL-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
+      "notes": "The target-only SwiftUI composition is independently reviewed and locally focused-test/build green. It does not replace the source Firebase application or claim unimplemented Project/Space controls.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": ["ActiveWorkspaceToSpaceChecklistStagingView"],
+        "securityRequirements": ["Render bounded typed presentation and stable diagnostics only; expose no credentials, raw SQL, provider payload or production endpoint"],
+        "syncRequirements": ["Display exact parent/scope readiness and operation state without converting cached or incomplete evidence into authority"]
+      },
+      "migration": {"rule": "Render isolated target-local state only.", "reconciliation": ["Do not imply hosted synchronization, migration or cutover readiness"]},
+      "verification": {"tests": ["ActiveWorkspaceToSpaceChecklistStagingExerciseTests", "macOS and iOS target staging builds"], "acceptance": ["The recorded Project, Spaces, Space, checklist and lifecycle controls compile and remain connected to the composed AppModel"]}
     }
   ]
 }

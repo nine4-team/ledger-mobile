@@ -5,6 +5,7 @@
   "kind": "product_ui",
   "status": "blocked",
   "outcome": "From the target Project directory, create one Project for a represented active existing Client with exact optional category allocations, accept it durably while offline, and expose its pending or rejected state without losing the draft.",
+  "targetStoryIds": ["project-creation-existing-client", "client-identity", "project-budget-allocation"],
   "authority": [
     {
       "role": "canonical_target",

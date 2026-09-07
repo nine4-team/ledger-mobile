@@ -128,6 +128,9 @@ private struct OfflineProviderSpikeView: View {
                 Task { await model.openBusinessInventorySpaces() }
             }
         )
+        ActiveWorkspaceToSpaceChecklistStagingView(
+            model: model.activeWorkspaceToSpaceChecklist
+        )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations
         )
@@ -172,6 +175,7 @@ private final class OfflineClientSpikeModel {
     let spaceBrowser: SpaceBrowserStagingExercise
     let spaceChecklistToggle: SpaceChecklistItemToggleStagingExercise
     let spaceChecklistEditor: SpaceChecklistEditorStagingExercise
+    let activeWorkspaceToSpaceChecklist: ActiveWorkspaceToSpaceChecklistStagingExercise
     let transferDestinations: TransferDestinationSelectionStagingExercise
     private let stagingProjectId: ProjectID
     private let syntheticTransferSource: ProjectSummary
@@ -180,6 +184,7 @@ private final class OfflineClientSpikeModel {
         let accountId = try! AccountID(validating: "account-primary")
         let principalId = try! PrincipalID(validating: "principal-owner")
         let projectBrowser = ProjectBrowsingStagingExercise(accountId: accountId)
+        let activeWorkspaceProjectBrowser = ProjectBrowsingStagingExercise(accountId: accountId)
 
         self.accountId = accountId
         self.principalId = principalId
@@ -241,23 +246,32 @@ private final class OfflineClientSpikeModel {
         )
         spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
         spaceBrowser = SpaceBrowserStagingExercise(accountId: accountId)
-        let checklistToggle = SpaceChecklistItemToggleStagingExercise(
-            accountId: accountId,
-            actorPrincipalId: principalId,
-            operationContractVersion: try! OperationContractVersion(
-                validating: "space-checklist-revision-v1"
-            ),
-            makeIdentity: {
-                SpaceChecklistItemToggleSubmissionIdentity(
-                    operationId: try SpaceChecklistRevisionOperationIdentity.make(
-                        accountId: accountId,
-                        uuid: UUID()
+        func makeChecklistToggle() -> SpaceChecklistItemToggleStagingExercise {
+            SpaceChecklistItemToggleStagingExercise(
+                accountId: accountId,
+                actorPrincipalId: principalId,
+                operationContractVersion: try! OperationContractVersion(
+                    validating: "space-checklist-revision-v1"
+                ),
+                makeIdentity: {
+                    SpaceChecklistItemToggleSubmissionIdentity(
+                        operationId: try SpaceChecklistRevisionOperationIdentity.make(
+                            accountId: accountId,
+                            uuid: UUID()
+                        )
                     )
-                )
-            },
-            now: Date.init
-        )
+                },
+                now: Date.init
+            )
+        }
+        let checklistToggle = makeChecklistToggle()
         spaceChecklistToggle = checklistToggle
+        activeWorkspaceToSpaceChecklist = ActiveWorkspaceToSpaceChecklistStagingExercise(
+            accountId: accountId,
+            projectBrowser: activeWorkspaceProjectBrowser,
+            spaceBrowser: SpaceBrowserStagingExercise(accountId: accountId),
+            checklistToggle: makeChecklistToggle()
+        )
         spaceChecklistEditor = SpaceChecklistEditorStagingExercise(
             coordinator: checklistToggle,
             makeChecklistId: {
@@ -332,6 +346,9 @@ private final class OfflineClientSpikeModel {
             await spaceChecklistToggle.start(
                 runtime: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)
             )
+            await activeWorkspaceToSpaceChecklist.start(
+                runtime: ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter.adapt(runtime)
+            )
             await spaceChecklistEditor.start()
             await transferDestinations.open(
                 source: syntheticTransferSource,
@@ -364,6 +381,7 @@ private final class OfflineClientSpikeModel {
             await spaceBrowser.stop()
             await spaceChecklistEditor.stop()
             await spaceChecklistToggle.stop()
+            await activeWorkspaceToSpaceChecklist.stop()
             await transferDestinations.stop()
             openedRuntime = nil
             try await runtime.close()
@@ -392,6 +410,7 @@ private final class OfflineClientSpikeModel {
         await spaceBrowser.stop()
         await spaceChecklistEditor.stop()
         await spaceChecklistToggle.stop()
+        await activeWorkspaceToSpaceChecklist.stop()
         await transferDestinations.stop()
         if let openedRuntime {
             try? await openedRuntime.close()

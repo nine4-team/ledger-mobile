@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-07T10:33:15.637Z",
+  "generatedFromManifestSync": "2026-09-07T14:50:21.111Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1029,
-    "targetRelevantSurfaces": 767,
+    "surfaces": 1032,
+    "targetRelevantSurfaces": 770,
     "batches": 47,
-    "productScopeSurfaces": 838,
-    "technicalControlSurfaces": 191
+    "productScopeSurfaces": 840,
+    "technicalControlSurfaces": 192
   },
   "canonicalTargetCoverage": [
     {
@@ -82,8 +82,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
       ],
-      "surfaceCount": 524,
-      "targetRelevantSurfaceCount": 406
+      "surfaceCount": 526,
+      "targetRelevantSurfaceCount": 408
     },
     {
       "path": "docs/specs/projects.md",
@@ -99,8 +99,8 @@
         "M0-SPACE-CORE-DETAILS-PROVIDER-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 181,
-      "targetRelevantSurfaceCount": 177
+      "surfaceCount": 183,
+      "targetRelevantSurfaceCount": 179
     },
     {
       "path": "docs/specs/spaces.md",
@@ -2470,8 +2470,8 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 146,
-      "targetRelevantSurfaceCount": 83,
+      "surfaceCount": 147,
+      "targetRelevantSurfaceCount": 84,
       "authorities": [
         {
           "path": "docs/architecture/redesign/01-system-context-and-principles.md",
@@ -2635,6 +2635,7 @@
         "SWIFT-AD26BFE430B2",
         "SWIFT-B2CF26BDA1A8",
         "SWIFT-B4A356C2FE88",
+        "SWIFT-C00A169E9D19",
         "SWIFT-C1EC0E1D9BE6",
         "SWIFT-CBE990F49610",
         "SWIFT-D861839CD17D",
@@ -2840,8 +2841,8 @@
       "title": "Project browsing target staging application flow",
       "scope": "product",
       "rationale": "This bounded target application flow turns the already-verified Project directory-selection/detail-header presentation and Account-bound local provider streams into one honest offline staging browser without deciding sorting, search, cards, budgets, media, routes, workspace activation, mutation, hosted authorization or production behavior.",
-      "surfaceCount": 4,
-      "targetRelevantSurfaceCount": 4,
+      "surfaceCount": 6,
+      "targetRelevantSurfaceCount": 6,
       "authorities": [
         {
           "path": "docs/specs/projects.md",
@@ -2898,9 +2899,11 @@
       ],
       "surfaceIds": [
         "SWIFT-07427FF0DA84",
+        "SWIFT-2D3E6AD58F41",
         "SWIFT-AA91CE0C3FAB",
         "SWIFT-CAB085E24751",
-        "TEST-5C7E5E715EAE"
+        "TEST-5C7E5E715EAE",
+        "TEST-DD5F755D2507"
       ]
     },
     {

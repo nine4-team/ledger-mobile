@@ -4,9 +4,11 @@
 > [Workflow Implementation Method](vertical-slice-implementation-method.md) and
 > current work is recorded only in `current-execution-state.json`. The detailed
 > READY/dossier/promotion narratives below preserve audit history; they are not
-> instructions for new work. The surface catalog remains the exhaustive
-> UI/control/data/operation coverage backstop and is checked at workflow and
-> migration milestones.
+> instructions for new work. The Product Behavior Catalog is the authoritative
+> checklist of what the app must let a person see, choose, do, and observe. The
+> code-surface catalog is only an omission detector and implementation-impact
+> map; finding or mapping a source file never proves product parity or workflow
+> completion.
 
 For a task start, handoff, or context-compaction resume, begin with
 `current-execution-state.json`. This README explains the complete control plane
@@ -892,7 +894,16 @@ summary or select a different slice merely because the prior reasoning is gone.
 
 ## Authority and Files
 
-- `conversion-manifest.json` is the machine-readable coverage source of truth.
+- `conversion-manifest.json` is the machine-readable source of truth for where
+  implementation surfaces exist and whether each has been accounted for. It is
+  not product-behavior authority and cannot prove a workflow complete.
+- `workflow-records/current-app-ui-control-flow-baseline.json` is the Product
+  Behavior Catalog: the authoritative current-product parity checklist. Product
+  UI workflows must claim its exact controls, options, transitions, and states;
+  broad journey or code-surface references are insufficient.
+- `target-product-story-catalog.json` is the redesigned-product checklist. Its
+  authority, decision, and delivery-requirement ledgers must be exhaustive
+  before M3-M5 can pass; partial audits remain visible blockers.
 - `conversion-coverage.md` is generated from the manifest and must not be edited
   manually.
 - `execution-state.md` records the exact safe resumption point.

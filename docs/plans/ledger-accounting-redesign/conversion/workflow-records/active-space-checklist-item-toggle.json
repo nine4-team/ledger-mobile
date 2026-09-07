@@ -5,6 +5,7 @@
   "kind": "product_ui",
   "status": "complete",
   "outcome": "From represented local detail for one active Project or Business Inventory Space, toggle one existing checklist item with immediate optimistic progress, durable offline acceptance, deterministic replay, conflict recovery, and authoritative readback.",
+  "targetStoryIds": ["space-checklist-toggle", "space-checklist-progress"],
   "authority": [
     {
       "role": "canonical_target",
@@ -71,13 +72,12 @@
           ]
         }
       ],
-      "transitions": [
-        "Collapsed section | Tap header | Expanded content"
-      ],
-      "states": [
-        "Expanded / collapsed",
-        "Optional badges"
-      ]
+    "transitions": [
+      "Collapsed section | Tap header | Expanded content"
+    ],
+    "states": [
+      "Expanded / collapsed"
+    ]
     }
   ],
   "affectedComponents": [
@@ -93,6 +93,52 @@
     "supabase/config.toml",
     "scripts",
     "package.json"
+  ],
+  "implementationEvidence": [
+    {
+      "layer": "domain",
+      "paths": [
+        "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionOperation.swift",
+        "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionUseCase.swift"
+      ]
+    },
+    {
+      "layer": "app_ui",
+      "paths": [
+        "LedgeriOS/LedgerTargetAppModel/SpaceChecklistItemToggleStagingExercise.swift",
+        "LedgeriOS/LedgerTargetApp/SpaceBrowserStagingComposition.swift"
+      ]
+    },
+    {
+      "layer": "postgres_schema",
+      "paths": ["supabase/migrations/20260907050142_active_space_checklist_item_toggle.sql"]
+    },
+    {
+      "layer": "postgres_handler",
+      "paths": ["supabase/migrations/20260907050142_active_space_checklist_item_toggle.sql"]
+    },
+    {
+      "layer": "rls",
+      "paths": [
+        "supabase/migrations/20260907050142_active_space_checklist_item_toggle.sql",
+        "supabase/tests/active_space_checklist_item_toggle.test.sql"
+      ]
+    },
+    {
+      "layer": "auth",
+      "paths": ["LedgeriOS/LedgerTargetPowerSync/SupabaseSpaceChecklistRevisionRPC.swift"]
+    },
+    {
+      "layer": "powersync_sync",
+      "paths": [
+        "LedgeriOS/LedgerTargetPowerSync/SpaceCoreDetailsPowerSyncQuery.swift",
+        "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncUploadConnector.swift"
+      ]
+    },
+    {
+      "layer": "local_offline",
+      "paths": ["LedgeriOS/LedgerTargetPowerSync/SpaceChecklistRevisionPowerSyncStore.swift"]
+    }
   ],
   "layers": [
     "domain",
@@ -255,56 +301,75 @@
       "risk": "general",
       "expected": "Both checked directions traverse represented Space detail, one shared application command, local provider acceptance, operation observation, and authoritative readback without unrelated mutations.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle", "space-checklist-progress"],
+      "coversBehaviorRefs": [
+        "UIBASE-SPACE-DETAIL-001::control::CHECKLISTS",
+        "UIBASE-SPACE-DETAIL-001::option::CHECKLISTS::Expand / Collapse",
+        "UIBASE-SPACE-DETAIL-001::option::CHECKLISTS::Checklist item",
+        "UIBASE-SPACE-DETAIL-001::state::Invisible persistence failure",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::control::Section header",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::option::Section header::Expand",
+      "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::option::Section header::Collapse",
+      "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::transition::Collapsed section | Tap header | Expanded content",
+      "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::state::Expanded / collapsed"
+    ]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-UI",
       "risk": "ui_fidelity",
       "expected": "The compiled target UI exposes section expansion, stable checklist/item controls, honest progress, pending/rejected status, disabled admission, empty state, and accessible labels wired to AppModel actions.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle", "space-checklist-progress"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-OFFLINE",
       "risk": "offline_durability",
       "expected": "Atomic local acceptance, encrypted restart, byte-identical replay, rejection rollback, refreshed retry identity, readback reconciliation, and lifecycle drainage pass.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-IDENTITY",
       "risk": "identity_auth",
       "expected": "The local writer, queued evidence, authenticated user RPC, actor claim, and server result remain bound to one exact Account-derived operation identity; service-role credentials and forged identities fail closed.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-SYNC",
       "risk": "sync_visibility",
       "expected": "Only exact Account/Space checklist rows and exact operation results drive the local projection; wrong-scope, malformed, revoked, and incomplete evidence fail closed.",
       "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle", "space-checklist-progress"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-RLS",
       "risk": "tenant_authorization",
       "expected": "Active same-Account membership can invoke the trusted handler while anonymous, inactive, forged-actor, cross-Account, wrong-parent, and direct table writes fail without enumeration.",
       "command": "npm run target:supabase:test:db",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-DATABASE",
       "risk": "database_integrity",
       "expected": "The handler atomically replaces the full ordered hierarchy, increments Space revision once, preserves immutable scope and unrelated rows, and leaves no partial mutation on failure.",
       "command": "npm run target:supabase:test:db",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle"]
     },
     {
       "id": "SPACE-CHECKLIST-TOGGLE-IDEMPOTENCY",
       "risk": "handler_idempotency",
       "expected": "Exact OperationID and fingerprint replay returns the immutable original result while a changed-payload replay, stale revision, and concurrent revision race mutate nothing.",
       "command": "npm run target:supabase:test:db",
-      "status": "passed"
+      "status": "passed",
+      "coversStoryIds": ["space-checklist-toggle"]
     }
   ],
   "blockers": [],

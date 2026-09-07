@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -1860,6 +1861,18 @@ function main() {
         `${requested} BLOCKED: ${milestone.blockers.length} coverage blockers, ${validation.errors.length} structural errors`,
       );
       process.exit(1);
+    }
+    if (new Set(["M3", "M4", "M5"]).has(requested)) {
+      try {
+        execFileSync(
+          process.execPath,
+          [path.join(ROOT, "scripts/check-conversion-current-state.mjs"), "--gate", requested],
+          { cwd: ROOT, stdio: "inherit" },
+        );
+      } catch {
+        console.error(`${requested} BLOCKED: product behavior/story gate failed`);
+        process.exit(1);
+      }
     }
     console.log(`${requested} PASS: ${milestone.name}`);
     return;

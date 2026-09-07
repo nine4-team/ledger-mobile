@@ -200,6 +200,14 @@ backups, compatibility verification, and an explicit cutover phase.
 
 The redesign is complete only when:
 
+- every exact control, option, transition, and visible/edge state in the Product
+  Behavior Catalog is covered by a passed completed workflow as preserved,
+  deliberately redesigned, or explicitly retired;
+- the target product story catalog has completed its exhaustive spec/decision
+  audit and every required story is covered by a passed completed workflow or
+  retired by confirmed product authority;
+- the code-surface catalog has no unexplained omissions, while never being used
+  as a substitute for either product checklist;
 - all target writers use the global three-value taxonomy;
 - every active project has authoritative Client identity;
 - same-Client Transfer is atomic and cannot cross Clients;
@@ -209,7 +217,8 @@ The redesign is complete only when:
   duplicating the physical Item or manufacturing a project movement
   Transaction;
 - paid history and repeated Item cycles remain auditable;
-- iOS, MCP, Functions, rules, reports, search, exports, and production data agree;
+- iOS, MCP, Supabase handlers/RLS, PowerSync, reports, search, exports, and
+  migrated production data agree;
 - stale clients cannot recreate retired shapes;
 - migration reconciliation reports zero unexplained differences; and
 - release, rollback, and post-release monitoring have been completed.

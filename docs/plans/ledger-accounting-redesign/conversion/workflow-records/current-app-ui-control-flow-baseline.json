@@ -5,6 +5,10 @@
   "kind": "coverage_audit",
   "status": "complete",
   "catalogRole": "authoritative_current_behavior_checklist",
+  "sourceBaseline": {
+    "branch": "firebase",
+    "commit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6"
+  },
   "outcome": "Produce the page-by-page checklist of everything a person can see and do in the current Ledger app, with each behavior explicitly preserved, redesigned, or retired for the Supabase implementation.",
   "authority": [
     {

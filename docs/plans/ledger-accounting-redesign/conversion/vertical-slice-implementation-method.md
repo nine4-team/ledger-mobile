@@ -64,6 +64,9 @@ active workflow and, after selection, its durable record under
   each resulting transition or operation, and loading/empty/error/offline states;
 - exact behavior-level references into the current-product catalog—not merely a
   page, source file, or broad journey ID;
+- exact story IDs from `target-product-story-catalog.json` for the redesigned
+  outcomes the workflow fully implements; broad stories must not be claimed by
+  a partial screen or technical layer;
 - exact spec or decision-log headings that govern each UI journey;
 - affected technical components, at component level rather than an exhaustive
   file allowlist;
@@ -103,6 +106,13 @@ accounting, authentication, media, deletion, migration, app UI, or MCP paths.
 Human judgment may add risks; it may not remove the derived minimum.
 free-form “tested” claims are insufficient.
 
+A completed target workflow also records `implementationEvidence`: exact
+repository files grouped by layer. Directory names, declared layer labels, and
+test prose do not count. Every layer required by a claimed target story must
+have a matching concrete file, and every required risk must have a passed check
+whose `coversStoryIds` explicitly names that story. This prevents a UI-only
+slice from claiming database, RLS, PowerSync, or offline completion by metadata.
+
 ### Product Behavior Catalog
 
 The durable record
@@ -110,6 +120,11 @@ The durable record
 Behavior Catalog. It covers all 167 currently discovered Swift UI components
 and views. The historical filename remains stable so links and CI evidence do
 not churn; its role is not a code inventory or a one-time audit.
+
+Its `sourceBaseline` records the reviewed Firebase branch and commit. Before a
+product milestone can pass, the gate verifies the remote branch still matches
+that revision. Later Firebase support changes require a fresh behavior review,
+so the checklist cannot silently become stale while the existing app evolves.
 
 For every page or shared component it records:
 
@@ -135,6 +150,44 @@ Before cutover readiness, every catalog behavior must be accounted for by a
 completed target workflow as preserved, deliberately redesigned, or explicitly
 retired. Open or deferred behavior remains visibly unverified rather than being
 hidden inside a page-level completion claim.
+
+### Target Product Story Catalog
+
+`target-product-story-catalog.json` is the complementary checklist for behavior
+introduced or materially changed by the redesign specs. The Product Behavior
+Catalog answers “did we preserve, redesign, or retire everything people can do
+today?” The target story catalog answers “did we build every outcome required by
+the new specs?” The code-surface catalog answers only where relevant code lives.
+
+Each target story names one canonical spec heading, its milestone, and whether
+it is required, blocked by named open decisions, or retired by confirmed
+authority. A product workflow lists only the story IDs it completely exercises.
+At least one passed acceptance check must explicitly cover every story claimed
+by a completed workflow. A partial implementation may cite the governing spec
+without claiming its broader story complete.
+
+The catalog also contains three machine-checked ledgers:
+
+- `authorityCoverage` accounts for every spec indexed by `docs/specs/README.md`
+  as audited, partial, or an explicitly allowlisted source-only artifact. Every
+  entry is pinned to the SHA-256 of the reviewed source. An `audited` entry must
+  disposition every current Markdown heading exactly once and map each claimed
+  story through that heading inventory;
+- `decisionCoverage` accounts for every ID in the exact Confirmed and Open
+  Product Decisions sections as mapped or pending. A mapped open decision can
+  point only to a blocked story that names that exact decision, and the reverse
+  link is required once the decision audit is mapped. The whole decision log is
+  content-hashed, so changed meaning under an unchanged ID invalidates the
+  audit;
+- `deliveryRequirements` assigns every story one required workflow kind plus
+  the minimum layers and risk proofs that must be concretely evidenced in its
+  completed workflow. A migration record therefore cannot satisfy a UI story
+  merely by citing its ID.
+
+The catalog remains `partial` until every canonical redesign spec and decision
+has been audited into stable stories. M3, M4, and M5 must fail while it is
+partial; changing that status requires an exhaustive authority audit, not an
+estimate or a surface count.
 
 ## When a Separate Design Note Is Worth It
 
@@ -165,8 +218,9 @@ immutable audit history; do not create new ones for ordinary workflow delivery.
    two-file abstraction or a source file family.
 2. **Check authority.** Read only the relevant target-spec sections and confirmed
    decisions. Put their paths and headings in `activeWorkflow.authority`.
-3. **Write acceptance checks.** Cite the exact catalog behavior elements in
-   `baselineBehaviorRefs`, then state the happy path and the applicable negative,
+3. **Write acceptance checks.** Cite the exact current behavior elements in
+   `baselineBehaviorRefs` and the fully implemented redesigned outcomes in
+   `targetStoryIds`, then state the happy path and the applicable negative,
    offline, replay, security, accounting, and reconciliation cases in concise
    testable language. Record the page-by-page UI journey, including controls,
    options, transitions, loading/empty/error/offline states and accessibility.
@@ -244,6 +298,22 @@ M3 remains the complete target-implementation gate, M4 remains migration and
 rehearsal proof, and M5 remains explicit cutover readiness. Method v3 changes
 delivery bookkeeping only; it does not weaken or remove M3, M4, M5, hosted
 authentication/Sync evidence, rollback, or explicit cutover authorization.
+For M3 and later, the gate is composite: all required conversion controls must
+pass, the target story catalog must be exhaustively audited, every cumulative
+target story through that milestone must be covered by a passed completed
+workflow or authority-retired, and all 1,919 current-product behavior
+obligations must be covered by passed completed workflows. Surface promotion by
+itself can never satisfy M3, M4, or M5.
+At the product gate, the non-status workflow evidence payload must also match
+the record stored at its exact CI commit, including passed acceptance checks,
+local commands, specialist review, and concrete layer files. The gate queries
+the recorded GitHub Actions run and requires that it succeeded on that commit
+through `.github/workflows/supabase-conversion-control.yml`; a positive integer
+typed into a record is not CI evidence. Adding or changing a story, behavior,
+test result, review, or implementation-file reference after that run requires another CI
+verification. The authoritative baseline is fixed to its reviewed identity and
+91-journey/1,919-behavior threshold, so a thinner second audit cannot silently
+replace it.
 
 ## Context Continuity
 

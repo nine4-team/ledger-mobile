@@ -5,6 +5,7 @@
   "kind": "product_ui",
   "status": "blocked",
   "outcome": "Open an isolated draft for one represented active Project or Business Inventory Space, edit its complete checklist structure and text, then cancel without mutation or save one durable revision-bound replacement with conflict recovery.",
+  "targetStoryIds": ["space-checklist-editor"],
   "authority": [
     {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Redesign Requirements"},
     {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklists"},

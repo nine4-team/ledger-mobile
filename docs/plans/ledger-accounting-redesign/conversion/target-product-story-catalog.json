@@ -1,0 +1,668 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "ledger-target-product-stories",
+  "authorityIndex": "docs/specs/README.md",
+  "decisionLog": {
+    "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+    "sourceHash": "a873e7385211a2a08ba123de4e12164933d4d9d60bd88a27d79d2635e55fa26e"
+  },
+  "completeness": {
+    "status": "partial",
+    "reason": "65 stories are recorded. Five confirmed accounting decisions are mapped; remaining decisions and target/mixed spec heading audits are pending. The remainingAudit list preserves concrete gaps found by independent review. Do not mark complete until those gaps and every partial authority entry are reconciled."
+  },
+  "remainingAudit": [
+    "Split broad Invoice editing/collection/refund stories into Expense lifecycle, manual typed adjustments, positive whole collection, credit/zero settlement, sent revisions, paid credits and posting/corrections. Preserve each exact O-002 through O-015 and O-028 through O-034 dependency.",
+    "Complete Item vocabulary, Link cancellation, minimum evidence, wizard hint/layout, app/MCP parity, unresolved acquisition, duplicate evidence, accounting provenance and frozen collection membership. Preserve one physical Item identity.",
+    "Split Client lifecycle and Project setup/editing branches: new Client, rename/archive/merge, description updates, inline categories, hero media, category edits and unarchive. Map O-025/O-026/O-039/O-042/O-043/O-048/O-049/O-050 precisely.",
+    "Separate same-Client Transfer open-charge movement, paid attribution, Additional Requests tag, destination Space and reversal. Add Client identity migration; avoid double-counting the existing overlapping Transfer stories.",
+    "Complete Space search, Item count, primary media, direct create/details update, template apply/save/manage and archive assignment. Split checklist draft editing from rejected-operation resolution under O-051; preserve the spec's unresolved search-normalization requirement.",
+    "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
+    "Complete budget definitions versus shared management, card preview/pins, enabled category display, Transaction/Item attribution and edge states. Separate exact receipt completeness from billability, rounding and Item basis under O-008/O-030/O-031.",
+    "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
+    "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
+    "Map remaining confirmed/open decisions, add explicit D-026 production compatibility and D-027 isolated rehearsal outcomes, and split target-writer opening from stale-source-writer freeze under O-020/O-022. Complete every authority heading disposition against its pinned source hash."
+  ],
+  "deliveryRequirements": [
+    {
+      "profile": "identity_sync_read",
+      "storyIds": ["account-discovery-authorized", "workspace-selection-explicit", "workspace-selection-remembered", "workspace-selection-failure-privacy"],
+      "workflowKinds": ["product_ui"],
+      "requiredLayers": ["app_ui", "auth", "powersync_sync"],
+      "requiredRisks": ["ui_fidelity", "identity_auth", "sync_visibility"]
+    },
+    {
+      "profile": "secure_sync_read",
+      "storyIds": ["project-list", "project-detail", "space-list-to-detail", "space-checklist-progress", "client-identity"],
+      "workflowKinds": ["product_ui"],
+      "requiredLayers": ["app_ui", "powersync_sync"],
+      "requiredRisks": ["ui_fidelity", "sync_visibility"]
+    },
+    {
+      "profile": "secure_offline_write",
+      "storyIds": ["session-ending-pending-work", "project-creation-existing-client", "project-edit", "project-archive", "project-deletion-policy", "space-fields", "space-checklist-toggle", "space-checklist-editor", "space-templates", "space-item-assignment", "space-archive-assignment", "client-lifecycle", "item-create-unified-wizard", "budget-pinning"],
+      "workflowKinds": ["product_ui"],
+      "requiredLayers": ["domain", "app_ui", "postgres_schema", "postgres_handler", "rls", "powersync_sync", "local_offline"],
+      "requiredRisks": ["ui_fidelity", "database_integrity", "handler_idempotency", "tenant_authorization", "sync_visibility", "offline_durability"]
+    },
+    {
+      "profile": "accounting_offline_write",
+      "storyIds": ["accounting-scope-owner-boundary", "direct-client-paid-entry", "business-paid-physical-entry", "business-paid-expense-entry", "furnishings-additional-requests-overlay", "transaction-taxonomy", "same-client-transfer", "transfer-paired-records", "transfer-budget-reallocation", "accounting-entry-routing", "project-invoicing-workspace", "invoice-build-edit", "invoice-collect", "paid-history-boundary", "budget-paid-unpaid-progress", "accounting-corrections-refunds", "item-inventory-to-project", "item-remove-before-invoice", "item-remove-live-invoice", "item-credit-after-payment", "item-resale", "item-project-to-inventory", "item-inventory-back-to-source-project", "item-same-client-project-transfer", "item-cross-client-through-inventory", "item-correction", "item-vendor-return", "item-accounting-state", "item-link-client-paid", "item-link-business-paid", "item-one-identity", "budget-categories", "project-budget-allocation", "budget-progress-calculation", "budget-sign-conventions", "budget-offline-conflict", "non-item-receipt-lines", "receipt-completeness", "non-item-line-lifecycle"],
+      "workflowKinds": ["product_ui"],
+      "requiredLayers": ["domain", "app_ui", "postgres_schema", "postgres_handler", "rls", "powersync_sync", "local_offline", "accounting"],
+      "requiredRisks": ["ui_fidelity", "database_integrity", "handler_idempotency", "tenant_authorization", "sync_visibility", "offline_durability", "accounting"]
+    },
+    {
+      "profile": "migration",
+      "storyIds": ["legacy-proto-item-migration", "non-item-line-migration"],
+      "workflowKinds": ["migration"],
+      "requiredLayers": ["migration"],
+      "requiredRisks": ["migration_fidelity"]
+    },
+    {
+      "profile": "cutover_control",
+      "storyIds": ["stale-client-authority-cutover"],
+      "workflowKinds": ["backend_control", "migration"],
+      "requiredLayers": ["auth", "migration", "observability"],
+      "requiredRisks": ["identity_auth", "migration_fidelity"]
+    }
+  ],
+  "authorityCoverage": [
+    {"path": "docs/specs/invoice-centered-project-accounting.md", "sourceHash": "51e3b58b4ad54d6cd800607bc9f34543b60344cd21da68feb3b487dc855fbe34", "auditStatus": "partial", "storyIds": ["accounting-scope-owner-boundary", "direct-client-paid-entry", "business-paid-physical-entry", "business-paid-expense-entry", "furnishings-additional-requests-overlay", "accounting-entry-routing", "project-invoicing-workspace", "invoice-build-edit", "invoice-collect", "paid-history-boundary", "budget-paid-unpaid-progress", "accounting-corrections-refunds"]},
+    {"path": "docs/specs/inventory-item-invoicing-lifecycle.md", "sourceHash": "802bc08ba3e7524bcbab57d8cc7a1fa1e04e49a2b84ef381b2e4560ae965dbe1", "auditStatus": "partial", "storyIds": ["item-inventory-to-project", "item-remove-before-invoice", "item-remove-live-invoice", "item-credit-after-payment", "item-resale", "item-project-to-inventory", "item-inventory-back-to-source-project", "item-same-client-project-transfer", "item-cross-client-through-inventory", "item-correction", "item-vendor-return"]},
+    {"path": "docs/specs/client-identity-and-project-transfers.md", "sourceHash": "7f577bf40401ed29098826498a54631d3962b8266048d58f821bb29f23567f6f", "auditStatus": "partial", "storyIds": ["client-identity", "client-lifecycle", "transaction-taxonomy", "same-client-transfer", "transfer-paired-records", "transfer-budget-reallocation"]},
+    {"path": "docs/specs/projects.md", "sourceHash": "ffb0dcb14f52cdb472e87a23bba67391f89663e6c9b4c21eb2d29726ea2dbd76", "auditStatus": "partial", "storyIds": ["project-creation-existing-client", "project-list", "project-detail", "project-edit", "project-archive", "project-deletion-policy"]},
+    {"path": "docs/specs/account-discovery-and-workspace-selection.md", "sourceHash": "ce354f271eb218cef392c0188ef058f423eecf6f3592a90fa96086081ea4b676", "auditStatus": "partial", "storyIds": ["account-discovery-authorized", "workspace-selection-explicit", "workspace-selection-remembered", "workspace-selection-failure-privacy"]},
+    {"path": "docs/specs/session-ending-pending-work.md", "sourceHash": "4aa3b912db58b5f42395622351ebb14d8451a9bc52b2e0c2148b615e41e72936", "auditStatus": "partial", "storyIds": ["session-ending-pending-work"]},
+    {"path": "docs/specs/data-model.md", "sourceHash": "906047fa73e941b18aa576bb07f7291f6734f6a48b2244b0a28b5bf3eb3c3c77", "auditStatus": "partial", "reason": "The file describes the current persisted model and must be explicitly reconciled with target entity stories or classified as source-only."},
+    {"path": "docs/specs/proto-item-capture.md", "sourceHash": "a7c33dae9f6355148b1dbffdc3c11b5cad57d61b3cd76251ea4b107ce2ed96d7", "auditStatus": "partial", "storyIds": ["item-create-unified-wizard", "item-accounting-state", "item-link-client-paid", "item-link-business-paid", "item-one-identity", "legacy-proto-item-migration", "stale-client-authority-cutover"]},
+    {"path": "docs/specs/spaces.md", "sourceHash": "f4f25670190795de1d157ac3f83a42c52e893ab3a236a0cfcbf5d5c83a0dc6ad", "auditStatus": "partial", "storyIds": ["space-list-to-detail", "space-fields", "space-checklist-toggle", "space-checklist-editor", "space-checklist-progress", "space-templates", "space-item-assignment", "space-archive-assignment"]},
+    {"path": "docs/plans/non-item-receipt-lines/design.md", "sourceHash": "3c7807e797abdb3b3cd10a40d4e67cda60a87ef5245f0251f4a72c0df793ea3b", "auditStatus": "partial", "storyIds": ["non-item-receipt-lines", "receipt-completeness", "non-item-line-lifecycle", "non-item-line-migration"]},
+    {"path": "docs/specs/write-tiers.md", "sourceHash": "10050f7f8660dd58d6eeb03c711a1c579b004af50d1102c9ffe663daf05d3de8", "auditStatus": "source_only", "reason": "The spec index explicitly classifies this as current Firebase behavior superseded for the redesigned target."},
+    {"path": "docs/specs/offline-first.md", "sourceHash": "a57e3186002256370b0839741d68aa94622df888088dbf15020c6deef21c6c8f", "auditStatus": "partial", "reason": "Target optimistic-work, attachment lifecycle, retention, sync feedback, and offline-capability stories remain to be added."},
+    {"path": "docs/specs/budget-management.md", "sourceHash": "21c691318ff00931e875623bd6444c082cb359272394604730224caf2d5afc95", "auditStatus": "partial", "storyIds": ["budget-categories", "project-budget-allocation", "budget-progress-calculation", "budget-sign-conventions", "budget-pinning", "budget-offline-conflict"]},
+    {"path": "docs/specs/canonical-sales.md", "sourceHash": "b0e813bc1e89b14ea296f5356ca8cd9423e4a73b03818902ee13097b29b1a88a", "auditStatus": "source_only", "reason": "The file identifies its two-hop sales model as legacy and superseded by the canonical Item lifecycle specs."},
+    {"path": "docs/specs/lineage-tracking.md", "sourceHash": "27392bdb19d46e919e66c1eaf29b2c1d5d868b08e5a23016b5de35418e1335f1", "auditStatus": "partial", "reason": "Its candidate provenance foundation remains subject to O-007 and O-015 and needs explicit target-story disposition."},
+    {"path": "docs/specs/return-and-sale-tracking.md", "sourceHash": "9e68dbe194ec49793487ca4227498b3d251d7530df6f67a3c55f45e57ee40a23", "auditStatus": "partial", "reason": "Retained return-status/recovery behavior must be separated from obsolete Firebase and two-hop mechanics."},
+    {"path": "docs/specs/transaction-audit.md", "sourceHash": "e2d28443279a7b9856b4c042b325b3d100c0a6611f2bfb40d72169de9630cf3a", "auditStatus": "source_only", "reason": "Its legacy percentage completeness model conflicts with the accepted exact receipt-line design and is migration evidence only."},
+    {"path": "docs/specs/vendor-credits.md", "sourceHash": "2dae17a38786fa58a502086ae9e06362b4006a7e71ce26c4087040330b8a0827", "auditStatus": "source_only", "reason": "The file states that its proposed Transaction type is superseded; the retained vendor-adjustment need belongs to O-028."},
+    {"path": "docs/specs/reassign-vs-sell.md", "sourceHash": "1c9e7d5c4fb03ef8ebfcbf8b6c4a05296a7ccd4fe5f9488dd10fdce6945e4f30", "auditStatus": "partial", "reason": "Correct/Move intent and action-visibility stories remain to be added while stale two-hop terminology is excluded."},
+    {"path": "docs/specs/reports.md", "sourceHash": "f8bc160cae8025d8b5c0c704ce9daacc8503cf3749cc6cb75abe16d9ed74e844", "auditStatus": "partial", "reason": "Invoice, Client Summary, property-management, generation, delivery, and vendor-spend stories remain to be added."},
+    {"path": "docs/specs/invoice-import.md", "sourceHash": "8f8f545b9a9c6e56b4e6ddf2d5090787f72a717da68396b9816d861fa27914a8", "auditStatus": "partial", "reason": "Capture/parse, review, commit, and vendor-recognition stories remain to be added."}
+  ],
+  "decisionCoverage": {
+    "confirmed": [
+      {"decisionId":"D-001","auditStatus":"pending"},{"decisionId":"D-002","auditStatus":"mapped","storyIds":["accounting-scope-owner-boundary"]},{"decisionId":"D-003","auditStatus":"pending"},{"decisionId":"D-004","auditStatus":"pending"},{"decisionId":"D-005","auditStatus":"pending"},{"decisionId":"D-006","auditStatus":"pending"},{"decisionId":"D-007","auditStatus":"mapped","storyIds":["accounting-scope-owner-boundary","transaction-taxonomy"]},{"decisionId":"D-008","auditStatus":"mapped","storyIds":["business-paid-physical-entry","item-inventory-to-project"]},{"decisionId":"D-009","auditStatus":"mapped","storyIds":["business-paid-expense-entry","direct-client-paid-entry"]},{"decisionId":"D-010","auditStatus":"pending"},{"decisionId":"D-011","auditStatus":"pending"},{"decisionId":"D-012","auditStatus":"pending"},{"decisionId":"D-013","auditStatus":"mapped","storyIds":["furnishings-additional-requests-overlay"]},{"decisionId":"D-014","auditStatus":"pending"},{"decisionId":"D-015","auditStatus":"pending"},{"decisionId":"D-016","auditStatus":"pending"},{"decisionId":"D-017","auditStatus":"pending"},{"decisionId":"D-018","auditStatus":"pending"},{"decisionId":"D-019","auditStatus":"pending"},{"decisionId":"D-020","auditStatus":"pending"},{"decisionId":"D-021","auditStatus":"pending"},{"decisionId":"D-022","auditStatus":"pending"},{"decisionId":"D-023","auditStatus":"pending"},{"decisionId":"D-024","auditStatus":"pending"},{"decisionId":"D-025","auditStatus":"pending"},{"decisionId":"D-026","auditStatus":"pending"},{"decisionId":"D-027","auditStatus":"pending"}
+    ],
+    "open": [
+      {"decisionId":"O-002","auditStatus":"pending"},{"decisionId":"O-003","auditStatus":"pending"},{"decisionId":"O-004","auditStatus":"pending"},{"decisionId":"O-005","auditStatus":"pending"},{"decisionId":"O-006","auditStatus":"pending"},{"decisionId":"O-007","auditStatus":"pending"},{"decisionId":"O-008","auditStatus":"pending"},{"decisionId":"O-009","auditStatus":"pending"},{"decisionId":"O-010","auditStatus":"pending"},{"decisionId":"O-011","auditStatus":"pending"},{"decisionId":"O-012","auditStatus":"pending"},{"decisionId":"O-013","auditStatus":"pending"},{"decisionId":"O-014","auditStatus":"pending"},{"decisionId":"O-015","auditStatus":"pending"},{"decisionId":"O-016","auditStatus":"pending"},{"decisionId":"O-017","auditStatus":"pending"},{"decisionId":"O-018","auditStatus":"pending"},{"decisionId":"O-019","auditStatus":"pending"},{"decisionId":"O-020","auditStatus":"pending"},{"decisionId":"O-021","auditStatus":"pending"},{"decisionId":"O-022","auditStatus":"pending"},{"decisionId":"O-023","auditStatus":"pending"},{"decisionId":"O-024","auditStatus":"pending"},{"decisionId":"O-025","auditStatus":"pending"},{"decisionId":"O-026","auditStatus":"pending"},{"decisionId":"O-027","auditStatus":"pending"},{"decisionId":"O-028","auditStatus":"pending"},{"decisionId":"O-029","auditStatus":"pending"},{"decisionId":"O-030","auditStatus":"pending"},{"decisionId":"O-031","auditStatus":"pending"},{"decisionId":"O-032","auditStatus":"pending"},{"decisionId":"O-033","auditStatus":"pending"},{"decisionId":"O-034","auditStatus":"pending"},{"decisionId":"O-035","auditStatus":"pending"},{"decisionId":"O-036","auditStatus":"pending"},{"decisionId":"O-037","auditStatus":"pending"},{"decisionId":"O-038","auditStatus":"pending"},{"decisionId":"O-039","auditStatus":"pending"},{"decisionId":"O-040","auditStatus":"pending"},{"decisionId":"O-041","auditStatus":"pending"},{"decisionId":"O-042","auditStatus":"pending"},{"decisionId":"O-043","auditStatus":"pending"},{"decisionId":"O-044","auditStatus":"pending"},{"decisionId":"O-045","auditStatus":"pending"},{"decisionId":"O-046","auditStatus":"pending"},{"decisionId":"O-047","auditStatus":"pending"},{"decisionId":"O-048","auditStatus":"pending"},{"decisionId":"O-049","auditStatus":"pending"},{"decisionId":"O-050","auditStatus":"pending"},{"decisionId":"O-051","auditStatus":"pending"}
+    ]
+  },
+  "stories": [
+    {
+      "storyId": "account-discovery-authorized",
+      "title": "Discover authorized Accounts",
+      "outcome": "A signed-in principal sees only Accounts their current membership authorizes.",
+      "authority": { "path": "docs/specs/account-discovery-and-workspace-selection.md", "section": "Authorized Account Discovery" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "workspace-selection-explicit",
+      "title": "Select an Account workspace explicitly",
+      "outcome": "The user explicitly selects the Account scope that every target read and write uses.",
+      "authority": { "path": "docs/specs/account-discovery-and-workspace-selection.md", "section": "Explicit Workspace Selection" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "workspace-selection-remembered",
+      "title": "Restore a remembered workspace safely",
+      "outcome": "A remembered Account selection is restored only after current authorization is proved.",
+      "authority": { "path": "docs/specs/account-discovery-and-workspace-selection.md", "section": "Remembered Selection" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "workspace-selection-failure-privacy",
+      "title": "Fail workspace selection without disclosure",
+      "outcome": "Unavailable or unauthorized Account evidence fails closed without leaking other Accounts.",
+      "authority": { "path": "docs/specs/account-discovery-and-workspace-selection.md", "section": "Failure and Privacy Contract" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "session-ending-pending-work",
+      "title": "End sessions without silently losing pending work",
+      "outcome": "Logout and account removal preserve, resolve, or explicitly handle accepted offline work and media.",
+      "authority": { "path": "docs/specs/session-ending-pending-work.md", "section": "Session-Ending Safety Contract" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-051"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "project-creation-existing-client",
+      "title": "Create a Project for an existing Client",
+      "outcome": "A Project is created in the selected Account with exact Client identity, validated fields, categories, and budget allocations.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Creation Flow" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-049"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "project-list",
+      "title": "Browse Projects",
+      "outcome": "The user sees the authorized Project list, archive state, and honest budget preview.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Project List" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-detail",
+      "title": "Open Project detail",
+      "outcome": "The selected Project resolves to its scoped detail, tabs, and available actions without cross-Account evidence.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Project Detail" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-edit",
+      "title": "Edit a Project",
+      "outcome": "Authorized Project edits apply atomically against the expected revision while preserving dependent meaning.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Editing" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-048", "O-049", "O-050"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "project-archive",
+      "title": "Archive a Project",
+      "outcome": "Archiving removes a Project from active work without deleting its identity or history.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Archiving" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-deletion-policy",
+      "title": "Apply the Project deletion policy",
+      "outcome": "A synchronized Project cannot be physically removed in a way that orphans history or dependent records.",
+      "authority": { "path": "docs/specs/projects.md", "section": "Deletion" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-024"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "space-list-to-detail",
+      "title": "Browse scoped active Spaces",
+      "outcome": "A Project or Inventory scope shows only its active Spaces and opens exact scoped detail with honest offline completeness.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Target Space Browsing" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-fields",
+      "title": "Create and edit Space fields",
+      "outcome": "Space name and notes share exact app, MCP, and database validation and revision behavior.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Space Fields" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-044", "O-045", "O-046"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "space-checklist-toggle",
+      "title": "Toggle a Space checklist item",
+      "outcome": "An eligible checklist item toggles offline with stable identity, exact aggregate progress, and visible operation outcome.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Checklists" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-checklist-editor",
+      "title": "Edit Space checklists",
+      "outcome": "The user can add, edit, delete, reorder, save, or cancel complete checklist replacements without losing rejected drafts.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Checklist Structure" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-051"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "space-checklist-progress",
+      "title": "Show checklist progress",
+      "outcome": "Per-list and aggregate progress is derived honestly from exact checklist item state.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Checklist Progress" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-templates",
+      "title": "Create and apply Space templates",
+      "outcome": "Authorized users save and apply stable Space templates without granting unintended reference-data authority.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Space Templates" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-026"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "space-item-assignment",
+      "title": "Assign Items to Spaces",
+      "outcome": "Authorized Items move into, between, or out of Spaces within the exact owning scope.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Item Assignment" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-archive-assignment",
+      "title": "Preserve assignments through Space archive",
+      "outcome": "Space archive preserves resolvable Item placement history and prevents new assignment without silently clearing evidence.",
+      "authority": { "path": "docs/specs/spaces.md", "section": "Edge Cases" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-037"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "client-identity",
+      "title": "Use canonical Client identity",
+      "outcome": "Projects and accounting relationships use account-scoped Client identity rather than mutable display names.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Client Entity" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "client-lifecycle",
+      "title": "Manage Client lifecycle",
+      "outcome": "Client rename, archive, correction, and merge preserve authoritative identity and historical relationships.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Client lifecycle" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-025", "O-042", "O-043"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "transaction-taxonomy",
+      "title": "Enforce the global Transaction taxonomy",
+      "outcome": "Only scope-relative Purchase, Return, and project-only non-cash Transfer Transactions are canonical.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Target Global Transaction Taxonomy" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "same-client-transfer",
+      "title": "Transfer Items between same-Client Projects",
+      "outcome": "One authorized action atomically creates linked source and destination records and moves exact Item scope without an Inventory hop.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Transfer User Experience" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-002", "O-011", "O-012", "O-013", "O-014"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "transfer-paired-records",
+      "title": "Preserve paired Transfer evidence",
+      "outcome": "Transfer records remain atomically paired, cross-linked, and inseparable across source and destination Projects.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Paired Transfer Records" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "transfer-budget-reallocation",
+      "title": "Reallocate budget through Transfer",
+      "outcome": "Transfer reallocates recognized value between same-Client Projects while remaining Client-wide net zero.",
+      "authority": { "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Budget Reallocation" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "accounting-entry-routing",
+      "title": "Route money and billable activity canonically",
+      "outcome": "Client-paid money becomes Project Transactions while business-paid goods and costs enter Inventory or Invoicing as specified.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Canonical Entry Routing" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-invoicing-workspace",
+      "title": "Manage the Project Invoicing workspace",
+      "outcome": "Open Item charges, credits, and Expenses remain visible and editable according to their lifecycle.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Project Invoicing Workspace" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-006", "O-008", "O-009", "O-034"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "invoice-build-edit",
+      "title": "Build and revise an Invoice",
+      "outcome": "Invoice membership and values remain live before collection with explicit revision and delivery semantics.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Build and edit" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-006", "O-009", "O-010", "O-034"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "invoice-collect",
+      "title": "Collect a whole Invoice",
+      "outcome": "Whole-Invoice collection creates one positive Purchase, freezes exact membership, and rejects invalid or mismatched settlement.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Collect" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-003", "O-004", "O-010", "O-033"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "paid-history-boundary",
+      "title": "Preserve immutable paid history",
+      "outcome": "Collected Invoice membership and accounting evidence remain immutable and auditable.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Paid boundary" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-paid-unpaid-progress",
+      "title": "Show paid and unpaid budget progress",
+      "outcome": "Collection moves value from unpaid to paid without increasing total spend, with signed credits represented honestly.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Budget Progress" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-005"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "accounting-corrections-refunds",
+      "title": "Correct accounting and issue refunds without story confusion",
+      "outcome": "Physical movement, vendor refund, Client cash refund, pending credit, and accounting correction remain distinct operations.",
+      "authority": { "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Corrections and Refunds" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-003", "O-004", "O-028", "O-029", "O-032"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-inventory-to-project",
+      "title": "Sell an Inventory Item to a Project",
+      "outcome": "A single physical Item moves to the Project and gains an open billable charge without creating Client cash activity.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 1: Sell an Inventory Item to a Project" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-remove-before-invoice",
+      "title": "Remove an Item before invoicing",
+      "outcome": "An unused Item returns to Inventory and its uncollected charge is removed without a cash Return.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 2: Decide Not to Use It Before It Is on an Invoice" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-remove-live-invoice",
+      "title": "Remove an Item from a live Invoice",
+      "outcome": "Removing an Item from a created or sent Invoice updates placement, membership, and revisions atomically.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 3: Remove It from a Created or Sent Invoice" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-002", "O-010", "O-034"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-credit-after-payment",
+      "title": "Credit a paid Item",
+      "outcome": "A paid Item remains historically frozen while any later Client credit or cash refund is represented explicitly.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 4: Remove It after the Invoice Was Paid" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-003", "O-004", "O-005", "O-014"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-resale",
+      "title": "Sell the same Item again",
+      "outcome": "One physical Item identity survives repeated sale, return, and resale occurrences with auditable provenance.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 5: Sell the Same Item Again" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-007", "O-015"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-project-to-inventory",
+      "title": "Move a Project-originated Item into Inventory",
+      "outcome": "The Item changes owner and scope with the exact inventory acquisition and Project accounting evidence required by the payer story.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 6: Sell a Project-Originated Item to Business Inventory" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-007", "O-015", "O-032"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-inventory-back-to-source-project",
+      "title": "Return an Item to its source Project",
+      "outcome": "A Project-originated Item can return from Inventory to its source with conserved identity and correct accounting provenance.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 7: Return a Project-Originated Item to Its Source Project" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-007", "O-015"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-same-client-project-transfer",
+      "title": "Transfer an Item between same-Client Projects",
+      "outcome": "The Item moves directly between Projects with paired non-cash Transfer evidence and no Inventory hop.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 8: Transfer between Projects Owned by the Same Client" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-002", "O-011", "O-012", "O-013", "O-014"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-cross-client-through-inventory",
+      "title": "Move an Item across Clients through Inventory",
+      "outcome": "Cross-Client resale uses explicit Inventory acquisition and later Project billing rather than a direct Transfer.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 9: Sell from Project A to a Different Client's Project through Inventory" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-correction",
+      "title": "Correct an Item lifecycle mistake",
+      "outcome": "Corrections preserve the physical Item and immutable prior evidence rather than rewriting history.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 10: Correct a Mistake" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-013", "O-029"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-vendor-return",
+      "title": "Return an Item to an outside vendor",
+      "outcome": "Physical vendor return, actual money refund, and non-cash vendor credit remain separate facts.",
+      "authority": { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "section": "Story 11: Return an Item to an Outside Vendor" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-028"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-create-unified-wizard",
+      "title": "Create one real Item through the unified wizard",
+      "outcome": "All entry contexts create one real Item identity from the same minimum and optional field contract.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Unified Item-Creation Wizard" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-017", "O-021", "O-027"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-accounting-state",
+      "title": "Show whether an Item is Accounted For",
+      "outcome": "Accounting state derives only from a Client-paid Purchase link or open billable Item charge, independently of Space and Invoice membership.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Accounting-State Rule" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-link-client-paid",
+      "title": "Link an Item as Client paid",
+      "outcome": "Client-paid Link requires and connects the actual Project Purchase.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Client paid" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-link-business-paid",
+      "title": "Link an Item as Business paid",
+      "outcome": "Business-paid Link creates an open Item charge and honestly represents optional or missing Inventory acquisition evidence.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Business paid" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-016"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "item-one-identity",
+      "title": "Preserve one Item identity",
+      "outcome": "Project Items, Invoicing, Inventory, and provenance reference one physical Item rather than duplicate records.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "One Item Identity" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "legacy-proto-item-migration",
+      "title": "Import legacy proto Item evidence",
+      "outcome": "Every legacy proto capture receives a deterministic Item, merge, or review disposition without a target proto writer.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Legacy Proto-Item Source Migration" },
+      "milestone": "M4",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-018", "O-019"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "stale-client-authority-cutover",
+      "title": "Reject stale source writers at cutover",
+      "outcome": "Final export and target authority cannot miss writes from already-shipped Firebase clients.",
+      "authority": { "path": "docs/specs/proto-item-capture.md", "section": "Pre-Cutover and Stale-Client Boundary" },
+      "milestone": "M5",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-020", "O-022"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "budget-categories",
+      "title": "Manage budget categories",
+      "outcome": "System, Account, and Project category meaning and authorization remain stable across app and backend.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "Budget Categories" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-026"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "project-budget-allocation",
+      "title": "Allocate Project budgets",
+      "outcome": "Per-Project category allocations preserve exact enabled-category and amount semantics.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "Per-Project Budget Allocation" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-progress-calculation",
+      "title": "Calculate budget progress",
+      "outcome": "Per-category and overall progress derives deterministically from canonical signed accounting contributions.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "Budget Progress Calculation" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-sign-conventions",
+      "title": "Apply budget sign conventions",
+      "outcome": "Purchases, Returns, Transfers, charges, and credits contribute with the documented signs.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "Sign Conventions" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "budget-pinning",
+      "title": "Preserve personal budget pins",
+      "outcome": "Personal ordered Project budget pins use typed targets and explicit absence without implicit shared-data writes.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "User Preferences: Pinning" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-040"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "budget-offline-conflict",
+      "title": "Resolve budget edits offline",
+      "outcome": "Offline allocation and category edits preserve accepted intent and expose conflicts without silent last-writer loss.",
+      "authority": { "path": "docs/specs/budget-management.md", "section": "Offline and Conflict Behavior" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "non-item-receipt-lines",
+      "title": "Represent nonphysical receipt lines",
+      "outcome": "Nonphysical receipt amounts remain typed embedded evidence rather than fake Items or a fourth Transaction type.",
+      "authority": { "path": "docs/plans/non-item-receipt-lines/design.md", "section": "Canonical shape" },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "receipt-completeness",
+      "title": "Reconcile receipt completeness exactly",
+      "outcome": "Items and non-Item lines explain source receipt totals without hidden tolerance or invented allocation.",
+      "authority": { "path": "docs/plans/non-item-receipt-lines/design.md", "section": "Accounting and completeness" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-008", "O-030", "O-031"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "non-item-line-lifecycle",
+      "title": "Preserve non-Item line lifecycle",
+      "outcome": "Non-Item receipt evidence remains distinguishable through billing, return, credit, and correction flows.",
+      "authority": { "path": "docs/plans/non-item-receipt-lines/design.md", "section": "Lifecycle and inventory behavior" },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": { "decisionIds": ["O-008", "O-028"], "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "section": "Open Product Decisions" }
+    },
+    {
+      "storyId": "non-item-line-migration",
+      "title": "Migrate non-Item receipt evidence",
+      "outcome": "Source receipt values migrate or enter explicit review without manufacturing physical Items.",
+      "authority": { "path": "docs/plans/non-item-receipt-lines/design.md", "section": "Production migration scope" },
+      "milestone": "M4",
+      "status": "required"
+    },
+    {
+      "storyId": "accounting-scope-owner-boundary",
+      "title": "Interpret payments relative to the scope owner",
+      "outcome": "Project Purchases and Returns record Client money; Inventory Purchases and Returns record Business money. An Invoice is a demand, not proof of payment.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Accounting Boundary"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "direct-client-paid-entry",
+      "title": "Record a direct Client-paid purchase",
+      "outcome": "Create the Project Transaction immediately; physical Items belong to Furnishings and non-itemized costs use the selected category. Neither enters Invoicing.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Direct client-paid purchases"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "business-paid-physical-entry",
+      "title": "Acquire Business-paid physical goods",
+      "outcome": "Create the Inventory acquisition with Items and receipt evidence. Selling an Item into a Project creates an invoiceable Item charge without a second Project Purchase.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "1584-paid physical goods"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "business-paid-expense-entry",
+      "title": "Capture a Business-paid non-itemized Project cost",
+      "outcome": "Capture vendor, date, amount, receipt, notes and category as an Expense in Invoicing; create the Project Transaction only when the Invoice is paid.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "1584-paid non-itemized costs"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "furnishings-additional-requests-overlay",
+      "title": "Keep Additional Requests non-additive",
+      "outcome": "Item charges and credits remain Furnishings; Additional Requests is an overlay and must not duplicate the amount in overall spend.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Furnishings and Additional Requests"
+      },
+      "milestone": "M3",
+      "status": "required"
+    }
+  ]
+}

@@ -67,6 +67,7 @@ public struct ProjectBrowsingDirectoryPresentation: Equatable, Sendable {
 @Observable
 public final class ProjectBrowsingStagingExercise {
     public let noteHistory: ProjectNoteHistoryStagingExercise
+    public private(set) var evidenceSequence: UInt64 = 0
     public var activeProjects: [ProjectDirectoryCoreRow] {
         directoryViewState.presentation?.active.rows ?? []
     }
@@ -142,10 +143,15 @@ public final class ProjectBrowsingStagingExercise {
 
     private let accountId: AccountID
     private var runtime: ProjectBrowsingStagingRuntime?
-    private var directoryViewState: DirectoryViewState = .loading
-    private var detailViewState: DetailViewState = .notSelected
+    private var directoryViewState: DirectoryViewState = .loading {
+        didSet { publishEvidenceChange() }
+    }
+    private var detailViewState: DetailViewState = .notSelected {
+        didSet { publishEvidenceChange() }
+    }
     private var directoryTask: Task<Void, Never>?
     private var detailTask: Task<Void, Never>?
+    private var evidenceObservers: [UUID: AsyncStream<UInt64>.Continuation] = [:]
     private var selectedProjectRevision: ExpectedProjectRevision?
     private var lifecycleGeneration: UInt64 = 0
     private var detailGeneration: UInt64 = 0
@@ -153,6 +159,24 @@ public final class ProjectBrowsingStagingExercise {
     public init(accountId: AccountID) {
         self.accountId = accountId
         noteHistory = ProjectNoteHistoryStagingExercise(accountId: accountId)
+    }
+
+    public func evidenceChanges() -> AsyncStream<UInt64> {
+        let observerId = UUID()
+        let initialSequence = evidenceSequence
+        return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { [weak self] continuation in
+            guard let self else {
+                continuation.finish()
+                return
+            }
+            evidenceObservers[observerId] = continuation
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.evidenceObservers.removeValue(forKey: observerId)
+                }
+            }
+            continuation.yield(initialSequence)
+        }
     }
 
     public func start(runtime: ProjectBrowsingStagingRuntime) async {
@@ -293,6 +317,13 @@ public final class ProjectBrowsingStagingExercise {
             await failDirectory(.sourceCancelled, generation: generation)
         } catch {
             await failDirectory(.localReadFailed, generation: generation)
+        }
+    }
+
+    private func publishEvidenceChange() {
+        evidenceSequence &+= 1
+        for continuation in evidenceObservers.values {
+            continuation.yield(evidenceSequence)
         }
     }
 

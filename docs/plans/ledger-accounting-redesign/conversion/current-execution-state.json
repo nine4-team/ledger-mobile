@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 34,
+  "stateVersion": 36,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -16,28 +16,28 @@
     "meaning": "The behavior-traced active-Space checklist editor now preserves and recovers an exact terminally rejected checklist save as immutable read-only evidence across encrypted database, runtime, coordinator and editor restart. Independent review returned GO after correcting unsafe defaults and misleading retry/empty-state claims. Exact commit CI passed traceability, isolated local Supabase, the full 711-test target suite, and macOS/iOS builds. O-051 still blocks retry, do-not-retry acknowledgment and resolution; A-003/A-004 still gate hosted authenticated Sync."
   },
   "activeWorkflow": {
-    "id": "scoped-active-space-list-to-detail",
+    "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
-    "status": "ci_verification",
-    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/scoped-active-space-list-to-detail.json",
-    "outcome": "Open one exact Project or Business Inventory Space browser, see its active Spaces in deterministic order with honest checklist progress and readiness, then select a represented stable Space ID and open only matching exact-scope detail.",
+    "status": "local_verification",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
+    "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Commit the locally green, independently reviewed exact-scope Space browser implementation and push the Supabase implementation branch.",
-      "Run the immutable CI gate for that exact commit and require all traceability, local Supabase, target test and macOS/iOS build jobs to pass.",
-      "Record the exact commit and CI run while selecting the next catalog-backed workflow; do not create a promotion-only checkpoint.",
-      "Before adding another Sync-backed query family, extract and parity-test the repeated PowerSync retained-baseline, freshness-observation and drainage machinery."
+      "Finish the target-product-story-catalog.json content audit: add missing redesign outcomes, cross-reference confirmed/open decisions, and preserve partial authority entries wherever source/spec reconciliation is unfinished.",
+      "Review catalog additions against exact product authority. The completion gate has independent GO; 20 negative and 5 positive/cumulative self-tests pass, with content hashes and concrete story/layer/risk evidence enforced.",
+      "Synchronize conversion classifications and run the focused control checks after catalog edits. The integrated app, database and build checks already passed locally; repeat executable tests only if executable changes require them.",
+      "Checkpoint the coherent batch and require automatic CI on its exact commit. Older amended completion records need refreshed CI evidence before any M3-M5 claim; never turn catalog partial into complete merely to pass a gate."
     ]
   },
   "progress": {
     "practicalCompletionEstimatePercent": {
       "low": 14,
-      "center": 17,
-      "high": 20
+      "center": 18,
+      "high": 21
     },
-    "locallyWorkingProviderWorkflows": 14,
+    "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "Workflow counts measure product progress. Checklist toggle is complete; exact read-only rejected-save recovery is exact-commit verified while the editor remains blocked only on O-051 resolution policy. The scoped Project/Inventory Space list-to-detail workflow is locally green and independently reviewed, with exact-commit CI now pending. The code-surface catalog is a passive completeness audit; the Product Behavior Catalog is the user-visible parity checklist."
+    "note": "Workflow counts measure product progress. The scoped Project/Inventory Space browser and the composed Active Project → Spaces → Space → checklist path are locally green and independently reviewed, with exact-commit CI pending. The code-surface catalog is only an omission/impact map. The Product Behavior Catalog is the current-product parity checklist, and the target story catalog is the redesign checklist; M3+ requires all three controls, not surface promotion alone."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
