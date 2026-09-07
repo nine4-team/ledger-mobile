@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 85,
+  "stateVersion": 87,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PROJECT-NAVIGATION-AND-SPACE-SEARCH-CI-GREEN",
-    "commit": "ad70e5cfcd449f619c8603bf2300ba493508330f",
-    "ciRun": 34167632359,
+    "name": "SOURCE-HISTORY-RECONCILIATION-CI-GREEN",
+    "commit": "fffdd270b2163f1fad7013a9632b95efaf108034",
+    "ciRun": 34169718629,
     "ciStatus": "passed",
-    "meaning": "Exact Project navigation and shared Space search commit passed automatic CI. Includes prior removal/Notes work; does not prove authenticated activation, media delivery, hosted behavior or full product completion."
+    "meaning": "Exact source-history/path reconciliation commit passed automatic CI. Does not prove current payment batch, target accounting persistence, hosted behavior or cutover readiness."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete; continue Item-history migration without reopening audit or O007/O015. D028/A019 allow improved technical representation while preserving meaning/history. Significant technical changes belong in architecture-decisions.md.",
-      "e21e48c626bcc8862c14d5cf09d42bcbcecda02a committed/pushed: validated fixture document exposure and checker self-test fix. Automatic PR CI34169217765 confirmed in_progress; poll exact run, do not dispatch. Previous18ac010c CI34168806311 failed because pop() removed the new workflow instead of historical evidence; target tests skipped. Local29 migration tests/5 suites plus final byte-identity test and control checks passed; independent review GO. No local processes running.",
-      "Source-path review now implemented: exact Account paths select full reference collections, not current Item membership; duplicates/foreign/malformed records excluded from resolution but preserved. Source-shaped sale/return/resale and rejection tests pass32/6 migration subset /tmp/ledger-source-cycle-tests.log; main independently reviewed delegated tests and fixed reviewer-discovered decoy-path omission. A019 records trust boundary/tradeoff. Batch awaiting commit/automatic CI. No local tests running.",
-      "Next: map reconciled source relationships into approved target accounting facts using existing core contracts; retain source correlation and quarantine ambiguous origin/paid evidence rather than inferring money from movement labels. Read focused source Item/Transaction/Invoice fields and target occurrence contracts. Source-shaped cycles currently package-level tests, not a reviewed export bundle; frozen v1 remains unchanged. Target persistence, history UI/MCP/readback and actual migration reconciliation still required.",
-      "O053 checklist actors, A007/O057 auth provider and other linked product/hosted gates remain unresolved only for affected outcomes. No production/hosted access authorized. Preserve independent progress; no new tracker."
+      "Audit complete. D028/A019 authorize improved technical representation while preserving meaning/history. Significant changes logged in architecture-decisions.md. No production/hosted access or cutover approved.",
+      "Source-history fffdd270 CI34169718629 success. Earlier e21e48c6 CI34169217765 still confirmed in_progress at last poll; no redispatch/restart. No local processes running.",
+      "Current integrated payment batch uncommitted: explicit client-payment mapping + exact Project snapshot/scope/identity binding, duplicate rejection and overflow-safe totals. Independent review GO with broader-plan scope clarified/tested;44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. A019 records mapping/tradeoffs. Run final controls, commit/push once; consume exact automatic CI.",
+      "Next: connect mapped client payments to target persistence and immutable source/settlement evidence plus migration-run counts/checkpoints and restart/readback reconciliation. Do not invent Client identity from legacy clientName or turn partial/category collections into whole-Invoice collection. Other source economic types remain unresolved; approved source-shaped import plan/bundle and full target history still required.",
+      "O053 checklist actors, A007/O057 auth provider and other linked product/hosted gates affect only related outcomes; continue independent work."
     ]
   },
   "blockers": [],

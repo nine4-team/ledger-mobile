@@ -27724,10 +27724,12 @@
         "LedgeriOS/LedgerTargetMigrationCoreTests"
       ],
       "layers": [
-        "migration"
+        "migration",
+        "accounting"
       ],
       "riskDomains": [
-        "migration_fidelity"
+        "migration_fidelity",
+        "accounting"
       ],
       "uiJourneys": [],
       "acceptanceChecks": [
@@ -27751,12 +27753,27 @@
           "expected": "A source-shaped sale/return/resale cycle preserves one physical Item and every historical link even when current Item membership only names the final Transaction. Foreign, duplicate and malformed path/reference evidence cannot advance to mapping; every source document remains retained.",
           "command": "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests",
           "status": "passed"
+        },
+        {
+          "id": "SOURCE-CLIENT-PAYMENT-MAPPING",
+          "risk": "migration_fidelity",
+          "expected": "Explicit legacy client payments become Project Purchase classifications with unchanged integer cents and retained raw settlement evidence. Do not infer Invoice/Item paid status, coalesce payments, round money or relabel movements/payer-ambiguous purchases.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseClientPaymentConversionTests",
+          "status": "passed"
+        },
+        {
+          "id": "SOURCE-CLIENT-PAYMENT-BATCH",
+          "risk": "accounting",
+          "expected": "Bind every input payment to unchanged source Project evidence, an explicit target Client/Project assignment and unique stable target identity. Preserve source count/order, distinguish unresolved inputs, detect sum overflow and prove deterministic replay without name-based ownership or silent payment merging.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseClientPaymentBatchTests",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
         "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
         "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries.",
-        "Frozen v1 fixture contains simplified movements, not shipped lineageEdges. Package-level source-shaped cycle tests exercise document selection and reconciliation; a reviewed source-shaped export bundle and canonical target accounting mapping/readback remain required."
+        "Frozen v1 fixture contains simplified movements, not shipped lineageEdges. Package-level source-shaped cycle tests exercise document selection and reconciliation; a reviewed source-shaped export bundle and canonical target accounting mapping/readback remain required.",
+        "Pure client-payment batch validates explicit mapping snapshots, identities and input totals. Reviewed import approval, complete export coverage, target persistence/restart and legacy Invoice/line allocation reconciliation remain required; partial/category payments are not automatically whole-Invoice collections."
       ],
       "blockers": [],
       "verification": {
@@ -27769,18 +27786,20 @@
             "npm run target:environment:check",
             "git diff --check",
             "node scripts/check-conversion-current-state.mjs --self-test",
-            "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests"
+            "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests",
+            "swift test --package-path LedgeriOS --filter 'FirebaseClientPayment|FirebaseLineage|FirebaseSourceFixtureTests|MigrationRunIntegrityTests|MigrationEnvironmentGuardTests|TransactionTaxonomyTests'",
+            "swift test --package-path LedgeriOS --filter FirebaseClientPaymentBatchTests"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration."
+          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration. Explicit client-payment transform independently reviewed GO: only shipped paymentToBusiness aliases, positive exact Int64 cents and Project standalone Purchase; original source retained. 39 tests/8 suites PASS /tmp/ledger-payment-migration-suite.log. Caller must still prove source→target Account/Project/Client mapping, stable identity/idempotence, per-source counts and totals before import; no Invoice paid-state inference.  Batch independently reviewed: per-input integrity GO; broader-plan ambiguity resolved explicitly and tested (unused mappings do not create/approve payments, identity/Project collisions still reject affected inputs). Main reviewed full diff; 44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. Source-history fffdd270b2163f1fad7013a9632b95efaf108034 CI34169718629 success; current payment batch awaits its own exact-commit CI."
         },
         "ci": {
-          "status": "failed",
-          "commit": "18ac010c4a287a998bfb83d7861ced0fe4ae7cf6",
-          "run": 34168806311
+          "status": "not_run",
+          "commit": null,
+          "run": null
         }
       },
       "implementationEvidence": [
@@ -27790,7 +27809,16 @@
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageEvidence.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageReconciliation.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageSourceReview.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageSourceReview.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift"
+          ]
+        },
+        {
+          "layer": "accounting",
+          "paths": [
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift"
           ]
         }
       ]

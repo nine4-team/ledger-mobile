@@ -365,3 +365,26 @@ the existing validated fixture reader; source-shaped cycle tests are separate
 from the frozen v1 fixture, whose simplified movements do not prove shipped
 lineage coverage. Neither structural reconciliation nor a `returned` label
 establishes a client refund, paid occurrence or completed target import.
+
+**Explicit client-payment translation:** A legacy `paymentToBusiness` record
+means actual client payment (`InvoiceService.markCollected` writes category-specific
+payment records). Under D-001/D-002 it maps to the target Project Purchase
+classification, retaining its exact integer cents and entire source document.
+Do not merge historical payments or infer full Invoice settlement from this
+classification; the source can represent partial or category-level collection.
+`FirebaseClientPaymentConversion` requires a reconciled source→target Project
+scope supplied by the migration caller. Other source transaction types, unclear
+payers, nonpositive amounts and non-integer money remain unresolved here. This
+is a domain transform, not the completed scope-mapping/import pipeline or proof
+that historical Invoice allocations reconcile.
+
+`FirebaseClientPaymentBatch` binds that transform to an exact source Project
+snapshot and an explicit target Project/Client assignment, plus stable supplied
+Transaction IDs. The source has only `clientName`; equal names never establish
+ownership. Duplicate source paths/target identities, changed or missing Project
+evidence and sum overflow prevent affected payments or totals from reconciling.
+The batch retains one result per input and does not merge category payments.
+Mappings may cover a larger import plan: unused entries create no payment and
+are not approved by a successful subset. Import approval, complete export
+coverage, target persistence and final settlement reconciliation remain separate
+requirements.
