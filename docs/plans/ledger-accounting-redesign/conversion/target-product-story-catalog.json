@@ -4,11 +4,11 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "e40d9ebabffcdb9743f6cd1b71aa7840b38d11c1affd0ce47ebd8349dc8bfd36"
+    "sourceHash": "a3f3aa352e78949f303a269b0051a2c4b15bb2daadd6a9a3f6a082883c854594"
   },
   "completeness": {
     "status": "partial",
-    "reason": "180 stories; nineteen heading audits/344 headings. Reports/import/search/review reviewed; vendor reporting corrections independently accepted. Data-model and lineage/return/reassign remain partial until remaining capabilities are traced. Counts are not implemented features."
+    "reason": "181 stories; twenty-one heading audits/401 headings. Transaction/Inventory composition and companion-spec references independently reviewed. Data-model, ordinary Item/return-status, Account profile and MCP ingestion metadata still need coverage. O-038/O-065 mappings remain pending. Counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -19,7 +19,7 @@
     "Offline/auth heading crosswalk complete (35 headings), primary and independent integrated review passed. Six shared outcomes cover cached readiness, durable edits/status, media delivery/retention, online entry/onboarding and bounded local access; existing session-ending stories are reused. O-057/O-058 cross-reference unchanged A-007/A-016 choices; O-023/O-051 remain open. Options A/B/C are alternatives, not approved features.",
     "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review passed. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reports/billing/import heading audit complete, independent review passed after corrections: typed complete snapshots, actual Invoice routing, Property Management, canonical Client Summary dependencies, billing summary and composed contract commands. Preserve local PDF parse/review independent of O-061 expanded/quantity/duplicate decisions; O-062 gates separate Closeout. Receipt sharing and financial policy remain separate.",
-    "O-038 Inventory destination planning still requires target disposition. O-041 vendor reporting is mapped but unapproved. Data-model audit exposed missing ordinary Item/Transaction/Inventory workspace, Account profile and email-ingestion ownership; reuse existing workflow entries where possible. Three lineage/return/reassign target contracts passed bounded review, but their full checklist mapping is still partial.",
+    "O-038 planning still requires target disposition; O-041 vendor reporting is mapped but unapproved. Transaction/Inventory host/browser/create/correction now have reviewed coverage, with O-065 role mapping pending the Item audit. Lineage/reassign are reviewed companion references to existing stories, not new writers. Ordinary Item edits/copies/status, Account profile and MCP ingestion metadata/triage still need coverage; no email intake pipeline exists in the inspected source.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
     "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance.",
     "Financial heading audit covers policy/whole-Invoice visibility, no-leak read paths, member settings, invitation lifecycle and migration. O-059 preserves unresolved ownership/self-lockout/role-change authority; O-060 mixed payments, no-revenue Invoices, archived grants and Project overrides. O-057/O-058 and O-009 remain distinct. Primary and independent integrated review passed; source fail-open fallback is not target policy.",
@@ -110,7 +110,6 @@
         "business-paid-physical-entry",
         "business-paid-expense-entry",
         "furnishings-additional-requests-overlay",
-        "accounting-entry-routing",
         "invoice-build-edit",
         "invoice-collect",
         "paid-history-boundary",
@@ -141,7 +140,6 @@
         "receipt-component-treatment",
         "vendor-cash-refund",
         "client-credit-cash-settlement",
-        "transaction-posting-correction",
         "accounting-relationship-provenance",
         "fee-demand-lifecycle",
         "vendor-noncash-adjustment",
@@ -425,7 +423,9 @@
         "budget-offline-conflict",
         "receipt-line-editor",
         "receipt-command-mcp-parity",
-        "contract-derived-project-and-fee-import"
+        "contract-derived-project-and-fee-import",
+        "accounting-entry-routing",
+        "transaction-posting-correction"
       ],
       "workflowKinds": [
         "product_ui"
@@ -798,7 +798,8 @@
         "financial-access-no-leak-projections",
         "universal-search-query-results",
         "search-contextual-detail",
-        "needs-review-queue"
+        "needs-review-queue",
+        "transaction-browser-and-detail"
       ],
       "workflowKinds": [
         "product_ui"
@@ -921,7 +922,7 @@
   "authorityCoverage": [
     {
       "path": "docs/specs/invoice-centered-project-accounting.md",
-      "sourceHash": "51e3b58b4ad54d6cd800607bc9f34543b60344cd21da68feb3b487dc855fbe34",
+      "sourceHash": "7c6540cb3c9e968d110bc9580fc51ba90aa3681420fe13bdc2ccb12c85375150",
       "auditStatus": "audited",
       "storyIds": [
         "accounting-scope-owner-boundary",
@@ -949,7 +950,8 @@
         "fee-demand-lifecycle",
         "vendor-noncash-adjustment",
         "client-summary-value-semantics",
-        "report-receipt-evidence-sharing"
+        "report-receipt-evidence-sharing",
+        "transaction-browser-and-detail"
       ],
       "headingCoverage": [
         {
@@ -980,6 +982,11 @@
           "occurrence": 1,
           "disposition": "story",
           "storyIds": [
+            "project-detail",
+            "transaction-posting-correction",
+            "attachment-capture-delivery-verification",
+            "receipt-audit-explanation",
+            "item-cycle-provenance",
             "accounting-entry-routing",
             "direct-client-paid-entry",
             "business-paid-physical-entry",
@@ -988,7 +995,8 @@
             "vendor-cash-refund",
             "client-credit-cash-settlement",
             "same-client-transfer",
-            "transaction-taxonomy"
+            "transaction-taxonomy",
+            "transaction-browser-and-detail"
           ]
         },
         {
@@ -1699,7 +1707,7 @@
     },
     {
       "path": "docs/specs/projects.md",
-      "sourceHash": "e7f3f8da09b5fbc96075f74e8540648fbc123f741561658ed2bb2da6877a45b2",
+      "sourceHash": "7b7a2affc58f86a32592b87f80199e0d921ab118a2816d78df87ead886fce1a4",
       "auditStatus": "audited",
       "storyIds": [
         "project-creation-existing-client",
@@ -1948,7 +1956,8 @@
           "storyIds": [
             "project-detail",
             "project-note-actions",
-            "project-invoicing-workspace"
+            "project-invoicing-workspace",
+            "transaction-browser-and-detail"
           ]
         },
         {
@@ -3460,8 +3469,178 @@
     {
       "path": "docs/specs/lineage-tracking.md",
       "sourceHash": "6ea789d70b1e456e3b974c415caedaaed2231455a8cb75844fcd1c16dcb01459",
-      "auditStatus": "partial",
-      "reason": "Its candidate provenance foundation remains subject to O-007 and O-015 and needs explicit target-story disposition."
+      "auditStatus": "audited",
+      "storyIds": [],
+      "headingCoverage": [
+        {
+          "heading": "Lineage Tracking",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Target History Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-cycle-provenance",
+            "accounting-relationship-provenance",
+            "financial-access-no-leak-projections",
+            "offline-working-set-readiness",
+            "item-evidence-reconciliation"
+          ]
+        },
+        {
+          "heading": "Shipped Source Evidence",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "The LineageEdge Entity",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Four Edge Types",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "1. Association (`movementKind: \"association\"`)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "2. Sold (`movementKind: \"sold\"`)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "3. Returned (`movementKind: \"returned\"`)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "4. Correction (`movementKind: \"correction\"`)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Two-Layer Architecture",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Audit layer: `\"association\"` edges",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Intent layer: `\"sold\"` / `\"returned\"` / `\"correction\"` edges",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Both layers can fire for the same move",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Creation Rules",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Querying Lineage",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Full item history",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "All movements for a transaction",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "All movements for a project",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Use Cases",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Item Provenance",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Return Tracking",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Audit Trail",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Sale History",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Transaction Audit Completeness",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Relationship to Other Systems",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Design Decision: Why a Separate Collection",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        }
+      ]
     },
     {
       "path": "docs/specs/return-and-sale-tracking.md",
@@ -3484,8 +3663,199 @@
     {
       "path": "docs/specs/reassign-vs-sell.md",
       "sourceHash": "ebbc40e32fcaafa019777a44a92b4e8cadd32035cd1668188caf2e72f2e492ad",
-      "auditStatus": "partial",
-      "reason": "Correct/Move intent and action-visibility stories remain to be added while stale two-hop terminology is excluded."
+      "auditStatus": "audited",
+      "storyIds": [],
+      "headingCoverage": [
+        {
+          "heading": "Correct/Move vs Sell vs Return",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Target Action Routing Contract",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-correction",
+            "item-inventory-to-project",
+            "item-project-to-inventory",
+            "item-inventory-back-to-source-project",
+            "item-cross-client-through-inventory",
+            "item-vendor-return",
+            "same-client-transfer",
+            "item-link-choice-review-cancel"
+          ]
+        },
+        {
+          "heading": "Shipped Source Evidence",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Correct / Move (Reassign)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Definition",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "What Changes",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "What Does NOT Change",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "When to Use",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Validation",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Sell",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Definition",
+          "occurrence": 2,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "What Changes",
+          "occurrence": 2,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "When to Use",
+          "occurrence": 2,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Budget Impact",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Return to Project (Inventory → Project)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Return to Inventory (Project → Inventory)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Return to Inventory (item came from inventory)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "What Changes (both paths)",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Lineage",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Decision Matrix",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Project-to-Project Sale Mechanics",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Menu Visibility Rules",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "\"Correct / Move\" is available when:",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "\"Sell\" is available when:",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "\"Return to Project\" is available when:",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "\"Return to Inventory\" is available when:",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "\"Return to Vendor\" is available when:",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Budget Category Resolution During Sell",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        },
+        {
+          "heading": "Design Decision: Why Separate Operations?",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Source-era evidence or title; target contract above and linked canonical owners preserve behavior without requiring source movement Transactions, duplicate triggers or a new writer."
+        }
+      ]
     },
     {
       "path": "docs/specs/reports.md",
@@ -5034,7 +5404,9 @@
           "invoice-import-confirmation",
           "needs-review-queue",
           "needs-review-contextual-resolution",
-          "vendor-aggregate-report"
+          "vendor-aggregate-report",
+          "transaction-browser-and-detail",
+          "accounting-entry-routing"
         ]
       },
       {
@@ -5299,7 +5671,8 @@
           "invoice-report-readback",
           "search-contextual-detail",
           "needs-review-contextual-resolution",
-          "vendor-aggregate-report"
+          "vendor-aggregate-report",
+          "transaction-browser-and-detail"
         ]
       },
       {
@@ -5330,6 +5703,14 @@
         "auditStatus": "mapped",
         "storyIds": [
           "search-selection-and-action-routing"
+        ]
+      },
+      {
+      "decisionId": "O-065",
+      "auditStatus": "pending",
+        "storyIds": [
+          "accounting-entry-routing",
+          "transaction-posting-correction"
         ]
       }
     ]
@@ -5419,7 +5800,7 @@
     {
       "storyId": "project-list",
       "title": "Browse Projects",
-      "outcome": "Browse same-Account synchronized Projects by stable ID in Active/Archived; Active also offers Business Inventory. Show alphabetical cards, Client display, hero/placeholder and create entry with loading, incomplete and empty states. Cached data is not proof of full history; budget-preview policy is separate.",
+      "outcome": "Browse same-Account Active/Archived Projects with alphabetical cards, Client/hero display, create entry and honest readiness. Active's Inventory card opens Account-scoped Items/Transactions/Spaces with remembered section and shared child workflows, never a fake Project. Budget preview and planning remain separate.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Project List"
@@ -5430,7 +5811,7 @@
     {
       "storyId": "project-detail",
       "title": "Open Project detail",
-      "outcome": "Open the exact same-Account Project from local evidence; show identity, Items/Transactions/Spaces/Notes/Budget/Invoicing/Reports capabilities and actions with honest readiness. Missing or disappeared data is not authoritative empty content. Do not infer target layout from old source tabs.",
+      "outcome": "Open the exact same-Account Project with honest readiness and routes to Item, Transaction, Space, Notes, Budget, Invoicing and Reports workflows. Compose the separately verified financial Transaction browser and owning mutations; host navigation alone never proves totals, financial visibility or write authority.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Project Detail"
@@ -5923,13 +6304,21 @@
     {
       "storyId": "accounting-entry-routing",
       "title": "Route money and billable activity canonically",
-      "outcome": "Client-paid money becomes Project Transactions while business-paid goods and costs enter Inventory or Invoicing as specified.",
+      "outcome": "Preserve New Transaction's applicable inputs, review/Back/Cancel, validation, durable pending/failure/success and exact detail route. Client-paid money enters Project Transactions; 1584 goods/costs enter Inventory/Invoicing. Collection and Transfer use their owning flows, not generic legacy payment/sale writes.",
       "authority": {
         "path": "docs/specs/invoice-centered-project-accounting.md",
         "section": "Canonical Entry Routing"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-032",
+          "O-065"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "project-invoicing-workspace",
@@ -6645,7 +7034,7 @@
     {
       "storyId": "transaction-posting-correction",
       "title": "Post and correct Transactions without erasing history",
-      "outcome": "Use the approved posting evidence, cancellation and correction rules. Retain paid history and never treat a mistaken association as a sale or refund.",
+      "outcome": "Route Transaction detail/list edit, cancel, delete and correction through approved posting rules with exact selection, confirmation, denied/canceled/error and success navigation. Preserve paid history and audit; never treat a mistaken association as a sale/refund or duplicate a screen-specific writer.",
       "authority": {
         "path": "docs/specs/invoice-centered-project-accounting.md",
         "section": "Corrections and Refunds"
@@ -6655,7 +7044,8 @@
       "blocker": {
         "decisionIds": [
           "O-029",
-          "O-032"
+          "O-032",
+          "O-065"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -8143,6 +8533,25 @@
           "O-032",
           "O-060",
           "O-029"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "transaction-browser-and-detail",
+      "title": "Browse and inspect real Transactions",
+      "outcome": "Preserve shared Project/Inventory search/sort/filter, cards/detail, selection/copy and honest readiness/financial visibility. Keep Project-only Add/select-all/export and Inventory-only planning distinct. Compose Item, receipt, media/history and owning mutation routes; a visible tab alone is not completion.",
+      "authority": {
+        "path": "docs/specs/invoice-centered-project-accounting.md",
+        "section": "Canonical Entry Routing"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-032",
+          "O-060"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"

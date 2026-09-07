@@ -170,6 +170,16 @@ blocked on O-024; archive is the safe supported lifecycle meanwhile.
 - "+" button in toolbar opens the creation sheet
 - Empty state when no projects exist in the selected tab
 
+The Business Inventory card must open the current Account's Inventory workspace,
+not merely appear in the list. Preserve its Items, Transactions and Spaces
+segments and remembered section (invalid saved values fall back to Items).
+Each child uses the shared Item/Transaction/Space workflow with independent
+loading, empty, partial/offline, failure and unavailable states. Never manufacture
+a Project ID for Inventory or reuse another Account's remembered workspace data.
+The source Info button has no behavior and is explicitly retired in the UI
+baseline; preserving Inventory does not require inventing its future tooltip.
+Planned-for-Projects follow-up remains separately gated by O-038.
+
 ### Project Card
 
 Each card shows:
@@ -199,6 +209,16 @@ The layout below describes the current source UI, verified against
 corrects the older four-tab/Finances description. Preserve the available
 capabilities in the target; this source description does not independently
 settle target navigation organization or the redesigned Invoicing model.
+
+Project and Inventory Transaction browsing share the full list/card/detail
+contract under [Canonical Entry Routing](invoice-centered-project-accounting.md#canonical-entry-routing):
+search/sort/filter, selection/copy, detail sections and exact child routes
+are required, not satisfied by merely showing a Transactions tab. Create/edit/
+cancel/delete/correction and media actions compose their owning workflows and
+retain their authorization, accounting and durability gates.
+Project-only Add, select-all and Export are not implicitly added to Inventory.
+The host navigation story composes the separately verified financial browser;
+opening a tab does not prove its totals, filters or financial visibility.
 
 ### Layout
 

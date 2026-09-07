@@ -638,7 +638,6 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
       requireCondition((entry.storyIds ?? []).length === 0, `${entryPrefix}: source_only authority cannot claim target stories.`);
       requireString(entry?.reason, `${entryPrefix}.reason`);
     } else {
-      requireCondition((entry.storyIds ?? []).length > 0 || entry.auditStatus === "partial", `${entryPrefix}: audited authority must map at least one story.`);
       if (entry.auditStatus === "partial") incompleteAuthorityCount += 1;
     }
     if (entry?.auditStatus === "audited") {
@@ -675,6 +674,9 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
           [...expectedHeadingKeys].every((key) => recordedHeadingKeys.has(key)),
         `${entryPrefix}: headingCoverage must account for every current Markdown heading exactly once.`,
       );
+      // Companion specs may clarify canonical stories without owning new ones.
+      // Require real story references; ownership stays unique below.
+      requireCondition(headingStoryIds.size > 0, `${entryPrefix}: audited authority must map at least one story.`);
       for (const storyId of entry.storyIds ?? []) {
         requireCondition(headingStoryIds.has(storyId), `${entryPrefix}: audited story ${storyId} is absent from headingCoverage.`);
       }
@@ -1767,6 +1769,38 @@ function runSelfTests() {
     validateTargetStoryCatalog(value, "self-test-stale-decision-log-hash");
   }, /decisionLog.sourceHash is stale/);
 
+  const companionFixture = () => {
+    const value = structuredClone(targetStoryCatalog);
+    const entry = value.authorityCoverage.find((entry) => entry.path === "docs/specs/lineage-tracking.md");
+    entry.auditStatus = "audited";
+    entry.storyIds = [];
+    entry.headingCoverage = markdownHeadingInventory(join(repositoryRoot, entry.path)).map((heading) => (
+      heading.heading === "Target History Contract"
+        ? { ...heading, disposition: "story", storyIds: ["item-cycle-provenance"] }
+        : { ...heading, disposition: "supporting_or_nonproduct", reason: "Synthetic source-context fixture." }
+    ));
+    return { value, entry };
+  };
+  {
+    const { value } = companionFixture();
+    const start = errors.length;
+    validateTargetStoryCatalog(value, "self-test-companion-authority");
+    const messages = errors.splice(start);
+    if (messages.length) throw new Error(`companion authority rejected: ${messages.join("; ")}`);
+  }
+  expectFailure("companion without target coverage", () => {
+    const { value, entry } = companionFixture();
+    entry.headingCoverage = entry.headingCoverage.map(({ storyIds, ...heading }) => (
+      { ...heading, disposition: "supporting_or_nonproduct", reason: "Synthetic missing-coverage fixture." }
+    ));
+    validateTargetStoryCatalog(value, "self-test-empty-companion");
+  }, /audited authority must map at least one story/);
+  expectFailure("companion with unknown story", () => {
+    const { value, entry } = companionFixture();
+    entry.headingCoverage.find((heading) => heading.disposition === "story").storyIds = ["not-a-real-story"];
+    validateTargetStoryCatalog(value, "self-test-unknown-companion-story");
+  }, /unknown story not-a-real-story/);
+
   expectFailure("declared layers without concrete files", () => {
     const value = {
       workflowId: "self-test-label-only-layers",
@@ -1809,7 +1843,7 @@ function runSelfTests() {
     validateDerivedLayers(value, ["supabase/migrations/example.sql"], value.workflowId);
   }, /requires layer postgres_schema/);
 
-  console.log("Conversion current-state self-tests passed: 20 negative cases and 5 positive/cumulative cases.");
+  console.log("Conversion current-state self-tests passed: 22 negative cases and 6 positive/cumulative cases.");
 }
 
 validateTargetStoryCatalog(targetStoryCatalog);

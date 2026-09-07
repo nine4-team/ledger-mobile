@@ -59,6 +59,52 @@ as the paired same-Client project exception described below.
 | Client or 1584 receives a vendor refund | Return/refund Transaction in the scope whose owner receives the money | Project or Business Inventory | No new demand by itself |
 | Same Client moves Items directly between two of its projects | Two linked Transfer Transactions, one in each project | Both projects | No; no money changed hands |
 
+The ordinary Transaction workspace remains a user workflow, not merely a
+Transaction table or an export endpoint. Preserve Project and Inventory entry,
+local search, eight date/created/source/amount sort choices, grouped filter
+semantics (OR within a group, AND across groups, All/reset/Close), stable-ID
+cards/detail, row/bulk selection, selected count/eligible total, Copy ID(s) and
+Clear. Preserve Project-only Add, select-all-visible and export of the processed
+set; the Inventory list does not gain those controls merely through shared code.
+Show loading/partial, genuinely empty, no-match, unavailable and failure states
+distinctly. Reuse readers and common controls with explicit entry-point options;
+Inventory never uses a synthetic Project identity.
+
+Filter meanings follow canonical facts: target Transaction types and payer,
+receipt evidence, source/category and approved posting/readiness. Legacy Sale,
+Client Payment, Fee/Expense-as-Transaction and reimbursement labels must not
+reappear as new target write types. The source Completed filter that never
+matches is a defect, not required parity. O-029/O-032 govern lifecycle/readiness,
+O-060 financial visibility, and O-038 the separate planned-Inventory follow-up.
+O-065 separately governs ordinary Item/Transaction command authorization; read
+visibility is not write permission. Creation cannot claim canonical posting
+before O-032's minimum evidence is settled.
+
+Detail retains expandable Receipts/Notes/Details, editable supported descriptive
+metadata, amount/date/created/status/payer/type/category/receipt evidence and
+conditional tax/subtotal. Preserve current versus historical Item evidence,
+Item detail/intake/Link entry, receipt/other-media add/view/primary/pin/remove,
+audit explanation and actionable next steps. Compose the owning Item, media,
+receipt-audit and history workflows. Recurring proto capture and fake movement
+Transactions are retired mechanics, not prerequisites for preserving these
+controls. Hidden or absent audit evidence never implies complete.
+
+New Transaction retains reviewable type/event, payer, destination and applicable
+category/source/date/amount/notes/receipt inputs, Back/Cancel, validation and
+observable pending/failure/success with exact created-detail navigation. Route
+the real event using the table above; do not recreate the old reimbursement
+wizard, generic Client Payment type or category-driven fake inventory sale.
+Whole-Invoice payment enters the owning collection flow; same-Client movement
+enters the owning Transfer flow. Do not save preparatory field changes on Cancel.
+
+Edit, cancel, delete and whole-Transaction correction controls use the approved
+posting/correction command with fresh identity and permission checks, exact
+selection and confirmation, honest failure and preserved paid history. Browsing
+does not grant mutation authority. These are shared workflows, not separate
+Project-screen, Inventory-screen or detail-screen backend writers. Acceptance
+must exercise their actual entry points and cancellation/denial routes in
+addition to the owning commands' tests.
+
 ### Project Transaction types
 
 Target project writes use exactly three values:
