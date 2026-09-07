@@ -47,6 +47,8 @@ const requiredScripts = Object.freeze({
     "node scripts/test-local-client-creation-rpc.mjs && node scripts/test-local-project-creation-rpc.mjs",
   "target:staging:build:macos":
     "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build",
+  "target:staging:ui:test:macos":
+    "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
   "target:staging:build:ios":
     "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build",
 });
@@ -227,6 +229,7 @@ function validateTargetJob(lines) {
     "          npm run target:contracts:check",
     "          npm run target:mcp:test",
     "        run: npm run target:staging:build:macos",
+    "        run: npm run target:staging:ui:test:macos",
     "        run: npm run target:staging:build:ios",
   ]) {
     const label = command.trim().replace(/^run:\s+/, "");

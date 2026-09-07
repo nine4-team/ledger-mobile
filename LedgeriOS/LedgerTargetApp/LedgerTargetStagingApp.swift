@@ -6,9 +6,15 @@ import SwiftUI
 
 @main
 struct LedgerTargetStagingApp: App {
-    private let rootView: TargetStagingRootView
+    private let rootView: AnyView
 
     init() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-workspace-checklist") {
+            rootView = AnyView(ActiveWorkspaceChecklistUITestFixtureView())
+            return
+        }
+        #endif
         do {
             let dependencies = try TargetAppBootstrap.start(
                 manifest: TargetStagingProjection.manifest,
@@ -16,20 +22,20 @@ struct LedgerTargetStagingApp: App {
             ) { environment in
                 TargetAppDependencies(environment: environment)
             }
-            rootView = TargetStagingRootView(
+            rootView = AnyView(TargetStagingRootView(
                 environment: dependencies.environment,
                 failureCode: nil
-            )
+            ))
         } catch let failure as LedgerEnvironmentValidationFailure {
-            rootView = TargetStagingRootView(
+            rootView = AnyView(TargetStagingRootView(
                 environment: nil,
                 failureCode: failure.diagnosticCode
-            )
+            ))
         } catch {
-            rootView = TargetStagingRootView(
+            rootView = AnyView(TargetStagingRootView(
                 environment: nil,
                 failureCode: "target_startup_unknown_failure"
-            )
+            ))
         }
     }
 

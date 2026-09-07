@@ -32,7 +32,7 @@ test("repository conversion CI retains the required product and implementation g
   const { packageJson, workflow } = inputs();
   assert.deepEqual(validateConversionCI(packageJson, workflow), {
     conversionCommands: 7,
-    packageGates: 13,
+    packageGates: 14,
     legacyScripts: 15,
     jobs: 3,
   });
@@ -131,6 +131,12 @@ test("workflow rejects conditional skips, execution overrides, and weakened hist
 });
 
 test("target job cannot bypass native, MCP, build, or dependency gates", () => {
+  expectFailure(
+    (value) => {
+      value.workflow = value.workflow.replace("        run: npm run target:staging:ui:test:macos\n", "");
+    },
+    /target gate npm run target:staging:ui:test:macos/,
+  );
   expectFailure(
     (value) => {
       value.workflow = value.workflow.replace("    needs: conversion-control\n", "", 1);

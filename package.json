@@ -34,6 +34,7 @@
     "target:project:generate": "xcodegen --spec LedgeriOS/LedgerTargetProject.yml",
     "target:staging:build:ios": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build",
     "target:staging:build:macos": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build",
+    "target:staging:ui:test:macos": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
     "conversion:profile:firestore-auth": "node scripts/profile-firebase-firestore-auth-readonly.mjs",
     "conversion:profile:storage": "node scripts/profile-firebase-storage-readonly.mjs",
     "legacy:conversion:gate:m0": "node scripts/supabase-conversion-ledger.mjs gate M0",

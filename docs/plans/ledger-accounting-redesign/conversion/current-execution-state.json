@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 60,
+  "stateVersion": 62,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "SIMPLIFIED-MANAGEMENT-CI-GREEN",
-    "commit": "ffcff090c685949edeb5b490e3f398c87103992f",
-    "ciRun": 34154928737,
+    "name": "PRODUCT-AUDIT-CI-GREEN",
+    "commit": "bab3b91c206fa19bd7e82586c34803359d068c72",
+    "ciRun": 34159534807,
     "ciStatus": "passed",
-    "meaning": "Management simplification committed and pushed; all three automatic PR CI jobs passed, including local Supabase, native tests and both staging builds. Does not claim new app behavior."
+    "meaning": "Finite UI/spec/background audit complete; corrected progress-independent negative fixtures. All three automatic CI jobs passed. Does not claim full target behavior."
   },
   "activeWorkflow": {
-    "id": "finish-product-audit",
-    "kind": "selection",
-    "status": "planning",
-    "recordPath": null,
-    "outcome": "Product audit complete; verify and save the coherent audit batch, then resume app workflow implementation without reopening completed reviews.",
+    "id": "active-workspace-to-space-checklist",
+    "kind": "product_ui",
+    "status": "local_verification",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
+    "outcome": "Verify the actual rendered Project-to-Space checklist route and fix accessibility defects, reusing existing coordinator/provider behavior.",
     "nextActions": [
-      "Audit complete in unified checklist:91 journeys/1919 behaviors, all445 background sources,31 authority reviews,27 confirmed/69 open decisions. Open choices block only affected outcomes. Do not repeat audit or maintain historical trackers. Main independently reviewed delegated MCP/backend findings; exact coverage and source checks pass.",
-      "Audit batch2a44682f CI34159414331 failed because three negative test fixtures implicitly depended on unfinished audit state. Fixed each fixture to explicitly introduce its invalid gap/empty dispositions/partial authority; no validator weakened. Full conversion CI command sequence passes locally, including29 negative cases,8 positive/cumulative cases, CI topology, source/query/capability guards. Push this focused correction and use its automatic run; no duplicate dispatch.",
-      "After batch CI, resume active-workspace-to-space-checklist. Inspect the existing acceptance evidence and actual app path; do not claim broad stories from narrow compilation/helper tests. Reuse verified underlying capabilities; complete missing UI interaction/integration evidence and then deliver the next approved coherent workflow.",
-      "New explicit owners include shared app/MCP behavior, Account profile, Item/Invoice removal, Inventory summary/planning, whole-account migration, signed updates and target startup isolation. O068 actors/name policy, O069 supplied ingestion metadata, O070 Invoice cancellation remain unresolved. Existing architecture spike/hosted authorization gates still apply.",
-      "Identify hosted Supabase/PowerSync validation prerequisites and request authorization before provisioning/access; continue independent local work. Keep one checklist and compact state, use focused tests and one automatic integration CI per completed batch."
+      "Audit closed at bab3b91c/CI34159534807 green; do not reopen. Current UI batch fixes DisclosureGroup accessibility propagation and modern iOS launch-screen metadata, with real rendered interaction tests on macOS and iOS. DEBUG-only in-memory fixture never opens providers or proves durability.",
+      "Both platform UI tests passed: macOS result13-38-45 and final iOS result13-46-19 on2026.09.07 in standard LedgerTarget DerivedData Logs/Test. Four focused coordinator tests passed. Main independently reviewed fixture and exact actor/revision/contract/one-acceptance checks; CI now requires macOS UI test with local ad-hoc signing.",
+      "Commit/push this coherent UI batch after final guards and use its automatic CI, no duplicate dispatch. Existing workflow records exact rendered checks and concrete app_ui files, but does not claim broad Space-browser/toggle outcome completion from a narrow fixture.",
+      "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
+      "After exact CI result, continue approved independent app workflow rather than more audit/testing infrastructure. Reuse current domain/provider implementation and close real product gaps. Request explicit authority before hosted provisioning/access; never touch Firebase checkout or production."
     ]
   },
   "blockers": [],

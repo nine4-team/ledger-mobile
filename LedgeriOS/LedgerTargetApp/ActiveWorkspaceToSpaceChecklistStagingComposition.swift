@@ -262,9 +262,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             }
         } label: {
             Text("CHECKLISTS")
+                .accessibilityIdentifier("target-active-space-checklists-section")
+                .accessibilityValue(model.isChecklistsExpanded ? "Expanded" : "Collapsed")
         }
-        .accessibilityIdentifier("target-active-space-checklists-section")
-        .accessibilityValue(model.isChecklistsExpanded ? "Expanded" : "Collapsed")
     }
 
     @ViewBuilder

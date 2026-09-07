@@ -95,6 +95,9 @@ jobs:
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos
 
+      - name: Exercise target workspace checklist UI
+        run: npm run target:staging:ui:test:macos
+
       - name: Build target staging for iOS Simulator
         run: npm run target:staging:build:ios
 

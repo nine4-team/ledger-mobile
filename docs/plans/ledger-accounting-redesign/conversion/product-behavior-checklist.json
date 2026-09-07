@@ -26476,7 +26476,9 @@
         "LedgeriOS/LedgerTarget.xcodeproj",
         "LedgeriOS/LedgerTargetPowerSync",
         "LedgeriOS/LedgerTargetPowerSyncTests",
-        "scripts"
+        "scripts",
+        "LedgeriOS/LedgerTargetProject.yml",
+        "LedgeriOS/LedgerTargetStagingUITests"
       ],
       "layers": [
         "app_ui",
@@ -26709,39 +26711,62 @@
           "expected": "Only exact active Account, Project and Space evidence becomes representable; stale, foreign, malformed, disappeared and noncooperative late evidence fails closed and child observations drain.",
           "command": "swift test --package-path LedgeriOS --filter 'ProjectBrowsingStagingExerciseTests|SpaceBrowserPowerSyncProviderTests|AccountWorkspacePendingWorkRuntimeTests'",
           "status": "passed"
+        },
+        {
+          "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-RENDERED-MAC",
+          "risk": "ui_fidelity",
+          "expected": "XCUITest taps real Project and Space cards, collapses/expands CHECKLISTS, toggles the exact item, observes Checked and one queued acceptance, then Back removes detail controls. DEBUG-only in-memory fixture proves rendered interactions, not provider durability.",
+          "command": "npm run target:staging:ui:test:macos",
+          "status": "passed"
+        },
+        {
+          "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-RENDERED-IOS",
+          "risk": "ui_fidelity",
+          "expected": "The same real-view route passes on iOS Simulator, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
+          "command": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=iOS Simulator,id=75D871BB-35DB-4559-92EF-6B0116B4E8D1' CODE_SIGNING_ALLOWED=NO -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
         "This workflow claims only the Project-to-Space-to-checklist path, not the Business Inventory entry path already covered by the scoped Space browser workflow.",
         "Other Project tabs, Project setup/edit/archive, Space search/create/edit/archive, checklist collection editing, Items, media, notes, budgets, accounting, MCP, hosted Sync/Auth, migration, production and cutover remain separate workflows.",
-        "No broad Project directory or Project detail story is claimed from this narrow path."
+        "No broad Project directory or Project detail story is claimed from this narrow path.",
+        "Live checklist mutation authorization remains subject to O-053. The user has been asked specifically about check/uncheck actors; the UI fixture grants no production permission and does not settle other Space command roles."
       ],
       "blockers": [],
       "verification": {
         "local": {
-          "status": "not_run",
+          "status": "passed",
           "commands": [
-            "npm run conversion:check",
+            "npm run conversion:ci:test",
             "npm run target:environment:check",
-            "npm run target:contracts:check",
-            "npm run target:mcp:test",
-            "swift test --package-path LedgeriOS --no-parallel",
-            "npm run target:staging:build:macos",
-            "npm run target:staging:build:ios",
+            "npm run conversion:check",
+            "swift test --package-path LedgeriOS --filter ActiveWorkspaceToSpaceChecklistStagingExerciseTests",
+            "npm run target:staging:ui:test:macos",
+            "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=iOS Simulator,id=75D871BB-35DB-4559-92EF-6B0116B4E8D1' CODE_SIGNING_ALLOWED=NO -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
             "git diff --check"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Primary integration review found that the initial composition displaced existing staging workflows and failed to revoke or drain child Space/checklist authority when its Project disappeared. The composition was isolated, existing entry paths were restored, parent evidence gained an explicit lifecycle stream, exact-parent and exact-scope gates were added, and tests now exercise the composed toggle and automatic disappearance cleanup. Independent re-review returned GO with no P0-P2 findings; only non-blocking adversarial timing coverage remains."
+          "summary": "Primary integration review found that the initial composition displaced existing staging workflows and failed to revoke or drain child Space/checklist authority when its Project disappeared. The composition was isolated, existing entry paths were restored, parent evidence gained an explicit lifecycle stream, exact-parent and exact-scope gates were added, and tests now exercise the composed toggle and automatic disappearance cleanup. Independent re-review returned GO with no P0-P2 findings; only non-blocking adversarial timing coverage remains. Rendered macOS review caught section accessibility modifiers replacing child Item IDs/checked values. Moving them to the label restored native child semantics; XCUITest now exercises actual taps. Main reviewed delegated fixture and exact command guards; fixture acceptance is explicitly in-memory."
         },
         "ci": {
           "status": "not_run",
           "commit": null,
           "run": null
         }
-      }
+      },
+      "implementationEvidence": [
+        {
+          "layer": "app_ui",
+          "paths": [
+            "LedgeriOS/LedgerTargetApp/ActiveWorkspaceToSpaceChecklistStagingComposition.swift",
+            "LedgeriOS/LedgerTargetAppModel/ActiveWorkspaceToSpaceChecklistStagingExercise.swift"
+          ]
+        }
+      ]
     },
     {
       "schemaVersion": 1,
