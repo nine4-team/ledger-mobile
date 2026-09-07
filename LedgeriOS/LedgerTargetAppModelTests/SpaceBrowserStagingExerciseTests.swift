@@ -6,6 +6,14 @@ import Testing
 @Suite("Scoped active Space browser staging orchestration")
 @MainActor
 struct SpaceBrowserStagingExerciseTests {
+    @Test("Space name search is case-insensitive, literal and locale-independent")
+    func nameSearch() {
+        #expect(SpaceNameSearch.matches("Living Room", query: " ROOM \n"))
+        #expect(SpaceNameSearch.matches("Living Room", query: " \n"))
+        #expect(SpaceNameSearch.matches("Café", query: "CAFÉ"))
+        #expect(!SpaceNameSearch.matches("Café", query: "cafe"))
+        #expect(!SpaceNameSearch.matches("Living Room", query: "%"))
+    }
     @Test("Project and Inventory directories preserve honest states and deterministic active rows")
     func directoryStatesOrderingAndScopeReplacement() async throws {
         let project = BrowserControlledSource<SpaceListUpdate>()
@@ -43,6 +51,15 @@ struct SpaceBrowserStagingExerciseTests {
             return false
         }
         #expect(model.spaces.map(\.id.rawValue) == ["space-b", "space-a", "space-z"])
+        model.searchText = " LOFT "
+        #expect(model.matchingSpaces.map(\.id) == model.spaces.map(\.id))
+        model.searchText = "absent"
+        #expect(model.matchingSpaces.isEmpty)
+        #expect(model.spaces.count == 3)
+        if case .partial = model.directoryPresentation {} else {
+            Issue.record("Search must not turn partial evidence into authoritative empty")
+        }
+        model.searchText = ""
         #expect(model.spaces.allSatisfy { $0.lifecycle == .active })
         #expect(model.spaces.allSatisfy { $0.itemCountState == .unavailable })
 
@@ -75,7 +92,9 @@ struct SpaceBrowserStagingExerciseTests {
         ))
         await Self.wait { model.directoryPresentation == .authoritativeEmpty }
 
+        model.searchText = "previous Project query"
         await model.start(scope: .businessInventory, runtime: runtime)
+        #expect(model.searchText.isEmpty)
         await Self.wait { listRequests.values.count == 2 }
         #expect(project.terminationCount == 1)
         let inventoryRow = try Self.row(

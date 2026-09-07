@@ -81,6 +81,10 @@ public final class SpaceBrowserStagingExercise {
     public let detailModel: SpaceCoreDetailsStagingExercise
 
     public var spaces: [SpaceDirectoryRowPresentation] { directoryPresentation.rows }
+    public var searchText = ""
+    public var matchingSpaces: [SpaceDirectoryRowPresentation] {
+        spaces.filter { SpaceNameSearch.matches($0.displayName.rawValue, query: searchText) }
+    }
     public var detailPresentation: SpaceBrowserDetailPresentation {
         if isStopped { return .stopped }
         if isSelectionUnavailable {
@@ -132,6 +136,7 @@ public final class SpaceBrowserStagingExercise {
         detailAdapter = nil
         self.runtime = nil
         self.scope = scope
+        searchText = ""
         selection = nil
         unavailableSelection = nil
         isSelectionUnavailable = false

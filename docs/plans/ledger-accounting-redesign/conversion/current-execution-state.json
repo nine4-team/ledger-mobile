@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 78,
+  "stateVersion": 79,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Expose Active/Archived Project selection and existing note history, preserving active-only Space/checklist admission and removal guards.",
     "nextActions": [
-      "Audit closed. Commit/push reviewed Active/Archived navigation batch and consume its single automatic PR CI run. Notes3e5e96ea CI34166128466 failed diagnostic-artifact allowlist; current checker requires bounded artifact configuration and both wrappers, with negative tests. All5 checker tests, environment and conversion checks passed.",
-      "Archived route reuses existing lists/history. Model20 tests and independent review passed. Native Mac focused archived route and all3 iOS workspace tests passed (/tmp/ledger-archived-route-mac-fixed.log, /tmp/ledger-archived-route-ios-fixed.log). Back test caught cancelled fixture-stream reuse, fixed with fresh snapshot per subscription. No complete Project/Notes outcome claimed. No test process remains running.",
+      "Audit closed. Active/Archived batch6649cc73ae4906fc7b7718ce91657e8f81730218 pushed; automatic CI34167126359 confirmed in_progress. Poll that exact run, no redispatch. Notes3e5e96ea CI34166128466 failed diagnostic-artifact allowlist; current checker fixes it and independently reviewed GO. All5 checker tests, environment and conversion checks passed.",
+      "Uncommitted shared Space search: model13 tests and Mac/iOS native search-clear-checklist interactions PASS; evidence in checklist. Environment and conversion checks PASS after replacing historical blanket search ban with exact reviewed field exemption. Independent review running /root/next_workflow_selection; finish review, commit/push one batch, consume its automatic CI. No local test process remains running.",
       "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
-      "After Notes batch, continue the existing Project workspace's required user controls using current models/specs; no new audit/catalog. Complete Notes still needs mutation and legacy-note preservation; full cards still need physical Item/media projections. Do not count a tab route as a complete Project/Notes outcome.",
+      "Items browser item-accounting-sections remains blocked by O007/O015/O060/O067. Async question now asks approval of saved explicit-facts/derived-history direction (O007/O015); no answer yet. Do not choose financial visibility or Sold meaning from that approval. Continue independent controls; complete Notes still needs mutation/legacy preservation, cards need Item/media evidence. No new audit/catalog.",
       "Removal/owned upload292b1b57 CI34165447171 all3 jobs passed; current checkpoint. Still needs verified online removal/authenticated scheduling, media upload implementation/ownership, final transaction linearization, native keychain/crash and cross-process proof. A007/O057 provider question pending; no hosted access approved. Retain uncertain work; no recovery bypass. Earlier timeout cause unproven; diagnostics remain in next CI."
     ]
   },

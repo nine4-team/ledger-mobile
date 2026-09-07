@@ -42,6 +42,19 @@ enum SpaceBrowserStagingRuntimeAdapter {
   }
 }
 
+struct SpaceBrowserSearchControls: View {
+    @Bindable var model: SpaceBrowserStagingExercise
+
+    var body: some View {
+        TextField("Search Spaces", text: $model.searchText)
+            .accessibilityIdentifier("target-space-search")
+        if !model.searchText.isEmpty {
+            Button("Clear search") { model.searchText = "" }
+                .accessibilityIdentifier("target-space-search-clear")
+        }
+    }
+}
+
 struct SpaceBrowserStagingExerciseView: View {
     @Bindable var model: SpaceBrowserStagingExercise
     @Bindable var checklistToggle: SpaceChecklistItemToggleStagingExercise
@@ -69,11 +82,15 @@ struct SpaceBrowserStagingExerciseView: View {
 
             LabeledContent("Space data", value: directoryStatus)
         .accessibilityIdentifier("target-space-browser-status")
+      SpaceBrowserSearchControls(model: model)
 
       if model.spaces.isEmpty {
         emptyOrIncompleteState
+      } else if model.matchingSpaces.isEmpty {
+        Text("No matching Spaces in downloaded data.")
+          .accessibilityIdentifier("target-space-search-no-match")
       } else {
-        ForEach(model.spaces, id: \.id) { space in
+        ForEach(model.matchingSpaces, id: \.id) { space in
           Button {
             Task { await model.select(spaceId: space.id) }
           } label: {

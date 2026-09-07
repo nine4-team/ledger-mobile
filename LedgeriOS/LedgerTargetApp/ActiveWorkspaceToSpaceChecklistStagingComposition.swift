@@ -144,6 +144,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 .accessibilityIdentifier("target-active-project-spaces-selected-tab")
             LabeledContent("Space data", value: spaceDirectoryStatus)
                 .accessibilityIdentifier("target-active-project-spaces-status")
+            SpaceBrowserSearchControls(model: model.spaceBrowser)
 
             if !model.representedProjectIsActive {
                 Text("The represented Project is unavailable.")
@@ -155,8 +156,11 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityIdentifier("target-active-project-spaces-scope-unavailable")
             } else if model.spaceBrowser.spaces.isEmpty {
                 spaceDirectoryEmptyState
+            } else if model.spaceBrowser.matchingSpaces.isEmpty {
+                Text("No matching Spaces in downloaded data.")
+                    .accessibilityIdentifier("target-space-search-no-match")
             } else {
-                ForEach(model.spaceBrowser.spaces, id: \.id) { space in
+                ForEach(model.spaceBrowser.matchingSpaces, id: \.id) { space in
                     Button {
                         Task { await model.selectSpace(spaceId: space.id) }
                     } label: {

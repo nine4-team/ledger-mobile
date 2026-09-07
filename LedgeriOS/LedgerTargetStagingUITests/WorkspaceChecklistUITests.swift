@@ -103,6 +103,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(spaces, in: app)
         XCTAssertTrue(spaces.waitForExistence(timeout: 5), app.debugDescription)
         spaces.tap()
+        let search = app.textFields["target-space-search"]
+        reveal(search, in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("no-matching-space")
+        XCTAssertTrue(app.staticTexts["target-space-search-no-match"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-active-space-card-space-ui-test"].exists)
+        app.buttons["target-space-search-clear"].tap()
+        search.tap()
+        search.typeText("ui TEST")
         let space = app.buttons["target-active-space-card-space-ui-test"]
         reveal(space, in: app)
         XCTAssertTrue(space.waitForExistence(timeout: 5), app.debugDescription)

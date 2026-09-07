@@ -1493,10 +1493,15 @@ if (
         fail("target_space_browser_composition_incomplete", required);
       }
     }
-    if (/\bTextField\s*\(|\bDelete\b|\bReorder\b|\bSearch\b/.test(composition)) {
+    // Name search is now implemented and interaction-tested. Other creation or
+    // mutation controls remain outside this read browser's reviewed boundary.
+    const withoutNameSearch = composition.replace(
+      'TextField("Search Spaces", text: $model.searchText)', "",
+    );
+    if (/\bTextField\s*\(|\bDelete\b|\bReorder\b/.test(withoutNameSearch)) {
       fail(
         "target_space_browser_composition_scope_escape",
-        "The bounded browser must not invent creation, deletion, reordering, or search controls.",
+        "The bounded browser must not invent creation, deletion, reordering, or unrelated text fields.",
       );
     }
     if (!publicRuntime.includes("SpaceListQuerying")) {

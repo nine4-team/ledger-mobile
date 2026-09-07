@@ -68,9 +68,14 @@ with explicit local-read evidence:
   detail flow;
 - rows have one deterministic case-insensitive name order with exact display
   name and stable Space ID tie-breakers. Duplicate names remain distinct;
-- the production browser retains case-insensitive name search. Exact search
-  normalization and cross-platform matching must be frozen before that search
-  implementation becomes READY;
+- the production browser retains case-insensitive name search. Target matching
+  trims leading/trailing whitespace and newlines from the query, then uses
+  locale-independent Unicode lowercase substring matching on name and query.
+  Empty/whitespace-only queries show all authorized rows; accents remain
+  significant and wildcard characters are literal. Filtering preserves source
+  order and readiness: no local matches never proves the Account has no Spaces.
+  Project and Inventory use the same `SpaceNameSearch` implementation; changing
+  scope clears the query, while returning from detail preserves it;
 - a complete production card retains the Space display name, authorized Item
   count, aggregate checklist progress, and authorized primary-image behavior.
   Numeric zero Items is valid only when a complete, visibility-safe Item

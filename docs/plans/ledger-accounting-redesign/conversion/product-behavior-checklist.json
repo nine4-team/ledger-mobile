@@ -1311,7 +1311,7 @@
     {
       "path": "docs/specs/spaces.md",
       "canonicalTarget": true,
-      "sourceHash": "4eb0664df026434065b1ff3b8bdf1e71b53c2bf565ef26b1678f5092464f1edc",
+    "sourceHash": "4866488d8c77ff94f63739c0f70bc92a17561a7a4cdbb94a9569ca69a038a4a8",
       "auditStatus": "audited",
       "supportingHeadings": [
         {
@@ -26608,6 +26608,7 @@
         }
       ],
       "affectedComponents": [
+        "LedgeriOS/LedgerTargetCore",
         "LedgeriOS/LedgerTargetAppModel",
         "LedgeriOS/LedgerTargetAppModelTests",
         "LedgeriOS/LedgerTargetApp",
@@ -26619,6 +26620,7 @@
         "LedgeriOS/LedgerTargetStagingUITests"
       ],
       "layers": [
+        "domain",
         "app_ui",
         "powersync_sync",
         "local_offline"
@@ -26858,6 +26860,13 @@
           "status": "passed"
         },
         {
+          "id": "SCOPED-SPACE-NAME-SEARCH",
+          "risk": "ui_fidelity",
+          "expected": "Project and Inventory browsers share locale-independent case-insensitive literal name matching, trimmed empty query, Clear, stable row order and scope-reset. Filtered no-match does not rewrite partial/stale/empty authority. Project native interaction searches, clears, opens the matched Space and completes the checklist round trip.",
+          "command": "13 focused model tests passed /tmp/ledger-space-search-final-model.log including scope reset and unchanged partial evidence. Native Mac/iOS exact search-clear-checklist interactions passed /tmp/ledger-space-search-native.log and /tmp/ledger-space-search-ios.log; xcresults Test-LedgerTargetStaging-2026.09.07_15-38-57--0700.xcresult and Test-LedgerTargetStaging-2026.09.07_15-40-11--0700.xcresult. Shared matching/control implementation reused by Inventory browser; full Inventory workspace is not claimed.",
+          "status": "passed"
+        },
+        {
           "id": "ARCHIVED-PROJECT-HISTORY-NAVIGATION",
           "risk": "ui_fidelity",
           "expected": "Active/Archived picker selects only that lifecycle's represented Projects. Archived Project opens scoped Notes but not active-only Spaces. Back returns to the same segment with a renewed directory subscription. This is read navigation, not full cards, restore or history migration.",
@@ -26902,7 +26911,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests."
+          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests. Shared Space search independently reviewed GO: only represented rows are filtered, order/readiness unchanged, empty and no-match distinguished, same controls for Project/Inventory, scope-reset and Back preservation, no provider/auth expansion. Exact TextField environment-checker exemption reviewed; other mutation/field bans retained. Native Mac/iOS search round trips passed."
         },
         "ci": {
           "status": "not_run",

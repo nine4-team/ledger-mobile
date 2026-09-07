@@ -1,6 +1,14 @@
 import CryptoKit
 import Foundation
 
+/// Device-locale-independent name matching shared by scoped Space browsers.
+public enum SpaceNameSearch {
+    public static func matches(_ name: String, query: String) -> Bool {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return query.isEmpty || name.lowercased().contains(query)
+    }
+}
+
 public enum SpaceListFailure: Error, Equatable, Sendable {
     case accountScopeMismatch
     case spaceScopeMismatch
