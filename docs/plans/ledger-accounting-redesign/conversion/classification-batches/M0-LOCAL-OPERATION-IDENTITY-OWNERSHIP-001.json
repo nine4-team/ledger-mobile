@@ -9,8 +9,8 @@
   "surfaces": [
     {
       "id": "SWIFT-142941D87D78",
-      "acknowledgeSourceHash": "20a8c5c480be02262324ac4895a012d51693d896faaa61e80293bdb0a36b19b9",
-      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact implementation commit and immutable CI are recorded in the evidence artifact.",
+      "acknowledgeSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
+      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all six current accepting stores, including an exact downloaded terminal-result race for Project creation only; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],

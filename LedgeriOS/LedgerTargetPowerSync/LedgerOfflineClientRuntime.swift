@@ -82,6 +82,18 @@ public final class LedgerOfflineClientRuntime:
         }
     }
 
+    public func watchProjectCreationOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startProjectCreationOperationWatch(
+                id: id,
+                operationId: operationId,
+                continuation: continuation
+            )
+        }
+    }
+
     public func watchClientArchiveOperation(
         _ operationId: OperationID
     ) -> AsyncThrowingStream<OperationSnapshot, Error> {

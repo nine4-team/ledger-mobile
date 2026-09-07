@@ -46,7 +46,7 @@ struct ProjectSetupUseCaseTests {
                     let operationID = try OperationID(
                         validating: "operation-\(clientQuality)-\(categoryQuality)-\(index)"
                     )
-                    let receipt = try await Self.useCase(setup).execute(
+                    let result = try await Self.useCase(setup).execute(
                         selection: selection,
                         currentPreparation: preparation,
                         projectId: try ProjectID(validating: "project-new"),
@@ -58,13 +58,14 @@ struct ProjectSetupUseCaseTests {
                         capturedAt: Self.t5
                     )
 
-                    #expect(receipt == OperationReceipt(
+                    #expect(result.receipt == OperationReceipt(
                         operationId: operationID,
                         localState: .queued
                     ))
                     let commands = await setup.recordedCommands()
                     #expect(commands.count == 1)
                     let command = try #require(commands.first)
+                    #expect(result.command == command)
                     #expect(command.draft.clientSelection == clientInput)
                     #expect(command.draft.displayName.rawValue == "  Exact Project Name  ")
                     #expect(command.draft.description == "Exact description")
@@ -684,7 +685,7 @@ struct ProjectSetupUseCaseTests {
                 validating: "project-setup-use-case-v1"
             ),
             capturedAt: t5
-        )
+        ).receipt
     }
 
     private static func selection(

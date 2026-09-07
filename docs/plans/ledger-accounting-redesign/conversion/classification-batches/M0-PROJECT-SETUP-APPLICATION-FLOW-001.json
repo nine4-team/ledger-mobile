@@ -12,8 +12,8 @@
   "surfaces": [
     {
       "id": "SWIFT-64E1171C47C5",
-      "acknowledgeSourceHash": "3c665e7f68d75a2b9a04691e69e1dbe497b65b6218b5c9ee4f817fedb0b2d7ef",
-      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, manages fail-closed selection and stable retry identity, and submits through ProjectSetupUseCase.",
+      "acknowledgeSourceHash": "454bcdb36d60be3c2b8873d8ea3519c8d1d8d47221274d76153071e31e524592",
+      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, owns the guarded three-step workflow and exact allocation input semantics, freezes an immutable admitted draft, manages fail-closed selection and retry identities, and follows local acceptance through the typed Project-creation operation watch.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
@@ -36,8 +36,8 @@
     },
     {
       "id": "TEST-E92B32DB7642",
-      "acknowledgeSourceHash": "9ab72864683360044c0907c6e8b083ee7ae8673240bd1681f30859328539b504",
-      "currentBehavior": "Fourteen deterministic Project Setup application-model tests cover independently arriving evidence, false-empty meaning, selection, exact submission, failures, retry, receipts, caller cancellation, concurrent lifecycle drainage and shutdown.",
+      "acknowledgeSourceHash": "2ddb6f57fa686a2022dd868dd36052858855615caa6563921fdd4ea8aae92842",
+      "currentBehavior": "Twenty-three deterministic Project Setup tests cover independently arriving evidence, false-empty meaning, guarded navigation, compiled SwiftUI control/action wiring, one-time category defaults, exact allocation semantics, immutable in-flight submission, queued-to-applied and queued-to-rejected observation, honest post-acceptance reference failures, malformed evidence, retry identity, observer generation isolation, lifecycle drainage and shutdown.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
@@ -60,8 +60,8 @@
     },
     {
       "id": "SWIFT-99B1B3CFBB7A",
-      "acknowledgeSourceHash": "b7c56c8c3ef5d2a7ab54319368a4c512e98446de1d959fa2d0821c85c244ed43",
-      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams and Project setup operation into the backend-neutral application-model runtime value.",
+      "acknowledgeSourceHash": "d52b1dd3a5371d9b13f5e2cc1b4126a6085a9eadb3d9aa5ea4431d4758e834d7",
+      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams, Project setup operation, and typed Project-creation operation watch into the backend-neutral application-model runtime value.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
@@ -84,8 +84,8 @@
     },
     {
       "id": "SWIFT-1F2F5FE68160",
-      "acknowledgeSourceHash": "98a8082a035da0093bd92c3ed4224769fbc2e984b901bf88b846d9c40689e91c",
-      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders exact Client/category readiness, stable-identity controls, bounded diagnostics and exact local operation receipts.",
+      "acknowledgeSourceHash": "68da37913620b25836c0f1ecf253813587e8d02d33676f4d1a57e45deb34e1a5",
+      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders the guarded three-step name/Client, category and budget-allocation workflow with exact readiness, stable-identity controls, immutable submitted summary, bounded diagnostics and live retryable operation state.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],

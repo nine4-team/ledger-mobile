@@ -12,8 +12,8 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending or authoritative assignment.",
+      "acknowledgeSourceHash": "0f32f52886bacbea0e1b9a7887cd10cc62bafa3a5fa1e8efbcb36ae90e3740ef",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project creation and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and all eleven public/provider-owned observations, including Project creation, are drained before database close without implementing session ending or authoritative assignment.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
@@ -57,8 +57,8 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
-      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, archive operations, exact Project/Inventory Space destination facade identities, finite-operation and subscription/provider drainage, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
+      "acknowledgeSourceHash": "5cba84e4dc4be1cc52baa0886efdab2dc519da24979f6f142eff590b5c142b48",
+      "currentBehavior": "Twenty-two executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, creation/archive operations, exact Project/Inventory Space destination facade identities, all eleven public streams, provider drainage ordering, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],

@@ -2,6 +2,12 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
+enum ProjectSetupPowerSyncFailure: Error, Equatable, Sendable {
+    case malformedLocalEvidence
+    case operationNotFound
+    case workspaceScopeRequired
+}
+
 enum ProjectSetupPowerSyncStoreCheckpoint: Equatable, Sendable {
     case beforeTransaction
     case inventoryConstruction
@@ -16,20 +22,33 @@ enum ProjectSetupPowerSyncStoreCheckpoint: Equatable, Sendable {
 
 actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
     private let database: any PowerSyncDatabaseProtocol
+    private let accountId: AccountID?
+    private let principalId: PrincipalID?
     private let now: @Sendable () -> Date
     private let checkpoint: @Sendable (ProjectSetupPowerSyncStoreCheckpoint) throws -> Void
+    private let watchRegistry = ProjectSetupOperationWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
+        accountId: AccountID? = nil,
+        principalId: PrincipalID? = nil,
         now: @Sendable @escaping () -> Date = Date.init,
         checkpoint: @Sendable @escaping (ProjectSetupPowerSyncStoreCheckpoint) throws -> Void = { _ in }
     ) {
         self.database = database
+        self.accountId = accountId
+        self.principalId = principalId
         self.now = now
         self.checkpoint = checkpoint
     }
 
     public func create(_ command: CreateProjectCommand) async throws -> OperationReceipt {
+        if let accountId, command.envelope.accountId != accountId {
+            throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+        }
+        if let principalId, command.envelope.actorPrincipalId != principalId {
+            throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+        }
         let envelopeData = try OperationContractCodec.encode(command.envelope)
         let allocationsData = try OperationContractCodec.encode(
             command.draft.categoryAllocations
@@ -431,12 +450,145 @@ actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
                 throw OperationContractFailure.payloadMismatch(command.envelope.operationId)
             }
             throw ProjectSetupFailure.localAcceptanceFailed
+        } catch let failure as LedgerOfflineClientRuntimeFailure {
+            throw failure
         } catch let failure as OperationContractFailure {
             throw failure
         } catch let failure as ProjectSetupFailure {
             throw failure
         } catch {
             throw ProjectSetupFailure.localAcceptanceFailed
+        }
+    }
+
+    nonisolated func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        guard accountId != nil, principalId != nil else {
+            return Self.failedStream(ProjectSetupPowerSyncFailure.workspaceScopeRequired)
+        }
+        return AsyncThrowingStream { continuation in
+            let watchId = UUID()
+            let handle = ProjectSetupOperationWatchTaskHandle()
+            let registration = Task {
+                await watchRegistry.register(id: watchId, handle: handle)
+            }
+            let task = Task {
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
+                    continuation.finish()
+                    if admitted { await watchRegistry.finished(id: watchId) }
+                    return
+                }
+                do {
+                    let updates = try database.watch(
+                        sql: Self.operationWatchSQL,
+                        parameters: [operationId.rawValue]
+                    ) { cursor in
+                        let id = try cursor.getString(name: "id")
+                        let state = try cursor.getString(name: "local_state")
+                        let updatedAt = try cursor.getInt64(name: "updated_at_ms")
+                        let resultPhase = try cursor.getStringOptional(name: "result_phase")
+                        let resultCompletedAt = try cursor.getInt64Optional(
+                            name: "result_completed_at_ms"
+                        )
+                        return "\(id)|\(state)|\(updatedAt)|\(resultPhase ?? "")|\(resultCompletedAt ?? -1)"
+                    }
+                    for try await _ in updates {
+                        try Task.checkCancellation()
+                        let snapshot = try await self.operationSnapshot(operationId)
+                        if case .terminated = continuation.yield(snapshot) { break }
+                    }
+                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: CancellationError())
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                await watchRegistry.finished(id: watchId)
+            }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
+        }
+    }
+
+    func cancelAndDrainWatches() async {
+        await watchRegistry.cancelAndDrain()
+    }
+
+    private func operationSnapshot(
+        _ operationId: OperationID
+    ) async throws -> OperationSnapshot {
+        guard let accountId, let principalId else {
+            throw ProjectSetupPowerSyncFailure.workspaceScopeRequired
+        }
+        try Task.checkCancellation()
+        do {
+            let snapshot = try await database.writeTransaction { transaction in
+                try Task.checkCancellation()
+                let operations = try transaction.getAll(
+                    sql: Self.operationEvidenceSQL,
+                    parameters: [operationId.rawValue]
+                ) { try ProjectSetupOperationEvidence(cursor: $0) }
+                guard operations.count <= 1 else {
+                    throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+                }
+                guard let operation = operations.first else {
+                    do {
+                        let disposition = try LocalOperationIdentityGuard.inspect(
+                            transaction: transaction,
+                            operationId: operationId,
+                            expectedFamily: .createProject,
+                            expectedFingerprint: ""
+                        )
+                        if disposition == .unclaimed {
+                            throw ProjectSetupPowerSyncFailure.operationNotFound
+                        }
+                    } catch let failure as ProjectSetupPowerSyncFailure {
+                        throw failure
+                    } catch {
+                        throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+                    }
+                    throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+                }
+                guard try LocalOperationIdentityGuard.inspect(
+                    transaction: transaction,
+                    operationId: operationId,
+                    expectedFamily: .createProject,
+                    expectedFingerprint: operation.fingerprint
+                ) == .matchingOwner else {
+                    throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+                }
+                let results = try transaction.getAll(
+                    sql: Self.operationResultSQL,
+                    parameters: [operationId.rawValue]
+                ) { try ProjectSetupOperationResultEvidence(cursor: $0) }
+                guard results.count <= 1 else {
+                    throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+                }
+                return try operation.snapshot(
+                    expectedOperationId: operationId,
+                    expectedAccountId: accountId,
+                    expectedPrincipalId: principalId,
+                    result: results.first
+                )
+            }
+            try Task.checkCancellation()
+            return snapshot
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as ProjectSetupPowerSyncFailure {
+            throw failure
+        } catch {
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+    }
+
+    private nonisolated static func failedStream<Value: Sendable>(
+        _ error: Error
+    ) -> AsyncThrowingStream<Value, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.finish(throwing: error)
         }
     }
 
@@ -480,6 +632,313 @@ actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
         FROM \(LedgerPowerSyncTable.pendingProjectCategoryAllocations)
         WHERE operation_id = ? ORDER BY id
         """
+    private static let operationWatchSQL = """
+        SELECT operation.id, operation.local_state, operation.updated_at_ms,
+               result.phase AS result_phase,
+               result.completed_at_ms AS result_completed_at_ms
+        FROM \(LedgerPowerSyncTable.localOperations) AS operation
+        LEFT JOIN \(LedgerPowerSyncTable.operationResults) AS result
+          ON result.id = operation.id
+        WHERE operation.id = ?
+        """
+    private static let operationEvidenceSQL = """
+        SELECT id, account_id, actor_principal_id, contract_version,
+               fingerprint, subject_id, local_state, accepted_at_ms,
+               updated_at_ms, command_type, command_expected_revision,
+               command_envelope_json
+        FROM \(LedgerPowerSyncTable.localOperations)
+        WHERE id = ?
+        """
+    private static let operationResultSQL = """
+        SELECT account_id, actor_principal_id, command_type,
+               contract_version, command_fingerprint, envelope_sha256,
+               request_sha256, subject_id, phase, result_code, error_code,
+               client_created_at_ms, server_received_at_ms, completed_at_ms
+        FROM \(LedgerPowerSyncTable.operationResults)
+        WHERE id = ?
+        """
+}
+
+private struct ProjectSetupOperationEvidence: Sendable {
+    let operationId: String
+    let accountId: String
+    let principalId: String
+    let contractVersion: String
+    let fingerprint: String
+    let subjectId: String
+    let localState: String
+    let acceptedAtMilliseconds: Int64
+    let updatedAtMilliseconds: Int64
+    let commandType: String?
+    let expectedRevision: String?
+    let envelopeJSON: String?
+
+    init(cursor: any SqlCursor) throws {
+        operationId = try cursor.getString(name: "id")
+        accountId = try cursor.getString(name: "account_id")
+        principalId = try cursor.getString(name: "actor_principal_id")
+        contractVersion = try cursor.getString(name: "contract_version")
+        fingerprint = try cursor.getString(name: "fingerprint")
+        subjectId = try cursor.getString(name: "subject_id")
+        localState = try cursor.getString(name: "local_state")
+        acceptedAtMilliseconds = try cursor.getInt64(name: "accepted_at_ms")
+        updatedAtMilliseconds = try cursor.getInt64(name: "updated_at_ms")
+        commandType = try cursor.getStringOptional(name: "command_type")
+        expectedRevision = try cursor.getStringOptional(name: "command_expected_revision")
+        envelopeJSON = try cursor.getStringOptional(name: "command_envelope_json")
+    }
+
+    func snapshot(
+        expectedOperationId: OperationID,
+        expectedAccountId: AccountID,
+        expectedPrincipalId: PrincipalID,
+        result: ProjectSetupOperationResultEvidence?
+    ) throws -> OperationSnapshot {
+        guard operationId == expectedOperationId.rawValue,
+              accountId == expectedAccountId.rawValue,
+              principalId == expectedPrincipalId.rawValue,
+              commandType == LocalOperationCommandFamily.createProject.rawValue,
+              expectedRevision == nil,
+              acceptedAtMilliseconds >= 0,
+              updatedAtMilliseconds >= acceptedAtMilliseconds,
+              let envelopeJSON,
+              let envelopeData = envelopeJSON.data(using: .utf8),
+              let envelope = try? OperationContractCodec.decode(
+                OperationEnvelope<CreateProjectPayload>.self,
+                from: envelopeData
+              ),
+              envelope.operationId == expectedOperationId,
+              envelope.accountId == expectedAccountId,
+              envelope.actorPrincipalId == expectedPrincipalId,
+              envelope.contractVersion.rawValue == contractVersion,
+              envelope.payload.projectId.rawValue == subjectId,
+              envelope.preconditions.isEmpty,
+              let typedFingerprint = try? OperationFingerprint(validating: fingerprint),
+              (try? OperationFingerprint.make(for: envelope)) == typedFingerprint,
+              let state = LocalOperationState(rawValue: localState) else {
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+        if let result {
+            try result.validate(operation: self, envelope: envelope)
+        }
+
+        let acceptedAt = Self.date(acceptedAtMilliseconds)
+        let effectiveUpdatedAtMilliseconds = max(
+            updatedAtMilliseconds,
+            result?.completedAtMilliseconds ?? updatedAtMilliseconds
+        )
+        let updatedAt = Self.date(effectiveUpdatedAtMilliseconds)
+        let subject = LedgerEntityReference(
+            kind: .project,
+            id: try EntityID(validating: subjectId)
+        )
+        let operationState: OperationState
+        let effectiveState = try result.map {
+            guard let terminalState = LocalOperationState(rawValue: $0.phase) else {
+                throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+            }
+            return terminalState
+        } ?? state
+        switch effectiveState {
+        case .queued:
+            operationState = .queued(attemptCount: 0, lastTransientError: nil)
+        case .applying:
+            operationState = .applying(attempt: 1, startedAt: updatedAt)
+        case .applied:
+            let completedAt = result.map { Self.date($0.completedAtMilliseconds) }
+                ?? updatedAt
+            let receivedAt = result.map { Self.date($0.serverReceivedAtMilliseconds) }
+                ?? updatedAt
+            operationState = .applied(AppliedOperationResult(
+                resultCode: try ApplicationResultCode(
+                    validating: result?.resultCode ?? "project_created"
+                ),
+                serverReceivedAt: receivedAt,
+                completedAt: completedAt,
+                affectedRevisions: [EntityRevision(entity: subject, revision: 1)]
+            ))
+        case .rejected:
+            let code = result?.errorCode ?? "project_setup_rejected"
+            operationState = .rejected(OperationRejection(
+                error: ApplicationErrorSummary(
+                    code: try ApplicationErrorCode(validating: code),
+                    category: Self.errorCategory(code),
+                    retryDisposition: Self.retryDisposition(code)
+                ),
+                rejectedAt: result.map { Self.date($0.completedAtMilliseconds) }
+                    ?? updatedAt,
+                conflictingEntities: Self.isConflict(code) ? [subject] : []
+            ))
+        case .superseded, .resolved:
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+        return OperationSnapshot(
+            operationId: expectedOperationId,
+            accountId: expectedAccountId,
+            contractVersion: try OperationContractVersion(validating: contractVersion),
+            fingerprint: typedFingerprint,
+            acceptedAt: acceptedAt,
+            updatedAt: updatedAt,
+            state: operationState
+        )
+    }
+
+    private static func date(_ milliseconds: Int64) -> Date {
+        Date(timeIntervalSince1970: Double(milliseconds) / 1_000)
+    }
+
+    private static func isConflict(_ code: String) -> Bool {
+        code.contains("conflict") || code.contains("not_selectable")
+    }
+
+    private static func errorCategory(_ code: String) -> ApplicationErrorCategory {
+        if isConflict(code) { return .conflict }
+        if code == "contract_unsupported" { return .unsupportedContract }
+        return .validation
+    }
+
+    private static func retryDisposition(_ code: String) -> RetryDisposition {
+        if code == "contract_unsupported" { return .afterClientUpdate }
+        return isConflict(code) ? .afterUserCorrection : .never
+    }
+}
+
+private struct ProjectSetupOperationResultEvidence: Sendable {
+    let accountId: String
+    let principalId: String
+    let commandType: String
+    let contractVersion: String
+    let fingerprint: String
+    let envelopeSHA256: String
+    let requestSHA256: String?
+    let subjectId: String
+    let phase: String
+    let resultCode: String?
+    let errorCode: String?
+    let clientCreatedAtMilliseconds: Int64
+    let serverReceivedAtMilliseconds: Int64
+    let completedAtMilliseconds: Int64
+
+    init(cursor: any SqlCursor) throws {
+        accountId = try cursor.getString(name: "account_id")
+        principalId = try cursor.getString(name: "actor_principal_id")
+        commandType = try cursor.getString(name: "command_type")
+        contractVersion = try cursor.getString(name: "contract_version")
+        fingerprint = try cursor.getString(name: "command_fingerprint")
+        envelopeSHA256 = try cursor.getString(name: "envelope_sha256")
+        requestSHA256 = try cursor.getStringOptional(name: "request_sha256")
+        subjectId = try cursor.getString(name: "subject_id")
+        phase = try cursor.getString(name: "phase")
+        resultCode = try cursor.getStringOptional(name: "result_code")
+        errorCode = try cursor.getStringOptional(name: "error_code")
+        clientCreatedAtMilliseconds = try cursor.getInt64(name: "client_created_at_ms")
+        serverReceivedAtMilliseconds = try cursor.getInt64(name: "server_received_at_ms")
+        completedAtMilliseconds = try cursor.getInt64(name: "completed_at_ms")
+    }
+
+    func validate(
+        operation: ProjectSetupOperationEvidence,
+        envelope: OperationEnvelope<CreateProjectPayload>
+    ) throws {
+        let createdAtValue = envelope.clientCreatedAt.timeIntervalSince1970 * 1_000
+        guard createdAtValue.isFinite,
+              let createdAtMilliseconds = Int64(
+                exactly: createdAtValue.rounded(.towardZero)
+              ),
+              accountId == operation.accountId,
+              principalId == operation.principalId,
+              commandType == LocalOperationCommandFamily.createProject.rawValue,
+              contractVersion == operation.contractVersion,
+              fingerprint == operation.fingerprint,
+              envelopeSHA256 == operation.fingerprint,
+              requestSHA256 == nil,
+              subjectId == operation.subjectId,
+              clientCreatedAtMilliseconds == createdAtMilliseconds,
+              serverReceivedAtMilliseconds >= 0,
+              completedAtMilliseconds >= serverReceivedAtMilliseconds else {
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+        let localPhaseAcceptsTerminalResult = operation.localState == phase
+            || operation.localState == LocalOperationState.queued.rawValue
+            || operation.localState == LocalOperationState.applying.rawValue
+        guard localPhaseAcceptsTerminalResult else {
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+        switch phase {
+        case "applied":
+            guard resultCode == "project_created", errorCode == nil else {
+                throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+            }
+        case "rejected":
+            guard resultCode == nil,
+                  errorCode.map(Self.knownRejectionCodes.contains) == true else {
+                throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+            }
+        default:
+            throw ProjectSetupPowerSyncFailure.malformedLocalEvidence
+        }
+    }
+
+    private static let knownRejectionCodes: Set<String> = [
+        "project_setup_command_encoding_invalid", "contract_unsupported",
+        "project_setup_payload_invalid", "project_setup_fingerprint_mismatch",
+        "project_setup_envelope_mismatch", "project_setup_category_allocation_invalid",
+        "project_setup_category_not_selectable", "project_setup_identity_conflict",
+        "project_setup_client_not_selectable",
+        "project_setup_new_client_identity_conflict"
+    ]
+}
+
+private final class ProjectSetupOperationWatchTaskHandle: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let shouldCancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if shouldCancel { task.cancel() }
+    }
+
+    func cancel() {
+        let installedTask = lock.withLock {
+            cancellationRequested = true
+            return task
+        }
+        installedTask?.cancel()
+    }
+}
+
+private actor ProjectSetupOperationWatchRegistry {
+    private var handles: [UUID: ProjectSetupOperationWatchTaskHandle] = [:]
+    private var isClosing = false
+    private var drainWaiters: [CheckedContinuation<Void, Never>] = []
+
+    func register(id: UUID, handle: ProjectSetupOperationWatchTaskHandle) -> Bool {
+        guard !isClosing else {
+            handle.cancel()
+            return false
+        }
+        handles[id] = handle
+        return true
+    }
+
+    func finished(id: UUID) {
+        handles.removeValue(forKey: id)
+        guard handles.isEmpty else { return }
+        let waiters = drainWaiters
+        drainWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func cancelAndDrain() async {
+        isClosing = true
+        for handle in handles.values { handle.cancel() }
+        guard !handles.isEmpty else { return }
+        await withCheckedContinuation { drainWaiters.append($0) }
+    }
 }
 
 private struct ProjectSetupReplayRow {

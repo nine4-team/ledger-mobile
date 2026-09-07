@@ -1,5 +1,19 @@
 import Foundation
 
+/// The exact command accepted by the Project setup port and its validated receipt.
+///
+/// Returning both keeps command derivation in Core while allowing callers to retain
+/// the immutable identity and fingerprint required to observe that operation.
+public struct ProjectSetupExecutionResult: Equatable, Sendable {
+    public let command: CreateProjectCommand
+    public let receipt: OperationReceipt
+
+    public init(command: CreateProjectCommand, receipt: OperationReceipt) {
+        self.command = command
+        self.receipt = receipt
+    }
+}
+
 /// Application-layer orchestration for one complete Project setup.
 public struct ProjectSetupUseCase<Setup: ProjectSetupOperating>: Sendable {
     private let setup: Setup
@@ -16,7 +30,7 @@ public struct ProjectSetupUseCase<Setup: ProjectSetupOperating>: Sendable {
         actorPrincipalId: PrincipalID,
         operationContractVersion: OperationContractVersion,
         capturedAt: Date
-    ) async throws -> OperationReceipt {
+    ) async throws -> ProjectSetupExecutionResult {
         let command = try selection.command(
             validating: currentPreparation,
             projectId: projectId,
@@ -39,6 +53,9 @@ public struct ProjectSetupUseCase<Setup: ProjectSetupOperating>: Sendable {
             throw ProjectSetupFailure.localAcceptanceFailed
         }
 
-        return try command.validate(receipt)
+        return ProjectSetupExecutionResult(
+            command: command,
+            receipt: try command.validate(receipt)
+        )
     }
 }

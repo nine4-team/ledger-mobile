@@ -123,7 +123,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
+      "acknowledgeSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -319,8 +319,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "1a27a5d7d502a5f4876250521117f3c93d1810ee9ef60dfe7e9c8b58be0a89e2",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, an integrated existing-Client Project-creation workflow, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -373,7 +373,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
+      "acknowledgeSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

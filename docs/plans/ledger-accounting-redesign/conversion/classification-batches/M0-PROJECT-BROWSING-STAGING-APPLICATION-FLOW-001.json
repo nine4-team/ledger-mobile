@@ -84,13 +84,13 @@
     },
     {
       "id": "SWIFT-07427FF0DA84",
-      "acknowledgeSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
-      "currentBehavior": "Renders typed active/archived Project rows, exact detail state and explicit Project archive confirmation/retry/operation truth in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
+      "acknowledgeSourceHash": "a74c4b908e423d2eba0c7649d526df63a0a3598f806cd66780c96342f9498c55",
+      "currentBehavior": "Renders typed active/archived Project rows, launches the existing-Client Project-creation workflow from the directory, retains its latest operation truth, and presents exact detail and Project archive confirmation/retry state in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "The view renders typed model state only and introduces no sorting, search, card, route, budget, media, or mutation policy; source-level accessibility identities and both staging builds pass locally.",
+  "notes": "The view renders typed model state and routes to an injected Project-creation model; it introduces no sorting, search, card, budget, media, command construction, or persistence policy. Source-level accessibility identities and both staging builds pass locally.",
       "target": {
         "owner": "Project Browsing Staging Application Flow",
         "surfaces": ["active/archived Project rows and exact local detail-state staging view"],

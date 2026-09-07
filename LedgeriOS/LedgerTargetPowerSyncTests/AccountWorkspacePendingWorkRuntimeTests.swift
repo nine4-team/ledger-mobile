@@ -488,7 +488,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all ten streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all eleven streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -507,7 +507,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let runtime = try await context.openRuntime(dependencies: dependencies)
 
         _ = try await runtime.createClient(context.clientCommand(id: "gate"))
-        _ = try await runtime.createProject(context.projectCommand(id: "gate"))
+        let projectCommand = try context.projectCommand(id: "gate")
+        _ = try await runtime.createProject(projectCommand)
         let archiveCommand = try context.archiveCommand(id: "gate")
         _ = try await runtime.archive(archiveCommand)
         _ = try await runtime.encryptionCipher()
@@ -546,10 +547,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchTransferDestinations(source: transferSource),
             runtime.watchProjectNotes(noteRequest),
             runtime.watchSpaceCoreDetails(spaceId: spaceId),
+            runtime.watchProjectCreationOperation(projectCommand.envelope.operationId),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(10)
+        await streamCounter.waitUntilEntered(11)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -561,6 +563,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .transferDestinations,
             .projectNotes,
             .spaceCoreDetails,
+            .projectCreationOperation,
             .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
@@ -605,6 +608,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
+        try await Self.expectClosed(
+            runtime.watchProjectCreationOperation(projectCommand.envelope.operationId)
+        )
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
@@ -659,6 +665,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
+        try await Self.expectClosed(
+            runtime.watchProjectCreationOperation(projectCommand.envelope.operationId)
+        )
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
@@ -895,6 +904,47 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         await drainGate.release()
         try await close.value
         await consumer.value
+        #expect(
+            events.values.filter {
+                $0 == .attachmentDatabaseCloseAttempted || $0 == .structuredDatabaseCloseAttempted
+            }.suffix(2) == [.attachmentDatabaseCloseAttempted, .structuredDatabaseCloseAttempted]
+        )
+        context.remove()
+    }
+
+    @Test("Project setup provider drainage completes before database close")
+    func projectSetupProviderDrainPrecedesDatabaseClose() async throws {
+        let context = try RuntimeTestContext(suffix: "project-setup-drain-order")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let drainGate = ManualGate()
+        let store = BlockingDrainProjectSetupStore(drainGate: drainGate)
+        var dependencies = context.dependencies(events: events)
+        dependencies.makeProjectSetupStore = { _, _, _, _ in store }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let operationId = try context.projectCommand(id: "drain-order")
+            .envelope.operationId
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchProjectCreationOperation(operationId) {}
+            } catch {
+                // Runtime close cancels the public stream.
+            }
+        }
+        for _ in 0..<2_000 {
+            if store.watchCount == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(store.watchCount == 1)
+
+        let close = Task { try await runtime.close() }
+        await drainGate.waitUntilEntered()
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+
+        await drainGate.release()
+        try await close.value
+        await consumer.value
+        #expect(store.drainCount == 1)
         #expect(
             events.values.filter {
                 $0 == .attachmentDatabaseCloseAttempted || $0 == .structuredDatabaseCloseAttempted
@@ -1552,6 +1602,38 @@ private final class BlockingDrainProjectArchiveStore:
     var drainCount: Int { lock.withLock { drains } }
 
     func archive(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
+        throw RuntimeInjectedFailure()
+    }
+
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        lock.withLock { watches += 1 }
+        return AsyncThrowingStream { _ in }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+        await drainGate.wait()
+    }
+}
+
+private final class BlockingDrainProjectSetupStore:
+    AccountWorkspaceProjectSetupStoring, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private let drainGate: ManualGate
+    private var watches = 0
+    private var drains = 0
+
+    init(drainGate: ManualGate) {
+        self.drainGate = drainGate
+    }
+
+    var watchCount: Int { lock.withLock { watches } }
+    var drainCount: Int { lock.withLock { drains } }
+
+    func create(_ command: CreateProjectCommand) async throws -> OperationReceipt {
         throw RuntimeInjectedFailure()
     }
 

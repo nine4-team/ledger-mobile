@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T03:00:01.110Z",
+    "lastSynchronizedAt": "2026-09-07T04:30:53.332Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2101,8 +2101,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
-      "acknowledgedSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
+      "observedSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
+      "acknowledgedSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6667,8 +6667,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
-      "acknowledgedSourceHash": "71dce6f5af7bf1b65035e8338618f2410975a929eb803662a062e194480fdacd",
+      "observedSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
+      "acknowledgedSourceHash": "fe186abcdb8eac76da5219113a52d3c041f4f867dd8eb495fed268d644d091a0",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -19263,12 +19263,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
-      "acknowledgedSourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
+      "observedSourceHash": "1a27a5d7d502a5f4876250521117f3c93d1810ee9ef60dfe7e9c8b58be0a89e2",
+      "acknowledgedSourceHash": "1a27a5d7d502a5f4876250521117f3c93d1810ee9ef60dfe7e9c8b58be0a89e2",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, an integrated existing-Client Project-creation workflow, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19475,12 +19475,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
-      "acknowledgedSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
+      "observedSourceHash": "a74c4b908e423d2eba0c7649d526df63a0a3598f806cd66780c96342f9498c55",
+      "acknowledgedSourceHash": "a74c4b908e423d2eba0c7649d526df63a0a3598f806cd66780c96342f9498c55",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Renders typed active/archived Project rows, exact detail state and explicit Project archive confirmation/retry/operation truth in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
+      "currentBehavior": "Renders typed active/archived Project rows, launches the existing-Client Project-creation workflow from the directory, retains its latest operation truth, and presents exact detail and Project archive confirmation/retry state in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Browsing Staging Application Flow",
@@ -19514,7 +19514,7 @@
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "The view renders typed model state only and introduces no sorting, search, card, route, budget, media, or mutation policy; source-level accessibility identities and both staging builds pass locally.",
+      "notes": "The view renders typed model state and routes to an injected Project-creation model; it introduces no sorting, search, card, budget, media, command construction, or persistence policy. Source-level accessibility identities and both staging builds pass locally.",
       "classificationBatch": "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -20848,12 +20848,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift"
         }
       ],
-      "observedSourceHash": "20a8c5c480be02262324ac4895a012d51693d896faaa61e80293bdb0a36b19b9",
-      "acknowledgedSourceHash": "20a8c5c480be02262324ac4895a012d51693d896faaa61e80293bdb0a36b19b9",
+      "observedSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
+      "acknowledgedSourceHash": "45cdacc900c0e610b3a174c72f778c420edb35b63ee67f91704cf791ca6390f8",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all five current accepting stores; exact implementation commit and immutable CI are recorded in the evidence artifact.",
+      "currentBehavior": "Verified centralized local OperationID evidence inventory and ownership guard across all six current accepting stores, including an exact downloaded terminal-result race for Project creation only; exact implementation commit and immutable CI are recorded in the evidence artifact.",
       "disposition": "redesign",
       "target": {
         "owner": "Shared Local Operation Identity Guard",
@@ -21943,12 +21943,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "98a8082a035da0093bd92c3ed4224769fbc2e984b901bf88b846d9c40689e91c",
-      "acknowledgedSourceHash": "98a8082a035da0093bd92c3ed4224769fbc2e984b901bf88b846d9c40689e91c",
+      "observedSourceHash": "68da37913620b25836c0f1ecf253813587e8d02d33676f4d1a57e45deb34e1a5",
+      "acknowledgedSourceHash": "68da37913620b25836c0f1ecf253813587e8d02d33676f4d1a57e45deb34e1a5",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders exact Client/category readiness, stable-identity controls, bounded diagnostics and exact local operation receipts.",
+      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders the guarded three-step name/Client, category and budget-allocation workflow with exact readiness, stable-identity controls, immutable submitted summary, bounded diagnostics and live retryable operation state.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -26333,12 +26333,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
-      "acknowledgedSourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
+      "observedSourceHash": "3723579f2cbe5942e58de6c77186bb12100850fec90b2353aa52226144a59d14",
+      "acknowledgedSourceHash": "3723579f2cbe5942e58de6c77186bb12100850fec90b2353aa52226144a59d14",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Space destination and Item-assignment operation watches, and non-destructive close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Project-creation, archive, Space-destination and Item-assignment operation watches, and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -27289,12 +27289,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
-      "acknowledgedSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
+      "observedSourceHash": "949995e08ab3eb5612c92cb102200ecc73b8a4b057c9404835de0cce5abf629c",
+      "acknowledgedSourceHash": "949995e08ab3eb5612c92cb102200ecc73b8a4b057c9404835de0cce5abf629c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, projected category-configuration revision text 1 and the complete Client/Project/allocation overlay; exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence plus the complete Client/Project/allocation overlay; its Account/Principal-scoped watcher validates the exact command graph and follows queued/applying into an applied or rejected terminal result, including downloaded-result races. Exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -27956,12 +27956,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "3c665e7f68d75a2b9a04691e69e1dbe497b65b6218b5c9ee4f817fedb0b2d7ef",
-      "acknowledgedSourceHash": "3c665e7f68d75a2b9a04691e69e1dbe497b65b6218b5c9ee4f817fedb0b2d7ef",
+      "observedSourceHash": "454bcdb36d60be3c2b8873d8ea3519c8d1d8d47221274d76153071e31e524592",
+      "acknowledgedSourceHash": "454bcdb36d60be3c2b8873d8ea3519c8d1d8d47221274d76153071e31e524592",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, manages fail-closed selection and stable retry identity, and submits through ProjectSetupUseCase.",
+      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, owns the guarded three-step workflow and exact allocation input semantics, freezes an immutable admitted draft, manages fail-closed selection and retry identities, and follows local acceptance through the typed Project-creation operation watch.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -28982,12 +28982,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
-      "acknowledgedSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
+      "observedSourceHash": "0f32f52886bacbea0e1b9a7887cd10cc62bafa3a5fa1e8efbcb36ae90e3740ef",
+      "acknowledgedSourceHash": "0f32f52886bacbea0e1b9a7887cd10cc62bafa3a5fa1e8efbcb36ae90e3740ef",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending or authoritative assignment.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project creation and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and all eleven public/provider-owned observations, including Project creation, are drained before database close without implementing session ending or authoritative assignment.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -32336,12 +32336,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "b7c56c8c3ef5d2a7ab54319368a4c512e98446de1d959fa2d0821c85c244ed43",
-      "acknowledgedSourceHash": "b7c56c8c3ef5d2a7ab54319368a4c512e98446de1d959fa2d0821c85c244ed43",
+      "observedSourceHash": "d52b1dd3a5371d9b13f5e2cc1b4126a6085a9eadb3d9aa5ea4431d4758e834d7",
+      "acknowledgedSourceHash": "d52b1dd3a5371d9b13f5e2cc1b4126a6085a9eadb3d9aa5ea4431d4758e834d7",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams and Project setup operation into the backend-neutral application-model runtime value.",
+      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams, Project setup operation, and typed Project-creation operation watch into the backend-neutral application-model runtime value.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -40683,8 +40683,8 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectSetupUseCase.swift"
         }
       ],
-      "observedSourceHash": "5f3b3185a6b1a5192a2c0ad7bb1bfa51abe47aeca4e45a52ddc78a91ab9c1dc8",
-      "acknowledgedSourceHash": "5f3b3185a6b1a5192a2c0ad7bb1bfa51abe47aeca4e45a52ddc78a91ab9c1dc8",
+      "observedSourceHash": "047063ea0deaa44b69028ad176786f2b6ea22aabb13e9e6399906a8a168e16a8",
+      "acknowledgedSourceHash": "047063ea0deaa44b69028ad176786f2b6ea22aabb13e9e6399906a8a168e16a8",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -44380,12 +44380,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
-      "acknowledgedSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
+      "observedSourceHash": "e98f17dc6cc4f63c77e741078a6effdc82d38bc0ffcb4a83eadacfbc08334d13",
+      "acknowledgedSourceHash": "e98f17dc6cc4f63c77e741078a6effdc82d38bc0ffcb4a83eadacfbc08334d13",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs eleven target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, Int64 RPC precision, and joined Project-detail provider shutdown with late-watch refusal.",
+      "currentBehavior": "Runs fourteen target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, exact scoped operation watching and downloaded-result races, malformed-evidence refusal, full UInt64 text, rollback, rebound preservation, authoritative reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, RPC precision, and provider shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -47171,12 +47171,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
-      "acknowledgedSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
+      "observedSourceHash": "5cba84e4dc4be1cc52baa0886efdab2dc519da24979f6f142eff590b5c142b48",
+      "acknowledgedSourceHash": "5cba84e4dc4be1cc52baa0886efdab2dc519da24979f6f142eff590b5c142b48",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, archive operations, exact Project/Inventory Space destination facade identities, finite-operation and subscription/provider drainage, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
+      "currentBehavior": "Twenty-two executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, creation/archive operations, exact Project/Inventory Space destination facade identities, all eleven public streams, provider drainage ordering, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -48662,8 +48662,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "e6e630f18a4b02d168c30a9ab899d29c44853389cad8448b489dd725a5ed11fd",
-      "acknowledgedSourceHash": "e6e630f18a4b02d168c30a9ab899d29c44853389cad8448b489dd725a5ed11fd",
+      "observedSourceHash": "6c39f29f63c3862acd30bb56ca7f25184080f4965ead41cda3eaeef561c54d30",
+      "acknowledgedSourceHash": "6c39f29f63c3862acd30bb56ca7f25184080f4965ead41cda3eaeef561c54d30",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -50487,12 +50487,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "9ab72864683360044c0907c6e8b083ee7ae8673240bd1681f30859328539b504",
-      "acknowledgedSourceHash": "9ab72864683360044c0907c6e8b083ee7ae8673240bd1681f30859328539b504",
+      "observedSourceHash": "2ddb6f57fa686a2022dd868dd36052858855615caa6563921fdd4ea8aae92842",
+      "acknowledgedSourceHash": "2ddb6f57fa686a2022dd868dd36052858855615caa6563921fdd4ea8aae92842",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Fourteen deterministic Project Setup application-model tests cover independently arriving evidence, false-empty meaning, selection, exact submission, failures, retry, receipts, caller cancellation, concurrent lifecycle drainage and shutdown.",
+      "currentBehavior": "Twenty-three deterministic Project Setup tests cover independently arriving evidence, false-empty meaning, guarded navigation, compiled SwiftUI control/action wiring, one-time category defaults, exact allocation semantics, immutable in-flight submission, queued-to-applied and queued-to-rejected observation, honest post-acceptance reference failures, malformed evidence, retry identity, observer generation isolation, lifecycle drainage and shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",

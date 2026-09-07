@@ -58,6 +58,190 @@ struct ProjectPowerSyncVerticalSliceTests {
         )
     }
 
+    @Test("Project operation watch validates scope and evidence through terminal state")
+    func projectOperationWatchValidatesAndReachesTerminalState() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.newClientCommand()
+        let store = ProjectSetupPowerSyncStore(
+            database: database,
+            accountId: command.envelope.accountId,
+            principalId: command.envelope.actorPrincipalId,
+            now: { Self.acceptedAt }
+        )
+
+        var missing = store.watchOperation(
+            try OperationID(validating: "operation-create-project-missing")
+        ).makeAsyncIterator()
+        await #expect(throws: ProjectSetupPowerSyncFailure.operationNotFound) {
+            _ = try await missing.next()
+        }
+
+        _ = try await store.create(command)
+        var iterator = store.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        let queued = try #require(try await iterator.next())
+        #expect(queued.operationId == command.envelope.operationId)
+        #expect(queued.accountId == command.envelope.accountId)
+        #expect(queued.fingerprint == command.fingerprint)
+        #expect(queued.state.localState == .queued)
+
+        let connector = LedgerPowerSyncUploadConnector(
+            credentialProvider: { nil },
+            clientCreationApplier: UnusedClientCreationApplier(),
+            projectCreationApplier: RecordingProjectCreationApplier(),
+            now: { Self.observedAt }
+        )
+        try await connector.uploadData(database: database)
+        let terminal = try #require(try await iterator.next())
+        guard case .applied(let result) = terminal.state else {
+            Issue.record("Expected applied Project creation operation")
+            await store.cancelAndDrainWatches()
+            try await database.close(deleteDatabase: true)
+            fixture.removeDirectory()
+            return
+        }
+        #expect(result.resultCode.rawValue == "project_created")
+        #expect(result.affectedRevisions.map(\.revision) == [1])
+
+        let wrongScope = ProjectSetupPowerSyncStore(
+            database: database,
+            accountId: try AccountID(validating: "account-other"),
+            principalId: command.envelope.actorPrincipalId
+        )
+        var crossAccount = wrongScope.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        await #expect(throws: ProjectSetupPowerSyncFailure.malformedLocalEvidence) {
+            _ = try await crossAccount.next()
+        }
+        await wrongScope.cancelAndDrainWatches()
+
+        await store.cancelAndDrainWatches()
+        do {
+            #expect(try await iterator.next() == nil)
+        } catch is CancellationError {
+            // Cancellation is a valid terminal signal for an admitted watch.
+        }
+        var refused = store.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        #expect(try await refused.next() == nil)
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Downloaded Project result advances a stale queued operation")
+    func downloadedProjectResultAdvancesStaleLocalState() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.newClientCommand()
+        let store = ProjectSetupPowerSyncStore(
+            database: database,
+            accountId: command.envelope.accountId,
+            principalId: command.envelope.actorPrincipalId,
+            now: { Self.acceptedAt }
+        )
+        _ = try await store.create(command)
+        let completedAtMilliseconds = Int64(Self.observedAt.timeIntervalSince1970 * 1_000)
+        _ = try await database.execute(
+            sql: """
+            INSERT INTO spike_operation_results (
+              id, account_id, actor_principal_id, command_type,
+              contract_version, command_fingerprint, envelope_sha256,
+              request_sha256, subject_id, phase, result_code, error_code,
+              client_created_at_ms, server_received_at_ms, completed_at_ms
+            ) VALUES (?, ?, ?, 'create_project', ?, ?, ?, NULL, ?,
+                      'applied', 'project_created', NULL, ?, ?, ?)
+            """,
+            parameters: [
+                command.envelope.operationId.rawValue,
+                command.envelope.accountId.rawValue,
+                command.envelope.actorPrincipalId.rawValue,
+                command.envelope.contractVersion.rawValue,
+                command.fingerprint.sha256,
+                command.fingerprint.sha256,
+                command.draft.projectId.rawValue,
+                Int64(command.envelope.clientCreatedAt.timeIntervalSince1970 * 1_000),
+                completedAtMilliseconds - 1_000,
+                completedAtMilliseconds
+            ]
+        )
+        _ = try await database.execute(
+            sql: """
+            DELETE FROM ps_crud
+            WHERE json_extract(data, '$.id') = ?
+              AND json_extract(data, '$.type') = ?
+            """,
+            parameters: [
+                command.envelope.operationId.rawValue,
+                LedgerPowerSyncTable.operationResults
+            ]
+        )
+
+        var iterator = store.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        let snapshot = try #require(try await iterator.next())
+        #expect(snapshot.state.localState == .applied)
+        #expect(snapshot.updatedAt == Self.observedAt)
+        guard case .applied(let result) = snapshot.state else {
+            Issue.record("Expected downloaded applied result")
+            await store.cancelAndDrainWatches()
+            try await database.close(deleteDatabase: true)
+            fixture.removeDirectory()
+            return
+        }
+        #expect(result.serverReceivedAt == Self.observedAt.addingTimeInterval(-1))
+        #expect(result.completedAt == Self.observedAt)
+
+        await store.cancelAndDrainWatches()
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("Project operation watch fails closed on envelope or fingerprint drift")
+    func projectOperationWatchRejectsDriftedEvidence() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.newClientCommand()
+        let store = ProjectSetupPowerSyncStore(
+            database: database,
+            accountId: command.envelope.accountId,
+            principalId: command.envelope.actorPrincipalId
+        )
+        _ = try await store.create(command)
+        _ = try await database.execute(
+            sql: "UPDATE spike_local_operations SET fingerprint = ? WHERE id = ?",
+            parameters: [
+                String(repeating: "0", count: 64),
+                command.envelope.operationId.rawValue
+            ]
+        )
+
+        var iterator = store.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        await #expect(throws: ProjectSetupPowerSyncFailure.malformedLocalEvidence) {
+            _ = try await iterator.next()
+        }
+        _ = try await database.execute(
+            sql: """
+            UPDATE spike_local_operations
+            SET fingerprint = ?, command_envelope_json = '{}'
+            WHERE id = ?
+            """,
+            parameters: [
+                command.fingerprint.sha256,
+                command.envelope.operationId.rawValue
+            ]
+        )
+        var envelopeIterator = store.watchOperation(command.envelope.operationId)
+            .makeAsyncIterator()
+        await #expect(throws: ProjectSetupPowerSyncFailure.malformedLocalEvidence) {
+            _ = try await envelopeIterator.next()
+        }
+        await store.cancelAndDrainWatches()
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
     @Test("Offline Project plus new Client and complete allocations survive restart atomically")
     func newClientProjectRestartDurability() async throws {
         let fixture = try ProjectDatabaseFixture()

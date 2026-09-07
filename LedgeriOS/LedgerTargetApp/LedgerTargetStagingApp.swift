@@ -116,7 +116,6 @@ private struct OfflineProviderSpikeView: View {
                     .accessibilityIdentifier("target-client-diagnostic")
             }
         }
-        ProjectSetupStagingExerciseView(model: model.projectSetup)
         SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
         SpaceCoreDetailsStagingExerciseView(model: model.spaceDetails)
         TransferDestinationSelectionStagingExerciseView(
@@ -128,7 +127,8 @@ private struct OfflineProviderSpikeView: View {
         )
         ProjectBrowsingStagingExerciseView(
             model: model.projectBrowser,
-            archive: model.projectArchive
+            archive: model.projectArchive,
+            projectSetup: model.projectSetup
         )
         .task {
             await model.start(validatedEnvironment: environment)
@@ -211,6 +211,7 @@ private final class OfflineClientSpikeModel {
         )
         projectSetup = ProjectSetupStagingExercise(
             accountId: accountId,
+            accountCurrency: try! CurrencyCode(validating: "USD"),
             actorPrincipalId: principalId,
             operationContractVersion: try! OperationContractVersion(
                 validating: "project-create-v1"

@@ -1999,10 +1999,13 @@ if (
       );
     }
   }
-  if (targetAppSource.includes("CreateProjectCommand(")) {
+  if (
+    targetAppSource.includes("CreateProjectCommand(") ||
+    appModelSource.includes("CreateProjectCommand(")
+  ) {
     fail(
       "target_project_setup_direct_command",
-      "The target app must submit through ProjectSetupUseCase, not construct CreateProjectCommand.",
+      "The target app and AppModel must submit through ProjectSetupUseCase, not construct CreateProjectCommand.",
     );
   }
   if (targetAppSource.includes("ArchiveProjectCommand(")) {

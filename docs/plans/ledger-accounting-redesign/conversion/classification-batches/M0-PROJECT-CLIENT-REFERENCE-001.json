@@ -3743,7 +3743,7 @@
     {
       "id": "SWIFT-EE8576F5CD39",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5f3b3185a6b1a5192a2c0ad7bb1bfa51abe47aeca4e45a52ddc78a91ab9c1dc8",
+      "acknowledgeSourceHash": "047063ea0deaa44b69028ad176786f2b6ea22aabb13e9e6399906a8a168e16a8",
       "currentBehavior": "Implements provider-free Project setup selection-to-application orchestration through the verified form-presentation and setup-operation contracts.",
       "disposition": "redesign",
       "status": "verified",
@@ -3768,7 +3768,7 @@
     {
       "id": "TEST-BB8C5679BA31",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e6e630f18a4b02d168c30a9ab899d29c44853389cad8448b489dd725a5ed11fd",
+      "acknowledgeSourceHash": "6c39f29f63c3862acd30bb56ca7f25184080f4965ead41cda3eaeef561c54d30",
       "currentBehavior": "Implements reciprocal Project setup use-case verification across represented evidence, command ownership, receipt and error boundaries.",
       "disposition": "redesign",
       "status": "verified",

@@ -242,8 +242,16 @@ enum LocalOperationIdentityGuard {
         let commandCount = commandCrud.filter { $0.table == family.insertOnlyCommandTable }.count
         switch operation.state {
         case "queued", "applying":
+            let resultCountIsValid: Bool
+            switch family {
+            case .createProject:
+                resultCountIsValid = results.count <= 1
+            case .createClient, .archiveProject, .archiveClient, .assignItemsToSpace,
+                 .clearItemSpaceAssignments:
+                resultCountIsValid = results.isEmpty
+            }
             guard operation.updatedAt >= operation.acceptedAt,
-                  operation.hasNoTerminalEvidence, results.isEmpty else { return false }
+                  operation.hasNoTerminalEvidence, resultCountIsValid else { return false }
             switch family {
             case .createClient:
                 return commandCount == 1 && pendingClients.count == 1
@@ -418,13 +426,17 @@ enum LocalOperationIdentityGuard {
             completedAt = try cursor.getInt64(name: "completed_at_ms")
         }
         func matches(operation: OperationRow) -> Bool {
-            let expectedPhase = operation.hasNoTerminalEvidence
-                ? operation.state
-                : operation.terminalPhase
+            let pendingCreationCanObserveTerminalResult =
+                operation.hasNoTerminalEvidence
+                && (operation.state == "queued" || operation.state == "applying")
+                && commandType == LocalOperationCommandFamily.createProject.rawValue
+            let phaseMatches = operation.hasNoTerminalEvidence
+                ? phase == operation.state || pendingCreationCanObserveTerminalResult
+                : phase == operation.terminalPhase
             guard accountId == operation.accountId && principalId == operation.principalId
                 && contractVersion == operation.contractVersion
                 && fingerprint == operation.fingerprint && subjectId == operation.subjectId,
-                  phase == expectedPhase, phase == "applied" || phase == "rejected",
+                  phaseMatches, phase == "applied" || phase == "rejected",
                   envelopeSHA256 == operation.fingerprint,
                   serverReceivedAt >= 0, completedAt >= serverReceivedAt else {
                 return false

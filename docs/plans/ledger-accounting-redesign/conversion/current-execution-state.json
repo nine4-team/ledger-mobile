@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 20,
+  "stateVersion": 23,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -16,24 +16,24 @@
     "meaning": "The source-verified 91-journey behavior catalog covers all 167 current UI surfaces and passed independent review, local controls, isolated target builds/tests, and disposable local Supabase checks."
   },
   "activeWorkflow": {
-    "id": "current-app-ui-control-flow-baseline",
-    "kind": "coverage_audit",
-    "status": "complete",
-    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/current-app-ui-control-flow-baseline.json",
-    "outcome": "Create the durable page-by-page baseline of every current Ledger UI control, option, transition, and visible state before resuming target product UI implementation.",
+    "id": "existing-client-project-creation",
+    "kind": "product_ui",
+    "status": "ci_verification",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/existing-client-project-creation.json",
+    "outcome": "Create one Project for a represented active existing Client with exact optional category allocations, durable offline acceptance, an immutable submitted summary, and live queued-to-applied-or-rejected operation state.",
     "nextActions": [
-      "Select the next user-meaningful workflow using the implementation tracker and open product decisions.",
-      "Create one compact workflow record that cites every applicable baseline journey and product authority section.",
-      "Implement and verify the workflow end to end without reviving per-surface dossier or promotion ceremony."
+      "Commit and push the locally green workflow batch, then verify automatic CI on the exact implementation commit.",
+      "Record the exact immutable CI commit and run after all three jobs pass.",
+      "Retain O-026 as an explicit cutover blocker; do not treat the provisional project-budget capability as approved product authority."
     ]
   },
   "progress": {
     "practicalCompletionEstimatePercent": {
-      "low": 12,
-      "center": 15,
-      "high": 18
+      "low": 13,
+      "center": 16,
+      "high": 19
     },
-    "locallyWorkingProviderWorkflows": 11,
+    "locallyWorkingProviderWorkflows": 12,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
     "note": "Workflow counts measure product progress. The surface catalog is a passive completeness audit, not a completion percentage."
@@ -41,6 +41,7 @@
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
     "Hosted Supabase and PowerSync resources, credentials, spending, and authenticated rehearsal require explicit user authorization.",
+    "O-026 must be approved before Project creation can be cutover-ready because its final project-budget command authorization, RLS, and Sync policy remain provisional.",
     "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes."
   ],
   "guardrails": [

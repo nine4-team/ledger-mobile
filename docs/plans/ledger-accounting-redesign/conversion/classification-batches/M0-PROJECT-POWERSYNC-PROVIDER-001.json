@@ -86,8 +86,8 @@
     },
     {
       "id": "SWIFT-5D88C2B47970",
-      "acknowledgeSourceHash": "3b211c27d1640bd9d6de63d8f492261d1130fafcb0ec5a610159b9de304aa03f",
-      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, projected category-configuration revision text 1 and the complete Client/Project/allocation overlay; exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
+      "acknowledgeSourceHash": "949995e08ab3eb5612c92cb102200ecc73b8a4b057c9404835de0cce5abf629c",
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence plus the complete Client/Project/allocation overlay; its Account/Principal-scoped watcher validates the exact command graph and follows queued/applying into an applied or rejected terminal result, including downloaded-result races. Exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
@@ -158,8 +158,8 @@
     },
     {
       "id": "TEST-3F2CAFC760D5",
-      "acknowledgeSourceHash": "f04f9de48f96e87a40c5ea9f766982b95c1f9c6cf89f9e72591c1a9fef9adf56",
-      "currentBehavior": "Runs eleven target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, Int64 RPC precision, and joined Project-detail provider shutdown with late-watch refusal.",
+      "acknowledgeSourceHash": "e98f17dc6cc4f63c77e741078a6effdc82d38bc0ffcb4a83eadacfbc08334d13",
+      "currentBehavior": "Runs fourteen target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, exact scoped operation watching and downloaded-result races, malformed-evidence refusal, full UInt64 text, rollback, rebound preservation, authoritative reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch, RPC precision, and provider shutdown.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-003", "A-004"],

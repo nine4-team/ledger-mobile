@@ -90,6 +90,15 @@ protocol AccountWorkspaceSpaceCoreDetailsQuerying: SpaceCoreDetailsQuerying {
 
 extension SpaceCoreDetailsPowerSyncQuery: AccountWorkspaceSpaceCoreDetailsQuerying {}
 
+protocol AccountWorkspaceProjectSetupStoring: ProjectSetupOperating, Sendable {
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error>
+    func cancelAndDrainWatches() async
+}
+
+extension ProjectSetupPowerSyncStore: AccountWorkspaceProjectSetupStoring {}
+
 protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
     func watchOperation(
         _ operationId: OperationID
@@ -147,6 +156,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case budgetCategories
     case spaceAssignmentDestinations
     case transferDestinations
+    case projectCreationOperation
     case projectArchiveOperation
     case clientArchiveOperation
     case itemSpaceAssignmentOperation
@@ -230,6 +240,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             AccountID,
             @Sendable @escaping () -> Date
         ) -> any AccountWorkspaceSpaceCoreDetailsQuerying
+    var makeProjectSetupStore:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            AccountID,
+            PrincipalID,
+            @Sendable @escaping () -> Date
+        ) -> any AccountWorkspaceProjectSetupStoring
     var makeProjectArchiveStore:
         @Sendable (
             any PowerSyncDatabaseProtocol,
@@ -374,6 +391,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeProjectSetupStore: { database, accountId, principalId, now in
+            ProjectSetupPowerSyncStore(
+                database: database,
+                accountId: accountId,
+                principalId: principalId,
+                now: now
+            )
+        },
         makeProjectArchiveStore: { database, accountId, principalId, now in
             ProjectArchivePowerSyncStore(
                 database: database,
@@ -427,7 +452,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let attachmentDatabase: any PowerSyncDatabaseProtocol
     let creationStore: ClientCreationPowerSyncStore
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
-    let projectSetupStore: ProjectSetupPowerSyncStore
+    let projectSetupStore: any AccountWorkspaceProjectSetupStoring
     let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
     let itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring
     let itemSpaceClearingStore: any AccountWorkspaceItemSpaceClearingStoring
@@ -469,6 +494,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             any AccountWorkspaceSpaceAssignmentDestinationQuerying,
         projectNoteQuery: any AccountWorkspaceProjectNoteQuerying,
         spaceCoreDetailsQuery: any AccountWorkspaceSpaceCoreDetailsQuerying,
+        projectSetupStore: any AccountWorkspaceProjectSetupStoring,
         projectArchiveStore: any AccountWorkspaceProjectArchiveStoring,
         itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring,
         itemSpaceClearingStore: any AccountWorkspaceItemSpaceClearingStoring,
@@ -498,7 +524,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             accountId: accountId,
             now: now
         )
-        projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
+        self.projectSetupStore = projectSetupStore
         self.projectArchiveStore = projectArchiveStore
         self.itemSpaceAssignmentStore = itemSpaceAssignmentStore
         self.itemSpaceClearingStore = itemSpaceClearingStore
@@ -863,6 +889,22 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startProjectCreationOperationWatch(
+        id: UUID,
+        operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .projectCreationOperation,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.projectSetupStore.watchOperation(operationId)
+            }
+        )
+    }
+
     func startProjectArchiveOperationWatch(
         id: UUID,
         operationId: OperationID,
@@ -1044,6 +1086,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.directoryQuery.cancelAndDrainWatches()
         await resources.itemSpaceAssignmentStore.cancelAndDrainWatches()
         await resources.itemSpaceClearingStore.cancelAndDrainWatches()
+        await resources.projectSetupStore.cancelAndDrainWatches()
         await resources.projectArchiveStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()
 
@@ -1272,6 +1315,12 @@ public enum LedgerPowerSyncLocalBootstrap {
             )
             spaceCoreDetailsQuery = madeSpaceCoreDetailsQuery
 
+            let madeProjectSetupStore = dependencies.makeProjectSetupStore(
+                openedStructured.database,
+                accountId,
+                principalId,
+                dependencies.now
+            )
             let madeProjectArchiveStore = dependencies.makeProjectArchiveStore(
                 openedStructured.database,
                 accountId,
@@ -1300,6 +1349,7 @@ public enum LedgerPowerSyncLocalBootstrap {
                 spaceAssignmentDestinationQuery: madeSpaceAssignmentDestinationQuery,
                 projectNoteQuery: madeProjectNoteQuery,
                 spaceCoreDetailsQuery: madeSpaceCoreDetailsQuery,
+                projectSetupStore: madeProjectSetupStore,
                 projectArchiveStore: madeProjectArchiveStore,
                 itemSpaceAssignmentStore: madeItemSpaceAssignmentStore,
                 itemSpaceClearingStore: madeItemSpaceClearingStore,

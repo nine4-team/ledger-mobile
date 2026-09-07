@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "existing-client-project-creation",
+  "title": "Create a Project for an existing Client",
+  "kind": "product_ui",
+  "status": "ci_verification",
+  "outcome": "From the target Project directory, create one Project for a represented active existing Client with exact optional category allocations, accept it durably while offline, and expose its pending or rejected state without losing the draft.",
+  "authority": [
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements"
+    },
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/projects.md",
+      "section": "Creation Flow"
+    },
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/budget-management.md",
+      "section": "Project Creation Flow"
+    },
+    {
+      "role": "canonical_target",
+      "path": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship"
+    },
+    {
+      "role": "decision_authority",
+      "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "section": "Confirmed Decisions"
+    }
+  ],
+  "baselineJourneyIds": [
+    "UIBASE-PROJECT-DIRECTORY-001",
+    "UIBASE-NEW-PROJECT-001",
+    "UIBASE-SHARED-MULTI-STEP-FORM-SHELL-001",
+    "UIBASE-SHARED-FORM-TEXT-FIELD-001",
+    "UIBASE-LIST-CONTROL-BARS-001"
+  ],
+  "affectedComponents": [
+    "LedgeriOS/LedgerTargetCore/ProjectSetupOperation.swift",
+    "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+    "LedgeriOS/LedgerTargetCore/ProjectSetupUseCase.swift",
+    "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+    "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift",
+    "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+    "LedgeriOS/LedgerTargetApp/ProjectSetupStagingExerciseView.swift",
+    "LedgeriOS/LedgerTargetApp/ProjectSetupStagingRuntimeAdapter.swift",
+    "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingExerciseView.swift",
+    "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+    "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift",
+    "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+    "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+    "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
+    "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
+    "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+    "supabase/migrations/20260904151946_project_setup_vertical_slice.sql",
+    "supabase/tests/project_setup_vertical_slice.test.sql",
+    "LedgerTargetMCP/src/projectCreation.ts"
+  ],
+  "layers": [
+    "domain",
+    "app_ui",
+    "app_mcp",
+    "postgres_schema",
+    "postgres_handler",
+    "rls",
+    "auth",
+    "powersync_sync",
+    "local_offline",
+    "accounting"
+  ],
+  "riskDomains": [
+    "ui_fidelity",
+    "offline_durability",
+    "tenant_authorization",
+    "identity_auth",
+    "accounting",
+    "sync_visibility",
+    "database_integrity",
+    "handler_idempotency",
+    "app_mcp_parity"
+  ],
+  "uiJourneys": [
+    {
+      "journeyId": "TARGET-EXISTING-CLIENT-PROJECT-CREATION-001",
+      "sourcePage": "ProjectsListView, NewProjectView, and shared form/list controls",
+      "targetPage": "Target Project directory and existing-Client New Project sheet",
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/projects.md",
+          "section": "Creation Flow"
+        },
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/budget-management.md",
+          "section": "Project Creation Flow"
+        },
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "section": "Project relationship"
+        }
+      ],
+      "sourceSurfaceIds": [
+        "SWIFT-E23DAF7A18FA",
+        "SWIFT-58A14BD25578",
+        "SWIFT-0BC8C7903DA1",
+        "SWIFT-4076F892F380",
+        "SWIFT-92844793C8F5",
+        "SWIFT-D49180285F84",
+        "SWIFT-CDADEAA08764",
+        "SWIFT-7FD35B52D248",
+        "SWIFT-E16F2BBFB7DB",
+        "SWIFT-1AFC0C0D73D7"
+      ],
+      "controls": [
+        {
+          "label": "Add Project",
+          "options": [],
+          "action": "Open Project creation from the active Project directory.",
+          "result": "Presents a draft-preserving three-step sheet.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Step 1 — Basic information",
+          "options": [
+            {
+              "label": "Project name *",
+              "result": "Accepts an ordinary nonblank Project display name; the unresolved cross-runtime boundary remains a cutover blocker.",
+              "disposition": "preserve"
+            },
+            {
+              "label": "Existing Client *",
+              "result": "Selects one represented active Client by stable ID, replacing free-text ownership.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Description",
+              "result": "Accepts optional multiline Project description with existing target trimming semantics.",
+              "disposition": "preserve"
+            },
+            {
+              "label": "Next / Cancel",
+              "result": "Next requires valid represented inputs; Cancel dismisses without accepting an operation.",
+              "disposition": "preserve"
+            }
+          ],
+          "action": "Enter Project identity and choose its existing Client.",
+          "result": "Advances without losing the draft only when the represented selection is valid.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Step 2 — Select budget categories",
+          "options": [
+            {
+              "label": "Category row",
+              "result": "Selects or deselects a represented configurable category by stable ID.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Next / Back",
+              "result": "Moves between category selection and amounts while retaining the draft.",
+              "disposition": "preserve"
+            },
+            {
+              "label": "Add Category",
+              "result": "Deferred pending O-026; it is not exposed by this workflow.",
+              "disposition": "redesign"
+            }
+          ],
+          "action": "Choose at least one currently represented category.",
+          "result": "Preserves the exact selected category identities for allocation entry.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Step 3 — Set budget amounts",
+          "options": [
+            {
+              "label": "Category amount",
+              "result": "Preserves blank as unset, explicit zero as zero, and a valid positive currency amount exactly.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Create Project / Back",
+              "result": "Back retains the draft; Create performs one durable atomic Project setup operation.",
+              "disposition": "redesign"
+            }
+          ],
+          "action": "Enter optional allocations and submit while online or offline.",
+          "result": "The sheet reports local acceptance, pending state, or recoverable rejection without duplicate submission.",
+          "disposition": "redesign"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "Active Project directory",
+          "event": "Add Project",
+          "to": "Basic information",
+          "disposition": "redesign"
+        },
+        {
+          "from": "Basic information",
+          "event": "Valid Next",
+          "to": "Category selection",
+          "disposition": "preserve"
+        },
+        {
+          "from": "Category selection",
+          "event": "Next",
+          "to": "Budget amounts",
+          "disposition": "redesign"
+        },
+        {
+          "from": "Budget amounts",
+          "event": "Create Project",
+          "to": "Pending Project represented by stable ID and operation status",
+          "disposition": "redesign"
+        }
+      ],
+      "states": [
+        {
+          "name": "Reference data loading, partial, stale, empty, or failed",
+          "expected": "Client and category readiness is visible; incomplete evidence never becomes an authoritative empty or an invented selection.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Invalid or disappeared selection",
+          "expected": "Forward navigation and submission fail closed while typed input remains available.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Offline accepted",
+          "expected": "One durable receipt is visible immediately and survives encrypted restart and deterministic replay.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Submission rejected or ambiguous",
+          "expected": "The draft remains, a diagnostic is visible, and retry reuses the same Project and Operation identities when acceptance was ambiguous.",
+          "disposition": "redesign"
+        },
+        {
+          "name": "Deferred source controls",
+          "expected": "New-Client creation, inline category creation, notes, and hero media are absent and remain explicitly tracked rather than silently dropped.",
+          "disposition": "redesign"
+        }
+      ]
+    }
+  ],
+  "acceptanceChecks": [
+    {
+      "id": "PROJECT-CREATE-GENERAL",
+      "risk": "general",
+      "expected": "The target three-step existing-Client flow requires at least one category and accepts one Project with exact selected categories and allocations.",
+      "command": "swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-UI",
+      "risk": "ui_fidelity",
+      "expected": "Executable AppModel tests prove step navigation, validation, draft retention, readiness, and pending/failure behavior; compiled SwiftUI source checks prove the recorded controls, stable identifiers, and action bindings are present. Device interaction and assistive-technology semantics are not claimed by this check.",
+      "command": "swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-OFFLINE",
+      "risk": "offline_durability",
+      "expected": "Offline acceptance, encrypted restart, stable retry identity, replay, rejection, and authoritative readback remain proven.",
+      "command": "swift test --package-path LedgeriOS --filter ProjectPowerSyncVerticalSliceTests",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-RLS",
+      "risk": "tenant_authorization",
+      "expected": "Only the exact authorized Account and active represented Client/category evidence can create the Project.",
+      "command": "npm run target:supabase:test:db",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-IDENTITY",
+      "risk": "identity_auth",
+      "expected": "The local runtime and operation watch reject cross-Account, cross-Principal, cross-family, mismatched-envelope, and mismatched-fingerprint evidence.",
+      "command": "swift test --package-path LedgeriOS --filter ProjectPowerSyncVerticalSliceTests",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-ACCOUNTING",
+      "risk": "accounting",
+      "expected": "Unset, zero, and positive category allocations remain distinct and the Project setup transaction is atomic.",
+      "command": "npm run target:supabase:test:db",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-SYNC",
+      "risk": "sync_visibility",
+      "expected": "The pending Project and categories appear only in the exact Account workspace and converge on qualifying authoritative readback.",
+      "command": "swift test --package-path LedgeriOS --filter ProjectPowerSyncVerticalSliceTests",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-DATABASE",
+      "risk": "database_integrity",
+      "expected": "Relational identities and category references remain valid across all accepted Project setup rows.",
+      "command": "npm run target:supabase:test:db",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-IDEMPOTENCY",
+      "risk": "handler_idempotency",
+      "expected": "Exact replay returns the immutable prior result and conflicting replay is rejected without partial mutation.",
+      "command": "npm run target:supabase:test:rpc",
+      "status": "passed"
+    },
+    {
+      "id": "PROJECT-CREATE-MCP",
+      "risk": "app_mcp_parity",
+      "expected": "App and MCP encode the same typed Project setup command and exact nullable allocations.",
+      "command": "npm run target:mcp:test",
+      "status": "passed"
+    }
+  ],
+  "deferredBehaviors": [
+    "O-049 prevents cutover-ready cross-runtime validation for adversarial Project display names; this workflow is limited to ordinary valid names.",
+    "O-043 keeps the new-Client branch out of this workflow.",
+    "O-026 keeps inline category creation out of this workflow and leaves the current project-budget capability check provisional rather than cutover-authorized.",
+    "Hero attachment chaining is a separate durable media workflow; it is not silently implemented or discarded here.",
+    "Project notes require a separate operation and O-039 parity; they are not smuggled into Project setup.",
+    "End-to-end simulator interaction and assistive-technology semantics remain part of the release UI-validation batch; this workflow proves AppModel behavior plus compiled SwiftUI control/action wiring only."
+  ],
+  "blockers": [
+    "O-026 must be approved before this workflow can become cutover-ready because final Project-budget command authorization, RLS, and Sync policy are not yet product-authoritative. The current can_manage_project_budgets check is a provisional implementation for local validation only."
+  ],
+  "verification": {
+    "local": {
+      "status": "passed",
+      "commands": [
+        "swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests",
+        "swift test --package-path LedgeriOS --filter ProjectPowerSyncVerticalSliceTests",
+        "npm run target:supabase:test:db",
+        "npm run target:supabase:test:rpc",
+        "npm run target:mcp:test",
+        "swift test --package-path LedgeriOS --no-parallel --filter LocalOperationIdentityGuardTests",
+        "swift test --package-path LedgeriOS --no-parallel --filter AccountWorkspacePendingWorkRuntimeTests",
+        "swift test --package-path LedgeriOS --no-parallel --filter LedgerWorkspaceRuntimeIsolationTests",
+        "swift test --package-path LedgeriOS --no-parallel --skip LedgerWorkspaceRuntimeIsolationTests",
+        "npm run target:staging:build:macos",
+        "npm run target:staging:build:ios",
+        "npm run conversion:check"
+      ]
+    },
+    "review": {
+      "required": true,
+      "status": "passed",
+      "summary": "Independent review initially found five material correctness/evidence issues and then three additional P2 boundary and UI-honesty issues. Root corrected category and currency requirements, immutable accepted payloads, operation observation and lifecycle coverage, O-026 blocker honesty, Core-only command derivation, proof wording, post-acceptance status presentation, and the direct-command architecture guard. Final re-review returned GO with no remaining P0-P3 finding."
+    },
+    "ci": {
+      "status": "not_run",
+      "commit": null,
+      "run": null
+    }
+  }
+}

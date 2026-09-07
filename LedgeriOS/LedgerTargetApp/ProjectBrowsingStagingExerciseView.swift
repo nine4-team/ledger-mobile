@@ -5,9 +5,17 @@ import SwiftUI
 struct ProjectBrowsingStagingExerciseView: View {
     @Bindable var model: ProjectBrowsingStagingExercise
     @Bindable var archive: ProjectArchiveBrowserStagingExercise
+    @Bindable var projectSetup: ProjectSetupStagingExercise
+    @State private var isProjectSetupPresented = false
 
     var body: some View {
         Section("Local Project Browser") {
+            Button("Add Project") {
+                projectSetup.beginDraft()
+                isProjectSetupPresented = true
+            }
+            .accessibilityIdentifier("target-project-add")
+
             LabeledContent("Project data", value: model.directoryStatus)
                 .accessibilityIdentifier("target-project-directory-status")
 
@@ -72,6 +80,11 @@ struct ProjectBrowsingStagingExerciseView: View {
                     .foregroundStyle(.red)
                     .accessibilityIdentifier("target-project-detail-diagnostic")
             }
+
+            if let setupState = projectSetup.receiptExplanation {
+                LabeledContent("Last Project creation", value: setupState)
+                    .accessibilityIdentifier("target-project-last-creation")
+            }
         }
         .onChange(of: model.selectedProjectArchiveEvidence) {
             Task { await archive.selectionDidSettle() }
@@ -93,6 +106,13 @@ struct ProjectBrowsingStagingExerciseView: View {
                 Task { await archive.confirmArchive() }
             }
             .accessibilityIdentifier("target-project-archive-confirm")
+        }
+        .sheet(isPresented: $isProjectSetupPresented) {
+            ProjectSetupStagingExerciseView(
+                model: projectSetup,
+                onCancel: { isProjectSetupPresented = false },
+                onDone: { isProjectSetupPresented = false }
+            )
         }
     }
 
