@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "scoped-active-space-list-to-detail",
+  "title": "Browse active Spaces and open exact detail",
+  "kind": "product_ui",
+  "status": "ci_verification",
+  "outcome": "Open one exact Project or Business Inventory Space browser, see its active Spaces in deterministic order with honest checklist progress and readiness, then select a represented stable Space ID and open only matching exact-scope detail.",
+  "authority": [
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Space Browsing"},
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Scope"},
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklist Progress"},
+    {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Core Principle"},
+    {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Rule 1: No Spinners of Doom"},
+    {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Synchronization Streams"},
+    {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Stream Authorization Rule"},
+    {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Sync Health Model"}
+  ],
+  "baselineJourneyIds": ["UIBASE-SPACE-BROWSING-001"],
+  "baselineBehaviorRefs": [
+    {
+      "journeyId": "UIBASE-SPACE-BROWSING-001",
+      "controls": [
+        {"label": "Space card", "includeControl": true, "options": []}
+      ],
+      "transitions": [
+        "Project Spaces | Open card | Project-scoped Space detail",
+        "Business Inventory Spaces | Open card | Inventory-scoped Space detail"
+      ],
+      "states": [
+        "No Project Spaces",
+        "No Inventory Spaces",
+        "Selected Space disappeared",
+        "Source list order",
+        "Incomplete browser evidence"
+      ]
+    }
+  ],
+  "affectedComponents": [
+    "LedgeriOS/LedgerTargetCore",
+    "LedgeriOS/LedgerTargetCoreTests",
+    "LedgeriOS/LedgerTargetPowerSync",
+    "LedgeriOS/LedgerTargetPowerSyncTests",
+    "LedgeriOS/LedgerTargetAppModel",
+    "LedgeriOS/LedgerTargetAppModelTests",
+    "LedgeriOS/LedgerTargetApp",
+    "powersync/sync-streams.yaml",
+    "scripts"
+  ],
+  "layers": ["domain", "app_ui", "powersync_sync", "local_offline"],
+  "riskDomains": ["ui_fidelity", "sync_visibility", "offline_durability"],
+  "uiJourneys": [
+    {
+      "journeyId": "TARGET-SCOPED-ACTIVE-SPACE-LIST-TO-DETAIL-001",
+      "sourcePage": "SpacesTabView, InventorySpacesSubTab, and SpaceCard",
+      "targetPage": "Isolated exact-scope active Space browser and existing exact-Space detail",
+      "authority": [
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Space Browsing"},
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Scope"},
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklist Progress"},
+        {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Rule 1: No Spinners of Doom"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Stream Authorization Rule"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Sync Health Model"}
+      ],
+      "sourceSurfaceIds": ["SWIFT-912A031F137B", "SWIFT-BC0B886FC610", "SWIFT-C3BE14BFCDE5"],
+      "controls": [
+        {
+          "label": "Project or Business Inventory Space browser",
+          "options": [
+            {"label": "Project scope", "result": "Requests active Spaces for one immutable exact Account and Project scope.", "disposition": "redesign"},
+            {"label": "Business Inventory scope", "result": "Requests active Spaces for one immutable exact Account-wide Inventory scope.", "disposition": "redesign"}
+          ],
+          "action": "Open the Space browser from one represented Project or Business Inventory context.",
+          "result": "The browser observes only its exact scope and distinguishes current-process completeness from cached local presence.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Space card",
+          "options": [],
+          "action": "Tap one represented active Space row identified by stable Space ID.",
+          "result": "Opens existing exact-Space detail only when the selected ID and immutable Project-or-Inventory scope match current represented evidence; the row shows exact name and checklist progress while Item count and media remain explicitly unavailable.",
+          "disposition": "redesign"
+        }
+      ],
+      "transitions": [
+        {"from": "Project Spaces", "event": "Open card", "to": "Project-scoped Space detail", "disposition": "redesign"},
+        {"from": "Business Inventory Spaces", "event": "Open card", "to": "Inventory-scoped Space detail", "disposition": "redesign"},
+        {"from": "Selected exact-Space detail", "event": "Selected row disappears or exact scope no longer matches", "to": "Space Unavailable", "disposition": "redesign"}
+      ],
+      "states": [
+        {"name": "Waiting for current-process exact-scope evidence", "expected": "Shows bounded waiting without claiming an empty list or zero Items.", "disposition": "redesign"},
+        {"name": "Cached, partial, or stale rows", "expected": "May show exact cached rows with explicit readiness while withholding authoritative-empty and unavailable Item/media claims.", "disposition": "redesign"},
+        {"name": "No Project Spaces", "expected": "Shows ‘No spaces yet.’ only after fresh complete exact-Project evidence proves the active list is empty.", "disposition": "preserve"},
+        {"name": "No Inventory Spaces", "expected": "Shows ‘No inventory spaces yet.’ only after fresh complete exact-Inventory evidence proves the active list is empty.", "disposition": "preserve"},
+        {"name": "Deterministic active rows", "expected": "Shows active Spaces only, ordered by case-insensitive name, exact spelling, then stable Space ID; duplicate names remain distinct.", "disposition": "redesign"},
+        {"name": "Selected Space disappeared", "expected": "Shows ‘Space Unavailable.’ and never substitutes another row or silently changes Project-versus-Inventory scope.", "disposition": "redesign"},
+        {"name": "Malformed, duplicate, foreign, or mismatched evidence", "expected": "Fails closed without rendering the evidence as an authorized row or detail.", "disposition": "redesign"},
+        {"name": "Observation failure", "expected": "Shows a bounded unavailable/error state while retaining only honestly labeled cached evidence.", "disposition": "redesign"}
+      ]
+    }
+  ],
+  "acceptanceChecks": [
+    {"id": "SPACE-LIST-DETAIL-E2E", "risk": "general", "expected": "Both Project and Business Inventory scopes traverse one exact active-Space list, stable-ID selection, matching exact-Space detail, and the Account-bound close-aware runtime.", "command": "swift test --package-path LedgeriOS --filter SpaceBrowserStagingExerciseTests && swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests", "status": "passed"},
+    {"id": "SPACE-LIST-DETAIL-UI", "risk": "ui_fidelity", "expected": "The isolated staging app compiles executable represented-Project and Business-Inventory entry controls, stable-ID cards, exact empty/unavailable/incomplete copy, checklist progress, unavailable Item-count copy, disabled Project entry without a represented Project, and stable accessibility identities.", "command": "node scripts/check-target-environment.mjs && xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build", "status": "passed"},
+    {"id": "SPACE-LIST-DETAIL-SYNC", "risk": "sync_visibility", "expected": "Only active exact-Account and exact-Project-or-Inventory rows become representable; foreign, malformed, duplicate, incomplete, and scope-mismatched evidence fails closed.", "command": "swift test --package-path LedgeriOS --filter SpaceBrowserPowerSyncProviderTests", "status": "passed"},
+    {"id": "SPACE-LIST-DETAIL-OFFLINE", "risk": "offline_durability", "expected": "Encrypted restart may expose honestly stale cached rows but resets current-process completeness; replacement, selection, stop, membership loss, and close cancel and drain list/detail observations.", "command": "swift test --package-path LedgeriOS --filter SpaceBrowserPowerSyncProviderTests", "status": "passed"}
+  ],
+  "deferredBehaviors": [
+    "Search remains outside this slice until its cross-platform normalization contract is frozen.",
+    "Add Space and direct creation remain separate and blocked by O-044, O-045, and O-046.",
+    "Authoritative Item count and primary-image card behavior remain unavailable rather than being represented as zero or placeholder authority.",
+    "Archived Space listing and archive effects remain outside this slice under O-037.",
+    "Before adding another Sync-backed query family, extract and parity-test the repeated PowerSync exact-stream retained-baseline, freshness-observation, and drainage machinery shared by the Space browser, exact-Space detail, and Space-destination providers.",
+    "Universal-search routing, MCP, hosted Sync/Auth, migration, production routing, release, and cutover are not claimed."
+  ],
+  "blockers": [],
+  "verification": {
+    "local": {
+      "status": "passed",
+      "commands": [
+        "swift test --package-path LedgeriOS --filter SpaceBrowserStagingExerciseTests && swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+        "node scripts/check-target-environment.mjs && xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build",
+        "swift test --package-path LedgeriOS --filter SpaceBrowserPowerSyncProviderTests",
+        "swift test --package-path LedgeriOS --no-parallel --filter LedgerWorkspaceRuntimeIsolationTests",
+        "swift test --package-path LedgeriOS --no-parallel --skip LedgerWorkspaceRuntimeIsolationTests",
+        "npm run target:environment:check",
+        "npm run target:contracts:check",
+        "npm run target:mcp:test",
+        "npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning",
+        "npm run target:supabase:test:db",
+        "npm run target:supabase:test:space-assignment-destination-read",
+        "npm run target:supabase:test:project-note-read",
+        "npm run target:supabase:test:rpc",
+        "npm run target:staging:build:macos",
+        "npm run target:staging:build:ios"
+      ]
+    },
+    "review": {"required": true, "status": "passed", "summary": "Independent review initially returned NO-GO for delayed subscription setup hiding valid cached rows, normal status completion retaining false authority, unreachable Inventory and represented-Project entry paths, missing encrypted reopen proof, and selection/cleanup races. Root corrected each functional and proof defect; the reviewer reran the focused provider, AppModel and runtime suites plus the environment guard and macOS build, then returned GO with no remaining P0-P2. Repeated exact-stream freshness machinery remains recorded as non-blocking extraction debt before another Sync-backed query family."},
+    "ci": {"status": "not_run", "commit": null, "run": null}
+  }
+}

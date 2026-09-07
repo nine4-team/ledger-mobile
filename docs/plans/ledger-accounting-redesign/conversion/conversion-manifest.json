@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T09:19:04.166Z",
+    "lastSynchronizedAt": "2026-09-07T10:33:15.637Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1138,10 +1138,10 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
-      "acknowledgedSourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
+      "observedSourceHash": "5c307c38fc2e446474a04aa657ad9321d3711ff85e29bfcfdee9e7160ae9b702",
+      "acknowledgedSourceHash": "5c307c38fc2e446474a04aa657ad9321d3711ff85e29bfcfdee9e7160ae9b702",
       "metadata": {},
-      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, explicit Projects with lossless category-configuration revision text, categories/allocations and operation results plus exact on-demand Space destinations, Project note history and Space core details under signed active membership.",
+      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, explicit Projects with lossless category-configuration revision text, categories/allocations and operation results plus exact on-demand Space destinations, active Project/Inventory Space browsing with checklist hierarchy, Project note history and Space core details under signed active membership.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -2101,8 +2101,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
-      "acknowledgedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "observedSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
+      "acknowledgedSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
       "metadata": {},
       "currentBehavior": "Fails closed unless target production layers remain isolated; exact dependencies and adapters hold; the PowerSync test target's sole extra target dependency is provider-free AppModel for cross-layer recovery proof; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6667,8 +6667,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
-      "acknowledgedSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "observedSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
+      "acknowledgedSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; admits AppModel only into the PowerSync test target for cross-layer recovery proof while production dependency direction remains unchanged; enforces exact Account-workspace recovery methods and nominal ports plus lexical, bounded pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -19265,12 +19265,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
-      "acknowledgedSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
+      "observedSourceHash": "b5a905444b8168d515db7c0f6171049fb175aa5a86c4c9e3527e157c13325a14",
+      "acknowledgedSourceHash": "b5a905444b8168d515db7c0f6171049fb175aa5a86c4c9e3527e157c13325a14",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, represented-Project and Business-Inventory Space-browser entry, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19807,12 +19807,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceBrowserStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
-      "acknowledgedSourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
+      "observedSourceHash": "4582fc252e3579baaf474ab07af1734274cfac1fe0bac994e722f715328e1c0a",
+      "acknowledgedSourceHash": "4582fc252e3579baaf474ab07af1734274cfac1fe0bac994e722f715328e1c0a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only target AppModel scaffold for Space browser presentation and stable-ID selection.",
+      "currentBehavior": "Executable Core-only Space browser AppModel for honest exact-scope readiness, stable-ID selection into the existing detail presenter, disappeared-selection refusal, generation fencing and observer drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Browser Staging AppModel",
@@ -19842,7 +19842,7 @@
           "Presentation and navigation remain bound to represented current Space evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -26446,12 +26446,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "eeef0cdc848e65350108c80000d712a8cbbbcb87b41166ea59a5df2a694a00ee",
-      "acknowledgedSourceHash": "eeef0cdc848e65350108c80000d712a8cbbbcb87b41166ea59a5df2a694a00ee",
+      "observedSourceHash": "7ea4c087cf20ffd03069314deaf3afd0fe580ebc20bf3c47880b2eb2d42d0c2b",
+      "acknowledgedSourceHash": "7ea4c087cf20ffd03069314deaf3afd0fe580ebc20bf3c47880b2eb2d42d0c2b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Project-creation, archive, Space-destination and Item-assignment operation watches, and non-destructive close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies the required backend-neutral operation and Space list/detail query ports, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed operation watches, exact Project/Inventory Space browsing, and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -29095,12 +29095,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "211b315227a01096c68d31fa03a0e20fd93aab34ace44c72623446a817a37ed6",
-      "acknowledgedSourceHash": "211b315227a01096c68d31fa03a0e20fd93aab34ace44c72623446a817a37ed6",
+      "observedSourceHash": "a525bf2a2a8bae4b7c36351394fd319f75d5b7136d24da5ac95e0c361446f419",
+      "acknowledgedSourceHash": "a525bf2a2a8bae4b7c36351394fd319f75d5b7136d24da5ac95e0c361446f419",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project creation and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and all eleven public/provider-owned observations, including Project creation, are drained before database close without implementing session ending or authoritative assignment.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project creation and archive flows, exact-scope Space destination and Space-browser queries, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and all twelve public/provider-owned observations are drained before database close without implementing session ending or authoritative assignment.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -31505,12 +31505,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceBrowserStagingComposition.swift"
         }
       ],
-      "observedSourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
-      "acknowledgedSourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
+      "observedSourceHash": "77445ba3c67ad3a9a8228c882fcad320d97e059c26af74623d965167e994e1b7",
+      "acknowledgedSourceHash": "77445ba3c67ad3a9a8228c882fcad320d97e059c26af74623d965167e994e1b7",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only target staging composition scaffold for Project/Inventory Space browsing into existing exact-Space detail.",
+      "currentBehavior": "Executable isolated target staging composition for represented-Project or Business-Inventory Space entry, honest list states, stable-ID cards, unavailable Item-count copy and handoff into existing exact-Space detail.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Browser Staging Composition",
@@ -31539,7 +31539,7 @@
           "The composition can only browse represented Spaces and open existing stable-ID detail"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -41740,12 +41740,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SpaceBrowserPowerSyncProvider.swift"
         }
       ],
-      "observedSourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
-      "acknowledgedSourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
+      "observedSourceHash": "0f48421380085c2ff105f85319e49e1151eda0c1de7344cc4c84b9ac2c4d0258",
+      "acknowledgedSourceHash": "0f48421380085c2ff105f85319e49e1151eda0c1de7344cc4c84b9ac2c4d0258",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only target scaffold for a PowerSync-backed exact-scope Space browser.",
+      "currentBehavior": "Executable PowerSync-backed exact-Account Project-or-Inventory active Space browser with encrypted row-first offline delivery, current-process completeness, checklist hierarchy reconstruction, fail-closed scope validation, freshness revocation and close-aware drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Browser PowerSync Provider",
@@ -41775,7 +41775,7 @@
           "Offline list truth remains exact across restart, cancellation, membership loss and close"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -45644,12 +45644,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift"
         }
       ],
-      "observedSourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
-      "acknowledgedSourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
+      "observedSourceHash": "3927c384b7c179538ba9d69b759b2b0253bd01509b3abd8913fad6fbe3cefa28",
+      "acknowledgedSourceHash": "3927c384b7c179538ba9d69b759b2b0253bd01509b3abd8913fad6fbe3cefa28",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only encrypted-local and controlled-completeness test scaffold for the Space browser provider.",
+      "currentBehavior": "Executable encrypted-local, close/reopen and controlled-completeness tests for exact Project/Inventory Space browsing, row-first offline visibility, freshness loss, retained-baseline refusal, malformed evidence and drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Browser PowerSync Provider Tests",
@@ -45677,7 +45677,7 @@
           "Every browser readiness, rejection, restart and close obligation is executable"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -47722,12 +47722,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "5cba84e4dc4be1cc52baa0886efdab2dc519da24979f6f142eff590b5c142b48",
-      "acknowledgedSourceHash": "5cba84e4dc4be1cc52baa0886efdab2dc519da24979f6f142eff590b5c142b48",
+      "observedSourceHash": "1a4705337c2c76cbfd341e7a08f10c3b8ba871c9263714695e040da9a7714291",
+      "acknowledgedSourceHash": "1a4705337c2c76cbfd341e7a08f10c3b8ba871c9263714695e040da9a7714291",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Twenty-two executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, creation/archive operations, exact Project/Inventory Space destination facade identities, all eleven public streams, provider drainage ordering, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
+      "currentBehavior": "Twenty-four executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, creation/archive operations, exact Project/Inventory Space destination and Space-browser facade identities, all twelve public streams, provider drainage ordering, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -48581,12 +48581,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
-      "acknowledgedSourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
+      "observedSourceHash": "ec946c2a49c63e84f5e492f5246b50e79665a1246a9f70d7a03847c49d0c20c7",
+      "acknowledgedSourceHash": "ec946c2a49c63e84f5e492f5246b50e79665a1246a9f70d7a03847c49d0c20c7",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only target tests for Space browser staging presentation and list-to-detail continuity.",
+      "currentBehavior": "Executable tests for Project/Inventory Space-browser presentation, stable-ID list-to-detail continuity, exact cached-selection retention, missing-selection invalidation, replacement fencing and drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Browser Staging AppModel Tests",
@@ -48614,7 +48614,7 @@
           "No late or rebound snapshot can drive visible rows or detail navigation"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",

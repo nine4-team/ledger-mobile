@@ -170,6 +170,6 @@
   "verification": {
     "local": {"status": "passed", "commands": ["swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests", "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests", "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "swift test --package-path LedgeriOS --filter SpaceChecklistItemToggleStagingExerciseTests", "swift test --package-path LedgeriOS --no-parallel", "npm run conversion:check", "node scripts/check-target-environment.mjs", "npm run target:staging:build:macos", "npm run target:staging:build:ios", "git diff --check"]},
     "review": {"required": true, "status": "passed", "summary": "Independent review initially rejected unsafe empty recovery defaults, a contradictory explicit-retry workflow transition, missing recovery controls, misleading recovered-empty copy, absent cross-layer restart proof, stale guard assertions, state mismatch and missing authority citations. All findings were corrected. Final re-review returned GO with no P0-P3 findings after 37 focused tests, standalone environment/state/conversion gates, source-batch synchronization and exact authority checks passed."},
-    "ci": {"status": "not_run", "commit": null, "run": null}
+    "ci": {"status": "passed", "commit": "afb15232c208264eeb6ffda3b2c52c93e479e47e", "run": 34105386837}
   }
 }

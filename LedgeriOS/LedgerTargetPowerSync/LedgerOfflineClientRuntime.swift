@@ -221,6 +221,30 @@ public final class LedgerOfflineClientRuntime:
         }
     }
 
+    public func watchSpaceCoreDetails(
+        _ request: SpaceCoreDetailsRequest
+    ) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startSpaceCoreDetailsWatch(
+                id: id,
+                request: request,
+                continuation: continuation
+            )
+        }
+    }
+
+    public func watchSpaces(
+        _ request: SpaceListRequest
+    ) -> AsyncThrowingStream<SpaceListUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startSpaceDirectoryWatch(
+                id: id,
+                request: request,
+                continuation: continuation
+            )
+        }
+    }
+
     public func watchBudgetCategories()
         -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>
     {
@@ -306,3 +330,6 @@ public final class LedgerOfflineClientRuntime:
         }
     }
 }
+
+extension LedgerOfflineClientRuntime: SpaceListQuerying {}
+extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 32,
+  "stateVersion": 34,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,22 +9,23 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "ACTIVE-SPACE-CHECKLIST-TOGGLE-GREEN",
-    "commit": "5c6c7786667bbc0df5f4c9f13b69f3198a68104e",
-    "ciRun": 34092045643,
+    "name": "ACTIVE-SPACE-CHECKLIST-REJECTED-RECOVERY-GREEN",
+    "commit": "afb15232c208264eeb6ffda3b2c52c93e479e47e",
+    "ciRun": 34105386837,
     "ciStatus": "passed",
-    "meaning": "The behavior-traced active-Space checklist-item toggle passed independent review and all exact-commit CI jobs, including traceability, 426 disposable-database assertions, the full 690-test isolated target suite, and macOS/iOS builds; hosted authenticated Sync and revocation remain outside its completed local scope under A-003/A-004."
+    "meaning": "The behavior-traced active-Space checklist editor now preserves and recovers an exact terminally rejected checklist save as immutable read-only evidence across encrypted database, runtime, coordinator and editor restart. Independent review returned GO after correcting unsafe defaults and misleading retry/empty-state claims. Exact commit CI passed traceability, isolated local Supabase, the full 711-test target suite, and macOS/iOS builds. O-051 still blocks retry, do-not-retry acknowledgment and resolution; A-003/A-004 still gate hosted authenticated Sync."
   },
   "activeWorkflow": {
-    "id": "active-space-checklist-editor",
+    "id": "scoped-active-space-list-to-detail",
     "kind": "product_ui",
-    "status": "blocked",
-    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-space-checklist-editor.json",
-    "outcome": "Edit the complete checklist structure and text for one represented active Project or Business Inventory Space in an isolated draft, then cancel without mutation or save one durable revision-bound replacement with conflict recovery.",
+    "status": "ci_verification",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/scoped-active-space-list-to-detail.json",
+    "outcome": "Open one exact Project or Business Inventory Space browser, see its active Spaces in deterministic order with honest checklist progress and readiness, then select a represented stable Space ID and open only matching exact-scope detail.",
     "nextActions": [
-      "Commit and push the verified read-only recovery checkpoint, then run the exact CI gates.",
-      "After immutable CI passes, advance the verified checkpoint while leaving active-space-checklist-editor explicitly blocked on O-051.",
-      "Select and begin the next unblocked Product Behavior Catalog workflow; do not add rejected-operation retry, dismissal, acknowledgment or resolution until O-051 is approved."
+      "Commit the locally green, independently reviewed exact-scope Space browser implementation and push the Supabase implementation branch.",
+      "Run the immutable CI gate for that exact commit and require all traceability, local Supabase, target test and macOS/iOS build jobs to pass.",
+      "Record the exact commit and CI run while selecting the next catalog-backed workflow; do not create a promotion-only checkpoint.",
+      "Before adding another Sync-backed query family, extract and parity-test the repeated PowerSync retained-baseline, freshness-observation and drainage machinery."
     ]
   },
   "progress": {
@@ -33,10 +34,10 @@
       "center": 17,
       "high": 20
     },
-    "locallyWorkingProviderWorkflows": 13,
+    "locallyWorkingProviderWorkflows": 14,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "Workflow counts measure product progress. The checklist toggle is locally complete and exact-commit verified; the full checklist editor is the active catalogued user workflow. The surface catalog is a passive completeness audit, not a completion percentage."
+    "note": "Workflow counts measure product progress. Checklist toggle is complete; exact read-only rejected-save recovery is exact-commit verified while the editor remains blocked only on O-051 resolution policy. The scoped Project/Inventory Space list-to-detail workflow is locally green and independently reviewed, with exact-commit CI now pending. The code-surface catalog is a passive completeness audit; the Product Behavior Catalog is the user-visible parity checklist."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",

@@ -279,6 +279,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 (.budgetCategoryQueryConstruction, .succeeded, .succeeded),
                 (.spaceAssignmentDestinationQueryConstruction, .succeeded, .succeeded),
                 (.projectNoteQueryConstruction, .succeeded, .succeeded),
+                (.spaceBrowserQueryConstruction, .succeeded, .succeeded),
                 (.runtimeConstruction, .succeeded, .succeeded),
             ]
 
@@ -488,7 +489,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all eleven streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all twelve streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -537,6 +538,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             pageSize: 20
         )
         let spaceId = try SpaceID(validating: "space-lifecycle")
+        let spaceListRequest = try SpaceListRequest(
+            accountId: context.accountId,
+            scope: .project(projectRequest.projectId)
+        )
         let streams: [Any] = [
             runtime.watchClient(clientRequest),
             runtime.watchProject(projectRequest),
@@ -547,11 +552,12 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchTransferDestinations(source: transferSource),
             runtime.watchProjectNotes(noteRequest),
             runtime.watchSpaceCoreDetails(spaceId: spaceId),
+            runtime.watchSpaces(spaceListRequest),
             runtime.watchProjectCreationOperation(projectCommand.envelope.operationId),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(11)
+        await streamCounter.waitUntilEntered(12)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -563,6 +569,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .transferDestinations,
             .projectNotes,
             .spaceCoreDetails,
+            .spaceDirectory,
             .projectCreationOperation,
             .projectArchiveOperation,
         ] {
@@ -608,6 +615,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
+        try await Self.expectClosed(runtime.watchSpaces(spaceListRequest))
         try await Self.expectClosed(
             runtime.watchProjectCreationOperation(projectCommand.envelope.operationId)
         )
@@ -665,6 +673,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         )
         try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
+        try await Self.expectClosed(runtime.watchSpaces(spaceListRequest))
         try await Self.expectClosed(
             runtime.watchProjectCreationOperation(projectCommand.envelope.operationId)
         )
@@ -912,6 +921,49 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Space-browser provider drainage completes before database close")
+    func spaceBrowserProviderDrainPrecedesDatabaseClose() async throws {
+        let context = try RuntimeTestContext(suffix: "space-browser-drain-order")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let drainGate = ManualGate()
+        let query = BlockingDrainSpaceListQuery(drainGate: drainGate)
+        var dependencies = context.dependencies(events: events)
+        dependencies.makeSpaceBrowserQuery = { _, _, _, _ in query }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let request = try SpaceListRequest(
+            accountId: context.accountId,
+            scope: .businessInventory
+        )
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchSpaces(request) {}
+            } catch {
+                // Runtime close cancels the public stream.
+            }
+        }
+        for _ in 0..<2_000 {
+            if query.watchCount == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(query.watchCount == 1)
+
+        let close = Task { try await runtime.close() }
+        await drainGate.waitUntilEntered()
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+
+        await drainGate.release()
+        try await close.value
+        await consumer.value
+        #expect(query.drainCount == 1)
+        #expect(
+            events.values.filter {
+                $0 == .attachmentDatabaseCloseAttempted || $0 == .structuredDatabaseCloseAttempted
+            }.suffix(2) == [.attachmentDatabaseCloseAttempted, .structuredDatabaseCloseAttempted]
+        )
+        context.remove()
+    }
+
     @Test("Project setup provider drainage completes before database close")
     func projectSetupProviderDrainPrecedesDatabaseClose() async throws {
         let context = try RuntimeTestContext(suffix: "project-setup-drain-order")
@@ -1056,6 +1108,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
     func publicSurfaceCompilesWithoutResourceEscape() async throws {
         let context = try RuntimeTestContext(suffix: "public-surface")
         let runtime: LedgerOfflineClientRuntime = try await context.openRuntime()
+        let _: any SpaceListQuerying = runtime
+        let _: any SpaceCoreDetailsQuerying = runtime
         _ = runtime.watchClients()
         _ = runtime.watchProjects()
         _ = runtime.watchBudgetCategories()
@@ -1077,6 +1131,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         _ = runtime.watchSpaceCoreDetails(
             spaceId: try SpaceID(validating: "space-runtime")
         )
+        _ = runtime.watchSpaces(try SpaceListRequest(
+            accountId: context.accountId,
+            scope: .businessInventory
+        ))
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
@@ -1250,7 +1308,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         )
         let consumer = Task {
             do {
-                for try await _ in runtime.watchSpaceCoreDetails(spaceId: spaceId) {}
+                for try await _ in runtime.watchSpaceCoreDetails(expected) {}
             } catch { }
         }
         for _ in 0..<2_000 {
@@ -1259,11 +1317,67 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         #expect(query.requests == [expected])
 
+        let wrongRequest = try SpaceCoreDetailsRequest(
+            accountId: AccountID(validating: "account-other"),
+            spaceId: spaceId
+        )
+        var wrongIterator = runtime.watchSpaceCoreDetails(wrongRequest).makeAsyncIterator()
+        do {
+            _ = try await wrongIterator.next()
+            Issue.record("Expected immutable Account-scope refusal")
+        } catch let failure as LedgerOfflineClientRuntimeFailure {
+            #expect(failure == .accountScopeMismatch)
+        }
+        #expect(query.requests == [expected])
+
         try await runtime.close()
         await consumer.value
         #expect(query.cancelAndDrainCount == 1)
         #expect(query.terminationCount == 1)
-        try await Self.expectClosed(runtime.watchSpaceCoreDetails(spaceId: spaceId))
+        try await Self.expectClosed(runtime.watchSpaceCoreDetails(expected))
+        context.remove()
+    }
+
+    @Test("Space browser facade preserves exact scope and drains before close")
+    func spaceBrowserFacadeScopeAndDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "space-browser-facade")
+        let query = RuntimeSpaceListQuery()
+        var dependencies = context.dependencies()
+        dependencies.makeSpaceBrowserQuery = { _, _, _, _ in query }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let request = try SpaceListRequest(
+            accountId: context.accountId,
+            scope: .project(ProjectID(validating: "project-runtime-space-browser"))
+        )
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchSpaces(request) {}
+            } catch { }
+        }
+        for _ in 0..<2_000 {
+            if query.requests.count == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(query.requests == [request])
+
+        let wrongRequest = try SpaceListRequest(
+            accountId: AccountID(validating: "account-other"),
+            scope: .businessInventory
+        )
+        var wrongIterator = runtime.watchSpaces(wrongRequest).makeAsyncIterator()
+        do {
+            _ = try await wrongIterator.next()
+            Issue.record("Expected immutable Account-scope refusal")
+        } catch let failure as LedgerOfflineClientRuntimeFailure {
+            #expect(failure == .accountScopeMismatch)
+        }
+        #expect(query.requests == [request])
+
+        try await runtime.close()
+        await consumer.value
+        #expect(query.cancelAndDrainCount == 1)
+        #expect(query.terminationCount == 1)
+        try await Self.expectClosed(runtime.watchSpaces(request))
         context.remove()
     }
 
@@ -1279,6 +1393,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .budgetCategoryQueryConstructed,
             .spaceAssignmentDestinationQueryConstructed,
             .projectNoteQueryConstructed,
+            .spaceBrowserQueryConstructed,
             .lifecycleOwnerConstructed,
         ] {
             #expect(events.filter { $0 == event }.count == 1)
@@ -1344,6 +1459,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let makeSpaceAssignmentDestinationQuery =
             dependencies.makeSpaceAssignmentDestinationQuery
         let makeProjectNoteQuery = dependencies.makeProjectNoteQuery
+        let makeSpaceBrowserQuery = dependencies.makeSpaceBrowserQuery
 
         if stage == .databaseKeyLoad {
             dependencies.loadDatabaseKey = { _, _ in throw RuntimeInjectedFailure() }
@@ -1414,6 +1530,13 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         } else {
             dependencies.makeProjectNoteQuery = makeProjectNoteQuery
         }
+        if stage == .spaceBrowserQueryConstruction {
+            dependencies.makeSpaceBrowserQuery = { _, _, _, _ in
+                throw RuntimeInjectedFailure()
+            }
+        } else {
+            dependencies.makeSpaceBrowserQuery = makeSpaceBrowserQuery
+        }
         if stage == .runtimeConstruction {
             dependencies.makeLifecycleOwner = { _ in throw RuntimeInjectedFailure() }
         }
@@ -1482,6 +1605,62 @@ struct AccountWorkspacePendingWorkRuntimeTests {
 }
 
 private struct RuntimeInjectedFailure: Error {}
+
+private final class BlockingDrainSpaceListQuery:
+    AccountWorkspaceSpaceListQuerying, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private let drainGate: ManualGate
+    private var watches = 0
+    private var drains = 0
+
+    init(drainGate: ManualGate) {
+        self.drainGate = drainGate
+    }
+
+    var watchCount: Int { lock.withLock { watches } }
+    var drainCount: Int { lock.withLock { drains } }
+
+    func watchSpaces(
+        _ request: SpaceListRequest
+    ) -> AsyncThrowingStream<SpaceListUpdate, Error> {
+        lock.withLock { watches += 1 }
+        return AsyncThrowingStream { _ in }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+        await drainGate.wait()
+    }
+}
+
+private final class RuntimeSpaceListQuery:
+    AccountWorkspaceSpaceListQuerying, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var recordedRequests: [SpaceListRequest] = []
+    private var drains = 0
+    private var terminations = 0
+
+    var requests: [SpaceListRequest] { lock.withLock { recordedRequests } }
+    var cancelAndDrainCount: Int { lock.withLock { drains } }
+    var terminationCount: Int { lock.withLock { terminations } }
+
+    func watchSpaces(
+        _ request: SpaceListRequest
+    ) -> AsyncThrowingStream<SpaceListUpdate, Error> {
+        lock.withLock { recordedRequests.append(request) }
+        return AsyncThrowingStream { continuation in
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { self?.terminations += 1 }
+            }
+        }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+    }
+}
 
 private final class RuntimeSpaceDestinationQuery:
     AccountWorkspaceSpaceAssignmentDestinationQuerying, @unchecked Sendable

@@ -123,7 +123,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "acknowledgeSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
       "currentBehavior": "Fails closed unless target production layers remain isolated; exact dependencies and adapters hold; the PowerSync test target's sole extra target dependency is provider-free AppModel for cross-layer recovery proof; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact schema/store/runtime checks; blocked category-provider leaves remain comment-only; the migration-safety source/test pairs remain executable only inside the provider-free migration package; their four registered test resources remain exact independently reviewed synthetic v1 bytes with canonical-one-LF framing and package-only Account identity; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -319,8 +319,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "b5a905444b8168d515db7c0f6171049fb175aa5a86c4c9e3527e157c13325a14",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, represented-Project and Business-Inventory Space-browser entry, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -374,7 +374,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "dc1f3709db608b594bf5a2ee77e58b1d547cfc3d67cba2cb06c2ee27f44afde3",
+      "acknowledgeSourceHash": "6da64276b69572ff8e7dab86251d1d3d25cbedeb1b19ffb886e789db511e0945",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; admits AppModel only into the PowerSync test target for cross-layer recovery proof while production dependency direction remains unchanged; enforces exact Account-workspace recovery methods and nominal ports plus lexical, bounded pending-status and Item-to-Space runtime rules; keeps O-026-blocked category-provider leaves nonexecutable; requires both migration-safety pairs to remain provider-free, package-contained, tested, and application-unlinked; pins all four synthetic fixture resources by exact size/hash/schema/canonical-one-LF framing; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

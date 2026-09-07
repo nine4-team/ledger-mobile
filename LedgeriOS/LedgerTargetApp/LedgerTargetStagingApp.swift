@@ -39,7 +39,6 @@ struct LedgerTargetStagingApp: App {
         }
     }
 }
-
 private struct TargetStagingRootView: View {
     let environment: ValidatedLedgerEnvironment?
     let failureCode: String?
@@ -117,10 +116,17 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
-        SpaceCoreDetailsStagingExerciseView(
-            model: model.spaceDetails,
+        SpaceBrowserStagingExerciseView(
+            model: model.spaceBrowser,
             checklistToggle: model.spaceChecklistToggle,
-            checklistEditor: model.spaceChecklistEditor
+            checklistEditor: model.spaceChecklistEditor,
+            representedProjectId: model.projectBrowser.selectedProjectId,
+            openProject: { projectId in
+                Task { await model.openProjectSpaces(projectId) }
+            },
+            openBusinessInventory: {
+                Task { await model.openBusinessInventorySpaces() }
+            }
         )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations
@@ -163,12 +169,11 @@ private final class OfflineClientSpikeModel {
     let projectArchive: ProjectArchiveBrowserStagingExercise
     let projectSetup: ProjectSetupStagingExercise
     let spaceDestinations: SpaceAssignmentDestinationStagingExercise
-    let spaceDetails: SpaceCoreDetailsStagingExercise
+    let spaceBrowser: SpaceBrowserStagingExercise
     let spaceChecklistToggle: SpaceChecklistItemToggleStagingExercise
     let spaceChecklistEditor: SpaceChecklistEditorStagingExercise
     let transferDestinations: TransferDestinationSelectionStagingExercise
-    private let syntheticSpaceScope: ItemPlacementScope
-    private let syntheticSpaceId: SpaceID
+    private let stagingProjectId: ProjectID
     private let syntheticTransferSource: ProjectSummary
 
     init() {
@@ -235,7 +240,7 @@ private final class OfflineClientSpikeModel {
             now: Date.init
         )
         spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
-        spaceDetails = SpaceCoreDetailsStagingExercise(accountId: accountId)
+        spaceBrowser = SpaceBrowserStagingExercise(accountId: accountId)
         let checklistToggle = SpaceChecklistItemToggleStagingExercise(
             accountId: accountId,
             actorPrincipalId: principalId,
@@ -269,8 +274,7 @@ private final class OfflineClientSpikeModel {
         transferDestinations = TransferDestinationSelectionStagingExercise(
             accountId: accountId
         )
-        syntheticSpaceScope = .project(try! ProjectID(validating: "project-primary"))
-        syntheticSpaceId = try! SpaceID(validating: "space-primary")
+        stagingProjectId = try! ProjectID(validating: "project-primary")
         let syntheticClientId = try! ClientID(validating: "client-primary")
         let syntheticClient = try! ClientSummary(
             id: syntheticClientId,
@@ -318,12 +322,12 @@ private final class OfflineClientSpikeModel {
             )
             await projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
             await spaceDestinations.open(
-                scope: syntheticSpaceScope,
+                scope: .project(stagingProjectId),
                 runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
             )
-            await spaceDetails.select(
-                spaceId: syntheticSpaceId,
-                runtime: SpaceCoreDetailsStagingRuntimeAdapter(runtime)
+            await spaceBrowser.start(
+                scope: .businessInventory,
+                runtime: SpaceBrowserStagingRuntimeAdapter.adapt(runtime)
             )
             await spaceChecklistToggle.start(
                 runtime: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)
@@ -357,7 +361,7 @@ private final class OfflineClientSpikeModel {
             await projectBrowser.stop()
             await projectSetup.stop()
             await spaceDestinations.stop()
-            await spaceDetails.stop()
+            await spaceBrowser.stop()
             await spaceChecklistEditor.stop()
             await spaceChecklistToggle.stop()
             await transferDestinations.stop()
@@ -385,7 +389,7 @@ private final class OfflineClientSpikeModel {
         await projectBrowser.stop()
         await projectSetup.stop()
         await spaceDestinations.stop()
-        await spaceDetails.stop()
+        await spaceBrowser.stop()
         await spaceChecklistEditor.stop()
         await spaceChecklistToggle.stop()
         await transferDestinations.stop()
@@ -393,6 +397,22 @@ private final class OfflineClientSpikeModel {
             try? await openedRuntime.close()
         }
         runtime = nil
+    }
+
+    func openProjectSpaces(_ projectId: ProjectID) async {
+        guard let runtime else { return }
+        await spaceBrowser.start(
+            scope: .project(projectId),
+            runtime: SpaceBrowserStagingRuntimeAdapter.adapt(runtime)
+        )
+    }
+
+    func openBusinessInventorySpaces() async {
+        guard let runtime else { return }
+        await spaceBrowser.start(
+            scope: .businessInventory,
+            runtime: SpaceBrowserStagingRuntimeAdapter.adapt(runtime)
+        )
     }
 
     func createClient() async {

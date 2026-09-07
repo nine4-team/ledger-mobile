@@ -614,6 +614,8 @@ if (
     "watchSpaceAssignmentDestinations",
     "watchSpaceChecklistRevisionOperation",
     "watchSpaceCoreDetails",
+    "watchSpaceCoreDetails",
+    "watchSpaces",
     "watchTransferDestinations",
   ];
   if (
@@ -1227,7 +1229,7 @@ if (
       "subscription.parameter('account_id')",
       "subscription.parameter('project_id')",
       "principal.auth_user_id = auth.user_id()",
-      "membership.state = 'active'",
+      "state = 'active'",
       "FROM spike_project_notes AS note",
     ]) {
       if (!syncSection.includes(required)) {
@@ -1351,16 +1353,23 @@ if (
       fail("target_space_core_details_lifecycle_filter", "exact detail cannot exclude archived Space or Project evidence");
     }
     for (const required of [
-      "SpaceCoreDetailsStagingExerciseView(",
+      "SpaceBrowserStagingExerciseView(",
+      "model: model.spaceBrowser",
       "checklistToggle: model.spaceChecklistToggle",
-      "SpaceCoreDetailsStagingRuntimeAdapter(runtime)",
+      "SpaceBrowserStagingRuntimeAdapter.adapt(runtime)",
       "SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)",
+      "await spaceBrowser.stop()",
       "await spaceChecklistToggle.stop()",
-      "syntheticSpaceId",
     ]) {
       if (!stagingAppSource.includes(required)) {
         fail("target_space_core_details_staging_missing", required);
       }
+    }
+    if (stagingAppSource.includes("syntheticSpaceId")) {
+      fail(
+        "target_space_core_details_synthetic_selection",
+        "The staging app must open exact detail from a represented Space-browser row.",
+      );
     }
     for (const fileName of [
       "SpaceCoreDetailsStagingRuntimeAdapter.swift",
@@ -1376,6 +1385,159 @@ if (
     ).map((filePath) => fs.readFileSync(filePath, "utf8")).join("\n");
     if (/spaceCoreDetails|space_core_details|SpaceCoreDetails/.test(mcpSource)) {
       fail("target_space_core_details_mcp_escape", "Space details remain outside MCP in this slice");
+    }
+  }
+
+  const spaceBrowserFiles = {
+    provider: path.join(powerSyncRoot, "SpaceBrowserPowerSyncProvider.swift"),
+    providerTests: path.join(
+      powerSyncTestRoot,
+      "SpaceBrowserPowerSyncProviderTests.swift",
+    ),
+    model: path.join(appModelRoot, "SpaceBrowserStagingExercise.swift"),
+    modelTests: path.join(
+      appModelTestRoot,
+      "SpaceBrowserStagingExerciseTests.swift",
+    ),
+    composition: path.join(targetAppRoot, "SpaceBrowserStagingComposition.swift"),
+  };
+  for (const filePath of Object.values(spaceBrowserFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_space_browser_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(spaceBrowserFiles).every(fs.existsSync)) {
+    const provider = fs.readFileSync(spaceBrowserFiles.provider, "utf8");
+    const providerTests = fs.readFileSync(spaceBrowserFiles.providerTests, "utf8");
+    const model = fs.readFileSync(spaceBrowserFiles.model, "utf8");
+    const modelTests = fs.readFileSync(spaceBrowserFiles.modelTests, "utf8");
+    const composition = fs.readFileSync(spaceBrowserFiles.composition, "utf8");
+    const publicRuntime = fs.readFileSync(accountWorkspaceRuntimePath, "utf8");
+    const lifecycleRuntime = fs.readFileSync(accountWorkspaceCoordinatorPath, "utf8");
+    const syncPath = path.join(repositoryRoot, "powersync/sync-streams.yaml");
+    const sync = fs.existsSync(syncPath) ? fs.readFileSync(syncPath, "utf8") : "";
+    const syncSection = sync.match(
+      /^  space_browser:\n([\s\S]*?)(?=^  [a-z][a-z0-9_]*:\n|(?![\s\S]))/m,
+    )?.[0] ?? "";
+
+    for (const required of [
+      "final class SpaceBrowserPowerSyncProvider: SpaceListQuerying",
+      'let name = "space_browser"',
+      "state = 'active'",
+      "lifecycle = 'active'",
+      "currentProcessSyncEpoch",
+      "cancelAndDrainWatches()",
+    ]) {
+      if (!provider.includes(required)) {
+        fail("target_space_browser_provider_incomplete", required);
+      }
+    }
+    if (/public\s+(?:final\s+)?class\s+SpaceBrowserPowerSyncProvider/.test(provider)) {
+      fail("target_space_browser_provider_public", relative(spaceBrowserFiles.provider));
+    }
+    for (const required of [
+      "malformed",
+      "foreign",
+      "authoritative",
+      "membership loss",
+      "cancel",
+      "Encrypted reader",
+    ]) {
+      if (!providerTests.includes(required)) {
+        fail("target_space_browser_provider_tests_incomplete", required);
+      }
+    }
+    if (/PowerSync|SQL|Supabase|Firebase|Firestore|credential|authorization/i.test(model)) {
+      fail("target_space_browser_model_boundary_escape", relative(spaceBrowserFiles.model));
+    }
+    for (const required of [
+      "SpaceBrowsingSelection",
+      "detailModel: SpaceCoreDetailsStagingExercise",
+      "directoryGeneration",
+      "selectionGeneration",
+      "await oldAdapter?.cancelAndDrain()",
+      "case authoritativeEmpty",
+      "case unavailable",
+    ]) {
+      if (!model.includes(required)) {
+        fail("target_space_browser_model_incomplete", required);
+      }
+    }
+    for (const required of [
+      "Project and Inventory directories",
+      "Stable-ID selection",
+      "Authoritative disappearance",
+      "Scope and selection replacement",
+    ]) {
+      if (!modelTests.includes(required)) {
+        fail("target_space_browser_model_tests_incomplete", required);
+      }
+    }
+    for (const required of [
+      "SpaceBrowserStagingExerciseView",
+      '"No spaces yet."',
+      '"No inventory spaces yet."',
+      'Text("Space Unavailable.")',
+      'Text("Item count unavailable")',
+      'accessibilityIdentifier("target-space-row-',
+      'Button("Selected Project Spaces")',
+      '.disabled(representedProjectId == nil)',
+      'Button("Business Inventory Spaces")',
+      'accessibilityIdentifier("target-space-browser-open-project")',
+      'accessibilityIdentifier("target-space-browser-open-inventory")',
+      "SpaceCoreDetailsStagingExerciseView(",
+    ]) {
+      if (!composition.includes(required)) {
+        fail("target_space_browser_composition_incomplete", required);
+      }
+    }
+    if (/\bTextField\s*\(|\bDelete\b|\bReorder\b|\bSearch\b/.test(composition)) {
+      fail(
+        "target_space_browser_composition_scope_escape",
+        "The bounded browser must not invent creation, deletion, reordering, or search controls.",
+      );
+    }
+    if (!publicRuntime.includes("SpaceListQuerying")) {
+      fail("target_space_browser_runtime_conformance_missing", "SpaceListQuerying");
+    }
+    for (const required of [
+      "case spaceDirectory",
+      "resources.spaceBrowserQuery.watchSpaces(request)",
+      "resources.spaceBrowserQuery.cancelAndDrainWatches()",
+    ]) {
+      if (!lifecycleRuntime.includes(required)) {
+        fail("target_space_browser_runtime_incomplete", required);
+      }
+    }
+    for (const required of [
+      "space_browser:",
+      "subscription.parameter('account_id')",
+      "subscription.parameter('scope_kind')",
+      "subscription.parameter('project_id')",
+      "principal.auth_user_id = auth.user_id()",
+      "membership.state = 'active'",
+      "FROM spike_spaces AS space",
+      "FROM spike_space_core_details AS detail",
+      "FROM spike_space_checklists AS checklist",
+      "FROM spike_space_checklist_items AS item",
+    ]) {
+      if (!syncSection.includes(required)) {
+        fail("target_space_browser_sync_scope_incomplete", required);
+      }
+    }
+    if ((syncSection.match(/^      - \|$/gm) ?? []).length !== 8) {
+      fail("target_space_browser_sync_query_count", "expected eight relation queries");
+    }
+    for (const required of [
+      "representedProjectId: model.projectBrowser.selectedProjectId",
+      "await model.openProjectSpaces(projectId)",
+      "await model.openBusinessInventorySpaces()",
+      "await spaceBrowser.start(",
+      "scope: .businessInventory",
+    ]) {
+      if (!stagingAppSource.includes(required)) {
+        fail("target_space_browser_staging_wiring_incomplete", required);
+      }
     }
   }
 
@@ -2296,6 +2458,7 @@ if (
     "spike_operation_results",
     "space_assignment_project_destinations",
     "space_assignment_business_inventory_destinations",
+    "space_browser",
     "project_note_history",
     "space_core_details",
   ];
