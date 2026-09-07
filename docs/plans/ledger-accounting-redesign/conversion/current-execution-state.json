@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 84,
+  "stateVersion": 85,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -24,8 +24,9 @@
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
       "Audit complete; continue Item-history migration without reopening audit or O007/O015. D028/A019 allow improved technical representation while preserving meaning/history. Significant technical changes belong in architecture-decisions.md.",
-      "18ac010c4a287a998bfb83d7861ced0fe4ae7cf6 automatic CI34168806311 failed checker self-test before target tests: pop() removed newly appended workflow rather than historical evidence. Fixed test to select migrated identity. Validated fixture now exposes exact typed source documents only after all existing validation; 29 migration tests/5 suites and control checks passed; independent review GO. Current batch awaiting commit/automatic CI.",
-      "Next: add source-shaped Item sale/return/resale fixture evidence and connect document paths/Account-scoped reference selection to lineage reader/reconciler. Frozen v1 fixture has simplified movements, no shipped lineageEdges; do not relabel it as real-history proof or weaken reviewed digest/privacy checks. Canonical mapping, target history UI/MCP/readback and reconciliation still required.",
+      "e21e48c626bcc8862c14d5cf09d42bcbcecda02a committed/pushed: validated fixture document exposure and checker self-test fix. Automatic PR CI34169217765 confirmed in_progress; poll exact run, do not dispatch. Previous18ac010c CI34168806311 failed because pop() removed the new workflow instead of historical evidence; target tests skipped. Local29 migration tests/5 suites plus final byte-identity test and control checks passed; independent review GO. No local processes running.",
+      "Source-path review now implemented: exact Account paths select full reference collections, not current Item membership; duplicates/foreign/malformed records excluded from resolution but preserved. Source-shaped sale/return/resale and rejection tests pass32/6 migration subset /tmp/ledger-source-cycle-tests.log; main independently reviewed delegated tests and fixed reviewer-discovered decoy-path omission. A019 records trust boundary/tradeoff. Batch awaiting commit/automatic CI. No local tests running.",
+      "Next: map reconciled source relationships into approved target accounting facts using existing core contracts; retain source correlation and quarantine ambiguous origin/paid evidence rather than inferring money from movement labels. Read focused source Item/Transaction/Invoice fields and target occurrence contracts. Source-shaped cycles currently package-level tests, not a reviewed export bundle; frozen v1 remains unchanged. Target persistence, history UI/MCP/readback and actual migration reconciliation still required.",
       "O053 checklist actors, A007/O057 auth provider and other linked product/hosted gates remain unresolved only for affected outcomes. No production/hosted access authorized. Preserve independent progress; no new tracker."
     ]
   },

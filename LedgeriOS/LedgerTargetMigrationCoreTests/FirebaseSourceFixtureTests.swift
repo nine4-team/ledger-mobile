@@ -513,6 +513,10 @@ struct FirebaseSourceFixtureTests {
         // This frozen fixture has simplified movements, not shipped lineageEdges.
         // Exposing its records must not synthesize or claim real lineage coverage.
         #expect(!fixture.firestoreDocuments.contains { $0.documentPathSegments.contains("lineageEdges") })
+        let history = FirebaseLineageSourceReview.review(fixture)
+        #expect(history.documents == fixture.firestoreDocuments)
+        #expect(history.lineage.isEmpty)
+        #expect(history.issues.contains { $0.sourceRecordID == "item_proto" && $0.kind == .invalidPath })
     }
 
     private static func fixtureBytes() throws -> (manifest: Data, files: [FirebaseSourceFixtureFile]) {

@@ -353,3 +353,15 @@ completed target or migration. Target cycle/readback/reconciliation tests remain
 required in the unified checklist's `accounting-relationship-provenance` and
 `item-cycle-provenance` outcomes. Financial policy, information loss and
 production/hosted actions retain their separate approval boundaries.
+
+**Source reconciliation boundary:** Resolve historical links from exact
+`accounts/{account}/items|transactions|projects/{id}` paths, not current Item
+membership or exporter classification labels. Preserve every input document;
+duplicate, malformed or foreign-Account records cannot satisfy references.
+Lineage document faults also prevent that edge from advancing to semantic
+mapping. This deliberately quarantines uncertain history instead of choosing a
+plausible relationship. `FirebaseLineageSourceReview` connects these checks to
+the existing validated fixture reader; source-shaped cycle tests are separate
+from the frozen v1 fixture, whose simplified movements do not prove shipped
+lineage coverage. Neither structural reconciliation nor a `returned` label
+establishes a client refund, paid occurrence or completed target import.

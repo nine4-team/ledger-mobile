@@ -27744,12 +27744,19 @@
           "expected": "Preserve every raw record, typed links, actor/time and unknown fields; missing, invalid, unknown-kind, duplicate/conflicting and unresolved-reference evidence must remain explicit rather than dropped or invented.",
           "command": "swift test --package-path LedgeriOS --filter FirebaseLineage",
           "status": "passed"
+        },
+        {
+          "id": "SOURCE-PATH-CYCLE-REVIEW",
+          "risk": "migration_fidelity",
+          "expected": "A source-shaped sale/return/resale cycle preserves one physical Item and every historical link even when current Item membership only names the final Transaction. Foreign, duplicate and malformed path/reference evidence cannot advance to mapping; every source document remains retained.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
         "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
         "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries.",
-        "Frozen v1 fixture contains simplified movements, not shipped lineageEdges; validated document exposure does not establish real source-history integration. Add source-shaped cycle evidence and exact path/Account reference selection before target mapping."
+        "Frozen v1 fixture contains simplified movements, not shipped lineageEdges. Package-level source-shaped cycle tests exercise document selection and reconciliation; a reviewed source-shaped export bundle and canonical target accounting mapping/readback remain required."
       ],
       "blockers": [],
       "verification": {
@@ -27761,13 +27768,14 @@
             "npm run conversion:check",
             "npm run target:environment:check",
             "git diff --check",
-            "node scripts/check-conversion-current-state.mjs --self-test"
+            "node scripts/check-conversion-current-state.mjs --self-test",
+            "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Main independently reviewed delegated reader and corrected source-ID syntax and UTF-8 Account checks. Independent consumer review identified embedded Account lookup gap; fixed and directly tested. Sorted-key raw-byte duplicate comparison preserves Unicode-distinct evidence and avoids nondeterministic conflicts. Broad migration suite27 tests/5 suites PASS /tmp/ledger-history-migration-suite.log; final focused10 tests/2 suites PASS /tmp/ledger-lineage-final-focused.log. No canonical event inference, target mapping, UI or actual import completeness claimed. Follow-up: validated fixture document exposure preserves all 14 records including fault tags and exact canonical fields; full migration subset29/5 PASS /tmp/ledger-source-document-tests.log. Independent review GO; identity assertions strengthened to UTF-8 bytes. CI34168806311 failed brittle checker self-test, not target code; targeted migrated-record removal fixes that without weakening validation. Control-plane self-tests/control checks PASS. Source-shaped lineage fixture integration remains required."
+          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration."
         },
         "ci": {
           "status": "failed",
@@ -27781,7 +27789,8 @@
           "paths": [
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageEvidence.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageReconciliation.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageSourceReview.swift"
           ]
         }
       ]

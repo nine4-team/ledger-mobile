@@ -19,6 +19,7 @@ public struct FirebaseLineageReferenceIndex: Sendable {
 
 public enum FirebaseLineageReferenceIssue: Equatable, Sendable {
     case invalidSourceEvidence
+    case invalidSourceDocument
     case accountScopeMismatch
     case duplicateDocument
     case conflictingDocument
