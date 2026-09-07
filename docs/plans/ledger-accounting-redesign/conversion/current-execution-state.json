@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 39,
+  "stateVersion": 40,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,11 +9,11 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "ITEM-LIFECYCLE-AND-INTAKE-AUDIT-CI-GREEN",
-    "commit": "b1eeda15bbdaab43645aa8cc0f77c3f72ce7b2c0",
-    "ciRun": 34138672098,
+    "name": "CLIENT-TRANSFER-AUDIT-CI-GREEN",
+    "commit": "ac8c280aca6793f21b3d0cbdf799e66839d15418",
+    "ciRun": 34140186476,
     "ciStatus": "passed",
-    "meaning": "Exact commit CI passed all three required jobs: traceability, local provider slices and isolated target tests/macOS/iOS builds. The five reviewed audits at this commit contain 99 stories; this does not verify the newer Client/Transfer audit or establish product completeness. Composed workflow promotion still needs reconciled local evidence; O-051 and A-003/A-004 remain gated."
+    "meaning": "Exact-commit CI succeeded for the reviewed Client/Transfer audit: 111 stories across six audited specs and 100 headings. This verifies checks at that commit, not product completeness or the newer Project audit. Composed workflow promotion still requires reconciled local evidence; O-051 and A-003/A-004 remain gated."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -22,9 +22,9 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "CI 34138672098 passed all three jobs on b1eeda15. Check automatic PR CI for the next Client/Transfer audit commit. Keep the composed workflow unpromoted until its local verification/evidence record is reconciled from actual results, not memory.",
-      "Continue target-product-story-catalog.json remainingAudit. Six specs map 100 headings; 111 stories, twenty-six confirmed decisions and thirty open-decision dependency sets are recorded. Next audit Projects, then Spaces, budget/receipts, offline/media, reports/import and remaining background/MCP authority before expanding implementation.",
-      "Client/Transfer patch passed primary integration review and focused checks after duplicate consolidation, exact eligibility, legacy import/name gating and app/MCP evidence fixes. Projects source descriptions now match seven tabs and archive-dismiss/unarchive-stay behavior; target organization is not inferred. Audit Project details/clear, both Client creation routes, nullable budgets, category actions, media, export, notes and restore against the current baseline; O-039 is note text, not description.",
+      "Project audit passed primary and independent review, including O-052 Project note/hero permissions. Commit the integrated audit, then record its automatic PR CI result. Do not promote composed workflow or feature counts.",
+      "Continue target-product-story-catalog.json remainingAudit. Project audit now records 123 stories across seven specs and 127 headings; 26 confirmed and 38 open-decision dependency sets mapped. Project review passed. Next audit Spaces, budget/receipts, offline/media, reports/import and remaining background/MCP authority before expanding implementation.",
+      "Project audit separates creation with existing/new Client, rename, description, categories/nullable allocations, media, archive/restore, export and notes. Source verification found initial Project.notes plus separate note records; preserve both without inventing metadata or merging description. Space audit is next: split direct create/edit, browser search/count/image, template apply/save/manage and checklist editing from O-051 resolution; preserve exact-scope assignments and photo-evidence effects.",
       "At the next green CI checkpoint, record its exact commit/run with honest scope. The composed app workflow remains unpromoted; current behavior verification stays 9 of 1919. Do not infer feature completion from these catalog improvements."
     ]
   },
@@ -37,12 +37,12 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No implementation estimate increase for audit work. CI 34138672098 passed all jobs on b1eeda15. The newer Client/Transfer audit separates fixed core behavior from five open edge policies and removes source-era Firebase implementation instructions. Catalog audit is partial; composed workflow promotion remains pending and current behavior verification remains 9 of 1919."
+    "note": "No implementation estimate increase for audit work. CI 34140186476 succeeded on ac8c280a for Client/Transfer. Project audit passed review; catalog completeness remains partial. Composed workflow promotion still needs actual evidence reconciliation; verified current behaviors remain 9 of 1919."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
     "Hosted Supabase and PowerSync resources, credentials, spending, and authenticated rehearsal require explicit user authorization.",
-    "O-026 must be approved before Project creation can be cutover-ready because its final project-budget command authorization, RLS, and Sync policy remain provisional.",
+    "O-052 must be approved for final Project/Client mutation authorization, including notes, hero images and category allocations. O-026 separately gates shared category/template mutations; do not infer command permissions from financial visibility.",
     "O-051 must be approved before a rejected operation can be retried or acknowledged as resolved; read-only exact recovery may proceed without inventing that policy.",
     "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes."
   ],

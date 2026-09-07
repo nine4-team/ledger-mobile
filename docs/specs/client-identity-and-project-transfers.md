@@ -120,6 +120,9 @@ display without rewriting frozen paid documents.
 
 ### Client lifecycle
 
+- Client create/rename/archive permissions remain unresolved under O-052;
+  financial visibility or a provisional Project-management capability does not
+  grant those commands. Ownership reassignment and merge remain under O-025.
 - Project creation selects an existing Client or creates one, then stores its
   `clientId`.
 - Editing the Client's name happens on the Client, not independently on each

@@ -4,17 +4,17 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "a873e7385211a2a08ba123de4e12164933d4d9d60bd88a27d79d2635e55fa26e"
+    "sourceHash": "e7fec95cd9e2a84f3eea9b8fef46721ae15f0934b4433c5557eb00a744ff0a7e"
   },
   "completeness": {
     "status": "partial",
-    "reason": "111 stories recorded. Six spec heading audits are accepted after independent review and integration corrections. Twenty-six confirmed decisions and thirty open-decision dependency sets are mapped. Other authority/decision audits remain pending; none of these counts imply implemented features."
+    "reason": "123 stories recorded across seven reviewed spec audits and 127 headings; 26 confirmed and 38 open-decision dependency sets mapped. Remaining authority audits are partial. Counts measure audit coverage, not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
     "Item lifecycle and intake audits passed independent review: distinct sale/return/correction/collection, one Item identity, exact fields/contexts, derived accounting sections, Link choices/cancel/review, duplicate reconciliation, MCP parity and isolation. Their named product decisions remain unresolved.",
     "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
-    "Audit Project setup/editing against the full current Product Behavior baseline before implementation. Preserve all seven current capability tabs, Quick Note and archive-dismiss/unarchive evidence without treating source free-text clientName, background setup or navigation layout as target authority; do not copy old zero-for-empty allocations or orphan deletion. O-039 governs note text, not Project description; O-049/O-050 govern Project names and rename only.",
+    "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
     "Complete Space search, Item count, primary media, direct create/details update, template apply/save/manage and archive assignment. Split checklist draft editing from rejected-operation resolution under O-051; preserve the spec's unresolved search-normalization requirement.",
     "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
     "Complete budget definitions versus shared management, card preview/pins, enabled category display, Transaction/Item attribution and edge states. Separate exact receipt completeness from billability, rounding and Item basis under O-008/O-030/O-031.",
@@ -73,10 +73,6 @@
     {
       "profile": "secure_offline_write",
       "storyIds": [
-        "project-creation-existing-client",
-        "project-edit",
-        "project-archive",
-        "project-deletion-policy",
         "space-fields",
         "space-checklist-toggle",
         "space-checklist-editor",
@@ -248,7 +244,8 @@
       "profile": "accounting_read_export",
       "storyIds": [
         "client-summary-value-semantics",
-        "report-receipt-evidence-sharing"
+        "report-receipt-evidence-sharing",
+        "project-transaction-export-entry"
       ],
       "workflowKinds": [
         "product_ui"
@@ -273,7 +270,8 @@
         "item-create-unified-wizard",
         "item-wizard-optional-details",
         "item-intake-entry-contexts",
-        "item-capture-mcp-parity"
+        "item-capture-mcp-parity",
+        "project-hero-media"
       ],
       "workflowKinds": [
         "product_ui"
@@ -395,7 +393,10 @@
         "transfer-additional-requests-policy",
         "transfer-destination-space-policy",
         "transfer-reversal-correction",
-        "transfer-later-credit-host"
+        "transfer-later-credit-host",
+        "project-creation-existing-client",
+        "project-creation-new-client",
+        "project-allocation-edit"
       ],
       "workflowKinds": [
         "product_ui"
@@ -499,6 +500,91 @@
         "tenant_authorization",
         "sync_visibility",
         "offline_durability",
+        "app_mcp_parity"
+      ]
+    },
+    {
+      "profile": "project_commands",
+      "storyIds": [
+        "project-edit",
+        "project-archive",
+        "project-description-update",
+        "project-unarchive",
+        "project-category-selection",
+        "project-inline-category-create",
+        "project-form-navigation",
+        "project-initial-notes-capture"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "app_mcp_parity"
+      ]
+    },
+    {
+      "profile": "project_deletion_commands",
+      "storyIds": [
+        "project-note-actions",
+        "project-deletion-policy"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "app_mcp",
+        "deletion"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "app_mcp_parity",
+        "deletion_retention"
+      ]
+    },
+    {
+      "profile": "project_notes_migration",
+      "storyIds": [
+        "project-initial-notes-preservation"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "migration",
+        "app_ui",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "migration_fidelity",
+        "ui_fidelity",
         "app_mcp_parity"
       ]
     }
@@ -1007,7 +1093,7 @@
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
-      "sourceHash": "966b8e62387e63b7853d41dfcfeefbb56f418774716636064fe0a83c377c6442",
+      "sourceHash": "a61c52289dcc7652c08fd7b196acecd8913f268b10eb2dd72b83f57706bc75ae",
       "auditStatus": "audited",
       "storyIds": [
         "client-identity",
@@ -1284,15 +1370,320 @@
     },
     {
       "path": "docs/specs/projects.md",
-      "sourceHash": "4b3aa49b95a65bf668817995176e0ce3bd48d33ad4e576b90ac83ad57dd03b7b",
-      "auditStatus": "partial",
+      "sourceHash": "e7f3f8da09b5fbc96075f74e8540648fbc123f741561658ed2bb2da6877a45b2",
+      "auditStatus": "audited",
       "storyIds": [
         "project-creation-existing-client",
         "project-list",
         "project-detail",
         "project-edit",
         "project-archive",
-        "project-deletion-policy"
+        "project-deletion-policy",
+        "project-creation-new-client",
+        "project-description-update",
+        "project-unarchive",
+        "project-category-selection",
+        "project-inline-category-create",
+        "project-allocation-edit",
+        "project-hero-media",
+        "project-form-navigation",
+        "project-transaction-export-entry",
+        "project-note-actions",
+        "project-initial-notes-preservation",
+        "project-initial-notes-capture"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Projects",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title and target notice distinguish current-source mechanics from isolated target requirements; body headings map behavior."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list",
+            "project-detail",
+            "client-identity"
+          ]
+        },
+        {
+          "heading": "Target Redesign Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-description-update",
+            "project-edit",
+            "project-archive",
+            "project-unarchive",
+            "project-list",
+            "project-detail",
+            "project-hero-media",
+            "client-correction-merge"
+          ]
+        },
+        {
+          "heading": "Project Entity",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list",
+            "project-detail",
+            "client-identity",
+            "project-initial-notes-preservation"
+          ]
+        },
+        {
+          "heading": "Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list",
+            "project-detail",
+            "project-description-update",
+            "project-hero-media",
+            "project-initial-notes-preservation",
+            "budget-paid-unpaid-progress"
+          ]
+        },
+        {
+          "heading": "Validation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-edit",
+            "client-create-select"
+          ]
+        },
+        {
+          "heading": "Project Data Scope",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-detail",
+            "project-note-actions",
+            "project-initial-notes-preservation",
+            "project-budget-allocation",
+            "budget-pinning"
+          ]
+        },
+        {
+          "heading": "Creation Flow",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-form-navigation",
+            "project-category-selection",
+            "project-allocation-edit",
+            "project-hero-media",
+            "project-initial-notes-capture"
+          ]
+        },
+        {
+          "heading": "Step 1: Basic Info",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-description-update",
+            "project-hero-media",
+            "project-initial-notes-capture",
+            "client-create-select"
+          ]
+        },
+        {
+          "heading": "Step 2: Category Selection",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-category-selection",
+            "project-inline-category-create"
+          ]
+        },
+        {
+          "heading": "Step 3: Budget Amounts",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-allocation-edit",
+            "project-budget-allocation"
+          ]
+        },
+        {
+          "heading": "On Create",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-creation-new-client",
+            "project-hero-media",
+            "project-initial-notes-capture"
+          ]
+        },
+        {
+          "heading": "Editing",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-edit",
+            "project-description-update",
+            "project-form-navigation",
+            "project-hero-media",
+            "client-lifecycle",
+            "client-correction-merge",
+            "project-allocation-edit"
+          ]
+        },
+        {
+          "heading": "Category Diffing on Save",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-allocation-edit",
+            "project-budget-allocation"
+          ]
+        },
+        {
+          "heading": "Archiving",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-archive",
+            "project-unarchive"
+          ]
+        },
+        {
+          "heading": "Deletion",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-deletion-policy",
+            "project-archive"
+          ]
+        },
+        {
+          "heading": "Current Firebase behavior",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-deletion-policy",
+            "project-archive"
+          ]
+        },
+        {
+          "heading": "Project List",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list"
+          ]
+        },
+        {
+          "heading": "Layout",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list"
+          ]
+        },
+        {
+          "heading": "Project Card",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list",
+            "project-hero-media",
+            "budget-pinning"
+          ]
+        },
+        {
+          "heading": "Budget Preview on Cards",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-list",
+            "budget-pinning",
+            "budget-paid-unpaid-progress"
+          ]
+        },
+        {
+          "heading": "Project Detail",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-detail",
+            "project-note-actions",
+            "project-invoicing-workspace"
+          ]
+        },
+        {
+          "heading": "Layout",
+          "occurrence": 2,
+          "disposition": "story",
+          "storyIds": [
+            "project-detail",
+            "budget-pinning"
+          ]
+        },
+        {
+          "heading": "Tabs",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-detail",
+            "project-note-actions",
+            "project-invoicing-workspace",
+            "budget-pinning"
+          ]
+        },
+        {
+          "heading": "Notes and Quick Note",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-note-actions",
+            "project-initial-notes-preservation",
+            "project-initial-notes-capture"
+          ]
+        },
+        {
+          "heading": "Kebab Menu Actions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-edit",
+            "project-description-update",
+            "project-form-navigation",
+            "project-transaction-export-entry",
+            "project-archive",
+            "project-unarchive",
+            "project-deletion-policy"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "project-creation-existing-client",
+            "project-list",
+            "project-detail",
+            "project-deletion-policy",
+            "project-hero-media",
+            "project-inline-category-create",
+            "project-category-selection",
+            "project-allocation-edit"
+          ]
+        }
       ]
     },
     {
@@ -2160,7 +2551,10 @@
       },
       {
         "decisionId": "O-024",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-deletion-policy"
+        ]
       },
       {
         "decisionId": "O-025",
@@ -2171,7 +2565,12 @@
       },
       {
         "decisionId": "O-026",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-templates",
+          "budget-categories",
+          "project-inline-category-create"
+        ]
       },
       {
         "decisionId": "O-027",
@@ -2249,11 +2648,18 @@
       },
       {
         "decisionId": "O-039",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-note-actions",
+          "project-initial-notes-capture"
+        ]
       },
       {
         "decisionId": "O-040",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "budget-pinning"
+        ]
       },
       {
         "decisionId": "O-041",
@@ -2272,7 +2678,8 @@
         "storyIds": [
           "client-lifecycle",
           "client-create-select",
-          "client-identity-migration"
+          "client-identity-migration",
+          "project-creation-new-client"
         ]
       },
       {
@@ -2293,15 +2700,26 @@
       },
       {
         "decisionId": "O-048",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-edit"
+        ]
       },
       {
         "decisionId": "O-049",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-creation-existing-client",
+          "project-edit",
+          "project-creation-new-client"
+        ]
       },
       {
         "decisionId": "O-050",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-edit"
+        ]
       },
       {
         "decisionId": "O-051",
@@ -2309,6 +2727,24 @@
         "storyIds": [
           "session-ending-pending-work",
           "space-checklist-editor"
+        ]
+      },
+      {
+        "decisionId": "O-052",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "project-creation-existing-client",
+          "project-archive",
+          "client-lifecycle",
+          "client-create-select",
+          "client-archive",
+          "project-creation-new-client",
+          "project-description-update",
+          "project-unarchive",
+          "project-allocation-edit",
+          "project-hero-media",
+          "project-note-actions",
+          "project-initial-notes-capture"
         ]
       }
     ]
@@ -2379,7 +2815,7 @@
     {
       "storyId": "project-creation-existing-client",
       "title": "Create a Project for an existing Client",
-      "outcome": "A Project is created in the selected Account with exact Client identity, validated fields, categories, and budget allocations.",
+      "outcome": "Create a stable-ID Project for the selected same-Account Client with validated name, optional description, eligible categories and exact nullable allocations as one durable observable result. Duplicate names are valid. Media reconciles separately; expose accepted/pending/rejected state, never silent partial setup.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Creation Flow"
@@ -2388,7 +2824,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-049"
+          "O-049",
+          "O-052"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -2397,7 +2834,7 @@
     {
       "storyId": "project-list",
       "title": "Browse Projects",
-      "outcome": "The user sees the authorized Project list, archive state, and honest budget preview.",
+      "outcome": "Browse same-Account synchronized Projects by stable ID in Active/Archived; Active also offers Business Inventory. Show alphabetical cards, Client display, hero/placeholder and create entry with loading, incomplete and empty states. Cached data is not proof of full history; budget-preview policy is separate.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Project List"
@@ -2408,7 +2845,7 @@
     {
       "storyId": "project-detail",
       "title": "Open Project detail",
-      "outcome": "The selected Project resolves to its scoped detail, tabs, and available actions without cross-Account evidence.",
+      "outcome": "Open the exact same-Account Project from local evidence; show identity, Items/Transactions/Spaces/Notes/Budget/Invoicing/Reports capabilities and actions with honest readiness. Missing or disappeared data is not authoritative empty content. Do not infer target layout from old source tabs.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Project Detail"
@@ -2418,8 +2855,8 @@
     },
     {
       "storyId": "project-edit",
-      "title": "Edit a Project",
-      "outcome": "Authorized Project edits apply atomically against the expected revision while preserving dependent meaning.",
+      "title": "Rename a Project",
+      "outcome": "Rename only the selected Project under the approved name, role, archived/same-value and revision rules. Preserve Client identity, description, media, categories, lifecycle, children and accounting; those use separate operations. Never use rename as ownership reassignment.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Editing"
@@ -2439,13 +2876,20 @@
     {
       "storyId": "project-archive",
       "title": "Archive a Project",
-      "outcome": "Archiving removes a Project from active work without deleting its identity or history.",
+      "outcome": "Confirm the selected active Project and observed revision; stale selection/revision invalidates confirmation. Offline confirmation durably accepts archive and moves it from Active to Archived as pending. Preserve children/history, allow cancel and show failure; this action never also restores.",
       "authority": {
         "path": "docs/specs/projects.md",
         "section": "Archiving"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "project-deletion-policy",
@@ -2607,7 +3051,8 @@
       "blocker": {
         "decisionIds": [
           "O-042",
-          "O-043"
+          "O-043",
+          "O-052"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -2625,7 +3070,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-043"
+          "O-043",
+          "O-052"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -2640,7 +3086,14 @@
         "section": "Client lifecycle"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "client-correction-merge",
@@ -3929,6 +4382,198 @@
       },
       "milestone": "M3",
       "status": "required"
+    },
+    {
+      "storyId": "project-creation-new-client",
+      "title": "Create a Project and its new Client",
+      "outcome": "Create the chosen new Client and the Project’s authoritative relationship, categories and exact allocations through one observable setup result. Require approved Client/Project names and authorization; do not fall back to free-text ownership or leave silently incomplete setup.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Target Redesign Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-043",
+          "O-049",
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-description-update",
+      "title": "Update or clear Project description",
+      "outcome": "UpdateProjectDetails trims edge whitespace and clears a whitespace-only description. It changes only description, never names, categories, media, lifecycle, children or accounting. Preserve save/cancel and durable outcome rather than swallowing background failures.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Target Redesign Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-unarchive",
+      "title": "Restore an archived Project",
+      "outcome": "Offer distinct confirmed restore for the selected archived Project, preserving identity, children and history and returning it to Active. Cancel leaves it unchanged; expose pending/failure instead of treating restore as archive or silently losing it. Keep source-navigation parity distinct from target layout.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Archiving"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-category-selection",
+      "title": "Choose Project categories without losing the draft",
+      "outcome": "Show ordered active eligible categories with Itemized/Fee badges and no General badge. Preselect once without overwriting later choices; require at least one for new setup. Back preserves draft; deselection removes its draft allocation. Existing zero-category Projects remain valid readable states.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Step 2: Category Selection"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-inline-category-create",
+      "title": "Create an Account category from Project setup",
+      "outcome": "Add Category is an authorized shared Account mutation under O-026, not permission implied by Project creation. On success expose it Account-wide and select its returned stable ID in the draft; surface failures. Canceling Project setup must not silently delete a separately created shared category.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Step 2: Category Selection"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-allocation-edit",
+      "title": "Save selected categories and exact allocations",
+      "outcome": "Show selected-category currency inputs and overall preview. Preserve enabled-with-null, explicit zero and disabled states; validate rather than coercing invalid input to zero. Save added/removed/changed allocations through target authority; skip unchanged values and preserve accounting history.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Category Diffing on Save"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-hero-media",
+      "title": "Choose, replace and retry the Project image",
+      "outcome": "Show optional image selection/preview and existing-image loading or placeholder. Retain bytes and thumbnail work across restart until verified upload, with retryable failure independent of Project creation. Replace without silently purging shared/history bytes; no new remove control is implied.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Step 1: Basic Info"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-form-navigation",
+      "title": "Preserve Project form navigation and outcomes",
+      "outcome": "Prefill edit values; preserve data across Back/Next, required-field/category guards, optional fields and cancel-without-Project-change. Missing Account, save failure, pending work and conflicts must be visible; do not copy immediate dismissal with suppressed background errors.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Editing"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-transaction-export-entry",
+      "title": "Export the intended Project Transactions",
+      "outcome": "Project Options opens CSV export for current Transactions filters only when invoked from that tab; otherwise export all Project Transactions. Bind export to the exact Project and honest data readiness, not a silently incomplete or wrong-scope snapshot.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Kebab Menu Actions"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "project-note-actions",
+      "title": "Capture and manage Project notes",
+      "outcome": "Keep Notes and Quick Note distinct from description: capture multiline text, send, edit stable-ID records and confirm/cancel deletion. Preserve metadata, newest-first notes, input on empty state and attempted text on failure. Share approved app/MCP text rules; never silently drop accepted notes.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Notes and Quick Note"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-039",
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "project-initial-notes-preservation",
+      "title": "Preserve initial and legacy Project notes",
+      "outcome": "Retain initial Project.notes content and individual notes separately from description, including source correlation and existing metadata. Show legacy content without inventing author/time or merging distinct records; replay/import must not duplicate or discard notes.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Notes and Quick Note"
+      },
+      "milestone": "M4",
+      "status": "required"
+    },
+    {
+      "storyId": "project-initial-notes-capture",
+      "title": "Capture initial notes during Project creation",
+      "outcome": "Preserve optional initial Notes alongside description during Project creation. Retain its content and distinct meaning in durable setup and later notes display; do not drop the field or turn it into description. Apply the approved Project-note text contract.",
+      "authority": {
+        "path": "docs/specs/projects.md",
+        "section": "Step 1: Basic Info"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-039",
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     }
   ]
 }
