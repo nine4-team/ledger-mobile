@@ -207,7 +207,7 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "429fe18850656df2a8a60ac046b6daf332a393ccba410f2348a3e5ab4750a60f",
+      "acknowledgeSourceHash": "58d2d546a9d571fadd4de1d776cdc111db1aa294fb44cdfc2549b3a78df91ae4",
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It preserves deterministic classification, retirement and evidence checks while validating one automatic pull-request CI gate rather than a duplicate manual trigger.",
       "disposition": "redesign",
       "target": {

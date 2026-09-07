@@ -21,7 +21,7 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d",
+      "acknowledgeSourceHash": "dd3cc14dd778c0ef00ee526a1719e2cd1ff4559bb8260eba038bb56f4905f5c5",
       "currentBehavior": "Automatically runs one pull-request CI gate per exact workflow commit: conversion traceability and query controls on Linux, disposable local Supabase schema/RLS/RPC/Data-API tests on Ubuntu, and target isolation, contracts, MCP/Swift tests, and macOS/iOS Simulator builds on macOS 26, all with clean-diff enforcement. Manual duplicate dispatch is intentionally absent.",
       "disposition": "redesign",
       "status": "target_mapped",

@@ -42,7 +42,7 @@ const EXPECTED_CONTRACTS_SHA =
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
   "ef8cf1572dced7f5a6dcb2e4613ad89595f9d1a4564588e46c0845d80661b51f";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d";
+  "dd3cc14dd778c0ef00ee526a1719e2cd1ff4559bb8260eba038bb56f4905f5c5";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -506,12 +506,17 @@ export function validateIntegrationHooks(packageJson, workflowText) {
   if (!targetLines.some((line) => /^    runs-on: macos-26\s*$/.test(line))) {
     fail("target-environment job must run on macos-26");
   }
+  const nonparallelSwiftCommands = targetLines.filter(
+    (line) => line === "          swift test --package-path LedgeriOS --no-parallel",
+  );
   if (
-    !targetLines.some((line) =>
-      /^        run: swift test --package-path LedgeriOS --no-parallel\s*$/.test(line),
-    )
+    nonparallelSwiftCommands.length !== 2 ||
+    !targetLines.includes("      - name: Test workspace isolation contracts") ||
+    !targetLines.includes("          --filter LedgerWorkspaceRuntimeIsolationTests") ||
+    !targetLines.includes("      - name: Test remaining isolated target contracts") ||
+    !targetLines.includes("          --skip LedgerWorkspaceRuntimeIsolationTests")
   ) {
-    fail("target-environment job must retain the nonparallel Swift test gate");
+    fail("target-environment job must retain the split nonparallel Swift test gates");
   }
   const targetDiffStep = uniqueLineIndex(
     targetLines,
