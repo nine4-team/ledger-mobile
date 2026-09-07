@@ -6,6 +6,17 @@
 > Fee and Expense visibility must follow their Invoicing source records rather
 > than legacy Transaction types. The existing rules below describe the current
 > schema until that migration.
+>
+> The visibility intent and no-leak requirements remain target obligations.
+> Firestore listeners, rules, Admin SDK filtering and backfill below are source
+> implementation evidence, not instructions to build new Firebase behavior.
+> Target enforcement must cover Postgres reads/commands, PowerSync downloads,
+> protected local data, private media, reports and MCP; hiding UI is insufficient.
+> The `paymentToBusiness` classifier must not be recreated in the target.
+> How mixed collected Purchases and their frozen allocations inherit Invoice
+> confidentiality is unresolved: do not expose hidden Fees through payment
+> totals or invent partial-redaction policy. Offline access/revocation follows
+> the separately gated authorization policy.
 Status: partially implemented
 Last updated: 2026-06-08
 Implementation plan: [../plans/financial-access-controls.md](../plans/financial-access-controls.md)
@@ -254,3 +265,10 @@ Backfill requirements:
   remain a UI-only label?
 - Is account-level fee category access enough for v1, or do some clients need
   per-project overrides?
+- How does a collected Purchase containing both visible costs and hidden Fees
+  inherit its Invoice's whole-document visibility, including frozen allocations,
+  linked Item provenance, refunds and Transfer/report summaries? The old
+  single-category payment classifier does not answer this target question.
+- How are existing device caches and retained pending work handled after a
+  financial-access reduction? Enforce current server/download permissions, but
+  do not invent an offline lease or destructive local-data policy.

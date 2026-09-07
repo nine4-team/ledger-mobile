@@ -24,6 +24,8 @@ migration mechanics.
 | [non-item receipt-line design](../plans/non-item-receipt-lines/design.md) | Canonical target physical-Item versus nonphysical receipt completeness model |
 | [write-tiers.md](write-tiers.md) | Current Firebase write patterns; superseded for the redesigned target by the architecture package |
 | [offline-first.md](offline-first.md) | Offline product requirements plus current Firebase implementation; target mechanics live in the architecture package |
+| [authentication-offline-access.md](authentication-offline-access.md) | Returning-device offline access and recovery requirements; identity, unlock and lease choices remain open |
+| [financial-access-controls.md](financial-access-controls.md) | Company-revenue confidentiality across UI, sync, local data, reports and MCP; source classifiers must be reconciled with target Invoicing and collected payments |
 | [budget-management.md](budget-management.md) | Categories, allocations, progress calculations, sign conventions, and pinning |
 | [canonical-sales.md](canonical-sales.md) | Scope transitions, deterministic transaction identity, and the two-hop model |
 | [lineage-tracking.md](lineage-tracking.md) | The four edge types, creation rules, and audit trail queries |

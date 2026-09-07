@@ -152,6 +152,14 @@
       "targetRelevantSurfaceCount": 18
     },
     {
+      "path": "docs/specs/offline-first.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001"
+      ],
+      "surfaceCount": 121,
+      "targetRelevantSurfaceCount": 45
+    },
+    {
       "path": "docs/plans/non-item-receipt-lines/design.md",
       "batchIds": [
         "M0-APP-SHELL-PRESENTATION-001",
@@ -571,7 +579,7 @@
         },
         {
           "path": "docs/specs/offline-first.md",
-          "role": "current_product"
+          "role": "canonical_target"
         },
         {
           "path": "docs/specs/financial-access-controls.md",

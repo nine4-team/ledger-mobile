@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 45,
+  "stateVersion": 46,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -22,10 +22,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Integrate reviewed receipt checklist and offline guidance corrections; run conversion checks and commit/push one batch. Budget CI 34144141800 passed all three jobs on b156fec3.",
-      "Receipt audit reviewed: 10 owned stories/21 headings; totals 152 stories, 10 audits/207 headings. Shared Transaction/Expense value, parent locks, ordered readback, parser/migration provenance and idempotency mapped; billability/rounding/tax-basis/posting decisions remain open.",
-      "Offline-first doc corrections are included: durable local acceptance before success, honest uncached/partial state, remote effects, transient versus permanent failure, no feature-level discard bypass. Full offline/media/authorization audit remains next; main read offline-first.md and authentication-offline-access.md completely.",
-      "Reconcile target-governing auth-offline/financial/billing/search/review/media authorities omitted from target index, preserving existing current-control coverage without duplicate stories. Finish data-model, lineage/return/correction and reports/import audits before expanding implementation.",
+      "Receipt CI 34145259522 on 04f63901 failed on an obsolete synthetic checker fixture, not app tests. Fixture fix passed independent review and all 25 self-test cases. Integrate current offline/auth/financial batch and use its automatic CI, not rerun of old commit.",
+      "155 target stories: receipt 10 stories/21 headings reviewed; offline adds three shared outcomes (cached readiness, durable edits/status, attachment delivery). Ten heading audits/207 headings remain reviewed; offline/auth/financial stay partial. No feature progress.",
+      "Finish offline/auth heading crosswalk and explicitly gate provider/recovery and offline unlock/lease under A-007/A-016. Reviewer confirmed five grouped outcomes; first three mapped, session-ending reused. Main read full offline/auth/financial specs and architecture 03.",
+      "Auth-offline and financial-access now registered as partial governing authorities. Financial target cannot reuse paymentToBusiness classifier; mixed collected Purchase/frozen allocation confidentiality and cached access-reduction handling are unresolved. Continue remaining billing/search/review/media and data/lineage/return/correction/report/import reconciliation.",
       "Product/hosted decisions remain open, including A-007 identity/A-016 offline lease. Do not invent provider fallback, lease duration or revocation retention. O-053 blocks prior checklist product completion; no implementation estimate gain and 0/1919 verified complete behaviors."
     ]
   },
@@ -38,7 +38,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No feature gain: 152 target stories, 10 reviewed heading audits/207 headings. Receipt independent review passed after Expense/readback/provenance corrections. Budget CI 34144141800 passed. Prior checklist tests retained but O-053 blocks product completion; 0/1919 current behaviors verified complete."
+    "note": "No feature gain: 155 target stories, 10 reviewed heading audits/207 headings. Budget CI green; receipt CI failed only checker self-test, correction locally passed and awaiting integration. Auth/financial omissions registered partial. O-053 still blocks prior checklist product completion; 0/1919 verified complete."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",

@@ -1651,25 +1651,35 @@ function runSelfTests() {
 
   {
     const start = errors.length;
+    const migrationRequirement = targetDeliveryRequirementsByStory.get("non-item-line-migration");
     const migrationWorkflow = {
       workflowId: "self-test-migration-story",
       kind: "migration",
       status: "complete",
       targetStoryIds: ["non-item-line-migration"],
-      layers: ["migration"],
-      riskDomains: ["migration_fidelity"],
-      implementationEvidence: [{
-        layer: "migration",
+      layers: [...migrationRequirement.requiredLayers],
+      riskDomains: [...migrationRequirement.requiredRisks],
+      implementationEvidence: migrationRequirement.requiredLayers.map((layer) => ({
+        layer,
         paths: ["supabase/migrations/20260907050142_active_space_checklist_item_toggle.sql"],
-      }],
-      acceptanceChecks: [{
-        id: "SELF-MIGRATION-STORY",
-        risk: "migration_fidelity",
+      })),
+      acceptanceChecks: migrationRequirement.requiredRisks.map((risk) => ({
+        id: `SELF-MIGRATION-STORY-${risk}`,
+        risk,
         status: "passed",
         coversStoryIds: ["non-item-line-migration"],
-      }],
+      })),
     };
-    const summary = validateSelfWorkflowSet([completeBaseline, migrationWorkflow]);
+    // Exercise non-UI delivery without declaring the real product decisions
+    // resolved. Synthetic evidence checks validator shape, not implementation.
+    const fixtureStories = new Map(targetStoriesById);
+    fixtureStories.set("non-item-line-migration", {
+      ...fixtureStories.get("non-item-line-migration"), status: "required",
+    });
+    const summary = validateWorkflowSet(
+      [completeBaseline, migrationWorkflow], fixtureStories,
+      { workflowId: "self-test-ui-baseline", journeys: 1, behaviors: 4 },
+    );
     const messages = errors.splice(start);
     if (messages.length > 0 || !summary.verifiedStoryIds.has("non-item-line-migration")) {
       throw new Error(`non-UI target-story workflow failed unexpectedly: ${messages.join(" | ")}`);

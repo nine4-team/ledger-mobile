@@ -8,7 +8,7 @@
   },
   "completeness": {
     "status": "partial",
-    "reason": "152 stories across ten reviewed heading audits (207 headings). Other authorities remain partial; product decisions and verification gaps are explicit, and counts are not implemented features."
+    "reason": "155 stories; ten authorities have reviewed heading audits (207 headings). Offline shared outcomes added, but its full crosswalk and auth/financial/other authority audits remain partial. Counts are not implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
@@ -16,12 +16,12 @@
     "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
     "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
     "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
-    "Offline audit started: spec now distinguishes durable local acceptance from remote application, cached data from complete history, transient retry from permanent rejection, and local/session policy from provider network effects. Still catalog the full working-set, media, sync-status, lease/auth and fault-case requirements; source fire-and-forget and request documents are not target mechanisms.",
-    "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review pending. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
+    "Offline review identified three shared outcomes now mapped: authorized cached readiness, durable command acceptance/status/conflicts, and protected attachment capture/upload/verification. Session-ending stories are reused. Auth provider/recovery and offline unlock/lease outcomes remain partial under A-007/A-016; O-023 deletion and O-051 rejected-work resolution stay independent.",
+    "Budget heading audit covers category settings/lifecycle/order/defaults, nullable allocations, canonical arithmetic, signed presentation, picker eligibility, pins/preview and historical/incomplete evidence. O-056 name rules and O-026/O-052/O-040/O-005 retain distinct blockers. Billing summary labels/definitions still require companion billing/report authority audit; Budget integrated review passed. Duplicate Project allocation stories were merged into project-budget-allocation; both UI entry points reference one command obligation.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized.",
-    "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Integrated review pending."
+    "Receipt heading audit separates ordered typed evidence, editor/MCP writes, exact equation explanation, completeness verdict, export/parser preservation, fixed parent lifecycle and final migration. Billability/non-cash adjustments reuse canonical companion stories; O-008/O-029/O-030/O-031/O-032 remain scoped blockers. Primary and independent integrated review passed, including Expense ownership, read-only line details and provenance."
   ],
   "deliveryRequirements": [
     {
@@ -264,7 +264,8 @@
         "project-hero-media",
         "space-item-assignment",
         "space-item-clear",
-        "space-photo-item-markers"
+        "space-photo-item-markers",
+        "attachment-capture-delivery-verification"
       ],
       "workflowKinds": [
         "product_ui"
@@ -524,7 +525,8 @@
         "space-command-mcp-parity",
         "space-manual-completion",
         "space-detail-item-entry",
-        "budget-category-order"
+        "budget-category-order",
+        "offline-command-durability-and-status"
       ],
       "workflowKinds": [
         "product_ui"
@@ -673,6 +675,30 @@
         "migration_fidelity",
         "media_durability",
         "accounting"
+      ]
+    },
+    {
+      "profile": "offline_working_set_read",
+      "storyIds": [
+        "offline-working-set-readiness"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability"
       ]
     }
   ],
@@ -2605,7 +2631,12 @@
       "path": "docs/specs/offline-first.md",
       "sourceHash": "8938ac024cf82f0d7effa10483e2511273f1db6144701623312a4e5b872350ad",
       "auditStatus": "partial",
-      "reason": "Target optimistic-work, attachment lifecycle, retention, sync feedback, and offline-capability stories remain to be added."
+      "reason": "Shared cached-readiness, durable-edit/status and complete capture/upload/verification outcomes added after bounded review. Final heading audit awaits authentication/lease and retention crosswalk; do not treat conditional supported operations as role approval.",
+      "storyIds": [
+        "offline-working-set-readiness",
+        "offline-command-durability-and-status",
+        "attachment-capture-delivery-verification"
+      ]
     },
     {
       "path": "docs/specs/budget-management.md",
@@ -3059,6 +3090,18 @@
       "sourceHash": "8f8f545b9a9c6e56b4e6ddf2d5090787f72a717da68396b9816d861fa27914a8",
       "auditStatus": "partial",
       "reason": "Capture/parse, review, commit, and vendor-recognition stories remain to be added."
+    },
+    {
+      "path": "docs/specs/authentication-offline-access.md",
+      "sourceHash": "f5e0fc533b3f454b760f61483026729ac24f117aab74cb7cbc77430bcf8ee71b",
+      "auditStatus": "partial",
+      "reason": "Previously omitted governing authority. Returning-device access/recovery still requires explicit coverage; A-007 identity and A-016 lease/unlock remain open. Reuse dedicated session-ending stories."
+    },
+    {
+      "path": "docs/specs/financial-access-controls.md",
+      "sourceHash": "22185cb6ed9f465a046d9224bdf4ffdc8eb7e8cc7afd3767a0c6053871f74fcf",
+      "auditStatus": "partial",
+      "reason": "Previously omitted governing authority. Preserve revenue confidentiality/no leaks across app, downloads, local cache and MCP. Mixed collected-payment allocation visibility, access reductions and legacy open questions require reconciliation before target delivery."
     }
   ],
   "decisionCoverage": {
@@ -6068,6 +6111,39 @@
       "authority": {
         "path": "docs/plans/non-item-receipt-lines/design.md",
         "section": "Canonical shape"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "offline-working-set-readiness",
+      "title": "Use cached work without pretending it is complete",
+      "outcome": "Under approved offline access, show authorized cached records, budgets/audits and local search without a network wait. Distinguish partial, stale, failed, known-empty and uncached evidence; never infer complete history or report readiness from connectivity. Lease and financial scope remain separate gates.",
+      "authority": {
+        "path": "docs/specs/offline-first.md",
+        "section": "Rule 1: No Spinners of Doom"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "offline-command-durability-and-status",
+      "title": "Keep offline edits durable and their status honest",
+      "outcome": "For otherwise-authorized supported edits, navigate only after durable local acceptance; show local failure, pending and authoritative outcomes across restart. Retry without duplicate effects; retain rejected intent without stalling unrelated work. Use each command's conflict rules; O-051 owns resolution.",
+      "authority": {
+        "path": "docs/specs/offline-first.md",
+        "section": "Rule 2: Optimistic UI"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "attachment-capture-delivery-verification",
+      "title": "Capture and deliver attachments without losing originals",
+      "outcome": "Across create/detail flows, retain protected scoped bytes, stable ID, metadata and receipt before acceptance. Show after restart; privately upload/verify without duplicates and retry derivatives separately. URLs are not identity; missing pending bytes are visible errors. O-023 separately gates byte deletion.",
+      "authority": {
+        "path": "docs/specs/offline-first.md",
+        "section": "Target Attachment Lifecycle"
       },
       "milestone": "M3",
       "status": "required"
