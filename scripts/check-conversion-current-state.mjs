@@ -1600,6 +1600,7 @@ function runSelfTests() {
   expectFailure("premature audit completion", () => {
     const value = structuredClone(checklist);
     value.auditAreas[0].status = "reviewed";
+    value.auditAreas[0].remainingGaps = ["Synthetic unresolved coverage gap"];
     validateChecklist(value);
   }, /reviewed audit still has gaps/);
   expectFailure("unknown direct confirmed decision", () => {
@@ -1616,6 +1617,7 @@ function runSelfTests() {
     const value = structuredClone(checklist);
     const area = value.auditAreas.find((entry) => entry.auditAreaId === "background-and-mcp-capabilities");
     Object.assign(area, { status: "reviewed", remainingGaps: [], reviewNote: "Synthetic prose-only claim", evidencePaths: ["docs/specs/README.md"] });
+    area.capabilityDispositions = [];
     validateChecklist(value);
   }, /cannot close with undispositioned/);
   {
@@ -1743,6 +1745,7 @@ function runSelfTests() {
   expectFailure("complete catalog with pending audits", () => {
     const value = structuredClone(targetStoryCatalog);
     value.completeness.status = "complete";
+    value.authorityCoverage[0].auditStatus = "partial";
     validateTargetStoryCatalog(value, "self-test-incomplete-target-catalog");
   }, /complete catalog cannot contain partial authority audits/);
 
