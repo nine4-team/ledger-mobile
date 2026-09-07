@@ -36,6 +36,12 @@
   abstraction only for a concrete shared problem. Do not create comment-only
   scaffolds, slice dossiers, evidence essays, READY commits, or promotion-only
   commits for ordinary work.
+- Record significant technical design changes in
+  `docs/architecture/redesign/architecture-decisions.md`: what changed, why,
+  preserved behavior/history, tradeoffs, and verification evidence or gaps.
+  Link existing specs/checklist evidence; do not duplicate progress tracking.
+  Routine edits need no entry. Engineers may improve legacy structures; changes
+  to product behavior, information retention or business policy require authority.
 - Preserve security, accounting, offline/replay, media, migration,
   reconciliation, and risk-specific evidence. Completion requires concrete
   implementation files and passed story-specific checks for every required

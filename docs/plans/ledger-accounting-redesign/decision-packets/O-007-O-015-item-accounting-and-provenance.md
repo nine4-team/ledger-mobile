@@ -1,14 +1,14 @@
 # Decision Packet — O-007/O-015 Item Accounting and Provenance Model
 
-Status: proposed recommendation; product decision not yet approved
-Last reviewed: 2026-08-31
+Status: technical direction accepted with strict relationship preservation; dependent product policies remain open
+Last reviewed: 2026-09-07
 Owners: Item Accounting, Inventory/Provenance, Invoicing, Budget, Transfer
 Unlocks: 49 unique residual surfaces (O-015: 46; O-007: 31; overlap: 28)
 Residual register: [generated M2 queue](../conversion/residual-decision-register.generated.md)
 
-## Decision Requested
+## Accepted Technical Direction (D-028)
 
-Approve or reject the following combined direction:
+Implement the following direction while improving concrete details where justified:
 
 > Use explicit relational facts for acquisition, temporal placement, real money,
 > Item billing occurrences, Invoice membership/collection, Transfer, and
@@ -17,16 +17,76 @@ Approve or reject the following combined direction:
 > accounting authority, and do not keep `item.transactionId` as a polymorphic
 > relationship.
 
-O-007 and O-015 should close together. Choosing an occurrence table without the
+O-007 and O-015 are resolved by D-028. Choosing an occurrence table without the
 acquisition/placement/Invoice/Transfer relationships leaves it ambiguous;
 choosing those relationships while keeping a generic lineage graph creates two
 competing authorities.
 
-This packet proposes the relational contract and tests. It is not DDL,
-implementation authorization, production migration authorization, or approval
-of Supabase/PowerSync A-003/A-004 before the vertical spike.
+This packet proposes concrete relational details and tests, not immutable DDL.
+D-028 authorizes engineering decisions within the preserved product contract.
+It does not authorize production migration or approve Supabase/PowerSync
+A-003/A-004 before the vertical spike.
 
 ## Confirmed Constraints
+
+### Relationship preservation clarification (2026-09-07)
+
+The user agreed with the existing direction, then explicitly
+questioned whether Transaction links and lineage records would be removed.
+They are essential evidence, not disposable implementation clutter. This is
+not blanket approval of every detail in this packet or permission to drop information.
+After clarification, the user instructed implementation to continue rather than
+re-asking this technical storage choice. Preserve existing business facts and
+make the necessary relational implementation decisions; escalate actual product
+policy changes, not equivalent representations of existing relationships.
+
+Replacing an overloaded relationship field means preserving its meaning in
+explicit relationships, not removing the relationship. For one chair, the
+target must retain its original purchase/receipt link, each Inventory/Project
+placement, Invoice and payment membership, returns, and later resale history.
+The chair keeps the same physical identity throughout. Physical return, vendor
+refund and Client refund remain distinct facts; no relationship may be inferred
+merely because the chair moved.
+
+Existing lineage records must remain traceable to their original IDs and raw
+source evidence. Every represented relationship must be reconciled to a target
+fact or explicitly retained as unresolved evidence for review. Ambiguous or
+unmapped history cannot be silently discarded, invented, or counted as a
+successful migration. A rebuildable history screen does not make its underlying
+financial, relationship or provenance records disposable.
+
+Verification must cover repeated purchase/placement/billing/payment/return/
+resale cycles, preserved original links and source lineage correlation, and
+honest incomplete history offline. The user-facing history and navigation to
+related records must still work. The technical direction no longer requires
+another user confirmation; dependent financial policy and authorization
+decisions remain unresolved and must not be inferred from it.
+
+### Verified source relationships
+
+Inspected in the source-code copy inside the separate Supabase worktree, not
+through production access. These relationships already exist; the target is
+not introducing their business meaning.
+
+| Existing source evidence | Required preservation in target |
+|---|---|
+| `Item.transactionId`, `Transaction.itemIds` | Preserve the actual Item/Transaction relationship and its role; current membership alone is not the entire history. |
+| `Item.projectId`, `Item.spaceId` | Preserve current placement by stable identity and exact scope. |
+| `LineageEdge.itemId`, from/to Transaction and Project IDs, movement kind, actor, timestamp and note | Preserve each movement/association/correction and original source correlation; use it to reconcile historical relationships. |
+| `Item.inventoryEntryTransactionId`, Project/category IDs, price and amount snapshots | Preserve the original return/reversal basis rather than substituting mutable current prices. |
+| `InvoiceLine.sourceType/sourceId`, line ID, sign, amount and category | Preserve exact billed source membership and signed amount. |
+| `Transaction.settlementInvoiceId/settlementInvoiceLineIds` and Invoice-line reverse references | Preserve which payment settled which Invoice lines, with original amounts and IDs. |
+
+Sources: `LedgeriOS/LedgeriOS/Models/Item.swift`, `Models/Transaction.swift`,
+`Models/Invoice.swift`, `Services/LineageEdgesService.swift`, and
+`Services/InventoryOperationsService.swift`. In `sellToProject`, source code
+updates current membership and writes a lineage edge retaining prior links.
+That is intentional history preservation, not evidence of missing history.
+Differences required by confirmed target accounting rules (such as whole-Invoice
+collection) must be handled separately from storage translation and preserve
+legacy settlement evidence.
+
+### Existing confirmed decisions
 
 The design must preserve all of these existing decisions:
 
@@ -416,33 +476,13 @@ Counts, IDs, relationship hashes, money cents and history readiness reconcile.
 - source/target accounting and provenance differences are zero or individually
   explained by approved semantic mappings.
 
-## Approval Consequences
+## Implementation Consequences
 
-If approved:
-
-1. update O-007/O-015 in the decision log and traceability table;
-2. promote this relationship model into architecture documents 02/04/05/06;
-3. map the 49 unique residual surfaces that depend on O-007/O-015, retaining any
-   other blockers on the same surfaces;
-4. derive reviewed conceptual DDL/RLS/Sync/query contracts and migration
-   fixtures; and
-5. include this model in the A-003/A-004 vertical spike before provider approval.
-
-If rejected, record which option replaces it and how that option satisfies every
-confirmed constraint and acceptance test above. Do not fall back implicitly to
-`item.transactionId`, mutable arrays or generic lineage edges.
-
-## Approval Checklist
-
-- [ ] Occurrences are approved as typed Item billing demand/credit, not generic
-  lineage.
-- [ ] Acquisition and temporal placement are separate authoritative facts.
-- [ ] Actual money remains separate from physical movement and billing demand.
-- [ ] Invoice live membership and collected freeze are separate relations.
-- [ ] Same-Client Transfer uses one aggregate plus exactly two paired entries.
-- [ ] History is derived/rebuildable and exposes offline completeness.
-- [ ] Correction is typed and append-only in evidence.
-- [ ] The migration quarantine rules are acceptable.
-- [ ] The RLS/Sync visibility split is acceptable.
-- [ ] The vertical spike must prove query plans, lock behavior and offline history
-  before A-003/A-004 approval.
+Use the existing unified behavior checklist and compact execution state. Do not
+reactivate the historical residual-surface register or maintain another approval
+checklist. O-007/O-015 no longer block technical implementation; other product
+decisions on affected outcomes remain in force. Implement and test relational
+commands, authorized local queries, history and migration together in coherent
+workflows. The tests above remain implementation obligations, not a demand for
+the user to approve every table. Financial visibility, ambiguous migration
+dispositions and production/hosted gates require their own existing authority.

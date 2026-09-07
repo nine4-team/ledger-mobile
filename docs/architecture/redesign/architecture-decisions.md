@@ -2,11 +2,17 @@
 
 Status: active
 Architecture version: 0.2
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-07
 
 This register records cross-cutting technical decisions. Product behavior remains
 in the redesign product decision log. A proposed decision is not an
 implementation authorization.
+
+Significant technical changes must be recorded here as they are made (user
+instruction, 2026-09-07). State what changed and why, intended behavior/history
+preserved, tradeoffs, and links to verification evidence or remaining gaps.
+Routine edits need no entry. This register records decisions, not a second
+progress tracker; use the existing unified checklist for implementation status.
 
 ## Status Definitions
 
@@ -38,6 +44,7 @@ implementation authorization.
 | A-016 | blocked | Approve the bounded offline-access lease |
 | A-017 | accepted | Firebase is a migration source, not a redesigned application adapter |
 | A-018 | accepted | Use one fail-closed OperationID ownership inventory across local command families |
+| A-019 | accepted | Improve Item relationship storage while preserving meaning and useful history |
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 
@@ -321,3 +328,28 @@ inventory follows that actual storage contract.
 This decision adds no second local registry table and chooses no cleanup or
 retention behavior. It does not advance A-003, A-004, A-015, A-016, hosted
 resources, migration execution, or production authority.
+
+## A-019 — Preserve Meaning, Improve Item Relationship Storage
+
+**Decision:** D-028 permits replacing legacy structures where a concrete
+correctness, simplicity or maintainability benefit exists. Acquisition,
+placement, billing and payment use explicit relationships; history is read from
+those facts rather than a second competing accounting authority. Existing
+Transaction links and lineage already represent important history. They are
+source evidence to preserve and reconcile, not missing functionality or a reason
+to discard relationships.
+
+**Reason/tradeoff:** Explicit relationships support database constraints and the
+confirmed accounting redesign, but require careful migration and may need more
+tables. Prefer shared existing contracts; avoid a universal event store or
+speculative generality. Improve concrete table details during implementation.
+
+**Preservation and evidence:** The existing
+[Item relationship note](../../plans/ledger-accounting-redesign/decision-packets/O-007-O-015-item-accounting-and-provenance.md#verified-source-relationships)
+records inspected source fields, settlement links and lineage writers. Preserve
+stable Item identity, historical amounts and relationships, original source
+correlation and unresolved evidence. It is source inspection, not proof of a
+completed target or migration. Target cycle/readback/reconciliation tests remain
+required in the unified checklist's `accounting-relationship-provenance` and
+`item-cycle-provenance` outcomes. Financial policy, information loss and
+production/hosted actions retain their separate approval boundaries.

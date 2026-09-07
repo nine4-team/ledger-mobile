@@ -69,7 +69,7 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "a765b49a3e57c3a109d3c08ea73fa822b307d70abba43a2665f2250e10426c22"
+    "sourceHash": "2364a8a892fa76ee5e81102a1ce87f9a8adfab41805db8fe6780d215c6715a8a"
   },
   "auditAreas": [
     {
@@ -2386,6 +2386,10 @@
       {
         "decisionId": "D-027",
         "auditStatus": "mapped"
+      },
+      {
+        "decisionId": "D-028",
+        "auditStatus": "mapped"
       }
     ],
     "open": [
@@ -2407,10 +2411,6 @@
       },
       {
         "decisionId": "O-006",
-        "auditStatus": "mapped"
-      },
-      {
-        "decisionId": "O-007",
         "auditStatus": "mapped"
       },
       {
@@ -2439,10 +2439,6 @@
       },
       {
         "decisionId": "O-014",
-        "auditStatus": "mapped"
-      },
-      {
-        "decisionId": "O-015",
         "auditStatus": "mapped"
       },
       {
@@ -18746,17 +18742,11 @@
         "section": "Story 5: Sell the Same Item Again"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_offline_write",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -18790,17 +18780,11 @@
         "section": "Story 6: Sell a Project-Originated Item to Business Inventory"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_offline_write",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -18850,17 +18834,11 @@
         "section": "Story 7: Return a Project-Originated Item to Its Source Project"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_offline_write",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -18900,17 +18878,11 @@
         "section": "Story 9: Sell from Project A to a Different Client's Project through Inventory"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_offline_write",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -20616,17 +20588,11 @@
         "section": "Required Data Relationships"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_offline_write",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -21130,18 +21096,11 @@
         "section": "Data and Integrity Requirements"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-007",
-          "O-015"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      },
+      "status": "required",
       "deliveryProfile": "accounting_read_export",
       "confirmedDecisionIds": [
-        "D-014"
+        "D-014",
+        "D-028"
       ],
       "authorityHeadingRefs": [
         {
@@ -21389,9 +21348,7 @@
       "blocker": {
         "decisionIds": [
           "O-060",
-          "O-067",
-          "O-007",
-          "O-015"
+          "O-067"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -21399,7 +21356,8 @@
       "deliveryProfile": "financial_visibility",
       "confirmedDecisionIds": [
         "D-019",
-        "D-023"
+        "D-023",
+        "D-028"
       ],
       "authorityHeadingRefs": [
         {
@@ -24666,14 +24624,15 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-015",
           "O-060"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       },
       "deliveryProfile": "financial_visibility",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/search-results.md",
@@ -24697,14 +24656,15 @@
         "decisionIds": [
           "O-029",
           "O-053",
-          "O-015",
           "O-064"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       },
       "deliveryProfile": "offline_working_set_read",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/search-results.md",
@@ -24944,7 +24904,6 @@
           "O-065",
           "O-047",
           "O-023",
-          "O-015",
           "O-051",
           "O-064",
           "O-060"
@@ -24953,7 +24912,9 @@
         "section": "Open Product Decisions"
       },
       "deliveryProfile": "item_accounting_media",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/items.md",
@@ -25253,8 +25214,6 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-007",
-          "O-015",
           "O-067",
           "O-060"
         ],
@@ -25262,7 +25221,9 @@
         "section": "Open Product Decisions"
       },
       "deliveryProfile": "mcp_accounting_read",
-      "confirmedDecisionIds": [],
+      "confirmedDecisionIds": [
+        "D-028"
+      ],
       "authorityHeadingRefs": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -26914,9 +26875,9 @@
           "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests. Shared Space search independently reviewed GO: only represented rows are filtered, order/readiness unchanged, empty and no-match distinguished, same controls for Project/Inventory, scope-reset and Back preservation, no provider/auth expansion. Exact TextField environment-checker exemption reviewed; other mutation/field bans retained. Native Mac/iOS search round trips passed."
         },
         "ci": {
-          "status": "not_run",
-          "commit": null,
-          "run": null
+          "status": "passed",
+          "commit": "ad70e5cfcd449f619c8603bf2300ba493508330f",
+          "run": 34167632359
         }
       },
       "implementationEvidence": [
@@ -27738,6 +27699,89 @@
           "run": null
         }
       }
+    },
+    {
+      "schemaVersion": 1,
+      "workflowId": "item-history-source-reconciliation",
+      "title": "Preserve and reconcile source Item history",
+      "kind": "migration",
+      "status": "implementation",
+      "outcome": "Retain exact source lineage evidence and reconcile referenced Items, Transactions and Projects before constructing target history. This is one part of the Item-history migration workflow, not completed target history or migration authorization.",
+      "targetStoryIds": [
+        "accounting-relationship-provenance",
+        "item-cycle-provenance",
+        "whole-account-migration-reconciliation"
+      ],
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "section": "Data and Integrity Requirements"
+        }
+      ],
+      "affectedComponents": [
+        "LedgeriOS/LedgerTargetMigrationCore",
+        "LedgeriOS/LedgerTargetMigrationCoreTests"
+      ],
+      "layers": [
+        "migration"
+      ],
+      "riskDomains": [
+        "migration_fidelity"
+      ],
+      "uiJourneys": [],
+      "acceptanceChecks": [
+        {
+          "id": "SOURCE-HISTORY-RECONCILIATION",
+          "risk": "general",
+          "expected": "Read source lineage and reconcile same-Account references deterministically without creating money events or silently merging conflicting evidence.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseLineage",
+          "status": "passed"
+        },
+        {
+          "id": "SOURCE-LINEAGE-PRESERVATION",
+          "risk": "migration_fidelity",
+          "expected": "Preserve every raw record, typed links, actor/time and unknown fields; missing, invalid, unknown-kind, duplicate/conflicting and unresolved-reference evidence must remain explicit rather than dropped or invented.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseLineage",
+          "status": "passed"
+        }
+      ],
+      "deferredBehaviors": [
+        "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
+        "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries."
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {
+          "status": "passed",
+          "commands": [
+            "swift test --package-path LedgeriOS --filter FirebaseLineage",
+            "swift test --package-path LedgeriOS --filter 'FirebaseLineage|FirebaseSourceFixtureTests|MigrationRunIntegrityTests|MigrationEnvironmentGuardTests'",
+            "npm run conversion:check",
+            "npm run target:environment:check",
+            "git diff --check"
+          ]
+        },
+        "review": {
+          "required": true,
+          "status": "passed",
+          "summary": "Main independently reviewed delegated reader and corrected source-ID syntax and UTF-8 Account checks. Independent consumer review identified embedded Account lookup gap; fixed and directly tested. Sorted-key raw-byte duplicate comparison preserves Unicode-distinct evidence and avoids nondeterministic conflicts. Broad migration suite27 tests/5 suites PASS /tmp/ledger-history-migration-suite.log; final focused10 tests/2 suites PASS /tmp/ledger-lineage-final-focused.log. No canonical event inference, target mapping, UI or actual import completeness claimed."
+        },
+        "ci": {
+          "status": "not_run",
+          "commit": null,
+          "run": null
+        }
+      },
+      "implementationEvidence": [
+        {
+          "layer": "migration",
+          "paths": [
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageEvidence.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageReconciliation.swift"
+          ]
+        }
+      ]
     }
   ]
 }
