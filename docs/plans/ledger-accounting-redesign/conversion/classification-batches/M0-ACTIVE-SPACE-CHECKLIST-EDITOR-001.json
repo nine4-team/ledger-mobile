@@ -24,8 +24,8 @@
     },
     {
       "id": "TEST-8BB9E9DC7C1A",
-      "acknowledgeSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
-      "currentBehavior": "Runs ten deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, active-only admission, exact uncertain retry, recreated-editor conflict recovery, selection cancellation, accessibility, and scope exclusions.",
+      "acknowledgeSourceHash": "5a700a94df03a4b46ceeaf773fdcf434da1f51d3406cb72f22856a060951339b",
+      "currentBehavior": "Runs twelve deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, offline cached admission, active-only admission, exact uncertain retry, recreated-editor conflict recovery, both rejection/detail event orders, selection cancellation, accessibility, and scope exclusions.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
@@ -38,7 +38,25 @@
         "syncRequirements": ["Exact accepted command identity and edited hierarchy survive retry and recreation"]
       },
       "migration": {"rule": "Use only synthetic target fixtures.", "reconciliation": ["Every specifically claimed catalog control and state has executable evidence"]},
-      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All ten focused cases pass"]}
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All twelve focused cases pass"]}
+    },
+    {
+      "id": "SWIFT-5486352D7A0C",
+      "acknowledgeSourceHash": "0ef07399af2a211d38570d01f2592a965f607c062e2bc04cba074e22a02bd39d",
+      "currentBehavior": "Renders the isolated active-Space checklist draft editor with every catalogued text, check, add, delete, reorder, Save, Cancel, retry, validation, progress, and accessibility control.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "The editor view is separated from the read-only Space-details renderer so each file retains one clear UI responsibility and the target scope guard remains precise.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["Isolated active-Space checklist editor SwiftUI view"],
+        "securityRequirements": ["Render and mutate only the typed AppModel draft; expose no backend or credential state"],
+        "syncRequirements": ["Disable draft mutation while local acceptance is uncertain and route retries through the frozen AppModel command"]
+      },
+      "migration": {"rule": "Compile only in LedgerTargetStaging and delegate semantics to the provider-free AppModel.", "reconciliation": ["Every claimed editor control has a stable accessibility identifier and source-contract coverage"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "npm run target:staging:build:macos", "npm run target:staging:build:ios"], "acceptance": ["The editor compiles for both target destinations and exposes only claimed controls"]}
     }
   ]
 }

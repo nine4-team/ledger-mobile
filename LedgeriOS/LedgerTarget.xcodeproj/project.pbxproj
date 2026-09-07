@@ -17,8 +17,10 @@
 		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
 		4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */; };
 		520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */; };
+		5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */; };
 		68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */; };
 		723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */; };
+		7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */; };
 		843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */; };
 		87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */; };
 		91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */; };
@@ -59,6 +61,7 @@
 		A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
 		BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerTargetStagingApp.swift; sourceTree = "<group>"; };
+		BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBrowserStagingComposition.swift; sourceTree = "<group>"; };
 		BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryStagingExercise.swift; sourceTree = "<group>"; };
 		CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -67,6 +70,7 @@
 		E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingExerciseView.swift; sourceTree = "<group>"; };
 		F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingExerciseView.swift; sourceTree = "<group>"; };
+		F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceChecklistEditorStagingExerciseView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +116,8 @@
 				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
 				F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */,
 				0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */,
+				BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */,
+				F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */,
 				A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */,
 				3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */,
 				6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */,
@@ -219,6 +225,8 @@
 				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,
 				24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */,
 				723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */,
+				5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */,
+				7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */,
 				FB9EB47CFF1DBC601104089A /* SpaceCoreDetailsStagingExerciseView.swift in Sources */,
 				E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */,
 				1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */,

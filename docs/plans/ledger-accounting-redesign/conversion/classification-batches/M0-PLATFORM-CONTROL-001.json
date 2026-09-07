@@ -184,8 +184,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, two comment-only Vendor-suggestion picker leaves, and two comment-only Account pending-work staging app leaves.",
+      "acknowledgeSourceHash": "86ff94308bf8c97ede2650a72094e19463eba146809e18da9b30c08db0d59fd0",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and every currently implemented target-app source, including the separately compiled active-Space checklist editor view.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -199,7 +199,7 @@
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The six Project-category placeholders compile but expose no symbol or behavior while O-026 remains open. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; all target-app Swift sources are included. The Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

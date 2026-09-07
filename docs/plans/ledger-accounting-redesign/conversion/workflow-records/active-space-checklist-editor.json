@@ -32,6 +32,7 @@
     "LedgeriOS/LedgerTargetAppModel",
     "LedgeriOS/LedgerTargetAppModelTests",
     "LedgeriOS/LedgerTargetApp",
+    "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
     "LedgeriOS/LedgerTargetPowerSyncTests",
     "scripts"
   ],

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T07:37:31.996Z",
+    "lastSynchronizedAt": "2026-09-07T07:48:49.118Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -692,10 +692,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
-      "acknowledgedSourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
+      "observedSourceHash": "86ff94308bf8c97ede2650a72094e19463eba146809e18da9b30c08db0d59fd0",
+      "acknowledgedSourceHash": "86ff94308bf8c97ede2650a72094e19463eba146809e18da9b30c08db0d59fd0",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, two comment-only Vendor-suggestion picker leaves, and two comment-only Account pending-work staging app leaves.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and every currently implemented target-app source, including the separately compiled active-Space checklist editor view.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -739,7 +739,7 @@
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The six Project-category placeholders compile but expose no symbol or behavior while O-026 remains open. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; all target-app Swift sources are included. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -19210,17 +19210,17 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "4de82f09ca03c1318cb1b4b10e23f928934970e4b27eb537befddc81818bb7eb",
-      "acknowledgedSourceHash": "4de82f09ca03c1318cb1b4b10e23f928934970e4b27eb537befddc81818bb7eb",
+      "observedSourceHash": "4b997ebe16d8097f68d50a019ce52a1fde1c5dce34a51cc2ec1b1c32cc04d6f2",
+      "acknowledgedSourceHash": "4b997ebe16d8097f68d50a019ce52a1fde1c5dce34a51cc2ec1b1c32cc04d6f2",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states, honest checklist progress, the immediate toggle controls, and the separately claimed full checklist editor sheet.",
+      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states, honest checklist progress, immediate toggle controls, and launches the separately owned full checklist editor sheet.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
         "surfaces": [
-          "Isolated Space core-details, checklist-toggle, and checklist-editor staging view"
+          "Isolated Space core-details and checklist-toggle staging view plus checklist-editor launcher"
         ],
         "securityRequirements": [
           "Accessibility and diagnostics contain no stable hidden identity"
@@ -26376,6 +26376,60 @@
       ],
       "notes": "Keep pure UI behavior and extend it for durable queued, verifying, derivative and rejected states.",
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
+    },
+    {
+      "id": "SWIFT-5486352D7A0C",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/SpaceChecklistEditorStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/SpaceChecklistEditorStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "0ef07399af2a211d38570d01f2592a965f607c062e2bc04cba074e22a02bd39d",
+      "acknowledgedSourceHash": "0ef07399af2a211d38570d01f2592a965f607c062e2bc04cba074e22a02bd39d",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Renders the isolated active-Space checklist draft editor with every catalogued text, check, add, delete, reorder, Save, Cancel, retry, validation, progress, and accessibility control.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": [
+          "Isolated active-Space checklist editor SwiftUI view"
+        ],
+        "securityRequirements": [
+          "Render and mutate only the typed AppModel draft; expose no backend or credential state"
+        ],
+        "syncRequirements": [
+          "Disable draft mutation while local acceptance is uncertain and route retries through the frozen AppModel command"
+        ]
+      },
+      "migration": {
+        "rule": "Compile only in LedgerTargetStaging and delegate semantics to the provider-free AppModel.",
+        "reconciliation": [
+          "Every claimed editor control has a stable accessibility identifier and source-contract coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests",
+          "npm run target:staging:build:macos",
+          "npm run target:staging:build:ios"
+        ],
+        "acceptance": [
+          "The editor compiles for both target destinations and exposes only claimed controls"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "WORKFLOW-active-space-checklist-editor"
+      ],
+      "notes": "The editor view is separated from the read-only Space-details renderer so each file retains one clear UI responsibility and the target scope guard remains precise.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
     },
     {
       "id": "SWIFT-548A8A928FAE",
@@ -47383,12 +47437,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistEditorStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
-      "acknowledgedSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
+      "observedSourceHash": "5a700a94df03a4b46ceeaf773fdcf434da1f51d3406cb72f22856a060951339b",
+      "acknowledgedSourceHash": "5a700a94df03a4b46ceeaf773fdcf434da1f51d3406cb72f22856a060951339b",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs ten deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, active-only admission, exact uncertain retry, recreated-editor conflict recovery, selection cancellation, accessibility, and scope exclusions.",
+      "currentBehavior": "Runs twelve deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, offline cached admission, active-only admission, exact uncertain retry, recreated-editor conflict recovery, both rejection/detail event orders, selection cancellation, accessibility, and scope exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Active Space Checklist Editor",
@@ -47413,7 +47467,7 @@
           "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"
         ],
         "acceptance": [
-          "All ten focused cases pass"
+          "All twelve focused cases pass"
         ]
       },
       "status": "implemented",

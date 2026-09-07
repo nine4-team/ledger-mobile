@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-07T07:37:31.996Z",
+  "generatedFromManifestSync": "2026-09-07T07:48:49.118Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1026,
-    "targetRelevantSurfaces": 764,
+    "surfaces": 1027,
+    "targetRelevantSurfaces": 765,
     "batches": 47,
-    "productScopeSurfaces": 835,
+    "productScopeSurfaces": 836,
     "technicalControlSurfaces": 191
   },
   "canonicalTargetCoverage": [
@@ -114,8 +114,8 @@
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 218,
-      "targetRelevantSurfaceCount": 212
+      "surfaceCount": 219,
+      "targetRelevantSurfaceCount": 213
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -416,8 +416,8 @@
       "title": "Edit one active Space checklist collection",
       "scope": "product",
       "rationale": "The isolated target workflow edits one represented active Space's complete checklist collection through the already verified revision command and offline coordinator. It preserves stable identities and untouched order, implements every claimed editor control, and changes no Space details, completion, Item placement, media, template, accounting, Firebase, production data, or cutover authority.",
-      "surfaceCount": 2,
-      "targetRelevantSurfaceCount": 2,
+      "surfaceCount": 3,
+      "targetRelevantSurfaceCount": 3,
       "authorities": [
         {
           "path": "docs/specs/spaces.md",
@@ -462,6 +462,7 @@
       ],
       "surfaceIds": [
         "SWIFT-22ED13ABCFFB",
+        "SWIFT-5486352D7A0C",
         "TEST-8BB9E9DC7C1A"
       ]
     },

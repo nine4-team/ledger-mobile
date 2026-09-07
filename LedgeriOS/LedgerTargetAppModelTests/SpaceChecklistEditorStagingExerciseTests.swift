@@ -366,9 +366,12 @@ struct SpaceChecklistEditorStagingExerciseTests {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let source = try String(contentsOf: root.appending(
-            path: "LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
-        ))
+        let source = try [
+            "LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift",
+            "LedgerTargetApp/SpaceChecklistEditorStagingExerciseView.swift",
+        ]
+        .map { try String(contentsOf: root.appending(path: $0)) }
+        .joined(separator: "\n")
         for token in [
             "target-space-checklist-editor-open",
             "target-space-checklist-editor-name-",
