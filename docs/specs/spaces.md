@@ -48,6 +48,9 @@ Spaces are organizational containers for items. They represent physical location
   Project parent where applicable; local value validation is not authorization.
 - No Space operation creates or changes a Transaction, occurrence, Invoice,
   budget contribution, payer, price, or other accounting state.
+- App and MCP invoke the same typed operations and validate the same identity,
+  scope, text, revision and authorization rules; UI-only tests do not establish
+  MCP parity. O-053 leaves the Space mutation permission matrix unresolved.
 - O-037 remains the authority for assigned Items when an existing Space is
   archived. It does not change direct creation semantics.
 
@@ -209,6 +212,29 @@ accounting.
 ## Space in Budget Context
 
 Spaces do not directly participate in budget calculations. However, items in spaces carry their `budgetCategoryId`, and items in spaces contribute to transaction audit completeness through their `purchasePriceCents`.
+
+## Detail, Media and Review Coverage
+
+The existing Space detail also exposes uncapped photo attachments, primary
+selection, pinned image/PDF viewing, printing, green Item-linked photo markers,
+and separate text review notes with optional red photo markers. Preserve their
+controls and meaningful states as recorded in `UIBASE-SPACE-DETAIL-001` in the
+current Product Behavior Catalog. The target uses stable media identity, durable
+bytes and visible operation outcomes; source URL-keyed references, immediate
+byte deletion and console-only persistence errors are not target requirements.
+O-023 governs reference removal/byte retention and O-053 mutation permissions.
+
+General Space notes, review notes, checklist progress, photo matching and the
+manual `isComplete` reconciliation flag are distinct. O-054 must settle the
+manual flag's target meaning; it is not implicitly retired or derived from the
+other progress values. Item intake preserves Create New preassigned to this
+Space and Add Existing Items, using the shared Item/placement commands.
+
+Template read/apply and management rules in the O-026 packet remain proposed,
+including snapshot application, retained archive references and atomic reorder.
+O-055 governs exact portable template/checklist text validation and browser
+search matching; the existing typed Swift models alone do not
+approve cross-runtime behavior or new text limits.
 
 ## Edge Cases
 

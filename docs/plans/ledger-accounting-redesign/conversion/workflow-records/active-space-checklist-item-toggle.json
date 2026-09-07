@@ -3,7 +3,7 @@
   "workflowId": "active-space-checklist-item-toggle",
   "title": "Toggle a checklist item in an active Space",
   "kind": "product_ui",
-  "status": "complete",
+  "status": "blocked",
   "outcome": "From represented local detail for one active Project or Business Inventory Space, toggle one existing checklist item with immediate optimistic progress, durable offline acceptance, deterministic replay, conflict recovery, and authoritative readback.",
   "targetStoryIds": ["space-checklist-toggle", "space-checklist-progress"],
   "authority": [
@@ -372,7 +372,9 @@
       "coversStoryIds": ["space-checklist-toggle"]
     }
   ],
-  "blockers": [],
+  "blockers": [
+    "O-053: Space checklist mutation authorization lacks approved product authority. Prior exact-commit UI/offline test results remain evidence, but do not establish final target permissions or product completion."
+  ],
   "verification": {
     "local": {
       "status": "passed",

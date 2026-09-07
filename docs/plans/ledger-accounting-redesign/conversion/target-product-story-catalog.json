@@ -4,20 +4,20 @@
   "authorityIndex": "docs/specs/README.md",
   "decisionLog": {
     "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-    "sourceHash": "e7fec95cd9e2a84f3eea9b8fef46721ae15f0934b4433c5557eb00a744ff0a7e"
+    "sourceHash": "89cf2c86242f903528cded051d7932c974a07e68632eae7d5e88feec6e4895c2"
   },
   "completeness": {
     "status": "partial",
-    "reason": "123 stories recorded across seven reviewed spec audits and 127 headings; 26 confirmed and 38 open-decision dependency sets mapped. Remaining authority audits are partial. Counts measure audit coverage, not implemented features."
+    "reason": "138 stories recorded across eight reviewed heading audits (145 headings). Product choices remain blocked by named decisions. Budget and other spec audits remain partial; counts do not imply implemented features."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
     "Item lifecycle and intake audits passed independent review: distinct sale/return/correction/collection, one Item identity, exact fields/contexts, derived accounting sections, Link choices/cancel/review, duplicate reconciliation, MCP parity and isolation. Their named product decisions remain unresolved.",
     "Client/Transfer audit passed primary integration review after fixing duplicate stories, exact source/destination eligibility, legacy interpretation boundaries, Client-name migration gating and app/MCP evidence. Client lifecycle, paid/open allocation and five unresolved edge policies remain distinct.",
     "Project audit passed primary and independent review: distinct rename/description/Client/setup/category/media/archive/restore/export/note stories, exact nullable budgets and local readiness. Source seven tabs and unarchive navigation are documented facts, not a chosen target organization. Initial scalar notes and individual notes remain distinct from description. O-052 explicitly gates the missing core Project/Client role matrix; user input is requested. Do not substitute financial visibility or another command’s capability.",
-    "Complete Space search, Item count, primary media, direct create/details update, template apply/save/manage and archive assignment. Split checklist draft editing from rejected-operation resolution under O-051; preserve the spec's unresolved search-normalization requirement.",
+    "Space heading audit maps browsing, details, templates, checklist editing/recovery, assignment/clear/photo links, media, review notes, manual completion and app/MCP. O-053 mutation roles, O-054 manual completion and O-055 portable text/search remain unresolved; O-026 gates template snapshot/archive/reorder proposals. Primary and independent review passed; no approved permissions inferred from tested UI behavior.",
     "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
-    "Complete budget definitions versus shared management, card preview/pins, enabled category display, Transaction/Item attribution and edge states. Separate exact receipt completeness from billability, rounding and Item basis under O-008/O-030/O-031.",
+    "Budget audit underway: source-only sign tables, movement Transactions, Item-category assumptions and Firebase Functions instructions are explicitly demoted to migration evidence. Still split shared categories, nullable allocation, paid/unpaid display, preview/pins, visibility and edge states; reconcile source controls and companion receipt arithmetic before closing.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
     "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized."
@@ -56,7 +56,9 @@
         "project-invoicing-workspace",
         "item-charge-credit-presentation",
         "item-intake-vocabulary",
-        "item-link-choice-review-cancel"
+        "item-link-choice-review-cancel",
+        "space-browser-search",
+        "space-assignment-picker"
       ],
       "workflowKinds": [
         "product_ui"
@@ -73,13 +75,8 @@
     {
       "profile": "secure_offline_write",
       "storyIds": [
-        "space-fields",
-        "space-checklist-toggle",
-        "space-checklist-editor",
-        "space-templates",
-        "space-item-assignment",
-        "space-archive-assignment",
-        "budget-pinning"
+        "budget-pinning",
+        "space-checklist-toggle"
       ],
       "workflowKinds": [
         "product_ui"
@@ -271,7 +268,10 @@
         "item-wizard-optional-details",
         "item-intake-entry-contexts",
         "item-capture-mcp-parity",
-        "project-hero-media"
+        "project-hero-media",
+        "space-item-assignment",
+        "space-item-clear",
+        "space-photo-item-markers"
       ],
       "workflowKinds": [
         "product_ui"
@@ -513,7 +513,17 @@
         "project-category-selection",
         "project-inline-category-create",
         "project-form-navigation",
-        "project-initial-notes-capture"
+        "project-initial-notes-capture",
+        "space-details-edit",
+        "space-create-from-template",
+        "space-save-as-template",
+        "space-checklist-rejection-resolution",
+        "space-fields",
+        "space-checklist-editor",
+        "space-templates",
+        "space-command-mcp-parity",
+        "space-manual-completion",
+        "space-detail-item-entry"
       ],
       "workflowKinds": [
         "product_ui"
@@ -542,7 +552,8 @@
       "profile": "project_deletion_commands",
       "storyIds": [
         "project-note-actions",
-        "project-deletion-policy"
+        "project-deletion-policy",
+        "space-archive-assignment"
       ],
       "workflowKinds": [
         "product_ui"
@@ -586,6 +597,60 @@
         "migration_fidelity",
         "ui_fidelity",
         "app_mcp_parity"
+      ]
+    },
+    {
+      "profile": "media_reference_commands",
+      "storyIds": [
+        "space-media-lifecycle",
+        "space-review-notes"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "app_mcp",
+        "deletion"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "app_mcp_parity",
+        "deletion_retention"
+      ]
+    },
+    {
+      "profile": "media_read_presentation",
+      "storyIds": [
+        "space-media-view-print",
+        "space-browser-card-evidence"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "powersync_sync",
+        "media"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "sync_visibility",
+        "media_durability"
       ]
     }
   ],
@@ -2070,8 +2135,8 @@
     },
     {
       "path": "docs/specs/spaces.md",
-      "sourceHash": "f4f25670190795de1d157ac3f83a42c52e893ab3a236a0cfcbf5d5c83a0dc6ad",
-      "auditStatus": "partial",
+      "sourceHash": "4eb0664df026434065b1ff3b8bdf1e71b53c2bf565ef26b1678f5092464f1edc",
+      "auditStatus": "audited",
       "storyIds": [
         "space-list-to-detail",
         "space-fields",
@@ -2080,7 +2145,208 @@
         "space-checklist-progress",
         "space-templates",
         "space-item-assignment",
-        "space-archive-assignment"
+        "space-archive-assignment",
+        "space-details-edit",
+        "space-browser-search",
+        "space-browser-card-evidence",
+        "space-create-from-template",
+        "space-save-as-template",
+        "space-item-clear",
+        "space-assignment-picker",
+        "space-checklist-rejection-resolution",
+        "space-command-mcp-parity",
+        "space-media-lifecycle",
+        "space-media-view-print",
+        "space-photo-item-markers",
+        "space-review-notes",
+        "space-manual-completion",
+        "space-detail-item-entry"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Spaces",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Title and target notice separate organizational placement from accounting and retire source implementation mechanics."
+        },
+        {
+          "heading": "Overview",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-list-to-detail",
+            "space-fields"
+          ]
+        },
+        {
+          "heading": "Target Redesign Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-fields",
+            "space-details-edit",
+            "space-checklist-editor",
+            "space-checklist-toggle",
+            "space-checklist-rejection-resolution",
+            "space-command-mcp-parity",
+            "space-manual-completion"
+          ]
+        },
+        {
+          "heading": "Target Space Browsing",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-list-to-detail",
+            "space-browser-search",
+            "space-browser-card-evidence"
+          ]
+        },
+        {
+          "heading": "Scope",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-fields",
+            "space-list-to-detail",
+            "space-item-assignment",
+            "space-item-clear"
+          ]
+        },
+        {
+          "heading": "Space Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-fields",
+            "space-details-edit",
+            "space-media-lifecycle",
+            "space-media-view-print",
+            "space-review-notes"
+          ]
+        },
+        {
+          "heading": "Checklists",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-checklist-toggle",
+            "space-checklist-editor",
+            "space-checklist-progress"
+          ]
+        },
+        {
+          "heading": "Checklist Structure",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-checklist-editor",
+            "space-checklist-toggle"
+          ]
+        },
+        {
+          "heading": "Checklist Progress",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-checklist-progress"
+          ]
+        },
+        {
+          "heading": "Space Templates",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-templates",
+            "space-create-from-template",
+            "space-save-as-template"
+          ]
+        },
+        {
+          "heading": "Template Fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-templates",
+            "space-create-from-template",
+            "space-save-as-template"
+          ]
+        },
+        {
+          "heading": "Creating from Template",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-create-from-template"
+          ]
+        },
+        {
+          "heading": "Saving as Template",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-save-as-template"
+          ]
+        },
+        {
+          "heading": "Item Assignment",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-item-assignment",
+            "space-item-clear",
+            "space-photo-item-markers",
+            "space-detail-item-entry"
+          ]
+        },
+        {
+          "heading": "Bulk Assignment",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-item-assignment",
+            "space-item-clear",
+            "space-assignment-picker"
+          ]
+        },
+        {
+          "heading": "Space in Budget Context",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-item-assignment",
+            "space-item-clear",
+            "item-accounting-state",
+            "receipt-completeness"
+          ]
+        },
+        {
+          "heading": "Detail, Media and Review Coverage",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-media-lifecycle",
+            "space-media-view-print",
+            "space-photo-item-markers",
+            "space-review-notes",
+            "space-manual-completion",
+            "space-detail-item-entry",
+            "space-templates"
+          ]
+        },
+        {
+          "heading": "Edge Cases",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "space-list-to-detail",
+            "space-archive-assignment",
+            "space-item-assignment",
+            "space-media-lifecycle",
+            "space-checklist-progress",
+            "space-fields"
+          ]
+        }
       ]
     },
     {
@@ -2108,7 +2374,7 @@
     },
     {
       "path": "docs/specs/budget-management.md",
-      "sourceHash": "21c691318ff00931e875623bd6444c082cb359272394604730224caf2d5afc95",
+      "sourceHash": "755371c1d376bd0ac3cd2140f7d7d37959e19b01b34c5ac8a0e1c50d94c81824",
       "auditStatus": "partial",
       "storyIds": [
         "budget-categories",
@@ -2569,7 +2835,10 @@
         "storyIds": [
           "space-templates",
           "budget-categories",
-          "project-inline-category-create"
+          "budget-offline-conflict",
+          "project-inline-category-create",
+          "space-create-from-template",
+          "space-save-as-template"
         ]
       },
       {
@@ -2640,7 +2909,10 @@
       },
       {
         "decisionId": "O-037",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-archive-assignment"
+        ]
       },
       {
         "decisionId": "O-038",
@@ -2684,15 +2956,31 @@
       },
       {
         "decisionId": "O-044",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-fields",
+          "space-details-edit",
+          "space-create-from-template",
+          "space-command-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-045",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-fields",
+          "space-create-from-template",
+          "space-command-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-046",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-fields",
+          "space-create-from-template",
+          "space-command-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-047",
@@ -2726,7 +3014,7 @@
         "auditStatus": "mapped",
         "storyIds": [
           "session-ending-pending-work",
-          "space-checklist-editor"
+          "space-checklist-rejection-resolution"
         ]
       },
       {
@@ -2738,6 +3026,8 @@
           "client-lifecycle",
           "client-create-select",
           "client-archive",
+          "project-budget-allocation",
+          "budget-offline-conflict",
           "project-creation-new-client",
           "project-description-update",
           "project-unarchive",
@@ -2745,6 +3035,42 @@
           "project-hero-media",
           "project-note-actions",
           "project-initial-notes-capture"
+        ]
+      },
+      {
+        "decisionId": "O-053",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-checklist-toggle",
+          "space-checklist-editor",
+          "space-item-assignment",
+          "space-archive-assignment",
+          "space-details-edit",
+          "space-item-clear",
+          "space-command-mcp-parity",
+          "space-media-lifecycle",
+          "space-photo-item-markers",
+          "space-review-notes",
+          "space-manual-completion"
+        ]
+      },
+      {
+        "decisionId": "O-054",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-manual-completion"
+        ]
+      },
+      {
+        "decisionId": "O-055",
+        "auditStatus": "mapped",
+        "storyIds": [
+          "space-checklist-editor",
+          "space-templates",
+          "space-browser-search",
+          "space-create-from-template",
+          "space-save-as-template",
+          "space-command-mcp-parity"
         ]
       }
     ]
@@ -2912,7 +3238,7 @@
     {
       "storyId": "space-list-to-detail",
       "title": "Browse scoped active Spaces",
-      "outcome": "A Project or Inventory scope shows only its active Spaces and opens exact scoped detail with honest offline completeness.",
+      "outcome": "List active Spaces in one exact Account/Project-or-Inventory scope with deterministic case-insensitive name order, display-name/ID ties and distinct duplicate names. Open exact-ID detail; distinguish empty, incomplete, stale, failed and disappeared data. Search and full card evidence are separate obligations.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Target Space Browsing"
@@ -2922,8 +3248,8 @@
     },
     {
       "storyId": "space-fields",
-      "title": "Create and edit Space fields",
-      "outcome": "Space name and notes share exact app, MCP, and database validation and revision behavior.",
+      "title": "Create a direct Space",
+      "outcome": "Create one stable-ID Space in immutable Project or Inventory scope with validated name and optional notes, duplicate names allowed. Preserve Create/Cancel and drafts on failure; durably accept offline intent, then validate current membership and exact parent. No template, media, checklist or Item side effects.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Space Fields"
@@ -2943,18 +3269,25 @@
     {
       "storyId": "space-checklist-toggle",
       "title": "Toggle a Space checklist item",
-      "outcome": "An eligible checklist item toggles offline with stable identity, exact aggregate progress, and visible operation outcome.",
+      "outcome": "Toggle the selected stable-ID task from exact scoped checklist evidence, durably offline with visible pending/rejection. Preserve other tasks and order; detect competing edits instead of silently replacing newer state. This never sets Space reconciliation completion or accounting.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Checklists"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "space-checklist-editor",
-      "title": "Edit Space checklists",
-      "outcome": "The user can add, edit, delete, reorder, save, or cancel complete checklist replacements without losing rejected drafts.",
+      "title": "Edit and save Space checklists",
+      "outcome": "Add, rename, remove and order checklists/items; edit text and checked state. Save one complete stable-ID replacement against the expected Space revision; stale concurrent edits conflict atomically. Empty collections/lists are valid. Cancel only an unaccepted draft; accepted work remains durable.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Checklist Structure"
@@ -2963,7 +3296,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-051"
+          "O-053",
+          "O-055"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -2972,7 +3306,7 @@
     {
       "storyId": "space-checklist-progress",
       "title": "Show checklist progress",
-      "outcome": "Per-list and aggregate progress is derived honestly from exact checklist item state.",
+      "outcome": "Derive per-list and aggregate checked/total counts from the same represented checklist state. Empty lists and collections are valid and must not divide by zero or imply completed reconciliation. Show unknown/incomplete evidence honestly, not fabricated zero or completion.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Checklist Progress"
@@ -2982,8 +3316,8 @@
     },
     {
       "storyId": "space-templates",
-      "title": "Create and apply Space templates",
-      "outcome": "Authorized users save and apply stable Space templates without granting unintended reference-data authority.",
+      "title": "Manage shared Space templates",
+      "outcome": "Browse active ordered templates with name, optional notes and checklist count. Add/edit name, notes and checklist structure; cancel retains data. Authorized save, archive and reorder have durable visible outcomes, not silent independent writes. Reset stored checked state; shared grants remain O-026.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Space Templates"
@@ -2992,7 +3326,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-026"
+          "O-026",
+          "O-055"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -3000,19 +3335,26 @@
     },
     {
       "storyId": "space-item-assignment",
-      "title": "Assign Items to Spaces",
-      "outcome": "Authorized Items move into, between, or out of Spaces within the exact owning scope.",
+      "title": "Assign or move Items to a Space",
+      "outcome": "Assign selected stable-ID Items atomically/idempotently to an active same-scope Space using exact Item and destination evidence. Replacing placement closes old-photo green Item checkmark links without deleting photos/bytes; derive links server-side. Red review notes and accounting remain unchanged.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Item Assignment"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "space-archive-assignment",
-      "title": "Preserve assignments through Space archive",
-      "outcome": "Space archive preserves resolvable Item placement history and prevents new assignment without silently clearing evidence.",
+      "title": "Remove a Space without losing placement evidence",
+      "outcome": "Ordinary removal is archive, never source hard delete. Confirm/cancel the exact Space and expose durable outcomes; resolve assigned-Item and historical-reference behavior under O-037 before implementation. Do not silently clear placement or leave hidden unexplained Space IDs.",
       "authority": {
         "path": "docs/specs/spaces.md",
         "section": "Edge Cases"
@@ -3021,7 +3363,8 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-037"
+          "O-037",
+          "O-053"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -3713,12 +4056,19 @@
         "section": "Per-Project Budget Allocation"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "budget-progress-calculation",
       "title": "Calculate budget progress",
-      "outcome": "Per-category and overall progress derives deterministically from canonical signed accounting contributions.",
+      "outcome": "Compute each category from direct Client-paid records and frozen collected allocations plus open Item charges/credits, Expenses and Fees. Collection changes paid/unpaid composition, never total. Same-Client Transfer is net zero; unresolved category/provenance prevents an authoritative complete total.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Budget Progress Calculation"
@@ -3729,7 +4079,7 @@
     {
       "storyId": "budget-sign-conventions",
       "title": "Apply budget sign conventions",
-      "outcome": "Purchases, Returns, Transfers, charges, and credits contribute with the documented signs.",
+      "outcome": "Use canonical scope-relative cash, Item charge/credit and paired Transfer contributions, not source Sale/paymentToBusiness multipliers. Preserve signed amount and exact category/cycle provenance; never manufacture movement Transactions or count settlement cash twice.",
       "authority": {
         "path": "docs/specs/budget-management.md",
         "section": "Sign Conventions"
@@ -3764,7 +4114,15 @@
         "section": "Offline and Conflict Behavior"
       },
       "milestone": "M3",
-      "status": "required"
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026",
+          "O-052"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
     },
     {
       "storyId": "non-item-receipt-lines",
@@ -4574,6 +4932,261 @@
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       }
+    },
+    {
+      "storyId": "space-details-edit",
+      "title": "Update Space name and notes",
+      "outcome": "Prefill name and multiline notes; preserve Save/Cancel and required-name feedback. Replace the complete normalized name/optional-notes pair for exact Space ID/revision; whitespace-only notes clear. Never change immutable scope; stale edits conflict visibly and accepted intent survives restart.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Target Redesign Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-044",
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-browser-search",
+      "title": "Search Space names",
+      "outcome": "Preserve case-insensitive name containment in both scoped browsers, query clearing and distinct no-Spaces versus no-matches states. Freeze shared cross-platform matching/normalization before verification; a filtered incomplete cache cannot establish that no matching Space exists.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Target Space Browsing"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-055"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-browser-card-evidence",
+      "title": "Show complete Space cards",
+      "outcome": "Show name, authorized primary/first image or honest placeholder, Item count and checklist progress. Zero Items requires complete visibility-safe evidence; missing/stale/partial Item or media data remains unavailable. Checklist progress never substitutes for the separate Space completion flag.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Target Space Browsing"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-create-from-template",
+      "title": "Create a Space from a real template",
+      "outcome": "Select an authorized stable template in the exact creation scope, copy notes and ordered checklists with every task unchecked, then allow customization. Replace the unavailable-picker stub with real loading/empty/failure states; template use never grants shared-template mutation authority.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Creating from Template"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-044",
+          "O-045",
+          "O-046",
+          "O-026",
+          "O-055"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-save-as-template",
+      "title": "Save a Space checklist as a template",
+      "outcome": "Save the selected Space checklist structure as a real new shared template, resetting every checked value. Preserve cancel and visible pending/failure; never report success without durable acceptance. Keep the source Space unchanged and authorize shared-template creation separately.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Saving as Template"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-026",
+          "O-055"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-item-clear",
+      "title": "Clear Item placement",
+      "outcome": "Clear selected Items in one common Project-or-Inventory scope, even from different current Spaces. Validate each exact revision/current Space and apply all-or-nothing/idempotently; close old-photo green Item links without deleting images/bytes or changing red review notes and accounting.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Bulk Assignment"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-assignment-picker",
+      "title": "Choose an exact-scope placement destination",
+      "outcome": "Show only active exact-scope Spaces with stable IDs/revisions, deterministic name order and current-selection mark. No Space clears placement; Close cancels. Distinguish complete empty from partial/stale/failed evidence; missing cached rows never prove no destination or grant authorization.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Bulk Assignment"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-checklist-rejection-resolution",
+      "title": "Resolve rejected checklist work",
+      "outcome": "Retain the exact accepted checklist intent and rejection across restart; review and close cannot erase it. Corrective retry or do-not-retry resolution must follow approved O-051 responsibility and evidence rules, separate from canceling an unaccepted editor draft.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Target Redesign Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-051"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-command-mcp-parity",
+      "title": "Expose shared Space operations through MCP",
+      "outcome": "App and MCP use the same typed Space creation, details, checklist and Item-placement commands with identical validation, scope, revision, authorization and durable outcomes. MCP cannot bypass role decisions or reinterpret missing local evidence; UI-only checks do not prove this story.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Target Redesign Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053",
+          "O-044",
+          "O-045",
+          "O-046",
+          "O-055"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-media-lifecycle",
+      "title": "Manage Space photos durably",
+      "outcome": "Add uncapped Space images with durable local bytes, upload/retry and visible failure; select primary media for detail/cards. Remove only the authorized reference under approved retention rules, never assume immediate byte deletion. Preserve stable media identity across upload and restart.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Space Fields"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-023",
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-media-view-print",
+      "title": "Inspect and print Space media",
+      "outcome": "Preserve media expand/collapse, image/PDF pinning, navigation, zoom/pan and unpin controls from the exact-control catalog. Print only resolved non-uploading images with loading/failure feedback; PDFs never expose photo matching. Missing offline bytes must be visible, not pretend available.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "space-photo-item-markers",
+      "title": "Match Items to Space photos",
+      "outcome": "Use stable photo/Item identities for single and grouped one/two-location green markers. Preserve cancel/redo/save gating, move/reassign/remove and clear-all across photos, not just the pinned one. Persist visibly across offline restart; keep red review-note marks and Space completion separate.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-review-notes",
+      "title": "Record Space review observations",
+      "outcome": "Create/edit/delete text observations, newest-first with author/date and optional same-Space photo/red marker. Preserve text-only notes, photo selection/change/removal, marker positioning and failure drafts. Do not mix general notes, Project Notes, green Item markers or duplicate image bytes.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-023",
+          "O-053"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-manual-completion",
+      "title": "Resolve manual Space completion behavior",
+      "outcome": "Account for the existing Mark space complete/incomplete control and persisted reconciliation flag, independently of checklist and photo-match progress. Its target meaning is not approved: preserve source evidence and require an explicit preserve/redesign/retire decision before claiming completion.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-053",
+          "O-054"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "space-detail-item-entry",
+      "title": "Open and add Items within a Space",
+      "outcome": "Preserve exact-Space Item list/count, shared search/sort/filter/group/selection, Item detail or unavailable state, Create New preassigned to this Space and Add Existing Items. Delegate accounting and placement to their shared commands; never change immutable scope through navigation.",
+      "authority": {
+        "path": "docs/specs/spaces.md",
+        "section": "Detail, Media and Review Coverage"
+      },
+      "milestone": "M3",
+      "status": "required"
     }
   ]
 }
