@@ -21,8 +21,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
+      "acknowledgeSourceHash": "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d",
+      "currentBehavior": "Automatically runs one pull-request CI gate per exact workflow commit: conversion traceability and query controls on Linux, disposable local Supabase schema/RLS/RPC/Data-API tests on Ubuntu, and target isolation, contracts, MCP/Swift tests, and macOS/iOS Simulator builds on macOS 26, all with clean-diff enforcement. Manual duplicate dispatch is intentionally absent.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],

@@ -1,5 +1,11 @@
 # Supabase Conversion Execution State
 
+> **Historical log after method v3.** Do not resume work from this file or copy
+> its READY/dossier/promotion sequence. Resume from
+> `current-execution-state.json` and follow
+> `vertical-slice-implementation-method.md`. This log is retained only as audit
+> history.
+
 > Detailed checkpoint history. Do not load this file during a normal task
 > start, handoff, or context-compaction resume. The compact authoritative resume
 > record is `current-execution-state.json`; consult this history only when that

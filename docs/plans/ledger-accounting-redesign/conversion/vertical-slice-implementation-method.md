@@ -1,364 +1,272 @@
-# Vertical Slice Implementation Method
+# Workflow Implementation Method
 
-Status: required before any redesigned target surface advances beyond
-`target_mapped`; method version 2
+Status: required for redesigned target implementation; method version 3
 
 ## Purpose
 
-This method turns an approved Ledger product slice into one traceable,
-testable implementation across backend-neutral domain/application code,
-Supabase Postgres, RLS, PowerSync, local reads, app and MCP entry points,
-migration, reconciliation, observability and rollback.
+Implement Ledger as coherent user workflows while preserving the controls that
+prevent accounting, authorization, offline, migration, and cutover mistakes.
+The process must make the product easier to finish and understand. It must not
+become a second product.
 
-It closes the gap between “the relevant specs were reviewed” and “the code is
-proven to implement the exact approved behavior.” Conversation history, a broad
-tracker row, compilation, or one happy-path test is never implementation proof.
-
-Every active slice has one machine-readable dossier in
-`implementation-slices/<slice-id>.json`. The conversion checker validates the
-dossier and refuses status advancement when traceability or evidence is
-missing.
+The normal unit of delivery is a user-visible workflow such as “create a
+Project,” “browse and edit a Space,” or “collect an Invoice.” Internal types,
+ports, SQL functions, adapters, and views are parts of that workflow, not
+separate delivery units.
 
 ## Authority and Precedence
 
 For product behavior, precedence is:
 
 1. canonical target specs;
-2. confirmed entries in the redesign decision log;
-3. the capability dossier's reviewed preserve/correct/improve/redesign/retire
-   outcome; and
-4. the target architecture for technical realization.
+2. confirmed redesign decisions;
+3. reviewed preserve/correct/improve/redesign/retire conclusions; and
+4. target architecture for technical realization.
 
-Current-product and historical specs may establish shipped behavior,
-migration evidence, or regression fixtures. They cannot authorize redesigned
-behavior. Architecture cannot settle an open product decision.
+Current-product and historical specs may establish shipped behavior and
+migration evidence. They do not authorize redesigned behavior. Architecture
+does not settle an open product decision.
 
-If sources disagree, stop the affected slice. Update the canonical spec and
-decision log when authority is clear, or record a blocker. Never resolve the
-conflict only in SQL, Swift, TypeScript, RLS, Sync rules, or tests.
+If these sources conflict or omit a choice that changes user-visible behavior,
+schema, accounting, authorization, offline conflict resolution, or migration,
+stop only the affected workflow and record the decision needed. Select another
+unblocked workflow instead of inventing an answer.
 
-Before a product slice becomes `ready`, perform a feature-specific authority
-audit: every promised user-visible outcome must already appear in a canonical
-target-spec heading or confirmed D decision. Batch-level association with broad
-specs, current shipped behavior, an architecture interface, a capability
-dossier, or a `target_mapped` manifest status does not establish that outcome.
-Do not add new target-spec language during ready preparation merely to make a
-candidate appear authorized; when the missing language represents a product
-choice, record an O blocker/decision packet and select another slice.
+## Non-Negotiable Engineering Boundaries
+
+- The redesigned application has one target authority: Supabase Postgres plus
+  PowerSync-backed local state. Do not implement redesigned behavior in
+  Firebase.
+- App and MCP entry points use the same domain commands and queries.
+- Multi-row accounting changes are one authoritative database transaction.
+- Tenant isolation requires explicit grants, RLS, and negative cross-tenant
+  tests. `authenticated` alone is not authorization.
+- Offline mutations require durable local acceptance, deterministic replay,
+  idempotency, rejection handling, and restart proof.
+- Migration requires source preservation and count, relationship, amount, and
+  provenance reconciliation. Unknown evidence is quarantined, never guessed.
+- Hosted resources, production access, source freeze, migration, release, and
+  cutover require explicit user authorization.
 
 ## Unit of Delivery
 
-A vertical slice is the smallest user-meaningful or operational outcome that
-can be implemented and verified through all affected layers. Good examples are
-“create a Project with authoritative Client identity,” “place an Inventory Item
-in a Project and create open Item demand,” or “collect one whole Invoice.” A
-table, view, SDK wrapper, screen, or migration script by itself is not a product
-slice.
+### The One Active Workflow Record
 
-Each manifest surface has one primary implementation slice. Several source
-surfaces may converge on the same slice. One slice may span several source
-surfaces when they collectively deliver one outcome. Shared infrastructure is a
-separate technical-control slice with explicit downstream contracts.
+`current-execution-state.json` is the compact resume pointer. It names the
+active workflow and, after selection, its durable record under
+`workflow-records/<workflow-id>.json`. The workflow record contains:
 
-### Delivery batches
+- the user outcome;
+- whether it is a product UI, backend/control, or migration workflow;
+- exact canonical spec/decision references;
+- applicable risk domains;
+- the source and target pages in the journey, every visible control and option,
+  each resulting transition or operation, and loading/empty/error/offline states;
+- exact spec or decision-log headings that govern each UI journey;
+- affected technical components, at component level rather than an exhaustive
+  file allowlist;
+- executable acceptance checks; and
+- the next one to five actions.
 
-The traceability unit remains a slice, but the normal execution unit is a
-delivery batch containing several tightly related slices that together produce
-an end-user workflow. A batch should normally include the required schema,
-trusted reads/commands, grants/RLS, PowerSync behavior, app/MCP entry points,
-offline/restart proof, and reconciliation support for that workflow.
+Update the compact pointer when the active workflow or verified checkpoint
+changes. Update the workflow record as behavior and verification become known;
+keep it after completion so detailed UI and control-flow coverage is cumulative,
+not overwritten by the next workflow. Do not create comment-only implementation
+or test files, a separate readiness commit, per-component dossiers, evidence
+essays, or promotion-only commits for an ordinary workflow.
 
-Do not create a separate implementation cycle for every two-file contract,
-adapter, presenter, or read projection when those pieces can be reviewed and
-verified safely as one feature batch. A smaller slice remains appropriate when
-it resolves a reusable high-risk invariant, blocks several downstream paths, or
-must be isolated to answer an architectural spike question.
+The implementation tracker is the workflow backlog and program-level status
+view. A completed row should say what works, what remains excluded, and identify
+the implementation commit and CI run. It should not narrate every intermediate
+type or control-plane transition.
 
-Progress is reported primarily by complete locally working workflows, hosted
-rehearsals, and cutover-ready workflows. Surface counts and planning coverage
-remain audit controls; they are not substitutes for product completion.
+The exhaustive conversion catalog remains the coverage backstop. It currently
+includes the discovered UI components and views as well as services, state,
+queries, MCP tools, tests, and operational surfaces. Workflow planning groups
+those detailed surfaces into a journey; it does not discard them. Before a
+workflow is complete, its UI coverage must be checked against both the catalog
+and the current app so every control, menu choice, sheet, navigation result,
+disabled rule, and visible data state has an explicit preserve, redesign, or
+retire outcome. The active record names the stable source-surface IDs used for
+that check, so grouping work into a journey never makes the underlying coverage
+anonymous.
 
-Before executable work, the active batch must be durably recorded in a
-machine-checked implementation-slice dossier (one umbrella user-workflow slice
-is preferred when practical) with its exact base commit, dependent verified
-slices, union change boundary, risk domains, requirement-to-test map, reviewers,
-rollback boundary, and unresolved blockers. Normal batches contain one coherent
-workflow and two to four independently understandable sub-slices. A one-slice
-batch must identify the reusable high-risk invariant, external dependency or
-architectural uncertainty that makes isolation cheaper than batching.
+Risk domains use a fixed vocabulary, and every selected risk must have at least
+one matching acceptance check in addition to the general end-to-end check. UI
+controls record their label, result, and preserve/redesign/retire disposition;
+the state checker derives minimum layers and risks from affected component paths
+and from every target file changed since the verified checkpoint. A workflow
+cannot declare itself low-risk while changing Postgres/RLS, PowerSync/offline,
+accounting, authentication, media, deletion, migration, app UI, or MCP paths.
+Human judgment may add risks; it may not remove the derived minimum.
+free-form “tested” claims are insufficient.
 
-Do not combine two distinct high-risk authorities merely to save a CI cycle.
-Auth/identity, financial accounting, destructive migration, Sync authorization,
-and retention/deletion each require an explicit boundary and specialist review.
-Every batch includes cross-slice tests for shared identity, authorization,
-revision, readiness, operation ordering, and rollback behavior. Financial
-batches additionally prove conservation, reconciliation, and concurrent
-interleavings.
+### Complete Current-App UI Baseline
 
-Parallel agents receive disjoint executable/test ownership. The integrating
-agent alone edits ordered migrations, shared runtime composition, generated
-projects, manifests, and status/evidence records. If a constituent slice fails
-review or CI, the exact batch cannot be promoted; remove or correct it in a new
-synchronized checkpoint and rerun the batch gate. Never reuse a failed exact
-commit's evidence to promote neighboring work.
+Before additional product UI implementation, complete one dedicated baseline
+record covering all 167 currently discovered Swift UI components and views.
+For every page or shared component it records:
 
-### Context, token and round-trip discipline
+- its stable surface IDs and source/target page names;
+- every visible control and every selectable option;
+- what each interaction does and where it navigates;
+- loading, empty, partial, error, disabled, offline, pending, and conflict states
+  that apply; and
+- whether the behavior is preserved, redesigned, or retired, with the governing
+  spec or decision.
 
-The compact `current-execution-state.json` record is the normal resume entry
-point. Do not load this document, the control-plane README, the detailed
-execution history, every target spec or every dossier after each compaction.
-Load the active dossier and only the exact authority/code sections needed for
-the next action. Broaden the read only when a concrete discrepancy or review
-question requires it.
+The baseline record maintains explicit covered and uncovered surface sets. Its
+completion gate requires their union to equal the manifest's complete UI set,
+with no duplicates and no uncovered IDs. Later product workflows reference the
+baseline journeys they implement and may add newly discovered details. This is
+the durable answer to “did we preserve every control flow?”; file-level surface
+discovery alone is not sufficient.
 
-During development, run the smallest focused checker or test suite that can
-falsify the change. The integration agent runs the complete local gate once on
-the synchronized normal batch and requests one immutable CI run on that exact
-commit. Workers do not independently rerun the complete repository gate unless
-their candidate changes a shared build/runtime boundary or the integration
-agent requests it after a failure.
+## When a Separate Design Note Is Worth It
 
-At each integrated batch checkpoint, record the number of completed workflows,
-elapsed time, goal-token delta when available, full local gates, immutable CI
-runs, accepted review findings and rework loops. Evaluate the approximately
-three-times speed and token-efficiency target using cost per verified end-to-end
-workflow. Commit count, surface count, generated-document count and agent
-utilization are diagnostic data, not progress.
+A short design note is required only when a workflow introduces or materially
+changes one of these boundaries:
 
-Efficiency targets never justify combining unrelated authorities, omitting a
-negative/security/offline/reconciliation test, weakening a checker, accepting a
-known race, or advancing an unsupported status.
+- financial conservation or accounting authority;
+- authentication, identity, tenant authorization, or RLS policy structure;
+- Sync Stream visibility or offline conflict/rejection policy;
+- destructive migration, retention, or deletion;
+- a shared architectural dependency whose result controls several workflows.
+
+The note answers the unresolved design question, records the chosen invariant,
+and names the tests. It is not a second tracker. Existing
+`implementation-slices/*.json` and `evidence/*.md` files remain historical audit
+records; new workflows do not need new files in those directories.
 
 ## Required Slice Dossier
 
-Copy `_template.json` to a stable lower-kebab-case slice filename. Delete the
-template comments by replacing every placeholder; do not weaken validation or
-mark an obligation not applicable merely to pass the checker.
-
-### Identity and ownership
-
-- stable `sliceId`, title, kind, owner and lifecycle status;
-- every stable conversion-manifest `surfaceId` primarily implemented by the
-  slice; and
-- every unresolved blocker that can still change behavior or architecture.
-
-### Exact requirements
-
-Each requirement records:
-
-- a slice-stable requirement ID;
-- an authority role;
-- repository path and exact Markdown section heading;
-- a concise invariant or observable story stated independently of
-  implementation;
-- applicable confirmed decision IDs; and
-- the verification IDs that prove it.
-
-The checker confirms that the file and heading exist, the authority is allowed
-by the claimed surfaces' reviewed authority batches, decision IDs exist, and
-every requirement is covered by a named verification obligation.
-
-### Contract map
-
-Every category below contains concrete items or a specific `notApplicable`
-reason:
-
-1. backend-neutral domain values, commands, queries and results;
-2. Postgres tables, relationships, checks, uniqueness and indexes;
-3. authoritative transactional handlers, locking, idempotency and stable
-   rejection results;
-4. Data API schema exposure and explicit grants;
-5. RLS policies and authorization predicates;
-6. PowerSync Sync Streams, local tables, visibility and readiness;
-7. encrypted local state, optimistic/rejected state and restart behavior;
-8. Storage/media policies and durable-byte behavior;
-9. app and MCP entry points using the same command/query authority;
-10. source transforms, target migrations and reconciliation;
-11. metrics, alerts and runbook effects; and
-12. rollout, feature-authority activation and rollback.
-
-For exposed Supabase tables, Data API grants and RLS are separate obligations.
-`authenticated` is never sufficient authorization by itself. Views, privileged
-functions, Storage upserts, JWT claim freshness, session revocation and service
-credentials receive explicit review where relevant.
-
-### Verification map
-
-Every verification obligation has a stable ID, test kind, executable owner,
-covered requirement IDs, expected result, status and evidence references.
-Required kinds are derived from the non-empty contract categories. Examples
-include domain/property tests, database invariants/concurrency, handler
-idempotency, positive and negative RLS matrices, Sync authorization/local-row
-absence, offline restart and rejection, migration/reconciliation, app/MCP
-contract parity, Supabase security/performance advisors and end-to-end stories.
-
-A test name is a plan, not proof. `verified` requires every obligation to be
-recorded as passed with durable evidence.
-
-## Lifecycle and Gates
-
-| Slice status | Meaning | Minimum gate |
-|---|---|---|
-| `draft` | Requirements or mapping are still incomplete | May contain blockers; no implementation status claim |
-| `ready` | Exact authority, contracts and test obligations are complete | Claimed target surfaces are `target_mapped`; blockers empty |
-| `in_progress` | Target implementation has started | Same gate as `ready`; dossier changes with the code |
-| `implemented` | Required target code/DDL/config exists | Claimed target surfaces are `implemented`; implementation evidence recorded; tests may still be pending |
-| `verified` | All required tests and advisors pass | Claimed target surfaces are `verified`; every verification has passing evidence |
-| `rehearsed` | Required isolated staging, migration and physical offline/fault evidence passes | Claimed target surfaces are `rehearsed`; rehearsal evidence recorded |
-| `cutover_ready` | Slice satisfies the approved coordinated cutover gate | Claimed surfaces are `cutover_ready`; never inferred from lower gates |
-
-The checker also enforces the inverse: no target-relevant manifest surface may
-advance to `implemented` or later without exactly one implementation slice that
-has reached the corresponding status.
-
-Mechanical target-query inventory follows the same checkpoint sequence. A
-public `Querying` port enters that inventory when its exact manifest owner is
-`implemented`, `verified`, `rehearsed`, or `cutover_ready`; pre-implementation,
-blocked, retired, and unknown owners reject the inventory. The inventory records
-owner status for human review, but its TQUERY identity, signature hash, and
-inventory digest are lifecycle-stable.
-
-Logical query authority is lifecycle-neutral: `mapped` means the query's scope,
-result, ordering, pagination, readiness, and authorization boundaries were
-reviewed, not that its implementation passed verification. A consumer claiming
-a `verified_target_query_port` must join the TQUERY's owner surface to the
-current conversion manifest and require exactly `verified`, `rehearsed`, or
-`cutover_ready`. It may not trust stale generated lifecycle prose or interpret
-`implemented` as verified.
+This heading is retained so historical dossiers can continue to validate their
+original authority references. Method v3 replaces the required per-slice
+dossier with the single active workflow record above. Existing dossiers remain
+immutable audit history; do not create new ones for ordinary workflow delivery.
 
 ## Required Work Sequence
 
-1. **Select the slice.** Identify stable manifest surfaces and owning capability
-   dossier. Do not organize work around Firebase files or target tables.
-2. **Freeze authority for the slice.** Independently confirm that the exact
-   feature exists in pre-existing canonical target authority, then record its
-   headings, invariants, confirmed decisions and blockers. An open or newly
-   discovered mapping-changing decision keeps the slice `draft`.
-3. **Complete the contract map.** Name domain/application contracts first, then
-   schema/handlers/RLS/Sync/local/app-MCP/migration/operations. Record explicit
-   non-applicability instead of silent omission.
-4. **Define verification before implementation.** Give every invariant one or
-   more executable verification IDs and include negative authorization,
-   concurrency, offline/restart/rejection and reconciliation cases where the
-   contracts require them.
-5. **Move to `ready`.** Run `conversion:check`; review the dossier, SQL/RLS/Sync
-   design and proposed tests. No code begins while this gate fails.
-6. **Implement one authority.** App and MCP use the same domain commands and
-   queries. Multi-row accounting changes occur in one authoritative target
-   transaction. Do not implement redesigned behavior in Firebase.
-7. **Verify locally and in isolated staging.** Before provider-specific work,
-   check the current Supabase changelog/docs. Run migrations, database tests,
-   positive/negative RLS tests, Sync/offline/fault tests, app/MCP parity,
-   migration/reconciliation fixtures and relevant advisors.
-8. **Attach evidence and advance statuses together.** Update the slice dossier,
-   manifest entries, evidence index, generated audits and execution state in the
-   same bounded checkpoint. A surface and its slice may not disagree.
-9. **Rehearse and activate separately.** Staging rehearsal does not authorize
-   production. Authority activation, source freeze, final import, rollback and
-   monitoring remain coordinated program gates requiring explicit approval.
+1. **Choose an unblocked workflow.** Prefer the next user-meaningful path, not a
+   two-file abstraction or a source file family.
+2. **Check authority.** Read only the relevant target-spec sections and confirmed
+   decisions. Put their paths and headings in `activeWorkflow.authority`.
+3. **Write acceptance checks.** State the happy path and the applicable negative,
+   offline, replay, security, accounting, and reconciliation cases in concise
+   testable language. Record the page-by-page UI journey, including controls,
+   options, transitions, loading/empty/error/offline states and accessibility.
+4. **Implement through the affected layers.** Keep business rules in shared
+   domain/application code and authoritative transactions, with thin UI, MCP,
+   and provider adapters.
+5. **Test while building.** Run focused tests that can quickly falsify the work.
+6. **Review by risk.** The integrating agent reviews the complete diff. Request
+   an independent specialist review when a high-risk boundary above changes or
+   for the first implementations delegated to a new subagent.
+7. **Verify once.** Run the complete applicable local workflow gate on the
+   integrated change, then use the pull-request CI run on that exact commit.
+   Do not manually dispatch a duplicate run for the same commit.
+8. **Record the result.** Update the tracker and current state with the commit,
+   CI run, what now works, and honest exclusions. Keep the completed workflow
+   record and link it from the tracker before continuing.
 
-### Immutable-CI checkpoint sequencing
+Do not split these steps into separate status commits unless a high-risk design
+decision genuinely needs approval before executable work.
 
-The conversion manifest records content hashes, so an executable-only commit
-above synchronized classifications is knowingly traceability-red. Use this
-sequence for each delivery batch:
+## Test Obligations by Risk
 
-1. prepare and review the authority, contract, verification and change-boundary
-   records for every slice in the batch before implementing its behavior;
-2. in one bounded implementation checkpoint, change only the reviewed batch
-   surfaces and synchronize their hashes, dossiers, manifest, evidence,
-   tracker and generated controls at honest `implemented` status;
-3. run focused checks while developing, then pass the complete immutable
-   workflow once on that exact implemented batch commit; and
-4. record the green run and advance eligible surfaces to `verified` in the next
-   natural control checkpoint. A dedicated promotion commit is optional unless
-   release tooling, a reviewer, or a higher lifecycle gate requires it.
+Every workflow needs domain/application tests and at least one end-to-end path
+through its implemented layers. Add the following only when applicable:
 
-A separate comment-only READY commit and full CI run is reserved for high-risk
-or independently deployable boundaries—especially new financial authority,
-security/RLS, destructive migration, identity/Auth, Sync authorization, or a
-spike whose result controls architecture. It is not required for every small
-target-local adapter or presentation leaf. One independent review may cover the
-whole batch; additional specialist review is required only for materially
-different risk domains such as SQL/RLS and offline concurrency.
+| Changed boundary | Required proof |
+|---|---|
+| Postgres schema or handler | constraints, transactionality, concurrency, idempotency |
+| Grants or RLS | allowed matrix plus denied cross-tenant and unauthenticated cases |
+| PowerSync/local mutation | offline acceptance, encrypted restart, replay, rejection, authoritative readback |
+| Sync visibility | allowed rows plus absence of unauthorized local rows and revocation behavior |
+| Accounting | conservation, rounding, concurrent interleavings, reconciliation |
+| Media | durable-byte lifecycle, retry, orphan/reference and retention behavior |
+| Migration | deterministic transform, quarantine, counts, relationships, money, provenance, resumability |
+| App and MCP | both invoke the same typed authority and return compatible results |
+| UI journey | every inventoried control/option/transition/state is preserved, deliberately redesigned, or explicitly retired; interaction and accessibility tests cover the target result |
 
-Do not push a known-red executable-only checkpoint merely to preserve a
-two-leaf implementation diff. Prove that allowlist relative to the READY commit
-inside the synchronized implementation checkpoint's evidence and review. If a
-legacy executable-only checkpoint already exists, record its isolated-target
-and traceability jobs separately, synchronize at honest `implemented` status,
-require a complete green immutable run on that recovery checkpoint, and only
-then promote. Never describe a partially failed workflow as passed.
+Compilation or a named test plan is not proof. A workflow is verified only when
+the applicable executable checks pass.
 
-## Change Control During Implementation
+## Status Meanings
 
-When a spec, confirmed decision, security model, Sync boundary, migration rule,
-or acceptance invariant changes:
+| Status | Meaning |
+|---|---|
+| `planning` | Authority and acceptance checks are being confirmed |
+| `implementation` | Executable target work is in progress |
+| `review` | The integrated diff is being checked for correctness and scope |
+| `local_verification` | The complete applicable local gate is running or being corrected |
+| `ci_verification` | Exact-commit CI is running or being corrected |
+| `blocked` | A named decision, permission, or external dependency prevents this workflow |
+| `complete` | Applicable local checks and exact-commit CI passed |
 
-1. stop affected implementation;
-2. update product authority first;
-3. update the product-authority crosswalk and capability dossier;
-4. update affected slice requirements/contracts/tests;
-5. return the slice and affected surfaces to the earliest honest status;
-6. regenerate/check all control artifacts; and
-7. resume only after review.
+“Complete” here means complete for the workflow’s stated scope. It does not mean
+hosted rehearsal, migration, or cutover is authorized.
 
-Do not preserve a higher status because code already exists.
+## Passive Completeness Controls
+
+The 1,019-surface conversion catalog—including 112 discovered Swift UI
+components and 55 Swift views—target-query inventory, logical-authority
+crosswalk, source-query reconciliation, and historical slice audit remain useful
+for detecting omissions. They are passive audit tools, not the unit of work and
+not a reason to create scaffolds or status-promotion commits.
+
+Run focused checks during implementation. Run `npm run conversion:check` and
+the complete relevant target tests at the integrated workflow boundary. Run the
+whole-catalog M0/M1/M2 gates when their inputs change and before migration or
+cutover readiness; do not repeatedly promote individual source surfaces merely
+to report feature progress.
+
+The conversion checker may validate historical dossiers, but a newly
+implemented target surface does not require a new dossier. Product completion
+is measured by working workflows, not mapped or promoted surface counts.
+
+M3 remains the complete target-implementation gate, M4 remains migration and
+rehearsal proof, and M5 remains explicit cutover readiness. Method v3 changes
+delivery bookkeeping only; it does not weaken or remove M3, M4, M5, hosted
+authentication/Sync evidence, rollback, or explicit cutover authorization.
+
+## Context Continuity
+
+After context compaction or handoff:
+
+1. read `current-execution-state.json`;
+2. inspect Git status and the diff since its verified checkpoint;
+3. run `npm run conversion:state:check`;
+4. read only the authority sections named for the active workflow; and
+5. continue its next action.
+
+Conversation history, the large conversion README, generated catalogs, old
+dossiers, and execution history are reference material. Load them only when a
+specific discrepancy requires them.
 
 ## Pull Request and Checkpoint Evidence
 
-Every slice PR or bounded checkpoint includes:
-
-- slice dossier diff and claimed surface IDs;
-- canonical spec sections and decisions changed or confirmed;
-- implementation/migration identifiers;
-- exact commands used for tests, advisors and generated checks;
-- passing/failing results and durable artifact links;
-- known blockers and excluded scope;
-- environment and production-isolation statement; and
-- manifest/evidence/execution-state updates.
-
-Required local control commands remain:
-
-```bash
-npm run conversion:check
-npm run conversion:report
-npm run conversion:gate:m0
-npm run conversion:gate:m1
-npm run conversion:gate:m2
-```
-
-Later gates remain expected to fail until their real prerequisites and slice
-evidence exist. Never weaken a gate to make progress look complete.
+For a normal workflow, the active workflow record and implementation-tracker row
+record the exact commit, automatic pull-request CI run, applicable test results,
+review outcome, blockers, and excluded scope. Store separate durable artifacts
+only when a security, accounting, offline, or migration claim needs structured
+evidence that cannot be recovered from executable tests and CI output.
 
 ## Reviewer Stop Conditions
 
-Reject or pause a slice when any of these is true:
+Stop the affected workflow if:
 
-- requirement text lacks an exact product/architecture authority section;
-- a current or historical spec is being used as target authority;
-- an open decision was silently chosen in code;
-- domain behavior exists only in a view, MCP tool, SQL trigger or adapter;
-- app and MCP calculate or mutate the same concept independently;
-- exposed tables lack explicit grants or RLS review;
-- positive authorization tests exist without negative/cross-tenant tests;
-- Sync tests inspect server results but not unauthorized local-row absence;
-- offline acceptance is only an in-memory mock or successful reconnect;
-- idempotency is asserted without lost-response/replay/concurrency cases;
-- migration counts exist without relationship/amount/provenance reconciliation;
-- a test is named but no executable owner or evidence exists;
-- implementation status advances without a corresponding slice dossier; or
-- production access, deployment or cutover is inferred from design evidence.
+- target behavior lacks canonical product authority;
+- an open product decision was silently chosen;
+- app, MCP, and database layers implement competing business rules;
+- a tenant-visible table lacks explicit authorization and negative tests;
+- offline success exists only in memory or only on a successful reconnect;
+- idempotency lacks lost-response/replay or concurrency proof;
+- accounting changes lack conservation and reconciliation proof;
+- migration invents meaning for ambiguous source evidence; or
+- production, hosted, migration, or cutover activity would exceed current
+  authorization.
 
-## Relationship to Existing Controls
-
-- `capability-evolution-method.md` decides what outcome should change or remain.
-- `target-mapping-method.md` assigns every source surface to target ownership.
-- `product-authority-crosswalk.json` supplies the reviewed authority set.
-- this method governs actual slice implementation and proof;
-- `conversion-manifest.json` holds per-surface lifecycle status;
-- `08-verification-observability-and-operations.md` defines system-wide tests,
-  operations and vertical-slice done criteria; and
-- the implementation tracker sequences slices and program gates.
-
-None of these documents authorizes production migration by itself.
+Do not stop an otherwise sound workflow because a comment-only scaffold,
+per-surface promotion, dossier field, or standalone evidence narrative is
+missing.

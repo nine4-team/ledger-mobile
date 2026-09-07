@@ -42,7 +42,7 @@ const EXPECTED_CONTRACTS_SHA =
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
   "ef8cf1572dced7f5a6dcb2e4613ad89595f9d1a4564588e46c0845d80661b51f";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000";
+  "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -431,7 +431,7 @@ export function validateIntegrationHooks(packageJson, workflowText) {
   if (triggerStart >= permissionsStart) fail("workflow triggers must precede permissions");
   requireEqual(
     lines.slice(triggerStart, permissionsStart).filter((line) => line.trim() !== ""),
-    ["on:", "  pull_request:", "  workflow_dispatch:"],
+    ["on:", "  pull_request:"],
     "conversion workflow triggers",
   );
   const conversionStart = uniqueLineIndex(

@@ -1,54 +1,30 @@
 {
-  "schemaVersion": 1,
-  "stateVersion": 16,
+  "schemaVersion": 2,
+  "stateVersion": 19,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
-  "historyFile": "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
   "method": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
-    "version": 2
+    "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "SPACE-LIST-AND-QUERY-LIFECYCLE-VERIFIED",
-    "commit": "ac26010ab720992c2d22d378f78b08e1d1c3760d",
-    "ciRun": 34067592484,
+    "name": "SPACE-LIST-QUERY-CONTROLS-GREEN",
+    "commit": "82bcb075e62f53bcedfdcc74587a83fd7244b0a8",
+    "ciRun": 34068138170,
     "ciStatus": "passed",
-    "meaning": "The independently corrected provider-free Space list/presentation contract and lifecycle-aware query inventory/logical/source-reconciliation controls passed implementation CI at 1601580655944e02310927a06345bb448679e003 / 34066237213, then their exact 37-path verified promotion passed all three immutable jobs at ac26010ab720992c2d22d378f78b08e1d1c3760d / 34067592484. The source reconciliation remains exactly 386 rows / 584 outcomes; no Firebase worktree, hosted target, production source or migration execution was accessed."
+    "meaning": "The active Space browser integrity contract, synchronized query controls, and frozen historical evidence passed all three CI jobs."
   },
-  "readyCheckpoint": {
-    "name": "SPACE-LIST-READ-PRESENTATION-READY",
-    "commit": "c9d4d8bbce6319f81aacb5851b16035d3c7ab809",
-    "ciRun": 34062468352,
-    "ciStatus": "passed",
-    "meaning": "The independently corrected two-file Space list/presentation boundary passed conversion traceability, isolated local Supabase provider checks, all existing target tests and both staging builds before executable edits; it authorized only the provider-free Core implementation."
-  },
-  "activeBatch": {
-    "id": "space-query-promotion-checkpoint-freeze",
-    "status": "local_verification",
-    "outcome": "Record exact promotion CI and freeze ac26010ab720992c2d22d378f78b08e1d1c3760d as the historical endpoint for the completed 37-path query-reconciliation promotion before opening the next Space-maintenance readiness batch.",
-    "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
-    ],
-    "allowedPaths": [
-      "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
-      "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
-      "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
-      "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md",
-      "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
-      "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-PORT-INVENTORY-001.md",
-      "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
-      "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
-      "scripts/generate-source-query-reconciliation.mjs"
-    ],
+  "activeWorkflow": {
+    "id": "current-app-ui-control-flow-baseline",
+    "kind": "coverage_audit",
+    "status": "ci_verification",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/current-app-ui-control-flow-baseline.json",
+    "outcome": "Create the durable page-by-page baseline of every current Ledger UI control, option, transition, and visible state before resuming target product UI implementation.",
     "nextActions": [
-      "Commit and push the exact checkpoint/evidence sync after focused controls pass.",
-      "Open the three-slice Space-maintenance readiness batch and audit canonical authority for archived-Space admission and equal-value/no-change behavior.",
-      "Create three DRAFT comment-only dossiers/scaffolds with one union path allowlist, rollback boundary, and cross-slice concurrency/restart/replay/RLS/readback verification matrix, then require independent READY review before executable edits."
+      "Commit the locally verified process simplification and 91-journey product-behavior baseline without changing target application code.",
+      "Push the Supabase branch and observe automatic pull-request CI for that exact checkpoint.",
+      "After CI passes, record the immutable checkpoint, mark the baseline complete, and resume target product UI implementation from named baseline journeys."
     ]
   },
   "progress": {
@@ -57,28 +33,14 @@
       "center": 15,
       "high": 18
     },
-    "targetRelevantSurfaces": 757,
-    "mappedOrLaterSurfaces": 567,
-    "implementedOrLaterSurfaces": 247,
     "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
-    "cutoverReadyWorkflows": 0
-  },
-  "efficiency": {
-    "measurementUnit": "verified end-to-end workflow",
-    "speedMultiplierTarget": 3,
-    "tokenEfficiencyMultiplierTarget": 3,
-    "measurementStart": "The backend goal remains active even when its UI chip is absent; record backend-reported goal token and elapsed-time deltas at each integrated batch checkpoint without fabricating a UI-derived reset.",
-    "normalBatchSliceMinimum": 2,
-    "normalBatchSliceMaximum": 4,
-    "normalBatchFullLocalGates": 1,
-    "normalBatchImmutableCiRuns": 1,
-    "maximumConcurrentWriters": 2,
-    "qualityOverride": "Correctness and required evidence outrank throughput targets."
+    "cutoverReadyWorkflows": 0,
+    "note": "Workflow counts measure product progress. The surface catalog is a passive completeness audit, not a completion percentage."
   },
   "blockers": [
-    "A canonical immutable production export or acceptable project-matching service-account access is still required for production-profile evidence.",
-    "Hosted Supabase and PowerSync resources, credentials, spending and authenticated rehearsal require explicit user authorization.",
+    "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
+    "Hosted Supabase and PowerSync resources, credentials, spending, and authenticated rehearsal require explicit user authorization.",
     "A-003 and A-004 remain proposed until the complete vertical-spike exit gate passes."
   ],
   "guardrails": [
@@ -90,14 +52,12 @@
   "resume": {
     "requiredReads": [
       "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
+      "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md"
     ],
     "requiredCommands": [
       "git status --short --branch",
       "npm run conversion:state:check"
     ],
-    "readHistoryOnlyWhen": "The compact state or active dossier lacks evidence needed for a concrete decision, audit, or discrepancy investigation."
+    "instruction": "Continue the active workflow from nextActions. Load only its named authority sections and affected code until a concrete discrepancy requires broader history."
   }
 }

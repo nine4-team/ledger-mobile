@@ -895,26 +895,9 @@ function validateImplementationSlices(manifest, crosswalk, slices) {
     }
   }
 
-  for (const surface of manifest.surfaces) {
-    if (
-      targetRequiredDispositions.has(surface.disposition) &&
-      implementationSurfaceStatuses.has(surface.status)
-    ) {
-      const sliceId = claimedSurfaceToSlice.get(surface.id);
-      if (!sliceId) {
-        errors.push(
-          `${surface.id}: ${surface.status} target surface lacks an implementation slice`,
-        );
-        continue;
-      }
-      const slice = slices.find((candidate) => candidate.sliceId === sliceId);
-      if (sliceStatusRank(slice.status) < manifestImplementationRank(surface.status)) {
-        errors.push(
-          `${surface.id}: manifest status ${surface.status} exceeds slice ${sliceId} status ${slice.status}`,
-        );
-      }
-    }
-  }
+  // Existing dossiers remain validated historical records. Method v3 tracks
+  // new delivery by end-to-end workflow, so a target surface does not need a
+  // newly created dossier merely to advance its honest status.
 
   return errors;
 }
@@ -983,7 +966,7 @@ function buildImplementationSliceAudit(manifest, slices) {
     "",
     "## Result",
     "",
-    `${audit.totals.slices} implementation slices currently claim ${audit.totals.claimedTargetSurfaces} of ${targetSurfaces.length} target-relevant surfaces. ${audit.totals.implementationAdvancedTargetSurfaces} target surfaces have advanced to implemented or later. Unclaimed target-mapped surfaces are expected until their bounded slice begins; an implemented or later surface without exactly one corresponding slice fails conversion checking.`,
+    `${audit.totals.slices} historical implementation slices currently claim ${audit.totals.claimedTargetSurfaces} of ${targetSurfaces.length} target-relevant surfaces. ${audit.totals.implementationAdvancedTargetSurfaces} target surfaces have advanced to implemented or later. Method v3 tracks new delivery by end-to-end workflow; this report remains a passive completeness aid and does not require a new dossier for every implemented surface.`,
     "",
     markdownTable([
       ["Metric", "Count"],

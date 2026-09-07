@@ -1,5 +1,13 @@
 # Supabase Conversion Control Plane
 
+> **Historical reference after method v3.** Current implementation procedure is
+> [Workflow Implementation Method](vertical-slice-implementation-method.md) and
+> current work is recorded only in `current-execution-state.json`. The detailed
+> READY/dossier/promotion narratives below preserve audit history; they are not
+> instructions for new work. The surface catalog remains the exhaustive
+> UI/control/data/operation coverage backstop and is checked at workflow and
+> migration milestones.
+
 For a task start, handoff, or context-compaction resume, begin with
 `current-execution-state.json`. This README explains the complete control plane
 and retains broader status history; it is not mandatory resume context.

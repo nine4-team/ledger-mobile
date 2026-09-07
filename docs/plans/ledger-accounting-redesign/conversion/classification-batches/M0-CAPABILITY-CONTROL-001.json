@@ -20,15 +20,15 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details, Project category-configuration revision and Vendor-suggestion migration/test/Data-API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "acknowledgeSourceHash": "e85e928c641a0172e58347c67ce523063c928aa5913cfcde273be8352bde3d05",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, applies classification batches, detects disappearance and live drift, validates product authority and historical dossier integrity, emits passive completeness audits, and enforces cumulative M0-M5 gates. New method-v3 workflow implementation does not require a new dossier or per-surface lifecycle promotion.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-SPACE-CREATION-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001"],
       "verification": {
-        "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
-        "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
+        "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
+        "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "Historical dossiers remain internally valid while new workflow delivery is tracked in current execution state", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
       "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated comment-only Project category-configuration revision migration and its one-placeholder/no-product-assertion pgTAP scaffold; it changes no validator semantics, product authority, status rule or existing primary ownership."
     },
@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
+      "acknowledgeSourceHash": "1791bca01e2453687c6d48d5c43c1fe7a6d16bf3e36f9adb8fb87b704819d0c6",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It preserves deterministic classification, retirement and evidence checks while validating one automatic pull-request CI gate rather than a duplicate manual trigger.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",

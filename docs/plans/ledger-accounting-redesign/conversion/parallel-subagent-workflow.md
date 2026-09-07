@@ -1,6 +1,12 @@
-# Parallel Subagent Implementation Workflow
+# Parallel Subagent Implementation Workflow — Historical v2
 
-Status: required for every write-capable conversion subagent
+Status: superseded by Workflow Implementation Method v3
+
+> Do not use the dossier, READY-commit, promotion, registry, or mandatory
+> per-worker-worktree sequence below for new work. It is retained to explain
+> historical checkpoints. Under method v3, delegate only a complete disjoint
+> workflow outcome, use focused worker tests, review the integrated diff by
+> risk, and run one full local gate plus the automatic pull-request CI run.
 
 ## Purpose
 

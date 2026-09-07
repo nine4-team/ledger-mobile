@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T23:53:08.884Z",
+    "lastSynchronizedAt": "2026-09-07T02:16:28.921Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -474,10 +474,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
-      "acknowledgedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
+      "observedSourceHash": "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d",
+      "acknowledgedSourceHash": "9154f5e6e8c5c2eb902ac3be8196dd4f118b550b078713e240db6b3ca165c69d",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
+      "currentBehavior": "Automatically runs one pull-request CI gate per exact workflow commit: conversion traceability and query controls on Linux, disposable local Supabase schema/RLS/RPC/Data-API tests on Ubuntu, and target isolation, contracts, MCP/Swift tests, and macOS/iOS Simulator builds on macOS 26, all with clean-diff enforcement. Manual duplicate dispatch is intentionally absent.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -2547,10 +2547,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
-      "acknowledgedSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
+      "observedSourceHash": "1791bca01e2453687c6d48d5c43c1fe7a6d16bf3e36f9adb8fb87b704819d0c6",
+      "acknowledgedSourceHash": "1791bca01e2453687c6d48d5c43c1fe7a6d16bf3e36f9adb8fb87b704819d0c6",
       "metadata": {},
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It preserves deterministic classification, retirement and evidence checks while validating one automatic pull-request CI gate rather than a duplicate manual trigger.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -4453,10 +4453,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
-      "acknowledgedSourceHash": "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
+      "observedSourceHash": "e85e928c641a0172e58347c67ce523063c928aa5913cfcde273be8352bde3d05",
+      "acknowledgedSourceHash": "e85e928c641a0172e58347c67ce523063c928aa5913cfcde273be8352bde3d05",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination, Project archival-review, Space core-details, Project category-configuration revision and Vendor-suggestion migration/test/Data-API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, applies classification batches, detects disappearance and live drift, validates product authority and historical dossier integrity, emits passive completeness audits, and enforces cumulative M0-M5 gates. New method-v3 workflow implementation does not require a new dossier or per-surface lifecycle promotion.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -4476,7 +4476,6 @@
           "generated product-authority and implementation-slice JSON/Markdown freshness checks",
           "valid ready-slice positive control",
           "invalid ready-slice negative control",
-          "implemented-surface-without-slice negative control",
           "intentional mismatched acknowledgeSourceHash negative check",
           "intentional live source-hash drift negative check",
           "npm run conversion:report",
@@ -4486,8 +4485,7 @@
           "Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings",
           "Every surface resolves through exactly one classification batch to reviewed product or technical authorities",
           "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking",
-          "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations",
-          "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence",
+          "Historical dossiers remain internally valid while new workflow delivery is tracked in current execution state",
           "A mismatched explicit acknowledgment fails",
           "A source edit made after manifest synchronization fails checking",
           "Incomplete M0 exits nonzero with cumulative blockers"

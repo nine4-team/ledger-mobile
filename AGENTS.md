@@ -10,41 +10,46 @@
 - For any Supabase/PowerSync redesign, conversion, migration, or cutover task,
   first read only
   `docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json`,
-  inspect `git status`, and run `npm run conversion:state:check`. Read the active
-  batch dossier and only the authority sections named by that state file before
-  editing. The large README and execution history are reference material, not
-  mandatory resume context.
+  inspect `git status`, and run `npm run conversion:state:check`. After workflow
+  selection, read its single `workflow-records/*.json` record and only the
+  authority sections named there before editing. The large
+  README, generated catalogs, historical dossiers, evidence files and execution
+  history are reference material, not mandatory resume context.
 - After a task start, resume, handoff, or context compaction, treat conversation
   history and summaries as advisory. Reconstruct the work from the repository
-  current-state record, active dossier, exact Git checkpoint and current diff.
-  Run the complete conversion check before changing control-plane status or at
-  the integrated batch boundary; do not rerun it merely to recover context.
+  current-state record, exact Git checkpoint and current diff. Do not run the
+  complete conversion suite merely to recover context.
 - Treat `docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json`
   as the conversion-coverage source of truth. Product specs and the redesign
   decision log remain product authority.
-- Run `node scripts/supabase-conversion-ledger.mjs check` after updating
-  conversion coverage and at the integrated batch boundary. Resolve discovery
-  drift before status advancement.
+- Run `node scripts/supabase-conversion-ledger.mjs check` after changing
+  conversion coverage and at the integrated workflow boundary. The surface
+  catalog is a passive omission audit, not the unit of implementation progress.
 - Keep `current-execution-state.json` under its enforced size limit and update
-  its verified base, active batch, next actions, progress and blockers whenever
-  the integration checkpoint changes. Append detailed history to
-  `execution-state.md` only at a meaningful batch/status boundary.
+  its verified base, active workflow, next actions, progress and blockers when
+  the workflow or integration checkpoint changes.
 - For target implementation, read
   `docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md`
   when the method version in current state changes, then work through the
-  recorded active delivery batch. Keep each constituent slice's requirements,
-  contracts, verification, evidence and status current. Do not rely on a later
-  recap to reconstruct unrecorded work.
-- The normal execution unit is one coherent user workflow containing two to
-  four tightly related slices. Use focused checks while developing and one
-  complete local gate plus one immutable CI run on the integrated normal batch.
-  A separate READY commit/full CI is reserved for the high-risk boundaries
-  listed by the implementation method.
+  recorded active workflow. Do not create comment-only scaffolds, new slice
+  dossiers, standalone evidence narratives, READY commits, or promotion-only
+  commits for ordinary workflows.
+- The normal execution unit is one coherent user workflow. Preserve exhaustive
+  page/control/option/transition/state coverage inside that workflow while
+  implementing its technical layers together. Use focused checks while
+  developing and one complete local gate plus one immutable CI run on the
+  integrated workflow. Use the automatic pull-request run; do not manually
+  dispatch the same commit. Use a separate short design note and specialist
+  review only for the high-risk boundaries listed by the implementation method.
+- Before additional product UI implementation, complete the current-app UI
+  baseline covering all 167 inventoried UI components/views. Keep every
+  completed workflow record so control/option/transition/state coverage remains
+  cumulative rather than being overwritten by current state.
 - Use no more than two disjoint write-capable subagents concurrently. Delegate
   a complete independently testable outcome, give each worker only the current
-  state, exact dossier/authority references and owned paths, and have workers
-  run focused checks. The integration agent owns shared files, full gates,
-  tracker synchronization and promotion.
+  state, exact authority references and owned paths, and have workers
+  run focused checks. The integration agent owns shared files, full gates, and
+  the compact workflow/checkpoint update.
 - Optimize for elapsed time and tokens per verified end-to-end workflow. Do not
   optimize for commit count, surface count, document count or agent utilization,
   and never relax correctness, tenant security, accounting, offline/replay,
@@ -56,5 +61,5 @@
 - Do not implement redesigned v2 behavior in Firebase. Firebase work is limited
   to read-only discovery/export, backups, final source freeze/rejected-write
   recovery, and retained rollback evidence.
-- Do not mark a surface verified from compilation or prose alone, and do not
+- Do not mark a workflow verified from compilation or prose alone, and do not
   authorize production migration from these files without explicit user approval.

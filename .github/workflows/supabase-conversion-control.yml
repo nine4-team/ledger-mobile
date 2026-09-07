@@ -2,7 +2,6 @@ name: Supabase conversion control
 
 on:
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,6 +25,7 @@ jobs:
 
       - name: Validate conversion control plane
         run: |
+          node scripts/check-conversion-current-state.mjs --self-test
           npm run target:query-ports:test
           npm run target:query-ports:check
           npm run target:query-authority:test
