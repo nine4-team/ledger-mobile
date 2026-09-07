@@ -3,7 +3,7 @@
   "workflowId": "existing-client-project-creation",
   "title": "Create a Project for an existing Client",
   "kind": "product_ui",
-  "status": "ci_verification",
+  "status": "blocked",
   "outcome": "From the target Project directory, create one Project for a represented active existing Client with exact optional category allocations, accept it durably while offline, and expose its pending or rejected state without losing the draft.",
   "authority": [
     {
@@ -358,9 +358,9 @@
       "summary": "Independent review initially found five material correctness/evidence issues and then three additional P2 boundary and UI-honesty issues. Root corrected category and currency requirements, immutable accepted payloads, operation observation and lifecycle coverage, O-026 blocker honesty, Core-only command derivation, proof wording, post-acceptance status presentation, and the direct-command architecture guard. Final re-review returned GO with no remaining P0-P3 finding."
     },
     "ci": {
-      "status": "not_run",
-      "commit": null,
-      "run": null
+      "status": "passed",
+      "commit": "272ce33fe879ff1ecf7f58ecc269bccc0538ca1a",
+      "run": 34083751029
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 23,
+  "stateVersion": 24,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,22 +9,21 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "CURRENT-APP-UI-CONTROL-FLOW-BASELINE-GREEN",
-    "commit": "8c5640728e539366ed4e3d2210339ca2cda81b9f",
-    "ciRun": 34078157416,
+    "name": "EXISTING-CLIENT-PROJECT-CREATION-GREEN",
+    "commit": "272ce33fe879ff1ecf7f58ecc269bccc0538ca1a",
+    "ciRun": 34083751029,
     "ciStatus": "passed",
-    "meaning": "The source-verified 91-journey behavior catalog covers all 167 current UI surfaces and passed independent review, local controls, isolated target builds/tests, and disposable local Supabase checks."
+    "meaning": "The behavior-traced existing-Client Project creation workflow passed independent review and all exact-commit CI jobs, including traceability, disposable local Supabase, the full isolated target suite, and macOS/iOS builds; O-026 still blocks final cutover authorization."
   },
   "activeWorkflow": {
     "id": "existing-client-project-creation",
     "kind": "product_ui",
-    "status": "ci_verification",
+    "status": "blocked",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/existing-client-project-creation.json",
     "outcome": "Create one Project for a represented active existing Client with exact optional category allocations, durable offline acceptance, an immutable submitted summary, and live queued-to-applied-or-rejected operation state.",
     "nextActions": [
-      "Commit and push the locally green workflow batch, then verify automatic CI on the exact implementation commit.",
-      "Record the exact immutable CI commit and run after all three jobs pass.",
-      "Retain O-026 as an explicit cutover blocker; do not treat the provisional project-budget capability as approved product authority."
+      "Retain O-026 as the sole cutover blocker for this otherwise locally and CI-verified workflow; do not treat the provisional project-budget capability as approved product authority.",
+      "Select and implement the next unblocked behavior-traced workflow from the product behavior baseline."
     ]
   },
   "progress": {
