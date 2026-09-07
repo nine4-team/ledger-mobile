@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-07T06:55:54.384Z",
+    "lastSynchronizedAt": "2026-09-07T07:37:31.996Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19210,17 +19210,17 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
-      "acknowledgedSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
+      "observedSourceHash": "4de82f09ca03c1318cb1b4b10e23f928934970e4b27eb537befddc81818bb7eb",
+      "acknowledgedSourceHash": "4de82f09ca03c1318cb1b4b10e23f928934970e4b27eb537befddc81818bb7eb",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states and only authoritative checklist progress.",
+      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states, honest checklist progress, the immediate toggle controls, and the separately claimed full checklist editor sheet.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details",
         "surfaces": [
-          "Isolated Space core-details staging view"
+          "Isolated Space core-details, checklist-toggle, and checklist-editor staging view"
         ],
         "securityRequirements": [
           "Accessibility and diagnostics contain no stable hidden identity"
@@ -19232,24 +19232,26 @@
       "migration": {
         "rule": "Compile only in LedgerTargetStaging.",
         "reconciliation": [
-          "The view offers no mutation or production action"
+          "Mutation controls call only the shared typed checklist-revision coordinator"
         ]
       },
       "verification": {
         "tests": [
-          "Target source-boundary checks and macOS/iOS staging builds"
+          "Target source-boundary checks, editor interaction tests, and macOS/iOS staging builds"
         ],
         "acceptance": [
-          "Thin rendering compiles with no broad SpaceDetailView advancement"
+          "Claimed checklist controls compile without broad SpaceDetailView advancement"
         ]
       },
       "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001",
-        "EVID-SPACE-CORE-DETAILS-PROVIDER-001"
+        "EVID-SPACE-CORE-DETAILS-PROVIDER-001",
+        "WORKFLOW-active-space-checklist-item-toggle",
+        "WORKFLOW-active-space-checklist-editor"
       ],
-      "notes": "Items, media, review, templates, accounting, editing and archive controls are excluded.",
+      "notes": "Space Options, details mutation, completion, Items, media, review, templates, accounting and archive controls are excluded.",
       "classificationBatch": "M0-SPACE-CORE-DETAILS-PROVIDER-001"
     },
     {
@@ -19263,12 +19265,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "7d1dea673d1dff5955e7094f34b5a22c893663ddd60f6510319dd84f29e8e334",
-      "acknowledgedSourceHash": "7d1dea673d1dff5955e7094f34b5a22c893663ddd60f6510319dd84f29e8e334",
+      "observedSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
+      "acknowledgedSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, an integrated existing-Client Project-creation workflow, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19314,7 +19316,8 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
-        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+        "WORKFLOW-active-space-checklist-editor"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -22082,6 +22085,58 @@
       ],
       "notes": "Keep for source-focused tests only.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "SWIFT-22ED13ABCFFB",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistEditorStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistEditorStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "8633f246001c92fb9c6432ed95b01bbb6180bbb7b6015369947161269233c078",
+      "acknowledgedSourceHash": "8633f246001c92fb9c6432ed95b01bbb6180bbb7b6015369947161269233c078",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Owns one isolated active-Space checklist editor draft, every catalogued structure/text/check/reorder action, stable identity and presentation-order preservation, exact validation, Cancel, complete-replacement Save, uncertain retry, accepted optimism adoption, rejection/conflict preservation, and lifecycle drainage.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": [
+          "isolated active-Space checklist editor application state"
+        ],
+        "securityRequirements": [
+          "Admit only complete represented active-Space evidence and stable typed identities"
+        ],
+        "syncRequirements": [
+          "Preserve accepted optimism and actionable rejected draft state without duplicating operation lifecycle logic"
+        ]
+      },
+      "migration": {
+        "rule": "Compose target-only Core and AppModel contracts.",
+        "reconciliation": [
+          "Cancel dispatches nothing; Save delegates exactly one complete revision-bound replacement"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SpaceChecklistEditorStagingExerciseTests"
+        ],
+        "acceptance": [
+          "All claimed controls, validation, order, retry, recreation, conflict, and drainage cases pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "WORKFLOW-active-space-checklist-editor"
+      ],
+      "notes": "The editor contains no backend-specific logic and delegates one typed draft to the shared verified revision coordinator.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
     },
     {
       "id": "SWIFT-2335BBE3E8FD",
@@ -31817,12 +31872,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceChecklistItemToggleStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "e909862933ca2031fe0092d2381f5051c0a4aed093de9223452fa8f7c6f9957d",
-      "acknowledgedSourceHash": "e909862933ca2031fe0092d2381f5051c0a4aed093de9223452fa8f7c6f9957d",
+      "observedSourceHash": "e89983d3451671d8fb66b6166f57ac82c4dbbc47ef546a2f52d9f3492c15671f",
+      "acknowledgedSourceHash": "e89983d3451671d8fb66b6166f57ac82c4dbbc47ef546a2f52d9f3492c15671f",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Owns exact-Space checklist-toggle admission, one frozen optimistic submission, byte-identical uncertain-acceptance retry, operation observation, encrypted restart restoration, conflict recovery, selection/lifecycle drainage, and exact authoritative-readback settlement.",
+      "currentBehavior": "Owns the shared exact-Space checklist-revision coordinator used by immediate toggles and full editor drafts: one frozen optimistic submission, byte-identical uncertain-acceptance retry, operation observation, encrypted restart restoration, conflict recovery, selection/lifecycle drainage, and exact authoritative-readback settlement.",
       "disposition": "redesign",
       "target": {
         "owner": "Active Space Checklist Toggle",
@@ -31853,7 +31908,8 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "WORKFLOW-active-space-checklist-item-toggle"
+        "WORKFLOW-active-space-checklist-item-toggle",
+        "WORKFLOW-active-space-checklist-editor"
       ],
       "notes": "The backend-neutral AppModel restores typed local projection provenance after restart and settles only from later complete evidence after the operation result baseline.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
@@ -44145,8 +44201,8 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistItemToggleStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "ad03d06b07745757315f73bcd06372a4c2aaa56706828f667a22770a0249adeb",
-      "acknowledgedSourceHash": "ad03d06b07745757315f73bcd06372a4c2aaa56706828f667a22770a0249adeb",
+      "observedSourceHash": "0438691375a06aa64ed6ea71bec8572841e436658beb9390a199b62504ffae29",
+      "acknowledgedSourceHash": "0438691375a06aa64ed6ea71bec8572841e436658beb9390a199b62504ffae29",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -44183,7 +44239,7 @@
       "evidence": [
         "WORKFLOW-active-space-checklist-item-toggle"
       ],
-      "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused cases pass.",
+      "notes": "Uses synthetic typed evidence and no hosted or source backend; ten focused toggle cases pass and the source boundary permits the separately claimed editor controls.",
       "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-TOGGLE-001"
     },
     {
@@ -47315,6 +47371,58 @@
       ],
       "notes": "Seven focused and all 218 target tests pass locally and in immutable Actions run 33707305340 on exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad after primary review added four direct edge assertions and independent review rejected a P1 false-authoritative-empty bug. Corrected tests cover exact source-row exhaustiveness, non-exhaustive empty/archived/active behavior, count/fingerprint tamper and restart. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-8BB9E9DC7C1A",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistEditorStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceChecklistEditorStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
+      "acknowledgedSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Runs ten deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, active-only admission, exact uncertain retry, recreated-editor conflict recovery, selection cancellation, accessibility, and scope exclusions.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": [
+          "deterministic checklist-editor AppModel and compiled-source UI behavior matrix"
+        ],
+        "securityRequirements": [
+          "Archived, incomplete, absent and invalid detail evidence cannot open or dispatch"
+        ],
+        "syncRequirements": [
+          "Exact accepted command identity and edited hierarchy survive retry and recreation"
+        ]
+      },
+      "migration": {
+        "rule": "Use only synthetic target fixtures.",
+        "reconciliation": [
+          "Every specifically claimed catalog control and state has executable evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"
+        ],
+        "acceptance": [
+          "All ten focused cases pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "WORKFLOW-active-space-checklist-editor"
+      ],
+      "notes": "Uses synthetic typed target evidence and no hosted, production, migration, or source backend.",
+      "classificationBatch": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001"
     },
     {
       "id": "TEST-8BFDF8C22B0C",

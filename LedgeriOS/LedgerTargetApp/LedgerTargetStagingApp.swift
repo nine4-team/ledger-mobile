@@ -119,7 +119,8 @@ private struct OfflineProviderSpikeView: View {
         SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
         SpaceCoreDetailsStagingExerciseView(
             model: model.spaceDetails,
-            checklistToggle: model.spaceChecklistToggle
+            checklistToggle: model.spaceChecklistToggle,
+            checklistEditor: model.spaceChecklistEditor
         )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations
@@ -164,6 +165,7 @@ private final class OfflineClientSpikeModel {
     let spaceDestinations: SpaceAssignmentDestinationStagingExercise
     let spaceDetails: SpaceCoreDetailsStagingExercise
     let spaceChecklistToggle: SpaceChecklistItemToggleStagingExercise
+    let spaceChecklistEditor: SpaceChecklistEditorStagingExercise
     let transferDestinations: TransferDestinationSelectionStagingExercise
     private let syntheticSpaceScope: ItemPlacementScope
     private let syntheticSpaceId: SpaceID
@@ -234,7 +236,7 @@ private final class OfflineClientSpikeModel {
         )
         spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
         spaceDetails = SpaceCoreDetailsStagingExercise(accountId: accountId)
-        spaceChecklistToggle = SpaceChecklistItemToggleStagingExercise(
+        let checklistToggle = SpaceChecklistItemToggleStagingExercise(
             accountId: accountId,
             actorPrincipalId: principalId,
             operationContractVersion: try! OperationContractVersion(
@@ -249,6 +251,20 @@ private final class OfflineClientSpikeModel {
                 )
             },
             now: Date.init
+        )
+        spaceChecklistToggle = checklistToggle
+        spaceChecklistEditor = SpaceChecklistEditorStagingExercise(
+            coordinator: checklistToggle,
+            makeChecklistId: {
+                try SpaceChecklistID(
+                    validating: "checklist-\(UUID().uuidString.lowercased())"
+                )
+            },
+            makeItemId: {
+                try SpaceChecklistItemID(
+                    validating: "checklist-item-\(UUID().uuidString.lowercased())"
+                )
+            }
         )
         transferDestinations = TransferDestinationSelectionStagingExercise(
             accountId: accountId
@@ -312,6 +328,7 @@ private final class OfflineClientSpikeModel {
             await spaceChecklistToggle.start(
                 runtime: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)
             )
+            await spaceChecklistEditor.start()
             await transferDestinations.open(
                 source: syntheticTransferSource,
                 runtime: TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)
@@ -341,6 +358,7 @@ private final class OfflineClientSpikeModel {
             await projectSetup.stop()
             await spaceDestinations.stop()
             await spaceDetails.stop()
+            await spaceChecklistEditor.stop()
             await spaceChecklistToggle.stop()
             await transferDestinations.stop()
             openedRuntime = nil
@@ -368,6 +386,7 @@ private final class OfflineClientSpikeModel {
         await projectSetup.stop()
         await spaceDestinations.stop()
         await spaceDetails.stop()
+        await spaceChecklistEditor.stop()
         await spaceChecklistToggle.stop()
         await transferDestinations.stop()
         if let openedRuntime {

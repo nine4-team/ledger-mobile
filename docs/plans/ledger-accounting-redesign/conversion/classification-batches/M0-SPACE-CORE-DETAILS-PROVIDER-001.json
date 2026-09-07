@@ -138,21 +138,21 @@
     },
     {
       "id": "SWIFT-058F3155F97F",
-      "acknowledgeSourceHash": "0e45d5c2bd566aea0de47b18a6f677467d22cefc1221a827aa4c5c30622ceb47",
-      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states and only authoritative checklist progress.",
+      "acknowledgeSourceHash": "4de82f09ca03c1318cb1b4b10e23f928934970e4b27eb537befddc81818bb7eb",
+      "currentBehavior": "Executable isolated SwiftUI renderer displays tested Space-detail states, honest checklist progress, the immediate toggle controls, and the separately claimed full checklist editor sheet.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001", "EVID-SPACE-CORE-DETAILS-PROVIDER-001", "WORKFLOW-active-space-checklist-item-toggle", "WORKFLOW-active-space-checklist-editor"],
       "target": {
         "owner": "Space Core Details",
-        "surfaces": ["Isolated Space core-details staging view"],
+        "surfaces": ["Isolated Space core-details, checklist-toggle, and checklist-editor staging view"],
         "securityRequirements": ["Accessibility and diagnostics contain no stable hidden identity"],
         "syncRequirements": ["Render only tested AppModel state without inventing completeness"]
       },
-      "migration": {"rule": "Compile only in LedgerTargetStaging.", "reconciliation": ["The view offers no mutation or production action"]},
-      "verification": {"tests": ["Target source-boundary checks and macOS/iOS staging builds"], "acceptance": ["Thin rendering compiles with no broad SpaceDetailView advancement"]},
-      "notes": "Items, media, review, templates, accounting, editing and archive controls are excluded."
+      "migration": {"rule": "Compile only in LedgerTargetStaging.", "reconciliation": ["Mutation controls call only the shared typed checklist-revision coordinator"]},
+      "verification": {"tests": ["Target source-boundary checks, editor interaction tests, and macOS/iOS staging builds"], "acceptance": ["Claimed checklist controls compile without broad SpaceDetailView advancement"]},
+      "notes": "Space Options, details mutation, completion, Items, media, review, templates, accounting and archive controls are excluded."
     }
   ]
 }

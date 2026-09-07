@@ -319,8 +319,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7d1dea673d1dff5955e7094f34b5a22c893663ddd60f6510319dd84f29e8e334",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, an integrated existing-Client Project-creation workflow, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "bbe42f2cdabe79b6475699111f23d40d84ef7fd80fdd9a4092631e070e1ae1a7",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, the shared checklist-toggle/editor coordinator, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -336,7 +336,8 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
-        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+        "WORKFLOW-active-space-checklist-editor"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {

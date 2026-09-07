@@ -1,0 +1,44 @@
+{
+  "batchId": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001",
+  "title": "Edit one active Space checklist collection",
+  "reviewedAt": "2026-09-07",
+  "evidence": ["WORKFLOW-active-space-checklist-editor"],
+  "surfaces": [
+    {
+      "id": "SWIFT-22ED13ABCFFB",
+      "acknowledgeSourceHash": "8633f246001c92fb9c6432ed95b01bbb6180bbb7b6015369947161269233c078",
+      "currentBehavior": "Owns one isolated active-Space checklist editor draft, every catalogued structure/text/check/reorder action, stable identity and presentation-order preservation, exact validation, Cancel, complete-replacement Save, uncertain retry, accepted optimism adoption, rejection/conflict preservation, and lifecycle drainage.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "The editor contains no backend-specific logic and delegates one typed draft to the shared verified revision coordinator.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["isolated active-Space checklist editor application state"],
+        "securityRequirements": ["Admit only complete represented active-Space evidence and stable typed identities"],
+        "syncRequirements": ["Preserve accepted optimism and actionable rejected draft state without duplicating operation lifecycle logic"]
+      },
+      "migration": {"rule": "Compose target-only Core and AppModel contracts.", "reconciliation": ["Cancel dispatches nothing; Save delegates exactly one complete revision-bound replacement"]},
+      "verification": {"tests": ["SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All claimed controls, validation, order, retry, recreation, conflict, and drainage cases pass"]}
+    },
+    {
+      "id": "TEST-8BB9E9DC7C1A",
+      "acknowledgeSourceHash": "704b7dad97585c593e133eb304fa7d17c8d9daf1006f65186e98b43a30502f8a",
+      "currentBehavior": "Runs ten deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, Cancel, empty/zero-item states, active-only admission, exact uncertain retry, recreated-editor conflict recovery, selection cancellation, accessibility, and scope exclusions.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "Uses synthetic typed target evidence and no hosted, production, migration, or source backend.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["deterministic checklist-editor AppModel and compiled-source UI behavior matrix"],
+        "securityRequirements": ["Archived, incomplete, absent and invalid detail evidence cannot open or dispatch"],
+        "syncRequirements": ["Exact accepted command identity and edited hierarchy survive retry and recreation"]
+      },
+      "migration": {"rule": "Use only synthetic target fixtures.", "reconciliation": ["Every specifically claimed catalog control and state has executable evidence"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All ten focused cases pass"]}
+    }
+  ]
+}

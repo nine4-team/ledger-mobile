@@ -40,6 +40,12 @@ public struct SpaceChecklistItemToggleSubmissionIdentity: Equatable, Sendable {
     }
 }
 
+public enum SpaceChecklistRevisionSubmissionOutcome: Equatable, Sendable {
+    case acceptedLocally
+    case acceptanceUncertain
+    case refused
+}
+
 public enum SpaceChecklistItemToggleAdmission: String, Equatable, Sendable {
     case waiting
     case incomplete
@@ -134,6 +140,14 @@ public final class SpaceChecklistItemToggleStagingExercise {
 
     public var canRetryAmbiguousAcceptance: Bool {
         runtime != nil && !isSubmitting && frozenSubmission == nil && ambiguousSubmission != nil
+    }
+
+    public var canSubmitCompleteDraft: Bool {
+        runtime != nil
+            && !isSubmitting
+            && frozenSubmission == nil
+            && ambiguousSubmission == nil
+            && admission.permitsToggle
     }
 
     private let accountId: AccountID
@@ -352,7 +366,7 @@ public final class SpaceChecklistItemToggleStagingExercise {
             )
             frozenSubmission = submission
             diagnostic = nil
-            await submit(submission, runtime: runtime)
+            _ = await submit(submission, runtime: runtime)
         } catch let failure as SpaceChecklistEditingFailure {
             diagnostic = failure.diagnosticCode
         } catch let failure as SpaceChecklistRevisionFailure {
@@ -364,6 +378,46 @@ public final class SpaceChecklistItemToggleStagingExercise {
         }
     }
 
+    @discardableResult
+    public func submitCompleteDraft(
+        _ draft: SpaceChecklistEditingDraft,
+        from sourceUpdate: SpaceCoreDetailsUpdate
+    ) async -> SpaceChecklistRevisionSubmissionOutcome {
+        guard canSubmitCompleteDraft,
+              let runtime,
+              selectedSpaceId == sourceUpdate.request.spaceId,
+              sourceUpdate.request.accountId == accountId,
+              let row = Self.row(from: sourceUpdate),
+              row.lifecycle == .active else {
+            diagnostic = SpaceChecklistToggleFailure.currentEvidenceRequired.diagnosticCode
+            return .refused
+        }
+
+        do {
+            _ = try SpaceChecklistEditingPresentation(projecting: sourceUpdate).prepare()
+            let targetCollection = try draft.collection()
+            let submission = try FrozenSubmission(
+                sourceUpdate: sourceUpdate,
+                draft: draft,
+                identity: makeIdentity(),
+                capturedAt: try Self.canonicalTimestamp(now()),
+                targetCollection: targetCollection,
+                baseRevision: row.revision,
+                settlementEvidenceSequence: evidenceSequence
+            )
+            frozenSubmission = submission
+            diagnostic = nil
+            return await submit(submission, runtime: runtime)
+        } catch let failure as SpaceChecklistEditingFailure {
+            diagnostic = failure.diagnosticCode
+        } catch let failure as SpaceChecklistRevisionFailure {
+            diagnostic = failure.diagnosticCode
+        } catch {
+            diagnostic = SpaceChecklistToggleFailure.submissionInvalid.diagnosticCode
+        }
+        return .refused
+    }
+
     public func retryAmbiguousAcceptance() async {
         guard canRetryAmbiguousAcceptance,
               let runtime,
@@ -371,13 +425,13 @@ public final class SpaceChecklistItemToggleStagingExercise {
         frozenSubmission = submission
         ambiguousSubmission = nil
         diagnostic = nil
-        await submit(submission, runtime: runtime)
+        _ = await submit(submission, runtime: runtime)
     }
 
     private func submit(
         _ submission: FrozenSubmission,
         runtime: SpaceChecklistItemToggleStagingRuntime
-    ) async {
+    ) async -> SpaceChecklistRevisionSubmissionOutcome {
         let activeLifecycle = lifecycleGeneration
         let activeSelection = selectionGeneration
         isSubmitting = true
@@ -402,7 +456,7 @@ public final class SpaceChecklistItemToggleStagingExercise {
             )
             guard lifecycleGeneration == activeLifecycle,
                   selectionGeneration == activeSelection,
-                  frozenSubmission == submission else { return }
+                  frozenSubmission == submission else { return .refused }
 
             let accepted = try submission.accepting(execution)
             frozenSubmission = accepted
@@ -416,23 +470,26 @@ public final class SpaceChecklistItemToggleStagingExercise {
                 lifecycleGeneration: activeLifecycle,
                 selectionGeneration: activeSelection
             )
+            return .acceptedLocally
         } catch is CancellationError {
             guard lifecycleGeneration == activeLifecycle,
-                  selectionGeneration == activeSelection else { return }
+                  selectionGeneration == activeSelection else { return .refused }
             frozenSubmission = nil
             ambiguousSubmission = submission
             optimisticCollection = nil
             operationState = nil
             operationIdLabel = submission.identity.operationId.rawValue
             diagnostic = SpaceChecklistToggleFailure.localAcceptanceCancelled.diagnosticCode
+            return .acceptanceUncertain
         } catch let failure as SpaceChecklistEditingFailure {
             guard lifecycleGeneration == activeLifecycle,
-                  selectionGeneration == activeSelection else { return }
+                  selectionGeneration == activeSelection else { return .refused }
             frozenSubmission = nil
             diagnostic = failure.diagnosticCode
+            return .refused
         } catch let failure as SpaceChecklistRevisionFailure {
             guard lifecycleGeneration == activeLifecycle,
-                  selectionGeneration == activeSelection else { return }
+                  selectionGeneration == activeSelection else { return .refused }
             if failure == .localAcceptanceFailed {
                 frozenSubmission = nil
                 ambiguousSubmission = submission
@@ -442,14 +499,16 @@ public final class SpaceChecklistItemToggleStagingExercise {
             }
             optimisticCollection = nil
             diagnostic = failure.diagnosticCode
+            return failure == .localAcceptanceFailed ? .acceptanceUncertain : .refused
         } catch {
             guard lifecycleGeneration == activeLifecycle,
-                  selectionGeneration == activeSelection else { return }
+                  selectionGeneration == activeSelection else { return .refused }
             frozenSubmission = nil
             ambiguousSubmission = submission
             optimisticCollection = nil
             operationIdLabel = submission.identity.operationId.rawValue
             diagnostic = SpaceChecklistToggleFailure.localAcceptanceFailed.diagnosticCode
+            return .acceptanceUncertain
         }
     }
 

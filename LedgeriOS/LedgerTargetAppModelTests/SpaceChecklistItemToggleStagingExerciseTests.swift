@@ -36,9 +36,6 @@ struct SpaceChecklistItemToggleStagingExerciseTests {
         }
 
         for excluded in [
-            "Edit Checklists",
-            "Add Checklist",
-            "Add Item",
             "Delete Space",
             "Mark space complete",
         ] {

@@ -3,7 +3,7 @@
   "workflowId": "active-space-checklist-editor",
   "title": "Edit an active Space checklist collection",
   "kind": "product_ui",
-  "status": "planning",
+  "status": "implementation",
   "outcome": "Open an isolated draft for one represented active Project or Business Inventory Space, edit its complete checklist structure and text, then cancel without mutation or save one durable revision-bound replacement with conflict recovery.",
   "authority": [
     {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Redesign Requirements"},
@@ -100,7 +100,7 @@
         {
           "label": "Save",
           "options": [
-            {"label": "Ready", "result": "Accepts exactly one full replacement bound to the represented Space revision, then shows pending state until authoritative settlement.", "disposition": "redesign"},
+            {"label": "Ready", "result": "After a semantic draft change, accepts exactly one full replacement bound to the represented Space revision, then shows pending state until authoritative settlement; an unchanged draft remains a no-op with Save disabled.", "disposition": "redesign"},
             {"label": "Saving / conflict", "result": "Prevents duplicate submission and preserves actionable draft/conflict evidence.", "disposition": "redesign"}
           ],
           "action": "Save the draft.",
@@ -132,7 +132,7 @@
   ],
   "acceptanceChecks": [
     {"id": "SPACE-CHECKLIST-EDITOR-E2E", "risk": "general", "expected": "Open, every catalogued draft action, Cancel, Save, pending, rejection and readback traverse one shared complete-replacement workflow.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"},
-    {"id": "SPACE-CHECKLIST-EDITOR-UI", "risk": "ui_fidelity", "expected": "Every claimed editor control, disabled rule, transition, empty state, conflict state and accessibility identity is compiled and interaction-tested.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"},
+    {"id": "SPACE-CHECKLIST-EDITOR-UI", "risk": "ui_fidelity", "expected": "Every claimed editor control and accessibility identity compiles, while model tests exercise its enabled/disabled rule, transition, empty state, and conflict behavior; full simulator interaction remains a release gate rather than a package-test claim.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"},
     {"id": "SPACE-CHECKLIST-EDITOR-OFFLINE", "risk": "offline_durability", "expected": "Save reuses atomic encrypted acceptance, exact replay, restart restoration, rejection recovery and authoritative readback without duplicate commands.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests", "status": "planned"},
     {"id": "SPACE-CHECKLIST-EDITOR-SYNC", "risk": "sync_visibility", "expected": "Only exact represented Space and operation evidence can settle the editor save; stale, foreign, malformed and incomplete evidence fails closed.", "command": "swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "status": "planned"}
   ],
@@ -141,7 +141,9 @@
     "Space name/notes, completion, templates, media, Items/placement, archive and accounting are separate workflows.",
     "Hosted authenticated Supabase/PowerSync upload and revocation proof remains gated by A-003/A-004."
   ],
-  "blockers": [],
+  "blockers": [
+    "A rejected checklist operation retains its complete command envelope in the encrypted local operation journal, and the mounted editor now preserves it across either event ordering. Full editor recovery after both coordinator and app restart still requires a general rejected-operation recovery/read-and-disposition port; this workflow must not be marked complete until that port is implemented and restart-tested."
+  ],
   "verification": {
     "local": {"status": "not_run", "commands": []},
     "review": {"required": true, "status": "not_run", "summary": "Review will focus on draft preservation, exact text and identity semantics, duplicate admission, conflict recovery, and complete catalog control coverage."},
