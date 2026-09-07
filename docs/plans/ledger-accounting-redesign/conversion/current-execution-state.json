@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 37,
+  "stateVersion": 38,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -9,11 +9,11 @@
     "version": 3
   },
   "verifiedCheckpoint": {
-    "name": "ACTIVE-SPACE-CHECKLIST-REJECTED-RECOVERY-GREEN",
-    "commit": "afb15232c208264eeb6ffda3b2c52c93e479e47e",
-    "ciRun": 34105386837,
+    "name": "COMPOSED-CHECKLIST-AND-INITIAL-STORY-AUDIT-CI-GREEN",
+    "commit": "72bdf597f31abdfc0f123801d7b96d3b955c1e22",
+    "ciRun": 34137412070,
     "ciStatus": "passed",
-    "meaning": "The behavior-traced active-Space checklist editor now preserves and recovers an exact terminally rejected checklist save as immutable read-only evidence across encrypted database, runtime, coordinator and editor restart. Independent review returned GO after correcting unsafe defaults and misleading retry/empty-state claims. Exact commit CI passed traceability, isolated local Supabase, the full 711-test target suite, and macOS/iOS builds. O-051 still blocks retry, do-not-retry acknowledgment and resolution; A-003/A-004 still gate hosted authenticated Sync."
+    "meaning": "Exact commit CI passed all three required jobs: conversion traceability, isolated target tests/macOS/iOS builds, and local Supabase provider slices. This verifies the composed checklist code and initial three-spec audit present at that commit, not the newer Item audit changes. Workflow promotion remains pending its exact local/evidence record; O-051 rejected-work resolution and A-003/A-004 hosted Sync gates remain unresolved."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -22,9 +22,9 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Check automatic CI for the next commit after 4184d5d2. Run 34135740353 failed before app/database jobs because a legacy checker expected two Swift test invocations instead of the current three; that expectation and stale residual outputs are now corrected locally.",
-      "Continue target-product-story-catalog.json remainingAudit. Accounting, Account discovery and session ending now have 34 heading dispositions; 85 stories and exact decision dependencies are recorded. Finish Item lifecycle/intake, Client/Project/Space, offline/media, reports/import, background and MCP coverage before expanding implementation.",
-      "Keep the catalog partial until every authority and decision is audited. Reuse companion-spec stories with one canonical owner. Independent review accepted all three audits after correcting exclusive discard, optional cache retention, Fee lifecycle, cash/noncash refunds and open-question authority.",
+      "CI 34137412070 passed all three jobs on exact commit 72bdf597. Keep the composed workflow unpromoted until its local verification/evidence record is reconciled from actual results; do not change not_run claims from memory. Use automatic PR CI for the new Item audit checkpoint.",
+      "Continue target-product-story-catalog.json remainingAudit. Five specs now map 74 headings; 99 stories, twenty confirmed decisions and twenty open-decision dependency sets are recorded. Next audit Client/Transfer and Project/Space, then offline/media, reports/import and remaining background/MCP authority before expanding implementation.",
+      "Keep the catalog partial until every authority and decision is audited. Both Item audits passed independent review after separating ordinary return/correction and payment-variance policies, adding atomic legacy resolution/media evidence, and mapping source-freeze timing. Do not count these additions as implemented behavior.",
       "At the next green CI checkpoint, record its exact commit/run with honest scope. The composed app workflow remains unpromoted; current behavior verification stays 9 of 1919. Do not infer feature completion from these catalog improvements."
     ]
   },
@@ -37,7 +37,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "No implementation estimate increase for audit work. The composed Project → Space → checklist path is locally tested/reviewed, but CI 34135740353 failed in a legacy test-topology assertion before app/database jobs. The current batch corrects that check and advances three spec audits; the redesigned-story catalog remains partial, and current behavior verification remains 9 of 1919."
+    "note": "No implementation estimate increase for audit work. CI 34137412070 passed all required jobs on 72bdf597. Item lifecycle/intake audits expose exact price/history, creation/Link/media/MCP, and source-freeze versus target-opening obligations. Catalog audit remains partial and composed workflow evidence promotion remains pending; current behavior verification remains 9 of 1919."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",

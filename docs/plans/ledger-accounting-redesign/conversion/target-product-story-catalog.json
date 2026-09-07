@@ -8,19 +8,19 @@
   },
   "completeness": {
     "status": "partial",
-    "reason": "85 stories recorded. Independent review accepted the accounting, Account discovery and session-ending heading audits after corrections. Nine confirmed decisions and twelve open-decision dependency sets are mapped. Other authority/decision audits remain pending; remainingAudit preserves the specific gaps."
+    "reason": "99 stories recorded. Independent review accepted all five completed spec audits, including Item lifecycle and intake after correcting blocker scope, atomic legacy resolution and migration-media evidence requirements. Twenty confirmed decisions and twenty open-decision dependency sets are mapped. Other authority/decision audits remain pending."
   },
   "remainingAudit": [
     "Accounting spec heading audit is complete (21 headings). Expense edits, adjustments, positive collection, credit/zero settlement, sent revisions, receipt ownership/treatment, refunds and provenance have explicit stories. Their open decisions remain unresolved; companion specs, reports and delivery still require their own audits.",
-    "Complete Item vocabulary, Link cancellation, minimum evidence, wizard hint/layout, app/MCP parity, unresolved acquisition, duplicate evidence, accounting provenance and frozen collection membership. Preserve one physical Item identity.",
-    "Split Client lifecycle and Project setup/editing branches: new Client, rename/archive/merge, description updates, inline categories, hero media, category edits and unarchive. Map O-025/O-026/O-039/O-042/O-043/O-048/O-049/O-050 precisely.",
+    "Item lifecycle and intake audits passed independent review: distinct sale/return/correction/collection, one Item identity, exact fields/contexts, derived accounting sections, Link choices/cancel/review, duplicate reconciliation, MCP parity and isolation. Their named product decisions remain unresolved.",
+    "Split Client lifecycle and Project setup/editing branches: new Client, rename/archive/merge, description updates, inline categories, hero media, category edits and unarchive. Map O-025/O-026/O-039/O-042/O-043/O-048/O-049/O-050 precisely. The Client/Transfer spec still contains source-era collection/Cloud Function/additive-reader language; reconcile its technical rollout wording with isolated Postgres target authority without implementing Firebase changes.",
     "Separate same-Client Transfer open-charge movement, paid attribution, Additional Requests tag, destination Space and reversal. Add Client identity migration; avoid double-counting the existing overlapping Transfer stories.",
     "Complete Space search, Item count, primary media, direct create/details update, template apply/save/manage and archive assignment. Split checklist draft editing from rejected-operation resolution under O-051; preserve the spec's unresolved search-normalization requirement.",
     "Register and reconcile offline-first product authority before adding optimistic structured work, attachment lifecycle/retention under O-023, sync feedback and the offline capability matrix. Split safe session ending from unresolved rejected-work resolution.",
     "Complete budget definitions versus shared management, card preview/pins, enabled category display, Transaction/Item attribution and edge states. Separate exact receipt completeness from billability, rounding and Item basis under O-008/O-030/O-031.",
     "Reconcile reports and invoice-import specs before promoting them to target authority: Invoice/Client Summary/property reports, complete-snapshot generation, export/delivery, capture/parse/review/import and vendor recognition. Preserve O-034/O-035/O-036/O-047.",
     "O-038 Inventory destination planning and O-041 vendor cash-movement reporting lack canonical target headings. Record their approved product authority before inserting implementation-ready stories. Retained return-status/recovery and Correct/Move behavior also need reconciliation with obsolete source mechanics.",
-    "Map remaining confirmed/open decisions, add explicit D-026 production compatibility and D-027 isolated rehearsal outcomes, and split target-writer opening from stale-source-writer freeze under O-020/O-022. Complete every authority heading disposition against its pinned source hash."
+    "Map remaining confirmed/open decisions and complete remaining authority heading dispositions against pinned source hashes. D-026/D-027 isolation and production compatibility now have an explicit story, with target opening O-020 separated from source freeze/recovery O-022; no production action is authorized."
   ],
   "deliveryRequirements": [
     {
@@ -53,7 +53,10 @@
         "space-list-to-detail",
         "space-checklist-progress",
         "client-identity",
-        "project-invoicing-workspace"
+        "project-invoicing-workspace",
+        "item-charge-credit-presentation",
+        "item-intake-vocabulary",
+        "item-link-choice-review-cancel"
       ],
       "workflowKinds": [
         "product_ui"
@@ -81,7 +84,6 @@
         "space-item-assignment",
         "space-archive-assignment",
         "client-lifecycle",
-        "item-create-unified-wizard",
         "budget-pinning"
       ],
       "workflowKinds": [
@@ -135,8 +137,6 @@
         "item-correction",
         "item-vendor-return",
         "item-accounting-state",
-        "item-link-client-paid",
-        "item-link-business-paid",
         "item-one-identity",
         "budget-categories",
         "project-budget-allocation",
@@ -157,7 +157,10 @@
         "transaction-posting-correction",
         "accounting-relationship-provenance",
         "fee-demand-lifecycle",
-        "vendor-noncash-adjustment"
+        "vendor-noncash-adjustment",
+        "item-cycle-provenance",
+        "item-collection-frozen-membership",
+        "item-unaccounted-real-shape"
       ],
       "workflowKinds": [
         "product_ui"
@@ -185,7 +188,6 @@
     {
       "profile": "migration",
       "storyIds": [
-        "legacy-proto-item-migration",
         "non-item-line-migration"
       ],
       "workflowKinds": [
@@ -201,7 +203,9 @@
     {
       "profile": "cutover_control",
       "storyIds": [
-        "stale-client-authority-cutover"
+        "stale-client-authority-cutover",
+        "item-redesign-production-isolation",
+        "item-target-authority-opening"
       ],
       "workflowKinds": [
         "backend_control",
@@ -267,6 +271,119 @@
         "app_mcp_parity",
         "sync_visibility",
         "accounting"
+      ]
+    },
+    {
+      "profile": "item_capture_media",
+      "storyIds": [
+        "item-create-unified-wizard",
+        "item-wizard-optional-details",
+        "item-intake-entry-contexts",
+        "item-capture-mcp-parity"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "app_mcp_parity"
+      ]
+    },
+    {
+      "profile": "item_accounting_media",
+      "storyIds": [
+        "item-link-client-paid",
+        "item-link-business-paid",
+        "item-evidence-reconciliation",
+        "item-intake-atomic-boundary"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "accounting",
+        "media",
+        "app_mcp"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "accounting",
+        "media_durability",
+        "app_mcp_parity"
+      ]
+    },
+    {
+      "profile": "item_section_media",
+      "storyIds": [
+        "item-accounting-sections"
+      ],
+      "workflowKinds": [
+        "product_ui"
+      ],
+      "requiredLayers": [
+        "domain",
+        "app_ui",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media"
+      ],
+      "requiredRisks": [
+        "ui_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability"
+      ]
+    },
+    {
+      "profile": "migration_media",
+      "storyIds": [
+        "legacy-proto-item-migration"
+      ],
+      "workflowKinds": [
+        "migration"
+      ],
+      "requiredLayers": [
+        "migration",
+        "media"
+      ],
+      "requiredRisks": [
+        "migration_fidelity",
+        "media_durability"
       ]
     }
   ],
@@ -525,7 +642,7 @@
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
       "sourceHash": "802bc08ba3e7524bcbab57d8cc7a1fa1e04e49a2b84ef381b2e4560ae965dbe1",
-      "auditStatus": "partial",
+      "auditStatus": "audited",
       "storyIds": [
         "item-inventory-to-project",
         "item-remove-before-invoice",
@@ -537,7 +654,228 @@
         "item-same-client-project-transfer",
         "item-cross-client-through-inventory",
         "item-correction",
-        "item-vendor-return"
+        "item-vendor-return",
+        "item-charge-credit-presentation",
+        "item-cycle-provenance",
+        "item-collection-frozen-membership"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Inventory Item Invoicing and Return Lifecycle",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Document title, status and companion-spec links; behavior is mapped under the body headings."
+        },
+        {
+          "heading": "Purpose",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-charge-credit-presentation",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Core Rules",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-to-project",
+            "item-remove-before-invoice",
+            "item-remove-live-invoice",
+            "item-credit-after-payment",
+            "item-resale",
+            "item-project-to-inventory",
+            "item-inventory-back-to-source-project",
+            "item-same-client-project-transfer",
+            "item-cross-client-through-inventory",
+            "item-correction",
+            "item-vendor-return",
+            "item-collection-frozen-membership",
+            "item-link-business-paid"
+          ]
+        },
+        {
+          "heading": "User-Facing Model",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-charge-credit-presentation",
+            "item-cycle-provenance"
+          ]
+        },
+        {
+          "heading": "Price and Category Basis",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-to-project",
+            "item-remove-live-invoice",
+            "item-credit-after-payment",
+            "item-project-to-inventory",
+            "item-inventory-back-to-source-project",
+            "item-resale",
+            "furnishings-additional-requests-overlay",
+            "item-remove-before-invoice",
+            "item-cross-client-through-inventory"
+          ]
+        },
+        {
+          "heading": "Story 1: Sell an Inventory Item to a Project",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-to-project"
+          ]
+        },
+        {
+          "heading": "Story 2: Decide Not to Use It Before It Is on an Invoice",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-remove-before-invoice"
+          ]
+        },
+        {
+          "heading": "Story 3: Remove It from a Created or Sent Invoice",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-remove-live-invoice",
+            "invoice-credit-zero-settlement",
+            "invoice-sent-revision-delivery"
+          ]
+        },
+        {
+          "heading": "Story 4: Remove It after the Invoice Was Paid",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-credit-after-payment",
+            "client-credit-cash-settlement",
+            "budget-paid-unpaid-progress"
+          ]
+        },
+        {
+          "heading": "Story 5: Sell the Same Item Again",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-resale"
+          ]
+        },
+        {
+          "heading": "Story 6: Sell a Project-Originated Item to Business Inventory",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-project-to-inventory"
+          ]
+        },
+        {
+          "heading": "Story 7: Return a Project-Originated Item to Its Source Project",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-back-to-source-project"
+          ]
+        },
+        {
+          "heading": "Story 8: Transfer between Projects Owned by the Same Client",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-same-client-project-transfer",
+            "same-client-transfer",
+            "transfer-paired-records",
+            "transfer-budget-reallocation"
+          ]
+        },
+        {
+          "heading": "Story 9: Sell from Project A to a Different Client's Project through Inventory",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-cross-client-through-inventory"
+          ]
+        },
+        {
+          "heading": "Story 10: Correct a Mistake",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-correction",
+            "transaction-posting-correction",
+            "accounting-corrections-refunds"
+          ]
+        },
+        {
+          "heading": "Story 11: Return an Item to an Outside Vendor",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-vendor-return",
+            "vendor-cash-refund",
+            "vendor-noncash-adjustment",
+            "item-remove-before-invoice",
+            "item-remove-live-invoice",
+            "item-credit-after-payment"
+          ]
+        },
+        {
+          "heading": "Collection Behavior for Items",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-collection-frozen-membership",
+            "invoice-collect"
+          ]
+        },
+        {
+          "heading": "Data and Integrity Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-cycle-provenance",
+            "accounting-relationship-provenance",
+            "item-inventory-to-project",
+            "item-correction",
+            "item-collection-frozen-membership"
+          ]
+        },
+        {
+          "heading": "Required Test Stories",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-inventory-to-project",
+            "item-remove-before-invoice",
+            "item-remove-live-invoice",
+            "item-credit-after-payment",
+            "item-resale",
+            "item-project-to-inventory",
+            "item-inventory-back-to-source-project",
+            "item-same-client-project-transfer",
+            "item-cross-client-through-inventory",
+            "item-correction",
+            "item-vendor-return",
+            "item-collection-frozen-membership",
+            "budget-paid-unpaid-progress",
+            "furnishings-additional-requests-overlay"
+          ]
+        },
+        {
+          "heading": "Open Decisions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "client-credit-cash-settlement",
+            "invoice-credit-zero-settlement",
+            "budget-paid-unpaid-progress",
+            "item-cycle-provenance",
+            "receipt-component-treatment"
+          ]
+        }
       ]
     },
     {
@@ -724,7 +1062,7 @@
     {
       "path": "docs/specs/proto-item-capture.md",
       "sourceHash": "a7c33dae9f6355148b1dbffdc3c11b5cad57d61b3cd76251ea4b107ce2ed96d7",
-      "auditStatus": "partial",
+      "auditStatus": "audited",
       "storyIds": [
         "item-create-unified-wizard",
         "item-accounting-state",
@@ -732,7 +1070,220 @@
         "item-link-business-paid",
         "item-one-identity",
         "legacy-proto-item-migration",
-        "stale-client-authority-cutover"
+        "stale-client-authority-cutover",
+        "item-intake-vocabulary",
+        "item-wizard-optional-details",
+        "item-intake-entry-contexts",
+        "item-accounting-sections",
+        "item-link-choice-review-cancel",
+        "item-unaccounted-real-shape",
+        "item-evidence-reconciliation",
+        "item-capture-mcp-parity",
+        "item-redesign-production-isolation",
+        "item-target-authority-opening",
+        "item-intake-atomic-boundary"
+      ],
+      "headingCoverage": [
+        {
+          "heading": "Item Creation and Accounting Link",
+          "occurrence": 1,
+          "disposition": "supporting_or_nonproduct",
+          "reason": "Document title and status/authority links; requirements are mapped in the body."
+        },
+        {
+          "heading": "Purpose",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-one-identity",
+            "legacy-proto-item-migration"
+          ]
+        },
+        {
+          "heading": "Product Vocabulary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-intake-vocabulary"
+          ]
+        },
+        {
+          "heading": "Unified Item-Creation Wizard",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-wizard-optional-details",
+            "item-intake-entry-contexts"
+          ]
+        },
+        {
+          "heading": "First: familiar minimum Item fields",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard"
+          ]
+        },
+        {
+          "heading": "Then: optional and accounting details",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-wizard-optional-details",
+            "item-create-unified-wizard"
+          ]
+        },
+        {
+          "heading": "Entry contexts",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-intake-entry-contexts"
+          ]
+        },
+        {
+          "heading": "Accounting-State Rule",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-accounting-state",
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Link Flow",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-link-choice-review-cancel",
+            "item-accounting-sections"
+          ]
+        },
+        {
+          "heading": "Link Routes",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-link-client-paid",
+            "item-link-business-paid"
+          ]
+        },
+        {
+          "heading": "Client paid",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-link-client-paid"
+          ]
+        },
+        {
+          "heading": "Business paid",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-link-business-paid",
+            "item-cycle-provenance",
+            "invoice-collect"
+          ]
+        },
+        {
+          "heading": "One Item Identity",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-one-identity",
+            "item-evidence-reconciliation"
+          ]
+        },
+        {
+          "heading": "Target Real-Item Requirements",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-unaccounted-real-shape",
+            "item-accounting-state",
+            "item-capture-mcp-parity",
+            "item-target-authority-opening"
+          ]
+        },
+        {
+          "heading": "Legacy Proto-Item Source Migration",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "legacy-proto-item-migration",
+            "item-redesign-production-isolation",
+            "stale-client-authority-cutover"
+          ]
+        },
+        {
+          "heading": "Pre-Cutover and Stale-Client Boundary",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-redesign-production-isolation",
+            "item-target-authority-opening",
+            "stale-client-authority-cutover"
+          ]
+        },
+        {
+          "heading": "Atomicity and Concurrency",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-link-client-paid",
+            "item-link-business-paid",
+            "legacy-proto-item-migration",
+            "item-evidence-reconciliation",
+            "item-cycle-provenance",
+            "item-intake-atomic-boundary"
+          ]
+        },
+        {
+          "heading": "MCP and Automation",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-capture-mcp-parity",
+            "item-redesign-production-isolation"
+          ]
+        },
+        {
+          "heading": "Required Tests",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-wizard-optional-details",
+            "item-intake-entry-contexts",
+            "item-accounting-state",
+            "item-accounting-sections",
+            "item-link-client-paid",
+            "item-link-business-paid",
+            "legacy-proto-item-migration",
+            "item-unaccounted-real-shape",
+            "item-capture-mcp-parity",
+            "item-redesign-production-isolation",
+            "stale-client-authority-cutover",
+            "item-intake-atomic-boundary"
+          ]
+        },
+        {
+          "heading": "Open Decisions",
+          "occurrence": 1,
+          "disposition": "story",
+          "storyIds": [
+            "item-create-unified-wizard",
+            "item-link-business-paid",
+            "item-cycle-provenance",
+            "stale-client-authority-cutover",
+            "legacy-proto-item-migration",
+            "item-evidence-reconciliation"
+          ]
+        }
       ]
     },
     {
@@ -919,7 +1470,11 @@
       },
       {
         "decisionId": "D-014",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-charge-credit-presentation",
+          "item-cycle-provenance"
+        ]
       },
       {
         "decisionId": "D-015",
@@ -939,43 +1494,82 @@
       },
       {
         "decisionId": "D-018",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-create-unified-wizard",
+          "item-wizard-optional-details",
+          "item-intake-entry-contexts"
+        ]
       },
       {
         "decisionId": "D-019",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-accounting-state",
+          "item-accounting-sections"
+        ]
       },
       {
         "decisionId": "D-020",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-link-choice-review-cancel"
+        ]
       },
       {
         "decisionId": "D-021",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-link-client-paid",
+          "item-link-business-paid"
+        ]
       },
       {
         "decisionId": "D-022",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-one-identity"
+        ]
       },
       {
         "decisionId": "D-023",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-accounting-state",
+          "item-accounting-sections"
+        ]
       },
       {
         "decisionId": "D-024",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-intake-vocabulary",
+          "item-link-choice-review-cancel"
+        ]
       },
       {
         "decisionId": "D-025",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-create-unified-wizard",
+          "legacy-proto-item-migration",
+          "item-redesign-production-isolation"
+        ]
       },
       {
         "decisionId": "D-026",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-redesign-production-isolation",
+          "item-target-authority-opening"
+        ]
       },
       {
         "decisionId": "D-027",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-redesign-production-isolation"
+        ]
       }
     ],
     "open": [
@@ -988,7 +1582,6 @@
         "auditStatus": "mapped",
         "storyIds": [
           "accounting-corrections-refunds",
-          "item-credit-after-payment",
           "invoice-credit-zero-settlement",
           "client-credit-cash-settlement"
         ]
@@ -998,7 +1591,6 @@
         "auditStatus": "mapped",
         "storyIds": [
           "accounting-corrections-refunds",
-          "item-credit-after-payment",
           "invoice-credit-zero-settlement",
           "client-credit-cash-settlement"
         ]
@@ -1007,8 +1599,7 @@
         "decisionId": "O-005",
         "auditStatus": "mapped",
         "storyIds": [
-          "budget-paid-unpaid-progress",
-          "item-credit-after-payment"
+          "budget-paid-unpaid-progress"
         ]
       },
       {
@@ -1025,7 +1616,9 @@
           "item-resale",
           "item-project-to-inventory",
           "item-inventory-back-to-source-project",
-          "accounting-relationship-provenance"
+          "item-cross-client-through-inventory",
+          "accounting-relationship-provenance",
+          "item-cycle-provenance"
         ]
       },
       {
@@ -1070,36 +1663,61 @@
           "item-resale",
           "item-project-to-inventory",
           "item-inventory-back-to-source-project",
-          "accounting-relationship-provenance"
+          "item-cross-client-through-inventory",
+          "accounting-relationship-provenance",
+          "item-cycle-provenance"
         ]
       },
       {
         "decisionId": "O-016",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-link-business-paid"
+        ]
       },
       {
         "decisionId": "O-017",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-create-unified-wizard"
+        ]
       },
       {
         "decisionId": "O-018",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "legacy-proto-item-migration",
+          "stale-client-authority-cutover"
+        ]
       },
       {
         "decisionId": "O-019",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "legacy-proto-item-migration",
+          "item-evidence-reconciliation"
+        ]
       },
       {
         "decisionId": "O-020",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-target-authority-opening"
+        ]
       },
       {
         "decisionId": "O-021",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-create-unified-wizard"
+        ]
       },
       {
         "decisionId": "O-022",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "stale-client-authority-cutover"
+        ]
       },
       {
         "decisionId": "O-023",
@@ -1119,7 +1737,12 @@
       },
       {
         "decisionId": "O-027",
-        "auditStatus": "pending"
+        "auditStatus": "mapped",
+        "storyIds": [
+          "item-create-unified-wizard",
+          "item-unaccounted-real-shape",
+          "item-capture-mcp-parity"
+        ]
       },
       {
         "decisionId": "O-028",
@@ -1693,7 +2316,7 @@
     {
       "storyId": "item-inventory-to-project",
       "title": "Sell an Inventory Item to a Project",
-      "outcome": "A single physical Item moves to the Project and gains an open billable charge without creating Client cash activity.",
+      "outcome": "Move the Item to the destination Project; create a new Furnishings charge and sale occurrence at project price, increasing unpaid progress without a Transaction. Approved uncollected price edits atomically update the charge and created/sent Invoice total; collected amounts stay frozen.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 1: Sell an Inventory Item to a Project"
@@ -1704,7 +2327,7 @@
     {
       "storyId": "item-remove-before-invoice",
       "title": "Remove an Item before invoicing",
-      "outcome": "An unused Item returns to Inventory and its uncollected charge is removed without a cash Return.",
+      "outcome": "Return the Item to Inventory, remove its uninvoiced positive charge and unpaid Furnishings progress, and link the return to the reversed sale occurrence. Retain audit history; create no Invoice, credit or project Transaction.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 2: Decide Not to Use It Before It Is on an Invoice"
@@ -1715,7 +2338,7 @@
     {
       "storyId": "item-remove-live-invoice",
       "title": "Remove an Item from a live Invoice",
-      "outcome": "Removing an Item from a created or sent Invoice updates placement, membership, and revisions atomically.",
+      "outcome": "Return the Item to Inventory and atomically remove its exact occurrence line and charge, recalculate live Invoice totals/category allocation and unpaid progress, and retain edit/return history. No cash Transaction; a resulting zero Invoice is noncollectible. Sent revision policy remains open.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 3: Remove It from a Created or Sent Invoice"
@@ -1724,7 +2347,6 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-002",
           "O-010",
           "O-034"
         ],
@@ -1735,28 +2357,18 @@
     {
       "storyId": "item-credit-after-payment",
       "title": "Credit a paid Item",
-      "outcome": "A paid Item remains historically frozen while any later Client credit or cash refund is represented explicitly.",
+      "outcome": "Return a paid Item to Inventory, preserving its paid Invoice, line, Transaction and historical membership. Create one retry-safe credit linked to the original paid line and return, using frozen amount/category and immediately reducing Furnishings progress. No cash refund or settlement is implied.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 4: Remove It after the Invoice Was Paid"
       },
       "milestone": "M3",
-      "status": "blocked",
-      "blocker": {
-        "decisionIds": [
-          "O-003",
-          "O-004",
-          "O-005",
-          "O-014"
-        ],
-        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
-        "section": "Open Product Decisions"
-      }
+      "status": "required"
     },
     {
       "storyId": "item-resale",
       "title": "Sell the same Item again",
-      "outcome": "One physical Item identity survives repeated sale, return, and resale occurrences with auditable provenance.",
+      "outcome": "Resell the same physical Item to the same or another Project using a new charge and occurrence, destination project price and Furnishings attribution. Never reuse a prior occurrence or reopen earlier charge, credit, Invoice or paid Transaction history.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 5: Sell the Same Item Again"
@@ -1775,7 +2387,7 @@
     {
       "storyId": "item-project-to-inventory",
       "title": "Move a Project-originated Item into Inventory",
-      "outcome": "The Item changes owner and scope with the exact inventory acquisition and Project accounting evidence required by the payer story.",
+      "outcome": "Acquire the Project-originated Item into Inventory at purchase cost, never inflated project price. Freeze source Project/category/amount/origin; remove unpaid demand or create a linked paid credit and reduce Project progress immediately. Physical entry alone creates no cash Purchase or client refund.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 6: Sell a Project-Originated Item to Business Inventory"
@@ -1785,8 +2397,7 @@
       "blocker": {
         "decisionIds": [
           "O-007",
-          "O-015",
-          "O-032"
+          "O-015"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -1795,7 +2406,7 @@
     {
       "storyId": "item-inventory-back-to-source-project",
       "title": "Return an Item to its source Project",
-      "outcome": "A Project-originated Item can return from Inventory to its source with conserved identity and correct accounting provenance.",
+      "outcome": "Return only to the proven source Project using immutable inventory-entry amount/category, creating a new positive charge and occurrence and increasing unpaid progress. No different destination or recalculated basis within Return; ambiguous provenance requires ordinary Sell or a block, never guessing.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 7: Return a Project-Originated Item to Its Source Project"
@@ -1814,7 +2425,7 @@
     {
       "storyId": "item-same-client-project-transfer",
       "title": "Transfer an Item between same-Client Projects",
-      "outcome": "The Item moves directly between Projects with paired non-cash Transfer evidence and no Inventory hop.",
+      "outcome": "Require the same non-null authoritative Client ID, not matching names. Move directly with paired records and client-wide net-zero attribution; preserve source paid history and move open demand without a purchase or source credit. Invoice, tag, Space, reversal and later-credit policies remain gated.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 8: Transfer between Projects Owned by the Same Client"
@@ -1836,37 +2447,37 @@
     {
       "storyId": "item-cross-client-through-inventory",
       "title": "Move an Item across Clients through Inventory",
-      "outcome": "Cross-Client resale uses explicit Inventory acquisition and later Project billing rather than a direct Transfer.",
+      "outcome": "One action removes source unpaid demand or credits its frozen paid basis, passes the Item through Inventory with correlated provenance, and creates destination demand at destination project price. Update both budgets atomically; never share accounting records or offer this in the same-Client Transfer picker.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 9: Sell from Project A to a Different Client's Project through Inventory"
       },
       "milestone": "M3",
-      "status": "required"
-    },
-    {
-      "storyId": "item-correction",
-      "title": "Correct an Item lifecycle mistake",
-      "outcome": "Corrections preserve the physical Item and immutable prior evidence rather than rewriting history.",
-      "authority": {
-        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
-        "section": "Story 10: Correct a Mistake"
-      },
-      "milestone": "M3",
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-013",
-          "O-029"
+          "O-007",
+          "O-015"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       }
     },
     {
+      "storyId": "item-correction",
+      "title": "Correct an Item lifecycle mistake",
+      "outcome": "Before collection, correct a mistaken placement that did not represent an economic scope change: atomically repair placement and open charge/Invoice and void or reverse the exact erroneous occurrence with audit metadata. Invent no sale, return, cash or budget event; never use this to edit paid history.",
+      "authority": {
+        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+        "section": "Story 10: Correct a Mistake"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
       "storyId": "item-vendor-return",
       "title": "Return an Item to an outside vendor",
-      "outcome": "Physical vendor return, actual money refund, and non-cash vendor credit remain separate facts.",
+      "outcome": "For an actual vendor refund, create a Return in the direct-paying Client’s Project or 1584’s Inventory scope. If the Item was also billed to a Project, separately remove its unpaid demand or create its paid credit. Vendor cash and client credit are distinct; posting evidence remains gated.",
       "authority": {
         "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
         "section": "Story 11: Return an Item to an Outside Vendor"
@@ -1875,7 +2486,7 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-028"
+          "O-032"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
@@ -1884,7 +2495,7 @@
     {
       "storyId": "item-create-unified-wizard",
       "title": "Create one real Item through the unified wizard",
-      "outcome": "All entry contexts create one real Item identity from the same minimum and optional field contract.",
+      "outcome": "All entry points share form state, validation and one real-Item writer. Show photos, name, notes, quantity (may default to one), Project/optional Space first; save or continue without replacing identity. Minimum name/image/note validation, payer hint and one-screen versus two-step layout remain open.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Unified Item-Creation Wizard"
@@ -1904,7 +2515,7 @@
     {
       "storyId": "item-accounting-state",
       "title": "Show whether an Item is Accounted For",
-      "outcome": "Accounting state derives only from a Client-paid Purchase link or open billable Item charge, independently of Space and Invoice membership.",
+      "outcome": "Derive project accounting state from an actual client-paid Purchase or billable charge/credit occurrence, including live and frozen paid history. Space, status, completeness and Invoice selection/sent state do not decide it. Inventory acquisition completeness is separate; a cached flag is not authority.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Accounting-State Rule"
@@ -1915,7 +2526,7 @@
     {
       "storyId": "item-link-client-paid",
       "title": "Link an Item as Client paid",
-      "outcome": "Client-paid Link requires and connects the actual Project Purchase.",
+      "outcome": "Idempotently Link an Unaccounted For Item still in the Project to its eligible actual client-paid Purchase; validate account/Project/type/mutability atomically. Reconcile category to Furnishings/approved rule; preserve ID/media/notes/quantity/Space. Mark Accounted For without Invoicing demand.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Client paid"
@@ -1926,7 +2537,7 @@
     {
       "storyId": "item-link-business-paid",
       "title": "Link an Item as Business paid",
-      "outcome": "Business-paid Link creates an open Item charge and honestly represents optional or missing Inventory acquisition evidence.",
+      "outcome": "Idempotently Link an Unaccounted For project Item to one positive Furnishings charge at approved project price, preserving ID/media/notes/quantity/Space. Inventory Purchase is optional, stays inventory-scoped/unrepriced and is created only by a separate explicit action, never fabricated. No project Transaction.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Business paid"
@@ -1944,7 +2555,7 @@
     {
       "storyId": "item-one-identity",
       "title": "Preserve one Item identity",
-      "outcome": "Project Items, Invoicing, Inventory, and provenance reference one physical Item rather than duplicate records.",
+      "outcome": "Project Items and Invoicing reference one physical Item. Its separate charge occurrence owns signed amount, category, Invoice state and paid history. Adding details or Link never replaces the Item ID; duplicate-evidence reconciliation is a separate audited action, not a routine Link step.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "One Item Identity"
@@ -1955,7 +2566,7 @@
     {
       "storyId": "legacy-proto-item-migration",
       "title": "Import legacy proto Item evidence",
-      "outcome": "Every legacy proto capture receives a deterministic Item, merge, or review disposition without a target proto writer.",
+      "outcome": "Atomically resolve each legacy proto to one Item or blocking quarantine without partial records; honor valid convertedItemId and durable source correlation. Retry without duplicate Items or media copies. Preserve media/notes/quantity/Space; explicit copy/reuse cannot orphan bytes. No target proto writer or dual-read.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Legacy Proto-Item Source Migration"
@@ -1974,7 +2585,7 @@
     {
       "storyId": "stale-client-authority-cutover",
       "title": "Reject stale source writers at cutover",
-      "outcome": "Final export and target authority cannot miss writes from already-shipped Firebase clients.",
+      "outcome": "At the explicitly authorized hard cutover, protect final export/delta with a fail-closed source write freeze; prove quiescence, late offline-writer rejection and pending/rejected-work recovery before target activation. No Firebase v2 adapter, dual write or intermediate redesign release.",
       "authority": {
         "path": "docs/specs/proto-item-capture.md",
         "section": "Pre-Cutover and Stale-Client Boundary"
@@ -1983,7 +2594,7 @@
       "status": "blocked",
       "blocker": {
         "decisionIds": [
-          "O-020",
+          "O-018",
           "O-022"
         ],
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
@@ -2496,6 +3107,196 @@
         "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
         "section": "Open Product Decisions"
       }
+    },
+    {
+      "storyId": "item-charge-credit-presentation",
+      "title": "Show Item charges and credits without movement jargon",
+      "outcome": "In Project Invoicing, show positive charges, negative credits and available, live-Invoice or paid states. Keep useful Item history understandable without asking users to manage an Item Movement entity.",
+      "authority": {
+        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+        "section": "User-Facing Model"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-cycle-provenance",
+      "title": "Explain the exact sale or return cycle",
+      "outcome": "Retain exact cycle, source/destination and category snapshots, signed amount/price basis, reversed occurrence, Invoice/line membership and open/paid/reversed/corrected state. An Invoice line identifies both Item and occurrence; one mutable transactionId cannot own every relationship.",
+      "authority": {
+        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+        "section": "Data and Integrity Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-007",
+          "O-015"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-collection-frozen-membership",
+      "title": "Freeze exact Item membership at collection",
+      "outcome": "Whole-Invoice collection atomically freezes Item/occurrence IDs, signed amount, category, label and price snapshot; attaches each occurrence to the single Purchase, removes active demand and leaves placement unchanged. Retries, concurrent return and price edits cannot duplicate or rewrite paid evidence.",
+      "authority": {
+        "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+        "section": "Collection Behavior for Items"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-intake-vocabulary",
+      "title": "Use Add Item and Link language",
+      "outcome": "Add Item opens one wizard; Quick is its lightweight completion, not another object or writer. Use Unaccounted For Items, Accounted For Items and Link; do not expose proto, draft, conversion, promotion, Needs Assignment, Assign Item, Unlinked Items or Linked Items as target labels.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Product Vocabulary"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-wizard-optional-details",
+      "title": "Continue from capture into optional details",
+      "outcome": "In the same wizard optionally enter SKU, vendor/source, purchase price, project price, market value, status, acquisition Purchase and accounting Link. Preserve the saved Item ID while adding details; payer guidance remains subject to the separate open hint decision.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Then: optional and accounting details"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-intake-entry-contexts",
+      "title": "Seed the same Item flow from each entry point",
+      "outcome": "Project capture starts in that Project with optional Space; Inventory capture has no Project. Transaction capture preselects only an eligible scope/type. Images and MCP extracted fields seed the same real-Item wizard/writer, not a separate product object.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Entry contexts"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-accounting-sections",
+      "title": "Keep both Item sections fully usable",
+      "outcome": "Project Items shows Unaccounted For Items first and Accounted For Items below. Search, Space assignment, media editing and ordinary physical details work in either section. Space may change before, during or after Link without changing accounting state.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Accounting-State Rule"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-link-choice-review-cancel",
+      "title": "Review or cancel either Link route",
+      "outcome": "Link asks Who paid for this Item? with only Client paid and Business paid. Closing leaves the Item Unaccounted For with no side effects; there is no Not sure yet option. Review the exact accounting destination/effect before commit. Never label Business paid as Sell from Business Inventory.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Link Flow"
+      },
+      "milestone": "M3",
+      "status": "required"
+    },
+    {
+      "storyId": "item-unaccounted-real-shape",
+      "title": "Save a real Item without accounting demand",
+      "outcome": "Allow a project Item with enabled Furnishings category, no Transaction or occurrence and optional prices/vendor/SKU/status/Space. Category alone is not accounting. Unaccounted For Items contribute nothing to budget, Invoice, Transaction completeness, reports or exports; later Link preserves identity.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Target Real-Item Requirements"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-027"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-evidence-reconciliation",
+      "title": "Reconcile duplicate evidence explicitly",
+      "outcome": "Use a separate audited Reconcile Existing Item action when receipt/MCP/migration reveals duplicates. Choose one surviving ID, merge media/evidence deterministically, redirect only mutable relationships and preserve paid history. Never force matching into normal Link or merge silently.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "One Item Identity"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-019"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-capture-mcp-parity",
+      "title": "Use the same Item contract in MCP",
+      "outcome": "MCP uses the app’s minimum-field real-Item writer and one trusted idempotent command per Link route, with target Item/Link names. Automation may suggest payer, Purchase, duplicates or details but never Links, migrates or merges silently. Existing source tools remain unchanged until authorized cutover.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "MCP and Automation"
+      },
+      "milestone": "M3",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-027"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-redesign-production-isolation",
+      "title": "Rehearse target intake without changing Firebase",
+      "outcome": "Before authorized cutover, keep production Firebase app/MCP, proto documents, fields, media cleanup, rules and indexes unchanged. Test the full target and import repeatedly in isolated Supabase/PowerSync using immutable fixtures; target-only Item writes never reach Firebase or its users.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Pre-Cutover and Stale-Client Boundary"
+      },
+      "milestone": "M4",
+      "status": "required"
+    },
+    {
+      "storyId": "item-target-authority-opening",
+      "title": "Open target writers only after the approved gate",
+      "outcome": "Keep target production writers disabled until the approved compatibility/authority gate passes, including app/MCP/nonfinancial projections, reconciled legacy proto dispositions and final stale-writer freeze/recovery. Opening production authority is separately authorized, not implied by passing local tests.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Pre-Cutover and Stale-Client Boundary"
+      },
+      "milestone": "M5",
+      "status": "blocked",
+      "blocker": {
+        "decisionIds": [
+          "O-020"
+        ],
+        "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+        "section": "Open Product Decisions"
+      }
+    },
+    {
+      "storyId": "item-intake-atomic-boundary",
+      "title": "Make intake and Link safe under retries and competing edits",
+      "outcome": "Validate scope, identity/placement/accounting state, Purchase eligibility, occurrence uniqueness, category, charge price, live Invoice and authority version at commit. Creation/Link/reconciliation leave no partial records or retry duplicates; delete/move/Transfer/collection/price races fail or serialize.",
+      "authority": {
+        "path": "docs/specs/proto-item-capture.md",
+        "section": "Atomicity and Concurrency"
+      },
+      "milestone": "M3",
+      "status": "required"
     }
   ]
 }
