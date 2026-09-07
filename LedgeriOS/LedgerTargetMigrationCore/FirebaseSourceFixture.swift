@@ -265,6 +265,18 @@ extension FirebaseSourceValue: Codable {
     }
 }
 
+/// Exact source documents released only after the enclosing fixture passes its
+/// digest, privacy and structural checks. Validation is not semantic approval:
+/// malformed, ambiguous and cross-Account evidence remains explicitly tagged.
+public struct FirebaseSourceDocument: Equatable, Sendable {
+    public let accountScopeID: String
+    public let documentPathSegments: [String]
+    public let entityCode: String
+    public let evidenceKind: FirebaseSourceEvidenceKind
+    public let fields: FirebaseSourceValue
+    public let sourceRecordID: String
+}
+
 public struct ValidatedFirebaseSourceFixture: Equatable, Sendable {
     public let sourceSnapshot: MigrationSourceSnapshot
     public let entityPlans: [MigrationEntityPlan]
@@ -273,6 +285,7 @@ public struct ValidatedFirebaseSourceFixture: Equatable, Sendable {
     package let accountScopeID: MigrationOpaqueID
     public let authorityDisposition: MigrationAuthorityDisposition
     public let privacyReviewEvidenceID: MigrationStableCode
+    public let firestoreDocuments: [FirebaseSourceDocument]
 }
 
 public struct FirebaseSourceFixtureCatalog: Sendable {
@@ -387,6 +400,7 @@ public struct FirebaseSourceFixtureCatalog: Sendable {
         guard envelope.content.files.map(\.path) == Self.payloadPaths else { throw FirebaseSourceFixtureFailure.fileOrderMismatch }
 
         var records: [EntityRecord] = []
+        var documents: [FirebaseSourceDocument] = []
         for (descriptor, file) in zip(envelope.content.files, files) {
             guard descriptor.path == file.path else { throw FirebaseSourceFixtureFailure.fileSetMismatch }
             guard descriptor.byteCount == file.bytes.count else { throw FirebaseSourceFixtureFailure.fileByteCountMismatch }
@@ -400,6 +414,7 @@ public struct FirebaseSourceFixtureCatalog: Sendable {
             guard descriptor.role == payload.role else { throw FirebaseSourceFixtureFailure.fileRoleMismatch }
             guard descriptor.recordCount == payload.records.count else { throw FirebaseSourceFixtureFailure.payloadRecordCountMismatch }
             records += payload.records
+            documents += payload.documents
         }
 
         let entities = try entityIdentities(records)
@@ -433,7 +448,8 @@ public struct FirebaseSourceFixtureCatalog: Sendable {
             sanitizationVersion: try MigrationVersion(validating: envelope.content.sanitizationVersion, field: "sanitization"),
             accountScopeID: try MigrationOpaqueID(validating: envelope.content.accountScopeID, field: "fixture_account"),
             authorityDisposition: .evidenceOnly,
-            privacyReviewEvidenceID: try MigrationStableCode(validating: envelope.content.privacyReview.evidenceID, field: "privacy_review")
+            privacyReviewEvidenceID: try MigrationStableCode(validating: envelope.content.privacyReview.evidenceID, field: "privacy_review"),
+            firestoreDocuments: documents
         )
     }
 
@@ -486,7 +502,15 @@ public struct FirebaseSourceFixtureCatalog: Sendable {
                 guard p.schemaVersion == 1, p.resourceKind == "firestore_documents", p.authorityDisposition == "evidence_only" else { throw FirebaseSourceFixtureFailure.resourceKindMismatch }
                 try Self.validateEntryCount(p.entries.count, role: .firestore)
                 var nodes = 0
-                return try DecodedPayload(role: "firestore_documents", records: p.entries.map { try $0.entityRecord(manifestAccountScopeID: manifestAccountScopeID, nodes: &nodes) })
+                return try DecodedPayload(
+                    role: "firestore_documents",
+                    records: p.entries.map { try $0.entityRecord(manifestAccountScopeID: manifestAccountScopeID, nodes: &nodes) },
+                    documents: p.entries.map {
+                        FirebaseSourceDocument(accountScopeID: $0.accountScopeID,
+                            documentPathSegments: $0.documentPathSegments, entityCode: $0.entityCode,
+                            evidenceKind: $0.evidenceKind, fields: $0.fields, sourceRecordID: $0.sourceRecordID)
+                    }
+                )
             case "storage/object-metadata.json":
                 let p = try Self.decodeCanonical(StoragePayload.self, file.bytes)
                 guard p.schemaVersion == 1, p.resourceKind == "storage_object_metadata", p.authorityDisposition == "evidence_only" else { throw FirebaseSourceFixtureFailure.resourceKindMismatch }
@@ -631,7 +655,11 @@ private struct PrivacyReview: Codable, Equatable {
     let reviewed: Bool
     let reviewedPayloadSHA256: [String]
 }
-private struct DecodedPayload { let role: String; let records: [EntityRecord] }
+private struct DecodedPayload {
+    let role: String
+    let records: [EntityRecord]
+    var documents: [FirebaseSourceDocument] = []
+}
 private struct EntityRecord { let sourceRecordID: String; let entityCode: String; let canonicalRecord: Data }
 
 private protocol FixtureRecord: Codable {

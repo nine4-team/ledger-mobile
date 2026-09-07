@@ -1610,7 +1610,8 @@ function runSelfTests() {
   }, /unknown confirmed decision/);
   expectFailure("lost migrated workflow evidence", () => {
     const value = structuredClone(checklist);
-    value.executionRecords.pop();
+    const migratedId = value.migration.sourceFiles.workflowRecords[0].path.split("/").at(-1).replace(/\.json$/, "");
+    value.executionRecords = value.executionRecords.filter((record) => record.workflowId !== migratedId);
     validateChecklist(value);
   }, /Migrated workflow evidence records must remain present/);
   expectFailure("prose-only background audit closure", () => {

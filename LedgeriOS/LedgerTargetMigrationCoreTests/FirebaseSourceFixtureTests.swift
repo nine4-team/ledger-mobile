@@ -486,6 +486,35 @@ struct FirebaseSourceFixtureTests {
         }
     }
 
+    @Test("Validated fixture releases every exact document without treating evidence tags as import approval")
+    func validatedDocumentsPreserveEvidence() throws {
+        let bytes = try Self.fixtureBytes()
+        let fixture = try FirebaseSourceFixtureCatalog().validate(manifestEnvelope: bytes.manifest, files: bytes.files)
+        let file = try #require(bytes.files.first { $0.path == "firestore/documents.json" })
+        let payload = try #require(JSONSerialization.jsonObject(with: file.bytes) as? [String: Any])
+        let entries = try #require(payload["entries"] as? [[String: Any]])
+        #expect(fixture.firestoreDocuments.count == entries.count)
+        #expect(fixture.firestoreDocuments.count == 14)
+        for (document, entry) in zip(fixture.firestoreDocuments, entries) {
+            let recordID = try #require(entry["sourceRecordID"] as? String)
+            let accountID = try #require(entry["accountScopeID"] as? String)
+            let path = try #require(entry["documentPathSegments"] as? [String])
+            #expect(document.sourceRecordID.utf8.elementsEqual(recordID.utf8))
+            #expect(document.accountScopeID.utf8.elementsEqual(accountID.utf8))
+            #expect(document.documentPathSegments.map { Data($0.utf8) } == path.map { Data($0.utf8) })
+            #expect(document.entityCode == entry["entityCode"] as? String)
+            #expect(document.evidenceKind.rawValue == entry["evidenceKind"] as? String)
+            let raw = try Self.canonicalJSON(#require(entry["fields"]))
+            #expect(try FirebaseSourceFixtureCatalog.canonicalData(for: document.fields) == raw)
+        }
+        #expect(fixture.firestoreDocuments.contains { $0.evidenceKind == .crossAccount })
+        #expect(fixture.firestoreDocuments.contains { $0.evidenceKind == .malformed })
+        #expect(fixture.firestoreDocuments.contains { $0.evidenceKind == .ambiguous })
+        // This frozen fixture has simplified movements, not shipped lineageEdges.
+        // Exposing its records must not synthesize or claim real lineage coverage.
+        #expect(!fixture.firestoreDocuments.contains { $0.documentPathSegments.contains("lineageEdges") })
+    }
+
     private static func fixtureBytes() throws -> (manifest: Data, files: [FirebaseSourceFixtureFile]) {
         let root = try #require(Bundle.module.url(forResource: "Fixtures", withExtension: nil))
             .appending(path: "FirebaseSource/v1", directoryHint: .isDirectory)

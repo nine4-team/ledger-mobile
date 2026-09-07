@@ -27748,7 +27748,8 @@
       ],
       "deferredBehaviors": [
         "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
-        "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries."
+        "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries.",
+        "Frozen v1 fixture contains simplified movements, not shipped lineageEdges; validated document exposure does not establish real source-history integration. Add source-shaped cycle evidence and exact path/Account reference selection before target mapping."
       ],
       "blockers": [],
       "verification": {
@@ -27759,18 +27760,19 @@
             "swift test --package-path LedgeriOS --filter 'FirebaseLineage|FirebaseSourceFixtureTests|MigrationRunIntegrityTests|MigrationEnvironmentGuardTests'",
             "npm run conversion:check",
             "npm run target:environment:check",
-            "git diff --check"
+            "git diff --check",
+            "node scripts/check-conversion-current-state.mjs --self-test"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Main independently reviewed delegated reader and corrected source-ID syntax and UTF-8 Account checks. Independent consumer review identified embedded Account lookup gap; fixed and directly tested. Sorted-key raw-byte duplicate comparison preserves Unicode-distinct evidence and avoids nondeterministic conflicts. Broad migration suite27 tests/5 suites PASS /tmp/ledger-history-migration-suite.log; final focused10 tests/2 suites PASS /tmp/ledger-lineage-final-focused.log. No canonical event inference, target mapping, UI or actual import completeness claimed."
+          "summary": "Main independently reviewed delegated reader and corrected source-ID syntax and UTF-8 Account checks. Independent consumer review identified embedded Account lookup gap; fixed and directly tested. Sorted-key raw-byte duplicate comparison preserves Unicode-distinct evidence and avoids nondeterministic conflicts. Broad migration suite27 tests/5 suites PASS /tmp/ledger-history-migration-suite.log; final focused10 tests/2 suites PASS /tmp/ledger-lineage-final-focused.log. No canonical event inference, target mapping, UI or actual import completeness claimed. Follow-up: validated fixture document exposure preserves all 14 records including fault tags and exact canonical fields; full migration subset29/5 PASS /tmp/ledger-source-document-tests.log. Independent review GO; identity assertions strengthened to UTF-8 bytes. CI34168806311 failed brittle checker self-test, not target code; targeted migrated-record removal fixes that without weakening validation. Control-plane self-tests/control checks PASS. Source-shaped lineage fixture integration remains required."
         },
         "ci": {
-          "status": "not_run",
-          "commit": null,
-          "run": null
+          "status": "failed",
+          "commit": "18ac010c4a287a998bfb83d7861ced0fe4ae7cf6",
+          "run": 34168806311
         }
       },
       "implementationEvidence": [
@@ -27778,7 +27780,8 @@
           "layer": "migration",
           "paths": [
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageEvidence.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageReconciliation.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageReconciliation.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift"
           ]
         }
       ]

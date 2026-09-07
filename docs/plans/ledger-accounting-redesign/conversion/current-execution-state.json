@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 83,
+  "stateVersion": 84,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit closed. Shared Space searchad70e5cf CI34167632359 confirmed success; checkpoint/current checklist updated. D028 removes technical approval blockers; A019 and AGENTS require significant technical changes logged, with tradeoffs/preserved behavior/evidence. Guidance updates remain uncommitted with current workflow.",
-      "Reader/reconciler implemented/reviewed. Fixed source ID syntax, byte-Account matching, embedded-Account lookup denial and nondeterministic duplicate comparison. Full migration suite27/5 PASS, final focused10/2 PASS; evidence in checklist. Environment/conversion/diff checks passed. Commit/push one batch and use automatic exact CI. No local tests running. Next: connect validated fixture records/reference collections to reader before canonical target mapping; no target history/UI/import completion claim.",
-      "O-053 live checklist mutation actors unresolved; asynchronous question asks all active Account members vs Owners/Admins only for check/uncheck. Do not infer checklist-structure/Space-edit rights from that answer. Other O068/O069/O070 and hosted architecture gates remain open.",
-      "D028 confirmed: preserve meaning/useful history, improve structural design when justified; engineers decide technical representation, ask only for product changes/information loss. O007/O015 removed as approval blockers; six outcomes now required, five retain other product blockers. Existing packet has verified source-field relationships (including lineage and Invoice settlement). Continue accounting-relationship-provenance/item-cycle-provenance implementation using existing target contracts; no new catalog, no blanket approval of packet details. O060/O067 remain independent.",
-      "Removal/owned upload292b1b57 CI34165447171 all3 jobs passed; current checkpoint. Still needs verified online removal/authenticated scheduling, media upload implementation/ownership, final transaction linearization, native keychain/crash and cross-process proof. A007/O057 provider question pending; no hosted access approved. Retain uncertain work; no recovery bypass. Earlier timeout cause unproven; diagnostics remain in next CI."
+      "Audit complete; continue Item-history migration without reopening audit or O007/O015. D028/A019 allow improved technical representation while preserving meaning/history. Significant technical changes belong in architecture-decisions.md.",
+      "18ac010c4a287a998bfb83d7861ced0fe4ae7cf6 automatic CI34168806311 failed checker self-test before target tests: pop() removed newly appended workflow rather than historical evidence. Fixed test to select migrated identity. Validated fixture now exposes exact typed source documents only after all existing validation; 29 migration tests/5 suites and control checks passed; independent review GO. Current batch awaiting commit/automatic CI.",
+      "Next: add source-shaped Item sale/return/resale fixture evidence and connect document paths/Account-scoped reference selection to lineage reader/reconciler. Frozen v1 fixture has simplified movements, no shipped lineageEdges; do not relabel it as real-history proof or weaken reviewed digest/privacy checks. Canonical mapping, target history UI/MCP/readback and reconciliation still required.",
+      "O053 checklist actors, A007/O057 auth provider and other linked product/hosted gates remain unresolved only for affected outcomes. No production/hosted access authorized. Preserve independent progress; no new tracker."
     ]
   },
   "blockers": [],
