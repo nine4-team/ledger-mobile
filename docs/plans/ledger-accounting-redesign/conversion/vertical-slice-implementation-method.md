@@ -9,6 +9,13 @@ prevent accounting, authorization, offline, migration, and cutover mistakes.
 The process must make the product easier to finish and understand. It must not
 become a second product.
 
+The active goal requires the behavior/spec checklist to be finished and reviewed
+before implementation expands. Include background and MCP capabilities as well
+as screen interactions. Choose the simplest implementation that satisfies the
+approved outcome, reuse existing capabilities, and justify new abstractions by
+the concrete problem they solve. Do not treat a fixed speedup or token-savings
+estimate as an acceptance requirement.
+
 The normal unit of delivery is a user-visible workflow such as “create a
 Project,” “browse and edit a Space,” or “collect an Invoice.” Internal types,
 ports, SQL functions, adapters, and views are parts of that workflow, not
@@ -162,6 +169,11 @@ the new specs?” The code-surface catalog answers only where relevant code live
 Each target story names one canonical spec heading, its milestone, and whether
 it is required, blocked by named open decisions, or retired by confirmed
 authority. A product workflow lists only the story IDs it completely exercises.
+For a blocked story, read its spec heading and each exact blocker row together:
+the heading supplies product context and the decision row defines the unresolved
+choice. Neither a proposed option nor a contextual heading grants permission
+to implement that choice. Map an explicit open-question heading to its blocked
+stories rather than hiding it as nonproduct text.
 At least one passed acceptance check must explicitly cover every story claimed
 by a completed workflow. A partial implementation may cite the governing spec
 without claiming its broader story complete.
@@ -172,7 +184,9 @@ The catalog also contains three machine-checked ledgers:
   as audited, partial, or an explicitly allowlisted source-only artifact. Every
   entry is pinned to the SHA-256 of the reviewed source. An `audited` entry must
   disposition every current Markdown heading exactly once and map each claimed
-  story through that heading inventory;
+  story through that heading inventory. A heading may reference a story owned
+  by a companion spec; each story still has exactly one canonical owning entry,
+  so repeated requirements do not require duplicate stories;
 - `decisionCoverage` accounts for every ID in the exact Confirmed and Open
   Product Decisions sections as mapped or pending. A mapped open decision can
   point only to a blocked story that names that exact decision, and the reverse

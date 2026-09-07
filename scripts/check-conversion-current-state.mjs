@@ -659,8 +659,9 @@ function validateTargetStoryCatalog(catalog, prefix = targetStoryCatalogRelative
         if (headingEntry?.disposition === "story") {
           requireStrings(headingEntry?.storyIds, `${headingPrefix}.storyIds`);
           for (const storyId of headingEntry?.storyIds ?? []) {
-            requireCondition((entry.storyIds ?? []).includes(storyId), `${headingPrefix}: story ${storyId} is not mapped by its authority entry.`);
-            requireCondition(catalogStoriesById.get(storyId)?.authority?.path === entry.path, `${headingPrefix}: story ${storyId} belongs to another authority.`);
+            // A heading may restate a story owned by a companion spec. Keep
+            // one canonical owner while allowing explicit shared references.
+            requireCondition(catalogStoriesById.has(storyId), `${headingPrefix}: unknown story ${storyId}.`);
             headingStoryIds.add(storyId);
           }
           requireCondition(headingEntry?.reason === undefined, `${headingPrefix}: story disposition cannot use a reason instead of storyIds.`);

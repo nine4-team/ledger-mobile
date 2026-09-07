@@ -303,6 +303,26 @@ test("package scripts and Linux-before-Swift workflow hooks are exact and fail c
   expectFailure(
     () => validateIntegrationHooks(
       packageJson,
+      workflow.replace(
+        "          --filter ItemSpaceAssignmentPowerSyncStoreTests",
+        "          --filter LedgerWorkspaceRuntimeIsolationTests",
+      ),
+    ),
+    /nonparallel Swift test gate/,
+  );
+  expectFailure(
+    () => validateIntegrationHooks(
+      packageJson,
+      workflow.replace(
+        "          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'",
+        "          --skip LedgerWorkspaceRuntimeIsolationTests",
+      ),
+    ),
+    /nonparallel Swift test gate/,
+  );
+  expectFailure(
+    () => validateIntegrationHooks(
+      packageJson,
       workflow.replace("    runs-on: ubuntu-latest\n", "    if : ${{ false }}\n    runs-on: ubuntu-latest\n"),
     ),
     /must not conditionally skip/,

@@ -42,7 +42,7 @@ const EXPECTED_CONTRACTS_SHA =
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
   "ef8cf1572dced7f5a6dcb2e4613ad89595f9d1a4564588e46c0845d80661b51f";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "dd3cc14dd778c0ef00ee526a1719e2cd1ff4559bb8260eba038bb56f4905f5c5";
+  "a1fcc60535f19e014fab4379d5d08fb98da528495a0c07f689e4d159b84dc4aa";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -510,11 +510,13 @@ export function validateIntegrationHooks(packageJson, workflowText) {
     (line) => line === "          swift test --package-path LedgeriOS --no-parallel",
   );
   if (
-    nonparallelSwiftCommands.length !== 2 ||
+    nonparallelSwiftCommands.length !== 3 ||
     !targetLines.includes("      - name: Test workspace isolation contracts") ||
     !targetLines.includes("          --filter LedgerWorkspaceRuntimeIsolationTests") ||
+    !targetLines.includes("      - name: Test Item-to-Space local durability contracts") ||
+    !targetLines.includes("          --filter ItemSpaceAssignmentPowerSyncStoreTests") ||
     !targetLines.includes("      - name: Test remaining isolated target contracts") ||
-    !targetLines.includes("          --skip LedgerWorkspaceRuntimeIsolationTests")
+    !targetLines.includes("          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'")
   ) {
     fail("target-environment job must retain the split nonparallel Swift test gates");
   }

@@ -7,6 +7,13 @@
 
 ## Supabase/PowerSync redesign continuity
 
+- Finish the behavior/spec audit before expanding implementation. Preserve
+  every user-visible control, option, navigation and meaningful state, plus
+  background and MCP capabilities. Keep unresolved product choices explicit.
+- Use the simplest architecture that meets the product requirements. Reuse
+  existing implementations and introduce an abstraction only for a concrete
+  problem; do not reproduce accidental Firebase complexity or grow tracking
+  infrastructure as a substitute for finishing the app.
 - For any Supabase/PowerSync redesign, conversion, migration, or cutover task,
   first read only
   `docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json`,

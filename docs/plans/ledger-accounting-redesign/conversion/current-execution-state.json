@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 36,
+  "stateVersion": 37,
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -22,10 +22,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/workflow-records/active-workspace-to-space-checklist.json",
     "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
     "nextActions": [
-      "Finish the target-product-story-catalog.json content audit: add missing redesign outcomes, cross-reference confirmed/open decisions, and preserve partial authority entries wherever source/spec reconciliation is unfinished.",
-      "Review catalog additions against exact product authority. The completion gate has independent GO; 20 negative and 5 positive/cumulative self-tests pass, with content hashes and concrete story/layer/risk evidence enforced.",
-      "Synchronize conversion classifications and run the focused control checks after catalog edits. The integrated app, database and build checks already passed locally; repeat executable tests only if executable changes require them.",
-      "Checkpoint the coherent batch and require automatic CI on its exact commit. Older amended completion records need refreshed CI evidence before any M3-M5 claim; never turn catalog partial into complete merely to pass a gate."
+      "Check automatic CI for the next commit after 4184d5d2. Run 34135740353 failed before app/database jobs because a legacy checker expected two Swift test invocations instead of the current three; that expectation and stale residual outputs are now corrected locally.",
+      "Continue target-product-story-catalog.json remainingAudit. Accounting, Account discovery and session ending now have 34 heading dispositions; 85 stories and exact decision dependencies are recorded. Finish Item lifecycle/intake, Client/Project/Space, offline/media, reports/import, background and MCP coverage before expanding implementation.",
+      "Keep the catalog partial until every authority and decision is audited. Reuse companion-spec stories with one canonical owner. Independent review accepted all three audits after correcting exclusive discard, optional cache retention, Fee lifecycle, cash/noncash refunds and open-question authority.",
+      "At the next green CI checkpoint, record its exact commit/run with honest scope. The composed app workflow remains unpromoted; current behavior verification stays 9 of 1919. Do not infer feature completion from these catalog improvements."
     ]
   },
   "progress": {
@@ -37,7 +37,7 @@
     "locallyWorkingProviderWorkflows": 15,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0,
-    "note": "Workflow counts measure product progress. The scoped Project/Inventory Space browser and the composed Active Project → Spaces → Space → checklist path are locally green and independently reviewed, with exact-commit CI pending. The code-surface catalog is only an omission/impact map. The Product Behavior Catalog is the current-product parity checklist, and the target story catalog is the redesign checklist; M3+ requires all three controls, not surface promotion alone."
+    "note": "No implementation estimate increase for audit work. The composed Project → Space → checklist path is locally tested/reviewed, but CI 34135740353 failed in a legacy test-topology assertion before app/database jobs. The current batch corrects that check and advances three spec audits; the redesigned-story catalog remains partial, and current behavior verification remains 9 of 1919."
   },
   "blockers": [
     "A canonical production export or approved read-only access is required for production-profile and migration evidence.",
