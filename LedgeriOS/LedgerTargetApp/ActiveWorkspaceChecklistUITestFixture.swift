@@ -35,6 +35,11 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                         .accessibilityValue(String(fixture.acceptedInvocationCount))
                     Button("Simulate Account removal") { fixture.simulateRemoval() }
                         .accessibilityIdentifier("target-ui-fixture-remove-account")
+                    if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-remove-after-pdf-edit") {
+                        Text("Closed review cleared: \(fixture.vendorReviewWasCleared ? "yes" : "no")")
+                            .accessibilityIdentifier("target-ui-fixture-pdf-cleared")
+                            .accessibilityValue(fixture.vendorReviewWasCleared ? "true" : "false")
+                    }
                 }
 
                 WorkspaceAccessGate(access: fixture.access) {
@@ -44,6 +49,9 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
             }
         }
         .task { await fixture.start() }
+        .onChange(of: fixture.access.isLocked) { _, locked in
+            if locked { fixture.model.closeVendorDocumentReview() }
+        }
         .onChange(of: fixture.model.vendorDocumentReview != nil) { _, isOpen in
             // Synthetic bytes supplied by the UI test exercise the real parser
             // and review UI, not the system file picker (tested separately).
@@ -52,7 +60,18 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                   let encoded = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--ledger-ui-test-pdf-base64=") }),
                   let bytes = Data(base64Encoded: String(encoded.dropFirst("--ledger-ui-test-pdf-base64=".count))),
                   let review = fixture.model.vendorDocumentReview else { return }
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-remove-after-pdf-edit") {
+                fixture.reviewForLifetimeAssertion = review
+            }
             Task { await review.load(bytes, parser: LocalVendorPDFParser()) }
+        }
+        .onChange(of: fixture.model.vendorDocumentReview?.includedCount) { _, includedCount in
+            // A deterministic test-only removal event after a real interaction
+            // in the already-loaded sheet; no timer or provider access.
+            guard includedCount == 1,
+                  fixture.model.vendorDocumentReview?.state == .review,
+                  ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-remove-after-pdf-edit") else { return }
+            fixture.simulateRemoval()
         }
         .onDisappear {
             Task { await fixture.stop() }
@@ -65,9 +84,16 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
 private final class ActiveWorkspaceChecklistUITestFixture {
     let access = WorkspaceAccessPresentation()
     private let removals = AsyncStream<Void>.makeStream()
+    // Retain the exact opened model only in the explicit removal test so hiding
+    // the sheet alone cannot falsely prove source/draft cleanup.
+    var reviewForLifetimeAssertion: LocalVendorDocumentReview?
+    var vendorReviewWasCleared: Bool {
+        guard let review = reviewForLifetimeAssertion else { return false }
+        return review.isClosed && review.sourceBytes == nil && review.document == nil
+            && review.documentHash == nil && review.rows.isEmpty && review.categories.isEmpty
+    }
 
     func simulateRemoval() {
-        model.closeVendorDocumentReview()
         removals.continuation.yield(())
         removals.continuation.finish()
     }

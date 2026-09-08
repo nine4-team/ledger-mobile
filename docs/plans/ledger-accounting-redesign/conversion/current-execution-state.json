@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 202,
+  "stateVersion": 206,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
     "nextActions": [
-      "NEXT commit/push reviewed integrated test fixes and follow the single new automatic PR CI. Full native follow-up session13411 terminal0:888tests/132suites passed45.086s. CI34235317607 at f234a72 failed3 of11 macOS UI tests; database/native/PDF fixtures/build passed,iOS skipped. Watch21790 terminal1,do not poll/restart. Exact result is in unified checklist.",
-      "Artifact10060328335 downloaded to .pdf-ui-ci-evidence.WOoD4x; pdf-test/frame-20.png proves local-network permission prompt covered Open. Fixes: narrowly matched deny-network interruption handler,scoped native OKButton/CancelButton,macOS AXValue text assertions. Note source now exists; prior offscreen removal tests passed. These test fixes need new exact-commit automatic CI; no architecture/product changes or weakened expectations.",
-      "Follow-up also adds older-parse races and loaded-source Back/project-removal/stop cleanup(each7 focused tests passed); DEBUG synthetic-byte iOS parser/review/category/edit/exclude/cancel/reopen test. Independent reviewer found caret-dependent clearing,fixed to Select All. macOS/iOS Swift6 typechecks,environment/conversion/10CI guards passed. Native execution,Account-revocation and real vendor-template coverage pending; no accepted accounting import. Audit complete,no restart.",
+      "NEXT commit/push integrated row-accessibility fix plus reviewed PDF error/removal tests,then follow single automatic exact-commit CI. CI34238072812 at5f39a5e8 failed1 of11macOSUI tests; notes and picker Cancel now passed. Watch35169 terminal1,do not poll. Full local888tests/132suites passed45.598s(session8511 terminal0),app/iOS Swift6 typechecks and environment/conversion/10CI guards passed.",
+      "Artifact10061481263 is .pdf-ui-ci-latest.VyUV0O; pdf-test/frame-60.png and AX hierarchy prove editable row visible but parent identifier replaced child control IDs. Added row accessibility containment (same fix already verified for notes). iOS reopen now compares actual original parser text,which includes synthetic trailing metadata. Need native confirmation; no weakened text expectations or architecture/product changes.",
+      "Batch includes iOS unreadable/unsupported/no-row states and both-platform loaded PDF removal via fixture access stream. Reviewer caught hiding!=clearing gap: retained exact review and test-only cleared indicator now require terminal/no source bytes/document/hash/rows/categories. Fixture mirrors production access-lock onChange. These are synthetic UI checks,not hosted revocation/iOS file-loading proof. Real vendor-template coverage pending; no accepted accounting import. Audit complete,no restart.",
       "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope and A007 auth owner; SKU report spec conflict. No responses/approvals received. Continue independent work; no Firebase/production access.",
-      "Preserve .native-pdf-batch.pXTMX4,.native-pdf-followup.WTR3HP,.report-ci-evidence-cEw4MR and .pdf-ui-ci-evidence.WOoD4x as untracked diagnostic artifacts; never commit. Artifact download41935 and checks23150 terminal0. Reviewer pdf_ui_followup_review completed. Keep only unified checklist/current state active."
+      "Preserve .native-pdf-batch.pXTMX4,.native-pdf-followup.WTR3HP,.report-ci-evidence-cEw4MR,.pdf-ui-ci-evidence.WOoD4x and .pdf-ui-ci-latest.VyUV0O as untracked diagnostics; never commit. Download51987/checks26604/typechecks15639,26131 terminal0. Reviewer pdf_ui_followup_review completed. Keep only unified checklist/current state active."
     ]
   },
   "blockers": [],

@@ -129,14 +129,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     #endif
 
-    private func syntheticVendorPDF() throws -> Data {
+    private func syntheticVendorPDF(lines suppliedLines: [String]? = nil) throws -> Data {
         let data = NSMutableData()
         let consumer = try XCTUnwrap(CGDataConsumer(data: data))
         var bounds = CGRect(x: 0, y: 0, width: 612, height: 792)
         let context = try XCTUnwrap(CGContext(consumer: consumer, mediaBox: &bounds, nil))
         context.beginPDFPage(nil)
         let font = CTFontCreateWithName("Helvetica" as CFString, 12, nil)
-        let lines = ["Amazon.com order number: 111-2222222-3333333", "Order Placed: January 2, 2025",
+        let lines = suppliedLines ?? ["Amazon.com order number: 111-2222222-3333333", "Order Placed: January 2, 2025",
                      "1 of: Synthetic Table $10.00", "1 of: Synthetic Chair $20.00",
                      "Grand Total: $30.00", "access_token=synthetic-secret"]
         for (index, line) in lines.enumerated() {
@@ -148,6 +148,42 @@ final class WorkspaceChecklistUITests: XCTestCase {
         context.endPDFPage()
         context.closePDF()
         return data as Data
+    }
+
+    func testVendorPDFRemovalClosesLoadedReview() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-vendor-pdf-bytes",
+            "--ledger-ui-test-remove-after-pdf-edit",
+            "--ledger-ui-test-pdf-base64=" + (try syntheticVendorPDF().base64EncodedString())]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let open = app.buttons["target-vendor-pdf-open"]
+        reveal(open, in: app)
+        open.tap()
+        let count = app.descendants(matching: .any)["target-vendor-pdf-included-count"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(displayedText(count), "Included rows: 2 of 2")
+        let include = app.descendants(matching: .any)["target-vendor-pdf-include-0"].firstMatch
+        let scroll = app.scrollViews["target-vendor-pdf-scroll"].firstMatch
+        for _ in 0..<8 {
+            if include.exists && include.isHittable { break }
+            scroll.swipeUp()
+        }
+        XCTAssertTrue(include.isHittable, app.debugDescription)
+        include.tap() // The fixture now delivers removal through its normal access stream.
+        XCTAssertTrue(count.waitForNonExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(open.exists)
+        XCTAssertFalse(app.buttons["target-vendor-pdf-select"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["target-vendor-pdf-row-0"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["target-workspace-access-removed"]
+            .firstMatch.waitForExistence(timeout: 5))
+        let cleared = app.descendants(matching: .any)["target-ui-fixture-pdf-cleared"].firstMatch
+        XCTAssertTrue(cleared.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { (cleared.value as? String) == "true" }, app.debugDescription)
     }
 
     func testVendorPDFSelectionCancellation() throws {
@@ -185,6 +221,39 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     #if os(iOS)
+    func testVendorPDFIOSFailureAndEmptyStates() throws {
+        continueAfterFailure = false
+        let cases: [(Data, String, String)] = [
+            (Data("Unreadable synthetic PDF".utf8), "target-vendor-pdf-error",
+             "The PDF could not be read. It may be corrupt or locked."),
+            (try syntheticVendorPDF(lines: ["Unsupported synthetic supplier", "Total: $10.00"]),
+             "target-vendor-pdf-error", "This PDF is not a supported Amazon or Wayfair document."),
+            (try syntheticVendorPDF(lines: ["Amazon.com order number: 111-2222222-3333333"]),
+             "target-vendor-pdf-no-rows", "No line items were extracted. Choose another PDF or review the source document.")
+        ]
+        for (bytes, identifier, expectedText) in cases {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-vendor-pdf-bytes",
+                "--ledger-ui-test-pdf-base64=" + bytes.base64EncodedString()]
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let open = app.buttons["target-vendor-pdf-open"]
+            reveal(open, in: app)
+            open.tap()
+            let state = app.descendants(matching: .any)[identifier].firstMatch
+            XCTAssertTrue(state.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertEqual(state.label, expectedText)
+            XCTAssertFalse(app.descendants(matching: .any)["target-vendor-pdf-row-0"].exists)
+            XCTAssertTrue(app.buttons["target-vendor-pdf-select"].isEnabled)
+            app.buttons["target-vendor-pdf-cancel"].tap()
+            XCTAssertTrue(state.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(open.exists)
+        }
+    }
+
     func testVendorPDFIOSLoadedReview() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -219,9 +288,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         show(include)
         include.tap()
         XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        var originalDescription: String?
         for (id, value) in [("description", "Edited table"), ("quantity", "3"), ("price", "12.34")] {
             let field = app.descendants(matching: .any)["target-vendor-pdf-\(id)-1"].firstMatch
             show(field)
+            if id == "description" { originalDescription = try XCTUnwrap(field.value as? String) }
             field.tap()
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
             field.press(forDuration: 1)
@@ -241,7 +312,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // Reopening constructs a new document review, not the abandoned draft.
         let description = app.descendants(matching: .any)["target-vendor-pdf-description-1"].firstMatch
         show(description)
-        XCTAssertEqual(description.value as? String, "Synthetic Chair")
+        XCTAssertEqual(description.value as? String, try XCTUnwrap(originalDescription))
         app.buttons["target-vendor-pdf-cancel"].tap()
     }
 

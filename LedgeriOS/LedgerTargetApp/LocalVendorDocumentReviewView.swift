@@ -93,6 +93,7 @@ struct LocalVendorDocumentReviewView: View {
                                     LabeledContent(key, value: row.original.details[key] ?? "")
                                 }
                             }
+                            .accessibilityElement(children: .contain)
                             .accessibilityIdentifier("target-vendor-pdf-row-\(row.id)")
                             Divider()
                         }
