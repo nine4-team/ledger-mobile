@@ -100,6 +100,16 @@ verification remains required for the uncommitted report batch.
 
 ## A-023 — One Property Management Report Snapshot
 
+**Verified native checkpoint:** automatic CI `34201884298` for
+`7919298c5b623b71e0b0ee28e172a8ad1f757d71` passed 877 native tests in
+130 suites, nine macOS UI tests, both platform builds and three iPhone report
+interaction tests. Native macOS Copy executed (not skipped), delivered usable
+PDF and CSV content after cleanup, and repeated Share cancellation plus the
+visible Print dialog's Cancel passed. The corrected iPhone toolbar, report
+availability states, final-read export denial/retry and refresh/dismiss passed.
+This resolves those specific pending checks below; iOS native destination/print
+handoff, hardware protection and hosted behavior are not established by this run.
+
 **Owned macOS sharing payload (2026-09-08):** exact CI `34200048685` executed
 the native Copy test and exposed a real lifetime defect: AppKit copied a URL into
 Ledger's scratch directory, then successful-service cleanup deleted its target.

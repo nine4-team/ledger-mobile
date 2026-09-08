@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 149,
+  "stateVersion": 152,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PROPERTY-REPORT-IMPLEMENTATION-CI-GREEN",
-    "commit": "ff59333ffb1ee6c89bc43d0cd7ffff807f73545b",
-    "ciRun": 34193510104,
+    "name": "PROPERTY-REPORT-NATIVE-COPY-PRINT-AND-IPHONE-CI-GREEN",
+    "commit": "7919298c5b623b71e0b0ee28e172a8ad1f757d71",
+    "ciRun": 34201884298,
     "ciStatus": "passed",
-    "meaning": "Exact automatic CI passed fresh database,875 native tests including real same-fixture reader/MCP parity,5 workspace UI tests and both builds. Not native system-dialog completion, hosted validation or cutover readiness."
+    "meaning": "Database,877 native tests/130 suites,9 macOS UI tests,both builds,3 iPhone report tests passed. Actual Copy payload and Print cancellation verified on macOS; iPhone report states/controls/error recovery verified. Not iOS native handoff, hardware protection, hosted validation or cutover readiness."
   },
   "activeWorkflow": {
     "id": "property-management-report-delivery",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "NEXT commit/push owned report sharing fix, then follow its one automatic PR CI. Previous watch33588 terminal1: ba98f990 CI34200048685 failed actual Copy (dead scratch URL after cleanup) and Print Escape; database/native contracts/macOS build/seven UI tests passed, iOS skipped. Do not rerun that commit.",
-      "Pending fix: PropertyManagementReportShareItem supplies named NSItemProvider immutable PDF/CSV bytes, no scratch URL. Main + share_payload_review accepted; actual helper Swift6 smoke /tmp/ledger-share-payload-check.x9WQab/check PASS PDF/CSV/UTF8 data and file copies after source deletion (50069 terminal0). Package tests + real native Copy remain required. Print test now clicks observed Print Dialog Cancel, requires actual dismissal; no print-fix claim. A023 records decision.",
-      "Local disk ~871MB free. Do not run full builds/recreate simulators until sufficient free disk (~10GB); no unrelated deletions. Only temporary synthetic simulator091B3FB1 was deleted; preexisting92BB3190 untouched. iOS bottom export/top Refresh fix awaits build and three CI UI tests.",
-      "Use next exact CI to verify Copy executes and payload survives cleanup, Print closes, and iPhone tests pass. If native service or print still fails, inspect actual logs instead of weakening assertions. Preserve ff59333f verified checkpoint until stronger exact evidence.",
-      "Product audit complete. Open O065/O033/O027/O060 affect accounting only; hosted/production access unauthorized. No Firebase worktree access. Workflow and cutover incomplete."
+      "NEXT commit/push iOS native delivery tests and checkpoint docs; follow new automatic CI once. Reuse green7919298c CI34201884298; watch51044 terminal0. New WorkspaceChecklistUITests IOSSystemDialogCancellation repeats PDF/CSV/PDF cancellation then Print Cancel; IOSCopyCompletion requires usable PDF/CSV after cleanup. Existing iPhone CI step runs both, TEST_RUNNER_ flag enables only disposable CI clipboard. Syntax/conversion/six CI-control tests passed; actual runtime unverified.",
+      "Inspect actual iOS test hierarchy/payload on failure. UIKit activityItems URL path unchanged intentionally: macOS provider proof is not iOS delivery proof. Keep OS completion/usable bytes assertions; do not infer labels or ownership failure from a passing build. No external recipient, physical print or production. Local Copy test skips absent isolated-CI flag.",
+      "Local disk ~871MB free; package .build only1.4GB (794MB compiled,195MB checkouts,135MB artifacts), so cleaning it would not restore ~10GB needed. Nothing deleted. Avoid full local builds/new simulators and unrelated cleanup; preexisting92BB3190 untouched. Small no-clipboard helper smoke /tmp/ledger-share-payload-check.x9WQab/check passed and actual package regression now passed CI.",
+      "Checklist and A023 updated with exact green CI evidence; documentation/current-state changes uncommitted for next implementation checkpoint, no promotion-only push. Use one normal automatic CI at next actual code batch. Preserve local-not-run distinction; integrated CI proof is explicit.",
+      "Product audit complete. Open O065/O033/O027/O060 affect accounting only; hosted/production access unauthorized. No Firebase worktree access. Hardware media protection, hosted validation and broad feature implementation remain required."
     ]
   },
   "blockers": [],

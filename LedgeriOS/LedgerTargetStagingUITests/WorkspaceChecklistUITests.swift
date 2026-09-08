@@ -1,10 +1,103 @@
 import XCTest
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    #if os(iOS)
+    func testPropertyManagementIOSSystemDialogCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        reveal(openReport, in: app)
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
+        let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
+        for identifier in ["target-property-report-share", "target-property-report-csv", "target-property-report-share"] {
+            let button = app.buttons[identifier]
+            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            XCTAssertTrue(button.isEnabled)
+            button.tap()
+            let close = app.buttons["Close"].firstMatch
+            XCTAssertTrue(close.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertFalse(failure.exists)
+            close.tap()
+            XCTAssertTrue(waitUntil { !close.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertFalse(failure.exists)
+        }
+        let printButton = app.buttons["target-property-report-print"]
+        printButton.tap()
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(failure.exists)
+        cancel.tap()
+        XCTAssertTrue(waitUntil { !cancel.exists && !busy.exists && printButton.isEnabled }, app.debugDescription)
+        XCTAssertFalse(failure.exists)
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+    }
+
+    func testPropertyManagementIOSCopyCompletion() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
+            throw XCTSkip("Native Copy completion uses only the isolated CI simulator clipboard")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        reveal(openReport, in: app)
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
+        let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
+        for identifier in ["target-property-report-share", "target-property-report-csv"] {
+            UIPasteboard.general.items = []
+            let button = app.buttons[identifier]
+            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            XCTAssertTrue(button.isEnabled)
+            button.tap()
+            let copy = app.buttons["Copy"].firstMatch
+            XCTAssertTrue(copy.waitForExistence(timeout: 10), app.debugDescription)
+            copy.tap()
+            XCTAssertTrue(waitUntil { !copy.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertFalse(failure.exists)
+            let isPDF = identifier == "target-property-report-share"
+            let bytes: Data
+            if let url = UIPasteboard.general.urls?.first {
+                XCTAssertTrue(url.isFileURL)
+                guard url.isFileURL else { return }
+                bytes = try Data(contentsOf: url)
+            } else if let data = UIPasteboard.general.data(forPasteboardType: isPDF ? "com.adobe.pdf" : "public.utf8-plain-text") {
+                bytes = data
+            } else if !isPDF, let string = UIPasteboard.general.string {
+                bytes = Data(string.utf8)
+            } else {
+                XCTFail("Native Copy produced no usable report content")
+                return
+            }
+            if isPDF { XCTAssertTrue(bytes.starts(with: Data("%PDF-".utf8))) }
+            else { XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains("Report test chair")) }
+        }
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+    }
+    #endif
+
     func testPropertyManagementExportFailureAllowsRetry() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

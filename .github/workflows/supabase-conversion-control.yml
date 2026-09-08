@@ -114,11 +114,13 @@ jobs:
             if (!device) throw new Error("No available supported iPhone simulator");
             process.stdout.write(device.udid);
           ')"
-          xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
+          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
             -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementEmptyAndUnavailableStates \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss test
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSSystemDialogCancellation \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
 
       - name: Confirm target checks did not rewrite tracked artifacts
         run: git diff --exit-code
