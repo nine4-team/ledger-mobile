@@ -33,9 +33,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
             XCTAssertTrue(dismiss.exists, app.debugDescription)
             XCTAssertFalse(failure.exists)
-            // The native iPhone share popover has no Close button. Tap its
-            // observed outside-dismiss region above the activity content.
-            dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
+            // The native iPhone share popover has no Close button. Let XCTest
+            // resolve the dismissal element's hittable point rather than send
+            // an unchecked coordinate into its full-window bounding rectangle.
+            XCTAssertTrue(waitUntil { dismiss.isHittable }, app.debugDescription)
+            dismiss.tap()
             XCTAssertTrue(activity.waitForNonExistence(timeout: 5), app.debugDescription)
             XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
             XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
