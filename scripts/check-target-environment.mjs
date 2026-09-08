@@ -610,6 +610,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "readDownloadedItemPlacementHistory",
     "readDownloadedItemPlacements",
     "readDownloadedPropertyManagementReport",
     "rejectedOperations",
@@ -620,6 +621,7 @@ if (
     "watchClient",
     "watchClientArchiveOperation",
     "watchClients",
+    "watchDownloadedItemPlacementHistory",
     "watchDownloadedItemPlacements",
     "watchItemSpaceAssignmentOperation",
     "watchItemSpaceClearingOperation",
@@ -3053,7 +3055,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
     )
   ) {
     fail(
@@ -3365,7 +3367,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
     )
   ) {
     fail(

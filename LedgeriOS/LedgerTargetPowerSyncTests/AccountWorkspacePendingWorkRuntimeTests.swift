@@ -149,6 +149,12 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(snapshot.rows.first?.itemId.rawValue == "physical-chair")
         #expect(snapshot.rows.first?.placementId.rawValue == "physical-placement")
         #expect(snapshot.rows.first?.itemRevision == 3)
+        let itemId = try ItemID(validating: "physical-chair")
+        let history = try await runtime.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+        #expect(history.isPartial && history.intervals.map(\.placementId.rawValue) == ["physical-placement"])
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readDownloadedItemPlacementHistory(accountId: AccountID(validating: "account-other"), itemId: itemId)
+        }
         await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
             try await runtime.readDownloadedItemPlacements(accountId: AccountID(validating: "account-other"), scope: .project(project))
         }
@@ -158,15 +164,17 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         let reopened = try await context.openRuntime()
         let restored = try await reopened.readDownloadedItemPlacements(accountId: context.accountId, scope: .project(project))
+        #expect(try await reopened.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) == history)
         #expect(restored.rows.map(\.placementId) == snapshot.rows.map(\.placementId))
         #expect(restored.rows.map(\.itemRevision) == snapshot.rows.map(\.itemRevision))
         try await reopened.close()
         context.remove()
     }
 
-    @Test("Downloaded physical Item reads drain before close; learned removal suppresses admitted reads", arguments: [false, true])
-    func downloadedItemPlacementsDrain(removing: Bool) async throws {
-        let context = try RuntimeTestContext(suffix: "downloaded-items-drain-\(removing)")
+    @Test("Downloaded physical Item reads drain before close; learned removal suppresses admitted reads",
+          arguments: [false, true], [false, true])
+    func downloadedItemPlacementsDrain(removing: Bool, history: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "downloaded-items-drain-\(removing)-\(history)")
         let gate = ManualGate()
         let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
         let locked = AsyncStream<Void>.makeStream()
@@ -179,7 +187,16 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             if operation == .readDownloadedItemPlacements { await gate.wait() }
         }
         let runtime = try await context.openRuntime(dependencies: dependencies)
-        let read = Task { try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) }
+        let itemId = try ItemID(validating: "physical-chair")
+        let read = Task {
+            if history {
+                let value = try await runtime.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+                #expect(value.intervals.count == 1)
+            } else {
+                let value = try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+                #expect(value.rows.isEmpty)
+            }
+        }
         await gate.waitUntilEntered()
         let closing = Task {
             if removing { try await runtime.lockAccessPreservingPendingWork() }
@@ -193,17 +210,57 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+            if history {
+                _ = try await runtime.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+            } else {
+                _ = try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+            }
         }
         await gate.release()
         if removing {
             await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await read.value }
         } else {
-            #expect(try await read.value.rows.isEmpty)
+            try await read.value
         }
         try await closing.value
         #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
         locked.continuation.finish()
+        context.remove()
+    }
+
+    @Test("Item history runtime watch terminates on close or learned removal and rejects further access",
+          arguments: [false, true])
+    func downloadedItemHistoryWatchLifecycle(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "history-watch-lifecycle-\(removing)")
+        let runtime = try await context.openRuntime(dependencies: physicalItemDependencies(context))
+        let itemId = try ItemID(validating: "physical-chair")
+        let first = AsyncStream<Void>.makeStream()
+        let consumer = Task {
+            var count = 0
+            do {
+                for try await value in runtime.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                    #expect(value.accountId == context.accountId && value.itemId == itemId)
+                    #expect(value.intervals.map(\.placementId.rawValue) == ["physical-placement"])
+                    count += 1
+                    first.continuation.yield(())
+                }
+            } catch is CancellationError {
+                // Closing a tracked watch is cancellation, not missing history.
+            } catch let failure as LedgerOfflineClientRuntimeFailure {
+                #expect(failure == .runtimeClosed)
+            } catch { Issue.record("Unexpected history stream failure: \(error)") }
+            first.continuation.finish()
+            return count
+        }
+        var iterator = first.stream.makeAsyncIterator()
+        #expect(await iterator.next() != nil)
+        var foreign = runtime.watchDownloadedItemPlacementHistory(
+            accountId: try AccountID(validating: "account-other"), itemId: itemId).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) { try await foreign.next() }
+        if removing { try await runtime.lockAccessPreservingPendingWork() }
+        else { try await runtime.close() }
+        #expect(await consumer.value >= 1)
+        try await Self.expectClosed(runtime.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId))
         context.remove()
     }
 

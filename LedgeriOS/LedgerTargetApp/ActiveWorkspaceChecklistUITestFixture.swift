@@ -481,11 +481,14 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
 }
 private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading {
     func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
-        try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,
+        let inventory = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-inventory-space")
+        return try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,
             description: "Downloaded test chair", intervals: [
                 .init(placementId: EntityID(validating: "history-current"),
-                    scope: .project(ProjectID(validating: "project-ui-test")), spaceId: nil,
-                    projectDisplayName: "Current test Project", startedAt: "2026-09-02T12:00:00Z", endedAt: nil),
+                    scope: inventory ? .businessInventory : .project(ProjectID(validating: "project-ui-test")),
+                    spaceId: SpaceID(validating: "space-ui-test"),
+                    projectDisplayName: inventory ? nil : "Current test Project", spaceDisplayName: "Current test Space",
+                    startedAt: "2026-09-02T12:00:00Z", endedAt: nil),
                 .init(placementId: EntityID(validating: "history-earlier"),
                     scope: .businessInventory, spaceId: SpaceID(validating: "old-space"),
                     startedAt: "2026-09-01T12:00:00Z", endedAt: "2026-09-02T12:00:00Z")
@@ -516,8 +519,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
         let row = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-chair"),
             description: "Downloaded test chair", itemRevision: 1,
-            placementId: EntityID(validating: "physical-ui-placement"), scope: scope, spaceId: nil)
-        return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row])
+            placementId: EntityID(validating: "physical-ui-placement"), scope: scope,
+            spaceId: SpaceID(validating: "space-ui-test"))
+        let elsewhere = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-other-space"),
+            description: "Item assigned to another Space", itemRevision: 1,
+            placementId: EntityID(validating: "physical-ui-other-placement"), scope: scope,
+            spaceId: SpaceID(validating: "other-space-ui-test"))
+        let unassigned = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-unassigned"),
+            description: "Unassigned test Item", itemRevision: 1,
+            placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil)
+        return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row, elsewhere, unassigned])
     }
 }
 

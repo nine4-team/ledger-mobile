@@ -974,6 +974,32 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 || text.localizedCaseInsensitiveContains("pending")
         })
 
+        // The same exact-Space read-only route works in Project and Inventory.
+        // Other-Space and unassigned rows exist in the fixture's scope reader.
+        let physicalItem = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(physicalItem, in: app)
+        XCTAssertTrue(physicalItem.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.buttons["target-physical-item-physical-ui-other-space"].exists)
+        XCTAssertFalse(app.buttons["target-physical-item-physical-ui-unassigned"].exists)
+        let downloadedCount = app.staticTexts["target-items-downloaded-count"]
+        XCTAssertTrue(waitUntil {
+            downloadedCount.label == "Downloaded Items: 1"
+                || (downloadedCount.value as? String) == "Downloaded Items: 1"
+        })
+        physicalItem.tap()
+        XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Current test Space"].exists)
+        XCTAssertTrue(app.staticTexts["Current downloaded location"].exists)
+        if inventory {
+            XCTAssertFalse(app.staticTexts["Current test Project"].exists)
+        } else {
+            XCTAssertTrue(app.staticTexts["Current test Project"].exists)
+        }
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(physicalItem.waitForExistence(timeout: 5))
+        reveal(item, in: app, upwards: false)
+        XCTAssertEqual(item.value as? String, "Checked", "Opening history must preserve the current Space checklist state")
+
         let back = app.buttons["target-active-workspace-back"]
         reveal(back, in: app, upwards: false)
         back.tap()

@@ -316,6 +316,10 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .font(.headline)
                     .accessibilityIdentifier("target-active-space-detail-name")
                 checklists
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId,
+                        scope: placementScope(scope), reader: reader, spaceId: spaceId)
+                }
             } else if model.representedSpaceScopeIsAvailable,
                       model.spaceBrowser.scope == scope,
                       model.spaceBrowser.selectedSpaceId == spaceId,
@@ -343,6 +347,13 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         }
         .task(id: model.spaceBrowser.detailModel.evidenceSequence) {
             await model.synchronizeChecklistEvidence()
+        }
+    }
+
+    private func placementScope(_ scope: SpaceCreationScope) -> ItemPlacementScope {
+        switch scope {
+        case .businessInventory: .businessInventory
+        case .project(let projectId): .project(projectId)
         }
     }
 

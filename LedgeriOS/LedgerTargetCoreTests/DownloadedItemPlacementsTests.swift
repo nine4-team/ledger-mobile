@@ -44,4 +44,20 @@ struct DownloadedItemPlacementsTests {
         try PhysicalItemPlacement(itemId: ItemID(validating: "chair"), description: "Chair",
             itemRevision: revision, placementId: EntityID(validating: placement), scope: scope, spaceId: nil)
     }
+
+    @Test("Exact Space filter excludes unassigned and other-Space Items in either owner scope", arguments: [false, true])
+    func exactSpaceFilter(inventory: Bool) throws {
+        let scope: ItemPlacementScope = inventory ? .businessInventory : .project(try ProjectID(validating: "project"))
+        let selected = try SpaceID(validating: "\u{212B}")
+        let other = try SpaceID(validating: "\u{00C5}")
+        let rows = try [selected, other, nil].enumerated().map { index, space in
+            try PhysicalItemPlacement(itemId: ItemID(validating: "item-\(index)"), description: "Item",
+                itemRevision: 1, placementId: EntityID(validating: "placement-\(index)"), scope: scope, spaceId: space)
+        }
+        let snapshot = try DownloadedItemPlacements(accountId: AccountID(validating: "account"), scope: scope, rows: rows)
+        #expect(snapshot.rows(in: selected).map(\.itemId.rawValue) == ["item-0"])
+        #expect(snapshot.rows(in: other).map(\.itemId.rawValue) == ["item-1"])
+        #expect(snapshot.rows(in: nil).count == 3)
+        #expect(snapshot.rows(in: try SpaceID(validating: "missing")).isEmpty)
+    }
 }

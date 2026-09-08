@@ -34,6 +34,15 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
         }
         self.accountId = accountId; self.scope = scope; self.rows = rows
     }
+
+    /// A Space filter narrows an already Account/scope-bound download; it does
+    /// not turn missing local rows into an authoritative zero count.
+    public func rows(in spaceId: SpaceID?) -> [PhysicalItemPlacement] {
+        guard let spaceId else { return rows }
+        return rows.filter { row in
+            row.spaceId.map { $0.rawValue.utf8.elementsEqual(spaceId.rawValue.utf8) } ?? false
+        }
+    }
 }
 
 public protocol DownloadedItemPlacementReading: Sendable {

@@ -8,6 +8,7 @@ struct DownloadedItemsView: View {
     let accountId: AccountID
     let scope: ItemPlacementScope
     let reader: any DownloadedItemPlacementReading
+    var spaceId: SpaceID? = nil
     @State private var model = DownloadedItemsModel()
     @State private var refresh = UUID()
     @State private var selectedItem: ItemSelection?
@@ -21,6 +22,7 @@ struct DownloadedItemsView: View {
     private struct Request: Equatable {
         let accountId: AccountID
         let scope: ItemPlacementScope
+        let spaceBytes: [UInt8]?
         let refresh: UUID
     }
 
@@ -37,13 +39,19 @@ struct DownloadedItemsView: View {
                 Text("Item data is unavailable or incomplete. Reconnect and try again.")
                     .accessibilityIdentifier("target-items-unavailable")
             case .downloaded(let snapshot):
+                let rows = snapshot.rows(in: spaceId)
+                if snapshot.accountId == accountId, snapshot.scope == scope {
+                    Text("Downloaded Items: \(rows.count)")
+                        .font(.caption)
+                        .accessibilityIdentifier("target-items-downloaded-count")
+                }
                 if snapshot.accountId != accountId || snapshot.scope != scope {
                     ProgressView("Loading downloaded Items…")
-                } else if snapshot.rows.isEmpty {
+                } else if rows.isEmpty {
                     Text("No Item placements are downloaded for this location yet.")
                         .accessibilityIdentifier("target-items-downloaded-empty")
                 } else {
-                    ForEach(snapshot.rows, id: \.itemId) { row in
+                    ForEach(rows, id: \.itemId) { row in
                         Button(row.description.isEmpty ? "Untitled Item" : row.description) {
                             selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
                         }
@@ -57,7 +65,8 @@ struct DownloadedItemsView: View {
             Button("Refresh Items") { refresh = UUID() }
                 .accessibilityIdentifier("target-items-refresh")
         }
-        .task(id: Request(accountId: accountId, scope: scope, refresh: refresh)) {
+        .task(id: Request(accountId: accountId, scope: scope,
+                          spaceBytes: spaceId.map { Array($0.rawValue.utf8) }, refresh: refresh)) {
             await model.load(accountId: accountId, scope: scope, reader: reader)
         }
         .sheet(item: $selectedItem) { selection in
@@ -68,6 +77,7 @@ struct DownloadedItemsView: View {
         }
         .onChange(of: accountId) { _, _ in selectedItem = nil }
         .onChange(of: scope) { _, _ in selectedItem = nil }
+        .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in selectedItem = nil }
         .onDisappear { model.clear(); selectedItem = nil }
     }
 }
