@@ -242,7 +242,8 @@ actor AttachmentLocalByteVault {
 
     public func persist(
         _ capture: LocalAttachmentCapture,
-        persistedAt: AttachmentEpochMilliseconds
+        persistedAt: AttachmentEpochMilliseconds,
+        repairingDownloadedCache: Bool = false
     ) throws -> AttachmentPersistedLocalObjectEvidence {
         guard scope.contains(capture.scope) else {
             throw AttachmentLocalByteVaultFailure.scopeMismatch
@@ -256,12 +257,20 @@ actor AttachmentLocalByteVault {
             contentSHA256: capture.contentSHA256,
             persistedAt: persistedAt
         )
+        var replaceCorruptCache = false
         if try objectEntryExists(objectID.rawValue) {
-            let existing = try verifiedBytes(for: evidence)
-            guard existing == capture.bytes else {
-                throw AttachmentLocalByteVaultFailure.corruptObject
+            do {
+                let existing = try verifiedBytes(for: evidence)
+                guard existing == capture.bytes else {
+                    throw AttachmentLocalByteVaultFailure.corruptObject
+                }
+                return evidence
+            } catch AttachmentLocalByteVaultFailure.corruptObject where repairingDownloadedCache {
+                // Only the cache owner may opt in after checking its persisted
+                // reference and proving that no upload receipt owns this object.
+                // Link substitution and other filesystem failures remain fatal.
+                replaceCorruptCache = true
             }
-            return evidence
         }
 
         let aad = try associatedData(for: evidence)
@@ -312,7 +321,7 @@ actor AttachmentLocalByteVault {
                 stagingIdentity,
                 objectsDescriptor,
                 objectID.rawValue,
-                UInt32(RENAME_EXCL)
+                replaceCorruptCache ? 0 : UInt32(RENAME_EXCL)
             ) == 0 else {
                 if errno == EEXIST {
                     _ = Darwin.unlinkat(stagingDescriptor, stagingIdentity, 0)

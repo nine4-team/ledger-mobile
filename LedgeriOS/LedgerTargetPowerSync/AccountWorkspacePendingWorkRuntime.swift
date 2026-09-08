@@ -59,6 +59,12 @@ protocol AccountWorkspaceAttachmentStoring:
 
 extension AttachmentCapturePowerSyncStore: AccountWorkspaceAttachmentStoring {}
 
+protocol AccountBusinessLogoCaching: Sendable {
+    func cachedAccountLogo(_ reference: AccountBusinessLogoReference) async throws -> Data?
+    func cacheAccountLogo(_ bytes: Data, reference: AccountBusinessLogoReference) async throws
+}
+extension AttachmentCapturePowerSyncStore: AccountBusinessLogoCaching {}
+
 protocol AccountWorkspacePendingWorkSummarizing: Sendable {
     func summary() async throws -> PendingLocalWorkSummary
 }
@@ -170,9 +176,11 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case pendingWorkSummary
     case readDownloadedItemPlacements
     case readDownloadedPropertyManagementReport
+    case readAccountBusinessProfile
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case accountBusinessProfile
     case propertyManagementReport
     case downloadedItemPlacements
     case clientDetails
@@ -324,6 +332,7 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
         ) async throws -> Void
     var lifecycleEvent: @Sendable (AccountWorkspaceRuntimeLifecycleEvent) -> Void
     var now: @Sendable () -> Date
+    var downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)? = nil
 
     static let live = LedgerPowerSyncLocalBootstrapDependencies(
         accessCoordinator: .shared,
@@ -526,6 +535,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let transferDestinationQuery:
         any AccountWorkspaceTransferDestinationSelectionQuerying
     let attachmentStore: any AccountWorkspaceAttachmentStoring
+    let downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)?
     let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
     let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
     let spaceAssignmentDestinationQuery:
@@ -581,8 +591,10 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         accountId: AccountID,
         now: @Sendable @escaping () -> Date,
         accessFence: LedgerWorkspaceAccessFence,
-        subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil
+        subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil,
+        downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)? = nil
     ) {
+        self.downloadAccountLogo = downloadAccountLogo
         self.subscribePhysicalItems = subscribePhysicalItems
         self.accessFence = accessFence
         self.now = now
@@ -830,6 +842,109 @@ actor AccountWorkspacePendingWorkRuntime {
             } catch {
                 await self.finishStream(continuation, error: error)
             }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
+        try await withFiniteLease(.readAccountBusinessProfile) { resources in
+            guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            let reader = AccountBusinessProfileLocalReader(database: resources.structuredDatabase)
+            let row = try await reader.read(accountId: accountId, principalId: resources.principalId)
+            var logo: AccountBusinessProfile.Logo = .absent
+            if let reference = row.logo {
+                logo = .notDownloaded
+                do {
+                    if let cache = resources.attachmentStore as? any AccountBusinessLogoCaching,
+                       let bytes = try await cache.cachedAccountLogo(reference) { logo = .downloaded(bytes) }
+                } catch is CancellationError { throw CancellationError() }
+                catch { logo = .unavailable }
+            }
+            let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
+            guard current.logo == row.logo else { throw AccountBusinessProfileReadFailure.unavailable }
+            return AccountBusinessProfile(accountId: accountId, name: current.name, logo: logo, isStale: true)
+        }
+    }
+
+    func startAccountBusinessProfileWatch(id: UUID, accountId: AccountID,
+        continuation: AsyncThrowingStream<AccountBusinessProfile, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.accountBusinessProfile)
+                let reader = AccountBusinessProfileLocalReader(database: resources.structuredDatabase)
+                let cache = resources.attachmentStore as? any AccountBusinessLogoCaching
+                try await withOwnedSyncStreamWatch(subscribe: {
+                    try await resources.structuredDatabase.syncStream(name: "account_business_profile",
+                        params: ["account_id": .string(accountId.rawValue)]).subscribe()
+                }, observe: {
+                var receivedProfile = false
+                for try await rows in try reader.watch(accountId: accountId, principalId: resources.principalId) {
+                    try Task.checkCancellation()
+                    if rows.isEmpty {
+                        guard !receivedProfile else { throw AccountBusinessProfileReadFailure.unavailable }
+                        let memberships = try await resources.structuredDatabase.getAll(sql: """
+                            SELECT id FROM spike_account_memberships
+                            WHERE account_id = ? AND principal_id = ? AND state = 'active'
+                            """, parameters: [accountId.rawValue, resources.principalId.rawValue],
+                            mapper: { try $0.getString(name: "id") })
+                        guard !memberships.isEmpty else { throw AccountBusinessProfileReadFailure.unavailable }
+                        // Keep the selected subscription alive for its first download.
+                        // Missing profile evidence is not an explicit absent logo.
+                        continue
+                    }
+                    guard rows.count == 1 else { throw AccountBusinessProfileReadFailure.unavailable }
+                    receivedProfile = true
+                    let row = rows[0]
+                    var logo: AccountBusinessProfile.Logo = .absent
+                    if let reference = row.logo {
+                        logo = .notDownloaded
+                        do {
+                            if let bytes = try await cache?.cachedAccountLogo(reference) { logo = .downloaded(bytes) }
+                        } catch is CancellationError { throw CancellationError() }
+                        catch { logo = .unavailable }
+                        if case .downloaded = logo {} else if let download = resources.downloadAccountLogo, let cache {
+                            let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
+                            guard current.logo == reference else { continue }
+                            // Render honest saved metadata while retrieval is in progress.
+                            guard await self.forwardStreamValue(AccountBusinessProfile(accountId: accountId,
+                                name: current.name, logo: logo, isStale: true), to: continuation) else { break }
+                            do {
+                                let bytes = try await download(reference)
+                                try Task.checkCancellation()
+                                let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
+                                guard current.logo == reference else { continue }
+                                guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                                try await cache.cacheAccountLogo(bytes, reference: reference)
+                                logo = .downloaded(bytes)
+                            } catch is CancellationError { throw CancellationError() }
+                            catch { logo = .unavailable }
+                        }
+                    }
+                    try Task.checkCancellation()
+                    // Revalidate after every awaited byte operation. A changed or
+                    // removed reference must not display an earlier logo/name.
+                    let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
+                    guard current.logo == row.logo else { continue }
+                    let profile = AccountBusinessProfile(accountId: accountId, name: current.name,
+                        logo: logo, isStale: true)
+                    guard await self.forwardStreamValue(profile, to: continuation) else { break }
+                }
+                })
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation, error: error) }
             await self.streamFinished(id: id)
         }
         streamTasks[id] = task
@@ -1805,7 +1920,8 @@ public enum LedgerPowerSyncLocalBootstrap {
                 accountId: accountId,
                 now: dependencies.now,
                 accessFence: accessFence,
-                subscribePhysicalItems: dependencies.subscribePhysicalItems
+                subscribePhysicalItems: dependencies.subscribePhysicalItems,
+                downloadAccountLogo: dependencies.downloadAccountLogo
             )
             runtimeResources = madeRuntimeResources
 

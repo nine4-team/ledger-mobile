@@ -57,6 +57,53 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-029 | accepted, integration verification pending | Clear Project setup presentation evidence before lifecycle drainage |
 | A-030 | accepted, implementation verification pending | Preserve original Project notes as distinct detail content |
 | A-031 | accepted, target integration pending | Preserve individual-note provenance without inventing missing metadata |
+| A-032 | implementation in progress, integration unverified | Keep downloaded Account branding separate from pending uploads |
+
+## A-032 — Downloaded Account Branding Is Not Pending Work
+
+Settings and report preview share the same profile presentation/model. PDF output
+receives that Account-scoped profile instead of querying a second branding source;
+it rejects foreign Account identity, and the UI reads current authorized local
+profile data independently of any pending download before OS handoff. A screen
+model comparison alone is insufficient while a download delays watch updates.
+Failed/not-yet-downloaded retrieval status does not itself change branding;
+Account/name, actual bytes and explicit logo absence remain significant.
+Both presentations decode a maximum-1024-pixel thumbnail with
+ImageIO instead of eagerly rendering the full original image. Original encrypted
+bytes and their identity remain unchanged. PDF text/fallback/foreign-Account tests
+pass. The oversized-logo test verifies 2048×1024→1024×512 decoding and all30 report
+rows. Main inspected all five Poppler-rendered synthetic PDF pages without logo
+overlap/clipping. Native interaction and authenticated end-to-end retrieval remain
+unverified.
+
+The read-only Account profile uses the existing Account name plus a separate
+authorized logo-reference row. A missing row is unknown evidence; an explicit
+null logo is known absence. Logo fields do not enter Account discovery. The
+selected-workspace stream and private Storage GET require active membership.
+Immutable logo paths bind Account, attachment identity and SHA-256; no profile
+write, upload, signing, listing or deletion policy is introduced.
+
+Downloaded bytes reuse the encrypted attachment vault. Their actual persisted
+evidence lives in a local-only cache table, not the pending capture/upload queue.
+The orphan inventory includes retained download references, and a populated
+cache cannot initialize a missing scope binding. This preserves existing upload
+receipts and offline bytes without fabricating locally accepted operations.
+
+Corrupt downloaded bytes may be atomically replaced only by verified bytes for
+the same persisted reference and only when no upload receipt owns that object.
+Normal capture persistence remains exclusive and never opts into replacement;
+link substitution still fails closed. The replacement is staged and synchronized
+before rename. Focused repair/refusal tests pass; concurrency and interruption
+review is still pending.
+
+Tradeoffs and unfinished verification: download
+drainage before logout/orphan observation, current-reference revalidation after
+network work, Settings/report integration and actual Storage HTTP behavior remain
+required. The local cache is not itself authorization to display a logo. Do not
+claim profile completion from metadata tests or schema checks. Product authority:
+`account-profile-readback` in the unified checklist and Account Business Profile
+in `docs/specs/account-discovery-and-workspace-selection.md`; O-068/O-023 still
+gate the separate editing/retention operations.
 
 ## A-031 — Historical Note Facts Do Not Imply Authenticated Authors
 

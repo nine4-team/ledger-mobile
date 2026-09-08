@@ -479,7 +479,21 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading {
+    func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
+        try AccountBusinessProfile(accountId: accountId,
+            name: AccountDisplayName(validating: "Design studio"), logo: .absent, isStale: true)
+    }
+    func watchAccountBusinessProfile(accountId: AccountID) -> AsyncThrowingStream<AccountBusinessProfile, Error> {
+        AsyncThrowingStream { continuation in
+            do {
+                continuation.yield(try AccountBusinessProfile(accountId: accountId,
+                    name: AccountDisplayName(validating: "Design studio"), logo: .absent, isStale: true))
+                continuation.finish()
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+
     func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
         let inventory = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-inventory-space")
         return try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,

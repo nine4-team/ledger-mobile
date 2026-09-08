@@ -7,6 +7,140 @@ import Testing
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("Profile first download arrives through selected subscription; disappearing evidence ends access")
+    func accountProfileFirstDownloadAndDisappearance() async throws {
+        let context = try RuntimeTestContext(suffix: "profile-first-download")
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_accounts(id,display_name) VALUES('account-runtime','Design studio')", parameters: nil)
+            databases.append(database)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let database = try #require(databases.values.first)
+        let stream = runtime.watchAccountBusinessProfile(accountId: context.accountId)
+        var registrations: [String] = []
+        for _ in 0..<500 {
+            registrations = try await database.getAll(sql: "SELECT local_params FROM ps_stream_subscriptions WHERE stream_name='account_business_profile'",
+                parameters: nil, mapper: { try $0.getString(name: "local_params") })
+            if !registrations.isEmpty { break }
+            try await Task.sleep(for: .milliseconds(2))
+        }
+        let parameters = try #require(registrations.first)
+        let decoded = try JSONSerialization.jsonObject(with: Data(parameters.utf8)) as? [String: String]
+        #expect(decoded == ["account_id": context.accountId.rawValue])
+        _ = try await database.execute(sql: "INSERT INTO spike_account_business_profiles(id,account_id) VALUES('account-runtime','account-runtime')", parameters: nil)
+        var iterator = stream.makeAsyncIterator()
+        let profile = try #require(await iterator.next())
+        #expect(profile.name.rawValue == "Design studio" && profile.logo == .absent)
+        _ = try await database.execute(sql: "DELETE FROM spike_account_business_profiles WHERE id='account-runtime'", parameters: nil)
+        await #expect(throws: AccountBusinessProfileReadFailure.self) {
+            _ = try await iterator.next()
+        }
+        try await runtime.close()
+        context.remove()
+    }
+
+    @Test("Account close and removal drain a cancelled logo download before database teardown", arguments: [false, true])
+    func accountProfileDownloadDrain(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "profile-download-drain-\(removing)")
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let downloadGate = ManualGate()
+        let cancellation = AsyncStream<Void>.makeStream()
+        var dependencies = physicalItemDependencies(context)
+        dependencies.lifecycleEvent = { events.append($0) }
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            let hash = String(repeating: "a", count: 64)
+            _ = try await database.execute(sql: "INSERT INTO spike_accounts(id,display_name) VALUES('account-runtime','Design studio')", parameters: nil)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_business_profiles(id,account_id,logo_attachment_id,
+                logo_content_sha256,logo_byte_count,logo_media_type,logo_storage_path)
+                VALUES('account-runtime','account-runtime','logo',?,'1','image/png',?)
+                """, parameters: [hash, "accounts/account-runtime/attachments/logo/\(hash)"])
+            databases.append(database)
+        }
+        dependencies.downloadAccountLogo = { _ in
+            await withTaskCancellationHandler {
+                await downloadGate.wait()
+            } onCancel: {
+                cancellation.continuation.yield(())
+            }
+            // Even a dependency returning bytes after cancellation must not cache them.
+            return Data([1])
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let consumer = Task {
+            do {
+                for try await profile in runtime.watchAccountBusinessProfile(accountId: context.accountId) {
+                    #expect(profile.logo == .notDownloaded)
+                }
+            } catch { }
+        }
+        await downloadGate.waitUntilEntered()
+        let database = try #require(databases.values.first)
+        _ = try await database.execute(sql: "UPDATE spike_accounts SET display_name='Renamed studio' WHERE id='account-runtime'", parameters: nil)
+        let current = try await runtime.readAccountBusinessProfile(accountId: context.accountId)
+        #expect(current.name.rawValue == "Renamed studio")
+        #expect(current.logo == .notDownloaded)
+        _ = try await database.execute(sql: "DELETE FROM spike_account_business_profiles WHERE id='account-runtime'", parameters: nil)
+        await #expect(throws: AccountBusinessProfileReadFailure.self) {
+            try await runtime.readAccountBusinessProfile(accountId: context.accountId)
+        }
+        let closing = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        var cancelled = cancellation.stream.makeAsyncIterator()
+        _ = await cancelled.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        await downloadGate.release()
+        try await closing.value
+        await consumer.value
+        #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
+        #expect(events.values.filter { $0 == .attachmentDatabaseCloseAttempted }.count == 1)
+        cancellation.continuation.finish()
+        context.remove()
+    }
+
+    @Test("Account profile facade reopens downloaded branding and denies foreign or locked workspaces")
+    func accountProfileRestartAndIsolation() async throws {
+        let context = try RuntimeTestContext(suffix: "profile-restart")
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_accounts(id,display_name) VALUES('account-runtime','Design studio')", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO spike_account_business_profiles(id,account_id) VALUES('account-runtime','account-runtime')", parameters: nil)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        var first = runtime.watchAccountBusinessProfile(accountId: context.accountId).makeAsyncIterator()
+        let profile = try #require(await first.next())
+        #expect(profile.accountId == context.accountId)
+        #expect(profile.logo == .absent)
+        #expect(profile.isStale)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            var foreign = runtime.watchAccountBusinessProfile(accountId: try AccountID(validating: "foreign-account")).makeAsyncIterator()
+            _ = try await foreign.next()
+        }
+        try await runtime.close()
+        let reopened = try await context.openRuntime()
+        var restored = reopened.watchAccountBusinessProfile(accountId: context.accountId).makeAsyncIterator()
+        let saved = try #require(await restored.next())
+        #expect(saved.name == profile.name && saved.logo == profile.logo)
+        try await reopened.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            var denied = reopened.watchAccountBusinessProfile(accountId: context.accountId).makeAsyncIterator()
+            _ = try await denied.next()
+        }
+        context.remove()
+    }
+
     @Test("Property report facade preserves downloaded snapshot across encrypted restart and denies foreign or closed access")
     func propertyReportFacade() async throws {
         let context = try RuntimeTestContext(suffix: "property-report")

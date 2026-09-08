@@ -8,6 +8,28 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testAccountSettingsDownloadedProfileRefreshAndDismiss() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let name = app.staticTexts["target-account-profile-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        XCTAssertEqual(name.label, "Design studio")
+        XCTAssertTrue(app.staticTexts["No business logo"].exists)
+        XCTAssertTrue(app.staticTexts["target-account-profile-stale"].exists)
+        app.buttons["target-account-profile-refresh"].tap()
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        XCTAssertEqual(name.label, "Design studio")
+        app.buttons["target-account-settings-done"].tap()
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        XCTAssertFalse(name.exists)
+    }
+
     func testInventoryNavigationAndRememberedSection() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -968,7 +990,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(status, in: app)
         XCTAssertTrue(status.exists)
         XCTAssertTrue(waitUntil {
-            status.value as? String == "queued — accepted locally"
+            status.label == "Checklist synchronization: queued — accepted locally"
         }, app.debugDescription)
 
         // The same exact-Space read-only route works in Project and Inventory.

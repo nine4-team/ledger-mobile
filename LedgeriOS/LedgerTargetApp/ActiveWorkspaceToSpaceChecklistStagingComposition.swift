@@ -23,6 +23,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
     let accountCurrency: CurrencyCode
     @State private var showingPropertyReport = false
+    @State private var showingSettings = false
 
     var body: some View {
         switch model.route {
@@ -60,6 +61,28 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
 
     private var projectDirectory: some View {
         Section("Projects") {
+            if let profileReader = model.itemReader as? any AccountBusinessProfileReading {
+                Button("Settings") { showingSettings = true }
+                    .accessibilityIdentifier("target-account-settings")
+                    .sheet(isPresented: $showingSettings) {
+                        NavigationStack {
+                            Form {
+                                Section("Business profile") {
+                                    AccountBusinessProfileView(accountId: model.accountId, reader: profileReader)
+                                }
+                            }
+                            .navigationTitle("Settings")
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { showingSettings = false }
+                                        .accessibilityIdentifier("target-account-settings-done")
+                                }
+                            }
+                        }
+                    }
+                    .onChange(of: Array(model.accountId.rawValue.utf8)) { _, _ in showingSettings = false }
+                    .onDisappear { showingSettings = false }
+            }
             Picker("Projects", selection: Binding(
                 get: { model.directorySegment },
                 set: { model.setDirectorySegment($0) }
@@ -235,7 +258,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .sheet(isPresented: $showingPropertyReport) {
                         NavigationStack {
                             PropertyManagementReportPreview(accountId: model.accountId, projectId: projectId,
-                                currency: accountCurrency, watcher: watcher, reader: model.reportReader)
+                                currency: accountCurrency, watcher: watcher, reader: model.reportReader,
+                                profileReader: model.itemReader as? any AccountBusinessProfileReading)
                             .toolbar {
                                 ToolbarItem(placement: .confirmationAction) {
                                     Button("Done") { showingPropertyReport = false }
@@ -427,13 +451,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
 
     @ViewBuilder
     private var checklistLifecycle: some View {
-        LabeledContent(
-            "Checklist synchronization",
-            value: model.checklistToggle.operationStatus
-        )
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Checklist synchronization")
-        .accessibilityValue(model.checklistToggle.operationStatus)
+        Text("Checklist synchronization: \(model.checklistToggle.operationStatus)")
         .accessibilityIdentifier("target-active-space-checklist-operation-status")
 
         if !model.checklistToggle.admission.permitsToggle {

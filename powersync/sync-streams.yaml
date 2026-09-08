@@ -2,6 +2,27 @@ config:
   edition: 3
 
 streams:
+  account_business_profile:
+    queries:
+      - |
+        SELECT account.id, account.display_name, account.created_at
+        FROM spike_accounts AS account
+        JOIN spike_account_memberships AS membership ON membership.account_id = account.id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE account.id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT profile.id, profile.account_id, profile.logo_attachment_id,
+          profile.logo_content_sha256, profile.logo_byte_count::text AS logo_byte_count,
+          profile.logo_media_type, profile.logo_storage_path, profile.revision::text AS revision
+        FROM spike_account_business_profiles AS profile
+        JOIN spike_account_memberships AS membership ON membership.account_id = profile.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE profile.account_id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
   property_management_report:
     queries:
       - |

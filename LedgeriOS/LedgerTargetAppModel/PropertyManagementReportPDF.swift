@@ -5,13 +5,20 @@ import CoreText
 import LedgerTargetCore
 
 public enum PropertyManagementReportPDFFailure: Error {
-    case couldNotCreateContext, couldNotPaginate
+    case couldNotCreateContext, couldNotPaginate, accountProfileMismatch
 }
 
 /// Pure on-device renderer. CoreText flows all text across Letter-sized pages;
 /// it never fetches assets or recomputes report eligibility, values or totals.
 public enum PropertyManagementReportPDF {
-    public static func render(_ snapshot: PropertyManagementReportSnapshot) throws -> Data {
+    public static func render(_ snapshot: PropertyManagementReportSnapshot,
+                              profile: AccountBusinessProfile? = nil) throws -> Data {
+        if let profile, !profile.accountId.rawValue.utf8.elementsEqual(snapshot.project.accountId.rawValue.utf8) {
+            throw PropertyManagementReportPDFFailure.accountProfileMismatch
+        }
+        let logo: CGImage?
+        if case .downloaded(let bytes) = profile?.logo { logo = AccountBusinessLogoImage.decode(bytes) }
+        else { logo = nil }
         let text = NSMutableAttributedString(string: "")
         var blocks: [NSRange] = []
         func append(_ value: String, size: CGFloat = 11, bold: Bool = false) {
@@ -31,6 +38,16 @@ public enum PropertyManagementReportPDF {
                 append("Unknown values: \(value.unknownMarketValueCount)")
             }
             blocks.append(NSRange(location: start, length: text.length - start))
+        }
+        if let profile {
+            append(profile.name.rawValue, size: 16, bold: true)
+            if profile.isStale { append("Saved business profile", size: 8) }
+            switch profile.logo {
+            case .absent: append("No business logo", size: 8)
+            case .notDownloaded: append("Business logo not downloaded", size: 8)
+            case .unavailable: append("Business logo unavailable", size: 8)
+            case .downloaded: if logo == nil { append("Business logo unavailable", size: 8) }
+            }
         }
         append("PROPERTY MANAGEMENT", size: 10, bold: true)
         append(snapshot.project.name, size: 22, bold: true)
@@ -71,7 +88,7 @@ public enum PropertyManagementReportPDF {
                 kCGPDFContextCreator: "Ledger"
               ] as CFDictionary) else { throw PropertyManagementReportPDFFailure.couldNotCreateContext }
         let framesetter = CTFramesetterCreateWithAttributedString(text)
-        let bounds = CGRect(x: 42, y: 48, width: 528, height: 696)
+        let bounds = CGRect(x: 42, y: 48, width: 528, height: logo == nil ? 696 : 606)
         let path = CGPath(rect: bounds, transform: nil)
         var offset = 0
         var page = 1
@@ -96,6 +113,11 @@ public enum PropertyManagementReportPDF {
                 throw PropertyManagementReportPDFFailure.couldNotPaginate
             }
             context.beginPDFPage(nil)
+            if let logo {
+                let scale = min(180 / CGFloat(logo.width), 72 / CGFloat(logo.height))
+                context.draw(logo, in: CGRect(x: 42, y: 666,
+                    width: CGFloat(logo.width) * scale, height: CGFloat(logo.height) * scale))
+            }
             context.textMatrix = .identity
             CTFrameDraw(frame, context)
             let footer = NSAttributedString(string: "Ledger  |  Property Management  |  Page \(page)", attributes: [

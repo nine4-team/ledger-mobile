@@ -10,7 +10,9 @@ struct PropertyManagementReportPreview: View {
     let currency: CurrencyCode
     let watcher: any PropertyManagementReportWatching
     let reader: (any PropertyManagementReportReading)?
+    var profileReader: (any AccountBusinessProfileReading)? = nil
     @State private var model = PropertyManagementReportModel()
+    @State private var profileModel = AccountBusinessProfileModel()
     @State private var refresh = UUID()
     @State private var exporting = false
     @State private var exportError: String?
@@ -25,6 +27,9 @@ struct PropertyManagementReportPreview: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if let profileReader {
+                    AccountBusinessProfileView(accountId: accountId, reader: profileReader, model: profileModel)
+                }
                 if exporting {
                     ProgressView("Preparing or delivering report…")
                         .accessibilityIdentifier("target-property-report-exporting")
@@ -88,6 +93,10 @@ struct PropertyManagementReportPreview: View {
 
     private var canExport: Bool {
         guard !exporting, reader != nil, case .ready(let snapshot) = model.state else { return false }
+        if profileReader != nil {
+            guard case .downloaded(let profile) = profileModel.state,
+                  profile.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8) else { return false }
+        }
         return snapshot.project.accountId == accountId && snapshot.project.projectId == projectId && snapshot.currency == currency
     }
 
@@ -95,6 +104,9 @@ struct PropertyManagementReportPreview: View {
         guard canExport, let reader, case .ready(let snapshot) = model.state else { return }
         exporting = true
         exportError = nil
+        let profile: AccountBusinessProfile?
+        if case .downloaded(let saved) = profileModel.state { profile = saved }
+        else { profile = nil }
         // This task deliberately outlives disappearance while the OS owns a
         // handoff. The watched model is checked again before presenting it.
         Task { @MainActor in
@@ -102,13 +114,20 @@ struct PropertyManagementReportPreview: View {
             do {
                 let bytes = try await Task.detached {
                     switch format {
-                    case .pdf: try PropertyManagementReportPDF.render(snapshot)
+                    case .pdf: try PropertyManagementReportPDF.render(snapshot, profile: profile)
                     case .csv: Data(PropertyManagementReportCSV.render(snapshot).utf8)
                     }
                 }.value
                 try await PropertyManagementReportDelivery.deliver(data: bytes, format: format, snapshot: snapshot, reader: reader) { url in
                     guard case .ready(let visible) = model.state, visible.reference == snapshot.reference else {
                         throw PropertyManagementReportDeliveryFailure.snapshotChanged
+                    }
+                    if let profile {
+                        guard let profileReader,
+                              try await profileReader.readAccountBusinessProfile(accountId: accountId).matchesExportedBranding(profile),
+                              case .downloaded(let current) = profileModel.state, current == profile else {
+                            throw PropertyManagementReportDeliveryFailure.snapshotChanged
+                        }
                     }
                     try await PropertyManagementReportSystemDelivery.handoff(url, action: action)
                 }

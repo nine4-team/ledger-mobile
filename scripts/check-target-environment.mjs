@@ -610,6 +610,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "readAccountBusinessProfile",
     "readDownloadedItemPlacementHistory",
     "readDownloadedItemPlacements",
     "readDownloadedPropertyManagementReport",
@@ -617,6 +618,7 @@ if (
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
     "watchAccessRemoval",
+    "watchAccountBusinessProfile",
     "watchBudgetCategories",
     "watchClient",
     "watchClientArchiveOperation",
@@ -2486,6 +2488,7 @@ if (
     ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
   ].map((match) => match[1]);
   const expectedStreamNames = [
+    "account_business_profile",
     "property_management_report",
     "physical_account_items",
     "spike_account_bootstrap",
@@ -3055,7 +3058,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,AccountBusinessProfileReading,Sendable",
     )
   ) {
     fail(
@@ -3367,7 +3370,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,AccountBusinessProfileReading,Sendable",
     )
   ) {
     fail(

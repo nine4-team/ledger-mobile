@@ -3,6 +3,7 @@ import PowerSync
 public enum LedgerPowerSyncTable {
     public static let principals = "spike_principals"
     public static let accounts = "spike_accounts"
+    public static let accountBusinessProfiles = "spike_account_business_profiles"
     public static let memberships = "spike_account_memberships"
     public static let clients = "spike_clients"
     public static let pendingClients = "spike_pending_clients"
@@ -61,6 +62,12 @@ public enum LedgerPowerSyncSchema {
         Table(
             name: LedgerPowerSyncTable.accounts,
             columns: [.text("display_name")]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.accountBusinessProfiles,
+            columns: [.text("account_id"), .text("logo_attachment_id"),
+                      .text("logo_content_sha256"), .text("logo_byte_count"),
+                      .text("logo_media_type"), .text("logo_storage_path"), .text("revision")]
         ),
         Table(
             name: LedgerPowerSyncTable.memberships,

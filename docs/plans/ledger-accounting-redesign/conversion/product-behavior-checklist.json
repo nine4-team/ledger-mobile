@@ -25423,6 +25423,228 @@
     }
   ],
   "executionRecords": [
+    {
+      "schemaVersion": 1,
+      "workflowId": "account-profile-readback",
+      "noCurrentBaselineReason": "Canonical read-only branding composition has no standalone inventoried journey: the legacy Business logo control performs replacement, and Account info also contains role/email. Those broader Settings/editor behaviors are not claimed by this viewing workflow; the canonical Account Business Profile outcome governs its name/logo and report composition.",
+      "title": "Account branding in Settings and reports",
+      "kind": "product_ui",
+      "status": "implementation",
+      "outcome": "Open selected Account Settings and show the same business name/logo in report preview and delivered PDF; no profile writes.",
+      "targetStoryIds": [
+        "account-profile-readback"
+      ],
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
+          "section": "Account Business Profile"
+        }
+      ],
+      "affectedComponents": [
+        "LedgeriOS/LedgerTargetCore",
+        "LedgeriOS/LedgerTargetCoreTests",
+        "LedgeriOS/LedgerTargetApp",
+        "LedgeriOS/LedgerTargetAppModel",
+        "LedgeriOS/LedgerTargetAppModelTests",
+        "LedgeriOS/LedgerTargetPowerSync",
+        "LedgeriOS/LedgerTargetPowerSyncTests",
+        "LedgeriOS/LedgerTargetStagingUITests",
+        "supabase/migrations",
+        "supabase/tests",
+        "powersync",
+        "docs/architecture/redesign/architecture-decisions.md"
+      ],
+      "layers": [
+        "domain",
+        "app_ui",
+        "auth",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "media",
+        "postgres_schema",
+        "postgres_handler"
+      ],
+      "riskDomains": [
+        "ui_fidelity",
+        "identity_auth",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "media_durability",
+        "database_integrity",
+        "handler_idempotency"
+      ],
+      "baselineJourneyIds": [],
+      "baselineBehaviorRefs": [],
+      "uiJourneys": [
+        {
+          "journeyId": "TARGET-ACCOUNT-PROFILE-READBACK",
+          "sourcePage": "Account Settings and report headers",
+          "targetPage": "Selected Account business profile and Property Management report",
+          "authority": [
+            {
+              "role": "canonical_target",
+              "path": "docs/specs/account-discovery-and-workspace-selection.md",
+              "section": "Account Business Profile"
+            }
+          ],
+          "sourceSurfaceIds": [
+            "SWIFT-3B7DE77EA8E4"
+          ],
+          "controls": [
+            {
+              "label": "Business profile",
+              "options": [],
+              "action": "Open Settings for the selected Account.",
+              "result": "Show authorized cached name/logo and honest readiness.",
+              "disposition": "preserve"
+            },
+            {
+              "label": "Refresh",
+              "options": [],
+              "action": "Retry authorized profile and logo retrieval.",
+              "result": "Replace only verified current branding; clear inaccessible content.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Report",
+              "options": [],
+              "action": "Open and deliver the report.",
+              "result": "Use the same authorized branding in preview and output.",
+              "disposition": "preserve"
+            }
+          ],
+          "transitions": [
+            {
+              "from": "Selected Account",
+              "event": "Open Settings",
+              "to": "Business profile",
+              "disposition": "preserve"
+            },
+            {
+              "from": "Business profile",
+              "event": "Account removal or switch",
+              "to": "No previous Account branding visible",
+              "disposition": "redesign"
+            }
+          ],
+          "states": [
+            {
+              "name": "Saved or unavailable branding",
+              "expected": "Exercise loading, absent/not-downloaded/corrupt logo, stale profile, refresh, dismissal and report delivery on both platforms.",
+              "disposition": "redesign"
+            }
+          ]
+        }
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "PROFILE-READ-ONLY",
+          "risk": "handler_idempotency",
+          "expected": "This schema introduces no mutation handler; repeated authorized reads change no profile, upload queue or storage object, and API profile mutations remain denied.",
+          "command": "account_business_profile_readback.test.sql and downloaded-logo provider tests",
+          "status": "planned"
+        },
+        {
+          "id": "PROFILE-0",
+          "risk": "general",
+          "expected": "Open selected Account Settings and show the same business name/logo in report preview and delivered PDF; no profile writes.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-1",
+          "risk": "ui_fidelity",
+          "expected": "Exercise loading, absent/not-downloaded/corrupt logo, stale profile, refresh, dismissal and report delivery on both platforms.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-2",
+          "risk": "identity_auth",
+          "expected": "Bind profile and download to current authenticated principal; reject secret credentials and stale access.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-3",
+          "risk": "tenant_authorization",
+          "expected": "Prove allowed membership and anonymous/foreign/removed denial for profile rows and exact private Storage objects.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-4",
+          "risk": "sync_visibility",
+          "expected": "Selected-workspace stream only; bootstrap remains name-only; missing profile is not known absence.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-5",
+          "risk": "offline_durability",
+          "expected": "Saved profile and logo survive restart; closing/removal drains downloads before local teardown.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-6",
+          "risk": "media_durability",
+          "expected": "Verify bytes/hash, encrypted cache, corrupt-cache repair and orphan accounting without adding pending uploads.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        },
+        {
+          "id": "PROFILE-7",
+          "risk": "database_integrity",
+          "expected": "Constrain complete logo references and immutable exact scoped paths; reject malformed metadata.",
+          "command": "Profile integrated provider and native UI verification (planned)",
+          "status": "planned",
+          "coversStoryIds": [
+            "account-profile-readback"
+          ]
+        }
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {
+          "status": "not_run",
+          "commands": []
+        },
+        "review": {
+          "required": true,
+          "status": "not_run",
+          "summary": "Local batch evidence: full swift test2825 passed957tests/142suites; after review, finite profile-read rename/removal-during-download test72064 and export status comparison82633 passed. Current app typecheck18592 passed; environment97176f/conversion04f3fd passed. Independent profile_integration_review found stale-model handoff (fixed with authorized finite read, reviewer confirmed) and unavailable/notDownloaded mismatch (fixed with branding comparison). Earlier cache repair/exclusion81720/23337 and restart/SDK first-download7062 passed. PDF47671 tests and oversized-image88352 passed; main inspected all5 synthetic Poppler pages without overlap/clipping. Settings/report UI tests await exact-commit CI; schema/RLS/Storage tests await database execution. Actual authenticated app session/PowerSync connection, HTTP Storage semantics and complete hosted/offline media workflow remain unverified. No complete workflow claim."
+        },
+        "ci": {
+          "status": "not_run"
+        }
+      },
+      "implementationEvidence": []
+    },
     {"schemaVersion":1,"workflowId":"local-vendor-pdf-review","title":"Offline vendor PDF review","kind":"product_ui","status":"implementation","outcome":"Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.","targetStoryIds":["local-vendor-pdf-review"],"authority":[{"role":"canonical_target","path":"docs/specs/invoice-import.md","section":"Target Import Contract"}],"affectedComponents":["LedgeriOS/LedgerTargetApp","LedgeriOS/LedgerTargetAppModel","LedgeriOS/LedgerTargetAppModelTests","LedgeriOS/LedgerTargetStagingUITests","LedgeriOS/LedgerTargetProject.yml","LedgeriOS/LedgerTarget.xcodeproj","scripts/check-target-environment.mjs","docs/architecture/redesign/architecture-decisions.md","scripts/local-vendor-parser-boundary.mjs","scripts/tests/local-vendor-parser-boundary.test.mjs","scripts/test-local-vendor-pdf-parser.sh","scripts/tests/LocalVendorPDFParserFixtureTests.swift","scripts/tests/LocalVendorPDFThumbnailFixtureTests.swift",".github/workflows/supabase-conversion-control.yml","scripts/supabase-conversion-ledger.mjs","scripts/check-conversion-ci.mjs","scripts/tests/check-conversion-ci.test.mjs"],"layers":["domain","app_ui","auth","rls","powersync_sync","local_offline","media"],"riskDomains":["ui_fidelity","identity_auth","tenant_authorization","sync_visibility","offline_durability","media_durability"],"baselineJourneyIds":["UIBASE-VENDOR-INVOICE-PDF-IMPORT-001"],"baselineBehaviorRefs":[{"journeyId":"UIBASE-VENDOR-INVOICE-PDF-IMPORT-001","controls":[{"label":"Select vendor PDF","includeControl":true,"options":["Select PDF","Select PDF Invoice","DocumentPicker Cancel","Form Cancel"]},{"label":"Budget Category","includeControl":true,"options":["No Category","Supplied Project category"]},{"label":"Draft Item row","includeControl":true,"options":["Include / Exclude","Description","Qty","Unit price"]},{"label":"Review actions","includeControl":true,"options":["Select Different PDF","Cancel"]},{"label":"Debug Info","includeControl":true,"options":["Show Stats / Hide Stats","Show Raw Text / Hide Raw Text","Copy Debug JSON"]}],"transitions":[],"states":["Parsing states","Parse summary","Wayfair extracted images","No Items and included count"]}],"uiJourneys":[{"journeyId":"TARGET-LOCAL-VENDOR-PDF-REVIEW-001","sourcePage":"ImportInvoiceModal","targetPage":"Account-scoped local PDF review","authority":[{"role":"canonical_target","path":"docs/specs/invoice-import.md","section":"Target Import Contract"}],"sourceSurfaceIds":["SWIFT-D7E8B2EB55DF","SWIFT-5E2EC2CDB48B","SWIFT-86F17626EE66","SWIFT-DCFAC7B24CF2","SWIFT-A3FD93675EFB"],"controls":[{"label":"Select vendor PDF","options":[{"label":"Select PDF","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Select PDF Invoice","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"DocumentPicker Cancel","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Form Cancel","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"}],"action":"Review local document","result":"Retain document-scoped source evidence and edits.","disposition":"preserve"},{"label":"Budget Category","options":[{"label":"No Category","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Supplied Project category","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"}],"action":"Review local document","result":"Retain document-scoped source evidence and edits.","disposition":"preserve"},{"label":"Draft Item row","options":[{"label":"Include / Exclude","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Description","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Qty","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Unit price","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Done (keyboard)","result":"Dismiss the iOS keyboard without submitting or losing row edits; clear field focus when replacing or closing the document.","disposition":"redesign"}],"action":"Review local document","result":"Retain document-scoped source evidence and edits.","disposition":"preserve"},{"label":"Review actions","options":[{"label":"Select Different PDF","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Cancel","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"}],"action":"Review local document","result":"Retain document-scoped source evidence and edits.","disposition":"preserve"},{"label":"Debug Info","options":[{"label":"Show Stats / Hide Stats","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Show Raw Text / Hide Raw Text","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"},{"label":"Copy Debug JSON","result":"Preserve approved local review behavior without financial writes.","disposition":"preserve"}],"action":"Review local document","result":"Retain document-scoped source evidence and edits.","disposition":"preserve"}],"transitions":[{"from":"Selection","event":"Select PDF","to":"Extraction and review or explicit failure","disposition":"preserve"}],"states":[{"name":"Extraction and review","expected":"Explicit unsupported, corrupt, image-only, no-row and review states; no false accepted-import result.","disposition":"redesign"}]}],"acceptanceChecks":[{"id":"PDF-REVIEW-0","risk":"general","expected":"Select a supported PDF locally, edit/exclude rows without changing source evidence, replace the document, distinguish picker cancellation from terminal form cancellation, and create no accounting records.","command":"WorkspaceChecklistUITests.testVendorPDFActualFileReview, testVendorPDFIOSLoadedReview, testVendorPDFSelectionCancellation; LocalVendorDocumentReviewTests.edits. Exact-commit native CI pending.","status":"planned"},{"id":"PDF-REVIEW-1","risk":"ui_fidelity","expected":"Exercise vendor summary, warnings, missing values, description/quantity/unit-price edits, inclusion, category, stats/raw text/Copy JSON, and corrupt/unsupported/no-row states on macOS and iOS. Actual iOS Files selection and representative real vendor templates remain unverified. Dismiss the iOS keyboard after each edit and preserve exact edited values.","command":"WorkspaceChecklistUITests vendor PDF tests; bash scripts/test-local-vendor-pdf-parser.sh. Real sanitized vendor examples and actual iOS Files selection still needed.","status":"planned"},{"id":"PDF-REVIEW-2","risk":"identity_auth","expected":"Bind review rows to Account, document hash and original row identity; reject stale edits and late parse/picker completions after replacement, cancellation or terminal close.","command":"LocalVendorDocumentReviewTests.edits, invalidIdentity, overlappingDocuments, cancel and terminalClose; included in passed local 893-test suite.","status":"planned"},{"id":"PDF-REVIEW-3","risk":"tenant_authorization","expected":"Reject foreign-Account category snapshots; Account removal must close loaded review and clear source bytes, hash, document, rows and categories, not merely hide the screen. Diagnostic redaction must preserve original evidence.","command":"LocalVendorDocumentReviewTests.categorySelection; LocalVendorDocumentDiagnosticsTests; WorkspaceChecklistUITests.testVendorPDFRemovalClosesLoadedReview passed on both platforms in CI34250091549 at e79ec782. Hosted authorization remains unverified.","status":"planned"},{"id":"PDF-REVIEW-4","risk":"sync_visibility","expected":"Only authorized current-Account category data may populate choices; removed, archived and system categories cannot remain selected. Missing category data must preserve document edits without implying a complete authorized download.","command":"LocalVendorDocumentReviewTests.categorySelection; native category selection in vendor PDF review tests. Hosted authorization is not proven by these fixtures.","status":"planned"},{"id":"PDF-REVIEW-5","risk":"offline_durability","expected":"Supported PDF parsing/review require no network parser. Interrupted/replaced parsing must not restore old data. This unaccepted in-memory review does not prove restart durability of accepted import intent; accepted import persistence/replay remains required in the accounting import workflow.","command":"bash scripts/test-local-vendor-pdf-parser.sh; LocalVendorDocumentReviewTests.cancel and overlappingDocuments. No accepted-import restart claim.","status":"planned"},{"id":"PDF-REVIEW-6","risk":"media_durability","expected":"Preserve original PDF bytes and exact source-row thumbnail provenance during review/filtering; reject ambiguous image associations. Synthetic PDF/pixel fixtures do not prove real vendor-template coverage or accepted receipt upload/restart durability.","command":"bash scripts/test-local-vendor-pdf-parser.sh (actual PDFKit extraction and thumbnail pixel fixtures); LocalVendorDocumentReviewTests.edits. Real vendor templates and accepted-media durability remain gaps.","status":"planned"}],"blockers":[],"verification":{"local":{"status":"passed","commands":["swift test --package-path LedgeriOS --filter 'LocalVendorDocumentReviewTests|LocalVendorDocumentDiagnosticsTests'","npm run target:environment:check","bash scripts/test-local-vendor-pdf-parser.sh","npm run conversion:ci:test","npm run conversion:check","swift test --package-path LedgeriOS --no-parallel","swift test --package-path LedgeriOS --filter ActiveWorkspaceToSpaceChecklistStagingExerciseTests"]},"review":{"required":true,"status":"not_run","summary":"CI34259667977 at71bce05c04d82cf7561a46ee2a083b8628392d4a: database580tests/19files, all15macOSUI, both builds and12of13iOSUI passed. Sole iOS failure at WorkspaceChecklistUITests.swift:341: long-press Select All menu absent with description field focused. Current test correction uses native Command-A supported by installed iOS XCUIAutomation and already used by macOS test; exact replacement values and keyboard Done/disappearance assertions remain. iOS typecheck passed; corrected runtime execution pending. Real vendor templates, actual iOS Files loading, hosted validation and accepted accounting/media durability remain unverified."},"ci":{"status":"failed","commit":"e79ec782a2ea57800cfbd02b15270a7f182c89f3","run":34250091549}},"implementationEvidence":[{"layer":"app_ui","paths":["LedgeriOS/LedgerTargetApp/LocalVendorPDFParser.swift"]}]},
     {
       "schemaVersion": 1,

@@ -1,12 +1,65 @@
 #if canImport(PDFKit)
 import Foundation
 import PDFKit
+import ImageIO
 import Testing
 import LedgerTargetCore
 import LedgerTargetAppModel
 
 @Suite("Property report PDF rendering")
 struct PropertyManagementReportPDFTests {
+    @Test("Large logo is downsampled and branded PDF preserves all report rows")
+    func boundedLogoPDF() throws {
+        let bitmap = try #require(CGContext(data: nil, width: 2048, height: 1024,
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        bitmap.setFillColor(CGColor(red: 0.1, green: 0.3, blue: 0.6, alpha: 1))
+        bitmap.fill(CGRect(x: 0, y: 0, width: 2048, height: 1024))
+        let original = try #require(bitmap.makeImage())
+        let encoded = NSMutableData()
+        let destination = try #require(CGImageDestinationCreateWithData(encoded, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, original, nil)
+        #expect(CGImageDestinationFinalize(destination))
+        let decoded = try #require(AccountBusinessLogoImage.decode(encoded as Data))
+        #expect(decoded.width == 1024 && decoded.height == 512)
+        #expect(AccountBusinessLogoImage.decode(Data([1, 2, 3])) == nil)
+        let snapshot = try fixture(count: 30)
+        let profile = try AccountBusinessProfile(accountId: snapshot.project.accountId,
+            name: AccountDisplayName(validating: "Design studio"), logo: .downloaded(encoded as Data), isStale: true)
+        let bytes = try PropertyManagementReportPDF.render(snapshot, profile: profile)
+        let document = try #require(PDFDocument(data: bytes))
+        let text = try #require(document.string)
+        #expect(document.pageCount > 1 && text.contains("Design studio"))
+        #expect(!text.contains("Business logo unavailable"))
+        for index in 0..<30 { #expect(text.contains("Item ID: item-\(String(format: "%03d", index))")) }
+        if let path = ProcessInfo.processInfo.environment["LEDGER_BRANDED_PDF_QA_OUTPUT"] {
+            try bytes.write(to: URL(fileURLWithPath: path), options: .atomic)
+        }
+    }
+
+    @Test("PDF uses selected Account branding, reports unavailable logos, and rejects foreign branding")
+    func accountBranding() throws {
+        let snapshot = try fixture(count: 2)
+        for logo: AccountBusinessProfile.Logo in [.absent, .notDownloaded, .unavailable, .downloaded(Data([0, 1]))] {
+            let profile = try AccountBusinessProfile(accountId: snapshot.project.accountId,
+                name: AccountDisplayName(validating: "Design studio"), logo: logo, isStale: true)
+            let document = try #require(PDFDocument(data: PropertyManagementReportPDF.render(snapshot, profile: profile)))
+            let text = try #require(document.string)
+            #expect(text.contains("Design studio") && text.contains("Saved business profile"))
+            #expect(text.contains("Report totals"))
+            switch logo {
+            case .absent: #expect(text.contains("No business logo"))
+            case .notDownloaded: #expect(text.contains("Business logo not downloaded"))
+            default: #expect(text.contains("Business logo unavailable"))
+            }
+        }
+        let foreign = try AccountBusinessProfile(accountId: AccountID(validating: "foreign-account"),
+            name: AccountDisplayName(validating: "Foreign studio"), logo: .absent, isStale: false)
+        #expect(throws: PropertyManagementReportPDFFailure.self) {
+            try PropertyManagementReportPDF.render(snapshot, profile: foreign)
+        }
+    }
+
     @Test("Multi-page PDF includes every Item, exact values, unknowns and provenance")
     func paginated() throws {
         let snapshot = try fixture(count: 80)

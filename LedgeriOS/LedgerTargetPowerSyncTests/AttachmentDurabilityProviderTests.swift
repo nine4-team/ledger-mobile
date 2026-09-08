@@ -6,6 +6,140 @@ import Testing
 
 @Suite("LedgerPowerSync attachment local byte durability provider", .serialized)
 struct LedgerPowerSyncAttachmentDurabilityProviderTests {
+    @Test("Upload and logo mutation exclude each other across suspended commit", arguments: [false, true])
+    func downloadedLogoMutationExclusion(uploadFirst: Bool) async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let gate = LogoMutationGate()
+        let store = AttachmentCapturePowerSyncStore(database: database, vault: try fixture.makeVault(),
+            scope: Fixture.scope,
+            resolutionDatabaseAccessCheckpoint: { if !uploadFirst { await gate.pauseOnce() } },
+            enqueueCommitCheckpoint: { if uploadFirst { await gate.pauseOnce() } })
+        let reference = try logoReference()
+        let capture = try fixture.capture(id: reference.attachmentId.rawValue)
+        let first = Task {
+            if uploadFirst { _ = try await store.enqueue(capture) }
+            else { try await store.cacheAccountLogo(Fixture.bytes, reference: reference) }
+        }
+        await gate.waitForPause()
+        if uploadFirst {
+            await #expect(throws: AttachmentCapturePowerSyncStoreFailure.attachmentBusy) {
+                try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+            }
+        } else {
+            await #expect(throws: AttachmentCapturePowerSyncStoreFailure.attachmentBusy) {
+                try await store.enqueue(capture)
+            }
+        }
+        await gate.release()
+        try await first.value
+        #expect(try await store.pendingCount() == (uploadFirst ? 1 : 0))
+        if uploadFirst {
+            #expect(try await store.nextVerifiedCandidate()?.bytes == Fixture.bytes)
+        } else { #expect(try await store.cachedAccountLogo(reference) == Fixture.bytes) }
+        try await database.close()
+    }
+
+    @Test("Downloaded logo survives encrypted restart without pending uploads or orphan classification")
+    func downloadedLogoRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let reference = try logoReference()
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        #expect(try await store.cachedAccountLogo(reference) == nil)
+        try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        #expect(try await store.cachedAccountLogo(reference) == Fixture.bytes)
+        #expect(try await store.pendingCount() == 0)
+        #expect(try await store.orphanInventory().isEmpty)
+        let pending = try await store.pendingWorkObservation()
+        #expect(pending.queue.isEmpty && pending.orphans.isEmpty)
+        #expect(try await database.get("SELECT count(*) FROM ps_crud") { try $0.getInt64(index: 0) } == 0)
+        try await database.close()
+        #expect(!(try Data(contentsOf: fixture.databaseURL)).contains(Fixture.bytes))
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.cachedAccountLogo(reference) == Fixture.bytes)
+        #expect(try await restored.pendingCount() == 0)
+        #expect(try await restored.orphanInventory().isEmpty)
+        try await reopened.close()
+    }
+
+    @Test("Downloaded logo rejects wrong bytes, Account, and substituted manifest")
+    func downloadedLogoValidation() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let reference = try logoReference()
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.cacheAccountLogo(Data("wrong".utf8), reference: reference)
+        }
+        let foreign = try logoReference(account: AccountID(validating: "foreign"))
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.cacheAccountLogo(Fixture.bytes, reference: foreign)
+        }
+        try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        _ = try await database.execute(sql: "INSERT INTO local_downloaded_account_logos(id,evidence_json) SELECT 'substituted',evidence_json FROM local_downloaded_account_logos", parameters: nil)
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.orphanInventory()
+        }
+        _ = try await database.execute(sql: "DELETE FROM local_attachment_durability_scope_binding", parameters: nil)
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.cachedAccountLogo(reference)
+        }
+        #expect(try await database.get("SELECT count(*) FROM local_attachment_durability_scope_binding") {
+            try $0.getInt64(index: 0)
+        } == 0)
+        try await database.close()
+    }
+
+    private func logoReference(account: AccountID = Fixture.scope.accountId) throws -> AccountBusinessLogoReference {
+        let hash = try AttachmentContentSHA256.make(bytes: Fixture.bytes).rawValue
+        return try AccountBusinessLogoReference(accountId: account, attachmentId: "logo-test",
+            sha256: hash, byteCount: String(Fixture.bytes.count), mediaType: "image/png",
+            storagePath: "accounts/\(account.rawValue)/attachments/logo-test/\(hash)")
+    }
+
+    @Test("Corrupt downloaded cache repairs atomically but never overwrites upload-owned bytes", arguments: [false, true])
+    func downloadedLogoRepair(uploadOwned: Bool) async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let vault = try fixture.makeVault()
+        let store = fixture.makeStore(database: database, vault: vault)
+        let reference = try logoReference()
+        try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        let json = try await database.get("SELECT evidence_json FROM local_downloaded_account_logos") {
+            try $0.getString(index: 0)
+        }
+        let evidence = try OperationContractCodec.decode(AttachmentPersistedLocalObjectEvidence.self, from: Data(json.utf8))
+        if uploadOwned {
+            _ = try await store.enqueue(LocalAttachmentCapture(attachmentId: reference.attachmentId,
+                scope: evidence.scope, capturedAt: Fixture.capturedAt, bytes: Fixture.bytes))
+        }
+        let url = try await vault.objectFileURLForTesting(evidence.localObjectId)
+        let original = try Data(contentsOf: url)
+        var corrupt = original
+        corrupt[corrupt.startIndex] ^= 1
+        try corrupt.write(to: url)
+        await #expect(throws: AttachmentLocalByteVaultFailure.self) { try await store.cachedAccountLogo(reference) }
+        if uploadOwned {
+            await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+                try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+            }
+            #expect(try Data(contentsOf: url) == corrupt)
+        } else {
+            try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+            #expect(try await store.cachedAccountLogo(reference) == Fixture.bytes)
+            #expect(try await store.pendingCount() == 0)
+            #expect(try await store.orphanInventory().isEmpty)
+        }
+        try await database.close()
+    }
+
     @Test("ATTACHDUR-TEST-001 ciphertext and queue reverify before path-free success")
     func encryptedAcceptance() async throws {
         let fixture = try Fixture()
@@ -963,6 +1097,23 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
 }
 
 private struct InjectedFailure: Error {}
+
+private actor LogoMutationGate {
+    private var paused = false
+    private var released = false
+    private var pause: CheckedContinuation<Void, Never>?
+    private var observer: CheckedContinuation<Void, Never>?
+    func pauseOnce() async {
+        guard !paused else { return }
+        paused = true
+        observer?.resume(); observer = nil
+        if !released { await withCheckedContinuation { pause = $0 } }
+    }
+    func waitForPause() async {
+        if !paused { await withCheckedContinuation { observer = $0 } }
+    }
+    func release() { released = true; pause?.resume(); pause = nil }
+}
 
 private enum EnqueueOutcome: Equatable, Sendable {
     case accepted

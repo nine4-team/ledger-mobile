@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 258,
+  "stateVersion": 275,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PROPERTY-REPORT-BOTH-PLATFORMS-NATIVE-HANDOFF-GREEN",
-    "commit": "41ef3770c53fe4bd6d764133f4034147e5c32f58",
-    "ciRun": 34224749750,
+    "name": "DOWNLOADED-SPACE-ITEMS-AND-HISTORY-BOTH-PLATFORMS-GREEN",
+    "commit": "fd57d6a44d6951541406da72780832404fc70cde",
+    "ciRun": 34277660571,
     "ciStatus": "passed",
-    "meaning": "Database,878 native tests/130 suites,9 macOS UI tests,both builds,5 iPhone report tests passed. Actual PDF/CSV Copy payload and Share/Print cancellation verified on both platforms. SKU spec conflict,hardware protection,hosted validation and cutover readiness remain unresolved."
+    "meaning": "Full exact-commit CI passed: database,940 native tests/139 suites,15 macOS UI tests,13 iPhone UI tests,both builds. Exact Project/Inventory Space Item filtering/count/history routes passed; no broad Item/Space outcome completion. Accessibility follow-up ada61425 still awaiting its own CI. Hosted/hardware/migration/cutover remain unverified."
   },
   "activeWorkflow": {
-    "id": "active-workspace-to-space-checklist",
+    "id": "account-profile-readback",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Show assigned downloaded Items in exact Project/Inventory Space detail and open their existing location history; preserve parent scope and honest partial coverage.",
+    "outcome": "Show selected Account branding in Settings and reports with authorized offline logo durability and honest failure states.",
     "nextActions": [
-      "LatestCI34277660571/fd57d6a4 now live in iOS UI; macOS UI and both builds passed. InvoiceCI34274974413/1a497ca4 failed iOS Inventory checklist status (12/13 passed). Artifact downloaded successfully to tmp/inventory-ui-ci-evidence-34274974413; status-last.png from final recording frame proves checked item, Accepted invocations:1 and visible queued—accepted locally; accessibility debug query lost status element as LabeledContent changed layout. Uncommitted focused fix gives row explicit accessibility element/label/value and test asserts exact queued value. Syntax parse/diff passed; full app typecheck56251 and conversion:check passed. Artifact moved intact into existing ignored tmp/ after untracked file listing exceeded checker buffer; no checker change. Finish review, checklist evidence, applicable checks and exact-commit automatic CI before accepting fix. Preserve diagnostics; no repeated full native suite for unchanged domain/provider code.",
-      "Space Item batch committed/pushedfd57d6a44d6951541406da72780832404fc70cde. AutomaticCI34277660571 confirmed in_progress. Full940native139suites10729 passed51.339s; app typecheck56711, environment/10CIguards4889/conversion/diff passed. Root reviewed delegated UI fixtures/tests. Follow exactCI for real interaction; do not rerun full local suite merely to resume.",
-      "Bounded next-workflow review found nearby substantive work product-gated, not a reason to add more partial physical labels. Asked user O053 specifically: who may assign/move/clear Item Space within same Project/Inventory (allactive vsowners/admins). Approval only covers that command family, not financial moves or all Space commands. Best next implementation after answer is real shared Item selection->Space assign->offline readback->clear using existing contracts. Other pending O027/O065/O033/O060 remain; no audit restart. While unanswered, finish CI/fix verified failures; no fullsuite merely towait.",
-      "O033 exact Invoice payment question asked asynchronously this turn; do not choose policy without answer. Prior Item minimum name/photo/note and ordinary create/edit permission questions pending O027/O065 (minimum evidence is O027, not payer-hint O017); other affected creation O021/O017, financial O060 remain. Unresolved decisions block only affected work; audit already complete.",
-      "Preserve diagnostics and Firebase/production/hosted boundaries. After storage proof, continue approved Item/Invoice relationships through user workflow rather than expanding generic foundations. Historical note blank-name batch full922native/39MCP passed; no entire workflow completion claimed."
+      "Reviewer P2 fixed: public finite readAccountBusinessProfile uses lifecycle lease/cache-only lookup/metadata recheck; handoff compares current authorized read. Suspended download rename+profile removal test72064 passed bothclose/removal cases; app typecheck27710 passed. Reviewer confirmed fix, flagged unavailable-vs-notDownloaded equality blocking valid exports; matchesExportedBranding now tolerates only those transient statuses while rejecting name/account/bytes/explicit-absence changes; test82633 passed. Latest UI helper-call typecheck still needed. Full957native2825 previously passed; environment97176f and conversion04f3fd passed after finite-read addition. Next integrated evidence/checkpoint and normal commit/automaticCI, keeping auth/hosted wholeworkflow incomplete. No full suite solely to resume.",
+      "CI34279959091/ada61425 terminal failed on macOS Project+Inventory exact status-value assertion;13/15MacUI passed, all earlier gates passed. Failure hierarchy proves Other node had label only and no value. Uncommitted fix replaces LabeledContent with one Text and asserts exact full label; syntax parse passed, native proof pending next normal batch. Do not redispatch old run. Verified checkpoint fd57d6a4/34277660571 remains full green.",
+      "Profile runtime/Settings wiring uncommitted. Runtime restart/isolation35418 passed. Download-drain1978 passed close+removal cases: cancellation observed, both databases stay open until downloader returns, no late downloaded profile emitted. New Settings Refresh/Done UI fixture/test added; full target app typecheck30524 and UI syntax parse passed, native UI still pending. Next changed-reference proof, selected profile Sync Stream/authenticated downloader integration, shared report branding. UI fixture is ActiveWorkspaceChecklistUITestFixture.swift. Do not rerun completed checks solely to resume.",
+      "Profile workflow uncommitted. Deterministic mutual-exclusion test23337 passed both upload-first/cache-first suspended interleavings; cache81720 passed repair/refusal,scope,restart. New SupabaseAccountLogoDownload built15304; synthetic HTTP51925 passed3tests/7cases: exact private GET/hash, denials/redirect status/size/hash, secret or non-user credentials refused. Ephemeral HTTP cache, no redirects,64MiB default bound. Actual redirect callback/cancellation and hosted Storage operation semantics still need proof. Next connect metadata watch to authorized workspace/runtime, revalidate current reference/access after download, use local cache, register/drain watch and finite work before logout/orphan observation; then Settings and report preview/PDF. Need update A032/current workflow evidence at integrated boundary. Do not repeat focused/full tests merely to resume. SQL and complete native profile flow remain unverified.",
+      "O033 exact Invoice payment question asked asynchronously; do not choose policy without answer. Prior Item minimum name/photo/note and ordinary create/edit permission questions pending O027/O065; other affected creation O021/O017, financial O060 remain. Unresolved decisions block only affected work; audit already complete. Preserve diagnostics and Firebase/production/hosted boundaries."
     ]
   },
   "blockers": [],

@@ -5,10 +5,16 @@ import PowerSync
 public enum AttachmentCapturePowerSyncTable {
     public static let queue = "local_attachment_durability_queue"
     public static let scopeBinding = "local_attachment_durability_scope_binding"
+    public static let downloadedLogos = "local_downloaded_account_logos"
 }
 
 public enum AttachmentCapturePowerSyncSchema {
     public static let schema = Schema(
+        Table(
+            name: AttachmentCapturePowerSyncTable.downloadedLogos,
+            columns: [.text("evidence_json")],
+            localOnly: true
+        ),
         Table(
             name: AttachmentCapturePowerSyncTable.queue,
             columns: [
@@ -123,6 +129,7 @@ public enum AttachmentStoreCheckpoint: String, CaseIterable, Sendable {
 public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
     case scopeMismatch
     case replayMismatch
+    case attachmentBusy
     case invalidTimestamp
     case missingBytes
     case corruptBytes
@@ -135,6 +142,7 @@ public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
         switch self {
         case .scopeMismatch: "attachment_store_scope_mismatch"
         case .replayMismatch: "attachment_store_replay_mismatch"
+        case .attachmentBusy: "attachment_store_attachment_busy"
         case .invalidTimestamp: "attachment_store_timestamp_invalid"
         case .missingBytes: "attachment_store_bytes_missing"
         case .corruptBytes: "attachment_store_bytes_corrupt"
@@ -163,7 +171,9 @@ actor AttachmentCapturePowerSyncStore:
         @Sendable (AttachmentPersistedLocalObjectEvidence) async throws -> Data
     private let resolutionDatabaseAccessCheckpoint: @Sendable () async throws -> Void
     private let resolutionLookupCheckpoint: @Sendable () async throws -> Void
+    private let enqueueCommitCheckpoint: @Sendable () async throws -> Void
     private var inFlight: [String: InFlightCapture] = [:]
+    private var cachingAttachmentIDs: Set<String> = []
 
     init(
         database: any PowerSyncDatabaseProtocol,
@@ -174,7 +184,8 @@ actor AttachmentCapturePowerSyncStore:
         resolutionRead:
             (@Sendable (AttachmentPersistedLocalObjectEvidence) async throws -> Data)? = nil,
         resolutionDatabaseAccessCheckpoint: @Sendable @escaping () async throws -> Void = {},
-        resolutionLookupCheckpoint: @Sendable @escaping () async throws -> Void = {}
+        resolutionLookupCheckpoint: @Sendable @escaping () async throws -> Void = {},
+        enqueueCommitCheckpoint: @Sendable @escaping () async throws -> Void = {}
     ) {
         self.database = database
         self.vault = vault
@@ -186,6 +197,7 @@ actor AttachmentCapturePowerSyncStore:
         }
         self.resolutionDatabaseAccessCheckpoint = resolutionDatabaseAccessCheckpoint
         self.resolutionLookupCheckpoint = resolutionLookupCheckpoint
+        self.enqueueCommitCheckpoint = enqueueCommitCheckpoint
     }
 
     public func enqueue(
@@ -196,6 +208,9 @@ actor AttachmentCapturePowerSyncStore:
         }
         try await ensureScopeBinding()
         let identity = CaptureIdentity(capture)
+        guard !cachingAttachmentIDs.contains(capture.attachmentId.rawValue) else {
+            throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
+        }
         if let existing = inFlight[capture.attachmentId.rawValue] {
             guard existing.identity == identity else {
                 throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
@@ -262,6 +277,7 @@ actor AttachmentCapturePowerSyncStore:
         )
 
         do {
+            try await enqueueCommitCheckpoint()
             try invoke(.beforeQueueCommit)
             _ = try await database.execute(
                 sql: """
@@ -448,10 +464,116 @@ actor AttachmentCapturePowerSyncStore:
 
     public func orphanInventory() async throws -> [AttachmentVaultOrphan] {
         try await ensureScopeBinding()
-        let referenced = Set(try await scopedRows().compactMap { row in
+        var referenced = Set(try await scopedRows().compactMap { row in
             row.validatedRecord?.receipt.localObjectId
         })
+        referenced.formUnion(try await downloadedLogoObjectIDs())
         return try await vault.orphanInventory(referencedObjectIDs: referenced)
+    }
+
+    /// Download caching never creates a locally pending upload or a capture receipt.
+    /// Callers must still authorize the current profile before displaying these bytes.
+    func cachedAccountLogo(_ reference: AccountBusinessLogoReference) async throws -> Data? {
+        try await ensureScopeBinding()
+        guard reference.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8) else {
+            throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+        }
+        try await resolutionDatabaseAccessCheckpoint()
+        guard let json = try await database.getOptional(
+            sql: "SELECT evidence_json FROM \(AttachmentCapturePowerSyncTable.downloadedLogos) WHERE id = ?",
+            parameters: [reference.attachmentId.rawValue],
+            mapper: { try $0.getString(name: "evidence_json") }) else { return nil }
+        let evidence = try decodedLogoEvidence(json)
+        guard evidence.attachmentId == reference.attachmentId,
+              evidence.contentSHA256 == reference.contentSHA256,
+              evidence.byteCount == UInt64(reference.byteCount) else {
+            throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+        }
+        return try await vault.verifiedBytes(for: evidence)
+    }
+
+    func cacheAccountLogo(_ bytes: Data, reference: AccountBusinessLogoReference) async throws {
+        let id = reference.attachmentId.rawValue
+        guard inFlight[id] == nil, !cachingAttachmentIDs.contains(id) else {
+            throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
+        }
+        // Held across every await, including vault promotion and manifest commit.
+        // enqueue checks this after its own scope-binding await and before admission.
+        cachingAttachmentIDs.insert(id)
+        defer { cachingAttachmentIDs.remove(id) }
+        try await ensureScopeBinding()
+        guard reference.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8),
+              bytes.count == reference.byteCount,
+              try AttachmentContentSHA256.make(bytes: bytes) == reference.contentSHA256 else {
+            throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+        }
+        let timestamp = try timestamp(now())
+        var repair = false
+        do {
+            if try await cachedAccountLogo(reference) == bytes { return }
+        } catch AttachmentLocalByteVaultFailure.missingObject {
+            // The validated cache manifest survives; normal exclusive promotion
+            // can restore the missing file without replacing any existing bytes.
+        } catch AttachmentLocalByteVaultFailure.corruptObject {
+            // cachedAccountLogo already validated the exact cache manifest.
+            // Never overwrite bytes owned by an accepted local upload receipt.
+            guard try await existingRow(attachmentIdentifier: reference.attachmentId.rawValue) == nil else {
+                throw AttachmentCapturePowerSyncStoreFailure.corruptBytes
+            }
+            repair = true
+        }
+        let capture = try LocalAttachmentCapture(attachmentId: reference.attachmentId,
+            scope: AttachmentCaptureScope(environment: scope.environment, principalId: scope.principalId,
+                accountId: scope.accountId,
+                parent: LedgerEntityReference(kind: .account, id: EntityID(validating: scope.accountId.rawValue))),
+            capturedAt: timestamp, bytes: bytes)
+        let evidence = try await vault.persist(capture, persistedAt: timestamp, repairingDownloadedCache: repair)
+        let json = String(decoding: try OperationContractCodec.encode(evidence), as: UTF8.self)
+        let didRepair = repair
+        try await database.writeTransaction { transaction in
+            let exists = try transaction.getOptional(
+                sql: "SELECT id FROM \(AttachmentCapturePowerSyncTable.downloadedLogos) WHERE id = ?",
+                parameters: [reference.attachmentId.rawValue], mapper: { try $0.getString(name: "id") })
+            if exists == nil {
+                _ = try transaction.execute(sql: """
+                    INSERT INTO \(AttachmentCapturePowerSyncTable.downloadedLogos)(id,evidence_json)
+                    VALUES(?,?)
+                    """, parameters: [reference.attachmentId.rawValue, json])
+            } else if didRepair {
+                _ = try transaction.execute(sql: "UPDATE \(AttachmentCapturePowerSyncTable.downloadedLogos) SET evidence_json = ? WHERE id = ?",
+                    parameters: [json, reference.attachmentId.rawValue])
+            }
+        }
+        // Verify durable readback even when another identical download won the insert.
+        guard try await cachedAccountLogo(reference) == bytes else {
+            throw AttachmentCapturePowerSyncStoreFailure.corruptBytes
+        }
+    }
+
+    private func decodedLogoEvidence(_ json: String) throws -> AttachmentPersistedLocalObjectEvidence {
+        let evidence = try OperationContractCodec.decode(AttachmentPersistedLocalObjectEvidence.self,
+                                                        from: Data(json.utf8))
+        guard evidence.scope.environment == scope.environment,
+              evidence.scope.principalId.rawValue.utf8.elementsEqual(scope.principalId.rawValue.utf8),
+              evidence.scope.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8),
+              evidence.scope.parent.kind == .account,
+              evidence.scope.parent.id.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8) else {
+            throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+        }
+        return evidence
+    }
+
+    private func downloadedLogoObjectIDs() async throws -> Set<AttachmentLocalObjectID> {
+        let rows = try await database.getAll(
+            sql: "SELECT id,evidence_json FROM \(AttachmentCapturePowerSyncTable.downloadedLogos)",
+            parameters: nil, mapper: { (try $0.getString(name: "id"), try $0.getString(name: "evidence_json")) })
+        return try Set(rows.map { id, json in
+            let evidence = try decodedLogoEvidence(json)
+            guard evidence.attachmentId.rawValue.utf8.elementsEqual(id.utf8) else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            return evidence.localObjectId
+        })
     }
 
     public func pendingWorkObservation() async throws -> AttachmentPendingWorkObservation {
@@ -494,6 +616,7 @@ actor AttachmentCapturePowerSyncStore:
 
         let orphans: [AttachmentVaultOrphan]
         do {
+            referencedObjectIDs.formUnion(try await downloadedLogoObjectIDs())
             orphans = try await vault.orphanInventory(
                 referencedObjectIDs: referencedObjectIDs
             )
@@ -637,7 +760,10 @@ actor AttachmentCapturePowerSyncStore:
                 }
                 if binding == nil {
                     let queued = try transaction.get(
-                        sql: "SELECT count(*) AS count FROM \(AttachmentCapturePowerSyncTable.queue)",
+                        sql: """
+                            SELECT (SELECT count(*) FROM \(AttachmentCapturePowerSyncTable.queue))
+                              + (SELECT count(*) FROM \(AttachmentCapturePowerSyncTable.downloadedLogos)) AS count
+                            """,
                         parameters: nil
                     ) { try $0.getInt64(name: "count") }
                     guard queued == 0 else {
