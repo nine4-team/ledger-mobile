@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 89,
+  "stateVersion": 92,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "CLIENT-PAYMENT-BATCH-CI-GREEN",
-    "commit": "45a8476e76f2be2cd730e5449d71645460946383",
-    "ciRun": 34170486476,
+    "name": "CLIENT-PAYMENT-STORAGE-CI-GREEN",
+    "commit": "75fac316bc4bc9529a934c3b32293f5a9fd79f37",
+    "ciRun": 34172399500,
     "ciStatus": "passed",
-    "meaning": "Exact source client-payment transform and batch reconciliation passed automatic CI. Current SQL storage edits are not included; target app financial access, importer integration, hosted behavior and cutover readiness remain unproved."
+    "meaning": "Atomic payment/source SQL storage, concurrency and Swift golden parameter boundary passed full automatic CI. New local resumable executable edits not included; whole migration/app/hosted readiness remains unproved."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,10 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete; D028/A019/A020 guide technical improvements while preserving behavior/history. Significant changes go in architecture-decisions.md. No Firebase checkout, production/hosted access or cutover authorized.",
-      "SQL+Swift parameter/concurrency batch ready for commit: local migration20260907233804 applied to existing supabase_db_ledger_target_supabase_local. Full DB450/13 and final focused30 PASS; integrated Swift46/10 PASS /tmp/ledger-payment-storage-integrated-swift.log; three observed lock races + Swift golden parameter SQL readback PASS /tmp/ledger-payment-concurrency.log; independent SQL and extension reviews GO. CI wiring added. No active local process.",
-      "Run final conversion check/diff, commit this integrated batch and push existing branch for one automatic PR CI. Prior verified45a8476e CI34170486476 remains exact baseline, not evidence for pending edits. Do not rerun completed full suites solely on resume.",
-      "Next implement real resumable payment-import execution using existing migration plan/journal primitives; preserve whole-source bytes and prove interruption/retry against actual SQL. Shared golden fixture proves serialization only, not a live runner or database restart. Complete export coverage, Client mapping approval, legacy Invoice allocation, app financial reads and hosted gates remain unproved."
+      "Audit complete. A019/A020/A021 and D028 guide technical improvements preserving product meaning/history. No Firebase checkout or production/hosted access authorized.",
+      "Integrated local executable batch ready to commit: LedgerLocalPaymentImport (fixed synthetic2payment batch only), package-scoped API access, separate-process recovery tests, environment/source-scope checks. Main reviewed delegated executable; terminal journal pre-SQL rejection and private owner-only run-dir added. Actual recovery PASS /tmp/ledger-local-payment-recovery-final.log; Swift46/10 PASS /tmp/ledger-local-payment-integrated-swift.log; control/environment/self-tests/diff PASS. No active local processes.",
+      "Commit/push this batch once and use its automatic exact-commit CI. Prior75fac316 CI34172399500 all jobs success. macOS CI compiles tool; executable+Docker recovery is local-only, Linux CI tests SQL boundary. Synthetic database rows/run artifacts retained under supabase/.temp, no immutable cleanup bypass.",
+      "Next focus source-shaped Item/Invoice settlement relationship mapping/reconciliation using preserved raw source, explicit Client assignments and canonical specs. Do not build a general migration framework before the remaining accounting transforms exist. Local loader demonstrates shared Swift->SQL+journal recovery; full export ingestion, approved mappings and invoice allocation remain missing.",
+      "Known recovery limits: lock implemented but simultaneous executable lock-contention not tested; server restart/power-loss and hosted behavior unproved. MigrationEnvironmentGuard remains fixture dry-run only/evidenceOnly. Old migration/src/cli.ts is opposite Supabase->Firebase, never run/repurpose. Significant design changes go in existing architecture-decisions.md."
     ]
   },
   "blockers": [],

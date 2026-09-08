@@ -125,6 +125,7 @@ const layerEvidencePredicates = new Map([
   ["media", (path) => /(attachment|media|image|photo|receipt)/i.test(path)],
   ["migration", (path) =>
     path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
+    path.startsWith("LedgeriOS/LedgerLocalPaymentImport/") ||
     /(^|\/)(migration|migrations)(\/|$)/i.test(path)],
   ["auth", (path) =>
     /(auth|principal|session|keychain|identity)/i.test(path) ||
@@ -212,7 +213,8 @@ function inferredLayersForPath(path) {
     inferred.add("local_offline");
   }
   if (path.startsWith("LedgerTargetMCP/")) inferred.add("app_mcp");
-  if (path.startsWith("LedgeriOS/LedgerTargetMigrationCore/")) inferred.add("migration");
+  if (path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
+      path.startsWith("LedgeriOS/LedgerLocalPaymentImport/")) inferred.add("migration");
   if (path.startsWith("supabase/migrations/") || path.startsWith("supabase/tests/")) {
     inferred.add("postgres_schema");
     inferred.add("postgres_handler");

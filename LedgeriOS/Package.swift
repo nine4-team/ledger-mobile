@@ -9,6 +9,7 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
+        .executable(name: "LedgerLocalPaymentImport", targets: ["LedgerLocalPaymentImport"]),
         .library(name: "LedgerTargetCore", targets: ["LedgerTargetCore"]),
         .library(name: "LedgerTargetAppModel", targets: ["LedgerTargetAppModel"]),
         .library(
@@ -40,6 +41,11 @@ let package = Package(
         )
     ],
     targets: [
+        .executableTarget(
+            name: "LedgerLocalPaymentImport",
+            dependencies: ["LedgerTargetCore", "LedgerTargetMigrationCore"],
+            path: "LedgerLocalPaymentImport"
+        ),
         .target(
             name: "LedgerTargetCore",
             path: "LedgerTargetCore"

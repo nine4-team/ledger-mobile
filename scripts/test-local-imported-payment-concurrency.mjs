@@ -71,6 +71,30 @@ try {
     assert.equal(query(`select count(*) || ':' || min(encode(source_bytes,'hex')) from ledger_private.imported_transaction_sources where source_account_id='synthetic-concurrency' and source_document_id=${quote(sourceID)};`), "1:007b7dff");
     if (mode === "changed-target") assert.equal(query(`select count(*) from public.spike_transactions where id=${quote(otherID)};`), "0", "source conflict rolled back provisional target");
   }
+  for (const committed of [false, true]) {
+    const id = `payment-interrupted-${committed}-${suffix}`;
+    const sourceID = `source-interrupted-${committed}-${suffix}`;
+    const call = `select ledger_private.import_client_payment(
+      ${quote(id)},'account-primary',${quote(project)},'client-existing',23,'USD',
+      'synthetic-interruption',${quote(sourceID)},decode('00ff','hex'));`;
+    const first = session(`begin; set local statement_timeout='15s'; ${call}
+      ${committed ? "commit;" : ""} select 'READY_TO_INTERRUPT';\n`, true);
+    await until(() => first.output().includes("READY_TO_INTERRUPT"), "import reached interruption boundary");
+    // Terminate only this test session's own backend, never an arbitrary PID or
+    // the database container. A client restart cannot trust whether COMMIT won.
+    first.child.stdin.end("select pg_terminate_backend(pg_backend_pid());\n");
+    const interrupted = await first.done;
+    assert.notEqual(interrupted.code, 0, "test backend really disconnected");
+    assert.match(interrupted.error, /57P01/, "expected deliberate session termination");
+    assert.equal(query(`select count(*) from public.spike_transactions where id=${quote(id)};`), committed ? "1" : "0");
+    assert.equal(query(`select count(*) from ledger_private.imported_transaction_sources where transaction_id=${quote(id)};`), committed ? "1" : "0");
+    // Start a fresh client and replay the same command regardless of where the
+    // old connection died. Both paths must converge to exactly one complete pair.
+    assert.equal(query(call), id);
+    assert.equal(query(call), id);
+    assert.equal(query(`select count(*) || ':' || min(amount_minor_units)::text from public.spike_transactions where id=${quote(id)};`), "1:23");
+    assert.equal(query(`select count(*) || ':' || min(encode(source_bytes,'hex')) from ledger_private.imported_transaction_sources where transaction_id=${quote(id)};`), "1:00ff");
+  }
   // Swift tests prove the real mapped batch emits these exact parameter values.
   // Consume that shared fixture here, crossing the JSON/text/bytea boundary.
   const p = JSON.parse(readFileSync("LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/ClientPayment/import-parameters.json", "utf8"));
@@ -91,7 +115,7 @@ try {
   assert.equal(query(exportedCall), p.p_id);
   assert.equal(query(`select amount_minor_units::text from public.spike_transactions where id=${quote(p.p_id)};`), p.p_amount);
   assert.equal(query(`select encode(source_bytes,'hex') from ledger_private.imported_transaction_sources where transaction_id=${quote(p.p_id)};`), p.p_source_bytes.slice(2));
-  console.log("local-imported-payment-concurrency: 3 observed lock races, conflict rollback, committed readback and exact Swift-exported payment/source bytes passed");
+  console.log("local-imported-payment-concurrency: 3 observed lock races, 2 terminated-session recovery boundaries, conflict rollback, committed readback and exact Swift-exported payment/source bytes passed");
 } finally {
   for (const child of live) {
     child.stdin.destroy();

@@ -138,7 +138,7 @@
         {"sourceIds":["MCPMOD-B1238289755F"],"outcomeIds":["legacy-proto-item-migration","item-create-unified-wizard","item-evidence-reconciliation","item-capture-mcp-parity","needs-review-queue","needs-review-contextual-resolution","mcp-public-interface"],"disposition":"redesign"},
         {"sourceIds":["MCPMOD-D14DD1E83CFE"],"outcomeIds":["inventory-destination-planning","item-correction","accounting-entry-routing","transaction-posting-correction"],"disposition":"redesign"},
         {"sourceIds":["MCPMOD-F5D411967411"],"outcomeIds":["item-inventory-to-project","item-project-to-inventory","item-inventory-back-to-source-project","item-vendor-return","item-remove-before-invoice","item-remove-live-invoice","item-credit-after-payment","same-client-transfer","item-cross-client-through-inventory","accounting-corrections-refunds","item-cycle-provenance","accounting-relationship-provenance"],"disposition":"redesign"},
-        {"sourceIds":["CONFIG-031396750B85","CONFIG-0C8B77A5FB08","CONFIG-2F4D7DBFD096","CONFIG-324443A09D94","CONFIG-3F7C92E2669F","CONFIG-50FA673297B2","CONFIG-6899B0DB9A09","CONFIG-6E140F8E16C0","CONFIG-9EF72A31126D","CONFIG-B903A5D5110D","CONFIG-D94C7653FB36","MAN-RELEASE-001"],"outcomeIds":["item-redesign-production-isolation","signed-app-update-durability","target-environment-isolation"],"disposition":"redesign"},
+        {"sourceIds":["CONFIG-0C8B77A5FB08","CONFIG-2F4D7DBFD096","CONFIG-324443A09D94","CONFIG-3F7C92E2669F","CONFIG-50FA673297B2","CONFIG-6899B0DB9A09","CONFIG-6E140F8E16C0","CONFIG-9EF72A31126D","CONFIG-B903A5D5110D","CONFIG-D94C7653FB36","MAN-RELEASE-001"],"outcomeIds":["item-redesign-production-isolation","signed-app-update-durability","target-environment-isolation"],"disposition":"redesign"},
         {"sourceIds":["CONFIG-2439DF7AA062","CONFIG-91C9B311D005","CONFIG-B982A17793ED","CONFIG-C185748A7F0A","CONFIG-D74F97384F03","CONFIG-EA72F3E0CC9F","CONFIG-EF6794568592"],"outcomeIds":["signed-app-update-durability","cutover-rollback-rehearsal"],"disposition":"redesign"},
         {"sourceIds":["CONFIG-3C679B93A305","CONFIG-3FB361C7F0E9","CONFIG-F3494FD36EE5","CONFIG-B2A2BF619303"],"outcomeIds":["mcp-public-interface","item-redesign-production-isolation","target-environment-isolation"],"disposition":"redesign"},
         {"sourceIds":["CONFIG-428FDE11BBE4","CONFIG-C1C61B2D6569","CONFIG-ED6818A70D4E","MAN-INDEX-001"],"outcomeIds":["offline-working-set-readiness","financial-access-no-leak-projections"],"disposition":"redesign"},
@@ -438,7 +438,7 @@
       "status": "reviewed",
       "completionRule": "Every inventoried background and MCP capability is preserved, redesigned or retired, including target-only security, migration and cutover outcomes.",
       "remainingGaps": [],
-      "reviewedSourceDigest": "16cd254b00f1ff30ab0a13a4804298a2adb1144f3b598b94e2339567d038788f",
+      "reviewedSourceDigest": "24b1cefc04294de973bcaf062eee1ca176e6aeea612703279d5ab8a20f9527de",
       "reviewedFirebaseCommit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
       "reviewNote": "All 445 finite source capabilities dispositioned once using unchanged characterization, focused code review and independently reviewed MCP/backend groups. Main corrected URL identity, absent-money formatting, thumbnail failures and preferences mappings; added omitted vendor/Invoice-backfill sources. Source scripts, caches, unused starter/request/profile scaffolds, instrumentation and reverse migration writers are supporting evidence, not target implementation requirements. Whole-account reconciliation, signed updates, environment refusal and rollback have acceptance owners. Open choices block affected outcomes only. No production accessed or Firebase implementation authorized.",
       "evidencePaths": ["docs/specs/mcp-interface.md", "docs/specs/app-shell.md", "docs/specs/migration-and-release.md", "docs/specs/offline-first.md", "docs/plans/ledger-accounting-redesign/decision-log.md"]
@@ -27724,7 +27724,10 @@
         "LedgeriOS/LedgerTargetMigrationCoreTests",
         "supabase/migrations/20260907233804_imported_client_payment_storage.sql",
         "supabase/tests/imported_client_payment_storage.test.sql",
-        "scripts/test-local-imported-payment-concurrency.mjs"
+        "scripts/test-local-imported-payment-concurrency.mjs",
+        "LedgeriOS/LedgerLocalPaymentImport",
+        "scripts/test-local-payment-import-recovery.mjs",
+        "LedgeriOS/Package.swift"
       ],
       "layers": [
         "migration",
@@ -27811,13 +27814,27 @@
           "expected": "Real reconciled Swift batch emits the same nine text parameters consumed by local SQL integration, preserving exact Int64 cents and complete tagged source envelope. Unresolved and overflowing batches cannot export partial parameter lists.",
           "command": "swift test --package-path LedgeriOS --filter FirebaseClientPaymentImportParametersTests",
           "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-INTERRUPTED-CONNECTION",
+          "risk": "migration_fidelity",
+          "expected": "Terminate only the test session before or after commit. A fresh client retries the same payment and converges to one complete payment/source pair with exact cents and bytes; uncommitted partial rows are absent.",
+          "command": "npm run target:supabase:test:payment-import",
+          "status": "passed"
+        },
+        {
+          "id": "LOCAL-PAYMENT-EXECUTABLE-RECOVERY",
+          "risk": "migration_fidelity",
+          "expected": "Real Swift local-only synthetic importer recomputes fixed source/batch, binds artifacts and plan, applies two payments atomically, verifies exact committed facts before journal acknowledgement, and resumes separate processes without double-counting. Changed source/mapping/plan, terminal journals, remote Docker overrides and conflicting second payment fail safely.",
+          "command": "npm run target:supabase:test:payment-recovery",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
         "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
         "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries.",
         "Frozen v1 fixture contains simplified movements, not shipped lineageEdges. Package-level source-shaped cycle tests exercise document selection and reconciliation; a reviewed source-shaped export bundle and canonical target accounting mapping/readback remain required.",
-        "Client-payment batch validates explicit mapping snapshots, identities and input totals; local SQL/golden parameter integration proves atomic per-payment persistence and committed cross-session readback. Reviewed import approval, complete export coverage, operational runner/process restart and legacy Invoice/line allocation reconciliation remain required; partial/category payments are not automatically whole-Invoice collections."
+        "Client-payment batch and local synthetic executable prove exact scoped mapping, atomic persistence, committed readback and journal-based separate-process recovery. General reviewed source-export ingestion, import approval, database-server/power-loss recovery and legacy Invoice/line allocation reconciliation remain required; partial/category payments are not automatically whole-Invoice collections."
       ],
       "blockers": [],
       "verification": {
@@ -27838,13 +27855,14 @@
             "npx --yes supabase@2.116.0 db advisors --local --type all --level warn",
             "node scripts/test-local-imported-payment-concurrency.mjs",
             "swift test --package-path LedgeriOS --filter FirebaseClientPaymentImportParametersTests",
-            "npm run conversion:ci:test"
+            "npm run conversion:ci:test",
+            "npm run target:supabase:test:payment-recovery"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration. Explicit client-payment transform independently reviewed GO: only shipped paymentToBusiness aliases, positive exact Int64 cents and Project standalone Purchase; original source retained. 39 tests/8 suites PASS /tmp/ledger-payment-migration-suite.log. Caller must still prove source→target Account/Project/Client mapping, stable identity/idempotence, per-source counts and totals before import; no Invoice paid-state inference.  Batch independently reviewed: per-input integrity GO; broader-plan ambiguity resolved explicitly and tested (unused mappings do not create/approve payments, identity/Project collisions still reject affected inputs). Main reviewed full diff; 44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. Source-history fffdd270b2163f1fad7013a9632b95efaf108034 CI34169718629 success; current payment batch awaits its own exact-commit CI. SQL storage independently reviewed: no current integrity/permission bypass; origin-conditional immutability fixes future writer trap, and A020 documents trusted invoker privilege boundary. Full pgTAP450 tests/13 files PASS /tmp/ledger-payment-storage-all-pgtap.log; final focused30 PASS /tmp/ledger-payment-storage-final-pgtap.log. Advisor warn/error scan clean. Local migration20260907233804 applied; no production/hosted access. Concurrency/restart and Swift importer/journal integration remain required. Prior payment batch45a8476e76f2be2cd730e5449d71645460946383 CI34170486476 success; SQL batch still uncommitted. Current parameter/concurrency extension: 46 Swift tests/10 suites PASS /tmp/ledger-payment-storage-integrated-swift.log; three observed lock races and Swift-exported golden parameter SQL readback PASS /tmp/ledger-payment-concurrency.log; CI guard tests5 PASS. Independent extension review GO: decimal-string money, whole source envelope, observed lock races and Node/Linux portability inspected; main reviewed implementation and focused evidence. Golden bridge is compositional, not a live Swift runner. Concurrent changed-source-bytes and first-writer rollback not exercised (sequential byte conflict covered by pgTAP). No operational runner, database restart or full migration claim."
+        "summary": "Prior source-history and payment-transform reviews retained at fffdd270 (CI34169718629 success) and45a8476e (CI34170486476 success). SQL/golden boundary75fac316bc4bc9529a934c3b32293f5a9fd79f37 independently reviewed GO and CI34172399500 success; full pgTAP450/13 and final focused30 passed. New local executable was delegated; main read full implementation and corrected terminal failed/blocked journal rejection before SQL, added private run-directory ownership/mode enforcement, reviewed package-only API access and added separate-process adversarial tests. Actual Swift->Docker integration passed /tmp/ledger-local-payment-recovery-final.log: two commit interruption boundaries, repeated completed resume, source/mapping/plan byte changes, valid terminal journals, whole-batch conflict rollback and remote destination denial. Initial environment check passed. Final integrated Swift46/10 PASS /tmp/ledger-local-payment-integrated-swift.log; conversion check, state self-tests29negative/8positive, source-omission self-tests4negative/4positive, target environment and diff checks PASS. Target-only Package.swift scope correction removes no shipped behavior; historical catalogs untouched. Run-directory lock exists but simultaneous executable lock contention and database-server/power-loss recovery are not yet tested. Fixed synthetic source only; no complete export, operator production authorization, Invoice allocation or app financial-read completion. macOS CI compiles executable; live executable/database recovery remains local-only."
         },
         "ci": {
           "status": "not_run",
@@ -27862,7 +27880,8 @@
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageSourceReview.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentImportParameters.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentImportParameters.swift",
+            "LedgeriOS/LedgerLocalPaymentImport/main.swift"
           ]
         },
         {

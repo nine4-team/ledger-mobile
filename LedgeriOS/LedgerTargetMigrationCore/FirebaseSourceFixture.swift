@@ -275,6 +275,18 @@ public struct FirebaseSourceDocument: Equatable, Sendable {
     public let evidenceKind: FirebaseSourceEvidenceKind
     public let fields: FirebaseSourceValue
     public let sourceRecordID: String
+
+    // Raw evidence construction for same-package migration tooling, not a
+    // ValidatedFirebaseSourceFixture or permission to bypass source validation.
+    package init(accountScopeID: String, documentPathSegments: [String], entityCode: String,
+                 evidenceKind: FirebaseSourceEvidenceKind, fields: FirebaseSourceValue, sourceRecordID: String) {
+        self.accountScopeID = accountScopeID
+        self.documentPathSegments = documentPathSegments
+        self.entityCode = entityCode
+        self.evidenceKind = evidenceKind
+        self.fields = fields
+        self.sourceRecordID = sourceRecordID
+    }
 }
 
 public struct ValidatedFirebaseSourceFixture: Equatable, Sendable {

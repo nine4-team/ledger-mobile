@@ -46,6 +46,7 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-018 | accepted | Use one fail-closed OperationID ownership inventory across local command families |
 | A-019 | accepted | Improve Item relationship storage while preserving meaning and useful history |
 | A-020 | accepted | Persist imported client payments atomically with immutable source bytes |
+| A-021 | accepted, local synthetic scope only | Replay bounded payment batches and acknowledge only verified committed data |
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 
@@ -427,8 +428,50 @@ checks committed results from new database sessions. A shared synthetic paramete
 fixture connects the real Swift batch exporter to SQL, preserving cents beyond
 JavaScript's safe integer range and the complete tagged source envelope as bytes.
 This proves the serialization boundary, not an operational import runner.
-Process/database restart recovery, migration-run journals, complete settlement
+The local test also terminates its own PostgreSQL session before and after commit:
+fresh-client retries converge to one complete payment/source pair in both cases.
+That covers uncertain commit outcomes, not database-server restart or durable
+operator-journal recovery. Migration-run journals, complete settlement
 allocations and hosted verification remain required. No production access or
 cutover is authorized.
 Grants and RLS follow the current
 [Supabase security guidance](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## A-021 — Local Payment Import Execution and Recovery
+
+**Decision:** A separate macOS Swift executable uses the existing payment
+conversion, exact parameter exporter, and migration plan/journal types. It does
+not introduce a second accounting transform or repurpose the old, opposite-direction
+Supabase-to-Firebase migration CLI. Raw source construction and the necessary
+migration methods are package-scoped; validated-fixture and public app boundaries
+remain unchanged.
+
+**Recovery contract:** Persist immutable source/mapping/plan artifacts and the
+load-started journal before SQL. Import one bounded batch in a single transaction,
+then compare committed payment/source facts through a new connection before
+recording load completion. An uncertain commit is recovered by replaying the same
+batch, using A-020 idempotency, not by guessing which rows were inserted. Existing
+journal events and applied totals must not be regenerated or incremented on retry.
+Use a run-directory lock and synchronized atomic journal replacement. This avoids
+adding per-record cursor machinery to the aggregate migration journal.
+
+**Authority and limits:** Initial execution accepts only fixed synthetic input
+and an independently checked local Docker destination. The existing dry-run
+`MigrationEnvironmentGuard` remains unchanged; its evidence-only receipt never
+authorizes writes. There is no hosted/production switch. This is not yet a general
+export importer, an approved Client mapping, or whole-account migration readiness.
+
+**Verification:** Local separate-process recovery checks passed for both sides
+of commit, repeated completed resume, changed source/mapping/plan artifacts,
+valid terminal blocked/failed journals, atomic batch conflicts, and remote Docker
+denial. Main independently reviewed the delegated executable and required terminal
+journal rejection before SQL and private run-directory ownership/permissions.
+macOS Swift CI compiles the tool; existing Linux CI tests
+the SQL boundary. Actual executable-to-Docker recovery is a local macOS check,
+not claimed as end-to-end CI or hosted validation. Database-server restart and
+full source/settlement reconciliation remain separate requirements.
+
+The target-only Swift package and local executable are checked by active workflow
+and environment checks, not frozen Firebase-source hashes. Correcting that scope
+removed one target configuration entry from the passive source audit; it did not
+remove or re-audit any shipped product behavior.

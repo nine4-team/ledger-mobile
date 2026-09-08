@@ -174,6 +174,7 @@ function swiftKind(filePath) {
     rel.includes("/LedgerTargetAppModel/") ||
     rel.includes("/LedgerTargetComposition/") ||
     rel.includes("/LedgerTargetMigrationCore/") ||
+    rel.includes("/LedgerLocalPaymentImport/") ||
     rel.includes("/LedgerTargetTestSupport/")
   ) {
     return "swift_platform";
@@ -1503,6 +1504,8 @@ function isProductSourceSurface(surface) {
   // evidence, not by copying every target edit into the Firebase inventory.
   const targetOrTrackingPath = (value) =>
     /^LedgeriOS\/LedgerTarget/.test(value) ||
+    /^LedgeriOS\/LedgerLocalPaymentImport\//.test(value) ||
+    value === "LedgeriOS/Package.swift" ||
     /^(LedgerTargetMCP|supabase)\//.test(value) ||
     /^scripts\/(test-local-|check-target-|check-conversion-|generate-target-|ledger-product-checklist)/.test(value) ||
     /^scripts\/tests\/check-conversion-ci\.test\.mjs$/.test(value) ||
@@ -1836,8 +1839,14 @@ function main() {
     fails("removed source", check(manifest, []), /disappeared without retirement/);
     const target = { ...source, id: "target", sourceRefs: [{ path: "LedgeriOS/LedgerTargetCore/Item.swift" }] };
     if (check(manifest, [source, target]).errors.length) throw new Error("Target implementation must not require source inventory promotion");
+    for (const targetPath of ["LedgeriOS/Package.swift", "LedgeriOS/LedgerLocalPaymentImport/main.swift"]) {
+      const config = { ...source, id: "target-config", sourceRefs: [{ path: targetPath }] };
+      if (check({ ...manifest, surfaces: [source, config] }, [source, { ...config, observedSourceHash: "changed-target" }]).errors.length) {
+        throw new Error("Target package/tool edits use active workflow and environment checks, not frozen Firebase source hashes");
+      }
+    }
     if (check(manifest, [source]).errors.length) throw new Error("Unchanged source rejected");
-    console.log("Source omission self-tests passed: four negative and two positive cases.");
+    console.log("Source omission self-tests passed: four negative and four positive cases.");
     return;
   }
   if (!fs.existsSync(MANIFEST_PATH)) {

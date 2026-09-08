@@ -6,11 +6,21 @@ import LedgerTargetCore
 package struct FirebasePaymentProjectMapping: Sendable {
     let sourceProject: FirebaseSourceDocument
     let targetScope: TransactionScope
+
+    package init(sourceProject: FirebaseSourceDocument, targetScope: TransactionScope) {
+        self.sourceProject = sourceProject
+        self.targetScope = targetScope
+    }
 }
 
 package struct FirebasePaymentIdentityMapping: Sendable {
     let sourcePath: [String]
     let targetID: TransactionID
+
+    package init(sourcePath: [String], targetID: TransactionID) {
+        self.sourcePath = sourcePath
+        self.targetID = targetID
+    }
 }
 
 package enum FirebasePaymentBatchIssue: Equatable, Sendable {
@@ -32,12 +42,12 @@ package struct FirebasePaymentBatchEntry: Equatable, Sendable {
 package struct FirebasePaymentBatchResult: Equatable, Sendable {
     let entries: [FirebasePaymentBatchEntry]
     /// Nil on overflow; never use a wrapped or partial sum as reconciliation.
-    let mappedTotalCents: Int64?
-    var mappedCount: Int { entries.filter(\.isMapped).count }
+    package let mappedTotalCents: Int64?
+    package var mappedCount: Int { entries.filter(\.isMapped).count }
     var unresolvedCount: Int { entries.count - mappedCount }
     /// Only the supplied Transaction inputs, not export completeness, unused
     /// mapping rows, target persistence or external approval of the import plan.
-    var isFullyReconciled: Bool { unresolvedCount == 0 && mappedTotalCents != nil }
+    package var isFullyReconciled: Bool { unresolvedCount == 0 && mappedTotalCents != nil }
 }
 
 /// Pure batch planning. Preserves one result per input, exact source evidence,
@@ -47,7 +57,7 @@ package struct FirebasePaymentBatchResult: Equatable, Sendable {
 /// payment and are not approved/validated by this result; identity collisions
 /// anywhere in that plan still disqualify affected input payments.
 package enum FirebaseClientPaymentBatch {
-    static func convert(
+    package static func convert(
         transactions: [FirebaseSourceDocument],
         projects: [FirebaseSourceDocument],
         sourceAccountID: String,

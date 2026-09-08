@@ -333,6 +333,12 @@ if (description) {
   const tests = targets.get("LedgerTargetCoreTests");
   const migrationCore = targets.get("LedgerTargetMigrationCore");
   const migrationTests = targets.get("LedgerTargetMigrationCoreTests");
+  const localPaymentImport = targets.get("LedgerLocalPaymentImport");
+  if (!localPaymentImport || localPaymentImport.type !== "executable" ||
+      JSON.stringify([...(localPaymentImport.target_dependencies ?? [])].sort()) !==
+      JSON.stringify(["LedgerTargetCore", "LedgerTargetMigrationCore"])) {
+    fail("target_local_payment_import_boundary", "Local payment tool must be a separate executable using only shared Core and MigrationCore.");
+  }
   const testSupport = targets.get("LedgerTargetTestSupport");
   const testSupportTests = targets.get("LedgerTargetTestSupportTests");
   const composition = targets.get("LedgerTargetComposition");

@@ -8,17 +8,17 @@ package enum FirebaseClientPaymentImportFailure: Error {
 /// Parameter data for the private SQL primitive, never executable SQL or import
 /// authorization. Cents cross JSON as decimal text, preserving all Int64 values.
 package struct FirebaseClientPaymentImportParameters: Encodable, Equatable, Sendable {
-    let p_id: String
-    let p_account_id: String
-    let p_project_id: String
-    let p_client_id: String
-    let p_amount: String
-    let p_currency: String
-    let p_source_account: String
-    let p_source_document: String
-    let p_source_bytes: String
+    package let p_id: String
+    package let p_account_id: String
+    package let p_project_id: String
+    package let p_client_id: String
+    package let p_amount: String
+    package let p_currency: String
+    package let p_source_account: String
+    package let p_source_document: String
+    package let p_source_bytes: String
 
-    static func make(batch: FirebasePaymentBatchResult, currency: CurrencyCode) throws -> [Self] {
+    package static func make(batch: FirebasePaymentBatchResult, currency: CurrencyCode) throws -> [Self] {
         guard batch.isFullyReconciled else { throw FirebaseClientPaymentImportFailure.unresolvedBatch }
         return try batch.entries.map { entry in
             guard entry.issues.isEmpty, let id = entry.targetID,
