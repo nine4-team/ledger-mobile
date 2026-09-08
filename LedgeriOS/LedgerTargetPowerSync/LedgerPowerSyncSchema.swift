@@ -9,6 +9,8 @@ public enum LedgerPowerSyncTable {
     public static let clientCommands = "spike_client_commands"
     public static let budgetCategories = "spike_budget_categories"
     public static let spaces = "spike_spaces"
+    public static let items = "spike_items"
+    public static let itemPlacements = "spike_item_placements"
     public static let spaceCoreDetails = "spike_space_core_details"
     public static let spaceChecklists = "spike_space_checklists"
     public static let spaceChecklistItems = "spike_space_checklist_items"
@@ -33,6 +35,23 @@ public enum LedgerPowerSyncTable {
 
 public enum LedgerPowerSyncSchema {
     public static let schema = Schema(
+        Table(
+            name: LedgerPowerSyncTable.items,
+            columns: [.text("account_id"), .text("description"), .integer("revision"),
+                      .text("created_at"), .text("created_by_principal_id")],
+            indexes: [.ascending(name: "item_account", columns: ["account_id"])]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.itemPlacements,
+            columns: [.text("account_id"), .text("item_id"), .text("scope_kind"),
+                      .text("project_id"), .text("space_id"), .text("started_at"),
+                      .text("started_by_principal_id"), .text("ended_at"),
+                      .text("ended_by_principal_id")],
+            indexes: [
+                .ascending(name: "placement_item", columns: ["account_id", "item_id", "ended_at"]),
+                .ascending(name: "placement_scope", columns: ["account_id", "scope_kind", "project_id", "ended_at"])
+            ]
+        ),
         Table(
             name: LedgerPowerSyncTable.principals,
             columns: [.text("auth_user_id")]

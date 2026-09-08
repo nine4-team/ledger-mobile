@@ -405,6 +405,16 @@ and financial visibility retain their product gates. Local cycle/rollback/scope/
 immutability tests live in `supabase/tests/physical_item_placement_history.test.sql`;
 actual authorized app/MCP/Sync movement and paid-history joins remain unproved.
 
+The local PowerSync schema now represents those physical tables;
+`CurrentItemPlacementLocalReader` validates membership and exact parent/scope
+evidence in one SQLite snapshot. It returns downloaded physical rows only, with
+Item revision and placement identity separate. It must not turn Item revision
+into an assignment precondition until movement and assignment share a proven
+revision contract. Missing/contradictory downloaded parents fail closed; unseen
+rows remain unknowable without a scoped stream-completion contract. No new
+Sync Stream, grants, accounting classification or inventory-completeness claim
+is introduced by registering local table shapes.
+
 **Explicit client-payment translation:** A non-canceled legacy `paymentToBusiness` record
 means actual client payment (`InvoiceService.markCollected` writes category-specific
 payment records). Under D-001/D-002 it maps to the target Project Purchase

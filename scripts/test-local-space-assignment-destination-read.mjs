@@ -233,7 +233,8 @@ try {
     status,
     EMPLOYEE_AUTH_USER_ID,
     `/spike_spaces?account_id=eq.${encodeURIComponent(ids.primaryAccount)}`
-      + "&scope_kind=eq.business_inventory&project_id=is.null&select=*",
+      + "&scope_kind=eq.business_inventory&project_id=is.null"
+      + "&select=id,account_id,scope_kind,project_id,display_name,lifecycle,revision",
   );
   assert.deepEqual(inventory, [{
     id: ids.inventory,

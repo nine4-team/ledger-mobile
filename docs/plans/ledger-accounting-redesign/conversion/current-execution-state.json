@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 104,
+  "stateVersion": 105,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. Full automatic CI34179461110 for71ceadde3ab0cd1f55dd407486418994b74fea78 SUCCESS; now verified checkpoint. Commit/push next bounded Item-placement batch and observe its one automatic CI. Never cancel with tiny follow-up or manually rerun.",
-      "Implemented physical Item/placement SQL migration20260908021909_physical_item_placement_history.sql, locally applied direct SQL and exact local migration history recorded. One Item, temporal placements, exact tenant/Space FKs, no overlaps, close-once history, invoker current-location view, forced RLS/no grants. A019 records significant change. Not a complete Item workflow.",
-      "Focused34 tests and integrated490 tests/14 files PASS; real competing-placement insert lock/rollback test PASS. Independent schema review GO. Main read delegated concurrency code, added remote Docker/endpoint guard and verified rejection; no immutable placement test rows retained. Advisors no warnings, conversion/CI tests pass. Space schema expectation updated for intentional generated FK key. Local schema lint has no errors; local migration list confirms20260908021909 recorded. No local process or agent active.",
-      "O065 ordinary Item actor policy asked asynchronously (employees vs owners/admins; no payment/refund authority). O027 creation minimum and O060 financial visibility remain open; O033 exact-payment question still unanswered. Do not infer policy from absence of reply or implement arbitrary grant defaults.",
-      "Finish/checkpoint this bounded storage batch and its one automatic CI, then wire real current Item/placement query evidence into existing shared contracts and complete an approved Item workflow. Commands must lock/check/advance Item revision, atomically close/open placement and accounting facts, define monotonic transition handling, and preserve history gaps honestly. Do not expand into more ungranted storage families instead of resolving workflow prerequisites."
+      "Audit complete. CI34180177491/e8c989b63a019a20bc53595149ded7312b278969 completed FAILURE: conversion and native/app UI/macOS/iOS passed; DB pgTAP passed, subsequent Space API inventory select=* assertion failed on new generated FK key. Fixed to explicit consumer columns; local affected API matrix passes. Verified checkpoint remains71ceadde/CI34179461110 SUCCESS.",
+      "New CurrentItemPlacementLocalReader and PowerSync physical-table registration read current local physical facts with membership, exact Item/Project/Space parents and cross-Project duplicate active-placement checks in one SQLite snapshot. No assignment candidate, accounting classification, grants/subscription or completeness claim. Independent GO; requested empty Inventory denial and Inventory Space tests added.",
+      "Focused4 PASS /tmp/ledger-item-reader-final.log; integrated814/117 PASS /tmp/ledger-item-reader-native-integrated.log (before additive test-only regressions); environment/conversion/diff PASS. Space API matrix PASS /tmp/ledger-item-space-api-check.log. Prior physical SQL490/14, concurrency/remote-Docker denial and advisors/lint passed. No local process/agent active. Commit/push batch and observe one automatic CI.",
+      "O065 Item actor policy and O033 exact collection payment remain unanswered. O027 creation minimum/O060 financial visibility remain open. Ask once and do not assume approvals. Reader deliberately exposes itemRevision and placementId separately: future commands must prove shared placement revision/locking before accepting assignment preconditions.",
+      "Next connect real physical Item reads through approved scope authorization and existing runtime/UI contracts; establish scoped download readiness without inventing complete accounting. Do not expand into more disconnected storage families. Item mutation must await actor policy and preserve atomic placement/accounting changes, history and offline replay. No Firebase or production/hosted changes."
     ]
   },
   "blockers": [],
