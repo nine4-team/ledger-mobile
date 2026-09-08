@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 139,
+  "stateVersion": 143,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
-  "updatedAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {
@@ -23,8 +23,8 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "CI34195227060 at91d83cb2 FAILED UI only; watch6826 terminal1. DB/native/macOS and six UI tests passed, iOS skipped. /tmp/ledger-report-dialog-ci-failure.log shows actual native Share popover with Copy/destination buttons, container disabled/not hittable. Selector now targets concrete Copy-containing popover and visible frame; no fake completion or weakening dismissal/retry. NEXT finish build29311, check and commit/push four-file UI correction, follow its one automatic CI.",
-      "Uncommitted next UI check: testPropertyManagementExportFailureAllowsRetry plus DEBUG export-denied reader fixture. Exercises actual export revalidation failure, visible error and usable PDF/CSV/Print/Refresh controls; no mocked OS completion. Build-for-testing PASS /tmp/ledger-report-export-failure-build.log (2164 terminal0); environment/conversion PASS (4884 terminal0). Runtime unverified; include with next checkpoint after current CI resolves. No architecture change.",
+      "CI34196499753 ata4152884 FAILED Print cancellation; watch22689 terminal1. Seven UI tests passed including availability/export-error retry; real PDF/CSV/PDF picker cancels also passed before Print. AX /tmp/ledger-report-dialog-second-ci-failure.log shows Print panel remained after coordinate click (not proven delegate bug). New check uses native Escape and explicitly requires Cancel/panel disappearance before busy clears. Build-for-testing PASS /tmp/ledger-report-print-keyboard-build.log (28270 terminal0). NEXT check/commit/push this combined UI+offline-reopen batch and follow its exact automatic CI; never manually rerun.",
+      "Uncommitted next batch: encryptedOfflineReopen feeds pinned-core protocol facts/completion, reopens encrypted DB and SDK resubscribes without transport; identical reference/CSV and removal denial. All5 query tests PASS /tmp/ledger-report-query-with-reopen.log, environment/conversion PASS (91737 terminal0). NativeCopyCompletion uses only disposable CI clipboard (local skips), checks real PDF/CSV service completion AND usable copied file/data after scratch cleanup. Build-for-testing PASS /tmp/ledger-report-copy-payload-build.log (79242 terminal0); runtime unverified. If Copy exposes a dead scratch URL, fix actual delivery lifetime with ADR, not weaken payload assertion. Verify this test really executes (not skips) in CI. Wait for current CI before next checkpoint/push; no architecture change yet.",
       "Review summary compacted; detailed prior review/evidence remains in ff59333f, not duplicated. Workflow review accepted, CI passed for that commit, but general/UI/media/deletion acceptance stays pending actual OS interaction. DB-integrity/read-only-handler/app-MCP-parity checks passed. No whole-outcome or cutover claim.",
       "Reuse valid local/CI evidence. Hosted Supabase/PowerSync and production remain unauthorized; physical report has no payment/spend inference. Product audit complete. O065/O033/O027/O060 remain open for affected accounting. No Firebase worktree access."
     ]

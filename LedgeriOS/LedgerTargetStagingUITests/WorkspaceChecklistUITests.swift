@@ -1,4 +1,7 @@
 import XCTest
+#if os(macOS)
+import AppKit
+#endif
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
@@ -76,6 +79,62 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     #if os(macOS)
+    func testPropertyManagementNativeCopyCompletion() throws {
+        // Only the disposable CI desktop's clipboard may be changed by this
+        // check. Do not overwrite the developer's clipboard during local QA.
+        guard ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" else {
+            throw XCTSkip("Native Copy completion uses the isolated CI clipboard")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
+        let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
+        let picker = app.popovers.containing(.button, identifier: "Copy").firstMatch
+        for identifier in ["target-property-report-share", "target-property-report-csv"] {
+            NSPasteboard.general.clearContents()
+            let button = app.buttons[identifier]
+            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            XCTAssertTrue(button.isEnabled)
+            button.tap()
+            let copy = picker.buttons["Copy"]
+            XCTAssertTrue(copy.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(busy.exists)
+            copy.tap()
+            // This observes the actual service delegate completion, not merely
+            // choosing a destination or an injected test handoff callback.
+            XCTAssertTrue(waitUntil { !picker.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertFalse(failure.exists)
+            // A callback is not usable delivery if cleanup deletes the file
+            // referenced by the clipboard. Inspect only this isolated CI
+            // clipboard, which we cleared immediately before the synthetic copy.
+            let copiedURLs = NSPasteboard.general.readObjects(forClasses: [NSURL.self],
+                options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+            let isPDF = identifier == "target-property-report-share"
+            let bytes: Data
+            if let url = copiedURLs.first {
+                bytes = try Data(contentsOf: url)
+            } else if let data = NSPasteboard.general.data(forType: isPDF ? .pdf : .string) {
+                bytes = data
+            } else {
+                XCTFail("Share Copy produced no usable report payload: \(NSPasteboard.general.types ?? [])")
+                return
+            }
+            if isPDF { XCTAssertTrue(bytes.starts(with: Data("%PDF-".utf8))) }
+            else { XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains("Report test chair")) }
+        }
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+    }
+
     func testPropertyManagementSystemDialogCancellation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -120,7 +179,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let cancel = app.buttons["Cancel"].firstMatch
         XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(failure.exists)
-        cancel.tap()
+        // The no-printer CI panel can still be resizing when Cancel first
+        // appears. Exercise its standard Escape action without targeting a
+        // moving screen coordinate, and prove the native panel actually closes.
+        cancel.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(waitUntil { !cancel.exists }, app.debugDescription)
         XCTAssertTrue(waitUntil { !busy.exists && printButton.isEnabled }, app.debugDescription)
         XCTAssertFalse(failure.exists)
         app.buttons["Done"].tap()

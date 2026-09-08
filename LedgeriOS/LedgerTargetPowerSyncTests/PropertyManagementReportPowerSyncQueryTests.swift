@@ -11,6 +11,68 @@ struct PropertyManagementReportPowerSyncQueryTests {
     private let project = try! ProjectID(validating: "report-project")
     private let parameters = #"{"project_id":"report-project","account_id":"report-account"}"#
 
+    @Test("Core-completed report survives encrypted reopen and offline resubscription")
+    func encryptedOfflineReopen() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("report-reopen-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let path = root.appendingPathComponent("ledger.sqlite").path
+        let key = try LedgerPowerSyncEncryptionKey(hexadecimal: String(repeating: "5a", count: 32))
+        var db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
+        do {
+            let identity = PropertyManagementReportStreamIdentity(accountId: account, projectId: project)
+            let subscription = try await db.syncStream(name: identity.name, params: identity.parameters).subscribe()
+            func json(_ value: Any) throws -> String {
+                String(decoding: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), as: UTF8.self)
+            }
+            // Feed a synthetic protocol download through the pinned engine.
+            // No provider connection or fabricated completed-checkpoint row.
+            let schema = try JSONSerialization.jsonObject(with: JSONEncoder().encode(LedgerPowerSyncSchema.schema))
+            let start: [String: Any] = ["parameters": [:], "schema": schema, "include_defaults": false,
+                "active_streams": [["name": identity.name, "params": ["account_id": account.rawValue, "project_id": project.rawValue]]],
+                "app_metadata": [:], "checkpoint_mode": "legacy"]
+            let facts: [(String, String, [String: Any])] = [
+                ("spike_account_memberships", "report-member", ["account_id": account.rawValue, "principal_id": principal.rawValue, "state": "active"]),
+                ("spike_projects", project.rawValue, ["account_id": account.rawValue, "display_name": "Offline property", "property_address": "123 Synthetic Street", "lifecycle": "active", "revision": 1]),
+                ("spike_items", "offline-chair", ["account_id": account.rawValue, "name": "Offline chair", "sku": "CHAIR-1", "market_value_minor_units": "9007199254740993", "market_value_currency": "USD", "revision": 1]),
+                ("spike_item_placements", "offline-placement", ["account_id": account.rawValue, "item_id": "offline-chair", "project_id": project.rawValue, "scope_kind": "project"]),
+            ]
+            let rows = try facts.enumerated().map { index, fact -> [String: Any] in
+                ["checksum": 0, "op_id": String(index + 1), "object_id": fact.1,
+                 "object_type": fact.0, "op": "PUT", "data": try json(fact.2)]
+            }
+            let controls: [(String, String?)] = [
+                ("start", try json(start)), ("connection", "established"),
+                ("line_text", try json(["checkpoint": ["last_op_id": "4", "buckets": [["bucket": "report-reopen-bucket", "priority": 3, "checksum": 0, "subscriptions": [["sub": 0]]]], "streams": [["name": identity.name, "is_default": false, "errors": []]]]])),
+                ("line_text", try json(["data": ["bucket": "report-reopen-bucket", "data": rows, "has_more": false]])),
+                ("line_text", try json(["checkpoint_complete": ["last_op_id": "4"]])), ("stop", nil),
+            ]
+            for (operation, parameter) in controls {
+                _ = try await db.writeTransaction { tx in
+                    try tx.getAll(sql: "SELECT powersync_control(?,?) AS result", parameters: [operation, parameter]) {
+                        try $0.getString(name: "result")
+                    }
+                }
+            }
+            let original = try await read(db)
+            #expect(original.totals.itemCount == 1)
+            #expect(original.totals.totalMarketValue?.minorUnits == 9_007_199_254_740_993)
+            try await subscription.unsubscribe()
+            try await db.close()
+            db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
+            // Reopening the report follows the SDK's real subscribe path, but
+            // no transport is started: bytes and completion must be durable.
+            let reopenedSubscription = try await db.syncStream(name: identity.name, params: identity.parameters).subscribe()
+            let reopened = try await read(db)
+            #expect(reopened.reference == original.reference)
+            #expect(PropertyManagementReportCSV.render(reopened) == PropertyManagementReportCSV.render(original))
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE id='report-member'", parameters: nil)
+            await #expect(throws: PropertyManagementReportLocalReadFailure.accountUnavailable) { try await read(db) }
+            try await reopenedSubscription.unsubscribe()
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
     @Test("Live report refreshes same-count edits, clears evicted data and terminates on removal")
     func liveWatch() async throws {
         try await withDatabase { db in
