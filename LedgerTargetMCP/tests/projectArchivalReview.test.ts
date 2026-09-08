@@ -236,7 +236,7 @@ test("note sources match Swift Unicode scalars and the 64-byte UTF-8 boundary", 
   );
 });
 
-test("note text and creator names reject the exact Foundation whitespace set", async () => {
+test("note text rejects blank content and creator names reject NUL", async () => {
   const request = makeProjectNotePageTransportRequest(
     { projectId: "project-primary", pageSize: 1 },
     context,
@@ -249,7 +249,7 @@ test("note text and creator names reject the exact Foundation whitespace set", a
     },
     {
       ...note("note-blank-creator", 1_788_600_000_000, "1"),
-      creatorDisplayName: foundationOnly,
+      creatorDisplayName: "name\0invalid",
     },
   ]) {
     await assert.rejects(
@@ -260,6 +260,17 @@ test("note text and creator names reject the exact Foundation whitespace set", a
       ),
       failure("project_note_server_result_mismatch"),
     );
+  }
+});
+
+test("historical blank creator names remain distinct from missing names", async () => {
+  const request = makeProjectNotePageTransportRequest({ projectId: "project-primary", pageSize: 1 }, context);
+  for (const creatorDisplayName of [null, "", " \n", "\u0085\u200B"]) {
+    const result = await listProjectNotesTool(
+      { projectId: request.projectId, pageSize: request.pageSize }, context,
+      { async read() { return page(request, [{ ...note("note-historical", 1, "0"), creatorDisplayName }], true); } },
+    );
+    assert.equal(result.rows[0]?.creatorDisplayName, creatorDisplayName);
   }
 });
 

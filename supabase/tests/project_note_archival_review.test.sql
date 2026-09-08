@@ -358,7 +358,7 @@ select throws_ok(
   'Foundation whitespace-only note text is rejected at the database boundary'
 );
 
-select throws_ok(
+select lives_ok(
   $$insert into public.spike_project_notes (
       id, account_id, project_id, content_kind, note_text, source,
       created_by_principal_id, creator_display_name, created_at, created_at_ms, revision
@@ -367,9 +367,9 @@ select throws_ok(
       'Visible', 'text', 'principal-owner', U&'\0085\200B',
       '2026-09-05T12:00:00Z', 1788609600000, 1
     )$$,
-  '23514', null,
-  'Foundation whitespace-only creator display name is rejected at the database boundary'
+  'Historical whitespace-only creator display name is preserved at the database boundary'
 );
+delete from public.spike_project_notes where id='note-foundation-blank-creator';
 
 set local role authenticated;
 select set_config(

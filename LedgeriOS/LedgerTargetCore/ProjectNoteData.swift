@@ -112,7 +112,8 @@ public struct ProjectNoteCreatorDisplayName: Codable, Equatable, Hashable, Senda
     public let rawValue: String
 
     public init(validating rawValue: String) throws {
-        guard !rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        // Historical source names can be empty; that is not a new-write policy.
+        guard !rawValue.contains("\0") else {
             throw ProjectNoteDataFailure.invalidCreatorDisplayName
         }
         self.rawValue = rawValue

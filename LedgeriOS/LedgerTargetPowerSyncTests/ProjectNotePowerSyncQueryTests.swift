@@ -502,7 +502,7 @@ struct ProjectNotePowerSyncQueryTests {
         try await fixture.seed(database)
         _ = try await database.execute(sql: """
             UPDATE spike_project_notes SET created_at_ms = NULL,
-              created_by_principal_id = NULL, original_creator_id = 'mcp-agent'
+              created_by_principal_id = NULL, original_creator_id = 'mcp-agent', creator_display_name = ''
             WHERE id IN ('note-b', 'note-a')
             """, parameters: [])
         let first = try await Self.firstPage(Self.query(database, complete: true),
@@ -515,6 +515,7 @@ struct ProjectNotePowerSyncQueryTests {
         #expect(second.local.rows[0].createdAt == nil)
         #expect(second.local.rows[0].createdByPrincipalId == nil)
         #expect(second.local.rows[0].originalCreatorId == "mcp-agent")
+        #expect(second.local.rows[0].creatorDisplayName?.rawValue == "")
         let undatedCursor = try #require(second.nextCursor)
         #expect(undatedCursor.createdAt == nil)
         try await database.close(deleteDatabase: false)
@@ -524,6 +525,7 @@ struct ProjectNotePowerSyncQueryTests {
         #expect(last.local.rows.map(\.id.rawValue) == ["note-a"])
         #expect(last.local.rows[0].createdAt == nil)
         #expect(last.local.rows[0].originalCreatorId == "mcp-agent")
+        #expect(last.local.rows[0].creatorDisplayName?.rawValue == "")
         #expect(last.nextCursor == nil)
         #expect(!last.isCompleteForProjectHistory)
         try await reopened.close(deleteDatabase: true)

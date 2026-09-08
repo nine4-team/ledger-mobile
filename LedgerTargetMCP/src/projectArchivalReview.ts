@@ -500,7 +500,7 @@ function validateProjectNote(
     || !/^\p{Ll}[\p{Ll}\p{Nd}_]*$/u.test(row.source)) mismatch();
   if (row.creatorDisplayName !== null
     && (typeof row.creatorDisplayName !== "string"
-      || FOUNDATION_WHITESPACE_ONLY.test(row.creatorDisplayName))) {
+      || row.creatorDisplayName.includes("\0"))) {
     mismatch();
   }
   if (row.lastEditedByPrincipalId != null && row.lastEditedTimestamp == null) {

@@ -215,7 +215,7 @@ struct ProjectNoteDataTests {
 
         #expect(Self.noteFailure { try ProjectNoteText(validating: " \n ") } == .invalidText)
         #expect(Self.noteFailure {
-            try ProjectNoteCreatorDisplayName(validating: "   ")
+            try ProjectNoteCreatorDisplayName(validating: "name\0invalid")
         } == .invalidCreatorDisplayName)
         #expect(Self.noteFailure {
             try ProjectNoteSource(validating: "MCP-Agent")

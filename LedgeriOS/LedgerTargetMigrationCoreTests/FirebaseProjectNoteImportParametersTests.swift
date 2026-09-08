@@ -71,11 +71,24 @@ struct FirebaseProjectNoteImportParametersTests {
 
     @Test("Unsupported historical values are not silently repaired to fit target reads")
     func unsupportedValues() throws {
-        for result in [try mapped([], text: " \n"), try mapped([], channel: "MCP-original/channel"),
-                       try mapped([.init(key: "createdByName", value: .string(" "))])] {
+        for result in [try mapped([], text: " \n"), try mapped([], channel: "MCP-original/channel")] {
             #expect(throws: FirebaseProjectNoteImportFailure.self) {
                 try FirebaseProjectNoteImportParameters.make(result)
             }
+        }
+    }
+
+    @Test("Blank historical creator names are retained, distinct from absent names")
+    func blankCreatorNames() throws {
+        for name in ["", " \n", "\u{0085}\u{200B}"] {
+            let values = try FirebaseProjectNoteImportParameters.make(mapped([
+                .init(key: "createdByName", value: .string(name))
+            ]))
+            #expect(values.p_creator_display_name?.utf8.elementsEqual(name.utf8) == true)
+            #expect(values.p_created_by_principal_id == nil)
+            let restored = try JSONDecoder().decode(ProjectNoteCreatorDisplayName.self,
+                from: JSONEncoder().encode(ProjectNoteCreatorDisplayName(validating: name)))
+            #expect(restored.rawValue.utf8.elementsEqual(name.utf8))
         }
     }
 

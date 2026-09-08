@@ -12,9 +12,9 @@ create function pg_temp.import_note(
   p_account text default 'account-primary', p_project text default 'note-import-project',
   p_created bigint default 1788609600000, p_remainder integer default 123456,
   p_updated bigint default 1788609600001, p_updated_remainder integer default 654321,
-  p_principal text default null
+  p_principal text default null, p_creator_name text default 'AI Assistant'
 ) returns text language sql as $$
-  select ledger_private.import_project_note(p_account,p_project,p_note,p_text,'mcp','mcp-agent','AI Assistant',
+  select ledger_private.import_project_note(p_account,p_project,p_note,p_text,'mcp','mcp-agent',p_creator_name,
     p_principal,p_created,p_remainder,p_updated,p_updated_remainder,
     'source-account','source-project',p_source_note,p_bytes)
 $$;
@@ -81,5 +81,13 @@ reset role;
 set local role service_role;
 select throws_ok($$select ledger_private.import_project_note('a','p','n','t','mcp',null,null,null,null,null,null,null,'a','p','n','\x01'::bytea)$$,'42501',null,'Service API cannot import');
 reset role;
+select is(pg_temp.import_note(p_note=>'empty-creator-note',p_source_note=>'empty-creator',p_creator_name=>''),
+  'empty-creator-note','Historical empty creator name does not discard the note');
+select is((select creator_display_name from public.spike_project_notes where id='empty-creator-note'),'',
+  'Empty creator remains empty, not null or an invented name');
+select is(pg_temp.import_note(p_note=>'blank-creator-note',p_source_note=>'blank-creator',p_creator_name=>E' \n'),
+  'blank-creator-note','Historical whitespace creator name imports');
+select is((select creator_display_name from public.spike_project_notes where id='blank-creator-note'),E' \n',
+  'Whitespace creator remains byte-for-byte unchanged');
 select * from finish();
 rollback;

@@ -21,6 +21,19 @@ struct ProjectNoteHistoryStagingExerciseTests {
         #expect(row.lastEditedAt == Date(timeIntervalSince1970: 100))
     }
 
+    @Test("Historical blank creator names remain blank in presentation")
+    func blankHistoricalCreator() throws {
+        for name in ["", " \n"] {
+            let note = try ProjectNoteSnapshot(
+                id: ProjectNoteID(validating: "historical-note"), accountId: Self.accountId,
+                projectId: Self.projectA, content: .visible(ProjectNoteText(validating: "Original note")),
+                source: ProjectNoteSource(validating: "mcp"), createdByPrincipalId: nil,
+                creatorDisplayName: ProjectNoteCreatorDisplayName(validating: name),
+                createdAt: nil, revision: 0)
+            #expect(ProjectNoteHistoryRowPresentation(note: note).creatorDisplayName == name)
+        }
+    }
+
     @Test("Selection reads a bounded first page and tombstones never expose deleted text")
     func firstPageAndTombstonePresentation() async throws {
         let probe = NotePageWatchProbe()

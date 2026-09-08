@@ -82,6 +82,13 @@ supplied by the caller; conversion is not identity reconciliation or permission
 to load data. Malformed known fields remain unresolved, with their source intact.
 O-039 governs new create/edit validation, not lossless historical preservation.
 
+Historical creator display names may be empty or whitespace-only: the source
+model defaults this field to an empty string. Preserve that exact value, distinct
+from null, across storage, shared reads and MCP. Reject NUL (not representable in
+Postgres text), but do not apply new-name validation to historical facts. This
+removes the target's unsupported nonblank-name assumption without changing
+principal attribution, permissions or new-note policy.
+
 Tradeoff: historical metadata must represent uncertainty explicitly, while new
 writes can still require authenticated authors. Timestamp display/index projections
 must not replace original precision or silently reorder history. The existing
