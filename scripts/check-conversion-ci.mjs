@@ -27,6 +27,13 @@ const retiredConversionCommands = Object.freeze([
   "npm run source:query-reconciliation:check",
 ]);
 
+const nativeUIClipboardStep = [
+  "      - name: Exercise target workspace checklist UI",
+  "        env:",
+  '          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"',
+  "        run: npm run target:staging:ui:test:macos",
+].join("\n");
+
 const requiredScripts = Object.freeze({
   "conversion:ci:test": "node --test scripts/tests/check-conversion-ci.test.mjs scripts/tests/select-ci-supabase-db-port.test.mjs",
   "conversion:check":
@@ -178,7 +185,8 @@ function validateWorkflowSafety(lines) {
 
   const executionOverride = /^\s*(?:env|defaults|shell|working-directory|container)\s*:/;
   requireCondition(
-    !lines.some((line) => executionOverride.test(line)),
+    !lines.some((line, index) => executionOverride.test(line)
+      && lines.slice(index - 1, index + 3).join("\n") !== nativeUIClipboardStep),
     "environment or execution overrides require security review",
   );
 
@@ -236,6 +244,8 @@ function validateTargetJob(lines) {
     "          path: ${{ runner.temp }}",
   ].join("\n")), "target requires the exact same-commit report fixture");
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
+  requireCondition(target.join("\n").includes(nativeUIClipboardStep),
+    "native UI Copy verification requires its exact isolated test-runner flag");
   for (const command of [
     "          node --check scripts/check-target-environment.mjs",
     "          npm run target:environment:check",

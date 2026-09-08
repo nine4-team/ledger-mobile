@@ -82,7 +82,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testPropertyManagementNativeCopyCompletion() throws {
         // Only the disposable CI desktop's clipboard may be changed by this
         // check. Do not overwrite the developer's clipboard during local QA.
-        guard ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" else {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
             throw XCTSkip("Native Copy completion uses the isolated CI clipboard")
         }
         continueAfterFailure = false

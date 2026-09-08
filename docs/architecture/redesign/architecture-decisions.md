@@ -100,6 +100,37 @@ verification remains required for the uncommitted report batch.
 
 ## A-023 — One Property Management Report Snapshot
 
+**macOS print lifetime (2026-09-08):** use AppKit's application-modal
+`NSPrintOperation.run()` instead of attaching a document-modal print sheet to
+the SwiftUI report sheet. Two CI attempts opened the nested print panel but did
+not dismiss it through Cancel or Escape; nesting is observed, not conclusively
+proven to be the cause. Independent review and the SDK contract support this
+simpler alternative: retain the PDF/operation until `run()` returns, preserve
+PrintCore cancellation/error handling, then permit the existing owned scratch
+cleanup. The print delegate/continuation class is removed. The tradeoff is that
+other app windows cannot be used during the native print operation. Real native
+cancellation still must pass before accepting the fix; no history or accounting
+changes are involved.
+
+The CI-only Copy test now uses xcodebuild's documented `TEST_RUNNER_` environment
+forwarding rather than assuming the runner inherits `GITHUB_ACTIONS`. Only the
+exact disposable-clipboard flag is allowed by the existing CI safety check;
+local runs still skip clipboard mutation, and removal or alteration of that flag
+is tested. A skipped test is not usable-delivery evidence.
+
+**Native report controls (2026-09-08):** iOS places PDF Share, Print and CSV Share
+in a bottom toolbar, with Refresh and Done in the navigation bar. The first
+isolated iPhone UI run exposed Refresh being pushed into automatic overflow by
+the combined toolbar. This is a platform layout correction, not a new action or
+authorization path: the same buttons, readiness checks, snapshot and delivery
+implementation are reused. macOS retains its grouped toolbar. The tradeoff is a
+dedicated bottom bar on iOS in exchange for discoverable controls on a narrow
+screen. Corrected-layout verification is pending. The existing CI runner will
+run the three synthetic iPhone report interaction tests after its iOS build;
+its timeout increases from 20 to 30 minutes to include simulator startup/testing.
+No new job, service or hosted backend is introduced. Local retesting remains
+limited by disk space. See the unified checklist for current evidence.
+
 **Online transport boundary:** The MCP reader uses a publishable key and caller
 JWT, rejects Account/Project/Principal/currency mismatches, requires HTTPS except
 loopback development, forbids redirects, bounds request time, and sanitizes

@@ -45,9 +45,7 @@ enum PropertyManagementReportSystemDelivery {
             defer { withExtendedLifetime(session) {} }
             try await session.run(url: url, view: view)
         case .print:
-            let session = MacPrintSession()
-            defer { withExtendedLifetime(session) {} }
-            try await session.run(url: url, window: window)
+            try printMacReport(url)
         }
         #elseif os(iOS)
         let windows = UIApplication.shared.connectedScenes
@@ -173,35 +171,18 @@ enum PropertyManagementReportSystemDelivery {
         }
     }
 
-    @MainActor private final class MacPrintSession: NSObject {
-        private var document: PDFDocument?
-        private var operation: NSPrintOperation?
-        private var completion: Completion?
-
-        func run(url: URL, window: NSWindow) async throws {
-            guard let document = PDFDocument(url: url), document.pageCount > 0,
-                  let operation = document.printOperation(for: NSPrintInfo.shared.copy() as? NSPrintInfo,
-                      scalingMode: .pageScaleToFit, autoRotate: true) else { throw Failure.printingUnavailable }
-            self.document = document
-            self.operation = operation
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                completion = Completion(continuation)
-                operation.runModal(for: window, delegate: self,
-                    didRun: #selector(didPrint(_:success:contextInfo:)), contextInfo: nil)
-            }
-        }
-
-        @objc private func didPrint(_ operation: NSPrintOperation, success: Bool, contextInfo: UnsafeMutableRawPointer?) {
-            let status = PMSessionError(PMPrintSession(operation.printInfo.pmPrintSession()))
-            // AppKit's Boolean reports cancellation as well as failure. The
-            // session's error distinguishes reported print failures; no error
-            // or kPMCancel is a normal cancellation when success is false.
-            let error: Error? = !success && status != noErr && status != OSStatus(kPMCancel)
-                ? NSError(domain: NSOSStatusErrorDomain, code: Int(status)) : nil
-            let completion = self.completion
-            self.completion = nil
-            self.operation = nil; document = nil
-            completion?.finish(error: error)
+    private static func printMacReport(_ url: URL) throws {
+        guard let document = PDFDocument(url: url), document.pageCount > 0,
+              let operation = document.printOperation(for: NSPrintInfo.shared.copy() as? NSPrintInfo,
+                  scalingMode: .pageScaleToFit, autoRotate: true) else { throw Failure.printingUnavailable }
+        // The report already occupies a SwiftUI sheet. Application-modal
+        // printing avoids attaching another document-modal panel to that sheet.
+        // AppKit runs its native event loop and returns only after completion;
+        // retain the PDF and leave scratch cleanup to the caller after return.
+        let success = withExtendedLifetime(document) { operation.run() }
+        let status = PMSessionError(PMPrintSession(operation.printInfo.pmPrintSession()))
+        if !success && status != noErr && status != OSStatus(kPMCancel) {
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
     }
     #endif

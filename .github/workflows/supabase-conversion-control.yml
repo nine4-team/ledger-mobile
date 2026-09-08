@@ -43,7 +43,7 @@ jobs:
     # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
     # CI exercises the same supported compiler floor as the target app.
     runs-on: macos-26
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -96,10 +96,29 @@ jobs:
         run: npm run target:staging:build:macos
 
       - name: Exercise target workspace checklist UI
+        env:
+          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"
         run: npm run target:staging:ui:test:macos
 
       - name: Build target staging for iOS Simulator
         run: npm run target:staging:build:ios
+
+      - name: Exercise iOS Property Management report UI
+        run: |
+          report_device_id="$(xcrun simctl list devices available -j | node --input-type=module -e '
+            let input=""; for await (const chunk of process.stdin) input+=chunk;
+            const device=Object.entries(JSON.parse(input).devices)
+              .filter(([runtime]) => /iOS-(\d+)/.test(runtime) && Number(runtime.match(/iOS-(\d+)/)[1]) >= 18)
+              .sort(([a],[b]) => b.localeCompare(a,undefined,{numeric:true}))
+              .flatMap(([,devices]) => devices).find(device => device.name.startsWith("iPhone"));
+            if (!device) throw new Error("No available supported iPhone simulator");
+            process.stdout.write(device.udid);
+          ')"
+          xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
+            -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementEmptyAndUnavailableStates \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss test
 
       - name: Confirm target checks did not rewrite tracked artifacts
         run: git diff --exit-code

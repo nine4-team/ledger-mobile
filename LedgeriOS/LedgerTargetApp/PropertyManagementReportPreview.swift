@@ -56,22 +56,34 @@ struct PropertyManagementReportPreview: View {
         }
         .navigationTitle("Property Management")
         .toolbar {
-            Button("Share") { export(.share) }
-                .disabled(!canExport)
-                .accessibilityIdentifier("target-property-report-share")
-            Button("Print") { export(.print) }
-                .disabled(!canExport)
-                .accessibilityIdentifier("target-property-report-print")
-            Button("Share CSV") { export(.share, format: .csv) }
-                .disabled(!canExport)
-                .accessibilityIdentifier("target-property-report-csv")
-            Button("Refresh") { refresh = UUID() }
-                .accessibilityIdentifier("target-property-report-refresh")
+            #if os(iOS)
+            ToolbarItemGroup(placement: .bottomBar) { exportButtons }
+            ToolbarItem(placement: .topBarLeading) { refreshButton }
+            #else
+            ToolbarItemGroup { exportButtons; refreshButton }
+            #endif
         }
         .task(id: Request(accountId: accountId, projectId: projectId, currency: currency, refresh: refresh)) {
             await model.load(accountId: accountId, projectId: projectId, currency: currency, watcher: watcher)
         }
         .onDisappear { model.clear() }
+    }
+
+    @ViewBuilder private var exportButtons: some View {
+        Button("Share") { export(.share) }
+            .disabled(!canExport)
+            .accessibilityIdentifier("target-property-report-share")
+        Button("Print") { export(.print) }
+            .disabled(!canExport)
+            .accessibilityIdentifier("target-property-report-print")
+        Button("Share CSV") { export(.share, format: .csv) }
+            .disabled(!canExport)
+            .accessibilityIdentifier("target-property-report-csv")
+    }
+
+    private var refreshButton: some View {
+        Button("Refresh") { refresh = UUID() }
+            .accessibilityIdentifier("target-property-report-refresh")
     }
 
     private var canExport: Bool {

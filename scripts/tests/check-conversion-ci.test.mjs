@@ -140,6 +140,14 @@ test("workflow rejects conditional skips, execution overrides, and weakened hist
 });
 
 test("target job cannot bypass native, MCP, build, or dependency gates", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace(
+      '        env:\n          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"\n', "");
+  }, /isolated test-runner flag/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace('TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"',
+      'TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "false"');
+  }, /environment or execution overrides/);
   for (const [original, replacement] of [
     ["          bash scripts/run-target-native-tests-with-diagnostics.sh\n", ""],
     ["          path: ${{ runner.temp }}/ledger-native-diagnostics", "          path: /Users"],
@@ -162,7 +170,7 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
     (value) => {
       value.workflow = value.workflow.replace("        run: npm run target:staging:ui:test:macos\n", "");
     },
-    /target gate npm run target:staging:ui:test:macos/,
+    /environment or execution overrides|target gate npm run target:staging:ui:test:macos/,
   );
   expectFailure(
     (value) => {
