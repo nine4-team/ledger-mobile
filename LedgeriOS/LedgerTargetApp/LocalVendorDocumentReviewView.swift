@@ -18,6 +18,7 @@ struct LocalVendorDocumentReviewView: View {
     @State private var showStats = false
     @State private var showRawText = false
     @State private var copyStatus: String?
+    @FocusState private var editingField: String?
     private let categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)?
 
     init(review: LocalVendorDocumentReview,
@@ -81,10 +82,13 @@ struct LocalVendorDocumentReviewView: View {
                                 Toggle("Include row \(row.id + 1)", isOn: binding(row, hash: hash, keyPath: \.included))
                                     .accessibilityIdentifier("target-vendor-pdf-include-\(row.id)")
                                 TextField("Description", text: binding(row, hash: hash, keyPath: \.description), axis: .vertical)
+                                    .focused($editingField, equals: "description-\(row.id)")
                                     .accessibilityIdentifier("target-vendor-pdf-description-\(row.id)")
                                 TextField("Quantity", text: binding(row, hash: hash, keyPath: \.quantity))
+                                    .focused($editingField, equals: "quantity-\(row.id)")
                                     .accessibilityIdentifier("target-vendor-pdf-quantity-\(row.id)")
                                 TextField("Unit price", text: binding(row, hash: hash, keyPath: \.unitPrice))
+                                    .focused($editingField, equals: "price-\(row.id)")
                                     .accessibilityIdentifier("target-vendor-pdf-price-\(row.id)")
                                 Text("Extracted line total: \(row.original.total)")
                                 if let sku = row.original.sku { Text("SKU: \(sku)") }
@@ -127,6 +131,13 @@ struct LocalVendorDocumentReviewView: View {
         .accessibilityIdentifier("target-vendor-pdf-scroll")
         .navigationTitle("Review Vendor PDF")
         .toolbar {
+            #if os(iOS)
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { editingField = nil }
+                    .accessibilityIdentifier("target-vendor-pdf-keyboard-done")
+            }
+            #endif
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { close(); dismiss() }
                     .accessibilityIdentifier("target-vendor-pdf-cancel")
@@ -170,6 +181,7 @@ struct LocalVendorDocumentReviewView: View {
             }
         }
         .onChange(of: review.documentHash) { _, _ in
+            editingField = nil
             showStats = false; showRawText = false; copyStatus = nil
         }
     }
@@ -181,6 +193,7 @@ struct LocalVendorDocumentReviewView: View {
     }
 
     private func close() {
+        editingField = nil
         loadingTask?.cancel(); loadingTask = nil
         review.close()
     }

@@ -342,6 +342,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
             selectAll.tap()
             field.typeText(value)
             XCTAssertEqual(field.value as? String, value)
+            let done = app.buttons["target-vendor-pdf-keyboard-done"]
+            XCTAssertTrue(done.waitForExistence(timeout: 5))
+            done.tap()
+            XCTAssertTrue(waitUntil { !app.keyboards.firstMatch.exists }, app.debugDescription)
         }
         app.buttons["target-vendor-pdf-cancel"].tap()
         XCTAssertTrue(count.waitForNonExistence(timeout: 5))
@@ -812,33 +816,56 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testProjectSpaceChecklistInteraction() throws {
+        try exerciseSpaceChecklist(inventory: false)
+    }
+
+    func testInventorySpaceChecklistInteraction() throws {
+        try exerciseSpaceChecklist(inventory: true)
+    }
+
+    private func exerciseSpaceChecklist(inventory: Bool) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        if inventory {
+            app.launchArguments += ["--ledger-ui-test-inventory-space", "--ledger-ui-test-reset-inventory-section"]
+        }
         app.launch()
         defer { app.terminate() }
         XCTAssertTrue(app.staticTexts["target-ui-fixture-banner"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["target-staging-banner"].exists)
 
-        let project = app.buttons["target-active-project-card-project-ui-test"]
-        XCTAssertTrue(project.waitForExistence(timeout: 10))
-        project.tap()
-        let notes = app.buttons["target-active-project-notes-tab"]
-        reveal(notes, in: app)
-        XCTAssertTrue(notes.waitForExistence(timeout: 5))
-        notes.tap()
-        XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Test Designer"].exists)
-        let noteSource = app.descendants(matching: .any)["target-project-note-source"].firstMatch
-        XCTAssertTrue(noteSource.waitForExistence(timeout: 5))
-        XCTAssertEqual(displayedText(noteSource), "Source: text")
-        XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
-        app.buttons["target-active-workspace-back"].tap()
-        XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))
-        let spaces = app.buttons["target-active-project-spaces-tab"]
-        reveal(spaces, in: app)
-        XCTAssertTrue(spaces.waitForExistence(timeout: 5), app.debugDescription)
-        spaces.tap()
+        if inventory {
+            let card = app.buttons["target-business-inventory-card"]
+            XCTAssertTrue(card.waitForExistence(timeout: 10))
+            card.tap()
+            #if os(macOS)
+            app.radioButtons["Spaces"].tap()
+            #else
+            app.segmentedControls.buttons["Spaces"].tap()
+            #endif
+            XCTAssertFalse(app.buttons["target-active-project-notes-tab"].exists)
+        } else {
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let notes = app.buttons["target-active-project-notes-tab"]
+            reveal(notes, in: app)
+            XCTAssertTrue(notes.waitForExistence(timeout: 5))
+            notes.tap()
+            XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.staticTexts["Test Designer"].exists)
+            let noteSource = app.descendants(matching: .any)["target-project-note-source"].firstMatch
+            XCTAssertTrue(noteSource.waitForExistence(timeout: 5))
+            XCTAssertEqual(displayedText(noteSource), "Source: text")
+            XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
+            app.buttons["target-active-workspace-back"].tap()
+            XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))
+            let spaces = app.buttons["target-active-project-spaces-tab"]
+            reveal(spaces, in: app)
+            XCTAssertTrue(spaces.waitForExistence(timeout: 5), app.debugDescription)
+            spaces.tap()
+        }
         let search = app.textFields["target-space-search"]
         reveal(search, in: app)
         XCTAssertTrue(search.waitForExistence(timeout: 5))
@@ -893,7 +920,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             .matching(identifier: "target-ui-fixture-acceptance-count").firstMatch
         reveal(accepted, in: app, upwards: false)
         XCTAssertTrue(accepted.exists, app.debugDescription)
-        XCTAssertTrue(waitUntil { accepted.label == "Accepted invocations: 1" || (accepted.value as? String) == "1" })
+        XCTAssertTrue(waitUntil { accepted.label == "Accepted invocations: 1" || (accepted.value as? String) == "1" }, app.debugDescription)
         let status = app.descendants(matching: .any)
             .matching(identifier: "target-active-space-checklist-operation-status").firstMatch
         reveal(status, in: app)

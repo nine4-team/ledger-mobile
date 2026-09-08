@@ -22,6 +22,11 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                 .background(Color.orange)
                 .accessibilityIdentifier("target-ui-fixture-banner")
 
+            // Keep command evidence outside List cell recycling during native QA.
+            Text("Accepted invocations: \(fixture.acceptedInvocationCount)")
+                .accessibilityIdentifier("target-ui-fixture-acceptance-count")
+                .accessibilityValue(String(fixture.acceptedInvocationCount))
+
             #if os(iOS)
             if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-copy-receiver") {
                 UITestReportCopyReceiver()
@@ -30,9 +35,6 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
 
             List {
                 Section("Fixture evidence") {
-                    Text("Accepted invocations: \(fixture.acceptedInvocationCount)")
-                        .accessibilityIdentifier("target-ui-fixture-acceptance-count")
-                        .accessibilityValue(String(fixture.acceptedInvocationCount))
                     Button("Simulate Account removal") { fixture.simulateRemoval() }
                         .accessibilityIdentifier("target-ui-fixture-remove-account")
                     if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-remove-after-pdf-edit") {
@@ -116,6 +118,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
     private let projectDirectorySnapshot: ProjectListSnapshot
     private let projectDetail = UITestFixtureStream<ProjectCoreDetailsUpdate>()
     private let spaceDirectory: UITestFixtureStream<SpaceListUpdate>
+    private let spaceScope: SpaceCreationScope
     private let spaceDetail: UITestFixtureStream<SpaceCoreDetailsUpdate>
     private let operationUpdates = UITestFixtureStream<OperationSnapshot>()
     private let rejectedUpdates: UITestFixtureStream<RejectedOperationRecoverySnapshot>
@@ -186,10 +189,13 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                 ]
             ),
         ])
+        let spaceScope: SpaceCreationScope = ProcessInfo.processInfo.arguments
+            .contains("--ledger-ui-test-inventory-space") ? .businessInventory : .project(projectId)
+        self.spaceScope = spaceScope
         let spaceRow = SpaceListSourceRow(
             id: spaceId,
             accountId: accountId,
-            scope: .project(projectId),
+            scope: spaceScope,
             displayName: try! SpaceDisplayName(validating: "UI Test Space"),
             lifecycle: .active,
             revision: 3,
@@ -197,7 +203,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         )
         let spaceListRequest = try! SpaceListRequest(
             accountId: accountId,
-            scope: .project(projectId)
+            scope: spaceScope
         )
         let spaceListUpdate = try! SpaceListUpdate(
             request: spaceListRequest,
@@ -219,7 +225,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         let detailRow = try! SpaceCoreDetailsSnapshot(
             id: spaceId,
             accountId: accountId,
-            scope: .project(projectId),
+            scope: spaceScope,
             displayName: SpaceDisplayName(validating: "UI Test Space"),
             notes: SpaceCreationNotes(nil),
             lifecycle: .active,
@@ -325,7 +331,8 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                 }
             ),
             spaceBrowsing: SpaceBrowserStagingRuntime(
-                listQuery: UITestFixtureSpaceListQuery(source: spaceDirectory),
+                listQuery: UITestFixtureSpaceListQuery(source: spaceDirectory,
+                    inventoryHasSpace: spaceScope == .businessInventory),
                 detailQuery: UITestFixtureSpaceDetailQuery(source: spaceDetail)
             ),
             checklistToggle: SpaceChecklistItemToggleStagingRuntime(
@@ -420,11 +427,12 @@ private final class UITestFixtureStream<Value: Sendable>: @unchecked Sendable {
 
 private struct UITestFixtureSpaceListQuery: SpaceListQuerying {
     let source: UITestFixtureStream<SpaceListUpdate>
+    let inventoryHasSpace: Bool
 
     func watchSpaces(
         _ request: SpaceListRequest
     ) -> AsyncThrowingStream<SpaceListUpdate, Error> {
-        if request.scope == .businessInventory {
+        if request.scope == .businessInventory && !inventoryHasSpace {
             return AsyncThrowingStream { continuation in
                 do {
                     continuation.yield(try SpaceListUpdate(request: request, state: .snapshot(
