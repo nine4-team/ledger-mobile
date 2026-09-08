@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 99,
+  "stateVersion": 101,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "CLIENT-PAYMENT-STORAGE-CI-GREEN",
-    "commit": "75fac316bc4bc9529a934c3b32293f5a9fd79f37",
-    "ciRun": 34172399500,
+    "name": "POWERSYNC-CLOSE-AND-INVOICE-SOURCE-CI-GREEN",
+    "commit": "806a2e73bfbb7fca3aad98f2289f0851827e1299",
+    "ciRun": 34176726688,
     "ciStatus": "passed",
-    "meaning": "Atomic payment/source SQL storage, concurrency and Swift golden parameter boundary passed full automatic CI. New local resumable executable edits not included; whole migration/app/hosted readiness remains unproved."
+    "meaning": "Tracked SDK cancellation fix and prior Invoice/source/payment work passed full automatic native/DB/app UI/macOS+iOS gates. New cancellation-event relationship review is local only; whole migration/app/hosted readiness remains unproved."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete; target implementation remains incomplete. Invoice source resolver22f3e6e0 and cancellation191c2291 are included in this batch. Verified checkpoint stays75fac316 until full exact-commit CI passes.",
-      "A022 implemented: tracked vendor/powersync-swift1.16.1 from e6c356ae, two Swift corrections remove continuation/cancellation under mutex and preserve terminal state. App/tests share local package; upstream has no fix. Main/independent review GO; active/buffered-error regressions added. No cache edits or remote fork.",
-      "Integrated797 native tests/114 suites PASS41.166s /tmp/ledger-powersync-fixed-native-integrated.log; focused600 cancellation races+terminal and real cleanup matrix PASS. Environment, conversion, CI verifier5cases, source-omission selftests4negative/4positive PASS. CI suite splitting removed; diagnostics retained. Package.resolved is target-only like Package.swift, removed from Firebase source hashing; no product behavior removed or historical catalogs synchronized.",
-      "Commit/push this integrated SDK+invoice batch to existing branch and observe its single automatic PR CI. Prior CI34173547450 canceled with proven SDK deadlock, never green. No active local process or review agent. Full app/macOS+iOS/CI validation pending; do not mark readiness.",
-      "Continue Invoice cancellation-event/historical Item occurrence mapping into target collection allocations. Narrow source coverage is not full export/collection approval; retain partial/grouped/canceled evidence. No Firebase checkout, production/hosted data/resources or cutover actions."
+      "Audit complete. Latest verified checkpoint806a2e73 CI34176726688 SUCCESS (native/DB/UI/macOS+iOS). SDK A022 fix is verified; no active CI/local process or agent. Do not repeat its full suites on resume.",
+      "New FirebaseInvoiceCancellationEvidence.swift and tests independently reviewed after bounded delegation. Explicit source paid-to-sent events resolve exact canceled payments; every raw document/ambiguity retained. Main requested amount-gap/issue-partition docs and missing-key/Invoice-duplicate tests, now present. Focused7 and integrated65/12 PASS /tmp/ledger-invoice-cancellation-integrated.log. New work is not covered by806 CI.",
+      "Record/commit the cancellation evidence with active checklist/A019 updates, then continue source occurrence and target collected-Invoice allocation work as a coherent next batch. No standalone readiness claim or tiny documentation-only push. Related source links are not target cash refunds, paid-state approval or amount validation.",
+      "Source Item identities already resolve by exact Account path regardless of current Project; fee sources resolve by Project-nested path. Next historical cycle mapping must use exact lineage/Invoice line evidence and original sale/return identity, not current location, labels or timestamp grouping. Target BillableItemAccountingOccurrence is only a phase/reference record, not full frozen financial provenance.",
+      "Preserve production Firebase and separate checkout; no production/hosted access, remote fork/publication, real migration, paid resources or cutover authorization. Hosted validation and broad feature coverage remain required."
     ]
   },
   "blockers": [],

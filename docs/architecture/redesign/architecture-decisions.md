@@ -394,6 +394,13 @@ and Invoice lines. Those links establish history, not current payment or paid
 status. Invoice reconciliation must inspect cancellation state; surviving links
 must never resurrect money or erase the correction history.
 
+`FirebaseInvoiceCancellationEvidence` resolves explicit `paymentCanceled`
+paid-to-sent source events to exact canceled settlement documents. All supplied
+records remain retained; duplicate paths/references, missing records, invalid
+scope/shape and unclaimed canceled payments stay visible. Recollection remains
+separate. This proves source relationships only, not canceled amounts, target
+refunds, paid-state reconstruction or permission to import.
+
 `FirebaseInvoiceSettlementReview` checks a narrower prerequisite than collection
 mapping: one explicit non-canceled payment covers the exact stable signed source
 lines and total. It retains the complete Invoice and every supplied payment;
