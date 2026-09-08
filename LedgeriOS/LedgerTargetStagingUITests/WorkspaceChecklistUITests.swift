@@ -2,6 +2,91 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testPropertyManagementEmptyAndUnavailableStates() throws {
+        continueAfterFailure = false
+        for (fixture, identifier, exportEnabled) in [
+            ("empty", "target-property-report-empty", true),
+            ("loading", "target-property-report-loading", false),
+            ("incomplete", "target-property-report-incomplete", false),
+            ("failed", "target-property-report-unavailable", false),
+        ] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-\(fixture)"]
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let openReport = app.buttons["target-property-report-open"]
+            reveal(openReport, in: app)
+            XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+            openReport.tap()
+            let state = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            XCTAssertTrue(state.waitForExistence(timeout: 5), app.debugDescription)
+            for control in ["target-property-report-share", "target-property-report-csv", "target-property-report-print"] {
+                XCTAssertEqual(app.buttons[control].isEnabled, exportEnabled, fixture)
+            }
+            let refresh = app.buttons["target-property-report-refresh"]
+            XCTAssertTrue(refresh.isEnabled)
+            refresh.tap()
+            XCTAssertTrue(state.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.descendants(matching: .any)
+                .matching(identifier: "target-property-report-item-report-ui-chair").firstMatch.exists)
+            app.buttons["Done"].tap()
+            XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        }
+    }
+
+    #if os(macOS)
+    func testPropertyManagementSystemDialogCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let share = app.buttons["target-property-report-share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5))
+        let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
+        let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
+        let pickerVisible = {
+            app.menuItems.allElementsBoundByIndex.contains { $0.isHittable }
+                || app.popovers.allElementsBoundByIndex.contains { $0.isHittable }
+        }
+
+        // Open real native pickers, but never choose a destination or send data.
+        // Repeat PDF after CSV to exercise native presentation-state release.
+        for identifier in ["target-property-report-share", "target-property-report-csv", "target-property-report-share"] {
+            let button = app.buttons[identifier]
+            XCTAssertTrue(button.isEnabled)
+            XCTAssertFalse(pickerVisible())
+            button.tap()
+            XCTAssertTrue(waitUntil(pickerVisible), app.debugDescription)
+            XCTAssertFalse(failure.exists)
+            app.typeKey(.escape, modifierFlags: [])
+            XCTAssertTrue(waitUntil { !pickerVisible() && !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertFalse(failure.exists)
+        }
+
+        // Observe the actual print controls and cancel; never press Print.
+        let printButton = app.buttons["target-property-report-print"]
+        printButton.tap()
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(failure.exists)
+        cancel.tap()
+        XCTAssertTrue(waitUntil { !busy.exists && printButton.isEnabled }, app.debugDescription)
+        XCTAssertFalse(failure.exists)
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+    }
+    #endif
+
     func testPropertyManagementPreviewRefreshAndDismiss() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

@@ -397,6 +397,16 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
     func watchPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode) -> AsyncThrowingStream<PropertyManagementReportUpdate, Error> {
         AsyncThrowingStream { continuation in
+            let arguments = ProcessInfo.processInfo.arguments
+            if arguments.contains("--ledger-ui-test-report-loading") { return }
+            if arguments.contains("--ledger-ui-test-report-incomplete") {
+                continuation.yield(.incomplete)
+                return
+            }
+            if arguments.contains("--ledger-ui-test-report-failed") {
+                continuation.finish(throwing: PropertyManagementReportFailure.scopeMismatch)
+                return
+            }
             do {
                 continuation.yield(.ready(try snapshot(accountId: accountId, projectId: projectId, currency: currency,
                     asOf: .init(validating: 1_789_500_000_000))))
@@ -417,7 +427,8 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
                     spaceId: nil, name: "Report test chair", sku: "CHAIR-001", marketValue: nil, itemRevision: 1)
                 return try PropertyManagementReportSnapshot.build(
                     project: .init(accountId: accountId, projectId: projectId, name: "Report test property",
-                        address: "123 Synthetic Street", revision: 1), spaces: [], items: [item], currency: currency,
+                        address: "123 Synthetic Street", revision: 1), spaces: [],
+                    items: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-empty") ? [] : [item], currency: currency,
                     provenance: .init(accountId: accountId, projectId: projectId,
                         principalId: PrincipalID(validating: "principal-ui-test"),
                         visibilityScopeID: .make(bytes: Data("report-ui-fixture".utf8)),

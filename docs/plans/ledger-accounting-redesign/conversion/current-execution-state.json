@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 134,
+  "stateVersion": 137,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PHYSICAL-ITEM-REACTIVE-READ-GREEN",
-    "commit": "7be7745abd8674b8898d2fdd0ac5cb04219585d5",
-    "ciRun": 34183995439,
+    "name": "PROPERTY-REPORT-IMPLEMENTATION-CI-GREEN",
+    "commit": "ff59333ffb1ee6c89bc43d0cd7ffff807f73545b",
+    "ciRun": 34193510104,
     "ciStatus": "passed",
-    "meaning": "Exact automatic CI passed conversion/localDB/native/macOS UI/iOS for authorized physical downloaded Item reads. Not full Item browsing/accounting or hosted/cutover readiness."
+    "meaning": "Exact automatic CI passed fresh database,875 native tests including real same-fixture reader/MCP parity,5 workspace UI tests and both builds. Not native system-dialog completion, hosted validation or cutover readiness."
   },
   "activeWorkflow": {
     "id": "property-management-report-delivery",
@@ -23,16 +23,13 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "NEXT inspect HEAD and PR1 automatic CI for the report checkpoint (commit/push follows this state update). Do not manually rerun CI or claim full workflow completion. Main reviewed changed boundaries, delegated differential proof and independently reran it; updated macOS/iOS builds PASS. Full native874 before final startup hook; focused7 recovery/handoff and1 native/RPC differential after hook PASS. No processes/agents active. Last verified checkpoint below remains7be7745a until exact report commit CI passes.",
-      "Startup recovery hook+visible error added and7focused tests PASS. reports.md Generation now distinguishes downloaded local/checkpoint from authoritative source; exact diff reviewed and only corresponding authority hash updated. DB/handler/parity acceptance passed; other broad acceptance remains pending. CI dependency now localDB -> existing native job so generated same-commit report-parity artifact feeds real-reader differential in full native suite; missing artifact fails, retention1day.9 CI verifier tests PASS. No duplicate job/fixture/catalog.",
-      "Valid integrated evidence: full native874/129 PASS/tmp/ledger-report-native-integrated.log before startup-hook edit; full MCP36 + local DB543/17 PASS; local lint/security advisors clean. Real MCP populated/empty, exact values/archived parent, same-session revocation/restoration PASS. Environment/contracts/actual report stream SQL PASS after correcting note-history Project address overlap. Do not repeat unaffected suites merely on resume.",
-      "CI includes report stream, real MCP and same-commit differential artifact consumed by native suite.9 verifier tests PASS; conversion self-tests29negative/8positive, checklist loader and conversion:check PASS (three existing stale-source warnings; no new omission). Report fields/reader are implemented but pending native OS dialog and hosted evidence; checkpoint does not authorize cutover.",
-      "Mac UI waiting only on unlock: prior CUA locked, user asked asynchronously; do not retry without changed state. Prior macOS RPATH fix build+standalone synthetic launch valid, process intentionally stopped. Native OS dialogs/iOS file protection interaction unverified. Product audit complete; no Firebase/hosted/production access. O065/O033/O027/O060 block only affected accounting."
+      "NEXT follow automatic CI for the next report UI-verification commit (commit/push follows this state). New macOS test opens PDF/CSV/PDF system pickers, observes hittable native menu/popover, Escape cancels, opens real Print then Cancel; never sends/prints. New cross-platform test covers empty/loading/incomplete/failed fixture states and export disabled rules. Build-for-testing PASS/tmp/ledger-report-native-dialog-build.log (72718 terminal0), environment/conversion checks PASS (97368 terminal0). Actual new interactions unverified until CI. On failure inspect actual accessibility/debug evidence; don't relax assertions into callback-only proof.",
+      "Prior ff59333f automaticCI34193510104 SUCCESS remains verified checkpoint:875 native tests including differential,5 workspace UI tests,DB/MCP and both builds. watch25924 terminal0. No processes/agents live. New changes are synthetic UI fixture/tests plus checkpoint records only; runtime production behavior unchanged.",
+      "Review summary compacted; detailed prior review/evidence remains in ff59333f, not duplicated. Workflow review accepted, CI passed for that commit, but general/UI/media/deletion acceptance stays pending actual OS interaction. DB-integrity/read-only-handler/app-MCP-parity checks passed. No whole-outcome or cutover claim.",
+      "Reuse valid local/CI evidence. Hosted Supabase/PowerSync and production remain unauthorized; physical report has no payment/spend inference. Product audit complete. O065/O033/O027/O060 remain open for affected accounting. No Firebase worktree access."
     ]
   },
-  "blockers": [
-    "Native Share/Print/CSV dialog interaction awaits an unlocked Mac; CUA reported locked and user was asked. Independent MCP work remains available."
-  ],
+  "blockers": [],
   "guardrails": [
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
     "Do not implement redesigned behavior in Firebase.",
