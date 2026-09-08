@@ -28,6 +28,15 @@ function expectFailure(mutate, pattern) {
   assert.throws(() => validateConversionCI(value.packageJson, value.workflow), pattern);
 }
 
+test("report parity cannot silently lose its same-commit fixture", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("          name: report-parity-${{ github.sha }}", "          name: report-parity-unbound");
+  }, /same-commit report fixture/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("          if-no-files-found: error", "          if-no-files-found: ignore");
+  }, /same-commit report fixture/);
+});
+
 test("repository conversion CI retains the required product and implementation gates", () => {
   const { packageJson, workflow } = inputs();
   assert.deepEqual(validateConversionCI(packageJson, workflow), {
@@ -157,9 +166,9 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
   );
   expectFailure(
     (value) => {
-      value.workflow = value.workflow.replace("    needs: conversion-control\n", "", 1);
+      value.workflow = value.workflow.replace("    needs: [conversion-control, local-supabase-provider-slices]\n", "");
     },
-    /target dependency/,
+    /target same-commit database dependency/,
   );
   expectFailure(
     (value) => {

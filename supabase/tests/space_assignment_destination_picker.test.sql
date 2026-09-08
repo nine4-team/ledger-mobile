@@ -98,13 +98,15 @@ select ok(
       and qual like '%lifecycle%active%'
       and qual like '%has_active_membership%account_id%'
   ),
-  'the sole read policy requires active lifecycle and active Account membership'
+  'the destination read policy requires active lifecycle and active Account membership'
 );
 
 select is(
-  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'spike_spaces'),
-  1::bigint,
-  'no write policy or alternate read policy exists'
+  (select array_agg(policyname || ':' || cmd || ':' || roles::text order by policyname)
+    from pg_policies where schemaname = 'public' and tablename = 'spike_spaces'),
+  array['spike_spaces_report_current_parent_read:SELECT:{authenticated}',
+        'spike_spaces_select_active_member:SELECT:{authenticated}'],
+  'only destination and retained report-parent reads exist; no write or other-role policy'
 );
 
 select ok(

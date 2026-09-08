@@ -2,6 +2,49 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testPropertyManagementPreviewRefreshAndDismiss() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        reveal(openReport, in: app)
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let item = app.descendants(matching: .any)
+            .matching(identifier: "target-property-report-item-report-ui-chair").firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["target-property-report-share"].isEnabled)
+        XCTAssertTrue(app.buttons["target-property-report-print"].isEnabled)
+        XCTAssertTrue(app.buttons["target-property-report-csv"].isEnabled)
+        XCTAssertTrue(waitUntil {
+            let text = item.label + " " + ((item.value as? String) ?? "")
+            return text.contains("Report test chair") && text.contains("CHAIR-001") && text.contains("Unknown")
+        })
+        let refresh = app.buttons["target-property-report-refresh"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 5))
+        refresh.tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "target-property-report-totals").firstMatch.exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        let remove = app.buttons["target-ui-fixture-remove-account"]
+        reveal(remove, in: app, upwards: false)
+        remove.tap()
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "target-workspace-access-removed").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(openReport.exists)
+        XCTAssertFalse(item.exists)
+    }
+
     func testDownloadedItemsRefreshAndRemoval() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

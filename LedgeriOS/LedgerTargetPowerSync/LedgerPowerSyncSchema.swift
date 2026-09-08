@@ -37,7 +37,9 @@ public enum LedgerPowerSyncSchema {
     public static let schema = Schema(
         Table(
             name: LedgerPowerSyncTable.items,
-            columns: [.text("account_id"), .text("description"), .integer("revision"),
+            columns: [.text("account_id"), .text("name"), .text("description"), .text("sku"),
+                      .text("market_value_minor_units"), .text("market_value_currency"),
+                      .integer("revision"),
                       .text("created_at"), .text("created_by_principal_id")],
             indexes: [.ascending(name: "item_account", columns: ["account_id"])]
         ),
@@ -190,7 +192,7 @@ public enum LedgerPowerSyncSchema {
             name: LedgerPowerSyncTable.projects,
             columns: [
                 .text("account_id"), .text("client_id"), .text("display_name"),
-                .text("description"), .text("lifecycle"), .integer("revision"),
+                .text("description"), .text("property_address"), .text("lifecycle"), .integer("revision"),
                 .text("category_configuration_revision"),
                 .integer("created_at_ms"), .integer("updated_at_ms"),
                 .text("created_by_principal_id")

@@ -7,6 +7,7 @@ import SwiftUI
 @main
 struct LedgerTargetStagingApp: App {
     private let rootView: AnyView
+    @State private var reportCleanupFailed = false
 
     init() {
         #if DEBUG
@@ -42,6 +43,15 @@ struct LedgerTargetStagingApp: App {
     var body: some Scene {
         WindowGroup {
             rootView
+                .task {
+                    do { try await PropertyManagementReportDelivery.recoverStartupScratch() }
+                    catch { reportCleanupFailed = true }
+                }
+                .alert("Report cleanup could not finish", isPresented: $reportCleanupFailed) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text("Some temporary report files could not be cleaned up. Ledger will retry before the next export. Original documents and saved exports are unchanged.")
+                }
         }
     }
 }
@@ -142,7 +152,8 @@ private struct OfflineProviderSpikeView: View {
             }
         )
         ActiveWorkspaceToSpaceChecklistStagingView(
-            model: model.activeWorkspaceToSpaceChecklist
+            model: model.activeWorkspaceToSpaceChecklist,
+            accountCurrency: model.projectSetup.accountCurrency
         )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations

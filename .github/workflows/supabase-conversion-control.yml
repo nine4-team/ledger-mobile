@@ -38,7 +38,7 @@ jobs:
 
   target-environment:
     name: Isolated target environment
-    needs: conversion-control
+    needs: [conversion-control, local-supabase-provider-slices]
     # PowerSync 1.16.1 uses swift-collections BasicContainers APIs that require
     # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
     # CI exercises the same supported compiler floor as the target app.
@@ -66,6 +66,12 @@ jobs:
           npm --prefix LedgerTargetMCP ci --ignore-scripts
           npm run target:contracts:check
           npm run target:mcp:test
+
+      - name: Load same-commit report parity fixture
+        uses: actions/download-artifact@v4
+        with:
+          name: report-parity-${{ github.sha }}
+          path: ${{ runner.temp }}
 
       - name: Test isolated target contracts
         # A-022 fixes the captured SDK cancellation deadlock. Run every suite
@@ -123,6 +129,7 @@ jobs:
 
       - name: Verify Client and Project schema, RLS, RPC, and replay behavior
         run: |
+          npm --prefix LedgerTargetMCP ci --ignore-scripts
           npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning
           npm run target:supabase:test:db
           npm run target:supabase:test:space-assignment-destination-read
@@ -131,6 +138,16 @@ jobs:
           npm run target:supabase:test:payment-import
           node scripts/test-local-item-placement-concurrency.mjs
           node scripts/test-local-physical-item-stream.mjs
+          node scripts/test-local-property-management-stream.mjs
+          node scripts/test-local-property-report-mcp.mjs
+
+      - name: Preserve same-commit report parity fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-parity-${{ github.sha }}
+          path: ${{ runner.temp }}/ledger-property-report-parity.json
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Stop isolated local Supabase
         if: always()

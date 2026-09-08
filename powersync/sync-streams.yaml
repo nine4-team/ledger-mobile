@@ -2,10 +2,70 @@ config:
   edition: 3
 
 streams:
+  property_management_report:
+    queries:
+      - |
+        SELECT project.id, project.account_id, project.client_id, project.display_name,
+          project.description, project.property_address, project.lifecycle, project.revision,
+          project.category_configuration_revision::text AS category_configuration_revision,
+          project.created_at_ms, project.updated_at_ms, project.created_by_principal_id
+        FROM spike_projects AS project
+        JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE project.account_id = subscription.parameter('account_id')
+        AND project.id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT space.id, space.account_id, space.scope_kind, space.project_id,
+          space.display_name, space.lifecycle, space.revision
+        FROM spike_spaces AS space
+        JOIN spike_account_memberships AS membership ON membership.account_id = space.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE space.account_id = subscription.parameter('account_id')
+        AND space.project_id = subscription.parameter('project_id')
+        AND (space.lifecycle = 'active' OR space.id IN (
+          SELECT placement.space_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.project_id = subscription.parameter('project_id')
+          AND placement.scope_kind = 'project' AND placement.ended_at IS NULL
+        ))
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT placement.id, placement.account_id, placement.item_id, placement.scope_kind,
+          placement.project_id, placement.space_id, placement.started_at,
+          placement.started_by_principal_id, placement.ended_at, placement.ended_by_principal_id
+        FROM spike_item_placements AS placement
+        JOIN spike_account_memberships AS membership ON membership.account_id = placement.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE placement.account_id = subscription.parameter('account_id')
+        AND placement.project_id = subscription.parameter('project_id')
+        AND placement.ended_at IS NULL
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT item.id, item.account_id, item.name, item.description, item.sku,
+          item.market_value_minor_units::text AS market_value_minor_units, item.market_value_currency, item.revision,
+          item.created_at, item.created_by_principal_id
+        FROM spike_items AS item
+        JOIN spike_account_memberships AS membership ON membership.account_id = item.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE item.account_id = subscription.parameter('account_id')
+        AND item.id IN (
+          SELECT placement.item_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.project_id = subscription.parameter('project_id')
+          AND placement.ended_at IS NULL
+        )
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
   physical_account_items:
     queries:
       - |
-        SELECT item.id, item.account_id, item.description, item.revision,
+        SELECT item.id, item.account_id, item.name, item.description, item.sku,
+          item.market_value_minor_units::text AS market_value_minor_units, item.market_value_currency, item.revision,
           item.created_at, item.created_by_principal_id
         FROM spike_items AS item
         JOIN spike_account_memberships AS membership ON membership.account_id = item.account_id
@@ -89,6 +149,7 @@ streams:
           project.client_id,
           project.display_name,
           project.description,
+          project.property_address,
           project.lifecycle,
           project.revision,
           project.category_configuration_revision::text
@@ -395,6 +456,7 @@ streams:
           project.client_id,
           project.display_name,
           project.description,
+          project.property_address,
           project.lifecycle,
           project.revision,
           project.category_configuration_revision::text

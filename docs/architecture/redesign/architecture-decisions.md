@@ -48,6 +48,234 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-020 | accepted | Persist imported client payments atomically with immutable source bytes |
 | A-021 | accepted, local synthetic scope only | Replay bounded payment batches and acknowledge only verified committed data |
 | A-022 | accepted, integration verification pending | Correct PowerSync cancellation lock inversion without weakening database cleanup |
+| A-023 | accepted, provider/delivery verification pending | Share one concrete Property Management snapshot across report outputs |
+| A-024 | accepted, local concurrent regression passed | Guard the pinned cipher library's concurrent database-open race |
+| A-025 | accepted, standalone macOS launch checked | Resolve embedded frameworks using the platform's app-bundle layout |
+
+## A-025 — Platform-Correct Embedded Framework Lookup
+
+Standalone synthetic macOS launch failed before app initialization: the database
+framework was correctly embedded in `Contents/Frameworks`, but the generated
+cross-platform target searched only the iOS-style executable-relative directory.
+Add `@executable_path/../Frameworks` for macOS SDKs in `LedgerTargetProject.yml`
+and regenerate the Xcode project. Keep inherited/iOS paths unchanged; do not use
+environment overrides or copy libraries into the wrong bundle directory.
+The rebuilt binary contains that runtime search path and starts standalone with
+the synthetic fixture flag. No data model, history, backend or security policy
+changes. Screen-locked native interaction and release/iOS packaging are separate
+verification requirements, not proven by this launch check.
+
+## A-024 — Narrow Guard for Concurrent Encrypted Database Opening
+
+**Evidence:** The 16-worker unique-path encrypted-open reproduction failed with
+`unknown cipher 'chacha20'` inside `sqlite3_open_v2`, before Ledger supplied a key.
+Main independently inspected pinned CSQLite 3.51.2's amalgamation:
+`sqlite3mc_cipher_name` returns a single static mutable buffer, and
+`sqlite3mcConfigureFromUri` compares that buffer after another open can overwrite
+it. Its only implementation callsite is URI/open configuration; this is not a
+one-time registry initialization problem. Disk pressure was observed but is not
+the established cause of this reproduced failure.
+
+**Decision:** Guard only `sqlite3_open_v2` in the existing vendored PowerSync
+connection factory with a process-wide synchronous mutex. Do not serialize
+ordinary queries, key configuration, whole pool startup, or the tests; do not
+retry away the failure. Current Ledger structured, principal and attachment
+databases use this opening path. Preserve SQLite's detailed error before closing
+any nonnil failed-open handle, avoiding both opaque diagnostics and handle leaks.
+No encryption key or cipher policy changes are authorized by this fix.
+
+**Limits and verification:** A future independent CSQLite opening or ATTACH path
+would need the same protection or an upstream library correction. This is a
+bounded workaround for the pinned dependency, not a claim that SQLite generally
+requires serialized access. Keep the concurrent reproduction and integrated
+report/runtime tests as regression evidence in the active workflow. Before/after
+results and any remaining failures must be recorded there before acceptance as
+verified; no broader hosted or cutover readiness follows from this patch.
+
+The same 16-worker reproduction passed after the guard. Main independently
+reviewed the C callsites and Swift patch, then ran the combined 67-test report,
+runtime, Item-watch and concurrent-open set with normal test concurrency: all
+passed. Exact logs remain linked in the active workflow; full integration/CI
+verification remains required for the uncommitted report batch.
+
+## A-023 — One Property Management Report Snapshot
+
+**Online transport boundary:** The MCP reader uses a publishable key and caller
+JWT, rejects Account/Project/Principal/currency mismatches, requires HTTPS except
+loopback development, forbids redirects, bounds request time, and sanitizes
+failures. Credential-shape checks are not authentication; server JWT verification,
+current membership and a coherent RLS-protected RPC remain required. This changes
+no history or product policy.
+
+The online RPC now uses `STABLE SECURITY INVOKER` with an empty search path:
+membership and all report facts share the calling statement's database snapshot
+and caller RLS. It derives Principal from Auth identity, retains referenced
+archived Spaces and rejects unreadable parents. Account/Project currently store
+no currency setting; the explicit requested unit must match every known Item
+value, with no conversion or default inference. The adapter verifies the native
+scope fingerprint and exact authority version. Independent read-only review found
+no blocking schema/RLS issue; 15 local pgTAP checks and nine TS projection/adapter
+tests pass.
+
+**Target MCP host:** A separate Node stdio entrypoint registers only the report
+tool, using pinned existing-stack SDK/Zod versions and no Firebase imports. The
+launcher supplies `LEDGER_TARGET_SUPABASE_URL`, `LEDGER_TARGET_PUBLISHABLE_KEY`,
+`LEDGER_TARGET_ACCOUNT_ID`, and `LEDGER_TARGET_ACCESS_TOKEN`; launch from
+`LedgerTargetMCP` with `npm run start:stdio`. Principal is resolved through
+caller-JWT RLS, and every report rechecks membership. Tokens are neither persisted
+nor refreshed here: expiry requires relaunch with a fresh user session. This is
+not hosted OAuth or complete MCP migration. Independent review found no blocking
+auth flaw. The local stdio-to-HTTP-to-Postgres smoke passes for an empty Project,
+rejects identity arguments and bad JWT signatures, and sanitizes unavailable
+Project errors. The same real MCP/HTTP path now also verifies populated reports
+(archived Space parent, No Space, Unicode, known zero, unknown and above-2^53
+amounts) and membership removal/restoration within one open session. The fixed
+synthetic fixture reuses immutable history and leaves its membership removed
+after testing. Full local database tests pass (543 checks), as do 36 MCP tests,
+schema lint and security advisors. CI now includes report stream and real MCP
+checks. Hosted behavior and native Share/Print interaction remain unverified.
+The combined native batch passes 874 tests. Integrated checks also found the
+note-history Project projection missing the report address: it now selects the
+same named fields as report/bootstrap, with a direct regression comparison.
+Older Space-policy tests now assert the exact two authenticated SELECT policies,
+not an obsolete one-policy count; no write grants or broad read policy were added.
+Final lifecycle review found recovery was invoked only before export. App startup
+now also invokes the same protected scratch recovery, with a visible cleanup
+failure alert. The focused recovery/handoff tests pass (seven tests), including
+startup cleanup retaining active sessions and deleting abandoned owned bytes.
+No new retention policy or original-document deletion is introduced.
+The native reader and real MCP RPC now match over the same synthetic source rows
+(fields, totals and source-set hash; source-specific provenance is excluded).
+CI transfers this generated, same-commit fixture from the existing local database
+job to the existing native job; missing artifacts fail, and retention is one day.
+This introduces a job dependency rather than another test job or maintained
+fixture. Main independently reviewed the test and reproduced its pass. Updated
+macOS and iOS builds pass after the startup hook; OS dialog interaction is still
+not inferred from compilation or callback simulations.
+
+**Physical read integration:** Store nullable Item name, SKU and exact signed
+market value separately from description; add an optional Project address without
+inferring it from description. Preserve current placements' archived Space parents
+with narrowly scoped read access. Overlapping report and ordinary streams must
+select identical expressions for the same table/ID; do not rely on partial-row
+merging. No additional tables or report receipt system are introduced. These are
+read fields, not permission to edit Items. Local SQL and SQLite tests cover the
+new fields and access boundaries; scoped download completeness and hosted
+replication still require verification in the active workflow.
+
+Market-value cents remain Postgres bigint but sync as decimal text into SQLite,
+then parse strictly into Int64. A focused falsification test found that an INTEGER
+PowerSync view silently coerced a fractional local value to an integer before
+the reader could reject it. Text prevents that loss; fractional, exponent and
+out-of-range values are rejected rather than rounded. The local report reader
+checks membership, Project, current placements and parent Spaces in one read
+transaction. Its query checks exact scoped retained sync metadata in that same
+transaction; synthetic metadata tests do not prove core eviction/re-subscription
+semantics, which remain an integration requirement before report readiness is
+accepted. Existing Item display-name fallback is presentation only, never a
+rewrite of stored name or description.
+
+**Pinned-core local evidence:** A fresh unseeded SQLite test now drives real
+core checkpoint/data processing. Expiry removes completion metadata while the
+bucket row can still exist; a later withdrawal checkpoint removes the row;
+re-subscription has no completed checkpoint. The SQL gate rejects both incomplete
+boundaries, even when public status briefly retains old stream information.
+This supports checking retained metadata with report inputs in one transaction,
+not relying solely on cached status. Runtime reads reuse the existing finite
+workspace lease; encrypted restart and foreign/closed/removed-access tests pass.
+This synthetic single-bucket sequence is not hosted replication proof or full
+report delivery verification; see the existing workflow's test evidence.
+
+**Live presentation:** Item and report watches now share a small owned-subscription
+task-group helper, preserving local-first emission and awaited cleanup. The
+runtime retains the report task until cleanup completes and suppresses updates
+after access lock. The preview consumes only the typed snapshot's precomputed
+groups/totals; incomplete or stopped watches clear visible report data. No new
+subscription registry or alternate UI accounting implementation is introduced.
+The macOS preview compiles; full integration and export verification remain open.
+
+Preview, PDF/print, CSV and MCP use `PropertyManagementReportSnapshot`, reusing
+the existing protected-artifact reference rather than a second export system.
+It preserves physical Item and placement identities, Project/Space revisions,
+SKU, nullable address/value, deterministic grouping, and exact known subtotals
+with unknown counts. Missing prices never become known zero. JSON encodes cents
+and revisions as decimal strings to avoid JavaScript precision loss.
+
+The owning provider must establish current access, complete exact-scope stream
+readiness and one coherent SQL snapshot. Public construction only checks internal
+coherence; it cannot authenticate a checkpoint or authorize an export. No new
+receipt/manifest service or arbitrary offline time expiry is introduced.
+Seven focused tests pass in `PropertyManagementReportTests`; real provider,
+rendering and protected handoff remain unverified. See the existing
+`property-management-report-delivery` workflow record for implementation evidence.
+
+The initial HTML renderer is pure snapshot presentation: escaped user text,
+no asset fetches or eligibility/total calculations, and no external resources.
+Known cents retain integer precision; unknown totals remain labelled subtotals.
+String-level tests are not visual/PDF or system-handoff proof.
+
+**Native PDF and temporary-file lifetime:** Use CoreText pagination directly from
+the same immutable snapshot, without a browser, asset fetches or recalculated
+accounting. Ordinary Item records and totals stay together; oversized user text
+can continue across pages instead of being truncated. Stable Item IDs and snapshot
+provenance remain in the output. This is presentation, not another data model.
+
+`ReportScratchStore` owns exclusively created files in a dedicated private temp
+directory (0700 directories, 0600 files, iOS complete protection). Session locks
+keep recovery from deleting active handoffs; explicit removal follows system
+completion/cancel/failure, while abandoned sessions are cleaned on recovery.
+Descriptor-relative no-follow operations reject symlinks, foreign artifacts and
+unexpected files. Only the trusted OS temp parent is canonicalized with realpath;
+Foundation's /var abbreviation otherwise prevents secure path traversal. Saved
+exports and original evidence are outside cleanup scope. No persistent receipt
+registry is added, and a snapshot/hash reference never grants access.
+
+Main reviewed the delegated store and its correction. Seven focused native tests
+pass for PDF content/pagination and scratch retention/failure/recovery. All nine
+pages of the synthetic 80-Item PDF were visually inspected after fixing split
+records. iOS protection, current-access checks at handoff, actual OS completion
+callbacks and app/MCP integration still require verification; see the existing
+workflow record. This does not claim completed export delivery.
+
+**Handoff authorization:** After rendering, the delivery coordinator re-reads
+through the authorized report port using the displayed as-of value. A changed
+snapshot or rejected access requires refresh instead of exporting stale content.
+The preview also checks its live state immediately before opening the OS dialog.
+Once disclosed to the system, content cannot be recalled; cancellation of an app
+task is therefore not proof that the system stopped reading its file. Cleanup
+waits for the native completion callback. Focused tests cover denied/changed reads
+and file retention through successful, canceled-task and failed handoffs. Actual
+native-dialog integration remains an additional verification requirement.
+
+**CSV projection:** A pure renderer emits typed metadata, Space, Item, group-total
+and report-total rows from the existing snapshot. It quotes cells and neutralizes
+formula-like user text without changing canonical data; numeric minor-unit fields
+remain exact signed decimal strings. Spreadsheet importers must retain large
+integers as text to avoid their own precision loss. This renderer does not supply
+authorization or a delivery host. Target MCP currently has tool/adaptor exports,
+not a running report connection; canonical JSON and CSV formatting alone do not
+close that integration gap.
+
+PDF and CSV now share the same owned-file/handoff implementation. The scratch
+store accepts only these two explicit formats; startup cleanup rejects other
+extensions and still never touches user-saved exports. CSV sharing uses the same
+fresh authorized read and completion-driven cleanup as PDF, not a separate
+authorization or retention path.
+
+**Online versus downloaded provenance:** The shared report content now carries
+an explicit source variant. Downloaded reports require their local version and
+exact stream checkpoint; authoritative online reports carry neither. Both bind
+the scoped principal, as-of time, source-row revisions/content hash and report
+authority. Online reads therefore do not fabricate a PowerSync sync time or
+local version. Renderers label the source; the downloaded app watch rejects an
+online result. The source variant participates in the snapshot hash while equal
+source facts still produce equal groups, totals and source-set hashes.
+
+Node MCP retains the existing caller-JWT RPC architecture. Its report projection
+must match Swift using the shared canonical JSON fixture, including exact money,
+No Space identity and string escaping; passing projection tests is not proof of
+live authenticated RPC/transport delivery. No Firebase server import or native
+subprocess bridge is introduced.
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 

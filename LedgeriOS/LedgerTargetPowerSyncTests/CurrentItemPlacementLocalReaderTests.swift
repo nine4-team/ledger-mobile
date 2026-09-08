@@ -10,6 +10,32 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Report storage preserves distinct text, unknown valuation and exact signed cents")
+    func reportFields() async throws {
+        try await withDatabase { db in
+            let unknown = try await db.getAll(sql: "SELECT market_value_minor_units FROM spike_items WHERE id='chair'", parameters: nil) {
+                try $0.getIntOptional(name: "market_value_minor_units")
+            }
+            #expect(unknown.count == 1 && unknown[0] == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET name='Named chair',sku='SKU-1',market_value_currency='USD' WHERE id='chair'", parameters: nil)
+            for amount: Int64 in [0, 9_007_199_254_740_993, Int64.min, Int64.max] {
+                _ = try await db.execute(sql: "UPDATE spike_items SET market_value_minor_units=? WHERE id='chair'", parameters: [amount])
+                let stored = try await db.getAll(sql: "SELECT name,description,sku,market_value_minor_units,market_value_currency FROM spike_items WHERE id='chair'", parameters: nil) {
+                    (try $0.getString(name: "name"), try $0.getString(name: "description"),
+                     try $0.getString(name: "sku"), try $0.getInt(name: "market_value_minor_units"),
+                     try $0.getString(name: "market_value_currency"))
+                }
+                #expect(stored[0].0 == "Named chair" && stored[0].1 == "Chair")
+                #expect(stored[0].2 == "SKU-1" && stored[0].3 == amount && stored[0].4 == "USD")
+            }
+            _ = try await db.execute(sql: "UPDATE spike_projects SET property_address='123 Main St' WHERE id='project-item'", parameters: nil)
+            let addresses = try await db.getAll(sql: "SELECT property_address FROM spike_projects WHERE id='project-item'", parameters: nil) {
+                try $0.getString(name: "property_address")
+            }
+            #expect(addresses == ["123 Main St"])
+        }
+    }
+
     @Test("Current physical rows retain history and do not become assignment preconditions")
     func currentRows() async throws {
         try await withDatabase { db in

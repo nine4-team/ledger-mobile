@@ -227,7 +227,14 @@ function validateConversionJob(lines) {
 
 function validateTargetJob(lines) {
   const target = jobLines(lines, "target-environment");
-  requireExactLine(target, "    needs: conversion-control", "target dependency");
+  requireExactLine(target, "    needs: [conversion-control, local-supabase-provider-slices]", "target same-commit database dependency");
+  requireCondition(target.join("\n").includes([
+    "      - name: Load same-commit report parity fixture",
+    "        uses: actions/download-artifact@v4",
+    "        with:",
+    "          name: report-parity-${{ github.sha }}",
+    "          path: ${{ runner.temp }}",
+  ].join("\n")), "target requires the exact same-commit report fixture");
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
   for (const command of [
     "          node --check scripts/check-target-environment.mjs",
@@ -278,6 +285,15 @@ function validateTargetJob(lines) {
 
 function validateLocalSupabaseJob(lines) {
   const local = jobLines(lines, "local-supabase-provider-slices");
+  requireCondition(local.join("\n").includes([
+    "      - name: Preserve same-commit report parity fixture",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: report-parity-${{ github.sha }}",
+    "          path: ${{ runner.temp }}/ledger-property-report-parity.json",
+    "          if-no-files-found: error",
+    "          retention-days: 1",
+  ].join("\n")), "local database gate must preserve the same-commit report fixture");
   requireExactLine(local, "    needs: conversion-control", "local Supabase dependency");
   requireExactLine(local, "    runs-on: ubuntu-latest", "local Supabase Linux runner");
   const portSelection = local.indexOf("        run: node scripts/select-ci-supabase-db-port.mjs");
@@ -294,6 +310,9 @@ function validateLocalSupabaseJob(lines) {
     "          npm run target:supabase:test:payment-import",
     "          node scripts/test-local-item-placement-concurrency.mjs",
     "          node scripts/test-local-physical-item-stream.mjs",
+    "          node scripts/test-local-property-management-stream.mjs",
+    "          node scripts/test-local-property-report-mcp.mjs",
+    "          npm --prefix LedgerTargetMCP ci --ignore-scripts",
     "        run: npx --yes supabase@2.116.0 stop --no-backup",
   ]) {
     requireExactLine(local, command, `local database gate ${command.trim()}`);

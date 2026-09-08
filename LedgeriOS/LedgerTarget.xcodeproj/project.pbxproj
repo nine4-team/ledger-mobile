@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BA10D039AFE04E0DB71F09A1 /* DownloadedItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */; };
 		080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */; };
 		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
@@ -20,10 +19,12 @@
 		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
 		4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */; };
 		520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */; };
+		5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */; };
 		5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */; };
 		68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */; };
 		723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */; };
 		7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */; };
+		7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */; };
 		7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */; };
 		843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */; };
 		87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */; };
@@ -31,6 +32,7 @@
 		95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */; };
 		A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */; };
 		AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */; };
+		C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */; };
 		D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */; };
 		D5549BCFFADB798944BA0844 /* VendorSuggestionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */; };
 		D93205BA1256BA6E7CDE6110 /* AccountPendingWorkStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */; };
@@ -56,11 +58,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemsView.swift; sourceTree = "<group>"; };
 		0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingExerciseView.swift; sourceTree = "<group>"; };
 		189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
 		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportPreview.swift; sourceTree = "<group>"; };
 		33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectNoteHistoryStagingExerciseView.swift; sourceTree = "<group>"; };
 		3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -78,11 +80,13 @@
 		9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingExerciseView.swift; sourceTree = "<group>"; };
 		9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
 		9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportSystemDelivery.swift; sourceTree = "<group>"; };
 		A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
 		BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerTargetStagingApp.swift; sourceTree = "<group>"; };
 		BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBrowserStagingComposition.swift; sourceTree = "<group>"; };
 		BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryStagingExercise.swift; sourceTree = "<group>"; };
+		BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemsView.swift; sourceTree = "<group>"; };
 		CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerRuntimeAdapter.swift; sourceTree = "<group>"; };
 		E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingExerciseView.swift; sourceTree = "<group>"; };
@@ -124,11 +128,11 @@
 				9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */,
 				E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */,
 				189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */,
-				BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */,
 				F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */,
 				9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */,
 				E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */,
 				76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */,
+				BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */,
 				BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */,
 				3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */,
 				4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */,
@@ -138,6 +142,8 @@
 				33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */,
 				E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */,
 				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
+				23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */,
+				A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */,
 				F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */,
 				0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */,
 				BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */,
@@ -279,11 +285,11 @@
 				D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */,
 				7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */,
 				1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */,
-				BA10D039AFE04E0DB71F09A1 /* DownloadedItemsView.swift in Sources */,
 				49DC392E33A075F038F9A911 /* ClientArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
 				EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */,
 				AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */,
 				A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */,
+				C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */,
 				95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */,
 				68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
 				87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */,
@@ -293,6 +299,8 @@
 				843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */,
 				4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */,
 				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,
+				7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */,
+				5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */,
 				24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */,
 				723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */,
 				5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */,
@@ -415,6 +423,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging;
 				PRODUCT_MODULE_NAME = LedgerTargetStaging;
@@ -508,6 +520,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging;

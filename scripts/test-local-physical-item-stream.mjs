@@ -63,7 +63,7 @@ const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-
 const results = output.trim().split("\n").map((line) => JSON.parse(line));
 assert.equal(results.length, 15);
 const columns = [
-  ["id", "account_id", "description", "revision", "created_at", "created_by_principal_id"],
+  ["id", "account_id", "name", "description", "sku", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
   ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
 ];

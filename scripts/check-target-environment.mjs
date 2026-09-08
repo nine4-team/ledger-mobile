@@ -610,6 +610,7 @@ if (
     "pendingUploadCount",
     "pendingWorkSummary",
     "readDownloadedItemPlacements",
+    "readDownloadedPropertyManagementReport",
     "rejectedOperations",
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
@@ -626,6 +627,7 @@ if (
     "watchProjectCreationOperation",
     "watchProjectNotes",
     "watchProjects",
+    "watchPropertyManagementReport",
     "watchRejectedOperations",
     "watchSpaceAssignmentDestinations",
     "watchSpaceChecklistRevisionOperation",
@@ -2474,6 +2476,7 @@ if (
     ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
   ].map((match) => match[1]);
   const expectedStreamNames = [
+    "property_management_report",
     "physical_account_items",
     "spike_account_bootstrap",
     "spike_clients",
@@ -2505,12 +2508,12 @@ if (
       /^      - \|\n([\s\S]*?)(?=^      - \|\n|(?![\s\S]))/gm,
     )].map((match) => match[1].replace(/\s+/g, " ").trim());
   const expectedBroadProjectQueries = [
-    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project WHERE project.account_id IN ( SELECT membership.account_id FROM spike_account_memberships AS membership JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' )",
+    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.property_address, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project WHERE project.account_id IN ( SELECT membership.account_id FROM spike_account_memberships AS membership JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' )",
     "SELECT category.* FROM spike_budget_categories AS category JOIN spike_account_memberships AS membership ON membership.account_id = category.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
     "SELECT allocation.* FROM spike_project_category_allocations AS allocation JOIN spike_budget_categories AS category ON category.account_id = allocation.account_id AND category.id = allocation.category_id JOIN spike_account_memberships AS membership ON membership.account_id = allocation.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
   ];
   const expectedProjectNoteQueries = [
-    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE project.account_id = subscription.parameter('account_id') AND project.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.property_address, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE project.account_id = subscription.parameter('account_id') AND project.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
     "SELECT note.id, note.account_id, note.project_id, note.id AS keyset_id, note.content_kind, note.note_text, note.source, note.created_by_principal_id, note.creator_display_name, note.created_at_ms, note.revision::text AS revision, note.last_edited_by_principal_id, note.last_edited_at_ms, note.deleted_by_principal_id, note.deleted_at_ms FROM spike_project_notes AS note JOIN spike_projects AS project ON project.account_id = note.account_id AND project.id = note.project_id JOIN spike_account_memberships AS membership ON membership.account_id = note.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE note.account_id = subscription.parameter('account_id') AND note.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
   ];
   if (
@@ -2534,12 +2537,12 @@ if (
   if (
     (sync.match(
       /project\.category_configuration_revision::text\s+AS category_configuration_revision/g,
-    ) ?? []).length !== 2 ||
+    ) ?? []).length !== 3 ||
     /SELECT\s+project\.\*/i.test(sync)
   ) {
     fail(
       "target_project_category_revision_sync_incomplete",
-      "Both unchanged-authority Project projections must cast the exact numeric revision to text and neither may use project.*.",
+      "All three Project projections must cast the exact numeric revision to text and none may use project.*.",
     );
   }
   if (!store.includes('command.draft.description,\n                        "1",')) {
@@ -3042,7 +3045,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
     )
   ) {
     fail(
@@ -3354,7 +3357,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,PropertyManagementReportReading,PropertyManagementReportWatching,Sendable",
     )
   ) {
     fail(

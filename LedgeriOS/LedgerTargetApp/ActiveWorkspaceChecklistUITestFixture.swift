@@ -31,7 +31,8 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                 }
 
                 WorkspaceAccessGate(access: fixture.access) {
-                    ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model)
+                    ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model,
+                        accountCurrency: try! CurrencyCode(validating: "USD"))
                 }
             }
         }
@@ -294,7 +295,9 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                 },
                 watchRejectedOperations: { [rejectedUpdates] _ in rejectedUpdates.stream }
             ),
-            itemReader: UITestFixtureItemReader()
+            itemReader: UITestFixtureItemReader(),
+            reportWatcher: UITestFixtureReportWatcher(),
+            reportReader: UITestFixtureReportWatcher()
         ))
     }
 
@@ -387,6 +390,41 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading {
             description: "Downloaded test chair", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-placement"), scope: scope, spaceId: nil)
         return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row])
+    }
+}
+
+private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, PropertyManagementReportReading {
+    func watchPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode) -> AsyncThrowingStream<PropertyManagementReportUpdate, Error> {
+        AsyncThrowingStream { continuation in
+            do {
+                continuation.yield(.ready(try snapshot(accountId: accountId, projectId: projectId, currency: currency,
+                    asOf: .init(validating: 1_789_500_000_000))))
+                // Every refresh owns a distinct stream until cancellation.
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+
+    func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
+        try snapshot(accountId: accountId, projectId: projectId, currency: currency, asOf: asOf)
+    }
+
+    private func snapshot(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode,
+        asOf: ProtectedArtifactEpochMilliseconds) throws -> PropertyManagementReportSnapshot {
+                let item = try PropertyManagementReportItem(accountId: accountId, projectId: projectId,
+                    itemId: ItemID(validating: "report-ui-chair"), placementId: EntityID(validating: "report-ui-placement"),
+                    spaceId: nil, name: "Report test chair", sku: "CHAIR-001", marketValue: nil, itemRevision: 1)
+                return try PropertyManagementReportSnapshot.build(
+                    project: .init(accountId: accountId, projectId: projectId, name: "Report test property",
+                        address: "123 Synthetic Street", revision: 1), spaces: [], items: [item], currency: currency,
+                    provenance: .init(accountId: accountId, projectId: projectId,
+                        principalId: PrincipalID(validating: "principal-ui-test"),
+                        visibilityScopeID: .make(bytes: Data("report-ui-fixture".utf8)),
+                        localDataVersion: .init(validating: "report-ui-1"),
+                        authorityVersion: .init(validating: "property-management-v1"),
+                        asOf: asOf, readiness: .ready,
+                        lastSyncedAt: .init(validating: 1_789_500_000_000)))
     }
 }
 #endif

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 115,
-  "resumeAfterWorkflowId": "learned-account-removal-enforcement",
+  "stateVersion": 134,
+  "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -10,27 +10,29 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PHYSICAL-ITEM-STORAGE-AND-LOCAL-READER-GREEN",
-    "commit": "6e3a022ae3b1b8485fca7756dc7c85533460f549",
-    "ciRun": 34180760150,
+    "name": "PHYSICAL-ITEM-REACTIVE-READ-GREEN",
+    "commit": "7be7745abd8674b8898d2fdd0ac5cb04219585d5",
+    "ciRun": 34183995439,
     "ciStatus": "passed",
-    "meaning": "Full automatic conversion/native/localDB/app UI/macOS+iOS CI passed for physical Item storage/local reader and explicit Space API projection. New member-read access/stream remains uncommitted local evidence; whole app/migration/hosted readiness remains unproved."
+    "meaning": "Exact automatic CI passed conversion/localDB/native/macOS UI/iOS for authorized physical downloaded Item reads. Not full Item browsing/accounting or hosted/cutover readiness."
   },
   "activeWorkflow": {
-    "id": "item-history-source-reconciliation",
-    "kind": "migration",
+    "id": "property-management-report-delivery",
+    "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
+    "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "Audit complete. CI34183395373/029bfd143cdd7c20197588eb2f48655a681b27c8 terminal failure: conversion/localDB/native/macOS build passed;3/4 UI tests passed. New Item UI test stopped at exact AXLabel text assertion (empty label), before refresh/removal. Corrected assertion checks exact same-element AXLabel OR AXValue (existing macOS test pattern). App code unchanged; iOS not run. NEXT commit/push test correction, follow its single automatic CI; no full local suite rerun. No process active. Last fully verified checkpoint6e3a022a remains.",
-      "Uncommitted physical member-read migration20260908024101 applied locally and recorded in local migration history. Named-column SELECT/current-membership RLS for Items/placements only, no writes/service-role/private-view/financial access. New manually subscribed physical_account_items stream is account/user/member scoped, explicit physical projections plus active Spaces. Independent security review GO; main added placement denial/future-column tests.",
-      "Initial49/2 and final integrated508/15 SQL tests PASS /tmp/ledger-physical-read-db-integrated.log; advisors/lint clean. Main fully read and reran delegated scripts/test-local-physical-item-stream.mjs: actual three query SQL projections,15 member/foreign/removal/column captures run as privileged local Postgres, all fixtures rolled back. Not PowerSync engine or hosted proof. Wired into normal CI; eight CI checks/environment/conversion/diff PASS. No local process/agent active.",
-      "Runtime/UI work now uncommitted: Core DownloadedItemPlacements port/value, lifecycle-owned finite read, DownloadedItemsModel and inline Project workspace DownloadedItemsView. Main reviewed delegated runtime tests; added deterministic stale/clear/cancel/wrong-scope presenter tests. Focused45 tests/3 suites PASS /tmp/ledger-downloaded-items-focused.log. No process running. Significant read boundary recorded in A019.",
-      "Batch ready for implementation checkpoint: real SDK subscription/member-removal tests2/1 PASS /tmp/ledger-items-sdk-test.log; integrated native833/120 PASS /tmp/ledger-items-native-integrated.log; conversion gate PASS. Agent idle; main reviewed code/tests. Earlier combined56/5 run had one temporary SQLite open error, isolated4 reader tests passed; cause not established. Local UI compiled but automation runner initialization timed out before tests (/tmp/ledger-items-ui.log). All processes terminal. First CI failed as described above; do not dispatch duplicate CI or silently rerun full local UI. Last fully verified checkpoint remains6e3a022a until exact new CI passes. Item read is physical/downloaded-only, not completed Item browsing/accounting. O065/O033/O027/O060 open; no Firebase/production/hosted access. Next substantive workflow candidate after batch verification: property-management-report + report-snapshot-and-delivery (no execution record yet), Project preview/PDF/print/share. Main read reports.md and financial-access-controls.md after agent recommendation. Must add completeness-proven snapshot and nullable address/SKU/market-value data, Space/No Space grouping, exact unknown-aware totals, protected handoff and shared MCP fields; current downloaded physical array is insufficient. No reported policy blocker for this non-revenue report; do not substitute it for unfinished Item/accounting outcomes."
+      "NEXT inspect HEAD and PR1 automatic CI for the report checkpoint (commit/push follows this state update). Do not manually rerun CI or claim full workflow completion. Main reviewed changed boundaries, delegated differential proof and independently reran it; updated macOS/iOS builds PASS. Full native874 before final startup hook; focused7 recovery/handoff and1 native/RPC differential after hook PASS. No processes/agents active. Last verified checkpoint below remains7be7745a until exact report commit CI passes.",
+      "Startup recovery hook+visible error added and7focused tests PASS. reports.md Generation now distinguishes downloaded local/checkpoint from authoritative source; exact diff reviewed and only corresponding authority hash updated. DB/handler/parity acceptance passed; other broad acceptance remains pending. CI dependency now localDB -> existing native job so generated same-commit report-parity artifact feeds real-reader differential in full native suite; missing artifact fails, retention1day.9 CI verifier tests PASS. No duplicate job/fixture/catalog.",
+      "Valid integrated evidence: full native874/129 PASS/tmp/ledger-report-native-integrated.log before startup-hook edit; full MCP36 + local DB543/17 PASS; local lint/security advisors clean. Real MCP populated/empty, exact values/archived parent, same-session revocation/restoration PASS. Environment/contracts/actual report stream SQL PASS after correcting note-history Project address overlap. Do not repeat unaffected suites merely on resume.",
+      "CI includes report stream, real MCP and same-commit differential artifact consumed by native suite.9 verifier tests PASS; conversion self-tests29negative/8positive, checklist loader and conversion:check PASS (three existing stale-source warnings; no new omission). Report fields/reader are implemented but pending native OS dialog and hosted evidence; checkpoint does not authorize cutover.",
+      "Mac UI waiting only on unlock: prior CUA locked, user asked asynchronously; do not retry without changed state. Prior macOS RPATH fix build+standalone synthetic launch valid, process intentionally stopped. Native OS dialogs/iOS file protection interaction unverified. Product audit complete; no Firebase/hosted/production access. O065/O033/O027/O060 block only affected accounting."
     ]
   },
-  "blockers": [],
+  "blockers": [
+    "Native Share/Print/CSV dialog interaction awaits an unlocked Mac; CUA reported locked and user was asked. Independent MCP work remains available."
+  ],
   "guardrails": [
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
     "Do not implement redesigned behavior in Firebase.",

@@ -34,6 +34,9 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Ledger STAGING
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]":
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
         MARKETING_VERSION: 0.1.0
         PRODUCT_BUNDLE_IDENTIFIER: apps.nine4.ledger.staging
         PRODUCT_MODULE_NAME: LedgerTargetStaging

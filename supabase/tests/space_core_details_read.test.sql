@@ -31,12 +31,13 @@ select ok(
 
 select is(
   (
-    select count(*)
+    select array_agg(policyname || ':' || cmd || ':' || roles::text order by policyname)
     from pg_policies
     where schemaname = 'public' and tablename = 'spike_spaces'
   ),
-  1::bigint,
-  'the existing Space relation still has exactly one policy'
+  array['spike_spaces_report_current_parent_read:SELECT:{authenticated}',
+        'spike_spaces_select_active_member:SELECT:{authenticated}'],
+  'Space policies remain restricted to authenticated destination and report-parent reads'
 );
 
 select ok(

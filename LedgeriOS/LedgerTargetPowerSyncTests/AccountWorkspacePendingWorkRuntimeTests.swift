@@ -7,6 +7,45 @@ import Testing
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("Property report facade preserves downloaded snapshot across encrypted restart and denies foreign or closed access")
+    func propertyReportFacade() async throws {
+        let context = try RuntimeTestContext(suffix: "property-report")
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "UPDATE spike_projects SET display_name='Property',lifecycle='active',revision=1 WHERE id='project-physical'", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('property_management_report',1,0,?,1000000)", parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "project-physical")
+        let currency = try CurrencyCode(validating: "USD")
+        let asOf = try ProtectedArtifactEpochMilliseconds(validating: 1_800_000_000_000)
+        let snapshot = try await runtime.readDownloadedPropertyManagementReport(accountId: context.accountId,
+            projectId: project, currency: currency, asOf: asOf)
+        #expect(snapshot.totals.itemCount == 1 && snapshot.totals.unknownMarketValueCount == 1)
+        #expect(snapshot.groups.first?.rows.first?.name == "Chair")
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readDownloadedPropertyManagementReport(accountId: AccountID(validating: "foreign-account"),
+                projectId: project, currency: currency, asOf: asOf)
+        }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readDownloadedPropertyManagementReport(accountId: context.accountId,
+                projectId: project, currency: currency, asOf: asOf)
+        }
+        let reopened = try await context.openRuntime()
+        let restored = try await reopened.readDownloadedPropertyManagementReport(accountId: context.accountId,
+            projectId: project, currency: currency, asOf: asOf)
+        #expect(restored.reference == snapshot.reference)
+        try await reopened.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await reopened.readDownloadedPropertyManagementReport(accountId: context.accountId,
+                projectId: project, currency: currency, asOf: asOf)
+        }
+        context.remove()
+    }
+
     @Test("Physical Item watch cleanup drains before workspace close or learned-removal teardown", arguments: [false, true])
     func physicalItemWatchCleanupDrain(removing: Bool) async throws {
         let context = try RuntimeTestContext(suffix: "physical-watch-cleanup-\(removing)")

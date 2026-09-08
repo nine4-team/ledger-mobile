@@ -27,7 +27,8 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 
 public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
-    RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, Sendable
+    RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, PropertyManagementReportReading,
+    PropertyManagementReportWatching, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
@@ -49,10 +50,24 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.readDownloadedItemPlacements(accountId: accountId, scope: scope)
     }
 
+    public func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
+        try await lifecycleOwner.readDownloadedPropertyManagementReport(accountId: accountId,
+            projectId: projectId, currency: currency, asOf: asOf)
+    }
+
     public func watchDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) -> AsyncThrowingStream<DownloadedItemPlacements, Error> {
         trackedStream { id, continuation in
             await self.lifecycleOwner.startDownloadedItemPlacementsWatch(id: id,
                 accountId: accountId, scope: scope, continuation: continuation)
+        }
+    }
+
+    public func watchPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode) -> AsyncThrowingStream<PropertyManagementReportUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startPropertyManagementReportWatch(id: id, accountId: accountId,
+                projectId: projectId, currency: currency, continuation: continuation)
         }
     }
 

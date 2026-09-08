@@ -122,7 +122,7 @@ const layerEvidencePredicates = new Map([
   ["local_offline", (path) => path.startsWith("LedgeriOS/LedgerTargetPowerSync/")],
   ["accounting", (path) =>
     /(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/i.test(path)],
-  ["media", (path) => /(attachment|media|image|photo|receipt)/i.test(path)],
+  ["media", (path) => /(attachment|media|image|photo|receipt|ReportScratchStore)/i.test(path)],
   ["migration", (path) =>
     path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
     path.startsWith("LedgeriOS/LedgerLocalPaymentImport/") ||
@@ -130,7 +130,7 @@ const layerEvidencePredicates = new Map([
   ["auth", (path) =>
     /(auth|principal|session|keychain|identity)/i.test(path) ||
     /^LedgeriOS\/LedgerTargetPowerSync\/Supabase.+RPC\.swift$/.test(path)],
-  ["deletion", (path) => /(delete|deletion|retention)/i.test(path)],
+  ["deletion", (path) => /(delete|deletion|retention|ReportScratchStore)/i.test(path)],
   ["observability", (path) => /(observability|telemetry|metric|reconciliation|cutover|health)/i.test(path)],
 ]);
 

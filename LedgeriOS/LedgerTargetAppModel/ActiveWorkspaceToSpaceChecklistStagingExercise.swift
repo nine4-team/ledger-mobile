@@ -7,17 +7,23 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
     public let spaceBrowsing: SpaceBrowserStagingRuntime
     public let checklistToggle: SpaceChecklistItemToggleStagingRuntime
     public let itemReader: (any DownloadedItemPlacementReading)?
+    public let reportWatcher: (any PropertyManagementReportWatching)?
+    public let reportReader: (any PropertyManagementReportReading)?
 
     public init(
         projectBrowsing: ProjectBrowsingStagingRuntime,
         spaceBrowsing: SpaceBrowserStagingRuntime,
         checklistToggle: SpaceChecklistItemToggleStagingRuntime,
-        itemReader: (any DownloadedItemPlacementReading)? = nil
+        itemReader: (any DownloadedItemPlacementReading)? = nil,
+        reportWatcher: (any PropertyManagementReportWatching)? = nil,
+        reportReader: (any PropertyManagementReportReading)? = nil
     ) {
         self.projectBrowsing = projectBrowsing
         self.spaceBrowsing = spaceBrowsing
         self.checklistToggle = checklistToggle
         self.itemReader = itemReader
+        self.reportWatcher = reportWatcher
+        self.reportReader = reportReader
     }
 }
 
@@ -80,6 +86,8 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public let accountId: AccountID
     public var itemReader: (any DownloadedItemPlacementReading)? { runtime?.itemReader }
+    public var reportWatcher: (any PropertyManagementReportWatching)? { runtime?.reportWatcher }
+    public var reportReader: (any PropertyManagementReportReading)? { runtime?.reportReader }
     private var runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime?
     private var generation: UInt64 = 0
     private var projectEvidenceTask: Task<Void, Never>?

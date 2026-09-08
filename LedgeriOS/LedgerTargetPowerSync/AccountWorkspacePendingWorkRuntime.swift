@@ -169,9 +169,11 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case resolveAttachmentBytes
     case pendingWorkSummary
     case readDownloadedItemPlacements
+    case readDownloadedPropertyManagementReport
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case propertyManagementReport
     case downloadedItemPlacements
     case clientDetails
     case projectDetails
@@ -791,6 +793,18 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
+        try await withFiniteLease(.readDownloadedPropertyManagementReport) { resources in
+            guard accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            return try await PropertyManagementReportPowerSyncQuery(database: resources.structuredDatabase)
+                .readDownloaded(accountId: resources.accountId, principalId: resources.principalId,
+                    projectId: projectId, currency: currency, asOf: asOf)
+        }
+    }
+
     func startDownloadedItemPlacementsWatch(id: UUID, accountId: AccountID, scope: ItemPlacementScope,
         continuation: AsyncThrowingStream<DownloadedItemPlacements, Error>.Continuation) {
         guard !normalAccessLocked, case .open = state, let resources else {
@@ -818,6 +832,40 @@ actor AccountWorkspacePendingWorkRuntime {
                 ) { value in
                     await self.forwardStreamValue(value, to: continuation)
                 }
+                continuation.finish()
+            } catch is CancellationError {
+                continuation.finish(throwing: CancellationError())
+            } catch {
+                await self.finishStream(continuation, error: error)
+            }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func startPropertyManagementReportWatch(id: UUID, accountId: AccountID, projectId: ProjectID,
+        currency: CurrencyCode, continuation: AsyncThrowingStream<PropertyManagementReportUpdate, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
+            return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError())
+            return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch)
+            return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.propertyManagementReport)
+                try Task.checkCancellation()
+                try await PropertyManagementReportWatch(database: resources.structuredDatabase).run(
+                    accountId: resources.accountId, principalId: resources.principalId,
+                    projectId: projectId, currency: currency) { value in
+                        await self.forwardStreamValue(value, to: continuation)
+                    }
                 continuation.finish()
             } catch is CancellationError {
                 continuation.finish(throwing: CancellationError())

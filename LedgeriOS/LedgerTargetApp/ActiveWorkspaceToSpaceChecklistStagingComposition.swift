@@ -11,13 +11,17 @@ enum ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter {
             projectBrowsing: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime),
             spaceBrowsing: SpaceBrowserStagingRuntimeAdapter.adapt(runtime),
             checklistToggle: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime),
-            itemReader: runtime
+            itemReader: runtime,
+            reportWatcher: runtime,
+            reportReader: runtime
         )
     }
 }
 
 struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
+    let accountCurrency: CurrencyCode
+    @State private var showingPropertyReport = false
 
     var body: some View {
         switch model.route {
@@ -131,6 +135,22 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityHint("Opens note history for this Project")
                 if let reader = model.itemReader {
                     DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader)
+                }
+                if let watcher = model.reportWatcher {
+                    Button("Property Management Report") { showingPropertyReport = true }
+                    .accessibilityIdentifier("target-property-report-open")
+                    .sheet(isPresented: $showingPropertyReport) {
+                        NavigationStack {
+                            PropertyManagementReportPreview(accountId: model.accountId, projectId: projectId,
+                                currency: accountCurrency, watcher: watcher, reader: model.reportReader)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { showingPropertyReport = false }
+                                }
+                            }
+                        }
+                        .frame(minWidth: 320, minHeight: 400)
+                    }
                 }
             } else {
                 Text("The represented Project is unavailable.")

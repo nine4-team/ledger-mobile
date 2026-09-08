@@ -3,6 +3,13 @@ import DequeModule
 import Foundation
 
 enum DatabaseLocation {
+    // Pinned SQLite3 Multiple Ciphers returns a shared mutable buffer from
+    // sqlite3mc_cipher_name(), used by default-URI configuration during open.
+    // Concurrent opens can clear it between lookup and comparison (observed
+    // "unknown cipher 'chacha20'"). Guard only this C call, not queries/key
+    // setup/pool lifetime. External CSQLite opens or ATTACH would require an
+    // equivalent guard or upstream cipher-name fix; Ledger uses this open path.
+    private static let cipherOpenLock = Mutex(())
     case inMemory
     case inDefaultDirectory(name: String)
     case atPath(String)
@@ -44,9 +51,18 @@ enum DatabaseLocation {
 
     private static func open(path: String, flags: Int32) throws -> RawSqliteConnection {
         var db: OpaquePointer?
-        let rc = sqlite3_open_v2(path, &db, flags, nil)
+        let rc = cipherOpenLock.withLock { _ in sqlite3_open_v2(path, &db, flags, nil) }
         if rc != 0 {
-            throw PowerSyncError.sqliteError(extendedResultCode: rc, offset: nil, message: "Could not open database \(path)", errorString: nil, sql: nil)
+            // Failed opens may still allocate a handle. Preserve its diagnostic
+            // before closing it; otherwise extension failures become opaque rc1
+            // errors and leak one handle on every failed attempt.
+            let code = db.map { sqlite3_extended_errcode($0) } ?? rc
+            let detail = db.map { String(cString: sqlite3_errmsg($0)) }
+                ?? String(cString: sqlite3_errstr(rc))
+            if let db { sqlite3_close_v2(db) }
+            throw PowerSyncError.sqliteError(extendedResultCode: code, offset: nil,
+                message: "Could not open database \(path): \(detail)",
+                errorString: String(cString: sqlite3_errstr(code)), sql: nil)
         }
         return RawSqliteConnection(connection: db!)
     }

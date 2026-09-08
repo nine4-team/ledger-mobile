@@ -88,9 +88,12 @@ aggregation is source behavior, not approved target “paid spend.”
 Reports may be rendered entirely on-device from an authorization-safe,
 readiness-complete local `ReportSnapshot`. Rendering code does not receive raw
 mutable domain arrays and does not reimplement accounting. A generated snapshot
-records account/project, report kind, local data version, accounting authority
-version, as-of time, visibility scope, currency, and source/frozen revision
-evidence. Server rendering is optional infrastructure, not report authority.
+records account/project, report kind, accounting authority version, as-of time,
+visibility scope, currency, and source/frozen revision evidence. Downloaded
+snapshots also record their local data version and completed-sync checkpoint;
+authoritative online snapshots identify that source without inventing a local
+version or sync checkpoint. Server rendering is optional infrastructure, not
+report authority.
 
 ## Output Formats
 
