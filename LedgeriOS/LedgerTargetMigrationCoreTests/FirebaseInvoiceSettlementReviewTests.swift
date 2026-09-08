@@ -112,4 +112,67 @@ struct FirebaseInvoiceSettlementReviewTests {
         #expect(try Self.review(source, [Self.payment(lines: [composed, decomposed])]).hasSinglePaymentLineCoverage)
         #expect(try Self.review(source, [Self.payment(lines: [composed, composed])]).issues.contains(.paymentLineCoverageMismatch))
     }
+
+    @Test("Historical Item identity resolves even after relocation, without inventing an occurrence")
+    func historicalItemSource() throws {
+        let item = Self.document("items", "physical-item", ["projectId": .string("later-project"), "unknown": .string("retained")])
+        let reviewed = try Self.review(Self.invoice(), [Self.payment()]).resolveSources(in: [item])
+        #expect(reviewed.lines.count == 1)
+        #expect(reviewed.lines[0].source == item)
+        #expect(reviewed.lines[0].issues == [.itemOccurrenceNotMapped])
+        #expect(reviewed.suppliedDocuments == [item])
+        let duplicate = try Self.review(Self.invoice(), [Self.payment()]).resolveSources(in: [item, item])
+        #expect(duplicate.lines[0].source == nil)
+        #expect(duplicate.lines[0].issues == [.duplicateSource])
+        #expect(duplicate.suppliedDocuments.count == 2)
+    }
+
+    @Test("Source semantic labels do not replace actual document paths or payment fields")
+    func semanticEntityLabels() throws {
+        let originalInvoice = Self.invoice(), originalPayment = Self.payment()
+        let invoice = FirebaseSourceDocument(accountScopeID: originalInvoice.accountScopeID,
+            documentPathSegments: originalInvoice.documentPathSegments, entityCode: "legacy_invoices",
+            evidenceKind: .record, fields: originalInvoice.fields, sourceRecordID: originalInvoice.sourceRecordID)
+        let payment = FirebaseSourceDocument(accountScopeID: originalPayment.accountScopeID,
+            documentPathSegments: originalPayment.documentPathSegments, entityCode: "client_payments",
+            evidenceKind: .record, fields: originalPayment.fields, sourceRecordID: originalPayment.sourceRecordID)
+        let result = try Self.review(invoice, [payment])
+        #expect(result.hasSinglePaymentLineCoverage)
+        #expect(result.invoice.entityCode == "legacy_invoices")
+        #expect(result.suppliedPayments[0].entityCode == "client_payments")
+    }
+
+    @Test("Fee identity uses the real nested Project path, not matching IDs elsewhere")
+    func nestedFeeIdentity() throws {
+        let line = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"),
+            "sourceType": .string("feeInstallment"), "sourceId": .string("fee")])
+        let invoice = Self.invoice(lines: [line])
+        let wrong = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "projects", "other-project", "feeInstallments", "fee"],
+            entityCode: "feeInstallments", evidenceKind: .record, fields: .map([]), sourceRecordID: "wrong")
+        let correct = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "projects", "source-project", "feeInstallments", "fee"],
+            entityCode: "feeInstallments", evidenceKind: .record, fields: .map([]), sourceRecordID: "correct")
+        let review = try Self.review(invoice, [Self.payment()])
+        #expect(review.resolveSources(in: [wrong]).lines[0].issues == [.missingSource])
+        let result = review.resolveSources(in: [wrong, correct])
+        #expect(result.lines[0].source == correct)
+        #expect(result.lines[0].issues == [.feeNotMapped])
+        #expect(result.suppliedDocuments == [wrong, correct])
+    }
+
+    @Test("Expense scope, missing source and manual adjustments remain explicit")
+    func unresolvedSourceMeaning() throws {
+        let expenseLine = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"),
+            "sourceType": .string("transaction"), "sourceId": .string("expense")])
+        let invoice = Self.invoice(lines: [expenseLine])
+        let review = try Self.review(invoice, [Self.payment()])
+        #expect(review.resolveSources(in: []).lines[0].issues == [.missingSource])
+        let foreign = Self.document("transactions", "expense", ["projectId": .string("other-project")])
+        #expect(review.resolveSources(in: [foreign]).lines[0].issues == [.projectMismatch])
+        let exact = Self.document("transactions", "expense", ["projectId": .string("source-project")])
+        #expect(review.resolveSources(in: [exact]).lines[0].issues == [.transactionMeaningNotMapped])
+        let manual = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"), "sourceType": .string("manual")])
+        #expect(try Self.review(Self.invoice(lines: [manual]), [Self.payment()]).resolveSources(in: []).lines[0].issues == [.manualAdjustmentNotMapped])
+    }
 }

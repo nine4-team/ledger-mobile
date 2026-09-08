@@ -403,6 +403,15 @@ line IDs, groups payments by timestamp, or creates target paid state. Complete
 export coverage, cancellation events, Item occurrence/source resolution and
 approved target allocation are still required before importing a collected Invoice.
 
+The same review resolves line source identity against all supplied document
+paths: Account-scoped Items/Transactions and Project-nested `feeInstallments`.
+Duplicate copies and mismatched scopes remain explicit; all supplied evidence
+is retained. An Item's current Project is not substituted for its historical
+Invoice occurrence. Resolved Item/Transaction/Fee identities still carry the
+unresolved occurrence/economic-mapping obligation; manual adjustments remain
+explicitly unmapped. Semantic export labels (`entityCode`) are retained, not
+treated as collection names—paths and validated source fields establish identity.
+
 `FirebaseClientPaymentBatch` binds that transform to an exact source Project
 snapshot and an explicit target Project/Client assignment, plus stable supplied
 Transaction IDs. The source has only `clientName`; equal names never establish

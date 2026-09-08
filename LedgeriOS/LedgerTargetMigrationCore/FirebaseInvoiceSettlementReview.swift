@@ -8,6 +8,23 @@ package enum FirebaseInvoiceSettlementIssue: Equatable, Sendable {
     case paymentLineCoverageMismatch, paymentAmountMismatch
 }
 
+package enum FirebaseInvoiceLineSourceIssue: Equatable, Sendable {
+    case invalidLine, missingSource, duplicateSource, invalidSource, projectMismatch
+    case itemOccurrenceNotMapped, transactionMeaningNotMapped, feeNotMapped, manualAdjustmentNotMapped
+}
+
+package struct FirebaseInvoiceLineSourceReview: Sendable {
+    package let line: FirebaseSourceValue
+    package let source: FirebaseSourceDocument?
+    package let issues: [FirebaseInvoiceLineSourceIssue]
+}
+
+package struct FirebaseInvoiceSourcesReview: Sendable {
+    package let settlement: FirebaseInvoiceSettlementReview
+    package let suppliedDocuments: [FirebaseSourceDocument]
+    package let lines: [FirebaseInvoiceLineSourceReview]
+}
+
 package struct FirebaseInvoiceSettlementReview: Sendable {
     package let invoice: FirebaseSourceDocument
     package let suppliedPayments: [FirebaseSourceDocument]
@@ -15,6 +32,62 @@ package struct FirebaseInvoiceSettlementReview: Sendable {
     /// Narrow source evidence only. Does not resolve Item occurrences, cancellation
     /// events, export completeness or authorize a target collection/paid snapshot.
     package var hasSinglePaymentLineCoverage: Bool { issues.isEmpty }
+
+    /// Resolve raw source identity, not accounting meaning. An Item may now be in
+    /// Inventory or another Project; its current location cannot rewrite a paid
+    /// Invoice's historical occurrence. Fee installments use their real nested
+    /// Project collection, never an Account-wide ID/name match.
+    package func resolveSources(in documents: [FirebaseSourceDocument]) -> FirebaseInvoiceSourcesReview {
+        func field(_ value: FirebaseSourceValue, _ key: String) -> FirebaseSourceValue? {
+            guard case .map(let entries) = value else { return nil }
+            return entries.first { $0.key.utf8.elementsEqual(key.utf8) }?.value
+        }
+        func string(_ value: FirebaseSourceValue?) -> String? {
+            guard case .string(let result) = value else { return nil }
+            return result
+        }
+        guard !issues.contains(.invalidInvoice), invoice.documentPathSegments.count == 4,
+              let project = string(field(invoice.fields, "projectId")),
+              case .array(let rawLines) = field(invoice.fields, "lines") else {
+            return .init(settlement: self, suppliedDocuments: documents, lines: [])
+        }
+        let account = invoice.documentPathSegments[1]
+        let copies = Dictionary(grouping: documents) { $0.documentPathSegments.map { Data($0.utf8) } }
+        let resolved: [FirebaseInvoiceLineSourceReview] = rawLines.map { line in
+            func reject(_ issue: FirebaseInvoiceLineSourceIssue) -> FirebaseInvoiceLineSourceReview {
+                .init(line: line, source: nil, issues: [issue])
+            }
+            guard let lineID = string(field(line, "id")),
+                  (try? FirebaseSourceValue.reference(segments: ["lines", lineID]).validated()) != nil,
+                  let type = string(field(line, "sourceType"))?.lowercased(),
+                  (try? line.validated()) != nil else { return reject(.invalidLine) }
+            if type == "manual" { return reject(.manualAdjustmentNotMapped) }
+            guard let id = string(field(line, "sourceId")) else { return reject(.invalidLine) }
+            let path: [String]
+            let mappingIssue: FirebaseInvoiceLineSourceIssue
+            switch type {
+            case "item": path = ["accounts", account, "items", id]; mappingIssue = .itemOccurrenceNotMapped
+            case "transaction": path = ["accounts", account, "transactions", id]; mappingIssue = .transactionMeaningNotMapped
+            case "feeinstallment": path = ["accounts", account, "projects", project, "feeInstallments", id]; mappingIssue = .feeNotMapped
+            default: return reject(.invalidLine)
+            }
+            guard (try? FirebaseSourceValue.reference(segments: path).validated()) != nil else { return reject(.invalidLine) }
+            guard let matches = copies[path.map { Data($0.utf8) }], !matches.isEmpty else { return reject(.missingSource) }
+            guard matches.count == 1 else { return reject(.duplicateSource) }
+            let source = matches[0]
+            guard source.evidenceKind == .record, source.accountScopeID.utf8.elementsEqual(account.utf8),
+                  case .map = source.fields, (try? source.fields.validated()) != nil else { return reject(.invalidSource) }
+            if let embedded = field(source.fields, "accountId"),
+               string(embedded).map({ $0.utf8.elementsEqual(account.utf8) }) != true { return reject(.invalidSource) }
+            if type == "transaction", string(field(source.fields, "projectId")).map({ $0.utf8.elementsEqual(project.utf8) }) != true {
+                return reject(.projectMismatch)
+            }
+            if type == "feeinstallment", let embeddedProject = field(source.fields, "projectId"),
+               string(embeddedProject).map({ $0.utf8.elementsEqual(project.utf8) }) != true { return reject(.projectMismatch) }
+            return .init(line: line, source: source, issues: [mappingIssue])
+        }
+        return .init(settlement: self, suppliedDocuments: documents, lines: resolved)
+    }
 
     package static func review(invoice: FirebaseSourceDocument, payments: [FirebaseSourceDocument],
                                sourceAccountID: String, targetScope: TransactionScope) -> Self {
@@ -35,7 +108,7 @@ package struct FirebaseInvoiceSettlementReview: Sendable {
             return raw
         }
         let path = invoice.documentPathSegments
-        guard invoice.evidenceKind == .record, invoice.entityCode == "invoices", path.count == 4,
+        guard invoice.evidenceKind == .record, path.count == 4,
               path[0] == "accounts", path[2] == "invoices", equal(path[1], sourceAccountID),
               equal(invoice.accountScopeID, sourceAccountID),
               (try? FirebaseSourceValue.reference(segments: path).validated()) != nil,
@@ -85,7 +158,6 @@ package struct FirebaseInvoiceSettlementReview: Sendable {
         if !reversePaymentIDs.isSubset(of: linkedIDs) { issues.append(.paymentScopeOrShape) }
         var active: [(FirebaseSourceDocument, Int64)] = []
         for payment in linked {
-            if payment.entityCode != "transactions" { issues.append(.paymentScopeOrShape) }
             if (paymentCopies[payment.documentPathSegments.map { Data($0.utf8) }]?.count ?? 0) > 1 {
                 issues.append(.duplicatePayment)
             }
