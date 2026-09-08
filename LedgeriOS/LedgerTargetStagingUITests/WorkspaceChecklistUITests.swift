@@ -103,7 +103,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             app.typeText(value)
             XCTAssertEqual(field.value as? String, value)
         }
-        let include = app.descendants(matching: .any)["target-vendor-pdf-include-0"].firstMatch
+        let include = vendorIncludeControl(row: 0, in: app)
         show(include, upward: false)
         include.tap()
         XCTAssertEqual(displayedText(count), "Included rows: 1 of 2")
@@ -207,7 +207,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let count = app.descendants(matching: .any)["target-vendor-pdf-included-count"].firstMatch
         XCTAssertTrue(count.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertEqual(displayedText(count), "Included rows: 2 of 2")
-        let include = app.descendants(matching: .any)["target-vendor-pdf-include-0"].firstMatch
+        let include = vendorIncludeControl(row: 0, in: app)
         let scroll = app.scrollViews["target-vendor-pdf-scroll"].firstMatch
         for _ in 0..<8 {
             if include.exists && include.isHittable { break }
@@ -249,7 +249,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             app.buttons["target-vendor-pdf-select"].tap()
             // Match the system picker's Cancel, not the underlying review toolbar.
             let pickerCancel = vendorPickerCancel(in: app)
-            XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(pickerCancel.waitForExistence(timeout: 10), app.debugDescription)
             pickerCancel.tap()
             XCTAssertTrue(pickerCancel.waitForNonExistence(timeout: 5), app.debugDescription)
             XCTAssertTrue(empty.exists)
@@ -324,7 +324,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             }
             XCTAssertTrue(element.isHittable, app.debugDescription)
         }
-        let include = app.switches["target-vendor-pdf-include-0"].firstMatch
+        let include = vendorIncludeControl(row: 0, in: app)
         show(include)
         include.tap()
         XCTAssertEqual(count.label, "Included rows: 1 of 2")
@@ -929,9 +929,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // Identifiers observed in the native open-panel failure hierarchy.
         return app.sheets["open-panel"].buttons["CancelButton"]
         #else
-        return app.buttons.matching(NSPredicate(
-            format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
-        )).firstMatch
+        // Scope to the actual Files navigation bar observed in native CI.
+        return app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons["Cancel"]
+        #endif
+    }
+
+    private func vendorIncludeControl(row: Int, in app: XCUIApplication) -> XCUIElement {
+        let identifier = "target-vendor-pdf-include-\(row)"
+        #if os(iOS)
+        // SwiftUI exposes a full-width Switch wrapper and a nested UISwitch.
+        // The wrapper's center is label whitespace, not the native control.
+        return app.switches[identifier].switches.firstMatch
+        #else
+        return app.descendants(matching: .any)[identifier].firstMatch
         #endif
     }
 

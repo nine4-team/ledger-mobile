@@ -723,6 +723,13 @@ struct ProjectSetupStagingExerciseTests {
         #expect(model.isAcceptedProjectReceipt == [.queued, .applying, .applied].contains(state))
         #expect(model.projectName == "Receipt Project")
         await model.stop()
+        #expect(model.receipt == nil && model.submittedProject == nil)
+        #expect(model.projectName.isEmpty && model.selectedClientId == nil)
+        #expect(model.clients.isEmpty && model.categories.isEmpty)
+        // Stop clears the display; it neither resubmits nor changes the command.
+        let recorded = await setup.commands()
+        #expect(recorded.count == 1)
+        #expect(recorded.first?.draft.displayName.rawValue == "Receipt Project")
     }
 
     @Test("Cancellation is bounded, retains input, and never reports success")
@@ -854,7 +861,7 @@ struct ProjectSetupStagingExerciseTests {
         await operationModel.stop()
     }
 
-    @Test("Stop drains both streams and prevents late mutation")
+    @Test("Stop clears private draft and reference evidence and prevents late mutation")
     func stopDrainsStreamsAndPreventsMutation() async throws {
         let clients = ControlledStream<ClientListSnapshot>()
         let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
@@ -865,15 +872,23 @@ struct ProjectSetupStagingExerciseTests {
         categories.yield(try Self.categorySnapshot())
         await Self.waitUntil { model.clients.count == 2 && model.categories.count == 2 }
         model.projectName = "Retained"
+        model.projectDescription = "Private description"
+        model.selectedClientId = model.clients[0].id
+        #expect(Self.advanceToBudget(model))
         await model.stop()
         #expect(clients.isCancelled())
         #expect(categories.isCancelled())
         clients.yield(try Self.clientSnapshot(rows: []))
         categories.yield(try Self.categorySnapshot(rows: []))
         await Task.yield()
-        #expect(model.clients.count == 2)
-        #expect(model.categories.count == 2)
-        #expect(model.projectName == "Retained")
+        #expect(model.clients.isEmpty && model.categories.isEmpty)
+        #expect(model.projectName.isEmpty && model.projectDescription.isEmpty)
+        #expect(model.selectedClientId == nil && model.selectedCategoryIds.isEmpty)
+        #expect(model.budgetAllocations.isEmpty && model.budgetAllocationText.isEmpty)
+        #expect(model.invalidAllocationIds.isEmpty && model.currentStep == .basicInfo)
+        #expect(model.receipt == nil && model.submittedProject == nil && model.diagnostic == nil)
+        #expect(model.clientStatus == "unavailable • workspace closed")
+        #expect(model.categoryStatus == "unavailable • workspace closed")
         #expect(!model.canSubmit)
     }
 
@@ -950,6 +965,13 @@ struct ProjectSetupStagingExerciseTests {
             let entered = await MainActor.run { stopLifecycle.entered }
             return entered && oldClients.isCancelled() && oldCategories.isCancelled()
         })
+
+        // Erasure must happen while the old submission is still suspended.
+        #expect(!stopLifecycle.completed)
+        #expect(model.projectName.isEmpty && model.projectDescription.isEmpty)
+        #expect(model.clients.isEmpty && model.categories.isEmpty)
+        #expect(model.selectedClientId == nil && model.selectedCategoryIds.isEmpty)
+        #expect(model.receipt == nil && model.submittedProject == nil)
 
         let restartLifecycle = LifecycleCallProbe()
         let restart = Task { @MainActor in

@@ -54,6 +54,28 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-026 | accepted, integration verification pending | Keep PowerSync stream parameter encoding deterministic across reopen |
 | A-027 | accepted, implementation verification pending | Reuse local vendor parsers without importing legacy accounting writes |
 | A-028 | accepted, implementation verification pending | Compose Inventory with existing Account-scoped workspace readers |
+| A-029 | accepted, integration verification pending | Clear Project setup presentation evidence before lifecycle drainage |
+
+## A-029 — Project Setup Closure Clears Presentation, Not Accepted Work
+
+`ProjectSetupStagingExercise.stop()` now clears draft fields, reference snapshots,
+category/budget choices, diagnostics and displayed submission evidence before
+awaiting cancellation/drainage. Previously those values remained readable on the
+retained model after workspace closure. Existing generation guards prevent late
+callbacks from restoring them; cleanup occurs before suspension so an older stop
+cannot erase a subsequently restarted form.
+
+This changes only the form's in-memory lifetime. It does not delete, cancel or
+rewrite an accepted durable operation, or change ordinary failed-submission retry
+behavior. Account-removal recovery and logout policy remain their existing
+authority; O-049/O-052 still gate full Project creation. No new provider or
+retention mechanism is introduced.
+
+Verification: `ProjectSetupStagingExerciseTests` covers cleared draft/reference
+fields, all displayed receipt states, late stream delivery, and immediate erasure
+during a suspended submission followed by restart. Runtime persistence is not
+proved by its command-recording test double; existing durable-runtime evidence
+remains separately required. Native lifecycle integration is not yet claimed.
 
 ## A-028 — Inventory Is an Account Workspace, Not a Synthetic Project
 

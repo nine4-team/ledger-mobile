@@ -360,6 +360,16 @@ public final class ProjectSetupStagingExercise {
         draftGeneration = UUID()
         runtime = nil
         isSubmitting = false
+        // Clear presentation evidence before awaiting potentially suspended work.
+        // Accepted operations remain owned by the durable runtime, not this form.
+        clientSnapshot = nil
+        categorySnapshot = nil
+        preparation = nil
+        clients = []
+        categories = []
+        resetDraftState(applyCurrentCategoryDefaults: false)
+        clientStatus = "unavailable • workspace closed"
+        categoryStatus = "unavailable • workspace closed"
         operationObservationTask?.cancel()
         operationObservationTask = nil
         await cancelAndDrainAdmittedTasks()
