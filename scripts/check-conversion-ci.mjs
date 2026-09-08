@@ -201,7 +201,11 @@ function validateWorkflowSafety(lines) {
       line === "        if: always()" &&
       lines[index - 1] === "      - name: Preserve native test stall diagnostics" &&
       lines[index + 1] === "        uses: actions/upload-artifact@v4";
-    requireCondition(allowedCleanup || allowedDiagnostics,
+    const allowedReportEvidence =
+      line === "        if: failure()" &&
+      lines[index - 1] === "      - name: Preserve failed iOS report test evidence" &&
+      lines[index + 1] === "        uses: actions/upload-artifact@v4";
+    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence,
       "jobs must not conditionally skip or tolerate failures");
   }
 }

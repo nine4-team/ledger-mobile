@@ -121,7 +121,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(button.isEnabled)
             button.tap()
             XCTAssertTrue(failure.waitForExistence(timeout: 5), app.debugDescription)
-            XCTAssertTrue(waitUntil { !busy.exists && button.isEnabled })
+            XCTAssertTrue(waitUntil { !busy.exists && button.isEnabled }, app.debugDescription)
             let text = failure.label + " " + ((failure.value as? String) ?? "")
             XCTAssertTrue(text.contains("could not be shared or printed"))
             let refresh = app.buttons["target-property-report-refresh"]

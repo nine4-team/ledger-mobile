@@ -212,6 +212,15 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
   );
 });
 
+test("failed iOS evidence allowance cannot conditionally run arbitrary commands", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace(
+      "      - name: Preserve failed iOS report test evidence\n        if: failure()\n        uses: actions/upload-artifact@v4",
+      "      - name: Preserve failed iOS report test evidence\n        if: failure()\n        run: echo skipped",
+    );
+  }, /jobs must not conditionally skip or tolerate failures/);
+});
+
 test("local Supabase job cannot bypass lint, database tests, cleanup, or its diff guard", () => {
   expectFailure(value => {
     value.workflow = value.workflow.replace("          node scripts/test-local-physical-item-stream.mjs\n", "");
