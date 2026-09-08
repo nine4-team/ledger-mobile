@@ -4,6 +4,84 @@ import Testing
 
 @Suite("Project Note Read Contracts")
 struct ProjectNoteDataTests {
+    @Test("Historical notes retain unknown authors and dates without fabricating edit actors")
+    func historicalMetadata() throws {
+        let fixture = try Self.fixture()
+        let note = try Self.historicalNote(fixture, id: "unknown", updated: Self.t2)
+        #expect(note.createdByPrincipalId == nil && note.createdAt == nil)
+        #expect(note.lastEditedByPrincipalId == nil && note.lastEditedAt == Self.t2)
+        #expect(try OperationContractCodec.decode(ProjectNoteSnapshot.self,
+            from: OperationContractCodec.encode(note)) == note)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-editor", editor: fixture.editorId)
+        } == .incompleteEditAudit)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-order", created: Self.t2, updated: Self.t1)
+        } == .invalidAuditOrder)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-date", created: Date(timeIntervalSince1970: .infinity))
+        } == .invalidAuditTime)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-update", updated: Date(timeIntervalSince1970: .infinity))
+        } == .invalidAuditTime)
+        let chronological = try Self.historicalNote(fixture, id: "known", created: Self.t1, updated: Self.t2)
+        #expect(chronological.lastEditedByPrincipalId == nil)
+        let deletion = try ProjectNoteContentState.tombstone(ProjectNoteDeletionAudit(
+            deletedByPrincipalId: fixture.editorId, deletedAt: Self.t3))
+        _ = try Self.historicalNote(fixture, id: "deleted", updated: Self.t2, content: deletion)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-deletion", updated: Self.t4, content: deletion)
+        } == .invalidAuditOrder)
+        #expect(Self.noteFailure {
+            try Self.historicalNote(fixture, id: "bad-creation", created: Self.t4, content: deletion)
+        } == .invalidAuditOrder)
+    }
+
+    @Test("Dated and undated note pages use stable continuation without sentinel dates")
+    func undatedContinuation() throws {
+        let fixture = try Self.fixture()
+        let dated = try Self.historicalNote(fixture, id: "note-a", created: Self.t1)
+        let firstUndated = try Self.historicalNote(fixture, id: "note-z")
+        let lastUndated = try Self.historicalNote(fixture, id: "note-b")
+        let page = try Self.page(accountId: fixture.accountId, projectId: fixture.projectId,
+            rows: [dated, firstUndated], pageSize: 2, includeNextCursor: true)
+        let cursor = try #require(page.nextCursor)
+        #expect(cursor.createdAt == nil && cursor.noteId == firstUndated.id)
+        let resumed = try Self.page(accountId: fixture.accountId, projectId: fixture.projectId,
+            rows: [lastUndated], after: cursor, historyComplete: true)
+        #expect(try OperationContractCodec.decode(ProjectNotePage.self,
+            from: OperationContractCodec.encode(resumed)) == resumed)
+        for invalid in [[firstUndated, dated], [lastUndated, firstUndated]] {
+            #expect(Self.noteFailure {
+                try Self.page(accountId: fixture.accountId, projectId: fixture.projectId, rows: invalid)
+            } == .invalidNoteOrder)
+        }
+        for invalid in [dated, firstUndated] {
+            #expect(Self.noteFailure {
+                try Self.page(accountId: fixture.accountId, projectId: fixture.projectId,
+                    rows: [invalid], after: cursor)
+            } == .invalidNoteOrder)
+        }
+        let datedBoundary = try ProjectNoteCursor(accountId: fixture.accountId,
+            projectId: fixture.projectId, createdAt: dated.createdAt, noteId: dated.id)
+        _ = try Self.page(accountId: fixture.accountId, projectId: fixture.projectId,
+            rows: [firstUndated, lastUndated], after: datedBoundary)
+        #expect(Self.noteFailure {
+            try ProjectNoteCursor(accountId: fixture.accountId, projectId: fixture.projectId,
+                createdAt: Date(timeIntervalSince1970: .infinity), noteId: dated.id)
+        } == .invalidAuditTime)
+    }
+
+    private static func historicalNote(_ fixture: Fixture, id: String,
+        created: Date? = nil, updated: Date? = nil, editor: PrincipalID? = nil,
+        content: ProjectNoteContentState? = nil) throws -> ProjectNoteSnapshot {
+        try ProjectNoteSnapshot(id: ProjectNoteID(validating: id), accountId: fixture.accountId,
+            projectId: fixture.projectId, content: content ?? .visible(ProjectNoteText(validating: "Original")),
+            source: ProjectNoteSource(validating: "text"), createdByPrincipalId: nil,
+            creatorDisplayName: nil, createdAt: created, revision: 0,
+            lastEditedByPrincipalId: editor, lastEditedAt: updated)
+    }
+
     @Test("Stable notes preserve visible, edited, tombstone, and ordered page truth")
     func noteAndPageShapeIsExact() throws {
         let fixture = try Self.fixture()

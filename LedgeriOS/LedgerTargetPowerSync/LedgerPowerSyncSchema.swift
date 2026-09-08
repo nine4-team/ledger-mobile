@@ -212,14 +212,17 @@ public enum LedgerPowerSyncSchema {
                 .text("content_kind"),
                 .text("note_text"), .text("source"),
                 .text("created_by_principal_id"), .text("creator_display_name"),
-                .integer("created_at_ms"), .text("revision"),
+                .text("original_creator_id"),
+                .integer("created_at_ms"), .integer("created_at_submillis"), .text("revision"),
                 .text("last_edited_by_principal_id"), .integer("last_edited_at_ms"),
-                .text("deleted_by_principal_id"), .integer("deleted_at_ms")
+                .integer("last_edited_at_submillis"),
+                .text("deleted_by_principal_id"), .integer("deleted_at_ms"),
+                .integer("deleted_at_submillis")
             ],
             indexes: [
                 .ascending(
                     name: "project_note_history_page",
-                    columns: ["account_id", "project_id", "created_at_ms", "keyset_id"]
+                    columns: ["account_id", "project_id", "created_at_ms", "created_at_submillis", "keyset_id"]
                 )
             ]
         ),

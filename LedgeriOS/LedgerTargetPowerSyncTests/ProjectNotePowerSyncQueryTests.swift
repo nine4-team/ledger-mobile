@@ -495,6 +495,66 @@ struct ProjectNotePowerSyncQueryTests {
         fixture.remove()
     }
 
+    @Test("Local history pages from dated into undated notes without fabricating metadata")
+    func undatedLocalPagination() async throws {
+        let fixture = try ProjectNoteDatabaseFixture()
+        let database = fixture.open()
+        try await fixture.seed(database)
+        _ = try await database.execute(sql: """
+            UPDATE spike_project_notes SET created_at_ms = NULL,
+              created_by_principal_id = NULL, original_creator_id = 'mcp-agent'
+            WHERE id IN ('note-b', 'note-a')
+            """, parameters: [])
+        let first = try await Self.firstPage(Self.query(database, complete: true),
+            request: Self.request(pageSize: 1))
+        #expect(first.local.rows.map(\.id.rawValue) == ["note-z"])
+        let datedCursor = try #require(first.nextCursor)
+        let second = try await Self.firstPage(Self.query(database, complete: true),
+            request: Self.request(pageSize: 1, after: datedCursor))
+        #expect(second.local.rows.map(\.id.rawValue) == ["note-b"])
+        #expect(second.local.rows[0].createdAt == nil)
+        #expect(second.local.rows[0].createdByPrincipalId == nil)
+        #expect(second.local.rows[0].originalCreatorId == "mcp-agent")
+        let undatedCursor = try #require(second.nextCursor)
+        #expect(undatedCursor.createdAt == nil)
+        try await database.close(deleteDatabase: false)
+        let reopened = fixture.open()
+        let last = try await Self.firstPage(Self.query(reopened, complete: false),
+            request: Self.request(pageSize: 1, after: undatedCursor))
+        #expect(last.local.rows.map(\.id.rawValue) == ["note-a"])
+        #expect(last.local.rows[0].createdAt == nil)
+        #expect(last.local.rows[0].originalCreatorId == "mcp-agent")
+        #expect(last.nextCursor == nil)
+        #expect(!last.isCompleteForProjectHistory)
+        try await reopened.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
+    @Test("Submillisecond history order and continuation survive encrypted reopen")
+    func exactLocalPagination() async throws {
+        let fixture = try ProjectNoteDatabaseFixture()
+        let database = fixture.open()
+        try await fixture.seed(database)
+        _ = try await database.execute(sql: """
+            UPDATE spike_project_notes SET created_at_ms = 1000,
+              created_at_submillis = CASE id WHEN 'note-b' THEN 3 WHEN 'note-a' THEN 2 ELSE 1 END
+            """, parameters: [])
+        let first = try await Self.firstPage(Self.query(database, complete: true),
+            request: Self.request(pageSize: 1))
+        #expect(first.local.rows.map(\.id.rawValue) == ["note-b"])
+        let cursor = try #require(first.nextCursor)
+        #expect(cursor.createdTimestamp?.nanoseconds == 3)
+        try await database.close(deleteDatabase: false)
+        let reopened = fixture.open()
+        let tail = try await Self.firstPage(Self.query(reopened, complete: false),
+            request: Self.request(pageSize: 2, after: cursor))
+        #expect(tail.local.rows.map(\.id.rawValue) == ["note-a", "note-z"])
+        #expect(tail.local.rows.map { $0.createdTimestamp?.nanoseconds } == [2, 1])
+        #expect(!tail.isCompleteForProjectHistory)
+        try await reopened.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
     private static let accountId = try! AccountID(validating: "account-primary")
     private static let principalId = try! PrincipalID(validating: "principal-owner")
     private static let projectId = try! ProjectID(validating: "project-primary")
@@ -814,10 +874,14 @@ private final class ProjectNoteDatabaseFixture: @unchecked Sendable {
                 .text("account_id"), .text("project_id"), .text("keyset_id"),
                 .text("content_kind"),
                 .text("note_text"), .text("source"), .text("created_by_principal_id"),
+                .text("original_creator_id"),
                 .text("creator_display_name"), .integer("created_at_ms"),
+                .integer("created_at_submillis"),
                 .text("revision"), .text("last_edited_by_principal_id"),
                 .integer("last_edited_at_ms"), .text("deleted_by_principal_id"),
+                .integer("last_edited_at_submillis"),
                 .integer("deleted_at_ms"),
+                .integer("deleted_at_submillis"),
             ],
             indexes: [
                 .ascending(

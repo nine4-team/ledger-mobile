@@ -109,13 +109,20 @@ async function request(status, subject, requestPath, init = {}) {
   return { response, body };
 }
 
+function exactTimestamp(after) {
+  if (after?.created_at_ms == null) return null;
+  const secondsSince1970 = Math.floor(after.created_at_ms / 1_000);
+  return { nanoseconds: (after.created_at_ms - secondsSince1970 * 1_000) * 1_000_000
+    + after.created_at_submillis, secondsSince1970 };
+}
+
 function fingerprint(accountId, projectId, pageSize, after = null) {
   const basis = {
     accountId,
     ...(after === null ? {} : {
       after: {
         accountId,
-        createdAt: after.created_at_ms,
+        ...(after.created_at_ms === null ? {} : { createdTimestamp: exactTimestamp(after) }),
         noteId: after.note_id,
         projectId,
       },
@@ -166,7 +173,7 @@ async function listNotes(status, subject, accountId, projectId, pageSize, after 
       p_account_id: accountId,
       p_project_id: projectId,
       p_page_size: pageSize,
-      p_after_created_at_ms: after?.created_at_ms ?? null,
+      p_after_created_timestamp: exactTimestamp(after),
       p_after_note_id: after?.note_id ?? null,
       p_query_fingerprint: fingerprint(accountId, projectId, pageSize, after),
     }),
@@ -324,6 +331,7 @@ try {
       account_id: ids.primaryAccount,
       project_id: ids.activeProject,
       created_at_ms: 1788609601000,
+      created_at_submillis: 0,
       note_id: ids.tiedHighNote,
     });
   }
@@ -446,7 +454,7 @@ try {
         p_account_id: ids.primaryAccount,
         p_project_id: ids.activeProject,
         p_page_size: 2,
-        p_after_created_at_ms: null,
+        p_after_created_timestamp: null,
         p_after_note_id: null,
         p_query_fingerprint: "a".repeat(64),
       }),

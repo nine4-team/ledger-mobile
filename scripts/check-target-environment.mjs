@@ -1200,7 +1200,7 @@ if (
     )?.[0] ?? "";
     for (const required of [
       "spike_project_notes",
-      "ORDER BY note.created_at_ms DESC, note.keyset_id DESC",
+      "ORDER BY note.created_at_ms DESC, coalesce(note.created_at_submillis, 0) DESC, note.keyset_id DESC",
       "Int(request.pageSize) + 1",
       "cancelAndDrainWatches()",
       '"project_note_history"',
@@ -2522,7 +2522,7 @@ if (
   ];
   const expectedProjectNoteQueries = [
     "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.legacy_notes, project.property_address, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE project.account_id = subscription.parameter('account_id') AND project.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
-    "SELECT note.id, note.account_id, note.project_id, note.id AS keyset_id, note.content_kind, note.note_text, note.source, note.created_by_principal_id, note.creator_display_name, note.created_at_ms, note.revision::text AS revision, note.last_edited_by_principal_id, note.last_edited_at_ms, note.deleted_by_principal_id, note.deleted_at_ms FROM spike_project_notes AS note JOIN spike_projects AS project ON project.account_id = note.account_id AND project.id = note.project_id JOIN spike_account_memberships AS membership ON membership.account_id = note.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE note.account_id = subscription.parameter('account_id') AND note.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+    "SELECT note.id, note.account_id, note.project_id, note.id AS keyset_id, note.content_kind, note.note_text, note.source, note.created_by_principal_id, note.original_creator_id, note.creator_display_name, note.created_at_ms, note.created_at_submillis, note.revision::text AS revision, note.last_edited_by_principal_id, note.last_edited_at_ms, note.last_edited_at_submillis, note.deleted_by_principal_id, note.deleted_at_ms, note.deleted_at_submillis FROM spike_project_notes AS note JOIN spike_projects AS project ON project.account_id = note.account_id AND project.id = note.project_id JOIN spike_account_memberships AS membership ON membership.account_id = note.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE note.account_id = subscription.parameter('account_id') AND note.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
   ];
   if (
     JSON.stringify(normalizedQueries(broadProjectSection)) !==

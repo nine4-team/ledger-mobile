@@ -6,6 +6,21 @@ import Testing
 @Suite("Project Note History Staging Flow")
 @MainActor
 struct ProjectNoteHistoryStagingExerciseTests {
+    @Test("Historical presentation does not invent an author or creation date")
+    func missingHistoricalMetadata() throws {
+        let note = try ProjectNoteSnapshot(
+            id: ProjectNoteID(validating: "historical-note"), accountId: Self.accountId,
+            projectId: Self.projectA, content: .visible(ProjectNoteText(validating: "Original note")),
+            source: ProjectNoteSource(validating: "mcp"), createdByPrincipalId: nil,
+            creatorDisplayName: nil, createdAt: nil, revision: 0,
+            lastEditedAt: Date(timeIntervalSince1970: 100))
+        let row = ProjectNoteHistoryRowPresentation(note: note)
+        #expect(row.body == "Original note")
+        #expect(row.creatorDisplayName == nil)
+        #expect(row.createdAt == nil)
+        #expect(row.lastEditedAt == Date(timeIntervalSince1970: 100))
+    }
+
     @Test("Selection reads a bounded first page and tombstones never expose deleted text")
     func firstPageAndTombstonePresentation() async throws {
         let probe = NotePageWatchProbe()

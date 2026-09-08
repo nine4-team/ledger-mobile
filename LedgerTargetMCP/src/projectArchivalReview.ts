@@ -19,10 +19,12 @@ const ARCHIVE_REJECTION_CODES = new Set([
   "project_archive_revision_conflict",
 ]);
 
+export type ProjectNoteTimestamp = Readonly<{ secondsSince1970: number; nanoseconds: number }>;
+
 export type ProjectNoteCursorTransport = Readonly<{
   accountId: string;
   projectId: string;
-  createdAtMilliseconds: number;
+  createdTimestamp?: ProjectNoteTimestamp | null;
   noteId: string;
 }>;
 
@@ -38,7 +40,7 @@ export type ProjectNoteContentTransport =
     kind: "tombstone";
     deletion: Readonly<{
       deletedByPrincipalId: string;
-      deletedAtMilliseconds: number;
+      deletedTimestamp: ProjectNoteTimestamp;
     }>;
   }>;
 
@@ -48,12 +50,13 @@ export type ProjectNoteTransport = Readonly<{
   projectId: string;
   content: ProjectNoteContentTransport;
   source: string;
-  createdByPrincipalId: string;
+  createdByPrincipalId?: string | null;
+  originalCreatorId?: string | null;
   creatorDisplayName: string | null;
-  createdAtMilliseconds: number;
+  createdTimestamp?: ProjectNoteTimestamp | null;
   revision: string;
   lastEditedByPrincipalId: string | null;
-  lastEditedAtMilliseconds: number | null;
+  lastEditedTimestamp?: ProjectNoteTimestamp | null;
 }>;
 
 export type ProjectNotePageTransportRequest = Readonly<{
@@ -106,14 +109,14 @@ export function makeProjectNotePageTransportRequest(
       "project_note_cursor_invalid",
     );
     const noteId = validateIdentifier(input.after.noteId, "project_note_cursor_invalid");
-    validateMilliseconds(input.after.createdAtMilliseconds, "project_note_cursor_invalid");
+    const createdTimestamp = optionalTimestamp(input.after.createdTimestamp, "project_note_cursor_invalid");
     if (cursorAccountId !== accountId || cursorProjectId !== projectId) {
       throw new TargetMCPFailure("project_note_cursor_scope_mismatch");
     }
     after = {
       accountId: cursorAccountId,
       projectId: cursorProjectId,
-      createdAtMilliseconds: input.after.createdAtMilliseconds,
+      createdTimestamp,
       noteId,
     };
   }
@@ -127,7 +130,7 @@ export function makeProjectNotePageTransportRequest(
   if (after !== null) {
     fingerprintBasis.after = {
       accountId: after.accountId,
-      createdAt: after.createdAtMilliseconds,
+      ...(after.createdTimestamp == null ? {} : { createdTimestamp: after.createdTimestamp }),
       noteId: after.noteId,
       projectId: after.projectId,
     };
@@ -196,7 +199,7 @@ export class SupabaseProjectNotePageReader implements ProjectNotePageReading {
         p_account_id: request.accountId,
         p_project_id: request.projectId,
         p_page_size: request.pageSize,
-        p_after_created_at_ms: request.after?.createdAtMilliseconds ?? null,
+        p_after_created_timestamp: request.after?.createdTimestamp ?? null,
         p_after_note_id: request.after?.noteId ?? null,
         p_query_fingerprint: request.queryFingerprint,
       }),
@@ -396,11 +399,17 @@ export const listProjectNotesToolDefinition = Object.freeze({
       after: {
         type: "object",
         additionalProperties: false,
-        required: ["accountId", "projectId", "createdAtMilliseconds", "noteId"],
+        required: ["accountId", "projectId", "noteId"],
         properties: {
           accountId: { type: "string", minLength: 1, maxLength: 128 },
           projectId: { type: "string", minLength: 1, maxLength: 128 },
-          createdAtMilliseconds: { type: "integer" },
+          createdTimestamp: { anyOf: [{ type: "null" }, {
+            type: "object", additionalProperties: false, required: ["secondsSince1970", "nanoseconds"],
+            properties: {
+              secondsSince1970: { type: "integer", minimum: -62135596800, maximum: 253402300799 },
+              nanoseconds: { type: "integer", minimum: 0, maximum: 999999999 },
+            },
+          }] },
           noteId: { type: "string", minLength: 1, maxLength: 128 },
         },
       },
@@ -462,7 +471,8 @@ function validateProjectNotePageResult(
     if (last === undefined || result.nextCursor === null
       || result.nextCursor.accountId !== request.accountId
       || result.nextCursor.projectId !== request.projectId
-      || result.nextCursor.createdAtMilliseconds !== last.createdAtMilliseconds
+      || compareTimestamp(optionalTimestamp(result.nextCursor.createdTimestamp, "project_note_server_result_mismatch"),
+        optionalTimestamp(last.createdTimestamp, "project_note_server_result_mismatch")) !== 0
       || result.nextCursor.noteId !== last.id) mismatch();
   }
 }
@@ -478,8 +488,10 @@ function validateProjectNote(
     validateIdentifier(row.id, "project_note_server_result_mismatch");
     validateIdentifier(row.accountId, "project_note_server_result_mismatch");
     validateIdentifier(row.projectId, "project_note_server_result_mismatch");
-    validateIdentifier(row.createdByPrincipalId, "project_note_server_result_mismatch");
-    validateMilliseconds(row.createdAtMilliseconds, "project_note_server_result_mismatch");
+    if (row.createdByPrincipalId != null) validateIdentifier(row.createdByPrincipalId, "project_note_server_result_mismatch");
+    optionalTimestamp(row.createdTimestamp, "project_note_server_result_mismatch");
+    optionalTimestamp(row.lastEditedTimestamp, "project_note_server_result_mismatch");
+    if (row.originalCreatorId != null && typeof row.originalCreatorId !== "string") mismatch();
     validateUInt64Decimal(row.revision, "project_note_server_result_mismatch");
   } catch { mismatch(); }
   if (row.accountId !== request.accountId || row.projectId !== request.projectId) mismatch();
@@ -491,19 +503,16 @@ function validateProjectNote(
       || FOUNDATION_WHITESPACE_ONLY.test(row.creatorDisplayName))) {
     mismatch();
   }
-  if ((row.lastEditedByPrincipalId === null) !== (row.lastEditedAtMilliseconds === null)) {
+  if (row.lastEditedByPrincipalId != null && row.lastEditedTimestamp == null) {
     mismatch();
   }
-  if (row.lastEditedByPrincipalId !== null) {
+  if (row.lastEditedByPrincipalId != null) {
     try {
       validateIdentifier(row.lastEditedByPrincipalId, "project_note_server_result_mismatch");
-      validateMilliseconds(
-        row.lastEditedAtMilliseconds as number,
-        "project_note_server_result_mismatch",
-      );
     } catch { mismatch(); }
-    if ((row.lastEditedAtMilliseconds as number) < row.createdAtMilliseconds) mismatch();
   }
+  if (row.createdTimestamp != null && row.lastEditedTimestamp != null
+    && compareTimestamp(row.lastEditedTimestamp, row.createdTimestamp) < 0) mismatch();
   if (row.content.kind === "visible") {
     if (typeof row.content.text !== "string"
       || FOUNDATION_WHITESPACE_ONLY.test(row.content.text)
@@ -515,14 +524,14 @@ function validateProjectNote(
         row.content.deletion.deletedByPrincipalId,
         "project_note_server_result_mismatch",
       );
-      validateMilliseconds(
-        row.content.deletion.deletedAtMilliseconds,
+      validateTimestamp(
+        row.content.deletion.deletedTimestamp,
         "project_note_server_result_mismatch",
       );
     } catch { mismatch(); }
-    if (row.content.deletion.deletedAtMilliseconds < row.createdAtMilliseconds
-      || (row.lastEditedAtMilliseconds !== null
-        && row.content.deletion.deletedAtMilliseconds < row.lastEditedAtMilliseconds)) mismatch();
+    if ((row.createdTimestamp != null && compareTimestamp(row.content.deletion.deletedTimestamp, row.createdTimestamp) < 0)
+      || (row.lastEditedTimestamp != null
+        && compareTimestamp(row.content.deletion.deletedTimestamp, row.lastEditedTimestamp) < 0)) mismatch();
   } else {
     mismatch();
   }
@@ -579,7 +588,7 @@ function decodeProjectNote(value: unknown): ProjectNoteTransport {
   const contentKind = requiredString(row.content_kind, code);
   let content: ProjectNoteContentTransport;
   if (contentKind === "visible") {
-    if (row.deleted_by_principal_id !== null || row.deleted_at_ms !== null) {
+    if (row.deleted_by_principal_id !== null || decodeTimestampParts(row.deleted_at_ms, row.deleted_at_submillis, code) !== null) {
       throw new TargetMCPFailure(code);
     }
     content = { kind: "visible", text: requiredString(row.note_text, code) };
@@ -589,7 +598,7 @@ function decodeProjectNote(value: unknown): ProjectNoteTransport {
       kind: "tombstone",
       deletion: {
         deletedByPrincipalId: requiredString(row.deleted_by_principal_id, code),
-        deletedAtMilliseconds: requiredSafeInteger(row.deleted_at_ms, code),
+        deletedTimestamp: requiredTimestampParts(row.deleted_at_ms, row.deleted_at_submillis, code),
       },
     };
   } else {
@@ -601,12 +610,13 @@ function decodeProjectNote(value: unknown): ProjectNoteTransport {
     projectId: requiredString(row.project_id, code),
     content,
     source: requiredString(row.source, code),
-    createdByPrincipalId: requiredString(row.created_by_principal_id, code),
+    createdByPrincipalId: optionalString(row.created_by_principal_id, code),
+    originalCreatorId: optionalString(row.original_creator_id, code),
     creatorDisplayName: optionalString(row.creator_display_name, code),
-    createdAtMilliseconds: requiredSafeInteger(row.created_at_ms, code),
+    createdTimestamp: decodeTimestampParts(row.created_at_ms, row.created_at_submillis, code),
     revision: requiredString(row.revision, code),
     lastEditedByPrincipalId: optionalString(row.last_edited_by_principal_id, code),
-    lastEditedAtMilliseconds: optionalSafeInteger(row.last_edited_at_ms, code),
+    lastEditedTimestamp: decodeTimestampParts(row.last_edited_at_ms, row.last_edited_at_submillis, code),
   };
 }
 
@@ -678,9 +688,8 @@ function precedes(
   earlier: ProjectNoteCursorTransport | ProjectNoteTransport,
   later: ProjectNoteTransport,
 ): boolean {
-  if (earlier.createdAtMilliseconds !== later.createdAtMilliseconds) {
-    return earlier.createdAtMilliseconds > later.createdAtMilliseconds;
-  }
+  const order = compareTimestamp(earlier.createdTimestamp, later.createdTimestamp);
+  if (order !== 0) return order > 0;
   return Buffer.compare(
     Buffer.from("noteId" in earlier ? earlier.noteId : earlier.id, "utf8"),
     Buffer.from(later.id, "utf8"),
@@ -793,7 +802,49 @@ function decodeCursor(value: unknown, code: string): ProjectNoteCursorTransport 
   return {
     accountId: requiredString(cursor.account_id, code),
     projectId: requiredString(cursor.project_id, code),
-    createdAtMilliseconds: requiredSafeInteger(cursor.created_at_ms, code),
+    createdTimestamp: decodeTimestampParts(cursor.created_at_ms, cursor.created_at_submillis, code),
     noteId: requiredString(cursor.note_id, code),
   };
+}
+
+function validateTimestamp(value: unknown, code: string): ProjectNoteTimestamp {
+  const raw = record(value, code);
+  if (Object.keys(raw).length !== 2 || !Number.isSafeInteger(raw.secondsSince1970)
+    || !Number.isSafeInteger(raw.nanoseconds)
+    || (raw.secondsSince1970 as number) < -62_135_596_800
+    || (raw.secondsSince1970 as number) > 253_402_300_799
+    || (raw.nanoseconds as number) < 0 || (raw.nanoseconds as number) > 999_999_999) {
+    throw new TargetMCPFailure(code);
+  }
+  return { secondsSince1970: raw.secondsSince1970 as number, nanoseconds: raw.nanoseconds as number };
+}
+
+function optionalTimestamp(value: unknown, code: string): ProjectNoteTimestamp | null {
+  return value == null ? null : validateTimestamp(value, code);
+}
+
+function decodeTimestampParts(milliseconds: unknown, remainder: unknown, code: string): ProjectNoteTimestamp | null {
+  if (milliseconds === null) {
+    if (remainder !== null && remainder !== 0) throw new TargetMCPFailure(code);
+    return null;
+  }
+  if (!Number.isSafeInteger(milliseconds) || !Number.isSafeInteger(remainder)
+    || (remainder as number) < 0 || (remainder as number) > 999_999) throw new TargetMCPFailure(code);
+  const ms = milliseconds as number;
+  const secondsSince1970 = Math.floor(ms / 1_000);
+  return validateTimestamp({ secondsSince1970, nanoseconds: (ms - secondsSince1970 * 1_000) * 1_000_000 + (remainder as number) }, code);
+}
+
+function requiredTimestampParts(milliseconds: unknown, remainder: unknown, code: string): ProjectNoteTimestamp {
+  const result = decodeTimestampParts(milliseconds, remainder, code);
+  if (result === null) throw new TargetMCPFailure(code);
+  return result;
+}
+
+// Unknown times sort after every known time, without a fabricated sentinel.
+function compareTimestamp(lhs: ProjectNoteTimestamp | null | undefined, rhs: ProjectNoteTimestamp | null | undefined): number {
+  if (lhs == null) return rhs == null ? 0 : -1;
+  if (rhs == null) return 1;
+  return lhs.secondsSince1970 === rhs.secondsSince1970
+    ? Math.sign(lhs.nanoseconds - rhs.nanoseconds) : Math.sign(lhs.secondsSince1970 - rhs.secondsSince1970);
 }

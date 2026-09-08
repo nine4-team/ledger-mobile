@@ -8,7 +8,7 @@ public struct ProjectNoteHistoryRowPresentation: Equatable, Identifiable, Sendab
     public let isTombstone: Bool
     public let creatorDisplayName: String?
     public let source: String
-    public let createdAt: Date
+    public let createdAt: Date?
     public let lastEditedAt: Date?
 
     init(note: ProjectNoteSnapshot) {

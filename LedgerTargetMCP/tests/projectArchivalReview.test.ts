@@ -48,7 +48,7 @@ test("note request fingerprints are byte-identical to Swift with and without a c
   const after = {
     accountId: context.accountId,
     projectId: "project-primary",
-    createdAtMilliseconds: 1_788_600_000_000,
+    createdTimestamp: { secondsSince1970: 1_788_600_000, nanoseconds: 0 },
     noteId: "note-z",
   };
   const continuation = makeProjectNotePageTransportRequest(
@@ -57,9 +57,73 @@ test("note request fingerprints are byte-identical to Swift with and without a c
   );
   assert.equal(
     continuation.queryFingerprint,
-    "255bb80755819962da920239c9e5425a3730b7ab8dc78dc77ca007f6b0b320b6",
+    sha256('{"accountId":"account-primary","after":{"accountId":"account-primary","createdTimestamp":{"nanoseconds":0,"secondsSince1970":1788600000},"noteId":"note-z","projectId":"project-primary"},"pageSize":2,"projectId":"project-primary"}'),
   );
   assert.deepEqual(continuation.after, after);
+});
+
+test("exact note pages retain nanoseconds, unknown metadata and undated continuation", async () => {
+  const input = { projectId: "project-primary", pageSize: 3 };
+  const request = makeProjectNotePageTransportRequest(input, context);
+  const later = { ...note("a", 0, "0"), createdTimestamp: { secondsSince1970: -1, nanoseconds: 999_999_999 },
+    createdByPrincipalId: null, originalCreatorId: "mcp-agent", lastEditedTimestamp: { secondsSince1970: 0, nanoseconds: 1 } };
+  const earlier = { ...note("z", 0, "0"), createdTimestamp: { secondsSince1970: -1, nanoseconds: 999_999_998 } };
+  const undated = { ...note("undated-z", 0, "0"), createdTimestamp: null, createdByPrincipalId: null };
+  const valid = page(request, [later, earlier, undated], false);
+  assert.deepEqual(await listProjectNotesTool(input, context, { async read() { return valid; } }), valid);
+  for (const rows of [[earlier, later], [undated, later], [later, later],
+    [{ ...later, lastEditedTimestamp: { secondsSince1970: -2, nanoseconds: 0 } }],
+    [{ ...later, lastEditedTimestamp: null, lastEditedByPrincipalId: "editor" }]]) {
+    await assert.rejects(listProjectNotesTool(input, context, { async read() { return page(request, rows, true); } }),
+      failure("project_note_server_result_mismatch"));
+  }
+  const after = valid.nextCursor!;
+  const continuation = makeProjectNotePageTransportRequest({ ...input, after }, context);
+  assert.equal(continuation.queryFingerprint, sha256('{"accountId":"account-primary","after":{"accountId":"account-primary","noteId":"undated-z","projectId":"project-primary"},"pageSize":3,"projectId":"project-primary"}'));
+  const last = { ...undated, id: "undated-a" };
+  await listProjectNotesTool({ ...input, after }, context, { async read() { return page(continuation, [last], true); } });
+  await assert.rejects(listProjectNotesTool({ ...input, after }, context, { async read() { return page(continuation, [later], true); } }),
+    failure("project_note_server_result_mismatch"));
+  for (const createdTimestamp of [{ secondsSince1970: 253402300800, nanoseconds: 0 },
+    { secondsSince1970: 0, nanoseconds: -1 }, { secondsSince1970: 0, nanoseconds: 1000000000 },
+    { secondsSince1970: Number.MAX_SAFE_INTEGER + 1, nanoseconds: 0 }, { secondsSince1970: 0.1, nanoseconds: 0 }]) {
+    assert.throws(() => makeProjectNotePageTransportRequest({ ...input, after: { ...after, createdTimestamp } }, context),
+      failure("project_note_cursor_invalid"));
+  }
+});
+
+test("note RPC decodes exact negative epoch parts and sends an undated cursor distinctly", async () => {
+  const after = { accountId: context.accountId, projectId: "project-primary", noteId: "undated-z", createdTimestamp: null };
+  const request = makeProjectNotePageTransportRequest({ projectId: "project-primary", pageSize: 1, after }, context);
+  let body: Record<string, unknown> | undefined;
+  let rawTimestamp: number | null = null;
+  let remainder: number | null = 0;
+  const reader = new SupabaseProjectNotePageReader(new URL("http://127.0.0.1:54321"), "publishable", async (_resource, init) => {
+    body = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ account_id: request.accountId, project_id: request.projectId,
+      page_size: 1, query_fingerprint: request.queryFingerprint, is_complete_for_project_history: false,
+      rows: [{ id: "undated-a", account_id: request.accountId, project_id: request.projectId,
+        content_kind: "visible", note_text: "Original", source: "mcp", created_by_principal_id: null,
+        original_creator_id: "mcp-agent", creator_display_name: null, created_at_ms: rawTimestamp,
+        created_at_submillis: remainder, revision: "0", last_edited_by_principal_id: null,
+        last_edited_at_ms: -1, last_edited_at_submillis: 999999,
+        deleted_by_principal_id: null, deleted_at_ms: null, deleted_at_submillis: 0 }],
+      next_cursor: { account_id: request.accountId, project_id: request.projectId, note_id: "undated-a",
+        created_at_ms: rawTimestamp, created_at_submillis: remainder } }), { status: 200 });
+  });
+  const result = await reader.read(request, context);
+  assert.equal(body?.p_after_created_timestamp, null);
+  assert.equal(body?.p_after_note_id, "undated-z");
+  assert.deepEqual(result.rows[0]?.lastEditedTimestamp, { secondsSince1970: -1, nanoseconds: 999999999 });
+  assert.equal(result.rows[0]?.createdByPrincipalId, null);
+  assert.equal(result.rows[0]?.originalCreatorId, "mcp-agent");
+  for (const bad of [1, -1, 1000000]) {
+    remainder = bad;
+    await assert.rejects(reader.read(request, context), failure("project_note_server_result_mismatch"));
+  }
+  rawTimestamp = Number.MAX_SAFE_INTEGER + 1;
+  remainder = 0;
+  await assert.rejects(reader.read(request, context), failure("project_note_server_result_mismatch"));
 });
 
 test("note input is strictly bounded and a rebound cursor never reaches the reader", async () => {
@@ -83,7 +147,7 @@ test("note input is strictly bounded and a rebound cursor never reaches the read
       after: {
         accountId: "account-other",
         projectId: "project-primary",
-        createdAtMilliseconds: 1_788_600_000_000,
+        createdTimestamp: { secondsSince1970: 1_788_600_000, nanoseconds: 0 },
         noteId: "note-z",
       },
     }, context, reader),
@@ -265,13 +329,17 @@ test("note transport uses one scoped read RPC and decodes tombstones without fab
           note_text: null,
           deleted_by_principal_id: "principal-editor",
           deleted_at_ms: 1_788_600_002_000,
+          deleted_at_submillis: 0,
           source: "manual",
           created_by_principal_id: "principal-owner",
+          original_creator_id: null,
           creator_display_name: "Jordan Lee",
           created_at_ms: 1_788_600_000_000,
+          created_at_submillis: 0,
           revision: "18446744073709551615",
           last_edited_by_principal_id: "principal-editor",
           last_edited_at_ms: 1_788_600_001_000,
+          last_edited_at_submillis: 0,
         }],
         is_complete_for_project_history: true,
         next_cursor: null,
@@ -284,7 +352,7 @@ test("note transport uses one scoped read RPC and decodes tombstones without fab
     p_account_id: request.accountId,
     p_project_id: request.projectId,
     p_page_size: 1,
-    p_after_created_at_ms: null,
+    p_after_created_timestamp: null,
     p_after_note_id: null,
     p_query_fingerprint: request.queryFingerprint,
   });
@@ -297,7 +365,7 @@ test("note transport uses one scoped read RPC and decodes tombstones without fab
     kind: "tombstone",
     deletion: {
       deletedByPrincipalId: "principal-editor",
-      deletedAtMilliseconds: 1_788_600_002_000,
+      deletedTimestamp: { secondsSince1970: 1_788_600_002, nanoseconds: 0 },
     },
   });
   assert.equal("local" in result, false);
@@ -515,10 +583,10 @@ function note(id: string, createdAtMilliseconds: number, revision: string): Proj
     source: "manual",
     createdByPrincipalId: context.principalId,
     creatorDisplayName: "Jordan Lee",
-    createdAtMilliseconds,
+    createdTimestamp: { secondsSince1970: Math.floor(createdAtMilliseconds / 1_000), nanoseconds: (createdAtMilliseconds % 1_000) * 1_000_000 },
     revision,
     lastEditedByPrincipalId: null,
-    lastEditedAtMilliseconds: null,
+    lastEditedTimestamp: null,
   };
 }
 
@@ -538,7 +606,7 @@ function page(
     nextCursor: complete || last === undefined ? null : {
       accountId: request.accountId,
       projectId: request.projectId,
-      createdAtMilliseconds: last.createdAtMilliseconds,
+      createdTimestamp: last.createdTimestamp,
       noteId: last.id,
     },
   };

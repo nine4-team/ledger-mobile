@@ -485,13 +485,17 @@ streams:
           note.note_text,
           note.source,
           note.created_by_principal_id,
+          note.original_creator_id,
           note.creator_display_name,
           note.created_at_ms,
+          note.created_at_submillis,
           note.revision::text AS revision,
           note.last_edited_by_principal_id,
           note.last_edited_at_ms,
+          note.last_edited_at_submillis,
           note.deleted_by_principal_id,
-          note.deleted_at_ms
+          note.deleted_at_ms,
+          note.deleted_at_submillis
         FROM spike_project_notes AS note
         JOIN spike_projects AS project
           ON project.account_id = note.account_id

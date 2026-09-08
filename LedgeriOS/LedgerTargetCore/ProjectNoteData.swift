@@ -170,25 +170,31 @@ public struct ProjectNoteSource: Codable, Equatable, Hashable, Sendable {
 
 public struct ProjectNoteDeletionAudit: Codable, Equatable, Sendable {
     public let deletedByPrincipalId: PrincipalID
-    public let deletedAt: Date
+    public let deletedTimestamp: ProjectNoteTimestamp
+    public var deletedAt: Date { deletedTimestamp.date }
 
     public init(deletedByPrincipalId: PrincipalID, deletedAt: Date) throws {
-        guard deletedAt.timeIntervalSinceReferenceDate.isFinite else {
-            throw ProjectNoteDataFailure.invalidAuditTime
-        }
+        self.init(deletedByPrincipalId: deletedByPrincipalId,
+            deletedTimestamp: try ProjectNoteTimestamp(legacyMillisecondsDate: deletedAt))
+    }
+
+    public init(deletedByPrincipalId: PrincipalID, deletedTimestamp: ProjectNoteTimestamp) {
         self.deletedByPrincipalId = deletedByPrincipalId
-        self.deletedAt = deletedAt
+        self.deletedTimestamp = deletedTimestamp
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         do {
-            try self.init(
-                deletedByPrincipalId: container.decode(
+            guard let timestamp = try container.decodeNoteTimestamp(exact: .deletedTimestamp, legacy: .deletedAt) else {
+                throw ProjectNoteDataFailure.invalidAuditTime
+            }
+            self.init(
+                deletedByPrincipalId: try container.decode(
                     PrincipalID.self,
                     forKey: .deletedByPrincipalId
                 ),
-                deletedAt: container.decode(Date.self, forKey: .deletedAt)
+                deletedTimestamp: timestamp
             )
         } catch let failure as ProjectNoteDataFailure {
             throw failure
@@ -197,9 +203,16 @@ public struct ProjectNoteDeletionAudit: Codable, Equatable, Sendable {
         }
     }
 
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(deletedByPrincipalId, forKey: .deletedByPrincipalId)
+        try container.encode(deletedTimestamp, forKey: .deletedTimestamp)
+    }
+
     private enum CodingKeys: String, CodingKey {
         case deletedByPrincipalId
         case deletedAt
+        case deletedTimestamp
     }
 }
 
@@ -262,12 +275,15 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
     public let projectId: ProjectID
     public let content: ProjectNoteContentState
     public let source: ProjectNoteSource
-    public let createdByPrincipalId: PrincipalID
+    public let createdByPrincipalId: PrincipalID?
+    public let originalCreatorId: String?
     public let creatorDisplayName: ProjectNoteCreatorDisplayName?
-    public let createdAt: Date
+    public let createdTimestamp: ProjectNoteTimestamp?
+    public var createdAt: Date? { createdTimestamp?.date }
     public let revision: UInt64
     public let lastEditedByPrincipalId: PrincipalID?
-    public let lastEditedAt: Date?
+    public let lastEditedTimestamp: ProjectNoteTimestamp?
+    public var lastEditedAt: Date? { lastEditedTimestamp?.date }
 
     public init(
         id: ProjectNoteID,
@@ -275,29 +291,41 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
         projectId: ProjectID,
         content: ProjectNoteContentState,
         source: ProjectNoteSource,
-        createdByPrincipalId: PrincipalID,
+        createdByPrincipalId: PrincipalID?,
         creatorDisplayName: ProjectNoteCreatorDisplayName?,
-        createdAt: Date,
+        createdAt: Date?,
         revision: UInt64,
         lastEditedByPrincipalId: PrincipalID? = nil,
-        lastEditedAt: Date? = nil
+        lastEditedAt: Date? = nil,
+        originalCreatorId: String? = nil
     ) throws {
-        guard createdAt.timeIntervalSinceReferenceDate.isFinite else {
-            throw ProjectNoteDataFailure.invalidAuditTime
+        try self.init(id: id, accountId: accountId, projectId: projectId, content: content,
+            source: source, createdByPrincipalId: createdByPrincipalId, creatorDisplayName: creatorDisplayName,
+            createdTimestamp: createdAt.map(ProjectNoteTimestamp.init(legacyMillisecondsDate:)), revision: revision,
+            lastEditedByPrincipalId: lastEditedByPrincipalId,
+            lastEditedTimestamp: lastEditedAt.map(ProjectNoteTimestamp.init(legacyMillisecondsDate:)),
+            originalCreatorId: originalCreatorId)
+    }
+
+    public init(id: ProjectNoteID, accountId: AccountID, projectId: ProjectID,
+        content: ProjectNoteContentState, source: ProjectNoteSource,
+        createdByPrincipalId: PrincipalID?, creatorDisplayName: ProjectNoteCreatorDisplayName?,
+        createdTimestamp: ProjectNoteTimestamp?, revision: UInt64,
+        lastEditedByPrincipalId: PrincipalID? = nil,
+        lastEditedTimestamp: ProjectNoteTimestamp? = nil,
+        originalCreatorId: String? = nil) throws {
+        guard !(originalCreatorId?.contains("\0") ?? false) else {
+            throw ProjectNoteDataFailure.invalidEncodedNote
         }
-        if let lastEditedAt,
-           !lastEditedAt.timeIntervalSinceReferenceDate.isFinite {
-            throw ProjectNoteDataFailure.invalidAuditTime
-        }
-        guard (lastEditedByPrincipalId == nil) == (lastEditedAt == nil) else {
+        guard lastEditedByPrincipalId == nil || lastEditedTimestamp != nil else {
             throw ProjectNoteDataFailure.incompleteEditAudit
         }
-        guard lastEditedAt.map({ createdAt <= $0 }) ?? true else {
+        guard createdTimestamp.flatMap({ creation in lastEditedTimestamp.map { creation <= $0 } }) ?? true else {
             throw ProjectNoteDataFailure.invalidAuditOrder
         }
         if case .tombstone(let deletion) = content {
-            guard createdAt <= deletion.deletedAt,
-                  lastEditedAt.map({ $0 <= deletion.deletedAt }) ?? true else {
+            guard createdTimestamp.map({ $0 <= deletion.deletedTimestamp }) ?? true,
+                  lastEditedTimestamp.map({ $0 <= deletion.deletedTimestamp }) ?? true else {
                 throw ProjectNoteDataFailure.invalidAuditOrder
             }
         }
@@ -307,11 +335,12 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
         self.content = content
         self.source = source
         self.createdByPrincipalId = createdByPrincipalId
+        self.originalCreatorId = originalCreatorId
         self.creatorDisplayName = creatorDisplayName
-        self.createdAt = createdAt
+        self.createdTimestamp = createdTimestamp
         self.revision = revision
         self.lastEditedByPrincipalId = lastEditedByPrincipalId
-        self.lastEditedAt = lastEditedAt
+        self.lastEditedTimestamp = lastEditedTimestamp
     }
 
     public init(from decoder: Decoder) throws {
@@ -323,7 +352,7 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
                 projectId: container.decode(ProjectID.self, forKey: .projectId),
                 content: container.decode(ProjectNoteContentState.self, forKey: .content),
                 source: container.decode(ProjectNoteSource.self, forKey: .source),
-                createdByPrincipalId: container.decode(
+                createdByPrincipalId: container.decodeIfPresent(
                     PrincipalID.self,
                     forKey: .createdByPrincipalId
                 ),
@@ -331,19 +360,36 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
                     ProjectNoteCreatorDisplayName.self,
                     forKey: .creatorDisplayName
                 ),
-                createdAt: container.decode(Date.self, forKey: .createdAt),
+                createdTimestamp: container.decodeNoteTimestamp(exact: .createdTimestamp, legacy: .createdAt),
                 revision: container.decode(UInt64.self, forKey: .revision),
                 lastEditedByPrincipalId: container.decodeIfPresent(
                     PrincipalID.self,
                     forKey: .lastEditedByPrincipalId
                 ),
-                lastEditedAt: container.decodeIfPresent(Date.self, forKey: .lastEditedAt)
+                lastEditedTimestamp: container.decodeNoteTimestamp(exact: .lastEditedTimestamp, legacy: .lastEditedAt),
+                originalCreatorId: container.decodeIfPresent(String.self, forKey: .originalCreatorId)
             )
         } catch let failure as ProjectNoteDataFailure {
             throw failure
         } catch {
             throw ProjectNoteDataFailure.invalidEncodedNote
         }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(accountId, forKey: .accountId)
+        try container.encode(projectId, forKey: .projectId)
+        try container.encode(content, forKey: .content)
+        try container.encode(source, forKey: .source)
+        try container.encodeIfPresent(createdByPrincipalId, forKey: .createdByPrincipalId)
+        try container.encodeIfPresent(originalCreatorId, forKey: .originalCreatorId)
+        try container.encodeIfPresent(creatorDisplayName, forKey: .creatorDisplayName)
+        try container.encodeIfPresent(createdTimestamp, forKey: .createdTimestamp)
+        try container.encode(revision, forKey: .revision)
+        try container.encodeIfPresent(lastEditedByPrincipalId, forKey: .lastEditedByPrincipalId)
+        try container.encodeIfPresent(lastEditedTimestamp, forKey: .lastEditedTimestamp)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -353,32 +399,39 @@ public struct ProjectNoteSnapshot: Codable, Equatable, Sendable {
         case content
         case source
         case createdByPrincipalId
+        case originalCreatorId
         case creatorDisplayName
         case createdAt
+        case createdTimestamp
         case revision
         case lastEditedByPrincipalId
         case lastEditedAt
+        case lastEditedTimestamp
     }
 }
 
 public struct ProjectNoteCursor: Codable, Equatable, Hashable, Sendable {
     public let accountId: AccountID
     public let projectId: ProjectID
-    public let createdAt: Date
+    public let createdTimestamp: ProjectNoteTimestamp?
+    public var createdAt: Date? { createdTimestamp?.date }
     public let noteId: ProjectNoteID
 
     public init(
         accountId: AccountID,
         projectId: ProjectID,
-        createdAt: Date,
+        createdAt: Date?,
         noteId: ProjectNoteID
     ) throws {
-        guard createdAt.timeIntervalSinceReferenceDate.isFinite else {
-            throw ProjectNoteDataFailure.invalidAuditTime
-        }
+        self.init(accountId: accountId, projectId: projectId,
+            createdTimestamp: try createdAt.map(ProjectNoteTimestamp.init(legacyMillisecondsDate:)), noteId: noteId)
+    }
+
+    public init(accountId: AccountID, projectId: ProjectID,
+        createdTimestamp: ProjectNoteTimestamp?, noteId: ProjectNoteID) {
         self.accountId = accountId
         self.projectId = projectId
-        self.createdAt = createdAt
+        self.createdTimestamp = createdTimestamp
         self.noteId = noteId
     }
 
@@ -388,7 +441,7 @@ public struct ProjectNoteCursor: Codable, Equatable, Hashable, Sendable {
             try self.init(
                 accountId: container.decode(AccountID.self, forKey: .accountId),
                 projectId: container.decode(ProjectID.self, forKey: .projectId),
-                createdAt: container.decode(Date.self, forKey: .createdAt),
+                createdTimestamp: container.decodeNoteTimestamp(exact: .createdTimestamp, legacy: .createdAt),
                 noteId: container.decode(ProjectNoteID.self, forKey: .noteId)
             )
         } catch let failure as ProjectNoteDataFailure {
@@ -398,10 +451,19 @@ public struct ProjectNoteCursor: Codable, Equatable, Hashable, Sendable {
         }
     }
 
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(accountId, forKey: .accountId)
+        try container.encode(projectId, forKey: .projectId)
+        try container.encodeIfPresent(createdTimestamp, forKey: .createdTimestamp)
+        try container.encode(noteId, forKey: .noteId)
+    }
+
     private enum CodingKeys: String, CodingKey {
         case accountId
         case projectId
         case createdAt
+        case createdTimestamp
         case noteId
     }
 }
@@ -545,7 +607,7 @@ public struct ProjectNotePage: Codable, Equatable, Sendable {
                   nextCursor.accountId == request.accountId,
                   nextCursor.projectId == request.projectId,
                   let last = local.rows.last,
-                  nextCursor.createdAt == last.createdAt,
+                  nextCursor.createdTimestamp == last.createdTimestamp,
                   nextCursor.noteId == last.id else {
                 throw ProjectNoteDataFailure.continuationBoundaryMismatch
             }
@@ -583,7 +645,7 @@ public struct ProjectNotePage: Codable, Equatable, Sendable {
 
     private static func isStrictlyOrdered(_ notes: [ProjectNoteSnapshot]) -> Bool {
         zip(notes, notes.dropFirst()).allSatisfy { earlier, later in
-            precedes(earlier.createdAt, earlier.id, later.createdAt, later.id)
+            precedes(earlier.createdTimestamp, earlier.id, later.createdTimestamp, later.id)
         }
     }
 
@@ -591,17 +653,21 @@ public struct ProjectNotePage: Codable, Equatable, Sendable {
         _ cursor: ProjectNoteCursor,
         _ note: ProjectNoteSnapshot
     ) -> Bool {
-        precedes(cursor.createdAt, cursor.noteId, note.createdAt, note.id)
+        precedes(cursor.createdTimestamp, cursor.noteId, note.createdTimestamp, note.id)
     }
 
     private static func precedes(
-        _ lhsDate: Date,
+        _ lhsDate: ProjectNoteTimestamp?,
         _ lhsId: ProjectNoteID,
-        _ rhsDate: Date,
+        _ rhsDate: ProjectNoteTimestamp?,
         _ rhsId: ProjectNoteID
     ) -> Bool {
-        if lhsDate != rhsDate {
-            return lhsDate > rhsDate
+        switch (lhsDate, rhsDate) {
+        case (.some(let lhs), .some(let rhs)) where lhs != rhs:
+            return lhs > rhs
+        case (.some, .none): return true
+        case (.none, .some): return false
+        default: break
         }
         return lhsId.rawValue > rhsId.rawValue
     }

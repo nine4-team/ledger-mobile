@@ -1,12 +1,13 @@
 begin;
-select plan(45);
+select plan(52);
 
 create function pg_temp.note_fingerprint(
   account_id text,
   project_id text,
   page_size integer,
   after_created_at_ms bigint default null,
-  after_note_id text default null
+  after_note_id text default null,
+  after_submillis integer default 0
 )
 returns text
 language sql
@@ -16,9 +17,12 @@ as $$
     digest(
       convert_to(
         '{"accountId":' || to_json(account_id)::text
-        || case when after_created_at_ms is null then '' else
+        || case when after_note_id is null then '' else
           ',"after":{"accountId":' || to_json(account_id)::text
-          || ',"createdAt":' || after_created_at_ms::text
+          || case when after_created_at_ms is null then '' else
+            ',"createdTimestamp":{"nanoseconds":'
+            || ((after_created_at_ms - floor(after_created_at_ms::numeric / 1000)::bigint * 1000) * 1000000 + after_submillis)::text
+            || ',"secondsSince1970":' || floor(after_created_at_ms::numeric / 1000)::bigint::text || '}' end
           || ',"noteId":' || to_json(after_note_id)::text
           || ',"projectId":' || to_json(project_id)::text || '}'
         end
@@ -80,7 +84,7 @@ select is(
     where table_schema = 'public'
       and table_name = 'spike_project_notes'
   ),
-  'id:text:NO,account_id:text:NO,project_id:text:NO,content_kind:text:NO,note_text:text:YES,source:text:NO,created_by_principal_id:text:NO,creator_display_name:text:YES,created_at:timestamp with time zone:NO,created_at_ms:bigint:NO,revision:numeric:NO,last_edited_by_principal_id:text:YES,last_edited_at:timestamp with time zone:YES,last_edited_at_ms:bigint:YES,deleted_by_principal_id:text:YES,deleted_at:timestamp with time zone:YES,deleted_at_ms:bigint:YES',
+  'id:text:NO,account_id:text:NO,project_id:text:NO,content_kind:text:NO,note_text:text:YES,source:text:NO,created_by_principal_id:text:YES,creator_display_name:text:YES,created_at:timestamp with time zone:YES,created_at_ms:bigint:YES,revision:numeric:NO,last_edited_by_principal_id:text:YES,last_edited_at:timestamp with time zone:YES,last_edited_at_ms:bigint:YES,deleted_by_principal_id:text:YES,deleted_at:timestamp with time zone:YES,deleted_at_ms:bigint:YES,original_creator_id:text:YES,created_at_submillis:integer:YES,last_edited_at_submillis:integer:YES,deleted_at_submillis:integer:YES',
   'the relation has the exact read and audit projection'
 );
 
@@ -106,8 +110,8 @@ select ok(
 );
 
 select ok(
-  pg_get_indexdef('public.spike_project_notes_project_history_idx'::regclass)
-    like '%(account_id, project_id, created_at_ms DESC, id COLLATE "C" DESC)',
+  pg_get_indexdef('public.project_notes_exact_history_idx'::regclass)
+    like '%(account_id, project_id, created_at_ms DESC NULLS LAST, COALESCE(created_at_submillis, 0) DESC, id COLLATE "C" DESC)',
   'the deterministic Project-history page index exists'
 );
 
@@ -162,7 +166,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.spike_list_project_notes(text,text,integer,bigint,text,text)',
+    'public.spike_list_project_notes(text,text,integer,jsonb,text,text)',
     'EXECUTE'
   ),
   'authenticated may execute the bounded read RPC'
@@ -171,7 +175,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'anon',
-    'public.spike_list_project_notes(text,text,integer,bigint,text,text)',
+    'public.spike_list_project_notes(text,text,integer,jsonb,text,text)',
     'EXECUTE'
   ),
   'anonymous may not execute the read RPC'
@@ -179,7 +183,7 @@ select ok(
 
 select ok(
   not (select prosecdef from pg_proc
-       where oid = 'public.spike_list_project_notes(text,text,integer,bigint,text,text)'::regprocedure),
+       where oid = 'public.spike_list_project_notes(text,text,integer,jsonb,text,text)'::regprocedure),
   'the public read RPC is security invoker'
 );
 
@@ -419,7 +423,7 @@ select is(
 
 select is(
   (public.spike_list_project_notes(
-    'account-primary', 'project-note-active', 2, 1788609601000, 'note-b',
+    'account-primary', 'project-note-active', 2, '{"secondsSince1970":1788609601,"nanoseconds":0}'::jsonb, 'note-b',
     pg_temp.note_fingerprint(
       'account-primary', 'project-note-active', 2, 1788609601000, 'note-b'
     )
@@ -430,7 +434,7 @@ select is(
 
 select is(
   (public.spike_list_project_notes(
-    'account-primary', 'project-note-active', 2, 1788609601000, 'note-b',
+    'account-primary', 'project-note-active', 2, '{"secondsSince1970":1788609601,"nanoseconds":0}'::jsonb, 'note-b',
     pg_temp.note_fingerprint(
       'account-primary', 'project-note-active', 2, 1788609601000, 'note-b'
     )
@@ -602,6 +606,78 @@ select throws_ok(
   '42501',
   'permission denied for function spike_list_project_notes',
   'anonymous callers cannot execute the Project-note RPC'
+);
+
+reset role;
+insert into public.spike_project_notes (
+  id, account_id, project_id, content_kind, note_text, source,
+  created_by_principal_id, original_creator_id, created_at, created_at_ms,
+  created_at_submillis, revision, last_edited_at, last_edited_at_ms
+) values
+  ('exact-a', 'account-primary', 'project-note-empty', 'visible', 'Later nanosecond', 'mcp',
+   null, 'mcp-agent', '2026-09-05T12:00:00Z', 1788609600000, 2, 0, null, null),
+  ('exact-z', 'account-primary', 'project-note-empty', 'visible', 'Earlier nanosecond', 'mcp',
+   null, 'mcp-agent', '2026-09-05T12:00:00Z', 1788609600000, 1, 0, null, null),
+  ('undated-z', 'account-primary', 'project-note-empty', 'visible', 'Unknown creator and time', 'mcp',
+   null, 'mcp-agent', null, null, 0, 0, '2026-09-05T12:00:01Z', 1788609601000);
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+
+select is(
+  (select string_agg(value->>'id', ',' order by ordinal)
+   from jsonb_array_elements(public.spike_list_project_notes(
+     'account-primary', 'project-note-empty', 20, null, null,
+     pg_temp.note_fingerprint('account-primary', 'project-note-empty', 20)
+   )->'rows') with ordinality as rows(value, ordinal)),
+  'exact-a,exact-z,undated-z',
+  'nanosecond ordering overrides the ID tie-break and unknown dates follow known dates'
+);
+select is(
+  (select jsonb_build_object('created_at_ms', note->'created_at_ms',
+    'created_by_principal_id', note->'created_by_principal_id',
+    'original_creator_id', note->'original_creator_id',
+    'last_edited_by_principal_id', note->'last_edited_by_principal_id',
+    'last_edited_at_ms', note->'last_edited_at_ms')
+   from (select public.spike_list_project_notes(
+     'account-primary', 'project-note-empty', 20, null, null,
+     pg_temp.note_fingerprint('account-primary', 'project-note-empty', 20)
+   ) #> '{rows,2}' as note) as history),
+  '{"created_at_ms":null,"created_by_principal_id":null,"original_creator_id":"mcp-agent","last_edited_by_principal_id":null,"last_edited_at_ms":1788609601000}'::jsonb,
+  'historical note metadata retains raw creator and known update time without invented actors or creation time'
+);
+select is(
+  (public.spike_list_project_notes(
+    'account-primary', 'project-note-empty', 20,
+    '{"secondsSince1970":1788609600,"nanoseconds":2}'::jsonb, 'exact-a',
+    pg_temp.note_fingerprint('account-primary', 'project-note-empty', 20, 1788609600000, 'exact-a', 2)
+  ) #>> '{rows,0,id}'),
+  'exact-z',
+  'an exact cursor includes the next older nanosecond without skipping it'
+);
+select is(
+  jsonb_array_length(public.spike_list_project_notes(
+    'account-primary', 'project-note-empty', 20, null, 'undated-z',
+    pg_temp.note_fingerprint('account-primary', 'project-note-empty', 20, null, 'undated-z')
+  )->'rows'),
+  0,
+  'an undated cursor does not restart the dated page'
+);
+
+select throws_ok(
+  $$select public.spike_list_project_notes('account-primary','project-note-empty',20,
+    '{"secondsSince1970":1788609600,"nanoseconds":1000000000}'::jsonb,'exact-a',repeat('0',64))$$,
+  '22023', 'project note timestamp invalid', 'out-of-range nanoseconds cannot enter a server cursor'
+);
+select throws_ok(
+  $$select public.spike_list_project_notes('account-primary','project-note-empty',20,
+    '{"secondsSince1970":1788609600,"nanoseconds":2,"createdAt":0}'::jsonb,'exact-a',repeat('0',64))$$,
+  '22023', 'project note timestamp invalid', 'ambiguous extra timestamp fields are rejected'
+);
+reset role;
+select throws_ok(
+  $$update public.spike_project_notes set created_at_submillis = 1 where id = 'undated-z'$$,
+  '23514', null, 'a precision remainder cannot fabricate an absent historical timestamp'
 );
 
 select * from finish();

@@ -35,7 +35,9 @@ struct ProjectNoteHistoryStagingExerciseView: View {
                         if let creator = row.creatorDisplayName {
                             Text(creator)
                         }
-                        Text(row.createdAt, style: .date)
+                        if let createdAt = row.createdAt {
+                            Text(createdAt, style: .date)
+                        }
                         if row.lastEditedAt != nil { Text("Edited") }
                     }
                     .font(.caption)

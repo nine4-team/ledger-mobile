@@ -94,7 +94,7 @@ struct LedgerPowerSyncVerticalSliceTests {
         }
     }
 
-    @Test("Project-note keyset query uses the declared composite index")
+    @Test("Exact Project-note paging keeps indexed scope with legacy precision fallback")
     func projectNoteKeysetQueryPlan() async throws {
         let fixture = try DatabaseFixture()
         let database = try fixture.open()
@@ -107,6 +107,7 @@ struct LedgerPowerSyncVerticalSliceTests {
         #expect(indexSQL.contains("$.account_id"))
         #expect(indexSQL.contains("$.project_id"))
         #expect(indexSQL.contains("$.created_at_ms"))
+        #expect(indexSQL.contains("$.created_at_submillis"))
         #expect(indexSQL.contains("$.keyset_id"))
 
         let plan = try await database.getAll(
@@ -117,17 +118,23 @@ struct LedgerPowerSyncVerticalSliceTests {
             WHERE account_id = ? AND project_id = ?
               AND (
                 created_at_ms < ?
-                OR (created_at_ms = ? AND keyset_id < ?)
+                OR (created_at_ms = ? AND (
+                  coalesce(created_at_submillis, 0) < ?
+                  OR (coalesce(created_at_submillis, 0) = ? AND keyset_id < ?)
+                ))
+                OR created_at_ms IS NULL
               )
-            ORDER BY created_at_ms DESC, keyset_id DESC
+            ORDER BY created_at_ms DESC, coalesce(created_at_submillis, 0) DESC, keyset_id DESC
             LIMIT ?
             """,
-            parameters: ["account-primary", "project-primary", 20, 20, "note-z", 201]
+            parameters: ["account-primary", "project-primary", 20, 20, 0, 0, "note-z", 201]
         ) { cursor in
             try cursor.getString(name: "detail")
         }
-        #expect(plan.contains { $0.contains("project_note_history_page") })
-        #expect(!plan.contains { $0.contains("USE TEMP B-TREE") })
+        #expect(plan.contains { $0.contains("SEARCH") && $0.contains("project_note_history_page") })
+        // The SDK index stores the raw remainder. COALESCE preserves old downloaded
+        // rows and can require sorting within the indexed Account/Project scope.
+        #expect(!plan.contains { $0.contains("SCAN ps_data__spike_project_notes") })
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }

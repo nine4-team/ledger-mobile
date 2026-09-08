@@ -26606,7 +26606,9 @@
         "supabase/migrations",
         "supabase/tests",
         "powersync",
-        "LedgeriOS/LedgerLocalPaymentImport"
+        "LedgeriOS/LedgerLocalPaymentImport",
+        "LedgerTargetMCP/src/projectArchivalReview.ts",
+        "LedgerTargetMCP/tests/projectArchivalReview.test.ts"
       ],
       "layers": [
         "domain",
@@ -26617,7 +26619,8 @@
         "postgres_schema",
         "postgres_handler",
         "rls",
-        "accounting"
+        "accounting",
+        "app_mcp"
       ],
       "riskDomains": [
         "ui_fidelity",
@@ -26627,7 +26630,8 @@
         "database_integrity",
         "handler_idempotency",
         "tenant_authorization",
-        "accounting"
+        "accounting",
+        "app_mcp_parity"
       ],
       "uiJourneys": [
         {
@@ -26950,6 +26954,13 @@
           "status": "planned"
         },
         {
+          "id": "INDIVIDUAL-NOTES-EXACT-MCP-PARITY",
+          "risk": "app_mcp_parity",
+          "expected": "App and MCP retain unknown historical metadata and exact timestamp ordering with identical request fingerprints and authorized page boundaries, including undated continuation.",
+          "command": "ProjectNoteDataTests, ProjectNotePowerSyncQueryTests, projectArchivalReview.test.ts and test-local-project-note-read.mjs; exact cross-runtime integration remains pending.",
+          "status": "planned"
+        },
+        {
           "id": "LEGACY-NOTES-PAYMENT-IMPORT-COMPATIBILITY",
           "risk": "accounting",
           "expected": "Sharing canonical source-envelope encoding preserves existing payment bytes and exact cents. The synthetic runner commits two payments and one parent legacy-note fact atomically, with separate journal counts and independent committed readback.",
@@ -26980,7 +26991,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "CI34259667977 at71bce05c04d82cf7561a46ee2a083b8628392d4a confirms580SQL tests/19files, all15macOSUI and12of13iOSUI passed. Legacy Project notes separation (four presence combinations), Project and Inventory checklist interactions and Inventory remembered navigation passed on iOS. Private legacy-note import passed3observed-lock races and2terminated-session recovery boundaries, conflict rollback and committed readback. Whole run failed only unrelated PDF text-selection test. Local900tests/134suites passed before commit. Individual note migration, complete Project layout, local executable recovery, hosted integration and broad workflow completeness remain unverified. Prior independent scope/lifecycle/route reviews remain applicable to unchanged code."
+          "summary": "CI34259667977 at71bce05c04d82cf7561a46ee2a083b8628392d4a confirms580SQL tests/19files, all15macOSUI and12of13iOSUI passed. Legacy Project notes separation (four presence combinations), Project and Inventory checklist interactions and Inventory remembered navigation passed on iOS. Private legacy-note import passed3observed-lock races and2terminated-session recovery boundaries, conflict rollback and committed readback. Whole run failed only unrelated PDF text-selection test. Local900tests/134suites passed before commit. Individual note migration, complete Project layout, local executable recovery, hosted integration and broad workflow completeness remain unverified. Prior independent scope/lifecycle/route reviews remain applicable to unchanged code. Follow-on A031: main independently reviewed FirebaseProjectNoteConversion.swift and source authority. Six FirebaseProjectNoteConversionTests passed (28191 terminal0), including byte-distinct Unicode scope, missing/null/empty metadata, mcp-agent, arbitrary source, unknown evidence, exact nanoseconds, update-without-editor and malformed fields. Source extraction only; existing target note model/schema/cursors still cannot represent all historical metadata. No individual-note persistence/read completeness claim. A031 read-contract batch: exact Core timestamps/nullable historical metadata, originalCreatorId, integer ms/remainder SQL and PowerSync paging, matching MCP cursor/fingerprint. Root independently reviewed agent Core/MCP/fixture work; agent static SQL/provider and compatibility-sort reviews returned GO. Combined28native tests48705 and all38MCP tests passed. Full914tests/136suites failed48.024s only old no-temp-sort plan assertion; focused reproduction confirmed. Updated actual-query indexed-scope test32640 passed; temporary scoped sort and unmeasured large-project latency explicitly recorded in A031. AppmacOS typecheck88291, environment/contracts/conversion/10CIguards/diff passed. SQL52checks and HTTP fixtures updated but runtime not executed locally (Docker timeout); exact-commit CI pending. Pure converter retains source facts, but private individual-note import/parameters and incompatible source-field handling remain unfinished; this is not migration or broad workflow completion."
         },
         "ci": {
           "status": "passed",

@@ -56,6 +56,56 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-028 | accepted, implementation verification pending | Compose Inventory with existing Account-scoped workspace readers |
 | A-029 | accepted, integration verification pending | Clear Project setup presentation evidence before lifecycle drainage |
 | A-030 | accepted, implementation verification pending | Preserve original Project notes as distinct detail content |
+| A-031 | accepted, target integration pending | Preserve individual-note provenance without inventing missing metadata |
+
+## A-031 — Historical Note Facts Do Not Imply Authenticated Authors
+
+Individual-note migration preserves original creator identifiers, display names,
+source channels, text and available creation/update timestamps. A source creator
+such as `mcp-agent` is not an authenticated human; missing creator/time fields do
+not authorize assigning the importer or import time. An update timestamp without
+an editor remains that fact, not a reconstructed edit event. Source snapshots
+cannot reconstruct physically deleted notes or previous text versions.
+
+This follows [Notes and Quick Note](../../specs/projects.md#notes-and-quick-note).
+The source `ProjectNote` model permits absent dates and blank creators;
+`ProjectContext.updateNote` records an update time without an editor. The existing
+target note row/snapshot instead requires a principal and creation time, couples
+edit time to editor identity, and reduces timestamps to milliseconds. Those
+assumptions must be corrected in the existing note read/import path, not worked
+around with fabricated users, dates, or a second history subsystem.
+
+The pure source converter retains complete immutable source evidence, exact
+optional strings and original timestamp seconds/nanoseconds. Missing and explicit
+null remain distinguishable in that evidence. Reconciled target identities are
+supplied by the caller; conversion is not identity reconciliation or permission
+to load data. Malformed known fields remain unresolved, with their source intact.
+O-039 governs new create/edit validation, not lossless historical preservation.
+
+Tradeoff: historical metadata must represent uncertainty explicitly, while new
+writes can still require authenticated authors. Timestamp display/index projections
+must not replace original precision or silently reorder history. The existing
+database, cursor, PowerSync, app and MCP contracts need coordinated verification
+before these source facts become usable target notes. A converter alone is not
+migration readiness. Implementation/test evidence belongs to the unified
+checklist's `project-initial-notes-preservation` outcome.
+
+Exact note time is represented by integer seconds/nanoseconds in the shared
+contract; `Date` is only a display projection. Storage retains its existing
+integer millisecond component and adds a 0–999999 nanosecond remainder within
+that millisecond. Existing millisecond records have remainder zero. A missing
+millisecond component remains an unknown date even when the compatibility default
+remainder is zero; a nonzero remainder without a date is invalid. Paging uses
+both components, then stable note identity, with undated records last. Server
+and local cursor encodings must move together; the old millisecond-only cursor
+must not silently skip submillisecond records.
+
+Local compatibility uses `coalesce(remainder, 0)` so old downloaded rows remain
+usable offline. The SDK's column index still narrows Account/Project scope, but
+SQLite can require a temporary sort inside that scope; the query-plan test checks
+the actual exact-time query and indexed scope rather than claiming sort-free
+paging. Postgres has a matching expression index. Do not add a second timestamp
+copy or custom SDK index lifecycle solely to avoid this compatibility sort.
 
 ## A-030 — Legacy Project Notes Are Not Individual Note Records
 

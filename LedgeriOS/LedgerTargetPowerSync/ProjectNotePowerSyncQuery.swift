@@ -88,32 +88,32 @@ private final class PowerSyncProjectNoteLocalReader:
             request.projectId.rawValue,
         ]
         let cursorPredicate: String
-        if let cursor = request.after {
-            let milliseconds = try Self.exactMilliseconds(cursor.createdAt)
+        if let cursor = request.after, let timestamp = cursor.createdTimestamp {
+            let milliseconds = timestamp.secondsSince1970 * 1_000 + Int64(timestamp.nanoseconds / 1_000_000)
+            let remainder = Int64(timestamp.nanoseconds % 1_000_000)
             cursorPredicate = """
                 AND (
                   note.created_at_ms < ?
-                  OR (note.created_at_ms = ? AND note.keyset_id < ?)
+                  OR (note.created_at_ms = ? AND (
+                    coalesce(note.created_at_submillis, 0) < ?
+                    OR (coalesce(note.created_at_submillis, 0) = ? AND note.keyset_id < ?)
+                  ))
+                  OR note.created_at_ms IS NULL
                 )
                 """
             parameters.append(milliseconds)
             parameters.append(milliseconds)
+            parameters.append(remainder)
+            parameters.append(remainder)
+            parameters.append(cursor.noteId.rawValue)
+        } else if let cursor = request.after {
+            cursorPredicate = "AND note.created_at_ms IS NULL AND note.keyset_id < ?"
             parameters.append(cursor.noteId.rawValue)
         } else {
             cursorPredicate = ""
         }
         parameters.append(Int64(fetchLimit))
         return (Self.sql(cursorPredicate: cursorPredicate), parameters)
-    }
-
-    private static func exactMilliseconds(_ date: Date) throws -> Int64 {
-        let raw = date.timeIntervalSince1970 * 1_000
-        guard raw.isFinite,
-              let milliseconds = Int64(exactly: raw.rounded(.towardZero)),
-              Date(timeIntervalSince1970: Double(milliseconds) / 1_000) == date else {
-            throw ProjectNoteDataFailure.requestMismatch
-        }
-        return milliseconds
     }
 
     private static func sql(cursorPredicate: String) -> String {
@@ -141,13 +141,17 @@ private final class PowerSyncProjectNoteLocalReader:
                note.note_text,
                note.source,
                note.created_by_principal_id,
+               note.original_creator_id,
                note.creator_display_name,
                note.created_at_ms,
+               note.created_at_submillis,
                note.revision AS revision_text,
                note.last_edited_by_principal_id,
                note.last_edited_at_ms,
+               note.last_edited_at_submillis,
                note.deleted_by_principal_id,
-               note.deleted_at_ms
+               note.deleted_at_ms,
+               note.deleted_at_submillis
         FROM scope
         CROSS JOIN parent
         LEFT JOIN spike_project_notes AS note
@@ -156,7 +160,7 @@ private final class PowerSyncProjectNoteLocalReader:
          AND note.account_id = ?
          AND note.project_id = ?
          \(cursorPredicate)
-        ORDER BY note.created_at_ms DESC, note.keyset_id DESC
+        ORDER BY note.created_at_ms DESC, coalesce(note.created_at_submillis, 0) DESC, note.keyset_id DESC
         LIMIT ?
         """
     }
@@ -657,10 +661,10 @@ final class ProjectNotePowerSyncQuery: ProjectNoteQuerying, @unchecked Sendable 
         }
         let nextCursor: ProjectNoteCursor?
         if hasExtra, let boundary = pageRows.last {
-            nextCursor = try ProjectNoteCursor(
+            nextCursor = ProjectNoteCursor(
                 accountId: request.accountId,
                 projectId: request.projectId,
-                createdAt: boundary.createdAt,
+                createdTimestamp: boundary.createdTimestamp,
                 noteId: boundary.id
             )
         } else {
@@ -778,6 +782,7 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
     let noteText: String?
     let source: String?
     let createdByPrincipalId: String?
+    let originalCreatorId: String?
     let creatorDisplayName: String?
     let createdAtMilliseconds: Int64?
     let revisionText: String?
@@ -785,6 +790,9 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
     let lastEditedAtMilliseconds: Int64?
     let deletedByPrincipalId: String?
     let deletedAtMilliseconds: Int64?
+    let createdAtSubmillis: Int64?
+    let lastEditedAtSubmillis: Int64?
+    let deletedAtSubmillis: Int64?
 
     init(
         scopeIsActive: Int64,
@@ -803,7 +811,11 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
         lastEditedByPrincipalId: String?,
         lastEditedAtMilliseconds: Int64?,
         deletedByPrincipalId: String?,
-        deletedAtMilliseconds: Int64?
+        deletedAtMilliseconds: Int64?,
+        createdAtSubmillis: Int64? = nil,
+        lastEditedAtSubmillis: Int64? = nil,
+        deletedAtSubmillis: Int64? = nil,
+        originalCreatorId: String? = nil
     ) {
         self.scopeIsActive = scopeIsActive
         self.projectIsVisible = projectIsVisible
@@ -815,6 +827,7 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
         self.noteText = noteText
         self.source = source
         self.createdByPrincipalId = createdByPrincipalId
+        self.originalCreatorId = originalCreatorId
         self.creatorDisplayName = creatorDisplayName
         self.createdAtMilliseconds = createdAtMilliseconds
         self.revisionText = revisionText
@@ -822,6 +835,9 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
         self.lastEditedAtMilliseconds = lastEditedAtMilliseconds
         self.deletedByPrincipalId = deletedByPrincipalId
         self.deletedAtMilliseconds = deletedAtMilliseconds
+        self.createdAtSubmillis = createdAtSubmillis
+        self.lastEditedAtSubmillis = lastEditedAtSubmillis
+        self.deletedAtSubmillis = deletedAtSubmillis
     }
 
     init(cursor: any SqlCursor) throws {
@@ -835,15 +851,19 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
         noteText = try cursor.getStringOptional(name: "note_text")
         source = try cursor.getStringOptional(name: "source")
         createdByPrincipalId = try cursor.getStringOptional(name: "created_by_principal_id")
+        originalCreatorId = try cursor.getStringOptional(name: "original_creator_id")
         creatorDisplayName = try cursor.getStringOptional(name: "creator_display_name")
         createdAtMilliseconds = try cursor.getInt64Optional(name: "created_at_ms")
+        createdAtSubmillis = try cursor.getInt64Optional(name: "created_at_submillis")
         revisionText = try cursor.getStringOptional(name: "revision_text")
         lastEditedByPrincipalId = try cursor.getStringOptional(
             name: "last_edited_by_principal_id"
         )
         lastEditedAtMilliseconds = try cursor.getInt64Optional(name: "last_edited_at_ms")
+        lastEditedAtSubmillis = try cursor.getInt64Optional(name: "last_edited_at_submillis")
         deletedByPrincipalId = try cursor.getStringOptional(name: "deleted_by_principal_id")
         deletedAtMilliseconds = try cursor.getInt64Optional(name: "deleted_at_ms")
+        deletedAtSubmillis = try cursor.getInt64Optional(name: "deleted_at_submillis")
     }
 
     var isExactSentinel: Bool {
@@ -855,6 +875,7 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
             && noteText == nil
             && source == nil
             && createdByPrincipalId == nil
+            && originalCreatorId == nil
             && creatorDisplayName == nil
             && createdAtMilliseconds == nil
             && revisionText == nil
@@ -862,6 +883,9 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
             && lastEditedAtMilliseconds == nil
             && deletedByPrincipalId == nil
             && deletedAtMilliseconds == nil
+            && createdAtSubmillis == nil
+            && lastEditedAtSubmillis == nil
+            && deletedAtSubmillis == nil
     }
 
     func note(
@@ -881,8 +905,6 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
               projectId == expectedProjectId.rawValue,
               let contentKind,
               let source,
-              let createdByPrincipalId,
-              let createdAtMilliseconds,
               let revisionText,
               let revision = UInt64(revisionText),
               String(revision) == revisionText else {
@@ -894,7 +916,8 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
         case "visible":
             guard let noteText,
                   deletedByPrincipalId == nil,
-                  deletedAtMilliseconds == nil else {
+                  deletedAtMilliseconds == nil,
+                  (deletedAtSubmillis ?? 0) == 0 else {
                 throw ProjectNotePowerSyncFailure.malformedNoteRow
             }
             content = .visible(try ProjectNoteText(validating: noteText))
@@ -904,9 +927,12 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
                   let deletedAtMilliseconds else {
                 throw ProjectNotePowerSyncFailure.malformedNoteRow
             }
+            guard let deletedTimestamp = try Self.timestamp(milliseconds: deletedAtMilliseconds, remainder: deletedAtSubmillis) else {
+                throw ProjectNotePowerSyncFailure.malformedNoteRow
+            }
             content = .tombstone(try ProjectNoteDeletionAudit(
                 deletedByPrincipalId: PrincipalID(validating: deletedByPrincipalId),
-                deletedAt: Self.date(milliseconds: deletedAtMilliseconds)
+                deletedTimestamp: deletedTimestamp
             ))
         default:
             throw ProjectNotePowerSyncFailure.malformedNoteRow
@@ -924,19 +950,31 @@ struct ProjectNotePowerSyncRow: Equatable, Sendable {
             projectId: ProjectID(validating: projectId),
             content: content,
             source: ProjectNoteSource(validating: source),
-            createdByPrincipalId: PrincipalID(validating: createdByPrincipalId),
+            createdByPrincipalId: createdByPrincipalId.map(PrincipalID.init(validating:)),
             creatorDisplayName: try creatorDisplayName.map(
                 ProjectNoteCreatorDisplayName.init(validating:)
             ),
-            createdAt: Self.date(milliseconds: createdAtMilliseconds),
+            createdTimestamp: Self.timestamp(milliseconds: createdAtMilliseconds, remainder: createdAtSubmillis),
             revision: revision,
             lastEditedByPrincipalId: editedBy,
-            lastEditedAt: lastEditedAtMilliseconds.map(Self.date(milliseconds:))
+            lastEditedTimestamp: Self.timestamp(milliseconds: lastEditedAtMilliseconds, remainder: lastEditedAtSubmillis),
+            originalCreatorId: originalCreatorId
         )
     }
 
-    private static func date(milliseconds: Int64) -> Date {
-        Date(timeIntervalSince1970: Double(milliseconds) / 1_000)
+    private static func timestamp(milliseconds: Int64?, remainder: Int64?) throws -> ProjectNoteTimestamp? {
+        let remainder = remainder ?? 0 // Pre-precision downloaded rows are whole milliseconds.
+        guard (0...999_999).contains(remainder) else { throw ProjectNotePowerSyncFailure.malformedNoteRow }
+        guard let milliseconds else {
+            guard remainder == 0 else { throw ProjectNotePowerSyncFailure.malformedNoteRow }
+            return nil
+        }
+        guard (-62_135_596_800_000...253_402_300_799_999).contains(milliseconds) else {
+            throw ProjectNotePowerSyncFailure.malformedNoteRow
+        }
+        let seconds = milliseconds / 1_000 - (milliseconds % 1_000 < 0 ? 1 : 0)
+        return try ProjectNoteTimestamp(secondsSince1970: seconds,
+            nanoseconds: Int32((milliseconds - seconds * 1_000) * 1_000_000 + remainder))
     }
 }
 
