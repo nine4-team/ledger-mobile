@@ -28,6 +28,18 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["target-account-settings-done"].tap()
         XCTAssertTrue(settings.waitForExistence(timeout: 5))
         XCTAssertFalse(name.exists)
+        app.buttons["target-active-project-card-project-ui-test"].tap()
+        let report = app.buttons["target-property-report-open"]
+        XCTAssertTrue(report.waitForExistence(timeout: 5))
+        report.tap()
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        XCTAssertEqual(name.label, "Design studio")
+        XCTAssertTrue(app.staticTexts["No business logo"].exists)
+        let share = app.buttons["target-property-report-share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5))
+        let enabled = NSPredicate(format: "enabled == true")
+        expectation(for: enabled, evaluatedWith: share)
+        waitForExpectations(timeout: 5)
     }
 
     func testInventoryNavigationAndRememberedSection() throws {
@@ -435,7 +447,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-copy-receiver"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-copy-receiver",
+                               "--ledger-ui-test-profile-logo-unavailable"]
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -450,6 +463,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             UIPasteboard.general.items = []
             reveal(openReport, in: app)
             openReport.tap()
+            XCTAssertTrue(app.staticTexts["Business logo unavailable. Refresh to try again."].waitForExistence(timeout: 5))
             let button = app.buttons[identifier]
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             XCTAssertTrue(button.isEnabled)

@@ -34,6 +34,7 @@
 		917EAB8FA16A0E0FD5809648 /* LocalVendorPDFParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76110BA471691343CFD6FF /* LocalVendorPDFParser.swift */; };
 		91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */; };
 		95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */; };
+		A4C85C18A40D64B173077BC4 /* AccountBusinessProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */; };
 		A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */; };
 		AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */; };
 		C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */; };
@@ -90,6 +91,7 @@
 		76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientRenameStagingExercise.swift; sourceTree = "<group>"; };
 		7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerView.swift; sourceTree = "<group>"; };
 		86109C0CC4785A451308867C /* LedgeriOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LedgeriOS; path = .; sourceTree = SOURCE_ROOT; };
+		86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountBusinessProfileView.swift; sourceTree = "<group>"; };
 		8D8B995ABA5476ED190A84C5 /* InvoiceDateParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceDateParsing.swift; sourceTree = "<group>"; };
 		9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingExerciseView.swift; sourceTree = "<group>"; };
 		9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 		309154BA717CE8384C3E73D8 /* LedgerTargetApp */ = {
 			isa = PBXGroup;
 			children = (
+				86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */,
 				BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */,
 				130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */,
 				9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */,
@@ -320,6 +323,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4C85C18A40D64B173077BC4 /* AccountBusinessProfileView.swift in Sources */,
 				DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */,
 				D93205BA1256BA6E7CDE6110 /* AccountPendingWorkStagingExerciseView.swift in Sources */,
 				D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */,

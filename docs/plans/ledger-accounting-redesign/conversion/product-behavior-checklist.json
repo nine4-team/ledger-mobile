@@ -25442,6 +25442,7 @@
         }
       ],
       "affectedComponents": [
+        "LedgeriOS/LedgerTarget.xcodeproj",
         "LedgeriOS/LedgerTargetCore",
         "LedgeriOS/LedgerTargetCoreTests",
         "LedgeriOS/LedgerTargetApp",
@@ -25640,7 +25641,9 @@
           "summary": "Local batch evidence: full swift test2825 passed957tests/142suites; after review, finite profile-read rename/removal-during-download test72064 and export status comparison82633 passed. Current app typecheck18592 passed; environment97176f/conversion04f3fd passed. Independent profile_integration_review found stale-model handoff (fixed with authorized finite read, reviewer confirmed) and unavailable/notDownloaded mismatch (fixed with branding comparison). Earlier cache repair/exclusion81720/23337 and restart/SDK first-download7062 passed. PDF47671 tests and oversized-image88352 passed; main inspected all5 synthetic Poppler pages without overlap/clipping. Settings/report UI tests await exact-commit CI; schema/RLS/Storage tests await database execution. Actual authenticated app session/PowerSync connection, HTTP Storage semantics and complete hosted/offline media workflow remain unverified. No complete workflow claim."
         },
         "ci": {
-          "status": "not_run"
+          "status": "failed",
+          "commit": "595edb4e1e06243b675413ffc78c3c51aa2dc883",
+          "run": 34285819003
         }
       },
       "implementationEvidence": []

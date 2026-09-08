@@ -480,15 +480,20 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
     }
 }
 private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading {
+    private var failedLogoDownload: Bool {
+        ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-profile-logo-unavailable")
+    }
     func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
         try AccountBusinessProfile(accountId: accountId,
-            name: AccountDisplayName(validating: "Design studio"), logo: .absent, isStale: true)
+            name: AccountDisplayName(validating: "Design studio"),
+            logo: failedLogoDownload ? .notDownloaded : .absent, isStale: true)
     }
     func watchAccountBusinessProfile(accountId: AccountID) -> AsyncThrowingStream<AccountBusinessProfile, Error> {
         AsyncThrowingStream { continuation in
             do {
                 continuation.yield(try AccountBusinessProfile(accountId: accountId,
-                    name: AccountDisplayName(validating: "Design studio"), logo: .absent, isStale: true))
+                    name: AccountDisplayName(validating: "Design studio"),
+                    logo: failedLogoDownload ? .unavailable : .absent, isStale: true))
                 continuation.finish()
             } catch { continuation.finish(throwing: error) }
         }
