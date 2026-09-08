@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 137,
+  "stateVersion": 139,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,8 +23,8 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "NEXT follow automatic CI for the next report UI-verification commit (commit/push follows this state). New macOS test opens PDF/CSV/PDF system pickers, observes hittable native menu/popover, Escape cancels, opens real Print then Cancel; never sends/prints. New cross-platform test covers empty/loading/incomplete/failed fixture states and export disabled rules. Build-for-testing PASS/tmp/ledger-report-native-dialog-build.log (72718 terminal0), environment/conversion checks PASS (97368 terminal0). Actual new interactions unverified until CI. On failure inspect actual accessibility/debug evidence; don't relax assertions into callback-only proof.",
-      "Prior ff59333f automaticCI34193510104 SUCCESS remains verified checkpoint:875 native tests including differential,5 workspace UI tests,DB/MCP and both builds. watch25924 terminal0. No processes/agents live. New changes are synthetic UI fixture/tests plus checkpoint records only; runtime production behavior unchanged.",
+      "CI34195227060 at91d83cb2 FAILED UI only; watch6826 terminal1. DB/native/macOS and six UI tests passed, iOS skipped. /tmp/ledger-report-dialog-ci-failure.log shows actual native Share popover with Copy/destination buttons, container disabled/not hittable. Selector now targets concrete Copy-containing popover and visible frame; no fake completion or weakening dismissal/retry. NEXT finish build29311, check and commit/push four-file UI correction, follow its one automatic CI.",
+      "Uncommitted next UI check: testPropertyManagementExportFailureAllowsRetry plus DEBUG export-denied reader fixture. Exercises actual export revalidation failure, visible error and usable PDF/CSV/Print/Refresh controls; no mocked OS completion. Build-for-testing PASS /tmp/ledger-report-export-failure-build.log (2164 terminal0); environment/conversion PASS (4884 terminal0). Runtime unverified; include with next checkpoint after current CI resolves. No architecture change.",
       "Review summary compacted; detailed prior review/evidence remains in ff59333f, not duplicated. Workflow review accepted, CI passed for that commit, but general/UI/media/deletion acceptance stays pending actual OS interaction. DB-integrity/read-only-handler/app-MCP-parity checks passed. No whole-outcome or cutover claim.",
       "Reuse valid local/CI evidence. Hosted Supabase/PowerSync and production remain unauthorized; physical report has no payment/spend inference. Product audit complete. O065/O033/O027/O060 remain open for affected accounting. No Firebase worktree access."
     ]

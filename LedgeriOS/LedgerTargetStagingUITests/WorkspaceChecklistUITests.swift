@@ -2,6 +2,44 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testPropertyManagementExportFailureAllowsRetry() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-export-denied"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let openReport = app.buttons["target-property-report-open"]
+        reveal(openReport, in: app)
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+        openReport.tap()
+        let failure = app.descendants(matching: .any)
+            .matching(identifier: "target-property-report-export-error").firstMatch
+        let busy = app.descendants(matching: .any)
+            .matching(identifier: "target-property-report-exporting").firstMatch
+        // A complete preview is not sufficient authority to deliver. The
+        // fixture denies the final read, exercising the real export error path
+        // without substituting a fake native Share/Print completion.
+        for identifier in ["target-property-report-share", "target-property-report-csv", "target-property-report-print"] {
+            let button = app.buttons[identifier]
+            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            XCTAssertTrue(button.isEnabled)
+            button.tap()
+            XCTAssertTrue(failure.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(waitUntil { !busy.exists && button.isEnabled })
+            let text = failure.label + " " + ((failure.value as? String) ?? "")
+            XCTAssertTrue(text.contains("could not be shared or printed"))
+            let refresh = app.buttons["target-property-report-refresh"]
+            XCTAssertTrue(refresh.isEnabled)
+            refresh.tap()
+            XCTAssertTrue(waitUntil { button.isEnabled })
+        }
+        app.buttons["Done"].tap()
+        XCTAssertTrue(openReport.waitForExistence(timeout: 5))
+    }
+
     func testPropertyManagementEmptyAndUnavailableStates() throws {
         continueAfterFailure = false
         for (fixture, identifier, exportEnabled) in [
@@ -54,9 +92,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(share.waitForExistence(timeout: 5))
         let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
         let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
+        // The observed macOS Share popover has real destination buttons, but
+        // its non-interactive container reports disabled/not hittable. Observe
+        // that concrete native UI instead of scanning every app menu item.
+        let picker = app.popovers.containing(.button, identifier: "Copy").firstMatch
         let pickerVisible = {
-            app.menuItems.allElementsBoundByIndex.contains { $0.isHittable }
-                || app.popovers.allElementsBoundByIndex.contains { $0.isHittable }
+            picker.exists && !picker.frame.isEmpty && picker.buttons["Copy"].exists
         }
 
         // Open real native pickers, but never choose a destination or send data.

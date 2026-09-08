@@ -417,7 +417,10 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
 
     func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
-        try snapshot(accountId: accountId, projectId: projectId, currency: currency, asOf: asOf)
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-export-denied") {
+            throw PropertyManagementReportFailure.scopeMismatch
+        }
+        return try snapshot(accountId: accountId, projectId: projectId, currency: currency, asOf: asOf)
     }
 
     private func snapshot(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode,
