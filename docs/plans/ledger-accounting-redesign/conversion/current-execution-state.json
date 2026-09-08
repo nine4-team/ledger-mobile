@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 170,
+  "stateVersion": 174,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "CI34216187984 atdb3e06ef is terminal FAILURE, not live. iOS actual Copy and Print cancellation passed; only denied-export retry failed line124 waiting busy cleared/Share enabled. AX stalled; cause unproven. Current changes preserve failure xcresult and add failure screen diagnostics, not an app fix. CI safety10 tests,environment,conversion,diff passed. Commit this diagnostic improvement with checklist checkpoint and follow its single automatic CI.",
-      "Inspect next exact CI failure artifact report-ios-failure-SHA if failure repeats. Prior retry test passed; do not blindly increase timeouts or remove assertions. Print Options/Close selector now verified by native iOS test43.629s.",
-      "Report Copy hang resolved in test path: native user-initiated PasteButton consumes real provider content after scratch cleanup, and PDF/CSV checks passed60.780s. Grouped preview passed on macOS15.543s/iOS29.492s; permission replacement regression part of878 native suite. Reuse valid evidence; no repeated local full suite for selector-only correction. Full report not yet complete.",
-      "Acceptance review is in unified checklist; identity/offline checks passed, UI/media/general and hosted authorization remain open. Pending async user inputs: free at least10GB locally (751MiB available), and explicit approval for separate free-only hosted Supabase/PowerSync synthetic staging or identification of an existing isolated environment. Neither request is approval; no paid plan, billing upgrade, hosted/prod access or cleanup authorized. Continue independent local/CI work. No docs-only push; A026 retained unsorted cache recovery remains unproven.",
-      "Focused migration review: whole-account-migration-reconciliation (M4) still owns import/readback of Item name,description,sku,marketValueCents with explicit Account currency. Target report columns exist but current migration core only implements payment conversion/lineage evidence, not these physical fields. Source Project model has no address field; never infer property_address from description. Reader may display name??description without overwriting stored meaning. Preserve this gap for M4, not a new standalone converter now. Product audit remains complete; hosted/hardware and broader feature gaps remain."
+      "CI34218863559 ate22a34ac terminal FAILURE. All stages except iOS Copy composite wait passed. Source AX11:25:25 shows desired settled state; same multi-query wait failed retry test in prior run. Current test-only correction waits separately for native dismissal,busy disappearance,enabled button; five seconds each, no assertions removed. iOS+macOS full test-file Swift6 typechecks and environment passed. Run conversion/diff, commit with checkpoint,push and follow single automatic CI. No process live.",
+      "Failed xcresult artifact10053648663 is retained under PR merge-SHA name report-ios-failure-1b05ba3a2eafdf6a1c59565f49e7b4bb7227ce9e,90MB; not downloaded because AX source log supplies diagnosis. Keep failure evidence capture; if sequential wait fails, inspect specific condition/artifact rather than blindly retrying.",
+      "Report acceptance is in unified checklist. Hosted/hardware proof and retained unsorted cache recovery remain unproven. Pending user inputs: free >=10GB locally (last751MiB), authorize separate free-only hosted synthetic staging or identify existing isolated environment. No approval received; no paid/hosted/prod/cleanup access. Reuse passed native/database evidence for test-only change; no docs-only pushes.",
+      "M4 whole-account-migration-reconciliation still owns physical Item name,description,sku,marketValueCents and explicit Account currency import/readback. Source Project has no address; never infer property_address from description. Product audit complete; no new unused converter/catalog.",
+      "Logout followup read-only review complete, no agents running. AccountSessionEnding has no concrete provider/app owner. Reuse stable PendingWorkPowerSyncQuery and shared fence/drain; need reversible quiescence before summary,physical cleanup/key/recovery,real Auth owner(A007 proposed). Never reuse permanent membership-removal marker. Async product question pending: whole-login logout protecting every downloaded Account vs active-Account-only. Do not silently choose scope or claim DB close equals logout. Main independently inspected relevant coordinator/runtime/A007."
     ]
   },
   "blockers": [],

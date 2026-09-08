@@ -36,7 +36,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
             // The native iPhone share popover has no Close button. Tap its
             // observed outside-dismiss region above the activity content.
             dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
-            XCTAssertTrue(waitUntil { !activity.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertTrue(activity.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
             XCTAssertFalse(failure.exists)
         }
         let printButton = app.buttons["target-property-report-print"]
@@ -45,7 +47,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(failure.exists)
         cancel.tap()
-        XCTAssertTrue(waitUntil { !cancel.exists && !busy.exists && printButton.isEnabled }, app.debugDescription)
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(waitUntil { printButton.isEnabled }, app.debugDescription)
         XCTAssertFalse(failure.exists)
         app.buttons["Done"].tap()
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
@@ -80,7 +84,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
             let copy = app.otherElements["ActivityListView"].cells["Copy"].firstMatch
             XCTAssertTrue(copy.waitForExistence(timeout: 10), app.debugDescription)
             copy.tap()
-            XCTAssertTrue(waitUntil { !copy.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            // Each AX query can wait for a fresh hierarchy during dismissal.
+            // Do not spend one predicate deadline fetching three snapshots.
+            XCTAssertTrue(copy.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
             XCTAssertFalse(failure.exists)
             let isPDF = identifier == "target-property-report-share"
             app.buttons["Done"].tap()
@@ -121,7 +129,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(button.isEnabled)
             button.tap()
             XCTAssertTrue(failure.waitForExistence(timeout: 5), app.debugDescription)
-            XCTAssertTrue(waitUntil { !busy.exists && button.isEnabled }, app.debugDescription)
+            XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
             let text = failure.label + " " + ((failure.value as? String) ?? "")
             XCTAssertTrue(text.contains("could not be shared or printed"))
             let refresh = app.buttons["target-property-report-refresh"]
