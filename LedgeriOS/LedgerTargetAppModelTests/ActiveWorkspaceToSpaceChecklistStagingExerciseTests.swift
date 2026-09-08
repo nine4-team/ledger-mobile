@@ -28,6 +28,10 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "No Spaces in this Project.",
             "Exact Space details are loading or unavailable.",
             "Rejected checklist changes are preserved for review.",
+            "target-vendor-pdf-open",
+            "LocalVendorDocumentReviewView(",
+            "runtime.watchBudgetCategories()",
+            "vendorReview?.close()",
         ] {
             #expect(view.contains(required), "Missing route UI contract token: \(required)")
         }
@@ -39,7 +43,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "Button(\"Edit\")",
             "Retry local acceptance",
             "Item count",
-            "Budget",
+            "Text(\"Budget",
+            "Button(\"Budget",
+            "Section(\"Budget",
             "Media",
             "Delete Space",
         ] {

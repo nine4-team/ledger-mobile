@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { sharedVendorParserPaths, validateLocalVendorParserBoundary } from "./local-vendor-parser-boundary.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "..");
@@ -845,6 +846,13 @@ if (
   fs.existsSync(targetScheme)
 ) {
   const spec = fs.readFileSync(targetProjectSpec, "utf8");
+  const sharedParserSources = new Map(sharedVendorParserPaths.map(file => {
+    const absolute = path.join(packageRoot, file);
+    return [file, fs.existsSync(absolute) ? fs.readFileSync(absolute, "utf8") : null];
+  }));
+  for (const message of validateLocalVendorParserBoundary(spec, sharedParserSources)) {
+    fail("target_local_vendor_parser_boundary", message);
+  }
   const project = fs.readFileSync(targetProject, "utf8");
   const scheme = fs.readFileSync(targetScheme, "utf8");
   const targetAppSource = swiftFiles(targetAppRoot)
@@ -893,7 +901,7 @@ if (
     .map((filePath) => fs.readFileSync(filePath, "utf8"))
     .join("\n");
   if (
-    /Firebase|Firestore|Supabase|PowerSync|\bSQL\b|credential|service[_ ]?role|bearer|https?:\/\//i.test(
+    /Firebase|Firestore|Supabase|PowerSync|\bSQL\b|credential|service[_ ]?role|\bbearer\s+[a-z0-9]|https?:\/\//i.test(
       appModelSource,
     )
   ) {

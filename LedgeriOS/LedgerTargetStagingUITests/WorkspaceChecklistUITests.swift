@@ -7,6 +7,39 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testVendorPDFSelectionCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let open = app.buttons["target-vendor-pdf-open"]
+        reveal(open, in: app)
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        for _ in 0..<2 {
+            open.tap()
+            let empty = app.descendants(matching: .any)["target-vendor-pdf-empty"].firstMatch
+            XCTAssertTrue(empty.waitForExistence(timeout: 5))
+            app.buttons["target-vendor-pdf-select"].tap()
+            // Match the system picker's Cancel, not the underlying review toolbar.
+            let pickerCancel = app.buttons.matching(NSPredicate(
+                format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
+            )).firstMatch
+            XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(waitUntil { pickerCancel.isHittable }, app.debugDescription)
+            pickerCancel.tap()
+            XCTAssertTrue(pickerCancel.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(empty.exists)
+            XCTAssertFalse(app.descendants(matching: .any)["target-vendor-pdf-error"].exists)
+            app.buttons["target-vendor-pdf-cancel"].tap()
+            XCTAssertTrue(empty.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(open.waitForExistence(timeout: 5))
+        }
+    }
+
     #if os(iOS)
     func testPropertyManagementIOSSystemDialogCancellation() throws {
         continueAfterFailure = false
@@ -481,7 +514,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         notes.tap()
         XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Test Designer"].exists)
-        XCTAssertEqual(app.staticTexts["target-project-note-source"].label, "Source: text")
+        let noteSource = app.descendants(matching: .any)["target-project-note-source"].firstMatch
+        XCTAssertTrue(noteSource.waitForExistence(timeout: 5))
+        XCTAssertEqual(noteSource.label, "Source: text")
         XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
         app.buttons["target-active-workspace-back"].tap()
         XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))

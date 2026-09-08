@@ -9,6 +9,7 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
     public let itemReader: (any DownloadedItemPlacementReading)?
     public let reportWatcher: (any PropertyManagementReportWatching)?
     public let reportReader: (any PropertyManagementReportReading)?
+    public let categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)?
 
     public init(
         projectBrowsing: ProjectBrowsingStagingRuntime,
@@ -16,7 +17,8 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
         checklistToggle: SpaceChecklistItemToggleStagingRuntime,
         itemReader: (any DownloadedItemPlacementReading)? = nil,
         reportWatcher: (any PropertyManagementReportWatching)? = nil,
-        reportReader: (any PropertyManagementReportReading)? = nil
+        reportReader: (any PropertyManagementReportReading)? = nil,
+        categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? = nil
     ) {
         self.projectBrowsing = projectBrowsing
         self.spaceBrowsing = spaceBrowsing
@@ -24,6 +26,7 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
         self.itemReader = itemReader
         self.reportWatcher = reportWatcher
         self.reportReader = reportReader
+        self.categoryWatch = categoryWatch
     }
 }
 
@@ -88,6 +91,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     public var itemReader: (any DownloadedItemPlacementReading)? { runtime?.itemReader }
     public var reportWatcher: (any PropertyManagementReportWatching)? { runtime?.reportWatcher }
     public var reportReader: (any PropertyManagementReportReading)? { runtime?.reportReader }
+    public var categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? { runtime?.categoryWatch }
     private var runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime?
     private var generation: UInt64 = 0
     private var projectEvidenceTask: Task<Void, Never>?

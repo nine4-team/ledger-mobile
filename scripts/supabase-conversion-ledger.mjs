@@ -1511,6 +1511,7 @@ function isProductSourceSurface(surface) {
     /^(LedgerTargetMCP|supabase)\//.test(value) ||
     /^scripts\/(test-local-|check-target-|check-conversion-|generate-target-|ledger-product-checklist)/.test(value) ||
     /^scripts\/tests\/check-conversion-ci\.test\.mjs$/.test(value) ||
+    /^scripts\/(?:tests\/)?local-vendor-parser-boundary(?:\.test)?\.mjs$/.test(value) ||
     /^scripts\/(?:tests\/)?(?:generate-source-query-reconciliation|generate-m2-residual-register|extract-current-capability-surfaces|extract-firestore-query-contract)(?:\.test)?\.mjs$/.test(value) ||
     value === "scripts/supabase-conversion-ledger.mjs" ||
     value === ".github/workflows/supabase-conversion-control.yml" ||

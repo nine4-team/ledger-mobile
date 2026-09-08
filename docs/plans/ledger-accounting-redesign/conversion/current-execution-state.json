@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 180,
+  "stateVersion": 189,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -17,17 +17,17 @@
     "meaning": "Database,878 native tests/130 suites,9 macOS UI tests,both builds,5 iPhone report tests passed. Actual PDF/CSV Copy payload and Share/Print cancellation verified on both platforms. SKU spec conflict,hardware protection,hosted validation and cutover readiness remain unresolved."
   },
   "activeWorkflow": {
-    "id": "active-workspace-to-space-checklist",
+    "id": "local-vendor-pdf-review",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Project Notes displays retained source alongside author/date using the existing authorized history; existing Project/Space round trip verifies metadata.",
+    "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
     "nextActions": [
-      "NEXT finish focused checks and review note-source display diff; commit with saved report evidence and push once. Five ProjectNoteHistoryStagingExerciseTests,macOS Swift6 view/test-file typechecks,10 CI guard tests passed. CI now includes existing Project/Notes/Space round trip on iPhone; Mac already runs it. No provider/storage/mutation change, no ADR required for routine display fix.",
-      "Report CI34224749750 at41ef3770 terminal SUCCESS; watch32843 terminal0. Evidence saved in report workflow; no more polling/retries. SKU conflict awaits user reply; do not silently pick reports.md versus property-management-report.md. Temporary prior failure artifact .report-ci-evidence-cEw4MR is untracked; never commit.",
-      "Hosted/hardware proof,retained unsorted cache recovery and whole-Account migration remain unproven. Pending inputs: free >=10GB locally(last3.6GiB), authorize free-only hosted synthetic staging or identify existing isolated environment. No approval received. No full local app builds or production/Firebase access.",
-      "Logout question still pending: whole-login scope protecting every downloaded Account versus active Account only. A007 actual Auth owner still proposed. Reuse stable pending-work query and reversible workspace quiescence; never reuse permanent membership-removal marker for logout.",
-      "Product audit remains complete. The scoped next UI correction does not complete Project Notes editing or legacy-note import. Those and Account profile edits have separate authorities/open decisions; do not silently implement O039/O068 policy."
+      "NEXT commit/push integrated local PDF review batch and follow its one automatic CI run; no run yet. Actual PDF+thumbnail fixture harness,7 focused review/diagnostic tests,6 workspace tests,10 CI guards,environment/conversion checks passed. Full native885tests/132suites exposed one source guard false positive on watchBudgetCategories; fixed guard matches UI literals and focused6 passed. No runtime failures. Full exact-commit CI remains required. Terminal native logs .native-pdf-batch.pXTMX4 never commit. Native picker cancel/reopen test only typechecked; other native edit/debug/category/revocation proof pending. A027 documents spatial-only thumbnail limits; no workflow completion claimed.",
+      "Note fix CI34228082338 at7492ae1c terminal FAILURE: macOS note-source lookup expected StaticText but runtime exposed Other. UI test now uses identifier across element types, retains exact Source:text assertion; native rerun pending next integrated commit. Do not poll/restart completed CI. Prior report CI34224749750 terminal SUCCESS. SKU conflict remains open.",
+      "Five shared parser sources guarded by explicit allowlist; three negative/positive Node tests and target:environment:check passed. Source money normalization remains best-effort, not financial authority. Parser fixture harness independently reviewed: only synthetic in-memory PDFs, current source direct compile, scoped temporary outputs. ADR A027 updated; no parser copies/new runtime module or Firebase edits.",
+      "Hosted/hardware proof,retained unsorted cache recovery and whole-Account migration remain unproven. Pending free>=10GB(last3.6GiB),free-only hosted synthetic staging authorization,logout whole-login scope/A007 owner. No approvals received. No full local app builds or production/Firebase access.",
+      "Product audit complete; no restart. Local PDF review explicitly independent of O061 accounting/quantity/duplicate acceptance policy. Do not implement Create Transaction as vendor-proof of Client payment. Temporary .report-ci-evidence-cEw4MR untracked,never commit."
     ]
   },
   "blockers": [],

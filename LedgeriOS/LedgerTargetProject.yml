@@ -19,6 +19,12 @@ targets:
       - macOS
     sources:
       - path: LedgerTargetApp
+      # Pure local extraction only; legacy import/writer helpers are excluded.
+      - path: LedgeriOS/Logic/AmazonInvoiceParser.swift
+      - path: LedgeriOS/Logic/WayfairInvoiceParser.swift
+      - path: LedgeriOS/Logic/InvoiceMoneyParsing.swift
+      - path: LedgeriOS/Logic/InvoiceDateParsing.swift
+      - path: LedgeriOS/Logic/PdfTextExtractor.swift
     dependencies:
       - package: LedgerTargetCore
         product: LedgerTargetCore

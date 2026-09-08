@@ -52,6 +52,62 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-024 | accepted, local concurrent regression passed | Guard the pinned cipher library's concurrent database-open race |
 | A-025 | accepted, standalone macOS launch checked | Resolve embedded frameworks using the platform's app-bundle layout |
 | A-026 | accepted, integration verification pending | Keep PowerSync stream parameter encoding deterministic across reopen |
+| A-027 | accepted, implementation verification pending | Reuse local vendor parsers without importing legacy accounting writes |
+
+## A-027 — Local Vendor PDF Review Boundary
+
+The target app compiles the existing pure Amazon/Wayfair text parsers, their
+money/date helpers, and PDFKit text extractor through five explicit source-file
+entries in `LedgerTargetProject.yml`. The files remain unchanged; the production
+app project and checkout are untouched. There is no copied parser fork, new
+runtime package, remote parsing service, or legacy import/writer dependency.
+This implements the local-review part of
+[Invoice Import](../../specs/invoice-import.md#target-import-contract), not its
+unresolved accounting-confirmation policies.
+
+`LocalVendorDocumentReview` owns an Account-scoped document digest and immutable
+extracted rows, with separate editable review values. Original row ordinals
+remain stable when rows are excluded. A replaced/closed document rejects late
+extraction and stale edits. Missing unit prices remain missing; a line total
+does not become a unit price and a missing date does not become today.
+Review is not durable acceptance of an Item, receipt, or payment.
+
+The presenting workspace owns the review session. Closing/dismissing it or
+leaving the authorized workspace permanently closes that instance; delayed
+picker results cannot reopen it. Presenting the system file picker is not itself
+a close event. Category choices reuse the existing visible Account-category
+stream, matching the shipped import picker rather than adding a new category
+query or restricting it silently to enabled Project allocations.
+
+Tradeoff: parser heuristics (including source money normalization) remain
+best-effort extraction suggestions, never financial authority. Their existing
+limitations must stay visible in review. The old import helper's index-based
+thumbnail attachment and filtered/unfiltered upload zip are not reused. Target
+thumbnails use actual PDF Image XObject placements and unique source SKU anchors,
+keyed by original row ID, with encoded bytes and page/range/bounds evidence kept
+on immutable source rows. This supports simple unrotated, unclipped layouts, not
+arbitrary PDFs: ambiguous anchors/images, unsupported graphics state/forms and
+page geometry return no thumbnail. Extraction is bounded to 100 pages, 1500-point
+page dimensions and 500 image placements per page; text review remains available.
+Geometry proves spatial association only, not product identity; a source crop can
+include overlaid content or a nearby logo. Real vendor-template coverage is still
+unproven. Debug
+disclosure remains explicit, local and scoped, not telemetry.
+
+Verification: the existing four Foundation parser files typecheck together in
+Swift 6. Focused review tests cover preserved originals, exclusion identity,
+stale edit rejection, cancel/late extraction and malformed row provenance.
+Synthetic PDFKit fixtures now exercise both actual vendor parsers, all mapped
+row details, corrupt/image-only/unsupported/ambiguous inputs and source-preserving
+review edits (`scripts/test-local-vendor-pdf-parser.sh`). They expose an existing
+limitation: unpriced rows are omitted by the parsers, not returned for editing.
+Focused model/diagnostic tests cover explicit redaction, immutable row provenance,
+category scope and both explicit-clear and task-cancel late completions. Actual
+illustrated PDF fixtures pass through parser and editable review with distinct
+row thumbnails. Independently reviewed extractor tests verify source pixels,
+crop orientation, nested transforms, missing/competing images and rejected
+unsupported geometry. Native review interaction, integrated category revocation
+and exact-commit CI remain pending; no workflow completion is claimed.
 
 ## A-026 — Deterministic PowerSync Stream Parameter Encoding
 
