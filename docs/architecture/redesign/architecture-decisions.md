@@ -369,6 +369,22 @@ from the frozen v1 fixture, whose simplified movements do not prove shipped
 lineage coverage. Neither structural reconciliation nor a `returned` label
 establishes a client refund, paid occurrence or completed target import.
 
+The shipped `InvoiceLine` stores Item identity but no explicit occurrence or
+lineage-edge identity. A historical Invoice/line ID remains valid billing
+evidence; it is not proof of a specific sale/return edge. Do not manufacture that
+link from the Item's current Transaction/Project or timestamps. Unproved cycle
+correlations remain migration gaps rather than blocking independent target work.
+
+`FrozenInvoiceContents` is the shared immutable value representation for the
+positive-Invoice paid-history path. It retains exact source identities/revisions,
+Item occurrence and explicit price-basis snapshot, category, label and signed
+money under one Invoice and Purchase reference. Scope, duplicate billing,
+currency, total/category overflow and decoded values are validated. Current Item
+placement is not a field or lookup dependency. The writer must still prove
+source/price/category eligibility and actual payment, and enforce database
+immutability and authorization; this value alone does not collect an Invoice.
+Manual adjustments and nonpositive settlement remain separate product decisions.
+
 **Explicit client-payment translation:** A non-canceled legacy `paymentToBusiness` record
 means actual client payment (`InvoiceService.markCollected` writes category-specific
 payment records). Under D-001/D-002 it maps to the target Project Purchase
