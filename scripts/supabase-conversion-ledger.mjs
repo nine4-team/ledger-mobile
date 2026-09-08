@@ -1506,6 +1506,7 @@ function isProductSourceSurface(surface) {
     /^LedgeriOS\/LedgerTarget/.test(value) ||
     /^LedgeriOS\/LedgerLocalPaymentImport\//.test(value) ||
     value === "LedgeriOS/Package.swift" ||
+    value === "LedgeriOS/Package.resolved" ||
     /^(LedgerTargetMCP|supabase)\//.test(value) ||
     /^scripts\/(test-local-|check-target-|check-conversion-|generate-target-|ledger-product-checklist)/.test(value) ||
     /^scripts\/tests\/check-conversion-ci\.test\.mjs$/.test(value) ||
@@ -1839,7 +1840,7 @@ function main() {
     fails("removed source", check(manifest, []), /disappeared without retirement/);
     const target = { ...source, id: "target", sourceRefs: [{ path: "LedgeriOS/LedgerTargetCore/Item.swift" }] };
     if (check(manifest, [source, target]).errors.length) throw new Error("Target implementation must not require source inventory promotion");
-    for (const targetPath of ["LedgeriOS/Package.swift", "LedgeriOS/LedgerLocalPaymentImport/main.swift"]) {
+    for (const targetPath of ["LedgeriOS/Package.swift", "LedgeriOS/Package.resolved", "LedgeriOS/LedgerLocalPaymentImport/main.swift"]) {
       const config = { ...source, id: "target-config", sourceRefs: [{ path: targetPath }] };
       if (check({ ...manifest, surfaces: [source, config] }, [source, { ...config, observedSourceHash: "changed-target" }]).errors.length) {
         throw new Error("Target package/tool edits use active workflow and environment checks, not frozen Firebase source hashes");

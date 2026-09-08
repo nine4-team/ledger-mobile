@@ -1,5 +1,5 @@
 {
-  "originHash" : "49d50acb8fb255203d6ba4b903eee9f9df44a6f79b81fffdd59a80ed9c910202",
+  "originHash" : "f6857b10d63cd5367f07e5bf221989f80ecaee38c9fd4dd263230eba2344a57c",
   "pins" : [
     {
       "identity" : "csqlite",
@@ -26,15 +26,6 @@
       "state" : {
         "revision" : "0302873677f07039d5e2fc4d1aefdf093e8e6292",
         "version" : "0.5.3"
-      }
-    },
-    {
-      "identity" : "powersync-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/powersync-ja/powersync-swift.git",
-      "state" : {
-        "revision" : "e6c356aea078dff9cf9cb12b3d1aa3f583ddc98b",
-        "version" : "1.16.1"
       }
     },
     {

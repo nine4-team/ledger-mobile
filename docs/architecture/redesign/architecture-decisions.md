@@ -47,6 +47,7 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-019 | accepted | Improve Item relationship storage while preserving meaning and useful history |
 | A-020 | accepted | Persist imported client payments atomically with immutable source bytes |
 | A-021 | accepted, local synthetic scope only | Replay bounded payment batches and acknowledge only verified committed data |
+| A-022 | accepted, integration verification pending | Correct PowerSync cancellation lock inversion without weakening database cleanup |
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 
@@ -422,6 +423,42 @@ Mappings may cover a larger import plan: unused entries create no payment and
 are not approved by a successful subset. Import approval, complete export
 coverage, target persistence and final settlement reconciliation remain separate
 requirements.
+
+## A-022 — PowerSync Cancellation Lock Inversion
+
+**Evidence:** Automatic CI run 34173547450 canceled during real failed-bootstrap
+cleanup. Its `native-test-stall-diagnostics` artifact and sampled stacks show
+PowerSync 1.16.1 (`e6c356aea078dff9cf9cb12b3d1aa3f583ddc98b`)
+`MergeItemSequence` resuming a continuation under its state mutex while another
+thread cancels that consumer: each waits for a lock held by the other. Main and
+independent review confirmed the inversion against the pinned source. Upstream
+HEAD and latest release were checked and contain the same defect; PRs 171 and
+177 are already included and do not fix this lock ordering.
+
+**Required correction:** Extract the continuation and result while atomically
+transitioning state under the mutex; resume only after unlocking. Cancellation
+must claim a continuation exactly once, and terminal state must remain terminal
+against late events/errors. Preserve real close, watch notifications, encrypted
+database paths and data retention; neither test skipping nor delayed shutdown
+fixes this defect.
+
+**Scope/tradeoff:** The checked-in `vendor/powersync-swift` copy preserves the
+1.16.1 manifest, license, source, tests and required demo sources. Only the two
+Swift files named in `LEDGER-PATCH.md` change. The target app's existing local
+LedgerTarget package and its tests share this local SDK dependency. Transitive
+pins are unchanged. This costs a temporary vendored dependency, but avoids
+cache-only patches and per-build patch scripts. Restore an exact upstream pin
+when a reviewed upstream correction passes the same tests. No remote fork or
+upstream publication is authorized by this note.
+
+**Verification:** Independent review found no continuation-ownership or
+lock-order blocker. The corrected SDK passed 600 event/finish/error cancellation
+races plus terminal-state regression and the real failed-bootstrap cleanup
+matrix. Root tests also exercise normal events, active errors and buffered
+errors (vendored dependency tests do not automatically run with root tests).
+Integrated native verification and full exact-commit automatic CI remain
+required. The canceled run is diagnostic evidence, not passed verification or
+cutover readiness.
 
 ## A-020 — Imported Client Payment Storage
 

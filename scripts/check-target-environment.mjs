@@ -303,7 +303,7 @@ if (failures.length === 0) {
 
 if (description) {
   const expectedExternalDependencies = new Map([
-    ["powersync-swift", ["1.16.1"]],
+    ["powersync-swift", null], // A-022: checked-in 1.16.1 cancellation correction.
     ["csqlite", ["3.51.2"]],
   ]);
   const externalDependencies = description.dependencies ?? [];
@@ -314,6 +314,13 @@ if (description) {
     );
   }
   for (const dependency of externalDependencies) {
+    if (dependency.identity === "powersync-swift") {
+      if (dependency.type !== "fileSystem" ||
+          dependency.path !== path.join(repositoryRoot, "vendor/powersync-swift")) {
+        fail("target_provider_dependency_version", "PowerSync must use the tracked A-022 SDK correction.");
+      }
+      continue;
+    }
     const expectedVersion = expectedExternalDependencies.get(dependency.identity);
     if (
       !expectedVersion ||

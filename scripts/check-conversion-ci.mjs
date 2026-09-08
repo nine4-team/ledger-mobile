@@ -243,16 +243,11 @@ function validateTargetJob(lines) {
     requireExactLine(target, command, `target gate ${label}`);
   }
   requireCondition(
-    target.filter((line) => line === "          swift test --package-path LedgeriOS --no-parallel").length === 3,
-    "target job must retain all three split nonparallel Swift test gates",
+    target.filter((line) => line === "          swift test --package-path LedgeriOS --no-parallel").length === 1,
+    "target job must retain one complete nonparallel Swift test gate",
   );
-  for (const command of [
-    "          --filter LedgerWorkspaceRuntimeIsolationTests",
-    "          --filter ItemSpaceAssignmentPowerSyncStoreTests",
-    "          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'",
-  ]) {
-    requireExactLine(target, command, `native test gate ${command.trim()}`);
-  }
+  requireCondition(!target.some(line => /^\s+--(?:filter|skip)\b/.test(line)),
+    "native test gate must not filter or skip suites");
   const guard = uniqueLineIndex(
     target,
     /^      - name: Confirm target checks did not rewrite tracked artifacts\s*$/,
@@ -270,17 +265,11 @@ function validateTargetJob(lines) {
   requireCondition(target.join("\n").includes(diagnostics.join("\n") + "\n\n"),
     "target diagnostics must retain the exact bounded artifact configuration");
   const wrapper = "          bash scripts/run-target-native-tests-with-diagnostics.sh";
-  requireCondition(target.filter(line => line === wrapper).length === 2,
-    "target diagnostics must wrap exactly two native test commands");
-  for (const selection of [
-    "          --filter ItemSpaceAssignmentPowerSyncStoreTests",
-    "          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'",
-  ]) {
-    const index = target.indexOf(selection);
-    requireCondition(target[index - 2] === wrapper &&
-      target[index - 1] === "          swift test --package-path LedgeriOS --no-parallel",
-    "target diagnostics must wrap the intended native test commands");
-  }
+  requireCondition(target.filter(line => line === wrapper).length === 1,
+    "target diagnostics must wrap exactly one native test command");
+  const nativeIndex = target.indexOf("          swift test --package-path LedgeriOS --no-parallel");
+  requireCondition(target[nativeIndex - 1] === wrapper && target[nativeIndex + 1] === "",
+    "target diagnostics must wrap the complete native test command");
   requireCondition(
     target[guard + 1] === "        run: git diff --exit-code",
     "target job must retain its exact read-only diff guard",

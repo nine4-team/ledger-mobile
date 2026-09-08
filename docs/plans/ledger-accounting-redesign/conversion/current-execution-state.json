@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 97,
+  "stateVersion": 99,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. A019/A020/A021/D028 govern improvements preserving product meaning/history. No Firebase checkout or production/hosted access.",
-      "CI34173547450 for c9310c91 canceled, not green. Conversion/local DB passed. /tmp/ledger-c931-ci.log lines2645-2738 identify PowerSync AsyncConnectionPool.close task cancellation and MergeItemSequence mutex contention during stagedBootstrapCleanupMatrix. Read-only powersync_close_review agent investigating pinned dependency. Do not mask by skipping tests or mark checkpoint passed.",
-      "Unpublished191c2291 plus source identity resolver extension ready to integrate. Resolver exact Account Items/Transactions and Project-nested fee paths preserves all source copies; semantic labels are not collection names; moved Item does not prove Invoice occurrence. Independent review GO. Integrated58/11 PASS /tmp/ledger-invoice-source-integrated.log. Verification details in unified checklist; no broad workflow completion.",
-      "Finish conversion/environment checks, commit invoice resolver work, and address diagnosed native close defect before next single automatic PR CI. Preserve existing branch; no force push. Verified checkpoint remains75fac316 CI34172399500.",
-      "Continue Invoice cancellation-event and historical Item occurrence mapping into target collection allocations/persistence. Single-payment line coverage is not collection approval or full-export proof. Preserve canceled/partial/category-grouped evidence; never invent missing line IDs or financial facts."
+      "Audit complete; target implementation remains incomplete. Invoice source resolver22f3e6e0 and cancellation191c2291 are included in this batch. Verified checkpoint stays75fac316 until full exact-commit CI passes.",
+      "A022 implemented: tracked vendor/powersync-swift1.16.1 from e6c356ae, two Swift corrections remove continuation/cancellation under mutex and preserve terminal state. App/tests share local package; upstream has no fix. Main/independent review GO; active/buffered-error regressions added. No cache edits or remote fork.",
+      "Integrated797 native tests/114 suites PASS41.166s /tmp/ledger-powersync-fixed-native-integrated.log; focused600 cancellation races+terminal and real cleanup matrix PASS. Environment, conversion, CI verifier5cases, source-omission selftests4negative/4positive PASS. CI suite splitting removed; diagnostics retained. Package.resolved is target-only like Package.swift, removed from Firebase source hashing; no product behavior removed or historical catalogs synchronized.",
+      "Commit/push this integrated SDK+invoice batch to existing branch and observe its single automatic PR CI. Prior CI34173547450 canceled with proven SDK deadlock, never green. No active local process or review agent. Full app/macOS+iOS/CI validation pending; do not mark readiness.",
+      "Continue Invoice cancellation-event/historical Item occurrence mapping into target collection allocations. Narrow source coverage is not full export/collection approval; retain partial/grouped/canceled evidence. No Firebase checkout, production/hosted data/resources or cutover actions."
     ]
   },
   "blockers": [],

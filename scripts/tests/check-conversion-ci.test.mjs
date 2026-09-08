@@ -174,8 +174,16 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
         "          swift test --package-path LedgeriOS",
       );
     },
-    /three split nonparallel Swift test gates/,
+    /one complete nonparallel Swift test gate/,
   );
+  for (const selection of ["--filter OneSuite", "--skip OneSuite"]) {
+    expectFailure(value => {
+      value.workflow = value.workflow.replace(
+        "          swift test --package-path LedgeriOS --no-parallel\n",
+        `          swift test --package-path LedgeriOS --no-parallel\n          ${selection}\n`,
+      );
+    }, /must not filter or skip suites/);
+  }
   expectFailure(
     (value) => {
       value.workflow = value.workflow.replace(

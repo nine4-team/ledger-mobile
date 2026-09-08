@@ -30,10 +30,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/powersync-ja/powersync-swift.git",
-            exact: "1.16.1"
-        ),
+        // A-022: pinned upstream SDK with a tracked cancellation deadlock fix.
+        .package(path: "../vendor/powersync-swift"),
         .package(
             url: "https://github.com/powersync-ja/CSQLite.git",
             exact: "3.51.2",

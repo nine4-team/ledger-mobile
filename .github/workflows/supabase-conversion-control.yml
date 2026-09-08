@@ -67,24 +67,9 @@ jobs:
           npm run target:contracts:check
           npm run target:mcp:test
 
-      - name: Test workspace isolation contracts
-        # Keep this tiny synchronous suite in its own process. A macOS 26 runner
-        # twice stalled while entering it after the native PowerSync/SQLCipher
-        # suites, although the exact suite and full command passed locally.
-        run: >-
-          swift test --package-path LedgeriOS --no-parallel
-          --filter LedgerWorkspaceRuntimeIsolationTests
-
-      - name: Test Item-to-Space local durability contracts
-        # Keep this native PowerSync/SQLCipher suite in its own process. An exact
-        # commit passed the suite locally and in 20 consecutive focused runs but
-        # a shared CI process later stalled while entering its replay test.
-        run: >-
-          bash scripts/run-target-native-tests-with-diagnostics.sh
-          swift test --package-path LedgeriOS --no-parallel
-          --filter ItemSpaceAssignmentPowerSyncStoreTests
-
-      - name: Test remaining isolated target contracts
+      - name: Test isolated target contracts
+        # A-022 fixes the captured SDK cancellation deadlock. Run every suite
+        # together again rather than hiding native shutdown faults by splitting.
         # Swift Testing's `.serialized` trait is suite-local, so independent
         # PowerSync/SQLCipher integration suites can otherwise open and close
         # native database runtimes concurrently on the shared CI process.
@@ -92,7 +77,6 @@ jobs:
         run: >-
           bash scripts/run-target-native-tests-with-diagnostics.sh
           swift test --package-path LedgeriOS --no-parallel
-          --skip 'LedgerWorkspaceRuntimeIsolationTests|ItemSpaceAssignmentPowerSyncStoreTests'
 
       - name: Preserve native test stall diagnostics
         if: always()
