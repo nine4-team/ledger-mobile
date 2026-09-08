@@ -107,6 +107,25 @@ the actual exact-time query and indexed scope rather than claiming sort-free
 paging. Postgres has a matching expression index. Do not add a second timestamp
 copy or custom SDK index lifecycle solely to avoid this compatibility sort.
 
+The private individual-note importer reuses the existing atomic import pattern:
+lock the exact existing Project, insert the note and immutable source evidence
+together, and accept an identical retry without updating either. Source identity,
+full source bytes and the original imported row projection are retained; changed
+input or a changed target fails rather than overwriting later work. API roles
+cannot invoke it. This is an operator primitive, not a new-note command or load
+authorization. UTC is pinned when comparing timestamp-bearing JSON projections
+so caller timezone cannot turn an identical retry into a conflict.
+
+The parameter exporter verifies its projection against retained source bytes and
+accepts only an explicitly supplied reconciled principal. Historical values the
+current target cannot represent remain unsupported, never normalized to make an
+import pass. The existing synthetic runner now includes individual notes in the
+same transaction and journal as payments and legacy Project notes, with separate
+counts and fresh byte-exact source/row readback before acknowledgement. This
+avoids introducing a second migration runner or recovery journal. Resolving the
+historical compatibility gap, database execution and recovery verification remain
+required; these primitives alone do not establish complete note migration.
+
 ## A-030 — Legacy Project Notes Are Not Individual Note Records
 
 The existing Project detail contract carries a separate nullable `legacyNotes`
