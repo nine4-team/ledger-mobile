@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 147,
+  "stateVersion": 149,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "CI34198056690 at3b33a257 FAILED Print panel dismissal; watch73932 terminal1. Seven UI tests and repeated Share cancels passed; Copy skipped because Xcode runner did not inherit GITHUB_ACTIONS. All876 native tests passed incl encrypted reopen and real MCP parity. NEXT commit/push reviewed native print/iOS layout/CI-forwarding fixes and follow exact new automatic CI; no manual rerun. Native test logs /tmp/ledger-report-delivery-third-ci-failure.log. Require actual Copy execution and usable payload, not just callback.",
-      "Local iOS71831 terminal65; /tmp/ledger-report-ios-ui.log and target DerivedData Logs/Test/Test-LedgerTargetStaging-2026.09.08_00-11-55--0700.xcresult. Real UI exposed Refresh/Done overflowing narrow toolbar. Pending PropertyManagementReportPreview fix puts iOS exports bottom, Refresh top; same gates/actions, macOS grouped toolbar. Recorded A023. Not compiled/retested yet. Disk filled (~138MB); deleted ONLY newly created synthetic simulator091B3FB1, now ~865MB free. Do not recreate/retest until sufficient free disk (~10GB), and do not delete unrelated user data or touch preexisting92BB3190 simulator. Inspect export-failure test details from xcresult if needed; no complete iOS pass claimed.",
-      "Pending fixes: macOS print uses synchronous application-modal operation.run(), PDF retained through return and same error mapping, removes delegate class. Main and native_print_review reviewed actual lifecycle diff; SDK contract verified. CI-only Copy flag uses documented TEST_RUNNER_ forwarding, safety checker permits only exact reviewed block and tests reject missing/changed flag. Three iPhone UI tests added after existing iOS build, same runner timeout30min. A023 records all technical changes. Syntax parse,environment/conversion,9 CI verifier tests and simulator-selection smoke PASS; compiled/runtime verification awaits remote CI due local disk. Local verification marked not_run for changed app, not falsely passed.",
-      "Review summary compacted; detailed prior review/evidence remains in ff59333f, not duplicated. Workflow review accepted, CI passed for that commit, but general/UI/media/deletion acceptance stays pending actual OS interaction. DB-integrity/read-only-handler/app-MCP-parity checks passed. No whole-outcome or cutover claim.",
-      "Reuse valid local/CI evidence. Hosted Supabase/PowerSync and production remain unauthorized; physical report has no payment/spend inference. Product audit complete. O065/O033/O027/O060 remain open for affected accounting. No Firebase worktree access."
+      "NEXT commit/push owned report sharing fix, then follow its one automatic PR CI. Previous watch33588 terminal1: ba98f990 CI34200048685 failed actual Copy (dead scratch URL after cleanup) and Print Escape; database/native contracts/macOS build/seven UI tests passed, iOS skipped. Do not rerun that commit.",
+      "Pending fix: PropertyManagementReportShareItem supplies named NSItemProvider immutable PDF/CSV bytes, no scratch URL. Main + share_payload_review accepted; actual helper Swift6 smoke /tmp/ledger-share-payload-check.x9WQab/check PASS PDF/CSV/UTF8 data and file copies after source deletion (50069 terminal0). Package tests + real native Copy remain required. Print test now clicks observed Print Dialog Cancel, requires actual dismissal; no print-fix claim. A023 records decision.",
+      "Local disk ~871MB free. Do not run full builds/recreate simulators until sufficient free disk (~10GB); no unrelated deletions. Only temporary synthetic simulator091B3FB1 was deleted; preexisting92BB3190 untouched. iOS bottom export/top Refresh fix awaits build and three CI UI tests.",
+      "Use next exact CI to verify Copy executes and payload survives cleanup, Print closes, and iPhone tests pass. If native service or print still fails, inspect actual logs instead of weakening assertions. Preserve ff59333f verified checkpoint until stronger exact evidence.",
+      "Product audit complete. Open O065/O033/O027/O060 affect accounting only; hosted/production access unauthorized. No Firebase worktree access. Workflow and cutover incomplete."
     ]
   },
   "blockers": [],

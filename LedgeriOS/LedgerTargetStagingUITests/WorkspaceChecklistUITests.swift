@@ -176,14 +176,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // Observe the actual print controls and cancel; never press Print.
         let printButton = app.buttons["target-property-report-print"]
         printButton.tap()
-        let cancel = app.buttons["Cancel"].firstMatch
+        let printDialog = app.dialogs["Print"]
+        let cancel = printDialog.buttons["Cancel"]
         XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(failure.exists)
-        // The no-printer CI panel can still be resizing when Cancel first
-        // appears. Exercise its standard Escape action without targeting a
-        // moving screen coordinate, and prove the native panel actually closes.
-        cancel.typeKey(.escape, modifierFlags: [])
-        XCTAssertTrue(waitUntil { !cancel.exists }, app.debugDescription)
+        // The actual application-modal panel is a Dialog; the AX tree also
+        // contains another offscreen Cancel. Target the visible dialog's own
+        // control instead of sending Escape to whichever window has focus.
+        XCTAssertTrue(waitUntil { cancel.isHittable }, app.debugDescription)
+        cancel.click()
+        XCTAssertTrue(waitUntil { !printDialog.exists }, app.debugDescription)
         XCTAssertTrue(waitUntil { !busy.exists && printButton.isEnabled }, app.debugDescription)
         XCTAssertFalse(failure.exists)
         app.buttons["Done"].tap()

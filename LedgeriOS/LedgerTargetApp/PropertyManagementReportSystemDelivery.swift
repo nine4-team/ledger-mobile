@@ -1,4 +1,5 @@
 import Foundation
+import LedgerTargetAppModel
 #if os(macOS)
 import AppKit
 import ApplicationServices
@@ -136,7 +137,8 @@ enum PropertyManagementReportSystemDelivery {
 
         func run(url: URL, view: NSView) async throws {
             sourceView = view
-            let picker = NSSharingServicePicker(items: [url])
+            let item = try PropertyManagementReportShareItem.make(fileURL: url)
+            let picker = NSSharingServicePicker(items: [item])
             self.picker = picker
             picker.delegate = self
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

@@ -100,6 +100,29 @@ verification remains required for the uncommitted report batch.
 
 ## A-023 — One Property Management Report Snapshot
 
+**Owned macOS sharing payload (2026-09-08):** exact CI `34200048685` executed
+the native Copy test and exposed a real lifetime defect: AppKit copied a URL into
+Ledger's scratch directory, then successful-service cleanup deleted its target.
+The macOS picker now receives a named `NSItemProvider` with PDF/CSV data
+representations (and UTF-8 text for CSV), not the scratch URL. Destinations can
+request bytes or a system-created file copy. Existing scoped authorization,
+content, completion waiting and scratch cleanup remain unchanged. This keeps
+Copy available without retaining private scratch indefinitely or guessing a
+cleanup delay. The tradeoff is retaining report bytes in memory for the
+provider's lifetime; a recipient's copy is outside Ledger's deletion authority.
+Focused tests remove source scratch before requesting both bytes and a file
+representation. A small Swift 6 executable using the actual helper passed both
+requests for PDF, CSV and UTF-8 CSV after source deletion; independent read-only
+review found no blocking defect. The package regression tests and actual native
+Copy remain pending CI verification; the previous successful service callback
+alone did not establish delivery.
+
+The same CI still failed Print cancellation with application-modal printing.
+Its accessibility tree contains a visible Print Dialog and a second offscreen
+Cancel. The interaction test now clicks the visible dialog's own Cancel after
+it becomes hittable and requires that dialog to disappear. This is not evidence
+that the print issue is fixed; retain the runtime gate and investigate if it fails.
+
 **macOS print lifetime (2026-09-08):** use AppKit's application-modal
 `NSPrintOperation.run()` instead of attaching a document-modal print sheet to
 the SwiftUI report sheet. Two CI attempts opened the nested print panel but did
