@@ -56,11 +56,12 @@ struct LocalVendorDocumentReviewView: View {
                             }
                         }
                         .accessibilityIdentifier("target-vendor-pdf-category")
+                        .accessibilityValue(review.categories.first { $0.id == review.selectedCategoryId }?.name.rawValue ?? "No Category")
                         Text(review.categoryStatus).font(.caption).foregroundStyle(.secondary)
                         ForEach(document.fields.keys.sorted(), id: \.self) { key in
                             LabeledContent(key, value: document.fields[key] ?? "")
                         }
-                        ForEach(Array(document.warnings.enumerated()), id: \.offset) { _, warning in
+                        ForEach(Array(document.reviewWarnings.enumerated()), id: \.offset) { _, warning in
                             Text(warning).foregroundStyle(.orange)
                         }
                         Text("Included rows: \(review.includedCount) of \(review.rows.count)")
@@ -78,9 +79,13 @@ struct LocalVendorDocumentReviewView: View {
                                     Text("No unambiguous source thumbnail for this row.").font(.caption)
                                 }
                                 Toggle("Include row \(row.id + 1)", isOn: binding(row, hash: hash, keyPath: \.included))
+                                    .accessibilityIdentifier("target-vendor-pdf-include-\(row.id)")
                                 TextField("Description", text: binding(row, hash: hash, keyPath: \.description), axis: .vertical)
+                                    .accessibilityIdentifier("target-vendor-pdf-description-\(row.id)")
                                 TextField("Quantity", text: binding(row, hash: hash, keyPath: \.quantity))
+                                    .accessibilityIdentifier("target-vendor-pdf-quantity-\(row.id)")
                                 TextField("Unit price", text: binding(row, hash: hash, keyPath: \.unitPrice))
+                                    .accessibilityIdentifier("target-vendor-pdf-price-\(row.id)")
                                 Text("Extracted line total: \(row.original.total)")
                                 if let sku = row.original.sku { Text("SKU: \(sku)") }
                                 ForEach(Array(row.original.attributes.enumerated()), id: \.offset) { _, value in Text(value) }
@@ -96,13 +101,17 @@ struct LocalVendorDocumentReviewView: View {
                                 Text("Local document diagnostics only. Links and recognized sensitive lines are omitted.")
                                     .font(.caption)
                                 Button(showStats ? "Hide Stats" : "Show Stats") { showStats.toggle() }
+                                    .accessibilityIdentifier("target-vendor-pdf-stats-toggle")
                                 if showStats {
                                     Text("Pages: \(document.pageCount) · Characters: \(document.rawText.count) · Rows: \(document.rows.count)")
+                                        .accessibilityIdentifier("target-vendor-pdf-stats")
                                 }
                                 Button(showRawText ? "Hide Raw Text" : "Show Raw Text") { showRawText.toggle() }
+                                    .accessibilityIdentifier("target-vendor-pdf-raw-toggle")
                                 if showRawText {
                                     Text(LocalVendorDocumentDiagnostics.redactedText(document.rawText))
                                         .font(.caption.monospaced()).textSelection(.enabled)
+                                        .accessibilityIdentifier("target-vendor-pdf-raw")
                                 }
                                 Button("Copy Debug JSON") { copyDiagnostics(document) }
                                     .accessibilityIdentifier("target-vendor-pdf-copy-debug")
@@ -114,6 +123,7 @@ struct LocalVendorDocumentReviewView: View {
             }
             .padding()
         }
+        .accessibilityIdentifier("target-vendor-pdf-scroll")
         .navigationTitle("Review Vendor PDF")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

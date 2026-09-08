@@ -131,12 +131,14 @@ jobs:
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
 
-      - name: Preserve failed iOS report test evidence
+      - name: Preserve failed native UI test evidence
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: report-ios-failure-${{ github.sha }}
-          path: ${{ runner.temp }}/ledger-report-ios.xcresult
+          name: native-ui-failure-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-report-ios.xcresult
+            /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 1
 

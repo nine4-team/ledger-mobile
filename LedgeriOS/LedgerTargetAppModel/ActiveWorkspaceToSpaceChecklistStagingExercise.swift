@@ -49,7 +49,21 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     public let spaceBrowser: SpaceBrowserStagingExercise
     public let checklistToggle: SpaceChecklistItemToggleStagingExercise
 
-    public private(set) var route: ActiveWorkspaceToSpaceChecklistRoute = .stopped
+    public private(set) var route: ActiveWorkspaceToSpaceChecklistRoute = .stopped {
+        didSet { if oldValue != route { closeVendorDocumentReview() } }
+    }
+    public private(set) var vendorDocumentReview: LocalVendorDocumentReview?
+
+    public func openVendorDocumentReview() {
+        guard runtime != nil, case .projectWorkspace = route, representedProjectIsAvailable else { return }
+        closeVendorDocumentReview()
+        vendorDocumentReview = LocalVendorDocumentReview(accountId: accountId)
+    }
+
+    public func closeVendorDocumentReview() {
+        vendorDocumentReview?.close()
+        vendorDocumentReview = nil
+    }
     public private(set) var isChecklistsExpanded = true
     public private(set) var directorySegment: ProjectDirectorySegment = .active
 
@@ -375,6 +389,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
         generation &+= 1
         let revocationGeneration = generation
+        closeVendorDocumentReview()
         route = .projectWorkspace(projectId)
         isChecklistsExpanded = true
         await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)

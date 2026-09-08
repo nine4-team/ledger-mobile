@@ -1,12 +1,138 @@
 import XCTest
 #if os(macOS)
 import AppKit
+import CoreText
 #elseif os(iOS)
 import UIKit
 #endif
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    #if os(macOS)
+    func testVendorPDFActualFileReview() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
+            throw XCTSkip("Diagnostic Copy uses only the isolated CI clipboard")
+        }
+        continueAfterFailure = false
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-synthetic-\(UUID().uuidString).pdf")
+        try Data("synthetic unreadable PDF".utf8).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        app.buttons["target-vendor-pdf-open"].tap()
+        let select = app.buttons["target-vendor-pdf-select"]
+        XCTAssertTrue(select.waitForExistence(timeout: 5))
+        selectVendorPDF(file, in: app)
+        let parseError = app.descendants(matching: .any)["target-vendor-pdf-error"].firstMatch
+        XCTAssertTrue(parseError.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(parseError.label.contains("could not be read"))
+        // Replacing bytes at the same path must not reuse the failed parse.
+        try syntheticVendorPDF().write(to: file, options: .atomic)
+        selectVendorPDF(file, in: app)
+        let count = app.descendants(matching: .any)["target-vendor-pdf-included-count"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(parseError.exists)
+        XCTAssertEqual(count.label, "Included rows: 2 of 2")
+        let category = app.descendants(matching: .any)["target-vendor-pdf-category"].firstMatch
+        XCTAssertEqual(category.value as? String, "No Category")
+        category.tap()
+        let furnishings = app.menuItems["Furnishings"].firstMatch
+        XCTAssertTrue(furnishings.waitForExistence(timeout: 5))
+        furnishings.tap()
+        XCTAssertEqual(category.value as? String, "Furnishings")
+        let scroll = app.scrollViews["target-vendor-pdf-scroll"].firstMatch
+        func show(_ element: XCUIElement, upward: Bool = true) {
+            for _ in 0..<10 {
+                if element.exists && element.isHittable { return }
+                if upward { scroll.swipeUp() } else { scroll.swipeDown() }
+            }
+            XCTAssertTrue(element.isHittable, app.debugDescription)
+        }
+        for (id, value) in [("description", "Edited chair"), ("quantity", "3"), ("price", "12.34")] {
+            let field = app.descendants(matching: .any)["target-vendor-pdf-\(id)-1"].firstMatch
+            show(field)
+            field.tap()
+            app.typeKey("a", modifierFlags: .command)
+            app.typeText(value)
+            XCTAssertEqual(field.value as? String, value)
+        }
+        let include = app.descendants(matching: .any)["target-vendor-pdf-include-0"].firstMatch
+        show(include, upward: false)
+        include.tap()
+        XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        let stats = app.buttons["target-vendor-pdf-stats-toggle"]
+        show(stats)
+        stats.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-vendor-pdf-stats"].exists)
+        let raw = app.buttons["target-vendor-pdf-raw-toggle"]
+        show(raw)
+        raw.tap()
+        let rawText = app.descendants(matching: .any)["target-vendor-pdf-raw"].firstMatch
+        XCTAssertTrue(rawText.exists)
+        XCTAssertTrue(rawText.label.contains("Synthetic Chair"))
+        XCTAssertFalse(rawText.label.contains("synthetic-secret"))
+        raw.tap()
+        let copy = app.buttons["target-vendor-pdf-copy-debug"]
+        show(copy)
+        copy.tap()
+        let json = try XCTUnwrap(NSPasteboard.general.string(forType: .string))
+        XCTAssertFalse(json.contains("synthetic-secret"))
+        XCTAssertTrue(json.contains("Synthetic Chair")) // Originals, not edited draft text.
+        show(select, upward: false)
+        select.tap()
+        let pickerCancel = app.buttons.matching(NSPredicate(
+            format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
+        )).firstMatch
+        XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5))
+        pickerCancel.tap()
+        XCTAssertTrue(pickerCancel.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        let description = app.descendants(matching: .any)["target-vendor-pdf-description-1"].firstMatch
+        show(description)
+        XCTAssertEqual(description.value as? String, "Edited chair")
+        XCTAssertEqual(category.value as? String, "Furnishings")
+        app.buttons["target-vendor-pdf-cancel"].tap()
+        XCTAssertTrue(count.waitForNonExistence(timeout: 5))
+    }
+
+    private func selectVendorPDF(_ file: URL, in app: XCUIApplication) {
+        app.buttons["target-vendor-pdf-select"].tap()
+        let open = app.buttons["Open"].firstMatch
+        XCTAssertTrue(open.waitForExistence(timeout: 5), app.debugDescription)
+        app.typeKey("g", modifierFlags: [.command, .shift])
+        app.typeText(file.path)
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(waitUntil { open.isEnabled && open.isHittable }, app.debugDescription)
+        open.tap()
+    }
+
+    private func syntheticVendorPDF() throws -> Data {
+        let data = NSMutableData()
+        let consumer = try XCTUnwrap(CGDataConsumer(data: data))
+        var bounds = CGRect(x: 0, y: 0, width: 612, height: 792)
+        let context = try XCTUnwrap(CGContext(consumer: consumer, mediaBox: &bounds, nil))
+        context.beginPDFPage(nil)
+        let font = CTFontCreateWithName("Helvetica" as CFString, 12, nil)
+        let lines = ["Amazon.com order number: 111-2222222-3333333", "Order Placed: January 2, 2025",
+                     "1 of: Synthetic Table $10.00", "1 of: Synthetic Chair $20.00",
+                     "Grand Total: $30.00", "access_token=synthetic-secret"]
+        for (index, line) in lines.enumerated() {
+            context.textPosition = CGPoint(x: 36, y: 750 - index * 20)
+            let attributed = NSAttributedString(string: line,
+                attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font])
+            CTLineDraw(CTLineCreateWithAttributedString(attributed), context)
+        }
+        context.endPDFPage()
+        context.closePDF()
+        return data as Data
+    }
+    #endif
+
     func testVendorPDFSelectionCancellation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -596,12 +722,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true) {
         #if os(iOS)
         let list = app.collectionViews.firstMatch
+        #elseif os(macOS)
+        let list = app.scrollViews.firstMatch
+        #endif
         XCTAssertTrue(list.exists)
         for _ in 0..<6 {
             if element.waitForExistence(timeout: 1), element.isHittable { return }
             if upwards { list.swipeUp() } else { list.swipeDown() }
         }
-        #endif
+        XCTAssertTrue(element.isHittable, app.debugDescription)
     }
 
     private func waitUntil(_ condition: @escaping () -> Bool) -> Bool {

@@ -203,7 +203,7 @@ function validateWorkflowSafety(lines) {
       lines[index + 1] === "        uses: actions/upload-artifact@v4";
     const allowedReportEvidence =
       line === "        if: failure()" &&
-      lines[index - 1] === "      - name: Preserve failed iOS report test evidence" &&
+      lines[index - 1] === "      - name: Preserve failed native UI test evidence" &&
       lines[index + 1] === "        uses: actions/upload-artifact@v4";
     requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence,
       "jobs must not conditionally skip or tolerate failures");

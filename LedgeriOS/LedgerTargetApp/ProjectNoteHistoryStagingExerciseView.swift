@@ -31,6 +31,7 @@ struct ProjectNoteHistoryStagingExerciseView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("target-project-note-row")
             }
 

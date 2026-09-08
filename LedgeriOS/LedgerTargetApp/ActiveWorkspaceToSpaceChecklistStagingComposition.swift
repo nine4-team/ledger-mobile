@@ -23,11 +23,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
     let accountCurrency: CurrencyCode
     @State private var showingPropertyReport = false
-    @State private var showingVendorPDF = false
-    @State private var vendorReview: LocalVendorDocumentReview?
 
     var body: some View {
-        Group {
         switch model.route {
         case .projectDirectory:
             projectDirectory
@@ -54,19 +51,6 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityIdentifier("target-active-workspace-stopped")
             }
         }
-        }
-        .onChange(of: model.representedProjectIsAvailable) { _, available in
-            if !available { closeVendorReview() }
-        }
-        .onChange(of: model.route) { _, route in
-            if case .projectWorkspace = route {} else { closeVendorReview() }
-        }
-        .onDisappear { closeVendorReview() }
-    }
-
-    private func closeVendorReview() {
-        vendorReview?.close()
-        showingVendorPDF = false
     }
 
     private var projectDirectory: some View {
@@ -151,15 +135,15 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityIdentifier("target-active-project-notes-tab")
                     .accessibilityHint("Opens note history for this Project")
                 Button("Review Vendor PDF") {
-                    vendorReview = LocalVendorDocumentReview(accountId: model.accountId)
-                    showingVendorPDF = true
+                    model.openVendorDocumentReview()
                 }
                     .accessibilityIdentifier("target-vendor-pdf-open")
-                    .sheet(isPresented: $showingVendorPDF, onDismiss: {
-                        vendorReview?.close(); vendorReview = nil
-                    }) {
+                    .sheet(isPresented: Binding(
+                        get: { model.vendorDocumentReview != nil },
+                        set: { if !$0 { model.closeVendorDocumentReview() } }
+                    )) {
                         NavigationStack {
-                            if let vendorReview {
+                            if let vendorReview = model.vendorDocumentReview {
                                 LocalVendorDocumentReviewView(review: vendorReview, categoryWatch: model.categoryWatch)
                                     .id(projectId)
                             }

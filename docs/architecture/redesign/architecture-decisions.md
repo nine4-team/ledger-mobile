@@ -72,10 +72,14 @@ extraction and stale edits. Missing unit prices remain missing; a line total
 does not become a unit price and a missing date does not become today.
 Review is not durable acceptance of an Item, receipt, or payment.
 
-The presenting workspace owns the review session. Closing/dismissing it or
+The workspace application model owns the review session. Closing/dismissing it or
 leaving the authorized workspace permanently closes that instance; delayed
 picker results cannot reopen it. Presenting the system file picker is not itself
-a close event. Category choices reuse the existing visible Account-category
+a close event. Navigation, Project-evidence removal and workspace stop close it
+through the model, not a SwiftUI `onDisappear` modifier on list content. This
+replaces the initial view-owned lifetime after CI exposed a missing PDF sheet;
+the callback cause is an inference awaiting native confirmation. Focused model
+tests prove terminal closure on Back, removal and stop. Category choices reuse the existing visible Account-category
 stream, matching the shipped import picker rather than adding a new category
 query or restricting it silently to enabled Project allocations.
 

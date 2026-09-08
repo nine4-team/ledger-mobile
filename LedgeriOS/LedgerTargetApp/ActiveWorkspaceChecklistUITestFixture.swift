@@ -57,6 +57,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
     private let removals = AsyncStream<Void>.makeStream()
 
     func simulateRemoval() {
+        model.closeVendorDocumentReview()
         removals.continuation.yield(())
         removals.continuation.finish()
     }
@@ -304,7 +305,24 @@ private final class ActiveWorkspaceChecklistUITestFixture {
             ),
             itemReader: UITestFixtureItemReader(),
             reportWatcher: UITestFixtureReportWatcher(),
-            reportReader: UITestFixtureReportWatcher()
+            reportReader: UITestFixtureReportWatcher(),
+            categoryWatch: { [accountId] in
+                AsyncThrowingStream { continuation in
+                    do {
+                        let category = BudgetCategoryDefinitionSnapshot(
+                            id: try BudgetCategoryID(validating: "category-ui-test"), accountId: accountId,
+                            name: try BudgetCategoryName(validating: "Furnishings"), kind: .general,
+                            lifecycle: .active, isSystem: false, excludesFromOverallBudget: false,
+                            presentationOrder: 0, revision: 1)
+                        continuation.yield(try BudgetCategoryReferenceSnapshot(accountId: accountId,
+                            local: ListLocalSnapshot(
+                                queryFingerprint: ListQueryFingerprint(validating: String(repeating: "2", count: 64)),
+                                rows: [category], visibleRowCountBeforeFiltering: 1, isCompleteForQuery: true,
+                                quality: .ready, localDataVersion: LocalDataVersion(validating: "ui-categories-1"),
+                                asOf: Date(timeIntervalSince1970: 1_789_500_000))))
+                    } catch { continuation.finish(throwing: error) }
+                }
+            }
         ))
     }
 

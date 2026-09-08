@@ -52,6 +52,16 @@ public struct LocalVendorDocument: Equatable, Sendable {
     public let rawText: String
     public let pageCount: Int
 
+    /// Keep raw parser evidence intact without presenting legacy date-default
+    /// advice as a valid target accounting choice.
+    public var reviewWarnings: [String] {
+        warnings.map { warning in
+            warning == "Could not confidently find an order date; defaulting to today is recommended."
+                ? "The order date could not be found. No date has been assumed."
+                : warning
+        }
+    }
+
     public init(vendor: Vendor, fields: [String: String], rows: [LocalVendorDocumentRow],
                 warnings: [String], rawText: String, pageCount: Int) {
         self.vendor = vendor; self.fields = fields; self.rows = rows

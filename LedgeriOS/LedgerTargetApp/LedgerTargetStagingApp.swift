@@ -112,6 +112,9 @@ private struct OfflineProviderSpikeView: View {
         WorkspaceAccessGate(access: model.access) {
             workspaceContent
         }
+        .onChange(of: model.access.isLocked) { _, locked in
+            if locked { model.activeWorkspaceToSpaceChecklist.closeVendorDocumentReview() }
+        }
     }
 
     @ViewBuilder

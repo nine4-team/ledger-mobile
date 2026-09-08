@@ -71,6 +71,16 @@ struct LocalVendorDocumentReviewTests {
         #expect(review.document == nil && review.rows.isEmpty && review.sourceBytes == nil)
     }
 
+    @Test("Missing-date display never recommends today while raw warnings remain intact")
+    func missingDateWarning() {
+        let original = "Could not confidently find an order date; defaulting to today is recommended."
+        let document = LocalVendorDocument(vendor: .amazon, fields: [:], rows: [],
+            warnings: [original, "Missing order total"], rawText: "Source text", pageCount: 1)
+        #expect(document.reviewWarnings == ["The order date could not be found. No date has been assumed.", "Missing order total"])
+        #expect(document.warnings[0] == original)
+        #expect(document.fields["Order date"] == nil)
+    }
+
     @Test("A closed review rejects late file-picker completions and cannot reopen")
     func terminalClose() async throws {
         let review = LocalVendorDocumentReview(accountId: try AccountID(validating: "review-account"))

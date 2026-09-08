@@ -31,7 +31,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "target-vendor-pdf-open",
             "LocalVendorDocumentReviewView(",
             "runtime.watchBudgetCategories()",
-            "vendorReview?.close()",
+            "model.closeVendorDocumentReview()",
         ] {
             #expect(view.contains(required), "Missing route UI contract token: \(required)")
         }
@@ -185,6 +185,35 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         #expect(!model.representedProjectIsActive)
         model.openNotesTab()
         #expect(model.route == .projectWorkspace(project.id))
+        await model.stop()
+    }
+
+    @Test("Vendor review follows workspace lifetime, not view appearance", arguments: ["back", "removal", "stop"])
+    func vendorReviewLifetime(action: String) async throws {
+        let directory = RouteSource<ProjectListSnapshot>()
+        let model = Self.model()
+        await model.start(runtime: Self.runtime(
+            projectDirectory: directory, projectDetail: RouteSource(),
+            spaceDirectory: RouteSource(), spaceDetail: RouteSource(),
+            projectRequests: RouteRecorder(), listRequests: RouteRecorder(), detailRequests: RouteRecorder()
+        ))
+        model.openVendorDocumentReview()
+        #expect(model.vendorDocumentReview == nil)
+        let project = try Self.project("vendor-review-project")
+        directory.yield(try Self.projectList([project]))
+        await Self.wait { model.projectBrowser.activeProjects.count == 1 }
+        await model.selectProject(projectId: project.id)
+        model.openVendorDocumentReview()
+        let review = try #require(model.vendorDocumentReview)
+        #expect(!review.isClosed && review.accountId == Self.accountId)
+        switch action {
+        case "back": await model.back()
+        case "removal": directory.yield(try Self.projectList([]))
+        default: await model.stop()
+        }
+        await Self.wait { review.isClosed }
+        #expect(model.vendorDocumentReview == nil)
+        #expect(review.isClosed)
         await model.stop()
     }
 
