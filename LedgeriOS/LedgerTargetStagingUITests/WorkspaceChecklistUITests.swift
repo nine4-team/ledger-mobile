@@ -41,7 +41,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         let printButton = app.buttons["target-property-report-print"]
         printButton.tap()
-        let cancel = app.buttons["Cancel"].firstMatch
+        let cancel = app.navigationBars["Options"].buttons["Close"].firstMatch
         XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(failure.exists)
         cancel.tap()

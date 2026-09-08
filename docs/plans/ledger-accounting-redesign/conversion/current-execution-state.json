@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 161,
+  "stateVersion": 167,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "NEXT complete focused checks/review, commit current report test fixes and push for one automatic PR CI. CI34209616265 at81358e84d89b4e7a984261eb708939807aa7e36f is terminal canceled at30-minute limit, not live. Watch88597 needs final poll/closure. Database,878 native,macOS UI,both builds passed; iOS empty/retry passed.",
-      "Diagnosis: iOS PDF Copy completes and Share re-enables at09:48:24; next synchronous XCTest UIPasteboard read hangs until cancellation09:56:49. Changed test to actual user-initiated PasteButton receiver in DEBUG isolated fixture. It reads actual provider data/file bytes after cleanup; dead URL fails. No production sharing change. Added Copy120s/default iOS300s timeouts; later native cancellation still needs execution.",
-      "Current batch also includes grouped report preview coverage (Space/No Space, known12345-cent table, zero lamp, unknown chair;3 items/123.45 known subtotal/1 unknown) and principal/visibility replacement regression with identical content. Focused15340 passed2 tests/8 cases; extracted watcher77108 and macOS/iOS UI file typechecks passed. New receiver/UI Swift6 typechecks passed; full new UI proof pending CI. Use same-commit CI, not another local full app build.",
-      "Local disk constrained; no full simulator rebuild or unrelated cleanup. A026 retained unsorted development-cache recovery remains unproven; strict duplicate readiness unchanged. All significant production technical changes remain in architecture-decisions.md; current patch is test-only behavior, not a new architecture.",
-      "Product audit complete. Hosted/hardware and broad feature gaps remain. Open accounting decisions block only linked outcomes. No Firebase worktree or hosted/production/resource provisioning authorized."
+      "NEXT commit/push one-line iOS Print selector fix plus current evidence checkpoint after focused checks. CI34213428532 atf9da7be01f16cadac8538b51104d7b745db61b72 terminal FAILURE; database,878 native,macOS UI,both builds passed. iOS4/5 passed including real PDF/CSV Copy+Paste and grouped preview. No live watch process.",
+      "Only failure: iOSSystemDialogCancellation line45 expected Cancel after three successful share cancellations. AX10:29:29 shows navigation bar Options > button Close. Test now uses app.navigationBars[Options].buttons[Close]; no production change. Full iOS Swift6 test-file typecheck72038 passed; verify next automatic CI actual Print close ends busy/error-free and re-enables Print.",
+      "Report Copy hang resolved in test path: native user-initiated PasteButton consumes real provider content after scratch cleanup, and PDF/CSV checks passed60.780s. Grouped preview passed on macOS15.543s/iOS29.492s; permission replacement regression part of878 native suite. Reuse valid evidence; no repeated local full suite for selector-only correction. Full report not yet complete.",
+      "Acceptance review is in unified checklist; identity/offline checks passed, UI/media/general and hosted authorization remain open. Pending async user inputs: free at least10GB locally (751MiB available), and explicit approval for separate free-only hosted Supabase/PowerSync synthetic staging or identification of an existing isolated environment. Neither request is approval; no paid plan, billing upgrade, hosted/prod access or cleanup authorized. Continue independent local/CI work. No docs-only push; A026 retained unsorted cache recovery remains unproven.",
+      "Focused migration review: whole-account-migration-reconciliation (M4) still owns import/readback of Item name,description,sku,marketValueCents with explicit Account currency. Target report columns exist but current migration core only implements payment conversion/lineage evidence, not these physical fields. Source Project model has no address field; never infer property_address from description. Reader may display name??description without overwriting stored meaning. Preserve this gap for M4, not a new standalone converter now. Product audit remains complete; hosted/hardware and broader feature gaps remain."
     ]
   },
   "blockers": [],
