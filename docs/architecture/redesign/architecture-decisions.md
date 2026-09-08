@@ -368,7 +368,7 @@ from the frozen v1 fixture, whose simplified movements do not prove shipped
 lineage coverage. Neither structural reconciliation nor a `returned` label
 establishes a client refund, paid occurrence or completed target import.
 
-**Explicit client-payment translation:** A legacy `paymentToBusiness` record
+**Explicit client-payment translation:** A non-canceled legacy `paymentToBusiness` record
 means actual client payment (`InvoiceService.markCollected` writes category-specific
 payment records). Under D-001/D-002 it maps to the target Project Purchase
 classification, retaining its exact integer cents and entire source document.
@@ -379,6 +379,29 @@ scope supplied by the migration caller. Other source transaction types, unclear
 payers, nonpositive amounts and non-integer money remain unresolved here. This
 is a domain transform, not the completed scope-mapping/import pipeline or proof
 that historical Invoice allocations reconcile.
+
+Cancellation is checked before active money is mapped. Source `canceled` and
+`cancelled` (case-insensitive) remain retained but require historical cancellation
+mapping; they cannot export active Purchase parameters. Absent/null status and
+known legacy `pending`/`completed` retain the source's non-cancellation meaning.
+Other status strings or types remain explicit mapping gaps instead of inheriting
+the shipped decoder's unknown-string-as-active fallback. Tests cover the transform,
+batch counts/source retention and parameter-export rejection.
+
+`InvoiceService.voidInvoicePayment` leaves settlement links on canceled payments
+and Invoice lines. Those links establish history, not current payment or paid
+status. Invoice reconciliation must inspect cancellation state; surviving links
+must never resurrect money or erase the correction history.
+
+`FirebaseInvoiceSettlementReview` checks a narrower prerequisite than collection
+mapping: one explicit non-canceled payment covers the exact stable signed source
+lines and total. It retains the complete Invoice and every supplied payment;
+partial/category-grouped, canceled/mixed, missing-ID, duplicate, dangling-link,
+scope and money inconsistencies remain explicit. Line identity comparisons use
+UTF-8 bytes, not Unicode-normalized equality. It never generates missing legacy
+line IDs, groups payments by timestamp, or creates target paid state. Complete
+export coverage, cancellation events, Item occurrence/source resolution and
+approved target allocation are still required before importing a collected Invoice.
 
 `FirebaseClientPaymentBatch` binds that transform to an exact source Project
 snapshot and an explicit target Project/Client assignment, plus stable supplied

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 92,
+  "stateVersion": 95,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. A019/A020/A021 and D028 guide technical improvements preserving product meaning/history. No Firebase checkout or production/hosted access authorized.",
-      "Integrated local executable batch ready to commit: LedgerLocalPaymentImport (fixed synthetic2payment batch only), package-scoped API access, separate-process recovery tests, environment/source-scope checks. Main reviewed delegated executable; terminal journal pre-SQL rejection and private owner-only run-dir added. Actual recovery PASS /tmp/ledger-local-payment-recovery-final.log; Swift46/10 PASS /tmp/ledger-local-payment-integrated-swift.log; control/environment/self-tests/diff PASS. No active local processes.",
-      "Commit/push this batch once and use its automatic exact-commit CI. Prior75fac316 CI34172399500 all jobs success. macOS CI compiles tool; executable+Docker recovery is local-only, Linux CI tests SQL boundary. Synthetic database rows/run artifacts retained under supabase/.temp, no immutable cleanup bypass.",
-      "Next focus source-shaped Item/Invoice settlement relationship mapping/reconciliation using preserved raw source, explicit Client assignments and canonical specs. Do not build a general migration framework before the remaining accounting transforms exist. Local loader demonstrates shared Swift->SQL+journal recovery; full export ingestion, approved mappings and invoice allocation remain missing.",
-      "Known recovery limits: lock implemented but simultaneous executable lock-contention not tested; server restart/power-loss and hosted behavior unproved. MigrationEnvironmentGuard remains fixture dry-run only/evidenceOnly. Old migration/src/cli.ts is opposite Supabase->Firebase, never run/repurpose. Significant design changes go in existing architecture-decisions.md."
+      "Audit complete; A019/A020/A021/D028 guide improvements without losing product meaning/history. No Firebase checkout or production/hosted access authorized.",
+      "Previous local importer c9310c91ca4df8b3719917906e15ff54c6db9c3b CI34173547450 confirmed live: conversion/localDB success, targetmacOS Test remaining isolated target contracts running. Poll exact run. Verified checkpoint remains75fac316 CI34172399500 until c931 completes.",
+      "Cancellation+Invoice evidence batch ready for local commit: canceled/cancelled retained/unresolved (not active money), unknown-status quarantine, FirebaseInvoiceSettlementReview exact signed line/payment coverage with raw retention. Partial/grouped/canceled/mixed/status-only/missingID/scope/dangling/amount/overflow issues explicit. Main fixed reviewer-found duplicate copies hidden by other/null/missing Invoice link: group all supplied UTF8 payment paths before selection. Final review GO.",
+      "Evidence: integrated53/11 PASS /tmp/ledger-invoice-settlement-integrated.log; post-fix focused7 PASS /tmp/ledger-invoice-settlement-final.log; prior status11/3 PASS. Conversion/environment/diff PASS. Commit this batch; prefer push after previous CI terminal to avoid canceling its completed work. No local process/agent active. Do not repeat full suites on resume.",
+      "Next connect source Invoice/line/payment evidence to cancellation events and Item occurrence/source resolution, then target collection allocations/persistence. Narrow hasSinglePaymentLineCoverage is NOT collection approval, wholeexport proof or paid-state creation. Missing legacy line IDs must not get decoder-generated UUIDs. Surviving canceled settlement links remain history. Preserve all source copies/partial/category payments; no grouping by timestamps or fabricated financial facts."
     ]
   },
   "blockers": [],

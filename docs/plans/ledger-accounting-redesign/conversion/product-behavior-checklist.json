@@ -27828,6 +27828,20 @@
           "expected": "Real Swift local-only synthetic importer recomputes fixed source/batch, binds artifacts and plan, applies two payments atomically, verifies exact committed facts before journal acknowledgement, and resumes separate processes without double-counting. Changed source/mapping/plan, terminal journals, remote Docker overrides and conflicting second payment fail safely.",
           "command": "npm run target:supabase:test:payment-recovery",
           "status": "passed"
+        },
+        {
+          "id": "SOURCE-PAYMENT-CANCELLATION-PRESERVATION",
+          "risk": "accounting",
+          "expected": "Canceled/cancelled source payments retain original status and settlement links but never become active cash or exportable import parameters. Absent/null and known legacy pending/completed retain active-source meaning; unknown/typed statuses remain explicit mapping gaps.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseClientPayment",
+          "status": "passed"
+        },
+        {
+          "id": "SOURCE-INVOICE-SETTLEMENT-COVERAGE",
+          "risk": "migration_fidelity",
+          "expected": "Retain raw Invoice and all supplied payment snapshots; establish only exact signed source-line coverage by one active payment. Partial/grouped/canceled/mixed/status-only, missing/duplicate line identity, foreign scope, conflicting duplicate payment copies (including links elsewhere/missing), dangling reverse links and amount/overflow errors remain explicit. No generated legacy IDs, paid-state creation or inferred Item occurrence.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseInvoiceSettlementReviewTests",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
@@ -27856,13 +27870,15 @@
             "node scripts/test-local-imported-payment-concurrency.mjs",
             "swift test --package-path LedgeriOS --filter FirebaseClientPaymentImportParametersTests",
             "npm run conversion:ci:test",
-            "npm run target:supabase:test:payment-recovery"
+            "npm run target:supabase:test:payment-recovery",
+            "swift test --package-path LedgeriOS --filter FirebaseClientPayment",
+            "swift test --package-path LedgeriOS --filter FirebaseInvoiceSettlementReviewTests"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-        "summary": "Prior source-history and payment-transform reviews retained at fffdd270 (CI34169718629 success) and45a8476e (CI34170486476 success). SQL/golden boundary75fac316bc4bc9529a934c3b32293f5a9fd79f37 independently reviewed GO and CI34172399500 success; full pgTAP450/13 and final focused30 passed. New local executable was delegated; main read full implementation and corrected terminal failed/blocked journal rejection before SQL, added private run-directory ownership/mode enforcement, reviewed package-only API access and added separate-process adversarial tests. Actual Swift->Docker integration passed /tmp/ledger-local-payment-recovery-final.log: two commit interruption boundaries, repeated completed resume, source/mapping/plan byte changes, valid terminal journals, whole-batch conflict rollback and remote destination denial. Initial environment check passed. Final integrated Swift46/10 PASS /tmp/ledger-local-payment-integrated-swift.log; conversion check, state self-tests29negative/8positive, source-omission self-tests4negative/4positive, target environment and diff checks PASS. Target-only Package.swift scope correction removes no shipped behavior; historical catalogs untouched. Run-directory lock exists but simultaneous executable lock contention and database-server/power-loss recovery are not yet tested. Fixed synthetic source only; no complete export, operator production authorization, Invoice allocation or app financial-read completion. macOS CI compiles executable; live executable/database recovery remains local-only."
+          "summary": "Prior source-history and payment-transform reviews retained at fffdd270 (CI34169718629 success) and45a8476e (CI34170486476 success). SQL/golden boundary75fac316bc4bc9529a934c3b32293f5a9fd79f37 independently reviewed GO and CI34172399500 success; full pgTAP450/13 and final focused30 passed. New local executable was delegated; main read full implementation and corrected terminal failed/blocked journal rejection before SQL, added private run-directory ownership/mode enforcement, reviewed package-only API access and added separate-process adversarial tests. Actual Swift->Docker integration passed /tmp/ledger-local-payment-recovery-final.log: two commit interruption boundaries, repeated completed resume, source/mapping/plan byte changes, valid terminal journals, whole-batch conflict rollback and remote destination denial. Initial environment check passed. Final integrated Swift46/10 PASS /tmp/ledger-local-payment-integrated-swift.log; conversion check, state self-tests29negative/8positive, source-omission self-tests4negative/4positive, target environment and diff checks PASS. Target-only Package.swift scope correction removes no shipped behavior; historical catalogs untouched. Run-directory lock exists but simultaneous executable lock contention and database-server/power-loss recovery are not yet tested. Fixed synthetic source only; no complete export, operator production authorization, Invoice allocation or app financial-read completion. macOS CI compiles executable; live executable/database recovery remains local-only. Invoice-source review found missing cancellation exclusion in payment conversion. Fixed with source aliases/casefolding and conservative unknown-status quarantine; independent read-only review GO. Focused11 tests/3 suites PASS /tmp/ledger-payment-canceled-source.log; conversion/diff PASS. InvoiceService.voidInvoicePayment retains settlement links and records paymentCanceled events; links alone must not recreate active cash. Status correction uncommitted pending invoice relationship batch; not covered by prior CI. Source Invoice review independently inspected; found duplicate payment snapshots linked elsewhere were hidden by filtering. Main moved duplicate detection across all supplied UTF8 paths; added other/null/missing link conflicts, exact9007199254740993 positive coverage and Unicode identity tests. Final re-review GO. Integrated53/11 PASS /tmp/ledger-invoice-settlement-integrated.log, post-fix focused7 PASS /tmp/ledger-invoice-settlement-final.log. This is source line/payment evidence, not resolved occurrence/category allocation/cancellation events or target collected-Invoice persistence."
         },
         "ci": {
           "status": "not_run",
@@ -27881,14 +27897,16 @@
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentImportParameters.swift",
-            "LedgeriOS/LedgerLocalPaymentImport/main.swift"
+            "LedgeriOS/LedgerLocalPaymentImport/main.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseInvoiceSettlementReview.swift"
           ]
         },
         {
           "layer": "accounting",
           "paths": [
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseInvoiceSettlementReview.swift"
           ]
         },
         {

@@ -7,6 +7,8 @@ public enum FirebaseClientPaymentConversionFailure: Equatable, Sendable {
     case targetRequiresProjectScope
     case requiresDifferentEconomicMapping
     case requiresExactPositiveAmount
+    case requiresCancellationMapping
+    case requiresStatusMapping
 }
 
 public enum FirebaseClientPaymentConversionResult: Equatable, Sendable {
@@ -60,6 +62,19 @@ public enum FirebaseClientPaymentConversion {
         guard case .string(let type) = value("type"),
               ["paymenttobusiness", "payment_to_business", "payment-to-business"].contains(type.lowercased()) else {
             return unresolved(.requiresDifferentEconomicMapping)
+        }
+        // Canceled payment corrections retain their source/history but are not
+        // active Client money. Preserve unknown status as an explicit mapping
+        // gap rather than inheriting the source reader's unknown-string fallback.
+        if let status = value("status"), status != .null {
+            guard case .string(let rawStatus) = status else {
+                return unresolved(.requiresStatusMapping)
+            }
+            switch rawStatus.lowercased() {
+            case "canceled", "cancelled": return unresolved(.requiresCancellationMapping)
+            case "pending", "completed": break // Known legacy non-cancellation values.
+            default: return unresolved(.requiresStatusMapping)
+            }
         }
         // Do not round doubles or infer a refund/zero-dollar collection policy.
         guard case .integer(let rawAmount) = value("amountCents"),

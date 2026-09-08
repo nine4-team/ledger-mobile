@@ -68,6 +68,44 @@ struct FirebaseClientPaymentConversionTests {
             == .unresolved(source: source, reason: .targetRequiresProjectScope))
     }
 
+    @Test("Canceled and unknown-status payments retain evidence but cannot export active money")
+    func statusMapping() throws {
+        let scope = try Self.scope()
+        for status: FirebaseSourceValue in [.null, .string("pending"), .string("COMPLETED")] {
+            let source = Self.document(status: status)
+            guard case .mapped(let retained, _, _) = FirebaseClientPaymentConversion.convert(source,
+                sourceAccountID: "source-account", sourceProjectID: "source-project", targetScope: scope) else {
+                Issue.record("Known non-canceled legacy payment rejected"); continue
+            }
+            #expect(retained == source)
+        }
+        let rejected: [(FirebaseSourceValue, FirebaseClientPaymentConversionFailure)] = [
+            (.string("canceled"), .requiresCancellationMapping),
+            (.string("CANCELLED"), .requiresCancellationMapping),
+            (.string("unexpected"), .requiresStatusMapping),
+            (.string(" canceled "), .requiresStatusMapping),
+            (.integer("1"), .requiresStatusMapping)
+        ]
+        let project = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "projects", "source-project"],
+            entityCode: "projects", evidenceKind: .record, fields: .map([]), sourceRecordID: "source-project")
+        for (status, reason) in rejected {
+            let source = Self.document(status: status)
+            #expect(FirebaseClientPaymentConversion.convert(source, sourceAccountID: "source-account",
+                sourceProjectID: "source-project", targetScope: scope) == .unresolved(source: source, reason: reason))
+            let batch = FirebaseClientPaymentBatch.convert(transactions: [source], projects: [project],
+                sourceAccountID: "source-account", targetAccountID: scope.accountId,
+                projectMappings: [.init(sourceProject: project, targetScope: scope)],
+                identityMappings: [.init(sourcePath: source.documentPathSegments, targetID: try TransactionID(validating: "payment"))])
+            #expect(batch.entries[0].source == source)
+            #expect(batch.unresolvedCount == 1)
+            #expect(batch.mappedTotalCents == 0)
+            #expect(throws: FirebaseClientPaymentImportFailure.self) {
+                try FirebaseClientPaymentImportParameters.make(batch: batch, currency: CurrencyCode(validating: "USD"))
+            }
+        }
+    }
+
     private static func scope() throws -> TransactionScope {
         .project(accountId: try AccountID(validating: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
             projectId: try ProjectID(validating: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
@@ -75,13 +113,15 @@ struct FirebaseClientPaymentConversionTests {
     }
 
     private static func document(type: String = "paymentToBusiness", amount: FirebaseSourceValue = .integer("1200"),
-        pathAccount: String = "source-account", kind: FirebaseSourceEvidenceKind = .record) -> FirebaseSourceDocument {
-        let values: [String: FirebaseSourceValue] = [
+        pathAccount: String = "source-account", kind: FirebaseSourceEvidenceKind = .record,
+        status: FirebaseSourceValue? = nil) -> FirebaseSourceDocument {
+        var values: [String: FirebaseSourceValue] = [
             "amountCents": amount, "projectId": .string("source-project"), "type": .string(type),
             "settlementInvoiceId": .string("original-invoice"),
             "settlementInvoiceLineIds": .array([.string("original-line")]),
             "unknownFutureField": .string("preserved")
         ]
+        if let status { values["status"] = status }
         return .init(accountScopeID: "source-account",
             documentPathSegments: ["accounts", pathAccount, "transactions", "payment"],
             entityCode: "transactions", evidenceKind: kind,
