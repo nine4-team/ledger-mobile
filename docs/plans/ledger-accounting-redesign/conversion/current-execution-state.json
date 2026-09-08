@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 206,
+  "stateVersion": 211,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
     "nextActions": [
-      "NEXT commit/push integrated row-accessibility fix plus reviewed PDF error/removal tests,then follow single automatic exact-commit CI. CI34238072812 at5f39a5e8 failed1 of11macOSUI tests; notes and picker Cancel now passed. Watch35169 terminal1,do not poll. Full local888tests/132suites passed45.598s(session8511 terminal0),app/iOS Swift6 typechecks and environment/conversion/10CI guards passed.",
-      "Artifact10061481263 is .pdf-ui-ci-latest.VyUV0O; pdf-test/frame-60.png and AX hierarchy prove editable row visible but parent identifier replaced child control IDs. Added row accessibility containment (same fix already verified for notes). iOS reopen now compares actual original parser text,which includes synthetic trailing metadata. Need native confirmation; no weakened text expectations or architecture/product changes.",
-      "Batch includes iOS unreadable/unsupported/no-row states and both-platform loaded PDF removal via fixture access stream. Reviewer caught hiding!=clearing gap: retained exact review and test-only cleared indicator now require terminal/no source bytes/document/hash/rows/categories. Fixture mirrors production access-lock onChange. These are synthetic UI checks,not hosted revocation/iOS file-loading proof. Real vendor-template coverage pending; no accepted accounting import. Audit complete,no restart.",
-      "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope and A007 auth owner; SKU report spec conflict. No responses/approvals received. Continue independent work; no Firebase/production access.",
-      "Preserve .native-pdf-batch.pXTMX4,.native-pdf-followup.WTR3HP,.report-ci-evidence-cEw4MR,.pdf-ui-ci-evidence.WOoD4x and .pdf-ui-ci-latest.VyUV0O as untracked diagnostics; never commit. Download51987/checks26604/typechecks15639,26131 terminal0. Reviewer pdf_ui_followup_review completed. Keep only unified checklist/current state active."
+      "NEXT follow automatic CI34240457119 at pushed a8c73cf9c633ceec71d47da86975cdb1a4c0c520. Confirmed in_progress at macOS build; database/native contracts/PDF fixtures passed. Watch shell36296 remains live; reuse,no duplicate CI. Prior exact-commit full888tests already passed; do not repeat for recovery.",
+      "Inventory batch ready for final diff/commit/push: model/composition, DEBUG fixture, native UI test+CI selection, two model test files, A028 and unified checklist. Full local892tests/133suites passed46.248s(session19060 terminal0). App Swift6 typecheck4496 and iOS UI testtypecheck passed; environment/10CI guards/conversion checks passed. No repeat full suite on resume. No commit yet; preserve diagnostic files.",
+      "Independent Inventory review completed. New InventoryNavigationRaceTests.swift verifies both real suspended-cleanup races with async gates and failure-only bounded timeouts; main reviewed source. Section intent has separate counter from initialization. Preferences tested per-Account; narrow enum methods own UserDefaults instead of allowing arbitrary runtime configuration in UI, environment guard unchanged. Native test covers Active-only entry, Items partial notice, Inventory empty fixture, Transactions unavailable, Back and app-restart preference. Native execution pending; do not claim financial browser or full Project list complete.",
+      "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope/A007 auth owner; SKU report conflict. Also asked user for sanitized representative Amazon/Wayfair PDFs preserving layout/images to validate real template/thumbnail coverage; no production access to obtain them. No responses/approvals received. Continue independent work.",
+      "Watch existing36296 for PDF CI34240457119; last confirmed native macOS UI in_progress. Inventory uncommitted acceptance evidence now in existing active-workspace-to-space-checklist record; no new tracker. Preserve all five named untracked diagnostic artifacts and include only intended source/test/doc paths in commit. Previous turn and this turn are progress; no blocked condition."
     ]
   },
   "blockers": [],

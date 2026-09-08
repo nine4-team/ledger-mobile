@@ -26442,10 +26442,10 @@
     {
       "schemaVersion": 1,
       "workflowId": "active-workspace-to-space-checklist",
-      "title": "Browse Active/Archived Projects, note history and active Space checklists",
+      "title": "Browse Projects, Inventory, note history and Space checklists",
       "kind": "product_ui",
       "status": "implementation",
-      "outcome": "Choose Active or Archived Projects and open a represented Project by stable identity. Browse existing scoped note history with Back preserving the list segment; Spaces/checklist actions remain active-only. Do not substitute stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace or list.",
+      "outcome": "Choose Active or Archived Projects and open a represented Project by stable identity. Browse existing scoped note history with Back preserving the list segment; Spaces/checklist actions remain active-only. Do not substitute stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace or list. Inventory now opens from Active only, remembers section per Account and composes shared physical Item and Space readers without a synthetic Project. Financial Transactions remain explicitly unavailable pending their authorized reader.",
       "targetStoryIds": [
         "project-list",
         "project-detail",
@@ -26777,6 +26777,20 @@
       ],
       "acceptanceChecks": [
         {
+          "id": "INVENTORY-WORKSPACE-SCOPING-AND-LIFETIME",
+          "risk": "general",
+          "expected": "Active-only Inventory entry uses exact Account scope without a Project query, displays scoped Space detail/checklists and clears on Back/stop. Preferences are Account-specific with invalid fallback. Tab changes reject pending detail navigation without cancelling Inventory initialization.",
+          "command": "swift test --package-path LedgeriOS --filter 'ActiveWorkspaceToSpaceChecklistStagingExerciseTests|InventoryNavigationRaceTests'; full local 892 tests/133 suites passed in 46.248 seconds. Independent review of deterministic suspension tests completed; exact-commit CI pending.",
+          "status": "passed"
+        },
+        {
+          "id": "INVENTORY-WORKSPACE-NATIVE-NAVIGATION",
+          "risk": "ui_fidelity",
+          "expected": "Both native platforms open Inventory only from Active, show honest partial Item and unavailable Transaction states, visit Inventory Spaces, return with Back and remember section across app restart. This does not prove full Item/Transaction browsing or financial visibility.",
+          "command": "WorkspaceChecklistUITests/testInventoryNavigationAndRememberedSection added to both-platform automatic CI; app and iOS test Swift6 typechecks passed. Native execution pending.",
+          "status": "planned"
+        },
+        {
           "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-E2E",
           "risk": "general",
           "expected": "One composed coordinator traverses exact Project card, Spaces tab, exact Space card, checklist disclosure and durable toggle, then invalidates and drains children automatically when the parent disappears.",
@@ -26893,7 +26907,7 @@
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests. Shared Space search independently reviewed GO: only represented rows are filtered, order/readiness unchanged, empty and no-match distinguished, same controls for Project/Inventory, scope-reset and Back preservation, no provider/auth expansion. Exact TextField environment-checker exemption reviewed; other mutation/field bans retained. Native Mac/iOS search round trips passed."
+          "summary": "Independent GO on existing Spaces/checklist composition after parent-authority cleanup and accessibility fixes. Notes follow-on reuses existing scoped history without new provider/store. Independent GO after adding authoritative-disappearance route test; it proves route demotion/selection invalidation/reopening refusal, not additional row-clearing evidence. Native macOS/iOS fixtures show actual note text/author and Back. Mutation, legacy notes and full Project layout remain incomplete. CI diagnostic wrapper reviewed GO: unchanged commands/exit status/timeout, no skips/retries, captures process evidence after120 seconds; local shell exit0/7 and native sample smoke passed. Archived navigation independently reviewed: lifecycle/identity admission preserved, active-only actions closed, Back segment retained, and fresh per-subscription fixture snapshots required. Mac focused archived test and all3 iOS interactions passed. Notes commit3e5e96ea CI34166128466 failed only the diagnostic artifact safety allowlist; this batch fixes it with bounded upload configuration and wrapper/path/name negative tests. Shared Space search independently reviewed GO: only represented rows are filtered, order/readiness unchanged, empty and no-match distinguished, same controls for Project/Inventory, scope-reset and Back preservation, no provider/auth expansion. Exact TextField environment-checker exemption reviewed; other mutation/field bans retained. Native Mac/iOS search round trips passed. Inventory follow-on: independent scope/authorization review found section-change races; separate selection-intent fence preserves initialization and rejects stale Space navigation. Nine focused coordinator/preference tests passed; native UI tests added for Active-only card, invalid fallback, Items/Spaces/Transactions, Back and remembered section across app restart. Deterministic suspension tests passed and were independently reviewed. Full local892tests/133suites passed46.248s; environment, conversion, CI guards and app/iOS test typechecks passed. Exact-commit native integration remains pending. No financial browser completeness claim."
         },
         "ci": {
           "status": "passed",

@@ -28,6 +28,10 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         switch model.route {
         case .projectDirectory:
             projectDirectory
+        case .businessInventory:
+            inventoryWorkspace
+        case .inventorySpaceDetail(let spaceId):
+            spaceDetail(scope: .businessInventory, spaceId: spaceId)
         case .projectWorkspace(let projectId):
             projectWorkspace(projectId)
         case .projectNotes(let projectId):
@@ -43,7 +47,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         case .projectSpaces(let projectId):
             projectSpaces(projectId)
         case .spaceDetail(let projectId, let spaceId):
-            spaceDetail(projectId: projectId, spaceId: spaceId)
+            spaceDetail(scope: .project(projectId), spaceId: spaceId)
         case .stopped:
             Section("Active Project Workspace") {
                 Text("Project workspace data is stopped.")
@@ -64,6 +68,16 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             }
             .pickerStyle(.segmented)
             .accessibilityIdentifier("target-project-directory-segment")
+            if model.directorySegment == .active {
+                Button("Business Inventory") {
+                    Task {
+                        await model.openBusinessInventory(
+                            savedSection: InventoryWorkspaceSection.remembered(accountId: model.accountId).rawValue
+                        )
+                    }
+                }
+                .accessibilityIdentifier("target-business-inventory-card")
+            }
             LabeledContent("Project data", value: model.projectBrowser.directoryStatus)
                 .accessibilityIdentifier("target-active-project-directory-status")
 
@@ -105,6 +119,63 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 Text(diagnostic)
                     .foregroundStyle(.red)
                     .accessibilityIdentifier("target-active-project-directory-diagnostic")
+            }
+        }
+    }
+
+    private var inventoryWorkspace: some View {
+        Section("Business Inventory") {
+            backButton
+            Picker("Inventory section", selection: Binding(
+                get: { model.inventorySection },
+                set: {
+                    model.selectInventorySection($0)
+                    $0.remember(accountId: model.accountId)
+                }
+            )) {
+                Text("Items").tag(InventoryWorkspaceSection.items)
+                Text("Transactions").tag(InventoryWorkspaceSection.transactions)
+                Text("Spaces").tag(InventoryWorkspaceSection.spaces)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("target-inventory-section")
+
+            switch model.inventorySection {
+            case .items:
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId, scope: .businessInventory, reader: reader)
+                } else {
+                    Text("Item data is unavailable.")
+                }
+            case .transactions:
+                Text("Inventory Transactions are unavailable. The authorized financial download is not implemented yet.")
+                    .accessibilityIdentifier("target-inventory-transactions-unavailable")
+            case .spaces:
+                LabeledContent("Space data", value: spaceDirectoryStatus)
+                SpaceBrowserSearchControls(model: model.spaceBrowser)
+                if !model.representedSpaceScopeIsAvailable {
+                    Text("Inventory Space data is unavailable.")
+                } else if model.spaceBrowser.spaces.isEmpty {
+                    if case .authoritativeEmpty = model.spaceBrowser.directoryPresentation {
+                        Text("No Spaces in Business Inventory.")
+                    } else {
+                        Text("Inventory Spaces are loading or incomplete.")
+                    }
+                } else if model.spaceBrowser.matchingSpaces.isEmpty {
+                    Text("No matching Spaces in downloaded data.")
+                } else {
+                    ForEach(model.spaceBrowser.matchingSpaces, id: \.id) { space in
+                        Button {
+                            Task { await model.selectSpace(spaceId: space.id) }
+                        } label: {
+                            SpaceDirectoryCardLabel(space: space)
+                        }
+                        .accessibilityIdentifier("target-inventory-space-\(space.id.rawValue)")
+                    }
+                }
+                if let diagnostic = model.spaceBrowser.directoryDiagnostic {
+                    Text(diagnostic).foregroundStyle(.red)
+                }
             }
         }
     }
@@ -223,25 +294,25 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     }
 
     @ViewBuilder
-    private func spaceDetail(projectId: ProjectID, spaceId: SpaceID) -> some View {
+    private func spaceDetail(scope: SpaceCreationScope, spaceId: SpaceID) -> some View {
         Section("Space") {
             backButton
             LabeledContent("Space data", value: model.spaceBrowser.detailModel.status)
                 .accessibilityIdentifier("target-active-space-detail-status")
 
-            if model.representedProjectIsActive,
-               model.spaceBrowser.scope == .project(projectId),
+            if model.representedSpaceScopeIsAvailable,
+               model.spaceBrowser.scope == scope,
                model.spaceBrowser.selectedSpaceId == spaceId,
                let row = model.spaceBrowser.detailModel.row,
                row.id == spaceId,
-               row.scope == .project(projectId),
+               row.scope == scope,
                row.lifecycle == .active {
                 Text(row.displayName.rawValue)
                     .font(.headline)
                     .accessibilityIdentifier("target-active-space-detail-name")
                 checklists
-            } else if model.representedProjectIsActive,
-                      model.spaceBrowser.scope == .project(projectId),
+            } else if model.representedSpaceScopeIsAvailable,
+                      model.spaceBrowser.scope == scope,
                       model.spaceBrowser.selectedSpaceId == spaceId,
                       model.spaceBrowser.detailModel.isAuthoritativelyEmpty {
                 Text("No Space exists for this exact selection.")
@@ -253,8 +324,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityIdentifier("target-active-space-detail-unavailable")
             }
 
-            if model.representedProjectIsActive,
-               model.spaceBrowser.scope == .project(projectId),
+            if model.representedSpaceScopeIsAvailable,
+               model.spaceBrowser.scope == scope,
                model.spaceBrowser.selectedSpaceId == spaceId {
                 checklistLifecycle
             }

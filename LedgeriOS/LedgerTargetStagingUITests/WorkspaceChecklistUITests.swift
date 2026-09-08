@@ -8,6 +8,46 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testInventoryNavigationAndRememberedSection() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-reset-inventory-section"]
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        func segment(_ name: String) -> XCUIElement {
+            #if os(macOS)
+            return app.radioButtons[name]
+            #else
+            return app.segmentedControls.buttons[name]
+            #endif
+        }
+        segment("Archived").tap()
+        XCTAssertFalse(inventory.exists)
+        segment("Active").tap()
+        XCTAssertTrue(inventory.waitForExistence(timeout: 5))
+        inventory.tap()
+        XCTAssertTrue(app.staticTexts["target-items-partial-notice"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-vendor-pdf-open"].exists)
+        segment("Spaces").tap()
+        XCTAssertTrue(app.staticTexts["No Spaces in Business Inventory."].waitForExistence(timeout: 5))
+        segment("Transactions").tap()
+        let unavailable = app.staticTexts["target-inventory-transactions-unavailable"]
+        XCTAssertTrue(unavailable.waitForExistence(timeout: 5))
+        app.buttons["target-active-workspace-back"].tap()
+        inventory.tap()
+        XCTAssertTrue(unavailable.waitForExistence(timeout: 5))
+        app.terminate()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        XCTAssertTrue(unavailable.waitForExistence(timeout: 5))
+        segment("Items").tap()
+        XCTAssertTrue(app.staticTexts["target-items-partial-notice"].waitForExistence(timeout: 5))
+    }
+
     #if os(macOS)
     func testVendorPDFActualFileReview() throws {
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {

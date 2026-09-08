@@ -32,11 +32,33 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
 
 public enum ActiveWorkspaceToSpaceChecklistRoute: Equatable, Sendable {
     case projectDirectory
+    case businessInventory
+    case inventorySpaceDetail(SpaceID)
     case projectWorkspace(ProjectID)
     case projectNotes(ProjectID)
     case projectSpaces(ProjectID)
     case spaceDetail(projectId: ProjectID, spaceId: SpaceID)
     case stopped
+}
+
+public enum InventoryWorkspaceSection: String, CaseIterable, Sendable {
+    case items, transactions, spaces
+
+    public init(savedValue: String?) {
+        self = savedValue.flatMap(Self.init(rawValue:)) ?? .items
+    }
+
+    public static func preferenceKey(accountId: AccountID) -> String {
+        "ledger.target.inventory.section.\(accountId.rawValue)"
+    }
+
+    public static func remembered(accountId: AccountID, defaults: UserDefaults = .standard) -> Self {
+        Self(savedValue: defaults.string(forKey: preferenceKey(accountId: accountId)))
+    }
+
+    public func remember(accountId: AccountID, defaults: UserDefaults = .standard) {
+        defaults.set(rawValue, forKey: Self.preferenceKey(accountId: accountId))
+    }
 }
 
 /// Coordinates Project -> Spaces -> checklist and read-only Project Notes paths.
@@ -66,6 +88,38 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
     public private(set) var isChecklistsExpanded = true
     public private(set) var directorySegment: ProjectDirectorySegment = .active
+    public private(set) var inventorySection: InventoryWorkspaceSection = .items
+
+    public func openBusinessInventory(savedSection: String? = nil) async {
+        guard let runtime, route == .projectDirectory, directorySegment == .active else { return }
+        generation &+= 1
+        let activeGeneration = generation
+        route = .businessInventory
+        inventorySection = InventoryWorkspaceSection(savedValue: savedSection)
+        await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)
+        guard generation == activeGeneration else { return }
+        await spaceBrowser.start(scope: .businessInventory, runtime: runtime.spaceBrowsing)
+    }
+
+    public func selectInventorySection(_ section: InventoryWorkspaceSection) {
+        guard route == .businessInventory else { return }
+        inventorySelectionGeneration &+= 1
+        inventorySection = section
+    }
+
+    public var representedSpaceScope: SpaceCreationScope? {
+        switch route {
+        case .businessInventory, .inventorySpaceDetail: .businessInventory
+        case .projectSpaces(let id), .spaceDetail(let id, _): .project(id)
+        default: nil
+        }
+    }
+
+    public var representedSpaceScopeIsAvailable: Bool {
+        guard runtime != nil, let scope = representedSpaceScope, spaceBrowser.scope == scope else { return false }
+        if case .project = scope { return representedProjectIsActive }
+        return true
+    }
 
     public var directoryProjects: [ProjectDirectoryCoreRow] {
         directorySegment == .active ? projectBrowser.activeProjects : projectBrowser.archivedProjects
@@ -87,12 +141,13 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
             projectId
         case .spaceDetail(let projectId, _):
             projectId
-        case .projectDirectory, .stopped:
+        case .projectDirectory, .businessInventory, .inventorySpaceDetail, .stopped:
             nil
         }
     }
 
     public var representedSpaceId: SpaceID? {
+        if case .inventorySpaceDetail(let spaceId) = route { return spaceId }
         guard case .spaceDetail(_, let spaceId) = route else { return nil }
         return spaceId
     }
@@ -108,6 +163,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     public var categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? { runtime?.categoryWatch }
     private var runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime?
     private var generation: UInt64 = 0
+    private var inventorySelectionGeneration: UInt64 = 0
     private var projectEvidenceTask: Task<Void, Never>?
     private var projectObservationGeneration = UUID()
 
@@ -209,9 +265,11 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
 
     public func selectSpace(spaceId: SpaceID) async {
-        guard case .projectSpaces(let projectId) = route,
-              isRepresentedActiveProject(projectId),
-              spaceBrowser.scope == .project(projectId),
+        let capturedRoute = route
+        let capturedSelectionGeneration = inventorySelectionGeneration
+        guard let scope = representedSpaceScope,
+              representedSpaceScopeIsAvailable,
+              (route == .businessInventory && inventorySection == .spaces || representedProjectId.map { route == .projectSpaces($0) } == true),
               spaceBrowser.spaces.filter({ $0.id == spaceId }).count == 1,
               spaceBrowser.spaces.first(where: { $0.id == spaceId })?.lifecycle == .active else {
             return
@@ -220,18 +278,23 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         generation &+= 1
         let activeGeneration = generation
         await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)
-        guard generation == activeGeneration else { return }
+        guard generation == activeGeneration, route == capturedRoute,
+              scope != .businessInventory || inventorySelectionGeneration == capturedSelectionGeneration else { return }
         await spaceBrowser.select(spaceId: spaceId)
-        guard generation == activeGeneration else { return }
-        guard isRepresentedActiveProject(projectId),
-              spaceBrowser.scope == .project(projectId),
+        guard generation == activeGeneration, route == capturedRoute,
+              scope != .businessInventory || inventorySelectionGeneration == capturedSelectionGeneration else { return }
+        guard representedSpaceScopeIsAvailable,
+              spaceBrowser.scope == scope,
               spaceBrowser.selectedSpaceId == spaceId else {
             await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)
             guard generation == activeGeneration else { return }
             await spaceBrowser.clearSelection()
             return
         }
-        route = .spaceDetail(projectId: projectId, spaceId: spaceId)
+        switch scope {
+        case .project(let projectId): route = .spaceDetail(projectId: projectId, spaceId: spaceId)
+        case .businessInventory: route = .inventorySpaceDetail(spaceId)
+        }
         isChecklistsExpanded = true
         await synchronizeChecklistEvidence()
     }
@@ -246,9 +309,8 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
             }
             let update: SpaceCoreDetailsUpdate?
             let selectedSpaceId: SpaceID?
-            if case .spaceDetail(let projectId, let spaceId) = route,
-               isRepresentedActiveProject(projectId),
-               spaceBrowser.scope == .project(projectId),
+            if let spaceId = representedSpaceId,
+               representedSpaceScopeIsAvailable,
                spaceBrowser.selectedSpaceId == spaceId {
                 update = spaceBrowser.detailModel.currentUpdate
                 selectedSpaceId = spaceId
@@ -265,7 +327,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
 
     public func toggleChecklistsExpanded() {
-        guard case .spaceDetail = route else { return }
+        guard representedSpaceId != nil else { return }
         isChecklistsExpanded.toggle()
     }
 
@@ -278,7 +340,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         await synchronizeChecklistEvidence()
         guard generation == activeGeneration,
               route == capturedRoute,
-              representedProjectId.map(isRepresentedActiveProject) == true,
+              representedSpaceScopeIsAvailable,
               checklistToggle.canToggle(checklistId: checklistId, itemId: itemId) else {
             return
         }
@@ -291,6 +353,18 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         let activeGeneration = generation
 
         switch route {
+        case .inventorySpaceDetail:
+            route = .businessInventory
+            await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)
+            guard generation == activeGeneration else { return }
+            await spaceBrowser.clearSelection()
+
+        case .businessInventory:
+            route = .projectDirectory
+            await checklistToggle.receiveDetailUpdate(nil, selectedSpaceId: nil)
+            guard generation == activeGeneration else { return }
+            await spaceBrowser.stop()
+
         case .projectNotes(let projectId):
             route = .projectWorkspace(projectId)
 

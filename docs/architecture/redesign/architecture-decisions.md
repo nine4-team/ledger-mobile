@@ -53,6 +53,35 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-025 | accepted, standalone macOS launch checked | Resolve embedded frameworks using the platform's app-bundle layout |
 | A-026 | accepted, integration verification pending | Keep PowerSync stream parameter encoding deterministic across reopen |
 | A-027 | accepted, implementation verification pending | Reuse local vendor parsers without importing legacy accounting writes |
+| A-028 | accepted, implementation verification pending | Compose Inventory with existing Account-scoped workspace readers |
+
+## A-028 — Inventory Is an Account Workspace, Not a Synthetic Project
+
+**Change and reason:** The Project directory opens Inventory through an explicit
+route. Items use the existing downloaded placement reader with business-Inventory
+scope; Spaces use the existing scoped browser and exact Space detail/checklist
+coordinator. The same detail view serves Project and Inventory Spaces. No fake
+Project ID, duplicated database, or Inventory-only accounting implementation is
+introduced. The device remembers only a section name under an Account-specific
+preference key; unknown values fall back to Items, and no downloaded records are
+stored in that preference.
+
+**Preserved behavior and tradeoff:** This implements the navigation contract in
+[Project List](../../specs/projects.md#project-list), preserving Items,
+Transactions and Spaces without changing Item identity, transaction links or
+history. Items still disclose incomplete physical-only downloads. Transactions
+explicitly remain unavailable: A-020's imported Project payments are not an
+Inventory financial reader, and no financial Sync policy is silently authorized.
+Existing checklist admission and durable command authority remain unchanged;
+navigation does not grant mutation rights.
+
+**Verification:** Focused coordinator tests cover Active-only entry, exact
+Account/Inventory query scope, invalid preference fallback, exact Space detail
+and checklist readback, back/stop cleanup and no Project query. Deterministic
+section-switch regressions and preference isolation pass. Full local suite:
+892 tests/133 suites passed. Native UI and exact-commit integration verification
+remain pending. This is not a claim
+that the full Item or Transaction browser is complete.
 
 ## A-027 — Local Vendor PDF Review Boundary
 

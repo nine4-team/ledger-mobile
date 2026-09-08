@@ -286,6 +286,9 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         access.observe(removals.stream)
         guard !isStarted else { return }
         isStarted = true
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-reset-inventory-section") {
+            InventoryWorkspaceSection.items.remember(accountId: accountId)
+        }
         await model.start(runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime(
             projectBrowsing: ProjectBrowsingStagingRuntime(
                 // Each subscription gets the current snapshot, including after Back.
@@ -421,7 +424,19 @@ private struct UITestFixtureSpaceListQuery: SpaceListQuerying {
     func watchSpaces(
         _ request: SpaceListRequest
     ) -> AsyncThrowingStream<SpaceListUpdate, Error> {
-        source.stream
+        if request.scope == .businessInventory {
+            return AsyncThrowingStream { continuation in
+                do {
+                    continuation.yield(try SpaceListUpdate(request: request, state: .snapshot(
+                        SpaceListLocalSnapshot(request: request, rows: [],
+                            visibleRowCountBeforeFiltering: 0, isCompleteForQuery: true,
+                            quality: .ready, localDataVersion: LocalDataVersion(validating: "ui-inventory-empty"),
+                            asOf: Date(timeIntervalSince1970: 1_789_500_000))
+                    )))
+                } catch { continuation.finish(throwing: error) }
+            }
+        }
+        return source.stream
     }
 }
 

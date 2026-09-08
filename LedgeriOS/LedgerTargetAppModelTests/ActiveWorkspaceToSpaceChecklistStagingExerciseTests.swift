@@ -6,6 +6,22 @@ import Testing
 @Suite("Active Project workspace to Space checklist coordination")
 @MainActor
 struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
+    @Test("Inventory section preferences cannot bleed between Accounts")
+    func inventoryPreferences() throws {
+        let suite = "ledger-inventory-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let first = InventoryWorkspaceSection.preferenceKey(accountId: Self.accountId)
+        let second = InventoryWorkspaceSection.preferenceKey(accountId: try AccountID(validating: "different-account"))
+        InventoryWorkspaceSection.spaces.remember(accountId: Self.accountId, defaults: defaults)
+        #expect(InventoryWorkspaceSection.remembered(accountId: Self.accountId, defaults: defaults) == .spaces)
+        #expect(InventoryWorkspaceSection(savedValue: defaults.string(forKey: second)) == .items)
+        defaults.set("obsolete", forKey: second)
+        #expect(InventoryWorkspaceSection(savedValue: defaults.string(forKey: second)) == .items)
+        defaults.set("transactions", forKey: second)
+        #expect(InventoryWorkspaceSection(savedValue: defaults.string(forKey: first)) == .spaces)
+    }
+
     @Test("SwiftUI exposes only the catalogued route controls and honest state labels")
     func swiftUISourceContract() throws {
         let ledgerDirectory = URL(fileURLWithPath: #filePath)
@@ -32,12 +48,14 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "LocalVendorDocumentReviewView(",
             "runtime.watchBudgetCategories()",
             "model.closeVendorDocumentReview()",
+            "target-business-inventory-card",
+            "target-inventory-section",
+            "target-inventory-transactions-unavailable",
         ] {
             #expect(view.contains(required), "Missing route UI contract token: \(required)")
         }
 
         for excluded in [
-            "Business Inventory",
             "Add Project",
             "Archive Project",
             "Button(\"Edit\")",
@@ -51,6 +69,72 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         ] {
             #expect(!view.contains(excluded), "Out-of-scope control escaped: \(excluded)")
         }
+    }
+
+    @Test("Inventory opens only from Active and scopes Space queries without a Project")
+    func inventoryNavigation() async throws {
+        let listRequests = RouteRecorder<SpaceListRequest>()
+        let projectRequests = RouteRecorder<ProjectCoreDetailsRequest>()
+        let detailRequests = RouteRecorder<SpaceCoreDetailsRequest>()
+        let spaceDirectory = RouteSource<SpaceListUpdate>()
+        let spaceDetail = RouteSource<SpaceCoreDetailsUpdate>()
+        let model = Self.model()
+        await model.openBusinessInventory(savedSection: "spaces")
+        #expect(model.route == .stopped)
+        await model.start(runtime: Self.runtime(
+            projectDirectory: RouteSource<ProjectListSnapshot>(),
+            projectDetail: RouteSource<ProjectCoreDetailsUpdate>(),
+            spaceDirectory: spaceDirectory,
+            spaceDetail: spaceDetail,
+            projectRequests: projectRequests,
+            listRequests: listRequests,
+            detailRequests: detailRequests
+        ))
+        model.setDirectorySegment(.archived)
+        await model.openBusinessInventory(savedSection: "spaces")
+        #expect(model.route == .projectDirectory)
+        #expect(listRequests.values.isEmpty)
+        model.setDirectorySegment(.active)
+        await model.openBusinessInventory(savedSection: "spaces")
+        await Self.wait { listRequests.values.count == 1 }
+        #expect(model.route == .businessInventory)
+        #expect(model.inventorySection == .spaces)
+        #expect(model.representedProjectId == nil)
+        #expect(model.representedSpaceScope == .businessInventory)
+        #expect(listRequests.values[0].accountId == Self.accountId)
+        #expect(listRequests.values[0].scope == .businessInventory)
+        #expect(projectRequests.values.isEmpty)
+        let space = try Self.space("inventory-space", project: nil)
+        spaceDirectory.yield(try Self.spaceList([space], project: nil))
+        await Self.wait { model.spaceBrowser.spaces.count == 1 }
+        await model.selectSpace(spaceId: space.id)
+        #expect(model.route == .inventorySpaceDetail(space.id))
+        await Self.wait { detailRequests.values.count == 1 }
+        #expect(detailRequests.values[0].accountId == Self.accountId)
+        let collection = try Self.checklists()
+        spaceDetail.yield(try Self.spaceDetail(space.id, project: nil, collection: collection))
+        await Self.wait { model.spaceBrowser.detailModel.row?.id == space.id }
+        await model.synchronizeChecklistEvidence()
+        #expect(model.checklistToggle.displayedCollection == collection)
+        await model.back()
+        #expect(model.route == .businessInventory)
+        #expect(model.inventorySection == .spaces)
+        #expect(model.spaceBrowser.selectedSpaceId == nil)
+        #expect(model.checklistToggle.displayedCollection == nil)
+        model.selectInventorySection(.transactions)
+        #expect(model.inventorySection == .transactions)
+        await model.selectSpace(spaceId: try SpaceID(validating: "not-selected"))
+        #expect(model.route == .businessInventory)
+        await model.back()
+        #expect(model.route == .projectDirectory)
+        #expect(!model.representedSpaceScopeIsAvailable)
+        await model.openBusinessInventory(savedSection: "invalid-old-value")
+        #expect(model.inventorySection == .items)
+        await model.stop()
+        #expect(model.route == .stopped)
+        #expect(!model.representedSpaceScopeIsAvailable)
+        model.selectInventorySection(.spaces)
+        #expect(model.inventorySection == .items)
     }
 
     @Test("Represented stable IDs derive the exact Project and Space scopes")
@@ -516,12 +600,12 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
     private static func space(
         _ id: String,
         name: String = "Space",
-        project: ProjectID
+        project: ProjectID?
     ) throws -> SpaceListSourceRow {
         SpaceListSourceRow(
             id: try SpaceID(validating: id),
             accountId: accountId,
-            scope: .project(project),
+            scope: project.map(SpaceCreationScope.project) ?? .businessInventory,
             displayName: try SpaceDisplayName(validating: name),
             lifecycle: .active,
             revision: 1,
@@ -531,9 +615,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
 
     private static func spaceList(
         _ rows: [SpaceListSourceRow],
-        project: ProjectID
+        project: ProjectID?
     ) throws -> SpaceListUpdate {
-        let request = try SpaceListRequest(accountId: accountId, scope: .project(project))
+        let request = try SpaceListRequest(accountId: accountId, scope: project.map(SpaceCreationScope.project) ?? .businessInventory)
         return try SpaceListUpdate(
             request: request,
             state: .snapshot(SpaceListLocalSnapshot(
@@ -568,14 +652,14 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
 
     private static func spaceDetail(
         _ spaceId: SpaceID,
-        project: ProjectID,
+        project: ProjectID?,
         collection: SpaceChecklistCollection
     ) throws -> SpaceCoreDetailsUpdate {
         let request = try SpaceCoreDetailsRequest(accountId: accountId, spaceId: spaceId)
         let row = try SpaceCoreDetailsSnapshot(
             id: spaceId,
             accountId: accountId,
-            scope: .project(project),
+            scope: project.map(SpaceCreationScope.project) ?? .businessInventory,
             displayName: SpaceDisplayName(validating: "Selected Space"),
             notes: SpaceCreationNotes(nil),
             lifecycle: .active,
