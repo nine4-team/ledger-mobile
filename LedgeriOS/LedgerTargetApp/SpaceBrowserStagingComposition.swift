@@ -44,12 +44,19 @@ enum SpaceBrowserStagingRuntimeAdapter {
 
 struct SpaceBrowserSearchControls: View {
     @Bindable var model: SpaceBrowserStagingExercise
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         TextField("Search Spaces", text: $model.searchText)
+            .focused($searchFocused)
+            .submitLabel(.search)
+            .onSubmit { searchFocused = false }
             .accessibilityIdentifier("target-space-search")
         if !model.searchText.isEmpty {
-            Button("Clear search") { model.searchText = "" }
+            Button("Clear search") {
+                model.searchText = ""
+                searchFocused = false
+            }
                 .accessibilityIdentifier("target-space-search-clear")
         }
     }

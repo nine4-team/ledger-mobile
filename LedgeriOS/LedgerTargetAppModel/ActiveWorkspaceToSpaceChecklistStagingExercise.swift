@@ -122,7 +122,12 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     }
 
     public var directoryProjects: [ProjectDirectoryCoreRow] {
-        directorySegment == .active ? projectBrowser.activeProjects : projectBrowser.archivedProjects
+        let rows = directorySegment == .active ? projectBrowser.activeProjects : projectBrowser.archivedProjects
+        return rows.sorted {
+            let comparison = $0.projectDisplayName.rawValue.localizedCaseInsensitiveCompare($1.projectDisplayName.rawValue)
+            if comparison == .orderedSame { return $0.projectId.rawValue < $1.projectId.rawValue }
+            return comparison == .orderedAscending
+        }
     }
 
     public var representedProjectIsAvailable: Bool {

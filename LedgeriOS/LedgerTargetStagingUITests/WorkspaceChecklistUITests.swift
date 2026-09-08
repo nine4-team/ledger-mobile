@@ -849,6 +849,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["target-space-search-clear"].tap()
         search.tap()
         search.typeText("ui TEST")
+        #if os(iOS)
+        let submitSearch = app.keyboards.buttons["Search"]
+        XCTAssertTrue(submitSearch.waitForExistence(timeout: 5))
+        submitSearch.tap()
+        XCTAssertTrue(waitUntil { !app.keyboards.firstMatch.exists })
+        #endif
         let space = app.buttons["target-active-space-card-space-ui-test"]
         reveal(space, in: app)
         XCTAssertTrue(space.waitForExistence(timeout: 5), app.debugDescription)

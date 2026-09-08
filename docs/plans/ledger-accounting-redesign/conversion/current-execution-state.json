@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 211,
+  "stateVersion": 214,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
     "nextActions": [
-      "NEXT follow automatic CI34240457119 at pushed a8c73cf9c633ceec71d47da86975cdb1a4c0c520. Confirmed in_progress at macOS build; database/native contracts/PDF fixtures passed. Watch shell36296 remains live; reuse,no duplicate CI. Prior exact-commit full888tests already passed; do not repeat for recovery.",
-      "Inventory batch ready for final diff/commit/push: model/composition, DEBUG fixture, native UI test+CI selection, two model test files, A028 and unified checklist. Full local892tests/133suites passed46.248s(session19060 terminal0). App Swift6 typecheck4496 and iOS UI testtypecheck passed; environment/10CI guards/conversion checks passed. No repeat full suite on resume. No commit yet; preserve diagnostic files.",
+      "PDF CI34240457119/a8c73cf9 terminalFAILED:30minute native job timeout;watch36296 terminal1. All12macOSUI/888native/PDFfixtures/database/bothbuilds passed. iOS also had first Project/Space test failure: focused keyboard y583 covered card y586, reveal failed(a8c73 testline903). Logs available via gh run view --job102110377072 --log; no failure artifact because job timeout skipped upload. Inventory CI34243356150/a421def5 remains running;watch89983 reuse,no restart.",
+      "Follow-on uncommitted batch: alphabetical Project cards+10focusedtests passed; shared SpaceBrowserSearchControls @FocusState with submitLabel Search/onSubmit/Clear dismissal; native test taps Search and requires keyboard gone; CI native limit45min(up from30,measured cold checkout6m36s). No assertion/gate removed. App typecheck+10CIguards passed56688 terminal0; iOS testtypecheck+conversion passed. Full native follow-on suite running as83778; resume exact handle,no duplicate.",
       "Independent Inventory review completed. New InventoryNavigationRaceTests.swift verifies both real suspended-cleanup races with async gates and failure-only bounded timeouts; main reviewed source. Section intent has separate counter from initialization. Preferences tested per-Account; narrow enum methods own UserDefaults instead of allowing arbitrary runtime configuration in UI, environment guard unchanged. Native test covers Active-only entry, Items partial notice, Inventory empty fixture, Transactions unavailable, Back and app-restart preference. Native execution pending; do not claim financial browser or full Project list complete.",
       "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope/A007 auth owner; SKU report conflict. Also asked user for sanitized representative Amazon/Wayfair PDFs preserving layout/images to validate real template/thumbnail coverage; no production access to obtain them. No responses/approvals received. Continue independent work.",
-      "Watch existing36296 for PDF CI34240457119; last confirmed native macOS UI in_progress. Inventory uncommitted acceptance evidence now in existing active-workspace-to-space-checklist record; no new tracker. Preserve all five named untracked diagnostic artifacts and include only intended source/test/doc paths in commit. Previous turn and this turn are progress; no blocked condition."
+      "Unified PDF CI/review updated (PDF record is minified one-line JSON; edit via parsed whole line, not pretty-line assumptions). Alphabetical sort acceptance also present. Full new batch needs terminal local result then commit/push automatic CI. Existing Inventory run includes old30min limit and keyboard issue; do not cancel/restart it. Preserve all diagnostic artifacts. Previous turns verified live waits; this turn diagnosed/fixed concrete failure,goal active."
     ]
   },
   "blockers": [],

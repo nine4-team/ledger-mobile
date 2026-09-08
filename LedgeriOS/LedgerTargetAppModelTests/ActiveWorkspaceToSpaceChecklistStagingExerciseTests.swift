@@ -6,6 +6,28 @@ import Testing
 @Suite("Active Project workspace to Space checklist coordination")
 @MainActor
 struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
+    @Test("Project cards sort alphabetically with stable identity ties without rewriting query evidence")
+    func projectCardOrdering() async throws {
+        let source = RouteSource<ProjectListSnapshot>()
+        let model = Self.model()
+        await model.start(runtime: Self.runtime(
+            projectDirectory: source, projectDetail: RouteSource<ProjectCoreDetailsUpdate>(),
+            spaceDirectory: RouteSource<SpaceListUpdate>(), spaceDetail: RouteSource<SpaceCoreDetailsUpdate>(),
+            projectRequests: RouteRecorder<ProjectCoreDetailsRequest>(),
+            listRequests: RouteRecorder<SpaceListRequest>(), detailRequests: RouteRecorder<SpaceCoreDetailsRequest>()
+        ))
+        let rows = try [Self.project("z", name: "Zulu"), Self.project("b", name: "alpha"),
+            Self.project("a", name: "Alpha"), Self.project("archive-z", name: "Zulu", lifecycle: .archived),
+            Self.project("archive-a", name: "Alpha", lifecycle: .archived)]
+        source.yield(try Self.projectList(rows))
+        await Self.wait { model.projectBrowser.activeProjects.count == 3 }
+        #expect(model.directoryProjects.map(\.projectId.rawValue) == ["a", "b", "z"])
+        #expect(model.projectBrowser.activeProjects.map(\.projectId.rawValue) == ["z", "b", "a"])
+        model.setDirectorySegment(.archived)
+        #expect(model.directoryProjects.map(\.projectId.rawValue) == ["archive-a", "archive-z"])
+        await model.stop()
+    }
+
     @Test("Inventory section preferences cannot bleed between Accounts")
     func inventoryPreferences() throws {
         let suite = "ledger-inventory-test-\(UUID().uuidString)"
