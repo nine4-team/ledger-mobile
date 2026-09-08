@@ -479,7 +479,29 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading {
+    func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
+        try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,
+            description: "Downloaded test chair", intervals: [
+                .init(placementId: EntityID(validating: "history-current"),
+                    scope: .project(ProjectID(validating: "project-ui-test")), spaceId: nil,
+                    projectDisplayName: "Current test Project", startedAt: "2026-09-02T12:00:00Z", endedAt: nil),
+                .init(placementId: EntityID(validating: "history-earlier"),
+                    scope: .businessInventory, spaceId: SpaceID(validating: "old-space"),
+                    startedAt: "2026-09-01T12:00:00Z", endedAt: "2026-09-02T12:00:00Z")
+            ])
+    }
+    func watchDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemPlacementHistory, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    continuation.yield(try await readDownloadedItemPlacementHistory(accountId: accountId, itemId: itemId))
+                    continuation.finish()
+                } catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
     func watchDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) -> AsyncThrowingStream<DownloadedItemPlacements, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {

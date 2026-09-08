@@ -10,6 +10,125 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Physical detail retains ordered raw intervals with missing historical labels")
+    func placementHistory() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            _ = try await db.execute(sql: "UPDATE spike_projects SET display_name='Original project' WHERE id='project-item'", parameters: nil)
+            let history = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(history.accountId == account && history.itemId.rawValue == "chair")
+            #expect(history.description == "Chair" && history.isPartial)
+            #expect(history.intervals.map(\.placementId.rawValue) == ["project-now", "inventory-before"])
+            #expect(history.intervals.map(\.startedAt) == ["2026-02-01", "2026-01-01"])
+            #expect(history.intervals[0].endedAt == nil)
+            #expect(history.intervals[1].endedAt == "2026-02-01")
+            #expect(history.intervals[0].projectDisplayName == "Original project")
+            _ = try await db.execute(sql: "DELETE FROM spike_projects WHERE id='project-item'", parameters: nil)
+            _ = try await db.execute(sql: "DELETE FROM spike_spaces WHERE id='room'", parameters: nil)
+            let partial = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(partial.intervals[0].scope == .project(project))
+            #expect(partial.intervals[0].spaceId?.rawValue == "room")
+            #expect(partial.intervals[0].projectDisplayName == nil && partial.intervals[0].spaceDisplayName == nil)
+            _ = try await db.execute(sql: "DELETE FROM spike_item_placements", parameters: nil)
+            let empty = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(empty.isPartial && empty.intervals.isEmpty)
+        }
+    }
+
+    @Test("Physical history rejects malformed intervals and contradictory downloaded evidence")
+    func invalidHistory() async throws {
+        for mutation in [
+            "UPDATE spike_item_placements SET started_at='invalid' WHERE id='project-now'",
+            "UPDATE spike_item_placements SET started_at='2026-02-01T00:00:00.١Z' WHERE id='project-now'",
+            "UPDATE spike_item_placements SET started_at='2026-02-30T00:00:00Z' WHERE id='project-now'",
+            "UPDATE spike_item_placements SET started_at='2026-02-01T00:00:00+2400' WHERE id='project-now'",
+            "UPDATE spike_item_placements SET started_at='2026-02-01T00:00:00+00:60' WHERE id='project-now'",
+            "UPDATE spike_item_placements SET ended_at='invalid' WHERE id='inventory-before'",
+            "UPDATE spike_item_placements SET ended_at='2025-01-01' WHERE id='inventory-before'",
+            "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='inventory-before'",
+            "UPDATE spike_item_placements SET ended_at=NULL WHERE id='inventory-before'",
+            "UPDATE spike_item_placements SET scope_kind='unknown' WHERE id='inventory-before'",
+            "UPDATE spike_item_placements SET project_id=NULL WHERE id='project-now'",
+            "UPDATE spike_spaces SET project_id='different' WHERE id='room'",
+            "DELETE FROM spike_items WHERE id='chair'"
+        ] {
+            try await withDatabase { db in
+                _ = try await db.execute(sql: mutation, parameters: nil)
+                await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                    try await CurrentItemPlacementLocalReader(database: db).readHistory(accountId: account,
+                        principalId: principal, itemId: ItemID(validating: "chair"))
+                }
+            }
+        }
+    }
+
+    @Test("History never resolves labels or placements from another Account and requires active membership")
+    func historyAuthorization() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            _ = try await db.execute(sql: "UPDATE spike_projects SET account_id='account-other',display_name='Secret project' WHERE id='project-item'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_spaces SET account_id='account-other',display_name='Secret room' WHERE id='room'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('foreign','account-other','chair','business_inventory','2026-03-01')", parameters: nil)
+            let history = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(history.intervals.count == 2)
+            #expect(history.intervals[0].projectDisplayName == nil && history.intervals[0].spaceDisplayName == nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readHistory(accountId: AccountID(validating: "account-other"), principalId: principal, itemId: ItemID(validating: "chair"))
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            }
+        }
+    }
+
+    @Test("Physical history compares submillisecond boundaries without rounding or reordering")
+    func preciseHistoryIntervals() async throws {
+        try await withDatabase { db in
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET started_at='2026-02-01T00:00:00.000001Z',ended_at='2026-02-01T00:00:00.000002Z' WHERE id='inventory-before'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET started_at='2026-01-31T16:00:00.000002-08:00' WHERE id='project-now'", parameters: nil)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let history = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(history.intervals.map(\.placementId.rawValue) == ["project-now", "inventory-before"])
+            #expect(history.intervals[0].startedAt == "2026-01-31T16:00:00.000002-08:00")
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-02-01T00:00:00.000003Z' WHERE id='inventory-before'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            }
+        }
+    }
+
+    @Test("Physical history watch stops on membership removal without opening a subscription")
+    func historyWatchRevocation() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            var iterator = try reader.watchHistory(accountId: account, principalId: principal,
+                itemId: ItemID(validating: "chair")).makeAsyncIterator()
+            let rows = try #require(try await iterator.next())
+            #expect(try CurrentItemPlacementLocalReader.history(accountId: account,
+                itemId: ItemID(validating: "chair"), rows: rows).intervals.count == 2)
+            let subscriptions = try await db.getAll(sql: "SELECT stream_name FROM ps_stream_subscriptions", parameters: nil) {
+                try $0.getString(index: 0)
+            }
+            #expect(subscriptions.isEmpty)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                while try await iterator.next() != nil { }
+            }
+        }
+    }
+
+    @Test("Physical placement history survives encrypted database close and reopen")
+    func historyEncryptedReopen() async throws {
+        try await withDatabase(reopen: { db in
+            let history = try await CurrentItemPlacementLocalReader(database: db).readHistory(
+                accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(history.description == "Chair" && history.isPartial)
+            #expect(history.intervals.map(\.placementId.rawValue) == ["project-now", "inventory-before"])
+            #expect(history.intervals[1].endedAt == "2026-02-01")
+        }) { _ in }
+    }
+
     @Test("Report storage preserves distinct text, unknown valuation and exact signed cents")
     func reportFields() async throws {
         try await withDatabase { db in
@@ -117,7 +236,8 @@ struct CurrentItemPlacementLocalReaderTests {
         }
     }
 
-    private func withDatabase(_ body: (any PowerSyncDatabaseProtocol) async throws -> Void) async throws {
+    private func withDatabase(reopen: ((any PowerSyncDatabaseProtocol) async throws -> Void)? = nil,
+                              _ body: (any PowerSyncDatabaseProtocol) async throws -> Void) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("item-reader-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -134,6 +254,12 @@ struct CurrentItemPlacementLocalReaderTests {
             ] { _ = try await db.execute(sql: sql, parameters: nil) }
             try await body(db)
             try await db.close()
+            if let reopen {
+                let reopened = try LedgerPowerSyncDatabaseFactory.open(absolutePath: root.appendingPathComponent("ledger.sqlite").path,
+                    encryptionKey: LedgerPowerSyncEncryptionKey(hexadecimal: String(repeating: "4a", count: 32)))
+                do { try await reopen(reopened); try await reopened.close() }
+                catch { try? await reopened.close(); throw error }
+            }
         } catch {
             try? await db.close()
             throw error

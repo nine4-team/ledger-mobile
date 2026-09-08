@@ -713,7 +713,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10))
         project.tap()
-        let item = app.staticTexts["target-physical-item-physical-ui-chair"]
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         // macOS SwiftUI static text can expose its content as AXValue;
@@ -723,6 +723,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 || (item.value as? String) == "Downloaded test chair"
         })
         XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
+        item.tap()
+        XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Current test Project"].exists)
+        XCTAssertTrue(app.staticTexts["Business Inventory"].exists)
+        XCTAssertTrue(app.staticTexts["Space name not downloaded"].exists)
+        app.buttons["target-item-history-refresh"].tap()
+        XCTAssertTrue(app.staticTexts["Current downloaded location"].waitForExistence(timeout: 5))
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
         let refresh = app.buttons["target-items-refresh"]
         reveal(refresh, in: app)
         refresh.tap()

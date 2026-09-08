@@ -793,6 +793,48 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
+        try await withFiniteLease(.readDownloadedItemPlacements) { resources in
+            guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
+                .readHistory(accountId: accountId, principalId: resources.principalId, itemId: itemId)
+        }
+    }
+
+    func startDownloadedItemPlacementHistoryWatch(id: UUID, accountId: AccountID, itemId: ItemID,
+        continuation: AsyncThrowingStream<DownloadedItemPlacementHistory, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.downloadedItemPlacements)
+                try Task.checkCancellation()
+                let reader = CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
+                // Observe already downloaded evidence; no historical subscription
+                // or broader access is created by opening this detail screen.
+                for try await rows in try reader.watchHistory(accountId: accountId, principalId: resources.principalId, itemId: itemId) {
+                    try Task.checkCancellation()
+                    let value = try CurrentItemPlacementLocalReader.history(accountId: accountId, itemId: itemId, rows: rows)
+                    guard await self.forwardStreamValue(value, to: continuation) else { break }
+                }
+                continuation.finish()
+            } catch is CancellationError {
+                continuation.finish(throwing: CancellationError())
+            } catch {
+                await self.finishStream(continuation, error: error)
+            }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
     func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
         try await withFiniteLease(.readDownloadedPropertyManagementReport) { resources in

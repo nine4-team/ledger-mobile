@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 248,
+  "stateVersion": 250,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -21,12 +21,12 @@
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Persist and reload frozen Invoice contents as a prerequisite to approved whole-Invoice collection; preserve exact history without claiming a collection workflow.",
+    "outcome": "Open an existing downloaded Item and inspect retained physical location history offline; keep financial history and missing older evidence explicitly separate.",
     "nextActions": [
-      "Frozen Invoice batch uncommitted: SQL20260908200541/store/read/pgTAP, Swift FrozenInvoiceStorageRecord and tests, A019, existing report artifact bridge. Root reviewed delegated SQL/bridge; agent reviewed codec and verified UTF8 identity fix. Five local tests passed19860; actualDatabaseRoundTrip locally skipped pending real artifact. Full Swift suite82958 passed928tests138suites49.175s; database-artifact test skipped locally. Conversion/syntax/diff and latest state check passed. Commit/push integrated batch next.",
-      "Finish integrated verification, update evidence, explicitly stage batch excluding diagnostic directories, commit/push once and follow single automatic exact-commit PR CI. New SQL and SQL-to-Swift artifact need CI runtime proof; local Docker socket ping56831 timed out5s, no daemon restart. Source eligibility, concurrent storage and actual collection command remain unfinished.",
-      "Existing latest note CI34271613888 at9bbab95fcaf05c61cd68136ed330fcb93d158cb8: conversion/database/macOS UI/both builds passed, iOS UI live at last check. Prior fdf importer CI34270811621 also live. Earlier34268641520 canceled on45m native job limit; pending workflow60m budget preserves individual limits,10CI guard tests passed44272. No manual CI redispatch.",
-      "O033 exact Invoice payment question asked asynchronously this turn; do not choose policy without answer. Prior Item minimum name/photo/note and ordinary create/edit permission questions pending O017/O065; other affected creation O021/O027, financial O060 remain. Unresolved decisions block only affected work; audit already complete.",
+      "Invoice commit1a497ca4d731b8494016794056036313de8421dd automaticCI34274974413: conversion/database/native-contract step passed, including actual SQL-to-Swift frozenInvoice artifact consumer; native UI still running. No full workflow/CI completion claim. Follow existing run only.",
+      "Location-history batch ready to commit: root reviewed delegated Core/provider/runtime/tests; agent reviewed root model/UI, fixed task identity reload key. Exact timestamp parser rejects invalid calendar/offset/Unicode digits;11provider69841 and4model1780 tests passed. Full938native139suites35596 passed51.168s; complete app Swift6 macOS14 typecheck86037 passed. Conversion/diff passed. UI test extended but not run locally (4.3GiBfree). Dedicated runtime history-wrapper drain proof remains next.",
+      "Commit/push history batch explicitly excluding diagnostic directories, then follow single automatic exact-commit CI. Unified checklist contains new Item/history controls/states and exact review evidence. Reuses existing rows/no new subscriptions; financial/history completeness remains separate. Next prove wrapper lifecycle and UI interaction, then continue unblocked user behavior.",
+      "O033 exact Invoice payment question asked asynchronously this turn; do not choose policy without answer. Prior Item minimum name/photo/note and ordinary create/edit permission questions pending O027/O065 (minimum evidence is O027, not payer-hint O017); other affected creation O021/O017, financial O060 remain. Unresolved decisions block only affected work; audit already complete.",
       "Preserve diagnostics and Firebase/production/hosted boundaries. After storage proof, continue approved Item/Invoice relationships through user workflow rather than expanding generic foundations. Historical note blank-name batch full922native/39MCP passed; no entire workflow completion claimed."
     ]
   },

@@ -964,6 +964,16 @@ its referenced business event exists. Tests are in
 `supabase/tests/collected_invoice_contents.test.sql`; local execution is pending
 the unavailable Docker engine. No payment, migration or cutover is authorized.
 
+The downloaded Item location-history view (2026-09-08) reads the existing placement
+intervals through the same authorized local runtime; it does not add a second
+history store or start a broader subscription. Missing historical labels and
+older downloads remain explicitly partial. Physical locations never imply a
+sale, payment or refund. Ordering compares whole seconds and retained fractional
+precision, rather than SQLite's rounded date arithmetic; malformed dates and
+overlapping occupied intervals fail closed. Reader tests cover access removal,
+exact boundaries and encrypted reopen. Native interaction and full financial
+history remain separate verification obligations.
+
 **Physical storage (2026-09-07):** `spike_items` owns permanent physical identity;
 `spike_item_placements` owns Inventory/Project/optional Space intervals. Composite
 foreign keys preserve exact tenant/scope relationships. A Postgres GiST exclusion
