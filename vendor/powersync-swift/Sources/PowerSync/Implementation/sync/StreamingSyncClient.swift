@@ -484,7 +484,13 @@ The next upload iteration will be delayed.
         return ControlInvocationsFromStream(sequence: stream)
     }
 
-    static let jsonEncoder = JSONEncoder()
+    static let jsonEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        // Local stream identity includes serialized parameters. Dictionary
+        // iteration order must not create a second subscription after restart.
+        encoder.outputFormatting = [.sortedKeys]
+        return encoder
+    }()
     static let jsonDecoder = JSONDecoder()
 
     private static func decodeWriteCheckpointId(from data: Data) throws -> Int64 {

@@ -51,6 +51,34 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-023 | accepted, provider/delivery verification pending | Share one concrete Property Management snapshot across report outputs |
 | A-024 | accepted, local concurrent regression passed | Guard the pinned cipher library's concurrent database-open race |
 | A-025 | accepted, standalone macOS launch checked | Resolve embedded frameworks using the platform's app-bundle layout |
+| A-026 | accepted, integration verification pending | Keep PowerSync stream parameter encoding deterministic across reopen |
+
+## A-026 — Deterministic PowerSync Stream Parameter Encoding
+
+CI `34204717358` exposed intermittent report unavailability after encrypted
+reopen. A focused local reproduction showed two `ps_stream_subscriptions` rows:
+one completed row encoded `project_id` before `account_id`; a second incomplete
+row encoded the same fields in the opposite order. The pinned SDK's shared
+default JSONEncoder allowed dictionary ordering to change the stored identity.
+
+Set `.sortedKeys` on that SDK encoder, which is shared by subscription commands,
+stream startup and subscription updates. This changes object-key order only;
+arrays, values, scope and authorization remain unchanged. Reuse the pinned SDK
+correction rather than introducing a second subscription layer or accepting
+ambiguous report readiness. The 32-registration test requires one stored identity;
+the real encrypted reopen test retains completed contents without transport.
+Main and independent stream_identity_review found no blocking issue; exact
+integrated CI remains required. The new registration test fails with the old
+encoder and passes with sorted keys. Six focused readiness tests and the full
+local suite (878 tests, 130 suites) passed after the fix.
+
+This prevents new identity drift, not migration of preexisting unsorted or
+duplicated development-cache metadata. Keep those ambiguous rows fail-closed;
+do not fabricate completion, merge history, or erase pending work to repair them.
+Any retained pre-release cache requiring recovery needs explicit handling before
+it can be considered covered by an upgrade path. Production Firebase data and
+its worktree are untouched. The patch is tracked in `vendor/powersync-swift/LEDGER-PATCH.md`
+and must be revalidated when replacing the pinned dependency.
 
 ## A-025 — Platform-Correct Embedded Framework Lookup
 

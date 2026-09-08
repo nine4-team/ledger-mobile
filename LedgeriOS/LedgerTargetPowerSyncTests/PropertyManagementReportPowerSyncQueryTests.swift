@@ -11,6 +11,25 @@ struct PropertyManagementReportPowerSyncQueryTests {
     private let project = try! ProjectID(validating: "report-project")
     private let parameters = #"{"project_id":"report-project","account_id":"report-account"}"#
 
+    @Test("Equivalent SDK parameter dictionaries retain one canonical subscription")
+    func subscriptionParameterOrder() async throws {
+        try await withDatabase { db in
+            var subscriptions: [any SyncStreamSubscription] = []
+            for index in 0..<32 {
+                var params: JsonParam = [:]
+                let fields = index.isMultiple(of: 2)
+                    ? [("project_id", project.rawValue), ("account_id", account.rawValue)]
+                    : [("account_id", account.rawValue), ("project_id", project.rawValue)]
+                for (key, value) in fields { params[key] = .string(value) }
+                subscriptions.append(try await db.syncStream(name: "property_management_report", params: params).subscribe())
+            }
+            let stored = try await db.getAll(sql: "SELECT local_params FROM ps_stream_subscriptions WHERE stream_name='property_management_report'",
+                parameters: nil) { try $0.getString(name: "local_params") }
+            #expect(stored == [#"{"account_id":"report-account","project_id":"report-project"}"#])
+            withExtendedLifetime(subscriptions) {}
+        }
+    }
+
     @Test("Core-completed report survives encrypted reopen and offline resubscription")
     func encryptedOfflineReopen() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("report-reopen-\(UUID().uuidString)")
@@ -54,7 +73,7 @@ struct PropertyManagementReportPowerSyncQueryTests {
                     }
                 }
             }
-            let original = try await read(db)
+            let original = try await readReopenCheckpoint(db, stage: "after protocol completion")
             #expect(original.totals.itemCount == 1)
             #expect(original.totals.totalMarketValue?.minorUnits == 9_007_199_254_740_993)
             try await subscription.unsubscribe()
@@ -63,7 +82,7 @@ struct PropertyManagementReportPowerSyncQueryTests {
             // Reopening the report follows the SDK's real subscribe path, but
             // no transport is started: bytes and completion must be durable.
             let reopenedSubscription = try await db.syncStream(name: identity.name, params: identity.parameters).subscribe()
-            let reopened = try await read(db)
+            let reopened = try await readReopenCheckpoint(db, stage: "after encrypted reopen and subscribe")
             #expect(reopened.reference == original.reference)
             #expect(PropertyManagementReportCSV.render(reopened) == PropertyManagementReportCSV.render(original))
             _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE id='report-member'", parameters: nil)
@@ -177,6 +196,19 @@ struct PropertyManagementReportPowerSyncQueryTests {
         try await PropertyManagementReportPowerSyncQuery(database: db).readDownloaded(accountId: account,
             principalId: principal, projectId: project, currency: CurrencyCode(validating: "USD"),
             asOf: .init(validating: 1_800_000_000_000))
+    }
+
+    private func readReopenCheckpoint(_ db: any PowerSyncDatabaseProtocol, stage: String) async throws -> PropertyManagementReportSnapshot {
+        do { return try await read(db) }
+        catch {
+            let evidence = try? await db.getAll(sql: """
+                SELECT json_object('id',id,'params',local_params,'active',active,
+                    'synced',last_synced_at,'expires',expires_at) AS evidence
+                FROM ps_stream_subscriptions ORDER BY id
+                """, parameters: nil) { try $0.getString(name: "evidence") }
+            print("Synthetic report checkpoint failure \(stage): \(evidence ?? [])")
+            throw error
+        }
     }
 
     private func withDatabase(_ body: (any PowerSyncDatabaseProtocol) async throws -> Void) async throws {

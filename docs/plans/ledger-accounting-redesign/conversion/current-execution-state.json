@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 152,
+  "stateVersion": 154,
   "resumeAfterWorkflowId": "item-history-source-reconciliation",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
     "nextActions": [
-      "NEXT commit/push iOS native delivery tests and checkpoint docs; follow new automatic CI once. Reuse green7919298c CI34201884298; watch51044 terminal0. New WorkspaceChecklistUITests IOSSystemDialogCancellation repeats PDF/CSV/PDF cancellation then Print Cancel; IOSCopyCompletion requires usable PDF/CSV after cleanup. Existing iPhone CI step runs both, TEST_RUNNER_ flag enables only disposable CI clipboard. Syntax/conversion/six CI-control tests passed; actual runtime unverified.",
-      "Inspect actual iOS test hierarchy/payload on failure. UIKit activityItems URL path unchanged intentionally: macOS provider proof is not iOS delivery proof. Keep OS completion/usable bytes assertions; do not infer labels or ownership failure from a passing build. No external recipient, physical print or production. Local Copy test skips absent isolated-CI flag.",
-      "Local disk ~871MB free; package .build only1.4GB (794MB compiled,195MB checkouts,135MB artifacts), so cleaning it would not restore ~10GB needed. Nothing deleted. Avoid full local builds/new simulators and unrelated cleanup; preexisting92BB3190 untouched. Small no-clipboard helper smoke /tmp/ledger-share-payload-check.x9WQab/check passed and actual package regression now passed CI.",
-      "Checklist and A023 updated with exact green CI evidence; documentation/current-state changes uncommitted for next implementation checkpoint, no promotion-only push. Use one normal automatic CI at next actual code batch. Preserve local-not-run distinction; integrated CI proof is explicit.",
+      "NEXT commit/push deterministic SDK JSON encoding fix and track one automatic CI. Local91112 terminal0:878 native tests/130 suites passed47.268s. Previous CI34204717358 at3be10d39/watch96089 terminal1 failed encryptedOfflineReopen before any UI. Diagnosis reproduced locally78686: same params in opposite key order created completed + incomplete subscription rows. iOS native tests remain unrun.",
+      "Pending A026: shared StreamingSyncClient.jsonEncoder .sortedKeys; affects subscription/start/update paths consistently, no values/arrays/auth changes. Strict duplicate readiness check unchanged. New32-registration test falsified oldencoder (80628 terminal1), fixed six-query suite92741 passed. Main + stream_identity_review accepted. Existing unsorted/duplicate development caches not repaired or deleted; retained-cache upgrade/recovery remains separate gap.",
+      "Local full native test91112 passed after incremental6s compile, not a full app/simulator build. Disk ~877MB; no unrelated cleanup. New test-only metadata diagnostic prints synthetic params/checkpoints only on reopen failure. No fresh hosted or production access.",
+      "After exact CI passes, inspect new iOS Copy and Share/Print cancellation tests for actual execution and usable payload. Older7919298c CI already passed macOS Copy/Print and three iPhone controls/state/error tests, but later run revealed intermittent SDK identity bug. Preserve evidence with this limitation, not whole-workflow completion.",
       "Product audit complete. Open O065/O033/O027/O060 affect accounting only; hosted/production access unauthorized. No Firebase worktree access. Hardware media protection, hosted validation and broad feature implementation remain required."
     ]
   },
