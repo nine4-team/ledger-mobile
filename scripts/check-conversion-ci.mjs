@@ -292,6 +292,7 @@ function validateLocalSupabaseJob(lines) {
     "          npm run target:supabase:test:project-note-read",
     "          npm run target:supabase:test:rpc",
     "          npm run target:supabase:test:payment-import",
+    "          node scripts/test-local-item-placement-concurrency.mjs",
     "        run: npx --yes supabase@2.116.0 stop --no-backup",
   ]) {
     requireExactLine(local, command, `local database gate ${command.trim()}`);

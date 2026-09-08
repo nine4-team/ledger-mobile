@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 103,
+  "stateVersion": 104,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "POWERSYNC-CLOSE-AND-INVOICE-SOURCE-CI-GREEN",
-    "commit": "806a2e73bfbb7fca3aad98f2289f0851827e1299",
-    "ciRun": 34176726688,
+    "name": "FROZEN-INVOICE-AND-CI-PORT-GREEN",
+    "commit": "71ceadde3ab0cd1f55dd407486418994b74fea78",
+    "ciRun": 34179461110,
     "ciStatus": "passed",
-    "meaning": "Tracked SDK cancellation fix and prior Invoice/source/payment work passed full automatic native/DB/app UI/macOS+iOS gates. New cancellation-event relationship review is local only; whole migration/app/hosted readiness remains unproved."
+    "meaning": "Full automatic conversion/native/localDB/app UI/macOS+iOS CI passed, including frozen Invoice value and CI port fix. New physical Item/placement storage is locally verified only; whole app/migration/hosted readiness remains unproved."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. CI34178745443 for22fa6a9e completed FAILURE: conversion and all native/app UI/macOS/iOS gates passed; local DB startup failed binding occupied host54322 before tests. Do not rerun that commit. Verified checkpoint remains806a2e73 CI34176726688 SUCCESS.",
-      "FrozenInvoiceContents and tests implement shared immutable positive-Invoice value: exact scope/source revisions, Item+occurrence+mandatory price snapshot, Expense/Fee identity, signed amount/category/label, one Purchase ref. Duplicate sources, currency/total/category overflow and invalid decoding reject. Main implemented; independent review caught missing price provenance and Expense/Fee duplicates, fixed; final GO.",
-      "CI fix selects a free IPv4 wildcard DB port into GITHUB_ENV via scripts/select-ci-supabase-db-port.mjs; pinned CLI SUPABASE_DB_PORT verified read-only using status. Project identity/config/security/tests unchanged; no unknown process stopped. Eight focused CI/selector tests, conversion and diff checks pass. Commit/push fix once and observe its automatic PR CI, with no manual rerun or tiny follow-up push. No local process/agent active.",
-      "O033 exact positive payment equality asked asynchronously this turn; no reply assumed. It blocks whole-Invoice collection policy only. Canonical source InvoiceLine has Item ID but no explicit cycle/edge ID; retain billing identity and only map cycles with real supporting evidence, not current location/timestamps. A019 documents both boundaries.",
-      "Next implement authoritative retained source/price/category references and immutable paid contents persistence/mapping, while keeping O033 and manual/nonpositive-settlement decisions visible. Existing FrozenInvoiceContents needs writer-side payment/provenance/eligibility, DB/RLS/offline/app/MCP enforcement. No Firebase checkout or production/hosted/cutover/remote-fork actions."
+      "Audit complete. Full automatic CI34179461110 for71ceadde3ab0cd1f55dd407486418994b74fea78 SUCCESS; now verified checkpoint. Commit/push next bounded Item-placement batch and observe its one automatic CI. Never cancel with tiny follow-up or manually rerun.",
+      "Implemented physical Item/placement SQL migration20260908021909_physical_item_placement_history.sql, locally applied direct SQL and exact local migration history recorded. One Item, temporal placements, exact tenant/Space FKs, no overlaps, close-once history, invoker current-location view, forced RLS/no grants. A019 records significant change. Not a complete Item workflow.",
+      "Focused34 tests and integrated490 tests/14 files PASS; real competing-placement insert lock/rollback test PASS. Independent schema review GO. Main read delegated concurrency code, added remote Docker/endpoint guard and verified rejection; no immutable placement test rows retained. Advisors no warnings, conversion/CI tests pass. Space schema expectation updated for intentional generated FK key. Local schema lint has no errors; local migration list confirms20260908021909 recorded. No local process or agent active.",
+      "O065 ordinary Item actor policy asked asynchronously (employees vs owners/admins; no payment/refund authority). O027 creation minimum and O060 financial visibility remain open; O033 exact-payment question still unanswered. Do not infer policy from absence of reply or implement arbitrary grant defaults.",
+      "Finish/checkpoint this bounded storage batch and its one automatic CI, then wire real current Item/placement query evidence into existing shared contracts and complete an approved Item workflow. Commands must lock/check/advance Item revision, atomically close/open placement and accounting facts, define monotonic transition handling, and preserve history gaps honestly. Do not expand into more ungranted storage families instead of resolving workflow prerequisites."
     ]
   },
   "blockers": [],

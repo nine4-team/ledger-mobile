@@ -385,6 +385,26 @@ source/price/category eligibility and actual payment, and enforce database
 immutability and authorization; this value alone does not collect an Invoice.
 Manual adjustments and nonpositive settlement remain separate product decisions.
 
+**Physical storage (2026-09-07):** `spike_items` owns permanent physical identity;
+`spike_item_placements` owns Inventory/Project/optional Space intervals. Composite
+foreign keys preserve exact tenant/scope relationships. A Postgres GiST exclusion
+constraint prevents overlapping intervals, including concurrent writes; a partial
+unique index also bounds active placement to one. Closing a placement is its only
+ordinary update; ended history cannot be rewritten, deleted or truncated. The
+security-invoker current-placement view derives location without any stored
+accounting-status flag or payment inference. This uses PostgreSQL's supported
+`btree_gist` extension rather than an application-only overlap check.
+
+This is required storage, not a completed movement API. RLS is forced and no
+app/service-role grants are issued. The future typed command must check actor and
+Item revision, atomically close/open placement plus required accounting facts,
+and handle rapid offline transitions with ordered timestamps. The schema permits
+unplaced Items/history gaps; its current-location view cannot certify inventory
+completeness. Creation validation, write permissions, correction/removal policy
+and financial visibility retain their product gates. Local cycle/rollback/scope/
+immutability tests live in `supabase/tests/physical_item_placement_history.test.sql`;
+actual authorized app/MCP/Sync movement and paid-history joins remain unproved.
+
 **Explicit client-payment translation:** A non-canceled legacy `paymentToBusiness` record
 means actual client payment (`InvoiceService.markCollected` writes category-specific
 payment records). Under D-001/D-002 it maps to the target Project Purchase

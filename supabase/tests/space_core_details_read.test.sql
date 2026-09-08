@@ -12,8 +12,8 @@ select is(
     where table_schema = 'public'
       and table_name = 'spike_spaces'
   ),
-  'id:text:NO,account_id:text:NO,scope_kind:text:NO,project_id:text:YES,display_name:text:NO,lifecycle:text:NO,revision:bigint:NO',
-  'the existing Space relation remains exactly seven columns'
+  'id:text:NO,account_id:text:NO,scope_kind:text:NO,project_id:text:YES,display_name:text:NO,lifecycle:text:NO,revision:bigint:NO,placement_project_key:text:YES',
+  'Space retains its fields plus the generated exact-placement foreign-key key'
 );
 
 select ok(
