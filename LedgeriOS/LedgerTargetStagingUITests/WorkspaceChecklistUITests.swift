@@ -28,11 +28,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             XCTAssertTrue(button.isEnabled)
             button.tap()
-            let close = app.buttons["Close"].firstMatch
-            XCTAssertTrue(close.waitForExistence(timeout: 10), app.debugDescription)
+            let activity = app.otherElements["ActivityListView"].firstMatch
+            let dismiss = app.otherElements["PopoverDismissRegion"].firstMatch
+            XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertTrue(dismiss.exists, app.debugDescription)
             XCTAssertFalse(failure.exists)
-            close.tap()
-            XCTAssertTrue(waitUntil { !close.exists && !busy.exists && button.isEnabled }, app.debugDescription)
+            // The native iPhone share popover has no Close button. Tap its
+            // observed outside-dismiss region above the activity content.
+            dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
+            XCTAssertTrue(waitUntil { !activity.exists && !busy.exists && button.isEnabled }, app.debugDescription)
             XCTAssertFalse(failure.exists)
         }
         let printButton = app.buttons["target-property-report-print"]
@@ -71,7 +75,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             XCTAssertTrue(button.isEnabled)
             button.tap()
-            let copy = app.buttons["Copy"].firstMatch
+            let copy = app.otherElements["ActivityListView"].cells["Copy"].firstMatch
             XCTAssertTrue(copy.waitForExistence(timeout: 10), app.debugDescription)
             copy.tap()
             XCTAssertTrue(waitUntil { !copy.exists && !busy.exists && button.isEnabled }, app.debugDescription)
