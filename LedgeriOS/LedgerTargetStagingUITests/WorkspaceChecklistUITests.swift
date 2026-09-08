@@ -8,14 +8,6 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
-    private func displayedText(_ element: XCUIElement) -> String {
-        #if os(macOS)
-        return element.value as? String ?? ""
-        #else
-        return element.label
-        #endif
-    }
-
     func testAccountSettingsDownloadedProfileRefreshAndDismiss() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
