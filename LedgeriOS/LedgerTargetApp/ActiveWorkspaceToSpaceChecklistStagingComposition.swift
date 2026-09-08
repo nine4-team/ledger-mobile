@@ -431,6 +431,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             "Checklist synchronization",
             value: model.checklistToggle.operationStatus
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Checklist synchronization")
+        .accessibilityValue(model.checklistToggle.operationStatus)
         .accessibilityIdentifier("target-active-space-checklist-operation-status")
 
         if !model.checklistToggle.admission.permitsToggle {

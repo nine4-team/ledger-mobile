@@ -968,11 +968,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(status, in: app)
         XCTAssertTrue(status.exists)
         XCTAssertTrue(waitUntil {
-            let text = status.label + " " + (status.value as? String ?? "")
-                + " " + status.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: " ")
-            return text.localizedCaseInsensitiveContains("queued")
-                || text.localizedCaseInsensitiveContains("pending")
-        })
+            status.value as? String == "queued — accepted locally"
+        }, app.debugDescription)
 
         // The same exact-Space read-only route works in Project and Inventory.
         // Other-Space and unassigned rows exist in the fixture's scope reader.
