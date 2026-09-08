@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 228,
+  "stateVersion": 230,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,9 +23,9 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Continue Project Notes with separate legacy Project.notes preservation, reusing exact Project detail authority; do not invent individual-note metadata or claim completion before migration/storage/Sync/UI verification.",
     "nextActions": [
-      "NEXT push/follow automatic CI for commit containing this checkpoint (private legacy import and concrete prior-CI fixes). Full900Swift tests/134suites passed46.815s(38836 terminal0); final executable build20405 passed after UTF8 readback fix; appmacOS/bothUI typechecks,environment/10CIguards/conversion/diff passed. Three JS harness syntax checks pass. Do not repeat full suite to resume.",
+      "NEXT follow single automatic CI for commit containing this PDF UI test correction. Parent CI34259667977 at71bce05c terminalfailure; watch74541 terminal1. Database580tests/19files, macOS15UI and iOS12of13 passed including legacy notes and both checklists. Sole failure at WorkspaceChecklistUITests.swift:341: long-press Select All absent despite focused field. Fix uses native Command-A (same as macOS); exact value and keyboard dismissal assertions retained. Both platform Swift6 UI typechecks, conversion and diff checks passed; unified checklist records exact parent evidence. No app/core code changed; reuse prior900tests until automatic integrated run. No new run ID yet.",
       "Prior CI34257496449 at8c6ddb04 terminal failure: legacy read migration and all548SQL tests/18files passed; report stream exact field-list expected omitted new legacy_notes. Fixed field expectation without weakening scope assertions. Native skipped. CI34255899861/b16d95e7 terminalfailure:13of14macOSUI passed; Inventory no-match AX ID missing. Fixed same semantic identifier, Inventory card summary and scope-specific test card ID; iOS was never run. No live old watch/run to poll.",
-      "Private SQL import locks exact existing Project, stores immutable text/source/SHA/correlation atomically, exact replay noUPDATE, conflicts rollback; API roles denied. Main independently reviewed agentSQL. Existing concurrency harness now tests3observed-lock races and2session interruption boundaries for notes, automatically in CI. Runtime execution still pending.",
+      "Private SQL import locks exact existing Project, stores immutable text/source/SHA/correlation atomically, exact replay noUPDATE, conflicts rollback; API roles denied. Main independently reviewed agentSQL. Terminal database CI102174361838 logs confirm580tests/19files and payment/legacy-note imports each3observed-lock races and2terminated-session recovery boundaries passed, including conflict rollback and committed readback. Separate local executable recovery remains unexecuted.",
       "Existing local synthetic payment runner now imports parent legacy notes in same transaction and existing journal, with2payment+1note entity counts and fresh committed readback. Shared source encoder preserves golden payment bytes. Independent review caught Unicode-equivalence issue: exporter and notes readback use UTF8 bytes; forged composed/decomposed test added. Expanded separate-process recovery script is NOT executed: bounded local docker inspect88924 returned ETIMEDOUT; no services started. Need run it once DB is available; current code is not migration readiness.",
       "External gates unchanged: disk2.9GiB, hosted synthetic authorization, logout scope/A007, reportSKU conflict, representative vendorPDFs and Project creation role/O049 unresolved. A030 records implementation/tradeoffs/gaps; unified checklist owns evidence. Preserve diagnostics; no Firebase/production/hosted access."
     ]

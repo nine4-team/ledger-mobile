@@ -335,11 +335,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             if id == "description" { originalDescription = try XCTUnwrap(field.value as? String) }
             field.tap()
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-            field.press(forDuration: 1)
-            let selectAll = app.descendants(matching: .any)
-                .matching(NSPredicate(format: "label == %@", "Select All")).firstMatch
-            XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
-            selectAll.tap()
+            // Use native selection without depending on the transient long-press menu.
+            app.typeKey("a", modifierFlags: .command)
             field.typeText(value)
             XCTAssertEqual(field.value as? String, value)
             let done = app.buttons["target-vendor-pdf-keyboard-done"]
