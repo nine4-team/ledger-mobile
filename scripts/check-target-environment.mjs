@@ -609,6 +609,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "readDownloadedItemPlacements",
     "rejectedOperations",
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
@@ -617,6 +618,7 @@ if (
     "watchClient",
     "watchClientArchiveOperation",
     "watchClients",
+    "watchDownloadedItemPlacements",
     "watchItemSpaceAssignmentOperation",
     "watchItemSpaceClearingOperation",
     "watchOperation",
@@ -3040,7 +3042,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,Sendable",
     )
   ) {
     fail(
@@ -3352,7 +3354,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,Sendable",
     )
   ) {
     fail(
