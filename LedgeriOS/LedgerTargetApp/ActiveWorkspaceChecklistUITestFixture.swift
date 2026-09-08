@@ -302,7 +302,27 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                 watchProjects: { [projectDirectorySnapshot] in
                     AsyncThrowingStream { $0.yield(projectDirectorySnapshot) }
                 },
-                watchProject: { [projectDetail] _ in projectDetail.stream },
+                watchProject: { [projectDetail, projectDirectorySnapshot, observedAt = Self.observedAt] request in
+                    let arguments = ProcessInfo.processInfo.arguments
+                    guard let mode = arguments.first(where: { $0.hasPrefix("--ledger-ui-test-legacy-notes=") }) else {
+                        return projectDetail.stream
+                    }
+                    return AsyncThrowingStream { continuation in
+                        do {
+                            let rows = try projectDirectorySnapshot.local.rows
+                                .filter { $0.id == request.projectId && $0.accountId == request.accountId }
+                                .map { try ProjectCoreDetailsSnapshot(project: $0,
+                                    locallyObservedRevision: ExpectedProjectRevision(3),
+                                    legacyNotes: mode.hasSuffix("=both") || mode.hasSuffix("=legacy-only")
+                                        ? "Original planning notes\nKeep the blue sofa." : nil) }
+                            continuation.yield(try ProjectCoreDetailsUpdate(request: request, state: .snapshot(
+                                ProjectCoreDetailsLocalSnapshot(request: request, rows: rows,
+                                    visibleRowCountBeforeFiltering: rows.count, isCompleteForQuery: true,
+                                    quality: .ready, localDataVersion: LocalDataVersion(validating: "ui-legacy-notes"),
+                                    asOf: observedAt))))
+                        } catch { continuation.finish(throwing: error) }
+                    }
+                },
                 watchNotes: { request in
                     AsyncThrowingStream { continuation in
                         do {
@@ -315,11 +335,13 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                                 creatorDisplayName: ProjectNoteCreatorDisplayName(validating: "Test Designer"),
                                 createdAt: Date(timeIntervalSince1970: 1_789_500_000), revision: 1
                             )
+                            let mode = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--ledger-ui-test-legacy-notes=") })
+                            let rows = mode?.hasSuffix("=legacy-only") == true || mode?.hasSuffix("=neither") == true ? [] : [note]
                             continuation.yield(try ProjectNotePage(
                                 request: request,
                                 local: ListLocalSnapshot(
-                                    queryFingerprint: request.queryFingerprint, rows: [note],
-                                    visibleRowCountBeforeFiltering: 1, isCompleteForQuery: true,
+                                    queryFingerprint: request.queryFingerprint, rows: rows,
+                                    visibleRowCountBeforeFiltering: rows.count, isCompleteForQuery: true,
                                     quality: .ready, localDataVersion: LocalDataVersion(validating: "ui-notes-1"),
                                     asOf: Date(timeIntervalSince1970: 1_789_500_000)
                                 ),

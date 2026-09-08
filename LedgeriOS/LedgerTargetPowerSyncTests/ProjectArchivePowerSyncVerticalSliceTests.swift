@@ -6,6 +6,34 @@ import Testing
 
 @Suite("Project archive PowerSync vertical slice", .serialized)
 struct ProjectArchivePowerSyncVerticalSliceTests {
+    @Test("Legacy Project notes survive archive overlay and encrypted reopen exactly")
+    func legacyNotesSurviveArchiveAndReopen() async throws {
+        let fixture = try ArchiveDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seedAuthority(database, revision: 7)
+        let notes = "  Original notes\n第二行\r\n  "
+        _ = try await database.execute(sql: "UPDATE spike_projects SET legacy_notes = ? WHERE id = ?",
+            parameters: [notes, Self.projectId.rawValue])
+        let before = try await Self.firstProjectDetail(database)
+        #expect(before.row?.legacyNotes == notes)
+        _ = try await Self.store(database).archive(Self.command(id: "offline", revision: 7))
+        let archived = try await Self.firstProjectDetail(database)
+        #expect(archived.row?.legacyNotes == notes)
+        #expect(archived.row?.project.lifecycle == .archived)
+        try await database.close()
+        let reopened = try fixture.open()
+        let retained = try await Self.firstProjectDetail(reopened)
+        #expect(retained.row?.legacyNotes == notes)
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET state = 'removed'", parameters: nil)
+        let removed = try await Self.firstProjectDetailUpdate(reopened)
+        switch removed.state {
+        case .snapshot(let snapshot): #expect(snapshot.row == nil)
+        case .failed(_, let cached): #expect(cached?.row == nil)
+        case .waiting: Issue.record("Expected a settled unavailable result after membership removal")
+        }
+        try await reopened.close(deleteDatabase: true)
+    }
+
     @Test("Archive operation identity is account-bound and namespace-exact before writes")
     func accountBoundOperationIdentityRejectsBeforeWrite() async throws {
         let fixture = try ArchiveDatabaseFixture()

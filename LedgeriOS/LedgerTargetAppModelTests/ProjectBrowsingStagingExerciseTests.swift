@@ -6,6 +6,43 @@ import Testing
 @Suite("Project Browsing Staging Application Flow")
 @MainActor
 struct ProjectBrowsingStagingExerciseTests {
+    @Test("Legacy notes follow exact Project detail lifetime and clear on selection, denial and stop")
+    func legacyNotesLifetime() async throws {
+        let directory = ControlledStream<ProjectListSnapshot>()
+        let detailA = ControlledStream<ProjectCoreDetailsUpdate>()
+        let detailB = ControlledStream<ProjectCoreDetailsUpdate>()
+        let details = DetailWatchProbe(sources: ["project-a": [detailA], "project-b": [detailB]])
+        let model = Self.model()
+        await model.start(runtime: Self.runtime(directory: directory, details: details))
+        let a = try Self.project("project-a")
+        let b = try Self.project("project-b")
+        directory.yield(try Self.directory([a, b]))
+        await Self.waitUntil { model.activeProjects.count == 2 }
+        await model.select(projectId: a.id, segment: .active)
+        await Self.waitUntil { details.requests.count == 1 }
+        let requestA = details.requests[0]
+        let text = "  Original Project notes\nKeep this separate.  "
+        let row = try ProjectCoreDetailsSnapshot(project: a,
+            locallyObservedRevision: ExpectedProjectRevision(7), legacyNotes: text)
+        detailA.yield(try Self.update(requestA, .snapshot(Self.detailLocal(
+            request: requestA, rows: [row], version: "legacy-a"))))
+        await Self.waitUntil { model.selectedLegacyNotes == text }
+        await model.select(projectId: b.id, segment: .active)
+        #expect(model.selectedLegacyNotes == nil)
+        await Self.waitUntil { details.requests.count == 2 }
+        let requestB = details.requests[1]
+        let rowB = try ProjectCoreDetailsSnapshot(project: b,
+            locallyObservedRevision: ExpectedProjectRevision(7), legacyNotes: "B notes")
+        detailB.yield(try Self.update(requestB, .snapshot(Self.detailLocal(
+            request: requestB, rows: [rowB], version: "legacy-b"))))
+        await Self.waitUntil { model.selectedLegacyNotes == "B notes" }
+        detailB.yield(try Self.update(requestB, .failed(failure: .unavailable, cached: nil)))
+        await Self.waitUntil { model.detailStateLabel == "unavailable" }
+        #expect(model.selectedLegacyNotes == nil)
+        await model.stop()
+        #expect(model.selectedLegacyNotes == nil)
+    }
+
     @Test("One emission atomically preserves segment order, identity, and Project lifecycle")
     func atomicDirectoryProjection() async throws {
         let directory = ControlledStream<ProjectListSnapshot>()

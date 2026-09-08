@@ -39,7 +39,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 backButton
                 if model.representedProjectIsAvailable,
                    model.projectBrowser.noteHistory.selectedProjectId == projectId {
-                    ProjectNoteHistoryStagingExerciseView(model: model.projectBrowser.noteHistory)
+                    ProjectNoteHistoryStagingExerciseView(model: model.projectBrowser.noteHistory,
+                        legacyNotes: model.projectBrowser.selectedLegacyNotes)
                 } else {
                     Text("Project note history is unavailable.")
                 }

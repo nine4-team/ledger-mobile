@@ -19,6 +19,7 @@ public struct ProjectDetailHeaderContent: Equatable, Sendable {
     public let clientDisplayName: ClientDisplayName
     public let projectLifecycle: DirectoryLifecycleState
     public let clientLifecycle: DirectoryLifecycleState
+    public let legacyNotes: String?
     public let sourceQuality: ListSnapshotQuality
     public let readiness: ListReadiness
     public let localDataVersion: LocalDataVersion
@@ -36,6 +37,7 @@ public struct ProjectDetailHeaderContent: Equatable, Sendable {
         clientDisplayName = project.client.displayName
         projectLifecycle = project.lifecycle
         clientLifecycle = project.client.lifecycle
+        legacyNotes = row.legacyNotes
         sourceQuality = snapshot.local.quality
         readiness = displayedReadiness
         localDataVersion = snapshot.local.localDataVersion

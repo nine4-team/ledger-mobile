@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 225,
+  "stateVersion": 227,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -17,17 +17,17 @@
     "meaning": "Database,878 native tests/130 suites,9 macOS UI tests,both builds,5 iPhone report tests passed. Actual PDF/CSV Copy payload and Share/Print cancellation verified on both platforms. SKU spec conflict,hardware protection,hosted validation and cutover readiness remain unresolved."
   },
   "activeWorkflow": {
-    "id": "local-vendor-pdf-review",
+    "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
+    "outcome": "Continue Project Notes with separate legacy Project.notes preservation, reusing exact Project detail authority; do not invent individual-note metadata or claim completion before migration/storage/Sync/UI verification.",
     "nextActions": [
-      "NEXT follow the single automatic CI for the commit containing this checkpoint: PDF keyboard Done/focus cleanup, visible actual fixture acceptance counter and positive Inventory Space native interaction coverage. App macOS and both UI-test Swift6 typechecks, conversion/environment/10CIguards and diff checks passed. No production/model changes; reuse parent893-model-test evidence. Native execution remains pending; do not dispatch duplicate CI.",
-      "CI34250091549 at e79ec782 terminal failure, watch43955 terminal1: all13macOSUI and9of11iOS passed. PDF switches/removal/model clear/Files Cancel fixed. Two remaining native failures diagnosed: keyboard covers next edit field; acceptance counter recycled out of List. Current fixes retain exact values and accepted-once assertions. Independent review no blocker; adopted focus reset on document hash change and close. Unified checklist records exact evidence and remaining real-template/iOS Files/accepted-import gaps.",
-      "Inventory positive fixture explicitly scopes list/detail to businessInventory; new shared interaction test covers search/checklist/accepted-once/pending/Back, preserves existing Project and empty Inventory/restart tests. Not authorization/persistence proof. Prior app/both UI sources typecheck,environment/10CIguards passed; no repeated893 suite for view/fixture-only edits.",
-      "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope/A007 auth owner; SKU report conflict. Also asked user for sanitized representative Amazon/Wayfair PDFs preserving layout/images to validate real template/thumbnail coverage; no production access to obtain them. No responses/approvals received. Continue independent work.",
-      "ProjectSetup cleanup/A-029 committed e79ec782; parent full893tests/133suites passed45.552s. Asked who may create Projects(any member vsowners/admins), no answer; blocks only create subcase O-052. O-049 name contract unresolved. Preserve all untracked diagnostics including251MB .pdf-ios-ci-evidence.dTooth; no branch/ref operations."
+      "NEXT follow automatic CI for commit containing this checkpoint (legacy-notes read/storage/source-transform batch). Full898Swift tests/134suites passed47.178s(50072 terminal0); appmacOS and both UI source Swift6 typechecks, environment,10CIguards/conversion/diff passed. Independent provider and UI/transform review complete; fixed AXValue assertions and fixture actor capture. SQL/native execution still pending. Do not repeat full suite to resume.",
+      "Prior pushed b16d95e7 CI34255899861 still live, watch86689; latest macOS workspace UI stage. It tests PDF Done/counter/Inventory fixes. Inspect terminal result/logs; do not dispatch duplicates or assume current uncommitted batch is covered by it.",
+      "Legacy notes now use nullable spike_projects.legacy_notes, identical existing Sync row projections, exact detail header/model lifetime and separate card. Pending-created Projects NULL; archive overlay/reopen preserves text; removal denies read. Native four-mode test added to automatic iOS lane. A030 records rationale/remaining gaps; unified workflow acceptance owns evidence.",
+      "NEXT remaining actual migration: FirebaseProjectLegacyNotesConversion retains complete source and deterministic mapped text, refuses nontext/NUL and wrong source scope; it is NOT persisted import/replay/reconciliation. Reuse existing migration plan/source journal and explicit reconciled Project mappings; no individual-note records or fabricated metadata. No production source/data access. Local CLI pinned npx supabase@2.116.0 available; migration created by CLI, no DB stack started due low disk.",
+      "External gates unchanged: local disk2.9GiB (need>=10GB native builds); hosted synthetic authorization, logout scope/A007, report SKU conflict, sanitized vendor PDFs and Project creation role/O049 unresolved. Preserve all untracked diagnostics; no Firebase worktree/production/hosted access."
     ]
   },
   "blockers": [],

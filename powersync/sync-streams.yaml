@@ -6,7 +6,7 @@ streams:
     queries:
       - |
         SELECT project.id, project.account_id, project.client_id, project.display_name,
-          project.description, project.property_address, project.lifecycle, project.revision,
+          project.description, project.legacy_notes, project.property_address, project.lifecycle, project.revision,
           project.category_configuration_revision::text AS category_configuration_revision,
           project.created_at_ms, project.updated_at_ms, project.created_by_principal_id
         FROM spike_projects AS project
@@ -149,6 +149,7 @@ streams:
           project.client_id,
           project.display_name,
           project.description,
+          project.legacy_notes,
           project.property_address,
           project.lifecycle,
           project.revision,
@@ -456,6 +457,7 @@ streams:
           project.client_id,
           project.display_name,
           project.description,
+          project.legacy_notes,
           project.property_address,
           project.lifecycle,
           project.revision,

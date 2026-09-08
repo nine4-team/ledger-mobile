@@ -135,6 +135,7 @@ jobs:
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFRemovalClosesLoadedReview \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testInventoryNavigationAndRememberedSection \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testInventorySpaceChecklistInteraction \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testLegacyProjectNotesRemainSeparate \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
 

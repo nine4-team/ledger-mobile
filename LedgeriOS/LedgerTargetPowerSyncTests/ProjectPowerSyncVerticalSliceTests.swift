@@ -336,6 +336,7 @@ struct ProjectPowerSyncVerticalSliceTests {
         #expect(snapshot.row?.project.client.displayName.rawValue == "New Client")
         #expect(snapshot.row?.project.displayName.rawValue == "  Lake House  ")
         #expect(snapshot.row?.project.description == "Canonical description")
+        #expect(snapshot.row?.legacyNotes == nil)
 
         let applier = RecordingProjectCreationApplier()
         let connector = LedgerPowerSyncUploadConnector(

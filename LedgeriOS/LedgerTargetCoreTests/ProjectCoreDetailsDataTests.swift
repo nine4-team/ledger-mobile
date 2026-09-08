@@ -4,6 +4,25 @@ import Testing
 
 @Suite("Project Core Details Read Contracts")
 struct ProjectCoreDetailsDataTests {
+    @Test("Legacy notes retain exact text separately from description without invented metadata")
+    func legacyNotesRoundTrip() throws {
+        let original = try Self.row(description: "Project description")
+        for notes: String? in [nil, "", "  Original notes\nSecond line\t "] {
+            let detail = try ProjectCoreDetailsSnapshot(project: original.project,
+                locallyObservedRevision: original.locallyObservedRevision, legacyNotes: notes)
+            let encoded = try JSONEncoder().encode(detail)
+            let restored = try JSONDecoder().decode(ProjectCoreDetailsSnapshot.self, from: encoded)
+            #expect(restored == detail)
+            #expect(restored.legacyNotes == notes)
+            #expect(restored.project.description == "Project description")
+        }
+        var oldPayload = try JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as! [String: Any]
+        oldPayload.removeValue(forKey: "legacyNotes")
+        let decoded = try JSONDecoder().decode(ProjectCoreDetailsSnapshot.self,
+            from: JSONSerialization.data(withJSONObject: oldPayload))
+        #expect(decoded.legacyNotes == nil)
+    }
+
     @Test("Active and archived Projects preserve exact core identity, relationship, and revision")
     func coreDetailsAndFingerprintBinding() throws {
         let request = try Self.request()

@@ -3,14 +3,24 @@ import SwiftUI
 
 struct ProjectNoteHistoryStagingExerciseView: View {
     @Bindable var model: ProjectNoteHistoryStagingExercise
+    var legacyNotes: String? = nil
 
     var body: some View {
         Group {
+            if let legacyNotes, !legacyNotes.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Legacy Notes").font(.headline)
+                    Text(legacyNotes)
+                        .accessibilityIdentifier("target-project-legacy-notes-text")
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("target-project-legacy-notes-card")
+            }
             LabeledContent("Note history", value: model.status)
                 .accessibilityIdentifier("target-project-note-history-status")
 
             if model.isAuthoritativelyEmpty {
-                Text("No notes")
+                Text("No individual notes")
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-project-note-history-empty")
             }

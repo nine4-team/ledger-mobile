@@ -114,16 +114,21 @@ public struct ProjectCoreDetailsRequest: Codable, Equatable, Sendable {
 public struct ProjectCoreDetailsSnapshot: Codable, Equatable, Sendable {
     public let project: ProjectSummary
     public let locallyObservedRevision: ExpectedProjectRevision
+    /// Original Project.notes text, not a description or a timestamped note.
+    /// Preserve whitespace and absence exactly; source correlation belongs to migration evidence.
+    public let legacyNotes: String?
 
     public init(
         project: ProjectSummary,
-        locallyObservedRevision: ExpectedProjectRevision
+        locallyObservedRevision: ExpectedProjectRevision,
+        legacyNotes: String? = nil
     ) throws {
         guard ProjectDescriptionReplacement(project.description).value == project.description else {
             throw ProjectCoreDetailsFailure.noncanonicalDescription
         }
         self.project = project
         self.locallyObservedRevision = locallyObservedRevision
+        self.legacyNotes = legacyNotes
     }
 
     public init(from decoder: Decoder) throws {
@@ -148,7 +153,8 @@ public struct ProjectCoreDetailsSnapshot: Codable, Equatable, Sendable {
             } catch {
                 throw ProjectCoreDetailsFailure.invalidEncodedRevision
             }
-            try self.init(project: project, locallyObservedRevision: revision)
+            try self.init(project: project, locallyObservedRevision: revision,
+                          legacyNotes: container.decodeIfPresent(String.self, forKey: .legacyNotes))
         } catch let failure as ProjectCoreDetailsFailure {
             throw failure
         } catch {
@@ -159,6 +165,7 @@ public struct ProjectCoreDetailsSnapshot: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case project
         case locallyObservedRevision
+        case legacyNotes
     }
 }
 

@@ -55,6 +55,39 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-027 | accepted, implementation verification pending | Reuse local vendor parsers without importing legacy accounting writes |
 | A-028 | accepted, implementation verification pending | Compose Inventory with existing Account-scoped workspace readers |
 | A-029 | accepted, integration verification pending | Clear Project setup presentation evidence before lifecycle drainage |
+| A-030 | accepted, implementation verification pending | Preserve original Project notes as distinct detail content |
+
+## A-030 — Legacy Project Notes Are Not Individual Note Records
+
+The existing Project detail contract carries a separate nullable `legacyNotes`
+value for original `Project.notes` content. It does not reuse description or
+manufacture an individual note with a guessed author, timestamp or source type.
+This implements [Notes and Quick Note](../../specs/projects.md#notes-and-quick-note),
+not a new note-writing policy. The existing Account/Project detail lifetime and
+authorization remain responsible for visibility and cleanup.
+
+Preserve text exactly, including multiline content, empty strings and whitespace.
+Migration must retain source correlation and immutable source evidence separately;
+replay must not append duplicate notes or overwrite individual note history.
+Keep legacy text out of directory-card presentation. The synchronized Project
+row carries it consistently across existing streams; a separate notes stream
+would duplicate ownership without a demonstrated need. The Notes screen composes a
+read-only legacy card with the existing individual-note list, without adding a
+second history or persistence system.
+
+Tradeoff: this adds one explicit detail field rather than coercing two distinct
+source shapes into one model. Older encoded detail fixtures may omit the field;
+that compatibility does not prove legacy-note migration or download completeness.
+
+Verification: core encoding and model lifecycle tests preserve exact text and
+clear it on selection/denial/stop. Provider tests preserve text through archive
+overlays and encrypted reopen, and deny removed membership. The source transform
+retains the entire original document and leaves nontext/NUL values unresolved
+rather than silently changing them. Full local Swift tests pass; SQL authorization
+and native legacy-only/both/neither presentation await exact-commit CI. A pure
+source transform is not a persisted import: durable source loading, replay and
+reconciliation remain required for `project-initial-notes-preservation` in the
+unified checklist. No production data has been accessed.
 
 ## A-029 — Project Setup Closure Clears Presentation, Not Accepted Work
 

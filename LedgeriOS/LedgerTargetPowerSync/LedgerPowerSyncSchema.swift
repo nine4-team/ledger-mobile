@@ -192,7 +192,7 @@ public enum LedgerPowerSyncSchema {
             name: LedgerPowerSyncTable.projects,
             columns: [
                 .text("account_id"), .text("client_id"), .text("display_name"),
-                .text("description"), .text("property_address"), .text("lifecycle"), .integer("revision"),
+                .text("description"), .text("legacy_notes"), .text("property_address"), .text("lifecycle"), .integer("revision"),
                 .text("category_configuration_revision"),
                 .integer("created_at_ms"), .integer("updated_at_ms"),
                 .text("created_by_principal_id")

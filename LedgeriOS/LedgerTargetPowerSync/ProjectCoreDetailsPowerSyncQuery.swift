@@ -60,7 +60,7 @@ final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unche
                         ), selected_projects AS (
                           SELECT authoritative.id, authoritative.account_id,
                                  authoritative.client_id, authoritative.display_name,
-                                 authoritative.description, authoritative.lifecycle,
+                                 authoritative.description, authoritative.legacy_notes, authoritative.lifecycle,
                                  authoritative.revision AS base_revision,
                                  NULL AS pending_operation_id,
                                  pending.operation_id AS reconciliation_operation_id
@@ -73,7 +73,7 @@ final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unche
                             AND (SELECT is_active FROM scope)
                           UNION ALL
                           SELECT pending.id, pending.account_id, pending.client_id,
-                                 pending.display_name, pending.description,
+                                 pending.display_name, pending.description, NULL AS legacy_notes,
                                  pending.lifecycle, pending.revision AS base_revision,
                                  pending.operation_id AS pending_operation_id,
                                  NULL AS reconciliation_operation_id
@@ -122,7 +122,7 @@ final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unche
                         )
                         SELECT scope.is_active,
                                project.id, project.account_id, project.client_id,
-                               project.display_name, project.description,
+                               project.display_name, project.description, project.legacy_notes,
                                CASE
                                  WHEN archive.operation_id IS NOT NULL
                                   AND project.base_revision <= archive.projected_revision
@@ -374,6 +374,7 @@ private struct PowerSyncProjectCoreRow: Sendable {
     let clientId: String
     let displayName: String
     let description: String?
+    let legacyNotes: String?
     let lifecycle: String
     let revision: Int64
     let projectPendingOperationId: String?
@@ -420,6 +421,7 @@ private struct PowerSyncProjectCoreRow: Sendable {
         clientId = try cursor.getString(name: "client_id")
         displayName = try cursor.getString(name: "display_name")
         description = try cursor.getStringOptional(name: "description")
+        legacyNotes = try cursor.getStringOptional(name: "legacy_notes")
         lifecycle = try cursor.getString(name: "lifecycle")
         revision = try cursor.getInt64(name: "revision")
         projectPendingOperationId = try cursor.getStringOptional(
@@ -520,7 +522,8 @@ private struct PowerSyncProjectCoreRow: Sendable {
         )
         return try ProjectCoreDetailsSnapshot(
             project: project,
-            locallyObservedRevision: ExpectedProjectRevision(UInt64(revision))
+            locallyObservedRevision: ExpectedProjectRevision(UInt64(revision)),
+            legacyNotes: legacyNotes
         )
     }
 

@@ -108,6 +108,11 @@ public final class ProjectBrowsingStagingExercise {
     public var detailPresentation: ProjectDetailHeaderPresentation? {
         detailViewState.presentation
     }
+    public var selectedLegacyNotes: String? {
+        guard let content = detailViewState.presentation?.state.content,
+              content.projectId == selectedProjectId else { return nil }
+        return content.legacyNotes
+    }
     public var detailStateLabel: String { detailViewState.stateLabel }
     public var detailReadiness: String { detailViewState.readinessLabel }
     public var detailDiagnostic: String? { detailViewState.diagnostic?.rawValue }

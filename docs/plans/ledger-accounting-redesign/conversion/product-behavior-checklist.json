@@ -26591,6 +26591,7 @@
       ],
       "affectedComponents": [
         "LedgeriOS/LedgerTargetCore",
+        "LedgeriOS/LedgerTargetCoreTests",
         "LedgeriOS/LedgerTargetAppModel",
         "LedgeriOS/LedgerTargetAppModelTests",
         "LedgeriOS/LedgerTargetApp",
@@ -26599,18 +26600,31 @@
         "LedgeriOS/LedgerTargetPowerSyncTests",
         "scripts",
         "LedgeriOS/LedgerTargetProject.yml",
-        "LedgeriOS/LedgerTargetStagingUITests"
+        "LedgeriOS/LedgerTargetStagingUITests",
+        "LedgeriOS/LedgerTargetMigrationCore",
+        "LedgeriOS/LedgerTargetMigrationCoreTests",
+        "supabase/migrations",
+        "supabase/tests",
+        "powersync"
       ],
       "layers": [
         "domain",
         "app_ui",
         "powersync_sync",
-        "local_offline"
+        "local_offline",
+        "migration",
+        "postgres_schema",
+        "postgres_handler",
+        "rls"
       ],
       "riskDomains": [
         "ui_fidelity",
         "sync_visibility",
-        "offline_durability"
+        "offline_durability",
+        "migration_fidelity",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization"
       ],
       "uiJourneys": [
         {
@@ -26652,6 +26666,13 @@
               "action": "Tap one represented active Project identified by stable Project ID.",
               "result": "Opens only that exact represented Project workspace; disappearance or authorization loss invalidates the workspace and all child observations.",
               "disposition": "redesign"
+            },
+            {
+              "label": "Legacy Notes",
+              "options": [],
+              "action": "Read original Project notes alongside individual note history.",
+              "result": "Show exact retained text separately without fabricated author/date; no card for nil or empty content, and no individual-note empty message claiming all notes are absent. The existing detail lifecycle owns clearing.",
+              "disposition": "preserve"
             },
             {
               "label": "Spaces tab",
@@ -26877,6 +26898,13 @@
           "status": "passed"
         },
         {
+          "id": "PROJECT-LEGACY-NOTES-PRESERVATION",
+          "risk": "ui_fidelity",
+          "expected": "Preserve original Project.notes independently of description and individual notes, show a separate read-only card without invented author/time, retain source correlation and exact text through import/replay, and clear it on Project change or Account lock. Governing outcome: project-initial-notes-preservation; projects.md Notes and Quick Note; A-030.",
+          "command": "25 focused core/detail/model tests passed;15 provider tests passed including exact Unicode/archive/encrypted reopen/removal and pending NULL;2 source conversion tests passed preserving full source and rejecting nontext/NUL. Independent review AXValue assertion issue corrected. Native four-mode test and SQL tests await CI. Persisted import/reconciliation remains unimplemented.",
+          "status": "planned"
+        },
+        {
           "id": "ACTIVE-PROJECT-NOTE-HISTORY-ROUTE",
           "risk": "ui_fidelity",
           "expected": "Notes opens existing history for the represented active Project; Back returns to its workspace. Existing note model supplies bounded pages, provenance, unavailable/empty state and cancellation. Native fixture must verify note text, creator and retained source. Creation/editing and legacy-note display are not claimed.",
@@ -26889,6 +26917,34 @@
           "expected": "The same real-view route passes on iOS Simulator, including card progress and unavailable Item/media evidence, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
           "command": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=iOS Simulator,id=75D871BB-35DB-4559-92EF-6B0116B4E8D1' CODE_SIGNING_ALLOWED=NO -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
           "status": "passed"
+        },
+        {
+          "id": "LEGACY-NOTES-MIGRATION-FIDELITY",
+          "risk": "migration_fidelity",
+          "expected": "Retain exact legacy text and source document with reconciled source-to-target scope; import must not duplicate individual notes.",
+          "command": "FirebaseProjectLegacyNotesConversionTests:2 passed; transform only, persisted load/replay still required.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-DATABASE-INTEGRITY",
+          "risk": "database_integrity",
+          "expected": "Nullable legacy_notes preserves exact text without modifying description or individual notes.",
+          "command": "project_legacy_notes_read.test.sql added; execution pending CI.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-HANDLER-IDEMPOTENCY",
+          "risk": "handler_idempotency",
+          "expected": "No new mutation grants or changed command semantics; actual import must be idempotent.",
+          "command": "No handler changed; SQL no-write-grant check added. Actual import handler/replay remains unimplemented.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-TENANT-AUTHORIZATION",
+          "risk": "tenant_authorization",
+          "expected": "Same-Account active membership scopes legacy-note reads; removal denies access.",
+          "command": "Provider archive/reopen/removal passed. SQL member/cross-Account/removal/no-write-grant checks await CI.",
+          "status": "planned"
         }
       ],
       "deferredBehaviors": [

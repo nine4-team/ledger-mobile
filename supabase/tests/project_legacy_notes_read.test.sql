@@ -1,0 +1,20 @@
+begin;
+set local search_path=public,extensions;
+select no_plan();
+insert into public.spike_projects(id,account_id,client_id,display_name,legacy_notes,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+values ('legacy-notes-primary','account-primary','client-existing','Legacy notes',E'  Original\n第二行\r\n  ',now(),now(),1,1,'principal-owner');
+select is((select legacy_notes from public.spike_projects where id='legacy-notes-primary'),E'  Original\n第二行\r\n  ','Exact whitespace and Unicode are preserved');
+select ok(not has_column_privilege('authenticated','public.spike_projects','legacy_notes','UPDATE'),'No legacy-note write grant');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
+select is((select legacy_notes from public.spike_projects where id='legacy-notes-primary'),E'  Original\n第二行\r\n  ','Member may read legacy notes independently of financial visibility');
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000003","role":"authenticated"}',true);
+select is((select count(*) from public.spike_projects where id='legacy-notes-primary'),0::bigint,'Another Account cannot read legacy notes');
+reset role;
+update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
+select is((select count(*) from public.spike_projects where id='legacy-notes-primary'),0::bigint,'Removed membership denies legacy notes with same JWT');
+reset role;
+select * from finish();
+rollback;

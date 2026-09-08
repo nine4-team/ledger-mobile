@@ -41,7 +41,8 @@ struct ProjectBrowsingStagingExerciseView: View {
             LabeledContent("Detail readiness", value: model.detailReadiness)
                 .accessibilityIdentifier("target-project-detail-readiness")
 
-            ProjectNoteHistoryStagingExerciseView(model: model.noteHistory)
+            ProjectNoteHistoryStagingExerciseView(model: model.noteHistory,
+                legacyNotes: model.selectedLegacyNotes)
 
             Button("Archive Project") {
                 archive.requestArchiveConfirmation()

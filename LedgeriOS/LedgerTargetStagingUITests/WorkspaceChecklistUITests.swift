@@ -819,6 +819,41 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseSpaceChecklist(inventory: false)
     }
 
+    func testLegacyProjectNotesRemainSeparate() throws {
+        continueAfterFailure = false
+        for mode in ["both", "legacy-only", "individual-only", "neither"] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-legacy-notes=\(mode)"]
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let notes = app.buttons["target-active-project-notes-tab"]
+            reveal(notes, in: app)
+            XCTAssertTrue(notes.waitForExistence(timeout: 5))
+            notes.tap()
+            let status = app.descendants(matching: .any)["target-project-note-history-status"].firstMatch
+            XCTAssertTrue(status.waitForExistence(timeout: 5))
+            let legacy = app.staticTexts["target-project-legacy-notes-text"]
+            if mode == "both" || mode == "legacy-only" {
+                XCTAssertTrue(legacy.waitForExistence(timeout: 5))
+                XCTAssertEqual(displayedText(legacy), "Original planning notes\nKeep the blue sofa.")
+                let card = app.descendants(matching: .any)["target-project-legacy-notes-card"].firstMatch
+                XCTAssertFalse(card.staticTexts["Test Designer"].exists)
+                XCTAssertFalse(card.staticTexts["target-project-note-source"].exists)
+            } else { XCTAssertFalse(legacy.exists) }
+            if mode == "both" || mode == "individual-only" {
+                XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
+                XCTAssertTrue(app.staticTexts["Test Designer"].exists)
+            } else {
+                XCTAssertTrue(app.staticTexts["target-project-note-history-empty"].waitForExistence(timeout: 5))
+                XCTAssertEqual(displayedText(app.staticTexts["target-project-note-history-empty"]), "No individual notes")
+            }
+            app.terminate()
+        }
+    }
+
     func testInventorySpaceChecklistInteraction() throws {
         try exerciseSpaceChecklist(inventory: true)
     }
