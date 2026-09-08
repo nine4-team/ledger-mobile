@@ -14,7 +14,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let item = app.staticTexts["target-physical-item-physical-ui-chair"]
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
-        XCTAssertEqual(item.label, "Downloaded test chair")
+        // macOS SwiftUI static text can expose its content as AXValue;
+        // iOS generally uses AXLabel. Verify content on this same element.
+        XCTAssertTrue(waitUntil {
+            item.label == "Downloaded test chair"
+                || (item.value as? String) == "Downloaded test chair"
+        })
         XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
         let refresh = app.buttons["target-items-refresh"]
         reveal(refresh, in: app)
