@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 176,
-  "resumeAfterWorkflowId": "item-history-source-reconciliation",
+  "stateVersion": 180,
+  "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -10,24 +10,24 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "PROPERTY-REPORT-NATIVE-COPY-PRINT-AND-IPHONE-CI-GREEN",
-    "commit": "7919298c5b623b71e0b0ee28e172a8ad1f757d71",
-    "ciRun": 34201884298,
+    "name": "PROPERTY-REPORT-BOTH-PLATFORMS-NATIVE-HANDOFF-GREEN",
+    "commit": "41ef3770c53fe4bd6d764133f4034147e5c32f58",
+    "ciRun": 34224749750,
     "ciStatus": "passed",
-    "meaning": "Database,877 native tests/130 suites,9 macOS UI tests,both builds,3 iPhone report tests passed. Actual Copy payload and Print cancellation verified on macOS; iPhone report states/controls/error recovery verified. Not iOS native handoff, hardware protection, hosted validation or cutover readiness."
+    "meaning": "Database,878 native tests/130 suites,9 macOS UI tests,both builds,5 iPhone report tests passed. Actual PDF/CSV Copy payload and Share/Print cancellation verified on both platforms. SKU spec conflict,hardware protection,hosted validation and cutover readiness remain unresolved."
   },
   "activeWorkflow": {
-    "id": "property-management-report-delivery",
+    "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Project Property Management preview and PDF/print/share from one complete authorized snapshot; shared MCP/CSV fields.",
+    "outcome": "Project Notes displays retained source alongside author/date using the existing authorized history; existing Project/Space round trip verifies metadata.",
     "nextActions": [
-      "NEXT commit native dismiss-element tap correction with this checkpoint after focused checks; push once and follow automatic CI. CI34221111520 at8654cd7b94d65f380ad2e38715480b61c9c6aa31 is terminal FAILURE: only third iPhone share cancellation failed. Other report tests/database/native/macOS/build gates passed. No manual rerun.",
-      "Inspected artifact10054818204,report-ios-failure-772165772e541fbf86fce670d051062931345eb1. Video and synthesized events confirm all three outside taps at(201,174.8); third sheet stayed open. Root cause unproven. Test now waits for dismissal-element hittability and uses element.tap(), retaining PDF/CSV/PDF repeats and five-second disappearance checks. No app changes. Evidence in .report-ci-evidence-cEw4MR; never commit it.",
-      "Report acceptance in unified checklist. Hosted/hardware proof and retained unsorted cache recovery unproven. Pending inputs: free >=10GB locally(last3.6GiB), authorize free-only hosted synthetic staging or identify existing isolated environment. No approval received; no hosted/prod/user-file cleanup access. Reuse passed native/database evidence for test-only change; no docs-only pushes.",
-      "M4 whole-account-migration-reconciliation still owns physical Item name,description,sku,marketValueCents and explicit Account currency import/readback. Source Project has no address; never infer property_address from description. Product audit complete; no new unused converter/catalog.",
-      "Logout followup read-only review complete, no agents running. AccountSessionEnding has no concrete provider/app owner. Reuse stable PendingWorkPowerSyncQuery and shared fence/drain; need reversible quiescence before summary,physical cleanup/key/recovery,real Auth owner(A007 proposed). Never reuse permanent membership-removal marker. Async product question pending: whole-login logout protecting every downloaded Account vs active-Account-only. Do not silently choose scope or claim DB close equals logout. Main independently inspected relevant coordinator/runtime/A007."
+      "NEXT finish focused checks and review note-source display diff; commit with saved report evidence and push once. Five ProjectNoteHistoryStagingExerciseTests,macOS Swift6 view/test-file typechecks,10 CI guard tests passed. CI now includes existing Project/Notes/Space round trip on iPhone; Mac already runs it. No provider/storage/mutation change, no ADR required for routine display fix.",
+      "Report CI34224749750 at41ef3770 terminal SUCCESS; watch32843 terminal0. Evidence saved in report workflow; no more polling/retries. SKU conflict awaits user reply; do not silently pick reports.md versus property-management-report.md. Temporary prior failure artifact .report-ci-evidence-cEw4MR is untracked; never commit.",
+      "Hosted/hardware proof,retained unsorted cache recovery and whole-Account migration remain unproven. Pending inputs: free >=10GB locally(last3.6GiB), authorize free-only hosted synthetic staging or identify existing isolated environment. No approval received. No full local app builds or production/Firebase access.",
+      "Logout question still pending: whole-login scope protecting every downloaded Account versus active Account only. A007 actual Auth owner still proposed. Reuse stable pending-work query and reversible workspace quiescence; never reuse permanent membership-removal marker for logout.",
+      "Product audit remains complete. The scoped next UI correction does not complete Project Notes editing or legacy-note import. Those and Account profile edits have separate authorities/open decisions; do not silently implement O039/O068 policy."
     ]
   },
   "blockers": [],

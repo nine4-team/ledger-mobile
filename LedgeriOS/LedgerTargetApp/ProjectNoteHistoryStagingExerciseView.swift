@@ -20,6 +20,8 @@ struct ProjectNoteHistoryStagingExerciseView: View {
                     Text(row.body)
                         .foregroundStyle(row.isTombstone ? .secondary : .primary)
                     HStack {
+                        Text("Source: \(row.source)")
+                            .accessibilityIdentifier("target-project-note-source")
                         if let creator = row.creatorDisplayName {
                             Text(creator)
                         }

@@ -481,6 +481,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         notes.tap()
         XCTAssertTrue(app.staticTexts["Measure the entry before delivery."].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Test Designer"].exists)
+        XCTAssertEqual(app.staticTexts["target-project-note-source"].label, "Source: text")
         XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
         app.buttons["target-active-workspace-back"].tap()
         XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))

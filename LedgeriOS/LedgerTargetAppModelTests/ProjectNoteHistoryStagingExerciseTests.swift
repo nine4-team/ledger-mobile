@@ -32,6 +32,8 @@ struct ProjectNoteHistoryStagingExerciseTests {
 
         #expect(model.status == "stale • incomplete")
         #expect(model.rows[0].body == "Visible")
+        #expect(model.rows[0].source == "text")
+        #expect(model.rows[0].creatorDisplayName == "Jordan")
         #expect(model.rows[1].body == "Deleted note")
         #expect(model.rows[1].isTombstone)
         #expect(model.hasOlderNotes)
