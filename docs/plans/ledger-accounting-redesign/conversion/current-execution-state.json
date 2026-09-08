@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 196,
+  "stateVersion": 202,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Select and review supported Amazon/Wayfair PDFs offline, preserve source evidence and editable row identity, safe category/debug/thumbnail controls. No accepted accounting import or payment inference.",
     "nextActions": [
-      "NEXT commit/push corrections+real-file UI follow-up,then follow one automatic CI. Full native887tests/132suites passed44.662s (session51535 terminal0,log .native-pdf-followup.WTR3HP); all-app/native-test Swift6 typecheck and conversion/environment/CI guards passed. Previous CI34232419167 terminal macOS UI failure:offscreen removal controls,note-source AX,PDF empty sheet; no iOS run. Model-owned review lifetime,gate-lock close,macOS reveal scrolling and contained note accessibility address these,awaiting native confirmation. New real-file error/edit/category/debug test compile-only. CI now retains both platforms' failure results.",
-      "Current follow-up focused13 tests passed,including three review lifetime cases; native test file and all-target-app typechecks passed before last small gate-lock hook. Missing-date warning no longer suggests today,raw evidence retained. Latest full source typecheck and UI runtime verification still required. Do not poll completed CI34232419167/34228082338/34224749750. SKU conflict remains open.",
-      "Five shared parser sources guarded by explicit allowlist; three negative/positive Node tests and target:environment:check passed. Source money normalization remains best-effort, not financial authority. Parser fixture harness independently reviewed: only synthetic in-memory PDFs, current source direct compile, scoped temporary outputs. ADR A027 updated; no parser copies/new runtime module or Firebase edits.",
-      "Hosted/hardware proof,retained unsorted cache recovery and whole-Account migration remain unproven. Pending free>=10GB(last3.6GiB),free-only hosted synthetic staging authorization,logout whole-login scope/A007 owner. No approvals received. No full local app builds or production/Firebase access.",
-      "Watch shell45956 terminal exit1; no live CI watch. Product audit complete; no restart. PDF review independent of O061 accounting/quantity/duplicate acceptance policy. No vendor-proof Client payment inference. All .native-pdf-* logs and .report-ci-evidence-cEw4MR untracked,never commit."
+      "NEXT commit/push reviewed integrated test fixes and follow the single new automatic PR CI. Full native follow-up session13411 terminal0:888tests/132suites passed45.086s. CI34235317607 at f234a72 failed3 of11 macOS UI tests; database/native/PDF fixtures/build passed,iOS skipped. Watch21790 terminal1,do not poll/restart. Exact result is in unified checklist.",
+      "Artifact10060328335 downloaded to .pdf-ui-ci-evidence.WOoD4x; pdf-test/frame-20.png proves local-network permission prompt covered Open. Fixes: narrowly matched deny-network interruption handler,scoped native OKButton/CancelButton,macOS AXValue text assertions. Note source now exists; prior offscreen removal tests passed. These test fixes need new exact-commit automatic CI; no architecture/product changes or weakened expectations.",
+      "Follow-up also adds older-parse races and loaded-source Back/project-removal/stop cleanup(each7 focused tests passed); DEBUG synthetic-byte iOS parser/review/category/edit/exclude/cancel/reopen test. Independent reviewer found caret-dependent clearing,fixed to Select All. macOS/iOS Swift6 typechecks,environment/conversion/10CI guards passed. Native execution,Account-revocation and real vendor-template coverage pending; no accepted accounting import. Audit complete,no restart.",
+      "External prerequisites remain: free>=10GB for local app builds(last4GiB); free-only hosted synthetic Supabase/PowerSync authorization; logout whole-login scope and A007 auth owner; SKU report spec conflict. No responses/approvals received. Continue independent work; no Firebase/production access.",
+      "Preserve .native-pdf-batch.pXTMX4,.native-pdf-followup.WTR3HP,.report-ci-evidence-cEw4MR and .pdf-ui-ci-evidence.WOoD4x as untracked diagnostic artifacts; never commit. Artifact download41935 and checks23150 terminal0. Reviewer pdf_ui_followup_review completed. Keep only unified checklist/current state active."
     ]
   },
   "blockers": [],

@@ -128,6 +128,7 @@ jobs:
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSSystemDialogCancellation \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testProjectSpaceChecklistInteraction \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFSelectionCancellation \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFIOSLoadedReview \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
 

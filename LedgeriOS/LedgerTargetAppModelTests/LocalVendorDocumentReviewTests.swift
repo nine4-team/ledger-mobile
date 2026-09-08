@@ -60,6 +60,37 @@ struct LocalVendorDocumentReviewTests {
         #expect(review.rows.isEmpty)
     }
 
+    @Test("An older parse cannot replace a newer document or its edits", arguments: [false, true])
+    func overlappingDocuments(oldParseFails: Bool) async throws {
+        actor Delayed: LocalVendorDocumentParsing {
+            var continuation: CheckedContinuation<LocalVendorDocument, Error>?
+            func parse(_ bytes: Data) async throws -> LocalVendorDocument {
+                try await withCheckedThrowingContinuation { continuation = $0 }
+            }
+            var started: Bool { continuation != nil }
+            func finish(_ document: LocalVendorDocument, fails: Bool) {
+                if fails { continuation?.resume(throwing: LocalVendorDocumentFailure.corruptDocument) }
+                else { continuation?.resume(returning: document) }
+                continuation = nil
+            }
+        }
+        let parser = Delayed()
+        let review = LocalVendorDocumentReview(accountId: try AccountID(validating: "review-account"))
+        let oldLoad = Task { await review.load(Data("older PDF".utf8), parser: parser) }
+        while !(await parser.started) { await Task.yield() }
+        #expect(review.state == .extracting)
+        let currentBytes = Data("newer PDF".utf8)
+        await review.load(currentBytes, parser: Parser(result: document()))
+        let currentHash = try #require(review.documentHash)
+        review.update(id: 1, documentHash: currentHash) { $0.description = "New document edit" }
+        await parser.finish(document(), fails: oldParseFails)
+        await oldLoad.value
+        #expect(review.state == .review)
+        #expect(review.documentHash == currentHash && review.sourceBytes == currentBytes)
+        #expect(review.rows[1].description == "New document edit")
+        #expect(review.document == document())
+    }
+
     @Test("Invalid row provenance fails instead of exposing an ambiguous draft")
     func invalidIdentity() async throws {
         let review = LocalVendorDocumentReview(accountId: try AccountID(validating: "review-account"))

@@ -44,6 +44,16 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
             }
         }
         .task { await fixture.start() }
+        .onChange(of: fixture.model.vendorDocumentReview != nil) { _, isOpen in
+            // Synthetic bytes supplied by the UI test exercise the real parser
+            // and review UI, not the system file picker (tested separately).
+            guard isOpen,
+                  ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-vendor-pdf-bytes"),
+                  let encoded = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--ledger-ui-test-pdf-base64=") }),
+                  let bytes = Data(base64Encoded: String(encoded.dropFirst("--ledger-ui-test-pdf-base64=".count))),
+                  let review = fixture.model.vendorDocumentReview else { return }
+            Task { await review.load(bytes, parser: LocalVendorPDFParser()) }
+        }
         .onDisappear {
             Task { await fixture.stop() }
         }

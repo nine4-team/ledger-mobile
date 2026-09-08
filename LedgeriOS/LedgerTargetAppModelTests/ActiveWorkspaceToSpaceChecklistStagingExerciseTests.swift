@@ -206,6 +206,16 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         model.openVendorDocumentReview()
         let review = try #require(model.vendorDocumentReview)
         #expect(!review.isClosed && review.accountId == Self.accountId)
+        struct Parser: LocalVendorDocumentParsing {
+            func parse(_ bytes: Data) async throws -> LocalVendorDocument {
+                LocalVendorDocument(vendor: .amazon, fields: [:], rows: [
+                    .init(id: 0, description: "Private source row", quantity: 1,
+                          unitPrice: "10.00", total: "10.00")
+                ], warnings: [], rawText: "Private document text", pageCount: 1)
+            }
+        }
+        await review.load(Data("private source bytes".utf8), parser: Parser())
+        #expect(review.state == .review && review.sourceBytes != nil)
         switch action {
         case "back": await model.back()
         case "removal": directory.yield(try Self.projectList([]))
@@ -214,6 +224,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         await Self.wait { review.isClosed }
         #expect(model.vendorDocumentReview == nil)
         #expect(review.isClosed)
+        #expect(review.sourceBytes == nil && review.document == nil && review.documentHash == nil)
+        #expect(review.rows.isEmpty && review.categories.isEmpty)
         await model.stop()
     }
 

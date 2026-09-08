@@ -1,7 +1,7 @@
 import XCTest
+import CoreText
 #if os(macOS)
 import AppKit
-import CoreText
 #elseif os(iOS)
 import UIKit
 #endif
@@ -14,6 +14,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             throw XCTSkip("Diagnostic Copy uses only the isolated CI clipboard")
         }
         continueAfterFailure = false
+        let permissionMonitor = installOfflinePDFPermissionHandler()
+        defer { removeUIInterruptionMonitor(permissionMonitor) }
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-synthetic-\(UUID().uuidString).pdf")
         try Data("synthetic unreadable PDF".utf8).write(to: file)
         defer { try? FileManager.default.removeItem(at: file) }
@@ -30,14 +32,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         selectVendorPDF(file, in: app)
         let parseError = app.descendants(matching: .any)["target-vendor-pdf-error"].firstMatch
         XCTAssertTrue(parseError.waitForExistence(timeout: 10), app.debugDescription)
-        XCTAssertTrue(parseError.label.contains("could not be read"))
+        XCTAssertTrue(displayedText(parseError).contains("could not be read"))
         // Replacing bytes at the same path must not reuse the failed parse.
         try syntheticVendorPDF().write(to: file, options: .atomic)
         selectVendorPDF(file, in: app)
         let count = app.descendants(matching: .any)["target-vendor-pdf-included-count"].firstMatch
         XCTAssertTrue(count.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(parseError.exists)
-        XCTAssertEqual(count.label, "Included rows: 2 of 2")
+        XCTAssertEqual(displayedText(count), "Included rows: 2 of 2")
         let category = app.descendants(matching: .any)["target-vendor-pdf-category"].firstMatch
         XCTAssertEqual(category.value as? String, "No Category")
         category.tap()
@@ -64,7 +66,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let include = app.descendants(matching: .any)["target-vendor-pdf-include-0"].firstMatch
         show(include, upward: false)
         include.tap()
-        XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        XCTAssertEqual(displayedText(count), "Included rows: 1 of 2")
         let stats = app.buttons["target-vendor-pdf-stats-toggle"]
         show(stats)
         stats.tap()
@@ -74,8 +76,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         raw.tap()
         let rawText = app.descendants(matching: .any)["target-vendor-pdf-raw"].firstMatch
         XCTAssertTrue(rawText.exists)
-        XCTAssertTrue(rawText.label.contains("Synthetic Chair"))
-        XCTAssertFalse(rawText.label.contains("synthetic-secret"))
+        XCTAssertTrue(displayedText(rawText).contains("Synthetic Chair"))
+        XCTAssertFalse(displayedText(rawText).contains("synthetic-secret"))
         raw.tap()
         let copy = app.buttons["target-vendor-pdf-copy-debug"]
         show(copy)
@@ -85,13 +87,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(json.contains("Synthetic Chair")) // Originals, not edited draft text.
         show(select, upward: false)
         select.tap()
-        let pickerCancel = app.buttons.matching(NSPredicate(
-            format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
-        )).firstMatch
+        let pickerCancel = vendorPickerCancel(in: app)
         XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5))
         pickerCancel.tap()
         XCTAssertTrue(pickerCancel.waitForNonExistence(timeout: 5))
-        XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        XCTAssertEqual(displayedText(count), "Included rows: 1 of 2")
         let description = app.descendants(matching: .any)["target-vendor-pdf-description-1"].firstMatch
         show(description)
         XCTAssertEqual(description.value as? String, "Edited chair")
@@ -102,14 +102,32 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     private func selectVendorPDF(_ file: URL, in app: XCUIApplication) {
         app.buttons["target-vendor-pdf-select"].tap()
-        let open = app.buttons["Open"].firstMatch
+        let open = app.sheets["open-panel"].buttons["OKButton"]
         XCTAssertTrue(open.waitForExistence(timeout: 5), app.debugDescription)
         app.typeKey("g", modifierFlags: [.command, .shift])
         app.typeText(file.path)
         app.typeKey(.return, modifierFlags: [])
-        XCTAssertTrue(waitUntil { open.isEnabled && open.isHittable }, app.debugDescription)
+        // Let XCTest perform its interruption handling as part of the action.
+        // Polling isHittable alone cannot dismiss a native permission prompt.
         open.tap()
     }
+
+    private func installOfflinePDFPermissionHandler() -> NSObjectProtocol {
+        addUIInterruptionMonitor(withDescription: "Deny local-network discovery for offline PDF review") { dialog in
+            let text = dialog.staticTexts.allElementsBoundByIndex.map {
+                $0.label + " " + (($0.value as? String) ?? "")
+            }.joined(separator: " ")
+            guard text.contains("Ledger STAGING"), text.contains("local networks") else { return false }
+            // The native report/print UI can leave this discovery prompt pending.
+            // PDF review needs no discovery permission; never grant it to pass.
+            let deny = dialog.buttons["Don’t Allow"]
+            guard deny.exists else { return false }
+            deny.tap()
+            return true
+        }
+    }
+
+    #endif
 
     private func syntheticVendorPDF() throws -> Data {
         let data = NSMutableData()
@@ -131,10 +149,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         context.closePDF()
         return data as Data
     }
-    #endif
 
     func testVendorPDFSelectionCancellation() throws {
         continueAfterFailure = false
+        #if os(macOS)
+        let permissionMonitor = installOfflinePDFPermissionHandler()
+        defer { removeUIInterruptionMonitor(permissionMonitor) }
+        #endif
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
         app.launch()
@@ -151,11 +172,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(empty.waitForExistence(timeout: 5))
             app.buttons["target-vendor-pdf-select"].tap()
             // Match the system picker's Cancel, not the underlying review toolbar.
-            let pickerCancel = app.buttons.matching(NSPredicate(
-                format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
-            )).firstMatch
+            let pickerCancel = vendorPickerCancel(in: app)
             XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5), app.debugDescription)
-            XCTAssertTrue(waitUntil { pickerCancel.isHittable }, app.debugDescription)
             pickerCancel.tap()
             XCTAssertTrue(pickerCancel.waitForNonExistence(timeout: 5), app.debugDescription)
             XCTAssertTrue(empty.exists)
@@ -167,6 +185,66 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     #if os(iOS)
+    func testVendorPDFIOSLoadedReview() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-vendor-pdf-bytes"]
+        app.launchArguments.append("--ledger-ui-test-pdf-base64=" + (try syntheticVendorPDF().base64EncodedString()))
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let open = app.buttons["target-vendor-pdf-open"]
+        reveal(open, in: app)
+        open.tap()
+        let count = app.descendants(matching: .any)["target-vendor-pdf-included-count"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(count.label, "Included rows: 2 of 2")
+        let category = app.descendants(matching: .any)["target-vendor-pdf-category"].firstMatch
+        category.tap()
+        let choice = app.buttons["Furnishings"].firstMatch
+        XCTAssertTrue(choice.waitForExistence(timeout: 5), app.debugDescription)
+        choice.tap()
+        XCTAssertEqual(category.value as? String, "Furnishings")
+        let scroll = app.scrollViews["target-vendor-pdf-scroll"].firstMatch
+        func show(_ element: XCUIElement) {
+            for _ in 0..<10 {
+                if element.exists && element.isHittable { return }
+                scroll.swipeUp()
+            }
+            XCTAssertTrue(element.isHittable, app.debugDescription)
+        }
+        let include = app.switches["target-vendor-pdf-include-0"].firstMatch
+        show(include)
+        include.tap()
+        XCTAssertEqual(count.label, "Included rows: 1 of 2")
+        for (id, value) in [("description", "Edited table"), ("quantity", "3"), ("price", "12.34")] {
+            let field = app.descendants(matching: .any)["target-vendor-pdf-\(id)-1"].firstMatch
+            show(field)
+            field.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            field.press(forDuration: 1)
+            let selectAll = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "label == %@", "Select All")).firstMatch
+            XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+            selectAll.tap()
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value)
+        }
+        app.buttons["target-vendor-pdf-cancel"].tap()
+        XCTAssertTrue(count.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.tap()
+        XCTAssertTrue(count.waitForExistence(timeout: 10))
+        XCTAssertEqual(count.label, "Included rows: 2 of 2")
+        // Reopening constructs a new document review, not the abandoned draft.
+        let description = app.descendants(matching: .any)["target-vendor-pdf-description-1"].firstMatch
+        show(description)
+        XCTAssertEqual(description.value as? String, "Synthetic Chair")
+        app.buttons["target-vendor-pdf-cancel"].tap()
+    }
+
     func testPropertyManagementIOSSystemDialogCancellation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -642,7 +720,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Test Designer"].exists)
         let noteSource = app.descendants(matching: .any)["target-project-note-source"].firstMatch
         XCTAssertTrue(noteSource.waitForExistence(timeout: 5))
-        XCTAssertEqual(noteSource.label, "Source: text")
+        XCTAssertEqual(displayedText(noteSource), "Source: text")
         XCTAssertFalse(app.buttons["target-project-note-older"].isEnabled)
         app.buttons["target-active-workspace-back"].tap()
         XCTAssertTrue(app.buttons["target-active-project-spaces-tab"].waitForExistence(timeout: 5))
@@ -717,6 +795,27 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(space.waitForExistence(timeout: 5))
         XCTAssertFalse(item.exists)
         XCTAssertFalse(status.exists)
+    }
+
+    private func displayedText(_ element: XCUIElement) -> String {
+        // Native macOS StaticText exposes its content as AXValue; iOS uses
+        // AXLabel. Keep the exact expected text assertion on both platforms.
+        #if os(macOS)
+        return (element.value as? String) ?? element.label
+        #else
+        return element.label
+        #endif
+    }
+
+    private func vendorPickerCancel(in app: XCUIApplication) -> XCUIElement {
+        #if os(macOS)
+        // Identifiers observed in the native open-panel failure hierarchy.
+        return app.sheets["open-panel"].buttons["CancelButton"]
+        #else
+        return app.buttons.matching(NSPredicate(
+            format: "label == %@ AND identifier != %@", "Cancel", "target-vendor-pdf-cancel"
+        )).firstMatch
+        #endif
     }
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true) {
