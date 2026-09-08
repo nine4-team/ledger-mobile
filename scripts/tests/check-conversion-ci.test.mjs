@@ -32,7 +32,7 @@ test("repository conversion CI retains the required product and implementation g
   const { packageJson, workflow } = inputs();
   assert.deepEqual(validateConversionCI(packageJson, workflow), {
     conversionCommands: 7,
-    packageGates: 14,
+    packageGates: 15,
     legacyScripts: 15,
     jobs: 3,
   });
@@ -188,6 +188,12 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
 });
 
 test("local Supabase job cannot bypass lint, database tests, cleanup, or its diff guard", () => {
+  expectFailure(
+    (value) => {
+      value.workflow = value.workflow.replace("          npm run target:supabase:test:payment-import\n", "");
+    },
+    /local database gate npm run target:supabase:test:payment-import/,
+  );
   expectFailure(
     (value) => {
       value.workflow = value.workflow.replace("          npm run target:supabase:test:db\n", "");

@@ -1,0 +1,47 @@
+import Foundation
+import LedgerTargetCore
+
+package enum FirebaseClientPaymentImportFailure: Error {
+    case unresolvedBatch
+}
+
+/// Parameter data for the private SQL primitive, never executable SQL or import
+/// authorization. Cents cross JSON as decimal text, preserving all Int64 values.
+package struct FirebaseClientPaymentImportParameters: Encodable, Equatable, Sendable {
+    let p_id: String
+    let p_account_id: String
+    let p_project_id: String
+    let p_client_id: String
+    let p_amount: String
+    let p_currency: String
+    let p_source_account: String
+    let p_source_document: String
+    let p_source_bytes: String
+
+    static func make(batch: FirebasePaymentBatchResult, currency: CurrencyCode) throws -> [Self] {
+        guard batch.isFullyReconciled else { throw FirebaseClientPaymentImportFailure.unresolvedBatch }
+        return try batch.entries.map { entry in
+            guard entry.issues.isEmpty, let id = entry.targetID,
+                  case .mapped(let source, let classification, let cents) = entry.conversion,
+                  let project = classification.scope.projectId, let client = classification.scope.clientId,
+                  source.documentPathSegments.count == 4 else {
+                throw FirebaseClientPaymentImportFailure.unresolvedBatch
+            }
+            // Preserve the whole source envelope, not merely the amount or fields.
+            let document = FirebaseSourceValue.map([
+                .init(key: "accountScopeID", value: .string(source.accountScopeID)),
+                .init(key: "documentPathSegments", value: .reference(segments: source.documentPathSegments)),
+                .init(key: "entityCode", value: .string(source.entityCode)),
+                .init(key: "evidenceKind", value: .string(source.evidenceKind.rawValue)),
+                .init(key: "fields", value: source.fields),
+                .init(key: "sourceRecordID", value: .string(source.sourceRecordID))
+            ])
+            let bytes = try FirebaseSourceFixtureCatalog.canonicalData(for: document)
+            return .init(p_id: id.rawValue, p_account_id: classification.scope.accountId.rawValue,
+                p_project_id: project.rawValue, p_client_id: client.rawValue, p_amount: String(cents),
+                p_currency: currency.rawValue, p_source_account: source.accountScopeID,
+                p_source_document: source.documentPathSegments[3],
+                p_source_bytes: "\\x" + bytes.map { String(format: "%02x", $0) }.joined())
+        }
+    }
+}

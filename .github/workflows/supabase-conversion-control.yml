@@ -141,6 +141,7 @@ jobs:
           npm run target:supabase:test:space-assignment-destination-read
           npm run target:supabase:test:project-note-read
           npm run target:supabase:test:rpc
+          npm run target:supabase:test:payment-import
 
       - name: Stop isolated local Supabase
         if: always()

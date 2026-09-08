@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 87,
+  "stateVersion": 89,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "SOURCE-HISTORY-RECONCILIATION-CI-GREEN",
-    "commit": "fffdd270b2163f1fad7013a9632b95efaf108034",
-    "ciRun": 34169718629,
+    "name": "CLIENT-PAYMENT-BATCH-CI-GREEN",
+    "commit": "45a8476e76f2be2cd730e5449d71645460946383",
+    "ciRun": 34170486476,
     "ciStatus": "passed",
-    "meaning": "Exact source-history/path reconciliation commit passed automatic CI. Does not prove current payment batch, target accounting persistence, hosted behavior or cutover readiness."
+    "meaning": "Exact source client-payment transform and batch reconciliation passed automatic CI. Current SQL storage edits are not included; target app financial access, importer integration, hosted behavior and cutover readiness remain unproved."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,11 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. D028/A019 authorize improved technical representation while preserving meaning/history. Significant changes logged in architecture-decisions.md. No production/hosted access or cutover approved.",
-      "Source-history fffdd270 CI34169718629 success. Earlier e21e48c6 CI34169217765 still confirmed in_progress at last poll; no redispatch/restart. No local processes running.",
-      "Current integrated payment batch uncommitted: explicit client-payment mapping + exact Project snapshot/scope/identity binding, duplicate rejection and overflow-safe totals. Independent review GO with broader-plan scope clarified/tested;44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. A019 records mapping/tradeoffs. Run final controls, commit/push once; consume exact automatic CI.",
-      "Next: connect mapped client payments to target persistence and immutable source/settlement evidence plus migration-run counts/checkpoints and restart/readback reconciliation. Do not invent Client identity from legacy clientName or turn partial/category collections into whole-Invoice collection. Other source economic types remain unresolved; approved source-shaped import plan/bundle and full target history still required.",
-      "O053 checklist actors, A007/O057 auth provider and other linked product/hosted gates affect only related outcomes; continue independent work."
+      "Audit complete; D028/A019/A020 guide technical improvements while preserving behavior/history. Significant changes go in architecture-decisions.md. No Firebase checkout, production/hosted access or cutover authorized.",
+      "SQL+Swift parameter/concurrency batch ready for commit: local migration20260907233804 applied to existing supabase_db_ledger_target_supabase_local. Full DB450/13 and final focused30 PASS; integrated Swift46/10 PASS /tmp/ledger-payment-storage-integrated-swift.log; three observed lock races + Swift golden parameter SQL readback PASS /tmp/ledger-payment-concurrency.log; independent SQL and extension reviews GO. CI wiring added. No active local process.",
+      "Run final conversion check/diff, commit this integrated batch and push existing branch for one automatic PR CI. Prior verified45a8476e CI34170486476 remains exact baseline, not evidence for pending edits. Do not rerun completed full suites solely on resume.",
+      "Next implement real resumable payment-import execution using existing migration plan/journal primitives; preserve whole-source bytes and prove interruption/retry against actual SQL. Shared golden fixture proves serialization only, not a live runner or database restart. Complete export coverage, Client mapping approval, legacy Invoice allocation, app financial reads and hosted gates remain unproved."
     ]
   },
   "blockers": [],

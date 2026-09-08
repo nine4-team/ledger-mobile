@@ -27721,15 +27721,24 @@
       ],
       "affectedComponents": [
         "LedgeriOS/LedgerTargetMigrationCore",
-        "LedgeriOS/LedgerTargetMigrationCoreTests"
+        "LedgeriOS/LedgerTargetMigrationCoreTests",
+        "supabase/migrations/20260907233804_imported_client_payment_storage.sql",
+        "supabase/tests/imported_client_payment_storage.test.sql",
+        "scripts/test-local-imported-payment-concurrency.mjs"
       ],
       "layers": [
         "migration",
-        "accounting"
+        "accounting",
+        "postgres_schema",
+        "postgres_handler",
+        "rls"
       ],
       "riskDomains": [
         "migration_fidelity",
-        "accounting"
+        "accounting",
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization"
       ],
       "uiJourneys": [],
       "acceptanceChecks": [
@@ -27767,13 +27776,48 @@
           "expected": "Bind every input payment to unchanged source Project evidence, an explicit target Client/Project assignment and unique stable target identity. Preserve source count/order, distinguish unresolved inputs, detect sum overflow and prove deterministic replay without name-based ownership or silent payment merging.",
           "command": "swift test --package-path LedgeriOS --filter FirebaseClientPaymentBatchTests",
           "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-DATABASE-INTEGRITY",
+          "risk": "database_integrity",
+          "expected": "Exact cents/currency and Account/Project/Client foreign keys; immutable source bytes/digest; positive amounts, bounded evidence and no orphan records on failed import.",
+          "command": "npx --yes supabase@2.116.0 test db --local supabase/tests/imported_client_payment_storage.test.sql",
+          "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-HANDLER-IDEMPOTENCY",
+          "risk": "handler_idempotency",
+          "expected": "Identical imported payment retry preserves one target/source pair; changed target fields or source bytes/identity conflict atomically without duplicate money.",
+          "command": "npx --yes supabase@2.116.0 test db --local supabase/tests/imported_client_payment_storage.test.sql",
+          "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-TENANT-AUTHORIZATION",
+          "risk": "tenant_authorization",
+          "expected": "Invoker-rights private import function and both RLS-protected relations deny all app/API roles including service_role; cross-Account and Client substitution fails. No approved app financial read policy is inferred.",
+          "command": "npx --yes supabase@2.116.0 test db --local supabase/tests/imported_client_payment_storage.test.sql",
+          "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-CONCURRENT-READBACK",
+          "risk": "handler_idempotency",
+          "expected": "Observe actual concurrent database lock waits; identical imports create one payment, changed amount/source target conflicts roll back without orphan money, and new sessions read committed exact cents/source bytes.",
+          "command": "npm run target:supabase:test:payment-import",
+          "status": "passed"
+        },
+        {
+          "id": "IMPORTED-PAYMENT-PARAMETER-BOUNDARY",
+          "risk": "migration_fidelity",
+          "expected": "Real reconciled Swift batch emits the same nine text parameters consumed by local SQL integration, preserving exact Int64 cents and complete tagged source envelope. Unresolved and overflowing batches cannot export partial parameter lists.",
+          "command": "swift test --package-path LedgeriOS --filter FirebaseClientPaymentImportParametersTests",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
         "Canonical target facts/history persistence and UI/MCP readback remain required, not proved by a source parser.",
         "Actual migration, hosted access, financial-visibility policy and ambiguous-record disposition retain their existing authority boundaries.",
         "Frozen v1 fixture contains simplified movements, not shipped lineageEdges. Package-level source-shaped cycle tests exercise document selection and reconciliation; a reviewed source-shaped export bundle and canonical target accounting mapping/readback remain required.",
-        "Pure client-payment batch validates explicit mapping snapshots, identities and input totals. Reviewed import approval, complete export coverage, target persistence/restart and legacy Invoice/line allocation reconciliation remain required; partial/category payments are not automatically whole-Invoice collections."
+        "Client-payment batch validates explicit mapping snapshots, identities and input totals; local SQL/golden parameter integration proves atomic per-payment persistence and committed cross-session readback. Reviewed import approval, complete export coverage, operational runner/process restart and legacy Invoice/line allocation reconciliation remain required; partial/category payments are not automatically whole-Invoice collections."
       ],
       "blockers": [],
       "verification": {
@@ -27788,13 +27832,19 @@
             "node scripts/check-conversion-current-state.mjs --self-test",
             "swift test --package-path LedgeriOS --filter FirebaseLineageSourceReviewTests",
             "swift test --package-path LedgeriOS --filter 'FirebaseClientPayment|FirebaseLineage|FirebaseSourceFixtureTests|MigrationRunIntegrityTests|MigrationEnvironmentGuardTests|TransactionTaxonomyTests'",
-            "swift test --package-path LedgeriOS --filter FirebaseClientPaymentBatchTests"
+            "swift test --package-path LedgeriOS --filter FirebaseClientPaymentBatchTests",
+            "npx --yes supabase@2.116.0 test db --local supabase/tests/imported_client_payment_storage.test.sql",
+            "npx --yes supabase@2.116.0 test db --local",
+            "npx --yes supabase@2.116.0 db advisors --local --type all --level warn",
+            "node scripts/test-local-imported-payment-concurrency.mjs",
+            "swift test --package-path LedgeriOS --filter FirebaseClientPaymentImportParametersTests",
+            "npm run conversion:ci:test"
           ]
         },
         "review": {
           "required": true,
           "status": "passed",
-          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration. Explicit client-payment transform independently reviewed GO: only shipped paymentToBusiness aliases, positive exact Int64 cents and Project standalone Purchase; original source retained. 39 tests/8 suites PASS /tmp/ledger-payment-migration-suite.log. Caller must still prove source→target Account/Project/Client mapping, stable identity/idempotence, per-source counts and totals before import; no Invoice paid-state inference.  Batch independently reviewed: per-input integrity GO; broader-plan ambiguity resolved explicitly and tested (unused mappings do not create/approve payments, identity/Project collisions still reject affected inputs). Main reviewed full diff; 44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. Source-history fffdd270b2163f1fad7013a9632b95efaf108034 CI34169718629 success; current payment batch awaits its own exact-commit CI."
+          "summary": "Source reader/reconciler prior reviews retained. Independent source-review inspection found malformed paths could select a decoy collection before lineageEdges; main fixed lineage-first recognition and independently reviewed delegated tests. Main corrected static helper calls/throwing assertions and added envelope-valid/path-foreign denial. Sale/return/resale retains original links despite latest-only Item.transactionId; invalid/duplicate/foreign evidence cannot resolve references or advance lineage. Full migration subset32 tests/6 suites PASS /tmp/ledger-source-cycle-tests.log; target environment and conversion checks PASS. Public validated-fixture integration retains simplified records but rejects top-level reference paths. Source-shaped cases are package-level synthetic tests, not a reviewed export bundle, completed accounting transform or production migration. Explicit client-payment transform independently reviewed GO: only shipped paymentToBusiness aliases, positive exact Int64 cents and Project standalone Purchase; original source retained. 39 tests/8 suites PASS /tmp/ledger-payment-migration-suite.log. Caller must still prove source→target Account/Project/Client mapping, stable identity/idempotence, per-source counts and totals before import; no Invoice paid-state inference.  Batch independently reviewed: per-input integrity GO; broader-plan ambiguity resolved explicitly and tested (unused mappings do not create/approve payments, identity/Project collisions still reject affected inputs). Main reviewed full diff; 44 tests/9 suites PASS /tmp/ledger-payment-batch-integrated.log. Source-history fffdd270b2163f1fad7013a9632b95efaf108034 CI34169718629 success; current payment batch awaits its own exact-commit CI. SQL storage independently reviewed: no current integrity/permission bypass; origin-conditional immutability fixes future writer trap, and A020 documents trusted invoker privilege boundary. Full pgTAP450 tests/13 files PASS /tmp/ledger-payment-storage-all-pgtap.log; final focused30 PASS /tmp/ledger-payment-storage-final-pgtap.log. Advisor warn/error scan clean. Local migration20260907233804 applied; no production/hosted access. Concurrency/restart and Swift importer/journal integration remain required. Prior payment batch45a8476e76f2be2cd730e5449d71645460946383 CI34170486476 success; SQL batch still uncommitted. Current parameter/concurrency extension: 46 Swift tests/10 suites PASS /tmp/ledger-payment-storage-integrated-swift.log; three observed lock races and Swift-exported golden parameter SQL readback PASS /tmp/ledger-payment-concurrency.log; CI guard tests5 PASS. Independent extension review GO: decimal-string money, whole source envelope, observed lock races and Node/Linux portability inspected; main reviewed implementation and focused evidence. Golden bridge is compositional, not a live Swift runner. Concurrent changed-source-bytes and first-writer rollback not exercised (sequential byte conflict covered by pgTAP). No operational runner, database restart or full migration claim."
         },
         "ci": {
           "status": "not_run",
@@ -27811,7 +27861,8 @@
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseSourceFixture.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseLineageSourceReview.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
-            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift"
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift",
+            "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentImportParameters.swift"
           ]
         },
         {
@@ -27819,6 +27870,24 @@
           "paths": [
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentConversion.swift",
             "LedgeriOS/LedgerTargetMigrationCore/FirebaseClientPaymentBatch.swift"
+          ]
+        },
+        {
+          "layer": "postgres_schema",
+          "paths": [
+            "supabase/migrations/20260907233804_imported_client_payment_storage.sql"
+          ]
+        },
+        {
+          "layer": "postgres_handler",
+          "paths": [
+            "supabase/migrations/20260907233804_imported_client_payment_storage.sql"
+          ]
+        },
+        {
+          "layer": "rls",
+          "paths": [
+            "supabase/migrations/20260907233804_imported_client_payment_storage.sql"
           ]
         }
       ]

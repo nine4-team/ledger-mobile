@@ -43,6 +43,8 @@ const requiredScripts = Object.freeze({
     "node scripts/test-local-space-assignment-destination-read.mjs",
   "target:supabase:test:project-note-read":
     "node scripts/test-local-project-note-read.mjs",
+  "target:supabase:test:payment-import":
+    "node scripts/test-local-imported-payment-concurrency.mjs",
   "target:supabase:test:rpc":
     "node scripts/test-local-client-creation-rpc.mjs && node scripts/test-local-project-creation-rpc.mjs",
   "target:staging:build:macos":
@@ -297,6 +299,7 @@ function validateLocalSupabaseJob(lines) {
     "          npm run target:supabase:test:space-assignment-destination-read",
     "          npm run target:supabase:test:project-note-read",
     "          npm run target:supabase:test:rpc",
+    "          npm run target:supabase:test:payment-import",
     "        run: npx --yes supabase@2.116.0 stop --no-backup",
   ]) {
     requireExactLine(local, command, `local database gate ${command.trim()}`);

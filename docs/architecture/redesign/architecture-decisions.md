@@ -45,6 +45,7 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-017 | accepted | Firebase is a migration source, not a redesigned application adapter |
 | A-018 | accepted | Use one fail-closed OperationID ownership inventory across local command families |
 | A-019 | accepted | Improve Item relationship storage while preserving meaning and useful history |
+| A-020 | accepted | Persist imported client payments atomically with immutable source bytes |
 
 ## A-001 — Domain-Oriented Ports and Backend Adapters
 
@@ -388,3 +389,46 @@ Mappings may cover a larger import plan: unused entries create no payment and
 are not approved by a successful subset. Import approval, complete export
 coverage, target persistence and final settlement reconciliation remain separate
 requirements.
+
+## A-020 — Imported Client Payment Storage
+
+**Decision:** Begin canonical `spike_transactions` storage with the verified
+imported Project Purchase path. Atomically insert its exact integer amount,
+explicit currency and Account/Project/Client identity with one private source
+record. Composite foreign keys enforce the existing Project's Client and Account.
+The source is stored as bytes with a database-derived digest: tagged Firebase
+values, NULs and unknown fields must not be coerced into lossy PostgreSQL JSON.
+
+**Retry and retention:** Stable target identity and unique source Account/document
+identity prevent duplicate money. An identical retry succeeds; different amounts,
+scopes, currency or source bytes conflict and roll back the entire call. Updates,
+deletes and truncation of these imported records are rejected. Future approved
+corrections must preserve original evidence instead of rewriting history.
+
+**Security/tradeoff:** The import function uses invoker rights in `ledger_private`.
+No app/API role, including `service_role`, receives function or table privileges;
+both tables enforce RLS. This deliberately leaves app/PowerSync financial reads
+unavailable until the relevant policy is resolved. Import-run authorization is a
+separate requirement, not something inferred from this SQL primitive. Current
+execution requires a trusted operator with direct privileges and RLS bypass;
+granting function execution alone is neither sufficient nor a restricted writer
+boundary. Any dedicated migration role needs separate security review. The row
+immutability trigger is conditional on imported origin so future ordinary
+Transaction behavior is not inadvertently frozen.
+Current database constraints support only this implemented payment path; normal writes,
+Return/Transfer and additional Transaction behavior are not claimed complete.
+
+**Evidence and remaining work:** Local migration `20260907233804` and
+`supabase/tests/imported_client_payment_storage.test.sql` verify atomic conflict
+rollback, exact cents/source bytes, retry, tenant/Client integrity, immutability
+and denied API access. `scripts/test-local-imported-payment-concurrency.mjs`
+observes actual lock waits for identical and conflicting concurrent imports and
+checks committed results from new database sessions. A shared synthetic parameter
+fixture connects the real Swift batch exporter to SQL, preserving cents beyond
+JavaScript's safe integer range and the complete tagged source envelope as bytes.
+This proves the serialization boundary, not an operational import runner.
+Process/database restart recovery, migration-run journals, complete settlement
+allocations and hosted verification remain required. No production access or
+cutover is authorized.
+Grants and RLS follow the current
+[Supabase security guidance](https://supabase.com/docs/guides/database/postgres/row-level-security).
