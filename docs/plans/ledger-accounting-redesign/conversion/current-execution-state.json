@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 227,
+  "stateVersion": 228,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Continue Project Notes with separate legacy Project.notes preservation, reusing exact Project detail authority; do not invent individual-note metadata or claim completion before migration/storage/Sync/UI verification.",
     "nextActions": [
-      "NEXT follow automatic CI for commit containing this checkpoint (legacy-notes read/storage/source-transform batch). Full898Swift tests/134suites passed47.178s(50072 terminal0); appmacOS and both UI source Swift6 typechecks, environment,10CIguards/conversion/diff passed. Independent provider and UI/transform review complete; fixed AXValue assertions and fixture actor capture. SQL/native execution still pending. Do not repeat full suite to resume.",
-      "Prior pushed b16d95e7 CI34255899861 still live, watch86689; latest macOS workspace UI stage. It tests PDF Done/counter/Inventory fixes. Inspect terminal result/logs; do not dispatch duplicates or assume current uncommitted batch is covered by it.",
-      "Legacy notes now use nullable spike_projects.legacy_notes, identical existing Sync row projections, exact detail header/model lifetime and separate card. Pending-created Projects NULL; archive overlay/reopen preserves text; removal denies read. Native four-mode test added to automatic iOS lane. A030 records rationale/remaining gaps; unified workflow acceptance owns evidence.",
-      "NEXT remaining actual migration: FirebaseProjectLegacyNotesConversion retains complete source and deterministic mapped text, refuses nontext/NUL and wrong source scope; it is NOT persisted import/replay/reconciliation. Reuse existing migration plan/source journal and explicit reconciled Project mappings; no individual-note records or fabricated metadata. No production source/data access. Local CLI pinned npx supabase@2.116.0 available; migration created by CLI, no DB stack started due low disk.",
-      "External gates unchanged: local disk2.9GiB (need>=10GB native builds); hosted synthetic authorization, logout scope/A007, report SKU conflict, sanitized vendor PDFs and Project creation role/O049 unresolved. Preserve all untracked diagnostics; no Firebase worktree/production/hosted access."
+      "NEXT push/follow automatic CI for commit containing this checkpoint (private legacy import and concrete prior-CI fixes). Full900Swift tests/134suites passed46.815s(38836 terminal0); final executable build20405 passed after UTF8 readback fix; appmacOS/bothUI typechecks,environment/10CIguards/conversion/diff passed. Three JS harness syntax checks pass. Do not repeat full suite to resume.",
+      "Prior CI34257496449 at8c6ddb04 terminal failure: legacy read migration and all548SQL tests/18files passed; report stream exact field-list expected omitted new legacy_notes. Fixed field expectation without weakening scope assertions. Native skipped. CI34255899861/b16d95e7 terminalfailure:13of14macOSUI passed; Inventory no-match AX ID missing. Fixed same semantic identifier, Inventory card summary and scope-specific test card ID; iOS was never run. No live old watch/run to poll.",
+      "Private SQL import locks exact existing Project, stores immutable text/source/SHA/correlation atomically, exact replay noUPDATE, conflicts rollback; API roles denied. Main independently reviewed agentSQL. Existing concurrency harness now tests3observed-lock races and2session interruption boundaries for notes, automatically in CI. Runtime execution still pending.",
+      "Existing local synthetic payment runner now imports parent legacy notes in same transaction and existing journal, with2payment+1note entity counts and fresh committed readback. Shared source encoder preserves golden payment bytes. Independent review caught Unicode-equivalence issue: exporter and notes readback use UTF8 bytes; forged composed/decomposed test added. Expanded separate-process recovery script is NOT executed: bounded local docker inspect88924 returned ETIMEDOUT; no services started. Need run it once DB is available; current code is not migration readiness.",
+      "External gates unchanged: disk2.9GiB, hosted synthetic authorization, logout scope/A007, reportSKU conflict, representative vendorPDFs and Project creation role/O049 unresolved. A030 records implementation/tradeoffs/gaps; unified checklist owns evidence. Preserve diagnostics; no Firebase/production/hosted access."
     ]
   },
   "blockers": [],

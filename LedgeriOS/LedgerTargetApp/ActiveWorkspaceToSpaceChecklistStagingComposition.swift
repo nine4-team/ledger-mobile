@@ -164,6 +164,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     }
                 } else if model.spaceBrowser.matchingSpaces.isEmpty {
                     Text("No matching Spaces in downloaded data.")
+                        .accessibilityIdentifier("target-space-search-no-match")
                 } else {
                     ForEach(model.spaceBrowser.matchingSpaces, id: \.id) { space in
                         Button {
@@ -172,6 +173,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                             SpaceDirectoryCardLabel(space: space)
                         }
                         .accessibilityIdentifier("target-inventory-space-\(space.id.rawValue)")
+                        .accessibilityLabel(space.displayName.rawValue)
+                        .accessibilityValue(SpaceDirectoryCardLabel(space: space).accessibilitySummary)
+                        .accessibilityHint("Opens this Space")
                     }
                 }
                 if let diagnostic = model.spaceBrowser.directoryDiagnostic {

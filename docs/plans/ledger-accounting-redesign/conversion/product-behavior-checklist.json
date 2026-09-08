@@ -26605,7 +26605,8 @@
         "LedgeriOS/LedgerTargetMigrationCoreTests",
         "supabase/migrations",
         "supabase/tests",
-        "powersync"
+        "powersync",
+        "LedgeriOS/LedgerLocalPaymentImport"
       ],
       "layers": [
         "domain",
@@ -26615,7 +26616,8 @@
         "migration",
         "postgres_schema",
         "postgres_handler",
-        "rls"
+        "rls",
+        "accounting"
       ],
       "riskDomains": [
         "ui_fidelity",
@@ -26624,7 +26626,8 @@
         "migration_fidelity",
         "database_integrity",
         "handler_idempotency",
-        "tenant_authorization"
+        "tenant_authorization",
+        "accounting"
       ],
       "uiJourneys": [
         {
@@ -26808,7 +26811,7 @@
           "id": "INVENTORY-WORKSPACE-NATIVE-NAVIGATION",
           "risk": "ui_fidelity",
           "expected": "Both native platforms open Inventory only from Active, show honest partial Item and unavailable Transaction states, visit Inventory Spaces, return with Back and remember section across app restart. A positive Inventory Space fixture must also exercise shared search, exact Space detail, checklist collapse/expand, one accepted toggle, pending display and Back cleanup. This does not prove full Item/Transaction browsing, financial visibility or hosted persistence.",
-          "command": "CI34244878539/17b05569 passed testInventoryNavigationAndRememberedSection on both platforms. Follow-on testInventorySpaceChecklistInteraction reuses the Project interaction assertions with businessInventory list/detail evidence; app and both-platform test Swift6 typechecks, environment and10CIguards pass. New native interaction execution pending.",
+          "command": "CI34255899861/b16d95e7:13of14macOS UI tests passed, Project checklist/counter passed; Inventory positive test failed on missing no-match AX identifier before iOS ran. Corrected Inventory no-match/card summary and scope-specific test card ID, exact assertions retained; both platform test sources typecheck. Reverification pending. Prior empty/restart Inventory tests passed both platforms at34244878539.",
           "status": "planned"
         },
         {
@@ -26922,21 +26925,21 @@
           "id": "LEGACY-NOTES-MIGRATION-FIDELITY",
           "risk": "migration_fidelity",
           "expected": "Retain exact legacy text and source document with reconciled source-to-target scope; import must not duplicate individual notes.",
-          "command": "FirebaseProjectLegacyNotesConversionTests:2 passed; transform only, persisted load/replay still required.",
+          "command": "Conversion/parameter tests and existing payment source fixtures pass. Private SQL importer and existing synthetic runner now load text/source atomically; expanded before/after-commit recovery harness awaits an available local database. No production migration claim.",
           "status": "planned"
         },
         {
           "id": "LEGACY-NOTES-DATABASE-INTEGRITY",
           "risk": "database_integrity",
           "expected": "Nullable legacy_notes preserves exact text without modifying description or individual notes.",
-          "command": "project_legacy_notes_read.test.sql added; execution pending CI.",
+          "command": "CI34257496449/8c6ddb04 applied legacy read migration and passed all548SQL tests/18files including project_legacy_notes_read.test.sql. Follow-on report stream field-list assertion then failed on newly added legacy_notes; expected exact field list updated. New import SQL migration/tests and concurrent replay execution pending next CI.",
           "status": "planned"
         },
         {
           "id": "LEGACY-NOTES-HANDLER-IDEMPOTENCY",
           "risk": "handler_idempotency",
           "expected": "No new mutation grants or changed command semantics; actual import must be idempotent.",
-          "command": "No handler changed; SQL no-write-grant check added. Actual import handler/replay remains unimplemented.",
+          "command": "Private invoker-rights import_project_legacy_notes locks exact Project, retains immutable source/text, rejects conflicts and performs no UPDATE on exact replay. SQL idempotency/rollback/role-denial tests added, execution pending. No API write grant.",
           "status": "planned"
         },
         {
@@ -26944,6 +26947,13 @@
           "risk": "tenant_authorization",
           "expected": "Same-Account active membership scopes legacy-note reads; removal denies access.",
           "command": "Provider archive/reopen/removal passed. SQL member/cross-Account/removal/no-write-grant checks await CI.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-PAYMENT-IMPORT-COMPATIBILITY",
+          "risk": "accounting",
+          "expected": "Sharing canonical source-envelope encoding preserves existing payment bytes and exact cents. The synthetic runner commits two payments and one parent legacy-note fact atomically, with separate journal counts and independent committed readback.",
+          "command": "Existing FirebaseClientPaymentImportParametersTests golden fixture passed unchanged. Expanded test-local-payment-import-recovery.mjs checks2payments/60cents plus1legacy note, both interruption boundaries and rollback on conflicting notes; runtime execution pending local Docker availability.",
           "status": "planned"
         }
       ],

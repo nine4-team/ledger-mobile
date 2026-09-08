@@ -81,7 +81,7 @@ const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-
 const results = output.trim().split("\n").map(JSON.parse);
 assert.equal(results.length, 20);
 const columns = [
-  ["id", "account_id", "client_id", "display_name", "description", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
+  ["id", "account_id", "client_id", "display_name", "description", "legacy_notes", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
   ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
   ["id", "account_id", "name", "description", "sku", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
@@ -94,7 +94,10 @@ for (const { label, index, rows } of results) {
   assert.equal(row.id, index === 0 ? projects[selected] : ids[index - 1][selected]);
   assert.deepEqual(Object.keys(row).sort(), [...columns[index]].sort());
   assert.equal(row.account_id, "account-primary");
-  if (index === 0) assert.equal(row.property_address, null);
+  if (index === 0) {
+    assert.equal(row.property_address, null);
+    assert.equal(row.legacy_notes, null);
+  }
   if (index === 1) assert.equal(row.lifecycle, "archived", "Retain current Item's archived Space parent");
   if (index === 3) {
     assert.equal(row.name, selected === 0 ? "Actual Item name" : null);

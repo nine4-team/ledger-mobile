@@ -89,6 +89,23 @@ source transform is not a persisted import: durable source loading, replay and
 reconciliation remain required for `project-initial-notes-preservation` in the
 unified checklist. No production data has been accessed.
 
+The follow-on private import primitive locks the existing Project and atomically
+stores exact text with immutable source bytes, derived SHA-256 and source/target
+correlation. Exact replay is a no-op; changed evidence, changed text or conflicting
+mapping fails rather than overwriting. API roles receive no grants. The existing
+local synthetic payment runner also imports its parent Project's legacy notes
+in the same transaction and tracks both entities in its existing journal. This
+reuses endpoint guards, retained artifacts and recovery/readback rather than
+adding another migration runner. Previously persisted runs remain bound to their
+original binary and plan; this does not upgrade or rewrite them.
+
+Parameter validation and committed-note readback compare UTF-8 bytes explicitly:
+Swift's canonically equivalent String equality is insufficient for exact source
+preservation. Payment and note exporters share the same canonical source-envelope
+encoder, with existing payment fixtures guarding byte compatibility. SQL tests
+and the expanded cross-process recovery harness require execution; building the
+runner and unit tests alone do not prove durable migration readiness.
+
 ## A-029 — Project Setup Closure Clears Presentation, Not Accepted Work
 
 `ProjectSetupStagingExercise.stop()` now clears draft fields, reference snapshots,

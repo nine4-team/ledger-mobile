@@ -36,20 +36,27 @@ function expectExit(result, code) {
   assert.equal(result.status, code, `${result.stdout}\n${result.stderr}`);
 }
 const counts = (fixture) => sql(`select count(*) || ':' || coalesce(sum(amount_minor_units),0)::text from public.spike_transactions where project_id='${fixture.project}';`);
+const noteCount = (fixture) => sql(`select count(*) from ledger_private.imported_project_legacy_note_sources where project_id='${fixture.project}';`);
 const journal = (fixture) => JSON.parse(readFileSync(path.join(fixture.dir, "journal.json"), "utf8"));
 function assertCompleted(fixture) {
   const value = journal(fixture);
   assert.equal(value.events.at(-1).stage, "finalize");
   assert.equal(value.events.at(-1).state, "completed");
-  assert.equal(value.events.at(-1).outcomes.length, 1);
+  assert.equal(value.events.at(-1).outcomes.length, 2);
   assert.equal(value.events.at(-1).outcomes[0].applied, 2);
+  assert.equal(value.events.at(-1).outcomes[1].entity, "project_legacy_notes");
+  assert.equal(value.events.at(-1).outcomes[1].applied, 1);
   assert.equal(counts(fixture), "2:60");
   assert.equal(sql(`select count(*) from ledger_private.imported_transaction_sources where transaction_id in ('${fixture.first}','${fixture.second}');`), "2");
+  assert.equal(noteCount(fixture), "1");
+  assert.deepEqual(JSON.parse(sql(`select json_build_array(p.legacy_notes,s.imported_notes) from public.spike_projects p join ledger_private.imported_project_legacy_note_sources s on s.project_id=p.id where p.id='${fixture.project}';`)),
+    ["  Original Project notes\nKeep the blue sofa.  ", "  Original Project notes\nKeep the blue sofa.  "]);
 }
 for (const flag of ["--interrupt-before-commit", "--interrupt-after-commit"]) {
   const fixture = newRun();
   expectExit(run(fixture, flag), 86);
   assert.equal(counts(fixture), flag === "--interrupt-before-commit" ? "0:0" : "2:60");
+  assert.equal(noteCount(fixture), flag === "--interrupt-before-commit" ? "0" : "1");
   assert.ok(!journal(fixture).events.some((event) => event.stage === "load" && event.state === "completed"), "No acknowledgement before readback");
   expectExit(run(fixture), 0);
   assertCompleted(fixture);
@@ -80,6 +87,14 @@ assert.notEqual(run(conflict).status, 0);
 assert.equal(counts(conflict), "1:99");
 assert.equal(sql(`select count(*) from public.spike_transactions where id='${conflict.first}';`), "0");
 assert.ok(!journal(conflict).events.some((event) => event.stage === "load" && event.state === "completed"));
+assert.equal(noteCount(conflict), "0");
+const noteConflict = newRun();
+sql(`insert into public.spike_projects(id,account_id,client_id,display_name,legacy_notes,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+ values ('${noteConflict.project}','account-primary','client-existing','Synthetic note conflict','Existing notes',now(),now(),1,1,'principal-owner');`);
+assert.notEqual(run(noteConflict).status, 0);
+assert.equal(counts(noteConflict), "0:0", "Conflicting legacy notes roll back provisional payments too");
+assert.equal(noteCount(noteConflict), "0");
+assert.equal(sql(`select legacy_notes from public.spike_projects where id='${noteConflict.project}';`), "Existing notes");
 const denied = newRun();
 assert.notEqual(run(denied, undefined, { ...process.env, DOCKER_HOST: "tcp://invalid.example:2375" }).status, 0);
 assert.equal(counts(denied), "0:0");

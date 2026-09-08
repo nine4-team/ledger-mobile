@@ -28,15 +28,7 @@ package struct FirebaseClientPaymentImportParameters: Encodable, Equatable, Send
                 throw FirebaseClientPaymentImportFailure.unresolvedBatch
             }
             // Preserve the whole source envelope, not merely the amount or fields.
-            let document = FirebaseSourceValue.map([
-                .init(key: "accountScopeID", value: .string(source.accountScopeID)),
-                .init(key: "documentPathSegments", value: .reference(segments: source.documentPathSegments)),
-                .init(key: "entityCode", value: .string(source.entityCode)),
-                .init(key: "evidenceKind", value: .string(source.evidenceKind.rawValue)),
-                .init(key: "fields", value: source.fields),
-                .init(key: "sourceRecordID", value: .string(source.sourceRecordID))
-            ])
-            let bytes = try FirebaseSourceFixtureCatalog.canonicalData(for: document)
+            let bytes = try source.canonicalEvidenceData()
             return .init(p_id: id.rawValue, p_account_id: classification.scope.accountId.rawValue,
                 p_project_id: project.rawValue, p_client_id: client.rawValue, p_amount: String(cents),
                 p_currency: currency.rawValue, p_source_account: source.accountScopeID,

@@ -906,8 +906,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap()
         search.typeText("no-matching-space")
-        XCTAssertTrue(app.staticTexts["target-space-search-no-match"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["target-active-space-card-space-ui-test"].exists)
+        XCTAssertTrue(app.staticTexts["target-space-search-no-match"].waitForExistence(timeout: 5), app.debugDescription)
+        let spaceIdentifier = inventory ? "target-inventory-space-space-ui-test" : "target-active-space-card-space-ui-test"
+        XCTAssertFalse(app.buttons[spaceIdentifier].exists)
         app.buttons["target-space-search-clear"].tap()
         search.tap()
         search.typeText("ui TEST")
@@ -917,7 +918,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         submitSearch.tap()
         XCTAssertTrue(waitUntil { !app.keyboards.firstMatch.exists })
         #endif
-        let space = app.buttons["target-active-space-card-space-ui-test"]
+        let space = app.buttons[spaceIdentifier]
         reveal(space, in: app)
         XCTAssertTrue(space.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertEqual(space.value as? String,

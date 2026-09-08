@@ -133,7 +133,10 @@ func run() throws {
     let sourceProjectID = "source-project-" + runHex
     let project = FirebaseSourceDocument(accountScopeID: sourceAccount,
         documentPathSegments: ["accounts", sourceAccount, "projects", sourceProjectID], entityCode: "projects",
-        evidenceKind: .record, fields: .map([.init(key: "clientName", value: .string("Synthetic Client"))]), sourceRecordID: sourceProjectID)
+        evidenceKind: .record, fields: .map([
+            .init(key: "clientName", value: .string("Synthetic Client")),
+            .init(key: "notes", value: .string("  Original Project notes\nKeep the blue sofa.  "))
+        ]), sourceRecordID: sourceProjectID)
     let sources: [FirebaseSourceDocument] = [23, 37].enumerated().map { offset, amount in
         let id = "local-payment-\(runHex)-\(offset + 1)"
         return FirebaseSourceDocument(accountScopeID: sourceAccount,
@@ -161,11 +164,21 @@ func run() throws {
     try require(converted.isFullyReconciled && converted.mappedCount == 2 && converted.mappedTotalCents == 60,
         "Synthetic payment batch did not reconcile")
     let parameters = try FirebaseClientPaymentImportParameters.make(batch: converted, currency: CurrencyCode(validating: "USD"))
+    func legacyNotesParameters() throws -> FirebaseProjectLegacyNotesImportParameters {
+        try FirebaseProjectLegacyNotesImportParameters.make(FirebaseProjectLegacyNotesConversion.convert(project,
+            sourceAccountID: sourceAccount, sourceProjectID: sourceProjectID,
+            targetAccountID: scope.accountId, targetProjectID: ProjectID(validating: projectID)))
+    }
+    let noteParameters = try legacyNotesParameters()
     let sourceBytes = try FirebaseSourceFixtureCatalog.canonicalData(for: .array(([project] + sources).map(envelope)))
-    let mappingBytes = try canonical(parameters.map {
+    var mappingRows = parameters.map {
         ["sourceAccount": $0.p_source_account, "sourceDocument": $0.p_source_document, "targetID": $0.p_id,
          "accountID": $0.p_account_id, "projectID": $0.p_project_id, "clientID": $0.p_client_id, "currency": $0.p_currency]
-    })
+    }
+    mappingRows.append(["sourceAccount": noteParameters.p_source_account,
+        "sourceDocument": noteParameters.p_source_document, "targetID": noteParameters.p_project_id,
+        "accountID": noteParameters.p_account_id, "entity": "project_legacy_notes"])
+    let mappingBytes = try canonical(mappingRows)
     let binaryURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
     let binaryBytes = try Data(contentsOf: binaryURL)
     func artifact(_ code: String, _ bytes: Data) throws -> MigrationArtifactIdentity {
@@ -191,6 +204,7 @@ func run() throws {
     let executableArtifact = try artifact("local_payment_executable", binaryBytes)
     let mappings = [try artifact("payment_scope_mapping", mappingBytes)]
     let entity = try MigrationStableCode(validating: "client_payments", field: "entity")
+    let notesEntity = try MigrationStableCode(validating: "project_legacy_notes", field: "entity")
     let validator = MigrationRunPlanValidator(policy: .init(expectedTarget: target, expectedContractVersions: contracts,
         expectedMigrationArtifact: executableArtifact, expectedMappingArtifacts: mappings, allowedSourceEnvironments: [.sourceFixture], allowedModes: [.apply]))
     // Fixed timestamp belongs to the fixed synthetic source, not a production export.
@@ -202,7 +216,9 @@ func run() throws {
         repositoryRevision: MigrationSourceRevision(validating: command(["git", "rev-parse", "HEAD"])), contractVersions: contracts,
         migrationArtifact: executableArtifact, mappingArtifacts: mappings,
         entityPlans: [.init(entity: entity, plannedCount: 2, sourceSHA256: .make(bytes: sourceBytes),
-            transformVersion: MigrationVersion(validating: "payment-v1", field: "transform"))], createdAtEpochMilliseconds: epoch))
+            transformVersion: MigrationVersion(validating: "payment-v1", field: "transform")),
+            .init(entity: notesEntity, plannedCount: 1, sourceSHA256: .make(bytes: sourceBytes),
+                transformVersion: MigrationVersion(validating: "legacy-notes-v1", field: "transform"))], createdAtEpochMilliseconds: epoch))
     let journalValidator = MigrationRunJournalValidator(planValidator: validator)
     let journalPath = directory + "/journal.json"
     // Once journal evidence exists, missing immutable inputs are corruption.
@@ -222,8 +238,10 @@ func run() throws {
     func event(_ stage: MigrationStage, _ state: MigrationJournalEventState, applied: Int64) throws {
         let timestamp = max(Int64(Date().timeIntervalSince1970 * 1000), journal.events.last?.occurredAtEpochMilliseconds ?? epoch)
         let outcome = try MigrationEntityOutcome(entity: entity, examined: 2, applied: applied, skipped: 0, blocked: 0, failed: 0)
+        let noteOutcome = try MigrationEntityOutcome(entity: notesEntity, examined: 1,
+            applied: applied == 2 ? 1 : 0, skipped: 0, blocked: 0, failed: 0)
         journal = try journalValidator.appending(.make(planDigest: plan.contentDigest, sequence: journal.events.count + 1,
-            stage: stage, state: state, occurredAtEpochMilliseconds: timestamp, outcomes: [outcome]), to: journal, plan: plan)
+            stage: stage, state: state, occurredAtEpochMilliseconds: timestamp, outcomes: [outcome, noteOutcome]), to: journal, plan: plan)
         try durableWrite(journalValidator.canonicalData(for: journal, plan: plan), to: journalPath, directory: directory)
     }
     func isComplete(_ stage: MigrationStage) -> Bool {
@@ -253,6 +271,19 @@ func run() throws {
         }
         try require(try sql("select count(*)::text || ':' || sum(amount_minor_units)::text from public.spike_transactions where project_id=\(quote(projectID));") == "2:60",
             "Committed batch reconciliation mismatch")
+        let expectedNotes: [String?] = [noteParameters.p_project_id, noteParameters.p_account_id,
+            noteParameters.p_notes, noteParameters.p_source_account, noteParameters.p_source_document,
+            String(noteParameters.p_source_bytes.dropFirst(2)), noteParameters.p_notes]
+        let noteReadback = try sql("""
+            select json_build_array(p.id,p.account_id,p.legacy_notes,s.source_account_id,s.source_document_id,
+              encode(s.source_bytes,'hex'),s.imported_notes)
+            from public.spike_projects p join ledger_private.imported_project_legacy_note_sources s
+              on s.project_id=p.id and s.account_id=p.account_id where p.id=\(quote(projectID));
+            """)
+        let actualNotes = try JSONDecoder().decode([String?].self, from: Data(noteReadback.utf8))
+        try require(actualNotes.map { $0.map { Array($0.utf8) } }
+            == expectedNotes.map { $0.map { Array($0.utf8) } },
+            "Committed legacy-note/source readback mismatch")
         committedReadbackVerified = true
     }
     // Completed journals still require independent committed-state verification.
@@ -271,6 +302,7 @@ func run() throws {
             try require(recomputed.isFullyReconciled && recomputed.mappedTotalCents == 60, "Transform failed reconciliation")
             try require(try FirebaseClientPaymentImportParameters.make(batch: recomputed, currency: CurrencyCode(validating: "USD")) == parameters,
                 "Transform changed parameters")
+            try require(try legacyNotesParameters() == noteParameters, "Legacy-note transform changed parameters")
         case .plan:
             _ = try validator.decodeAndValidate(Data(contentsOf: URL(fileURLWithPath: directory + "/plan.json")))
         case .load:
@@ -283,6 +315,10 @@ func run() throws {
                 insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
                 values (\(quote(projectID)),'account-primary','client-existing','Synthetic local payment import',now(),now(),1,1,'principal-owner') on conflict(id) do nothing;
                 \(calls)
+                select ledger_private.import_project_legacy_notes(
+                  \(quote(noteParameters.p_account_id)),\(quote(noteParameters.p_project_id)),
+                  \(noteParameters.p_notes.map(quote) ?? "NULL"),\(quote(noteParameters.p_source_account)),
+                  \(quote(noteParameters.p_source_document)),\(quote(noteParameters.p_source_bytes)));
                 """
             // EOF with an open transaction causes PostgreSQL to roll it back.
             _ = try sql(transaction + (interruption == "--interrupt-before-commit" ? "\n" : "\ncommit;\n"))
@@ -293,7 +329,7 @@ func run() throws {
         }
         try event(stage, .completed, applied: stage == .load || isComplete(.load) ? 2 : 0)
     }
-    print("local-payment-import: run=\(runHex) committed=2 amount_minor_units=60 journal=finalize/completed")
+    print("local-payment-import: run=\(runHex) committed=2 amount_minor_units=60 legacy_notes=1 journal=finalize/completed")
 }
 
 do { try run() }

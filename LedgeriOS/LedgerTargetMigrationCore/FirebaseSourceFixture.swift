@@ -276,6 +276,18 @@ public struct FirebaseSourceDocument: Equatable, Sendable {
     public let fields: FirebaseSourceValue
     public let sourceRecordID: String
 
+    /// Canonical retained evidence shared by private migration parameter exporters.
+    package func canonicalEvidenceData() throws -> Data {
+        try FirebaseSourceFixtureCatalog.canonicalData(for: .map([
+            .init(key: "accountScopeID", value: .string(accountScopeID)),
+            .init(key: "documentPathSegments", value: .reference(segments: documentPathSegments)),
+            .init(key: "entityCode", value: .string(entityCode)),
+            .init(key: "evidenceKind", value: .string(evidenceKind.rawValue)),
+            .init(key: "fields", value: fields),
+            .init(key: "sourceRecordID", value: .string(sourceRecordID))
+        ]))
+    }
+
     // Raw evidence construction for same-package migration tooling, not a
     // ValidatedFirebaseSourceFixture or permission to bypass source validation.
     package init(accountScopeID: String, documentPathSegments: [String], entityCode: String,
