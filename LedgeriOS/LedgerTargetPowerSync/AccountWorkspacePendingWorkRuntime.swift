@@ -168,9 +168,11 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case captureAttachment
     case resolveAttachmentBytes
     case pendingWorkSummary
+    case readDownloadedItemPlacements
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case downloadedItemPlacements
     case clientDetails
     case projectDetails
     case clientDirectory
@@ -196,6 +198,7 @@ struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
 }
 
 struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
+    var subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil
     var accessCoordinator: LedgerWorkspaceAccessCoordinator
     var requireWorkspaceNotRemoved: @Sendable (LedgerEnvironmentKind, PrincipalID, AccountID) throws -> Void
     var recordWorkspaceRemoval: @Sendable (LedgerEnvironmentKind, PrincipalID, AccountID) throws -> Void
@@ -502,6 +505,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
 }
 
 final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
+    let subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)?
     let accessFence: LedgerWorkspaceAccessFence
     let now: @Sendable () -> Date
     let structuredDatabase: any PowerSyncDatabaseProtocol
@@ -574,8 +578,10 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         principalId: PrincipalID,
         accountId: AccountID,
         now: @Sendable @escaping () -> Date,
-        accessFence: LedgerWorkspaceAccessFence
+        accessFence: LedgerWorkspaceAccessFence,
+        subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil
     ) {
+        self.subscribePhysicalItems = subscribePhysicalItems
         self.accessFence = accessFence
         self.now = now
         self.structuredDatabase = structuredDatabase
@@ -772,6 +778,55 @@ actor AccountWorkspacePendingWorkRuntime {
                 try cursor.getInt64(index: 0)
             }
         }
+    }
+
+    func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        try await withFiniteLease(.readDownloadedItemPlacements) { resources in
+            guard accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            let rows = try await CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
+                .read(accountId: resources.accountId, principalId: resources.principalId, scope: scope)
+            return try DownloadedItemPlacements(accountId: resources.accountId, scope: scope, rows: rows)
+        }
+    }
+
+    func startDownloadedItemPlacementsWatch(id: UUID, accountId: AccountID, scope: ItemPlacementScope,
+        continuation: AsyncThrowingStream<DownloadedItemPlacements, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
+            return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError())
+            return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch)
+            return
+        }
+        // Unlike an untracked producer behind an AsyncThrowingStream, this
+        // exact task remains in streamTasks until BOTH child tasks and owned
+        // subscription cleanup finish. performClose therefore drains it first.
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.downloadedItemPlacements)
+                try Task.checkCancellation()
+                try await DownloadedItemPlacementWatch(database: resources.structuredDatabase,
+                    subscribe: resources.subscribePhysicalItems).run(
+                    accountId: resources.accountId, principalId: resources.principalId, scope: scope
+                ) { value in
+                    await self.forwardStreamValue(value, to: continuation)
+                }
+                continuation.finish()
+            } catch is CancellationError {
+                continuation.finish(throwing: CancellationError())
+            } catch {
+                await self.finishStream(continuation, error: error)
+            }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
     }
 
     func encryptionCipher() async throws -> String {
@@ -1659,7 +1714,8 @@ public enum LedgerPowerSyncLocalBootstrap {
                 principalId: principalId,
                 accountId: accountId,
                 now: dependencies.now,
-                accessFence: accessFence
+                accessFence: accessFence,
+                subscribePhysicalItems: dependencies.subscribePhysicalItems
             )
             runtimeResources = madeRuntimeResources
 

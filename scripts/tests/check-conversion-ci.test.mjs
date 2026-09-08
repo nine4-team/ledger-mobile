@@ -197,6 +197,9 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
 
 test("local Supabase job cannot bypass lint, database tests, cleanup, or its diff guard", () => {
   expectFailure(value => {
+    value.workflow = value.workflow.replace("          node scripts/test-local-physical-item-stream.mjs\n", "");
+  }, /local database gate node scripts\/test-local-physical-item-stream/);
+  expectFailure(value => {
     value.workflow = value.workflow.replace("          node scripts/test-local-item-placement-concurrency.mjs\n", "");
   }, /local database gate node scripts\/test-local-item-placement-concurrency/);
   expectFailure(value => {

@@ -2,6 +2,33 @@ import XCTest
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testDownloadedItemsRefreshAndRemoval() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.staticTexts["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app)
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        XCTAssertEqual(item.label, "Downloaded test chair")
+        XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
+        let refresh = app.buttons["target-items-refresh"]
+        reveal(refresh, in: app)
+        refresh.tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        let remove = app.buttons["target-ui-fixture-remove-account"]
+        reveal(remove, in: app, upwards: false)
+        remove.tap()
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "target-workspace-access-removed").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(item.exists)
+        XCTAssertFalse(refresh.exists)
+    }
+
     func testArchivedProjectHistoryNavigation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 105,
+  "stateVersion": 110,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "FROZEN-INVOICE-AND-CI-PORT-GREEN",
-    "commit": "71ceadde3ab0cd1f55dd407486418994b74fea78",
-    "ciRun": 34179461110,
+    "name": "PHYSICAL-ITEM-STORAGE-AND-LOCAL-READER-GREEN",
+    "commit": "6e3a022ae3b1b8485fca7756dc7c85533460f549",
+    "ciRun": 34180760150,
     "ciStatus": "passed",
-    "meaning": "Full automatic conversion/native/localDB/app UI/macOS+iOS CI passed, including frozen Invoice value and CI port fix. New physical Item/placement storage is locally verified only; whole app/migration/hosted readiness remains unproved."
+    "meaning": "Full automatic conversion/native/localDB/app UI/macOS+iOS CI passed for physical Item storage/local reader and explicit Space API projection. New member-read access/stream remains uncommitted local evidence; whole app/migration/hosted readiness remains unproved."
   },
   "activeWorkflow": {
     "id": "item-history-source-reconciliation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. CI34180177491/e8c989b63a019a20bc53595149ded7312b278969 completed FAILURE: conversion and native/app UI/macOS/iOS passed; DB pgTAP passed, subsequent Space API inventory select=* assertion failed on new generated FK key. Fixed to explicit consumer columns; local affected API matrix passes. Verified checkpoint remains71ceadde/CI34179461110 SUCCESS.",
-      "New CurrentItemPlacementLocalReader and PowerSync physical-table registration read current local physical facts with membership, exact Item/Project/Space parents and cross-Project duplicate active-placement checks in one SQLite snapshot. No assignment candidate, accounting classification, grants/subscription or completeness claim. Independent GO; requested empty Inventory denial and Inventory Space tests added.",
-      "Focused4 PASS /tmp/ledger-item-reader-final.log; integrated814/117 PASS /tmp/ledger-item-reader-native-integrated.log (before additive test-only regressions); environment/conversion/diff PASS. Space API matrix PASS /tmp/ledger-item-space-api-check.log. Prior physical SQL490/14, concurrency/remote-Docker denial and advisors/lint passed. No local process/agent active. Commit/push batch and observe one automatic CI.",
-      "O065 Item actor policy and O033 exact collection payment remain unanswered. O027 creation minimum/O060 financial visibility remain open. Ask once and do not assume approvals. Reader deliberately exposes itemRevision and placementId separately: future commands must prove shared placement revision/locking before accepting assignment preconditions.",
-      "Next connect real physical Item reads through approved scope authorization and existing runtime/UI contracts; establish scoped download readiness without inventing complete accounting. Do not expand into more disconnected storage families. Item mutation must await actor policy and preserve atomic placement/accounting changes, history and offline replay. No Firebase or production/hosted changes."
+      "Audit complete. Full automatic CI34180760150 for6e3a022ae3b1b8485fca7756dc7c85533460f549 SUCCESS; now verified checkpoint. No CI running. Do not push intermediate read-access-only work just to create another full CI; continue runtime/UI within current working batch.",
+      "Uncommitted physical member-read migration20260908024101 applied locally and recorded in local migration history. Named-column SELECT/current-membership RLS for Items/placements only, no writes/service-role/private-view/financial access. New manually subscribed physical_account_items stream is account/user/member scoped, explicit physical projections plus active Spaces. Independent security review GO; main added placement denial/future-column tests.",
+      "Initial49/2 and final integrated508/15 SQL tests PASS /tmp/ledger-physical-read-db-integrated.log; advisors/lint clean. Main fully read and reran delegated scripts/test-local-physical-item-stream.mjs: actual three query SQL projections,15 member/foreign/removal/column captures run as privileged local Postgres, all fixtures rolled back. Not PowerSync engine or hosted proof. Wired into normal CI; eight CI checks/environment/conversion/diff PASS. No local process/agent active.",
+      "Runtime/UI work now uncommitted: Core DownloadedItemPlacements port/value, lifecycle-owned finite read, DownloadedItemsModel and inline Project workspace DownloadedItemsView. Main reviewed delegated runtime tests; added deterministic stale/clear/cancel/wrong-scope presenter tests. Focused45 tests/3 suites PASS /tmp/ledger-downloaded-items-focused.log. No process running. Significant read boundary recorded in A019.",
+      "Batch ready for implementation checkpoint: real SDK subscription/member-removal tests2/1 PASS /tmp/ledger-items-sdk-test.log; integrated native833/120 PASS /tmp/ledger-items-native-integrated.log; conversion gate PASS. Agent idle; main reviewed code/tests. Earlier combined56/5 run had one temporary SQLite open error, isolated4 reader tests passed; cause not established. Local UI compiled but automation runner initialization timed out before tests (/tmp/ledger-items-ui.log). All processes terminal. NEXT commit/push this coherent physical read batch and inspect its single automatic CI; do not dispatch duplicate CI or silently rerun full local UI. Last fully verified checkpoint remains6e3a022a until exact new CI passes. Item read is physical/downloaded-only, not completed Item browsing/accounting. O065/O033/O027/O060 open; no Firebase/production/hosted access."
     ]
   },
   "blockers": [],

@@ -415,6 +415,41 @@ rows remain unknowable without a scoped stream-completion contract. No new
 Sync Stream, grants, accounting classification or inventory-completeness claim
 is introduced by registering local table shapes.
 
+**Physical read authorization:** The subsequent member-read migration grants
+authenticated callers SELECT on named physical columns only, constrained by
+current Account membership. No Item writes, private-view/service-role access or
+financial facts are opened. Column-level grants and explicit Sync projections
+prevent future financial columns from inheriting this permission. The manually
+subscribed `physical_account_items` stream binds both requested Account and
+authenticated Principal to active membership; it includes physical placement
+intervals and active Spaces, not payment/Invoice evidence. Existing bootstrap
+provides Projects. An archived or undownloaded Space remains missing evidence,
+not an invented unassigned location. Local RLS and source-SQL checks plus review
+do not prove hosted stream parsing, revocation propagation or completeness.
+
+**App read boundary:** `DownloadedItemPlacements` is a backend-neutral, read-only
+physical projection, not a second history authority or a movement precondition.
+The existing Account runtime owns its database and admits reads through its
+finite-operation lifecycle gate: normal close drains them; learned removal
+suppresses their results. The Project workspace uses that same runtime, with no
+synthetic Items or separate database owner. The presenter rejects foreign scope,
+canceled and superseded results and clears on disappearance. Focused runtime,
+reader and presentation tests pass (45 tests); real stream subscription and UI
+interaction proof remain pending. This partial view deliberately reports only
+downloaded data, not zero inventory or accounting completeness.
+
+The read port also exposes continuous downloaded snapshots so the screen can
+follow local database changes without polling or requiring Refresh. It reuses
+the same physical projection and scope checks; it does not add an independent
+cache or history model. The runtime must retain the watch task through local
+query cancellation and owned subscription cleanup before closing the database.
+Reactive lifecycle tests cover delayed subscription, cancellation during setup,
+held cleanup during workspace close/removal, and separate concurrent handles.
+An additional test uses the real SDK's local subscription registration and
+confirms that removing local membership terminates the read. None of this proves
+hosted revocation propagation or download completeness. The macOS UI test runner
+could not initialize automation, so interaction acceptance remains unverified.
+
 **Explicit client-payment translation:** A non-canceled legacy `paymentToBusiness` record
 means actual client payment (`InvoiceService.markCollected` writes category-specific
 payment records). Under D-001/D-002 it maps to the target Project Purchase

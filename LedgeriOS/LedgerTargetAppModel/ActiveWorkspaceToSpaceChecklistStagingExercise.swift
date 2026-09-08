@@ -6,15 +6,18 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
     public let projectBrowsing: ProjectBrowsingStagingRuntime
     public let spaceBrowsing: SpaceBrowserStagingRuntime
     public let checklistToggle: SpaceChecklistItemToggleStagingRuntime
+    public let itemReader: (any DownloadedItemPlacementReading)?
 
     public init(
         projectBrowsing: ProjectBrowsingStagingRuntime,
         spaceBrowsing: SpaceBrowserStagingRuntime,
-        checklistToggle: SpaceChecklistItemToggleStagingRuntime
+        checklistToggle: SpaceChecklistItemToggleStagingRuntime,
+        itemReader: (any DownloadedItemPlacementReading)? = nil
     ) {
         self.projectBrowsing = projectBrowsing
         self.spaceBrowsing = spaceBrowsing
         self.checklistToggle = checklistToggle
+        self.itemReader = itemReader
     }
 }
 
@@ -75,7 +78,8 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
         representedProjectId.map(isRepresentedActiveProject) == true
     }
 
-    private let accountId: AccountID
+    public let accountId: AccountID
+    public var itemReader: (any DownloadedItemPlacementReading)? { runtime?.itemReader }
     private var runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime?
     private var generation: UInt64 = 0
     private var projectEvidenceTask: Task<Void, Never>?

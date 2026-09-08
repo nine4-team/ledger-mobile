@@ -2472,6 +2472,7 @@ if (
     ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
   ].map((match) => match[1]);
   const expectedStreamNames = [
+    "physical_account_items",
     "spike_account_bootstrap",
     "spike_clients",
     "spike_projects",
@@ -2485,7 +2486,7 @@ if (
   if (JSON.stringify(streamNames) !== JSON.stringify(expectedStreamNames)) {
     fail(
       "target_project_category_revision_sync_stream_set",
-      "The revision foundation must not add, remove, or rename a Sync Stream.",
+      "Sync Streams must match the reviewed target stream set.",
     );
   }
   const streamSection = (name) =>

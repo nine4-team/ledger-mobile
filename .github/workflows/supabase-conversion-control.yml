@@ -130,6 +130,7 @@ jobs:
           npm run target:supabase:test:rpc
           npm run target:supabase:test:payment-import
           node scripts/test-local-item-placement-concurrency.mjs
+          node scripts/test-local-physical-item-stream.mjs
 
       - name: Stop isolated local Supabase
         if: always()

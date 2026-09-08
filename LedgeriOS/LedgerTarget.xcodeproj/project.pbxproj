@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BA10D039AFE04E0DB71F09A1 /* DownloadedItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */; };
 		080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */; };
 		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
@@ -55,6 +56,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemsView.swift; sourceTree = "<group>"; };
 		0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingExerciseView.swift; sourceTree = "<group>"; };
 		189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 				9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */,
 				E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */,
 				189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */,
+				BA10D039AFE04E0DB71F09A2 /* DownloadedItemsView.swift */,
 				F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */,
 				9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */,
 				E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */,
@@ -276,6 +279,7 @@
 				D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */,
 				7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */,
 				1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */,
+				BA10D039AFE04E0DB71F09A1 /* DownloadedItemsView.swift in Sources */,
 				49DC392E33A075F038F9A911 /* ClientArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
 				EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */,
 				AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */,

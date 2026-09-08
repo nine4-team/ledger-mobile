@@ -10,7 +10,8 @@ enum ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter {
         ActiveWorkspaceToSpaceChecklistStagingRuntime(
             projectBrowsing: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime),
             spaceBrowsing: SpaceBrowserStagingRuntimeAdapter.adapt(runtime),
-            checklistToggle: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime)
+            checklistToggle: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime),
+            itemReader: runtime
         )
     }
 }
@@ -128,6 +129,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 Button("Notes") { model.openNotesTab() }
                     .accessibilityIdentifier("target-active-project-notes-tab")
                     .accessibilityHint("Opens note history for this Project")
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader)
+                }
             } else {
                 Text("The represented Project is unavailable.")
                     .foregroundStyle(.secondary)

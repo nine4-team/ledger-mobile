@@ -293,7 +293,8 @@ private final class ActiveWorkspaceChecklistUITestFixture {
                     return emptyRejectedSnapshot
                 },
                 watchRejectedOperations: { [rejectedUpdates] _ in rejectedUpdates.stream }
-            )
+            ),
+            itemReader: UITestFixtureItemReader()
         ))
     }
 
@@ -367,6 +368,25 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         _ request: SpaceCoreDetailsRequest
     ) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
         source.stream
+    }
+}
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading {
+    func watchDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) -> AsyncThrowingStream<DownloadedItemPlacements, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    continuation.yield(try await readDownloadedItemPlacements(accountId: accountId, scope: scope))
+                    continuation.finish()
+                } catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+    func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        let row = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-chair"),
+            description: "Downloaded test chair", itemRevision: 1,
+            placementId: EntityID(validating: "physical-ui-placement"), scope: scope, spaceId: nil)
+        return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row])
     }
 }
 #endif

@@ -27,7 +27,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 
 public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
-    RejectedOperationRecoveryQuerying, Sendable
+    RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
@@ -43,6 +43,17 @@ public final class LedgerOfflineClientRuntime:
 
     public func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
         try await lifecycleOwner.createClient(command)
+    }
+
+    public func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        try await lifecycleOwner.readDownloadedItemPlacements(accountId: accountId, scope: scope)
+    }
+
+    public func watchDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) -> AsyncThrowingStream<DownloadedItemPlacements, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startDownloadedItemPlacementsWatch(id: id,
+                accountId: accountId, scope: scope, continuation: continuation)
+        }
     }
 
     public func watchClient(

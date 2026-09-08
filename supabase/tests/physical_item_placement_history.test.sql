@@ -72,14 +72,14 @@ select throws_ok($$delete from public.spike_spaces where id='placement-space-a'$
 
 select ok((select bool_and(relrowsecurity and relforcerowsecurity) from pg_class
   where oid in ('public.spike_items'::regclass,'public.spike_item_placements'::regclass)),'Both tables force RLS');
-select ok((select bool_and(not has_table_privilege(r,t,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE'))
+select ok((select bool_and(not has_table_privilege(r,t,'INSERT,UPDATE,DELETE,TRUNCATE'))
   from unnest(array['anon','authenticated','service_role']) r
-  cross join unnest(array['public.spike_items','public.spike_item_placements','ledger_private.current_item_placements']) t),'No unapproved API grants');
+  cross join unnest(array['public.spike_items','public.spike_item_placements','ledger_private.current_item_placements']) t),'No unapproved API write grants');
 select ok((select reloptions @> array['security_invoker=true'] from pg_class
   where oid='ledger_private.current_item_placements'::regclass),'Current query does not bypass caller rights');
 set local role authenticated;
-select throws_ok('select * from public.spike_items','42501',null,'Authenticated direct Item read remains denied');
-select throws_ok('select * from public.spike_item_placements','42501',null,'Authenticated history read remains denied');
+select is((select count(*) from public.spike_items),0::bigint,'Authenticated role without verified membership sees no Items');
+select is((select count(id) from public.spike_item_placements),0::bigint,'Authenticated role without verified membership sees no placements');
 reset role;
 select * from finish();
 rollback;

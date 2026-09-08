@@ -9,29 +9,35 @@ enum CurrentItemPlacementReadFailure: Error, Equatable {
 /// Downloaded physical facts only. Not a complete inventory/accounting snapshot
 /// or an assignment precondition: movement commands must first share a proven
 /// revision contract. No subscription or new server access is granted here.
-struct CurrentItemPlacementLocalRow: Equatable, Sendable {
-    let itemId: ItemID
-    let description: String
-    let itemRevision: Int64
-    let placementId: EntityID
-    let scope: ItemPlacementScope
-    let spaceId: SpaceID?
-}
-
 struct CurrentItemPlacementLocalReader: Sendable {
     let database: any PowerSyncDatabaseProtocol
 
-    func read(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) async throws -> [CurrentItemPlacementLocalRow] {
+    func read(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) async throws -> [PhysicalItemPlacement] {
+        let rows: [PhysicalItemPlacement?] = try await database.getAll(sql: Self.sql,
+            parameters: Self.parameters(accountId: accountId, principalId: principalId, scope: scope)) {
+                try Self.row(cursor: $0, scope: scope)
+            }
+        return rows.compactMap { $0 }
+    }
+
+    func watch(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) throws -> AsyncThrowingStream<[PhysicalItemPlacement?], Error> {
+        try database.watch(sql: Self.sql,
+            parameters: Self.parameters(accountId: accountId, principalId: principalId, scope: scope)) {
+                try Self.row(cursor: $0, scope: scope)
+            }
+    }
+
+    private static func parameters(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) -> [Sendable?] {
         let kind: String
         let project: String?
         switch scope {
         case .businessInventory: kind = "business_inventory"; project = nil
         case .project(let id): kind = "project"; project = id.rawValue
         }
-        // Access, selected rows, parent evidence and cross-scope duplicate
-        // detection share one SQLite snapshot; no check-then-read race.
-        let rows: [CurrentItemPlacementLocalRow?] = try await database.getAll(sql: Self.sql,
-            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, kind, project]) { cursor in
+        return [accountId.rawValue, principalId.rawValue, accountId.rawValue, kind, project]
+    }
+
+    private static func row(cursor: any SqlCursor, scope: ItemPlacementScope) throws -> PhysicalItemPlacement? {
             guard try cursor.getInt(name: "is_active") == 1 else {
                 throw CurrentItemPlacementReadFailure.accountUnavailable
             }
@@ -44,15 +50,14 @@ struct CurrentItemPlacementLocalReader: Sendable {
                   try cursor.getInt(name: "project_valid") == 1 else {
                 throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
             }
-            return try CurrentItemPlacementLocalRow(itemId: ItemID(validating: item),
+            return try PhysicalItemPlacement(itemId: ItemID(validating: item),
                 description: description, itemRevision: Int64(revision),
                 placementId: EntityID(validating: placement), scope: scope,
                 spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) })
-        }
-        return rows.compactMap { $0 }
     }
 
     private static let sql = """
+      -- Membership, parents and cross-scope duplicate checks share one snapshot.
       WITH access AS (
         SELECT EXISTS (SELECT 1 FROM spike_account_memberships
           WHERE account_id = ? AND principal_id = ? AND state = 'active') AS is_active

@@ -7,6 +7,182 @@ import Testing
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("Physical Item watch cleanup drains before workspace close or learned-removal teardown", arguments: [false, true])
+    func physicalItemWatchCleanupDrain(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "physical-watch-cleanup-\(removing)")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let cleanup = ManualGate()
+        let subscription = RuntimePhysicalSubscription(cleanup: cleanup)
+        let subscribed = AsyncStream<Void>.makeStream()
+        let values = AsyncStream<DownloadedItemPlacements>.makeStream()
+        var dependencies = physicalItemDependencies(context)
+        dependencies.lifecycleEvent = { events.append($0) }
+        dependencies.subscribePhysicalItems = { account in
+            #expect(account == context.accountId)
+            subscribed.continuation.yield(())
+            return subscription
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let consumer = Task {
+            do {
+                for try await value in runtime.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) {
+                    values.continuation.yield(value)
+                }
+            } catch { }
+        }
+        var subscriptionIterator = subscribed.stream.makeAsyncIterator()
+        _ = await subscriptionIterator.next()
+        var valueIterator = values.stream.makeAsyncIterator()
+        #expect(try #require(await valueIterator.next()).rows.isEmpty)
+        let closing = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        await cleanup.waitUntilEntered()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+        }
+        await cleanup.release()
+        try await closing.value
+        await consumer.value
+        #expect(await subscription.unsubscribeCount == 1)
+        #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
+        subscribed.continuation.finish(); values.continuation.finish()
+        context.remove()
+    }
+
+    @Test("Concurrent physical Item watches release only their own subscription handles")
+    func physicalItemConcurrentWatchOwnership() async throws {
+        let context = try RuntimeTestContext(suffix: "physical-watch-peers")
+        let cleanup = ManualGate()
+        await cleanup.release()
+        let subscriptions = AsyncStream<RuntimePhysicalSubscription>.makeStream()
+        var dependencies = physicalItemDependencies(context)
+        dependencies.subscribePhysicalItems = { _ in
+            let subscription = RuntimePhysicalSubscription(cleanup: cleanup)
+            subscriptions.continuation.yield(subscription)
+            return subscription
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let first = Task {
+            do { for try await _ in runtime.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) { } }
+            catch { }
+        }
+        let second = Task {
+            do { for try await _ in runtime.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) { } }
+            catch { }
+        }
+        var iterator = subscriptions.stream.makeAsyncIterator()
+        let a = try #require(await iterator.next())
+        let b = try #require(await iterator.next())
+        first.cancel()
+        await first.value
+        var count = 0
+        for _ in 0..<2_000 {
+            count = await a.unsubscribeCount + b.unsubscribeCount
+            if count == 1 { break }
+            try await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(count == 1)
+        try await runtime.close()
+        await second.value
+        #expect(await a.unsubscribeCount == 1)
+        #expect(await b.unsubscribeCount == 1)
+        subscriptions.continuation.finish()
+        context.remove()
+    }
+
+    @Test("Downloaded physical Item facade binds Account, reads owned storage and survives restart")
+    func downloadedItemPlacementsFacade() async throws {
+        let context = try RuntimeTestContext(suffix: "downloaded-items")
+        let runtime = try await context.openRuntime(dependencies: physicalItemDependencies(context))
+        let project = try ProjectID(validating: "project-physical")
+        let empty = try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+        #expect(empty.accountId == context.accountId)
+        #expect(empty.scope == .businessInventory)
+        #expect(empty.rows.isEmpty) // Downloaded rows only, not completeness.
+        let snapshot = try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .project(project))
+        #expect(snapshot.accountId == context.accountId)
+        #expect(snapshot.scope == .project(project))
+        #expect(snapshot.rows.count == 1)
+        #expect(snapshot.rows.first?.itemId.rawValue == "physical-chair")
+        #expect(snapshot.rows.first?.placementId.rawValue == "physical-placement")
+        #expect(snapshot.rows.first?.itemRevision == 3)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readDownloadedItemPlacements(accountId: AccountID(validating: "account-other"), scope: .project(project))
+        }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .project(project))
+        }
+        let reopened = try await context.openRuntime()
+        let restored = try await reopened.readDownloadedItemPlacements(accountId: context.accountId, scope: .project(project))
+        #expect(restored.rows.map(\.placementId) == snapshot.rows.map(\.placementId))
+        #expect(restored.rows.map(\.itemRevision) == snapshot.rows.map(\.itemRevision))
+        try await reopened.close()
+        context.remove()
+    }
+
+    @Test("Downloaded physical Item reads drain before close; learned removal suppresses admitted reads", arguments: [false, true])
+    func downloadedItemPlacementsDrain(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "downloaded-items-drain-\(removing)")
+        let gate = ManualGate()
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let locked = AsyncStream<Void>.makeStream()
+        var dependencies = physicalItemDependencies(context)
+        dependencies.lifecycleEvent = { event in
+            events.append(event)
+            if event == .accessLocked { locked.continuation.yield(()) }
+        }
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .readDownloadedItemPlacements { await gate.wait() }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let read = Task { try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) }
+        await gate.waitUntilEntered()
+        let closing = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        if removing {
+            var iterator = locked.stream.makeAsyncIterator()
+            _ = await iterator.next()
+        } else {
+            try await Task.sleep(for: .milliseconds(30))
+        }
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+        }
+        await gate.release()
+        if removing {
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await read.value }
+        } else {
+            #expect(try await read.value.rows.isEmpty)
+        }
+        try await closing.value
+        #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
+        locked.continuation.finish()
+        context.remove()
+    }
+
+    private func physicalItemDependencies(_ context: RuntimeTestContext) -> LedgerPowerSyncLocalBootstrapDependencies {
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            for sql in [
+                "INSERT INTO spike_account_memberships(id,account_id,principal_id,state) VALUES('physical-member','account-runtime','principal-runtime','active')",
+                "INSERT INTO spike_projects(id,account_id) VALUES('project-physical','account-runtime')",
+                "INSERT INTO spike_items(id,account_id,description,revision) VALUES('physical-chair','account-runtime','Chair',3)",
+                "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at) VALUES('physical-placement','account-runtime','physical-chair','project','project-physical','2026-09-01')"
+            ] { _ = try await database.execute(sql: sql, parameters: nil) }
+        }
+        return dependencies
+    }
+
     @Test("WORKRUNTIME-TEST-001 exact composition returns clean and all pending classes")
     func exactCompositionAndPendingClasses() async throws {
         let cleanContext = try RuntimeTestContext(suffix: "clean")
@@ -2422,6 +2598,19 @@ private struct RuntimeGatedClientApplier: ClientCreationCommandApplying {
             commandFingerprint: request.fingerprint, subjectId: request.clientId,
             phase: "applied", resultCode: "client_created", errorCode: nil
         )
+    }
+}
+
+private actor RuntimePhysicalSubscription: SyncStreamSubscription {
+    nonisolated let name = "physical_account_items"
+    nonisolated let parameters: JsonParam? = ["account_id": .string("account-runtime")]
+    let cleanup: ManualGate
+    private(set) var unsubscribeCount = 0
+    init(cleanup: ManualGate) { self.cleanup = cleanup }
+    func waitForFirstSync() async throws { Issue.record("Physical watch must not gate local rows on first sync") }
+    func unsubscribe() async throws {
+        unsubscribeCount += 1
+        await cleanup.wait()
     }
 }
 
