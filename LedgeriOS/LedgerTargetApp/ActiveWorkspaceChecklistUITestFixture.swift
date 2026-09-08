@@ -3,6 +3,7 @@ import LedgerTargetAppModel
 import LedgerTargetCore
 import Observation
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// A deterministic, in-memory route used only by the staging app's explicit
 /// UI-test launch argument. It exercises the real SwiftUI composition and
@@ -20,6 +21,12 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                 .padding(.vertical, 10)
                 .background(Color.orange)
                 .accessibilityIdentifier("target-ui-fixture-banner")
+
+            #if os(iOS)
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-copy-receiver") {
+                UITestReportCopyReceiver()
+            }
+            #endif
 
             List {
                 Section("Fixture evidence") {
@@ -393,6 +400,49 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading {
     }
 }
 
+#if os(iOS)
+/// Explicit user-initiated paste, not a synchronous cross-app clipboard read
+/// from the XCTest runner. Only the isolated Copy test enables this receiver.
+/// https://developer.apple.com/documentation/swiftui/pastebutton
+private struct UITestReportCopyReceiver: View {
+    @State private var result = "No copied report received"
+
+    var body: some View {
+        VStack {
+            PasteButton(supportedContentTypes: [.pdf, .commaSeparatedText, .utf8PlainText, .fileURL]) { providers in
+                result = "Reading copied report"
+                guard let provider = providers.first else { result = "Missing copied report"; return }
+                let contentTypes: [UTType] = [.pdf, .commaSeparatedText, .utf8PlainText]
+                if let type = contentTypes.first(where: { provider.hasItemConformingToTypeIdentifier($0.identifier) }) {
+                    provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, _ in
+                        finish(data)
+                    }
+                } else {
+                    provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                        let fileURL = (item as? URL) ?? (item as? Data).flatMap { URL(dataRepresentation: $0, relativeTo: nil) }
+                        guard let url = fileURL, url.isFileURL else { finish(nil); return }
+                        let scoped = url.startAccessingSecurityScopedResource()
+                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                        // A dead scratch-file URL must fail, not count as a copy.
+                        finish(try? Data(contentsOf: url))
+                    }
+                }
+            }
+            .accessibilityIdentifier("target-ui-fixture-paste-report")
+            Text(result).accessibilityIdentifier("target-ui-fixture-paste-result")
+        }
+    }
+
+    private nonisolated func finish(_ data: Data?) {
+        let message: String
+        if let data, data.starts(with: Data("%PDF-".utf8)) { message = "PDF content received" }
+        else if let data, String(decoding: data, as: UTF8.self).contains("Report test chair") { message = "CSV content received" }
+        else { message = "Copied report content unavailable" }
+        Task { @MainActor in result = message }
+    }
+}
+#endif
+
 private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, PropertyManagementReportReading {
     func watchPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode) -> AsyncThrowingStream<PropertyManagementReportUpdate, Error> {
@@ -428,10 +478,27 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
                 let item = try PropertyManagementReportItem(accountId: accountId, projectId: projectId,
                     itemId: ItemID(validating: "report-ui-chair"), placementId: EntityID(validating: "report-ui-placement"),
                     spaceId: nil, name: "Report test chair", sku: "CHAIR-001", marketValue: nil, itemRevision: 1)
+                var items = [item]
+                var spaces: [PropertyManagementReportSpace] = []
+                if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-grouped") {
+                    let room = try SpaceID(validating: "report-ui-living-room")
+                    spaces = [.init(accountId: accountId, projectId: projectId, spaceId: room,
+                        name: "Report Living Room", revision: 1)]
+                    items += try [
+                        .init(accountId: accountId, projectId: projectId,
+                            itemId: ItemID(validating: "report-ui-table"), placementId: EntityID(validating: "report-ui-table-placement"),
+                            spaceId: room, name: "Report test table", sku: "TABLE-002",
+                            marketValue: .init(minorUnits: 12345, currency: currency), itemRevision: 1),
+                        .init(accountId: accountId, projectId: projectId,
+                            itemId: ItemID(validating: "report-ui-lamp"), placementId: EntityID(validating: "report-ui-lamp-placement"),
+                            spaceId: room, name: "Report test lamp", sku: nil,
+                            marketValue: .zero(currency: currency), itemRevision: 1)
+                    ]
+                }
                 return try PropertyManagementReportSnapshot.build(
                     project: .init(accountId: accountId, projectId: projectId, name: "Report test property",
-                        address: "123 Synthetic Street", revision: 1), spaces: [],
-                    items: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-empty") ? [] : [item], currency: currency,
+                        address: "123 Synthetic Street", revision: 1), spaces: spaces,
+                    items: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-empty") ? [] : items, currency: currency,
                     provenance: .init(accountId: accountId, projectId: projectId,
                         principalId: PrincipalID(validating: "principal-ui-test"),
                         visibilityScopeID: .make(bytes: Data("report-ui-fixture".utf8)),

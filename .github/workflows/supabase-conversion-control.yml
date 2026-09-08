@@ -120,6 +120,7 @@ jobs:
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSSystemDialogCancellation \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
 
       - name: Confirm target checks did not rewrite tracked artifacts

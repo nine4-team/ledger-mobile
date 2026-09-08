@@ -52,12 +52,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testPropertyManagementIOSCopyCompletion() throws {
+        executionTimeAllowance = 120
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
             throw XCTSkip("Native Copy completion uses only the isolated CI simulator clipboard")
         }
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-copy-receiver"]
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -66,11 +67,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let openReport = app.buttons["target-property-report-open"]
         reveal(openReport, in: app)
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
-        openReport.tap()
         let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
         let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
         for identifier in ["target-property-report-share", "target-property-report-csv"] {
             UIPasteboard.general.items = []
+            reveal(openReport, in: app)
+            openReport.tap()
             let button = app.buttons[identifier]
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             XCTAssertTrue(button.isEnabled)
@@ -81,23 +83,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(waitUntil { !copy.exists && !busy.exists && button.isEnabled }, app.debugDescription)
             XCTAssertFalse(failure.exists)
             let isPDF = identifier == "target-property-report-share"
-            let bytes: Data
-            if let url = UIPasteboard.general.urls?.first {
-                XCTAssertTrue(url.isFileURL)
-                guard url.isFileURL else { return }
-                bytes = try Data(contentsOf: url)
-            } else if let data = UIPasteboard.general.data(forPasteboardType: isPDF ? "com.adobe.pdf" : "public.utf8-plain-text") {
-                bytes = data
-            } else if !isPDF, let string = UIPasteboard.general.string {
-                bytes = Data(string.utf8)
-            } else {
-                XCTFail("Native Copy produced no usable report content")
-                return
-            }
-            if isPDF { XCTAssertTrue(bytes.starts(with: Data("%PDF-".utf8))) }
-            else { XCTAssertTrue(String(decoding: bytes, as: UTF8.self).contains("Report test chair")) }
+            app.buttons["Done"].tap()
+            let paste = app.buttons["target-ui-fixture-paste-report"]
+            XCTAssertTrue(paste.waitForExistence(timeout: 5))
+            XCTAssertTrue(paste.isEnabled)
+            paste.tap()
+            let result = app.staticTexts["target-ui-fixture-paste-result"]
+            XCTAssertTrue(waitUntil { result.label == (isPDF ? "PDF content received" : "CSV content received") }, app.debugDescription)
         }
-        app.buttons["Done"].tap()
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
     }
     #endif
@@ -293,7 +286,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testPropertyManagementPreviewRefreshAndDismiss() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-grouped"]
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -313,6 +306,24 @@ final class WorkspaceChecklistUITests: XCTestCase {
             let text = item.label + " " + ((item.value as? String) ?? "")
             return text.contains("Report test chair") && text.contains("CHAIR-001") && text.contains("Unknown")
         })
+        XCTAssertTrue(app.staticTexts["Report Living Room"].exists)
+        XCTAssertTrue(app.staticTexts["No Space"].exists)
+        for (id, name, sku, value) in [
+            ("table", "Report test table", "TABLE-002", "USD 123.45"),
+            ("lamp", "Report test lamp", "Not provided", "USD 0.00")
+        ] {
+            let row = app.descendants(matching: .any)
+                .matching(identifier: "target-property-report-item-report-ui-\(id)").firstMatch
+            XCTAssertTrue(row.exists)
+            let text = row.label + " " + ((row.value as? String) ?? "")
+            XCTAssertTrue(text.contains(name) && text.contains(sku) && text.contains(value), text)
+            XCTAssertFalse(text.contains("Unknown"))
+        }
+        let reportTotals = app.descendants(matching: .any)
+            .matching(identifier: "target-property-report-totals")
+        for text in ["Items: 3", "Known market value subtotal: USD 123.45", "Unknown values: 1"] {
+            XCTAssertTrue(reportTotals.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text)).firstMatch.exists)
+        }
         let refresh = app.buttons["target-property-report-refresh"]
         XCTAssertTrue(refresh.waitForExistence(timeout: 5))
         refresh.tap()

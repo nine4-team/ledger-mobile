@@ -20,17 +20,26 @@ struct PropertyManagementReportDeliveryTests {
         }
     }
 
-    @Test("Denied access or changed source cannot reach system handoff", arguments: [false, true])
-    func revalidation(changed: Bool) async throws {
+    @Test("Denied access, changed source or replaced authority cannot reach system handoff",
+          arguments: ["denied", "source", "principal", "visibility"])
+    func revalidation(change: String) async throws {
         let report = try fixture()
-        let reader = Reader(snapshot: try fixture(name: changed ? "Changed" : "Property"), denied: !changed)
+        let current = try fixture(name: change == "source" ? "Changed" : "Property",
+            principal: change == "principal" ? "replacement-user" : "delivery-user",
+            visibility: change == "visibility" ? "replacement-scope" : "delivery-scope")
+        if change == "principal" || change == "visibility" {
+            #expect(current.project == report.project)
+            #expect(current.groups == report.groups)
+            #expect(current.totals == report.totals)
+        }
+        let reader = Reader(snapshot: current, denied: change == "denied")
         do {
             try await PropertyManagementReportDelivery.deliver(data: Data("%PDF-test".utf8), snapshot: report, reader: reader) { _ in
                 Issue.record("Unauthorized/stale report reached handoff")
             }
             Issue.record("Expected validation failure")
-        } catch PropertyManagementReportDeliveryFailure.snapshotChanged { #expect(changed) }
-        catch Failure.denied { #expect(!changed) }
+        } catch PropertyManagementReportDeliveryFailure.snapshotChanged { #expect(change != "denied") }
+        catch Failure.denied { #expect(change == "denied") }
     }
 
     @Test("System success, cancellation and failure clean only after callback", arguments: [false, true], [ReportScratchFormat.pdf, .csv])
@@ -65,12 +74,13 @@ struct PropertyManagementReportDeliveryTests {
         entered.continuation.finish()
     }
 
-    private func fixture(name: String = "Property") throws -> PropertyManagementReportSnapshot {
+    private func fixture(name: String = "Property", principal: String = "delivery-user",
+                         visibility: String = "delivery-scope") throws -> PropertyManagementReportSnapshot {
         let account = try AccountID(validating: "delivery-account"), project = try ProjectID(validating: "delivery-project")
         return try .build(project: .init(accountId: account, projectId: project, name: name, address: nil, revision: 1),
             spaces: [], items: [], currency: CurrencyCode(validating: "USD"),
-            provenance: .init(accountId: account, projectId: project, principalId: PrincipalID(validating: "delivery-user"),
-                visibilityScopeID: .make(bytes: Data("delivery-scope".utf8)), localDataVersion: .init(validating: "delivery-1"),
+            provenance: .init(accountId: account, projectId: project, principalId: PrincipalID(validating: principal),
+                visibilityScopeID: .make(bytes: Data(visibility.utf8)), localDataVersion: .init(validating: "delivery-1"),
                 authorityVersion: .init(validating: "property-management-v1"), asOf: .init(validating: 1_800_000_000_000),
                 readiness: .ready, lastSyncedAt: .init(validating: 1_799_999_000_000)))
     }
