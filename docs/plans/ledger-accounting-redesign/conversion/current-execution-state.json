@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 102,
+  "stateVersion": 103,
   "resumeAfterWorkflowId": "learned-account-removal-enforcement",
   "updatedAt": "2026-09-07",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,9 +23,9 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve source lineage and reconcile exact-account Item/Transaction/Project references before target history mapping, without inventing financial events.",
     "nextActions": [
-      "Audit complete. Verified checkpoint806a2e73 CI34176726688 SUCCESS; do not repeat SDK/native full suites merely on resume. Cancellation evidence103bb183 still local until this batch is pushed.",
+      "Audit complete. CI34178745443 for22fa6a9e completed FAILURE: conversion and all native/app UI/macOS/iOS gates passed; local DB startup failed binding occupied host54322 before tests. Do not rerun that commit. Verified checkpoint remains806a2e73 CI34176726688 SUCCESS.",
       "FrozenInvoiceContents and tests implement shared immutable positive-Invoice value: exact scope/source revisions, Item+occurrence+mandatory price snapshot, Expense/Fee identity, signed amount/category/label, one Purchase ref. Duplicate sources, currency/total/category overflow and invalid decoding reject. Main implemented; independent review caught missing price provenance and Expense/Fee duplicates, fixed; final GO.",
-      "Focused7 and integrated76/14 PASS /tmp/ledger-frozen-invoice-contents-final.log and /tmp/ledger-frozen-history-integrated.log; conversion/environment/diff PASS. Commit/push frozen value+cancellation batch then observe one automatic exact-commit CI. No local process or agent active. This is not completed persistence, collection or app/hosted readiness.",
+      "CI fix selects a free IPv4 wildcard DB port into GITHUB_ENV via scripts/select-ci-supabase-db-port.mjs; pinned CLI SUPABASE_DB_PORT verified read-only using status. Project identity/config/security/tests unchanged; no unknown process stopped. Eight focused CI/selector tests, conversion and diff checks pass. Commit/push fix once and observe its automatic PR CI, with no manual rerun or tiny follow-up push. No local process/agent active.",
       "O033 exact positive payment equality asked asynchronously this turn; no reply assumed. It blocks whole-Invoice collection policy only. Canonical source InvoiceLine has Item ID but no explicit cycle/edge ID; retain billing identity and only map cycles with real supporting evidence, not current location/timestamps. A019 documents both boundaries.",
       "Next implement authoritative retained source/price/category references and immutable paid contents persistence/mapping, while keeping O033 and manual/nonpositive-settlement decisions visible. Existing FrozenInvoiceContents needs writer-side payment/provenance/eligibility, DB/RLS/offline/app/MCP enforcement. No Firebase checkout or production/hosted/cutover/remote-fork actions."
     ]

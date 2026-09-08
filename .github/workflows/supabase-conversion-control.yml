@@ -113,6 +113,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Select available CI database port
+        run: node scripts/select-ci-supabase-db-port.mjs
+
       - name: Start isolated local Supabase
         run: >-
           npx --yes supabase@2.116.0 start

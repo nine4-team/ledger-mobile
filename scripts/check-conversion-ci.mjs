@@ -28,7 +28,7 @@ const retiredConversionCommands = Object.freeze([
 ]);
 
 const requiredScripts = Object.freeze({
-  "conversion:ci:test": "node --test scripts/tests/check-conversion-ci.test.mjs",
+  "conversion:ci:test": "node --test scripts/tests/check-conversion-ci.test.mjs scripts/tests/select-ci-supabase-db-port.test.mjs",
   "conversion:check":
     "node scripts/check-conversion-current-state.mjs && node scripts/supabase-conversion-ledger.mjs source-check",
   "conversion:capabilities:check":
@@ -280,6 +280,9 @@ function validateLocalSupabaseJob(lines) {
   const local = jobLines(lines, "local-supabase-provider-slices");
   requireExactLine(local, "    needs: conversion-control", "local Supabase dependency");
   requireExactLine(local, "    runs-on: ubuntu-latest", "local Supabase Linux runner");
+  const portSelection = local.indexOf("        run: node scripts/select-ci-supabase-db-port.mjs");
+  requireCondition(portSelection >= 0 && portSelection < local.indexOf("      - name: Start isolated local Supabase"),
+    "local database port selection must precede startup");
   for (const command of [
     "          npx --yes supabase@2.116.0 start",
     "          -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor",

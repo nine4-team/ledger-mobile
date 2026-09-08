@@ -3,7 +3,7 @@
     "conversion:state:check": "node scripts/check-conversion-current-state.mjs",
     "legacy:conversion:sync": "node scripts/supabase-conversion-ledger.mjs sync",
     "conversion:check": "node scripts/check-conversion-current-state.mjs && node scripts/supabase-conversion-ledger.mjs source-check",
-    "conversion:ci:test": "node --test scripts/tests/check-conversion-ci.test.mjs",
+    "conversion:ci:test": "node --test scripts/tests/check-conversion-ci.test.mjs scripts/tests/select-ci-supabase-db-port.test.mjs",
     "conversion:report": "node scripts/check-conversion-current-state.mjs",
     "conversion:queries:generate": "node scripts/extract-firestore-query-contract.mjs generate",
     "conversion:queries:check": "node scripts/extract-firestore-query-contract.mjs check",

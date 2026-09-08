@@ -196,6 +196,9 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
 });
 
 test("local Supabase job cannot bypass lint, database tests, cleanup, or its diff guard", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("        run: node scripts/select-ci-supabase-db-port.mjs\n", "");
+  }, /port selection must precede startup/);
   expectFailure(
     (value) => {
       value.workflow = value.workflow.replace("          npm run target:supabase:test:payment-import\n", "");
