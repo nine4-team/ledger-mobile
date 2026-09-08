@@ -43,9 +43,10 @@ jobs:
     # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
     # CI exercises the same supported compiler floor as the target app.
     runs-on: macos-26
-    # Cold checkout/builds plus both native UI suites exceeded 30 minutes in
-    # run 34240457119; keep every test and allow time for failure evidence.
-    timeout-minutes: 45
+    # Run 34268641520 passed macOS UI and both builds, then GitHub canceled
+    # the combined job at 45 minutes during iOS UI. Allow the expanded workload
+    # plus failure evidence; individual test/stall limits remain unchanged.
+    timeout-minutes: 60
 
     steps:
       - name: Check out repository

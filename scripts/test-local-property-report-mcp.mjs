@@ -109,11 +109,61 @@ try {
       input: `begin isolation level repeatable read read only;\n${captures.join('\n')}\ncommit;`, encoding: 'utf8',
     }).trim().split('\n').map(JSON.parse);
     assert.equal(raw.length, 4);
+    // Extend the same-commit native artifact with actual private Invoice storage
+    // output. This isolated synthetic transaction rolls back even on success;
+    // it creates no public collection API or durable accounting fixture graph.
+    // Source JSON stays TEXT through Node so embedded Int64 money is never
+    // parsed as a JavaScript Number before Swift consumes the SQL result.
+    const description = '  e\u0301\r\nOriginal description  ';
+    const line = (id, position, kind, sourceId, itemId, amount, sourceJSON) => ({
+      id, line_position: position, source_kind: kind, source_id: sourceId,
+      item_id: itemId, source_revision: '2', category_id: 'furnishings',
+      signed_amount_minor_units: amount, description, source_snapshot_json: sourceJSON,
+    });
+    const invoiceInput = {
+      invoice_id: 'frozen-invoice', invoice_revision: '3', account_id: 'account-primary',
+      project_id: 'frozen-project', client_id: 'client-existing', purchase_id: 'frozen-purchase',
+      currency: 'USD', total_minor_units: '9007199254740978', lines: [
+        line('z-sale', 0, 'item', 'sale', 'frozen-item', '9007199254740993',
+          '{"item":{"itemId":"frozen-item","occurrenceId":"sale","price":{"basis":{"projectPrice":{}},"amount":{"minorUnits":9007199254740993,"currency":"USD"}}}}'),
+        line('a-credit', 1, 'item', 'return', 'frozen-item', '-20',
+          '{"item":{"itemId":"frozen-item","occurrenceId":"return","price":{"basis":{"paidInvoiceLine":{"invoiceId":"prior-invoice","lineId":"prior-line"}},"amount":{"minorUnits":20,"currency":"USD"}}}}'),
+        line('expense-line', 2, 'expense', 'expense', null, '3', '{"expense":{"expenseId":"expense"}}'),
+        line('fee-line', 3, 'fee_installment', 'installment', null, '2', '{"feeInstallment":{"installmentId":"installment"}}'),
+      ],
+    };
+    const frozenInvoice = JSON.parse(execFileSync('docker', ['exec', '-i', container, 'psql', '-X', '-q', '-A', '-t',
+      '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input: `begin;
+        insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+          values ('frozen-project','account-primary','client-existing','Synthetic frozen Invoice parity',now(),now(),1,1,'principal-owner');
+        insert into public.spike_items(id,account_id,description,created_by_principal_id)
+          values ('frozen-item','account-primary','Original Item','principal-owner');
+        do $fixture$ declare stored jsonb; begin
+          perform ledger_private.import_client_payment('frozen-purchase','account-primary','frozen-project','client-existing',
+            9007199254740978,'USD','synthetic-frozen-parity','frozen-invoice',decode('01','hex'));
+          stored := ledger_private.store_collected_invoice($record$${JSON.stringify(invoiceInput)}$record$::jsonb);
+          if stored is distinct from ledger_private.read_collected_invoice('account-primary','frozen-invoice')
+            or stored is distinct from ledger_private.store_collected_invoice($record$${JSON.stringify(invoiceInput)}$record$::jsonb)
+          then raise exception 'Frozen Invoice store, read and replay differ'; end if;
+        end $fixture$;
+        set constraints all immediate;
+        select ledger_private.read_collected_invoice('account-primary','frozen-invoice');
+        rollback;`, encoding: 'utf8',
+    }).trim());
+    assert.equal(frozenInvoice.total_minor_units, '9007199254740978');
+    assert.equal(frozenInvoice.lines[0].signed_amount_minor_units, '9007199254740993');
+    assert.match(frozenInvoice.lines[0].source_snapshot_json, /9007199254740993/);
+    assert.deepEqual(frozenInvoice.lines.map(line => line.id), ['z-sale', 'a-credit', 'expense-line', 'fee-line']);
+    assert.deepEqual(frozenInvoice.lines.map(line => line.line_position), [0, 1, 2, 3]);
+    assert.ok(frozenInvoice.lines.every(line => line.description === description));
+    assert.equal(frozenInvoice.lines[2].item_id, null);
+    assert.equal(frozenInvoice.lines[3].item_id, null);
     writeFileSync(parityOutput, JSON.stringify({
       accountId: account, principalId: 'principal-restricted', projectId: populated,
-      currency: 'USD', tables: raw, report,
+      currency: 'USD', tables: raw, report, frozenInvoice,
     }), { mode: 0o600, flag: 'wx' });
-    console.log('Captured actual scoped stream rows and MCP snapshot for native differential verification.');
+    console.log('Captured actual scoped stream rows, MCP snapshot and SQL frozen Invoice for native differential verification.');
   }
   const wrongCurrency = await client.callTool({ name: 'get_property_management_report', arguments: { projectId: populated, currency: 'CAD' } });
   assert.equal(wrongCurrency.isError, true);

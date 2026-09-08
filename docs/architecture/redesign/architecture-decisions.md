@@ -942,6 +942,28 @@ source/price/category eligibility and actual payment, and enforce database
 immutability and authorization; this value alone does not collect an Invoice.
 Manual adjustments and nonpositive settlement remain separate product decisions.
 
+**Frozen-content storage under implementation (2026-09-08):** Private collected
+Invoice headers and ordered lines retain frozen allocations against one existing
+Purchase with exact Account/Project/Client/currency linkage. Invoice allocation
+total and actual payment amount remain distinct facts pending O-033; the storage
+boundary does not decide payment equality. Deferred validation requires a
+nonempty, contiguous ordered line set, exact signed Invoice total and in-range
+category totals. An internal assembly/seal flag prevents later additions—even
+net-zero lines—as well as edits/deletions. This flag is not a new product phase.
+
+The tables reuse existing Purchase and physical Item identities without changing
+the Firebase-import-only Purchase origin or opening API grants. This is not a
+collection command: referenced occurrence/Expense/Fee eligibility and runtime/concurrent
+verification remain required. The private idempotent writer returns ordered source
+records; the Swift transport reconstructs the existing typed frozen contract,
+keeps money/revisions as exact decimal strings, and compares indexed source links
+by UTF-8 bytes rather than Swift's Unicode-equivalent string equality. Focused
+transport tests pass; an actual database-to-Swift round trip remains required.
+Retaining a source JSON object is not proof that
+its referenced business event exists. Tests are in
+`supabase/tests/collected_invoice_contents.test.sql`; local execution is pending
+the unavailable Docker engine. No payment, migration or cutover is authorized.
+
 **Physical storage (2026-09-07):** `spike_items` owns permanent physical identity;
 `spike_item_placements` owns Inventory/Project/optional Space intervals. Composite
 foreign keys preserve exact tenant/scope relationships. A Postgres GiST exclusion

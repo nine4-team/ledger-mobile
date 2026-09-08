@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 244,
+  "stateVersion": 248,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -21,13 +21,13 @@
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Continue Project Notes with separate legacy Project.notes preservation, reusing exact Project detail authority; do not invent individual-note metadata or claim completion before migration/storage/Sync/UI verification.",
+    "outcome": "Persist and reload frozen Invoice contents as a prerequisite to approved whole-Invoice collection; preserve exact history without claiming a collection workflow.",
     "nextActions": [
-      "Historical blank-creator-name batch ready to checkpoint: Core/MCP, exporter, presentation and encryptedreopen preserve blank vsnull; SQL20260908194745 drops only historical nonblank constraint. Independent review GO; full922native137suites68076 passed48.080s,39MCPtests, MCPtypecheck/conversion/environment41288 anddiff passed. Follow automaticCI for containingcommit; SQLruntime pending. Other source representation gaps remain unresolved; do not claim complete migration. Do not repeat fulltests to resume.",
-      "Latest committed importer fdf6362d34eaa47381a2785dc95dad62045a6c97 pushed. AutomaticCI34270811621 conversion/DATABASE passed, native checkout confirmedlive. This covers new private individual-note SQL but NOT uncommitted blank-name migration. Full920native137suites passed47.383s76911 beforecommit; independent reviews passed. Separate local executable recovery remains unexecuted (Docker93269ETIMEDOUT). PriorCI34268641520 at137849e0 reached macOSUI. Follow both without duplicate dispatch; nofullsuite merelytoresume.",
-      "Previous CI34264569841 failed only legacy-note UI line834. Artifact download68963 completed. Evidence at .notes-ui-ci-evidence.bygbXX/work/_temp/ledger-report-ios.xcresult; exported legacy-note-failure-hierarchy.txt, legacy-note-status-debug.txt and notes-tap-event. Tap coordinates201,581 match Notes frame16,555,370,52, but failure hierarchy remains Project Workspace with no note status: not simply offscreen Notes content. Investigate openNotesTab guard/navigation and actual hit region; no speculative timeout fix. PDF loaded-review passed70.330s in that run.",
-      "Existing payment+legacy-note runner and source-byte reconciliation remain preserved. Prior CI102174361838 proves580SQLtests/19files, each import3observed-lock races and2session-interruption boundaries. Separate executable recovery remains unexecuted because bounded Docker inspection timed out; no services started. New individual-note primitives do not prove migration readiness.",
-      "External gates unchanged: low disk, hosted synthetic authorization, logout scope/A007, reportSKU conflict, representative vendorPDFs and Project creation role/O049 unresolved. Use unified checklist only; keep audit complete. Preserve diagnostics and avoid Firebase/production/hosted access."
+      "Frozen Invoice batch uncommitted: SQL20260908200541/store/read/pgTAP, Swift FrozenInvoiceStorageRecord and tests, A019, existing report artifact bridge. Root reviewed delegated SQL/bridge; agent reviewed codec and verified UTF8 identity fix. Five local tests passed19860; actualDatabaseRoundTrip locally skipped pending real artifact. Full Swift suite82958 passed928tests138suites49.175s; database-artifact test skipped locally. Conversion/syntax/diff and latest state check passed. Commit/push integrated batch next.",
+      "Finish integrated verification, update evidence, explicitly stage batch excluding diagnostic directories, commit/push once and follow single automatic exact-commit PR CI. New SQL and SQL-to-Swift artifact need CI runtime proof; local Docker socket ping56831 timed out5s, no daemon restart. Source eligibility, concurrent storage and actual collection command remain unfinished.",
+      "Existing latest note CI34271613888 at9bbab95fcaf05c61cd68136ed330fcb93d158cb8: conversion/database/macOS UI/both builds passed, iOS UI live at last check. Prior fdf importer CI34270811621 also live. Earlier34268641520 canceled on45m native job limit; pending workflow60m budget preserves individual limits,10CI guard tests passed44272. No manual CI redispatch.",
+      "O033 exact Invoice payment question asked asynchronously this turn; do not choose policy without answer. Prior Item minimum name/photo/note and ordinary create/edit permission questions pending O017/O065; other affected creation O021/O027, financial O060 remain. Unresolved decisions block only affected work; audit already complete.",
+      "Preserve diagnostics and Firebase/production/hosted boundaries. After storage proof, continue approved Item/Invoice relationships through user workflow rather than expanding generic foundations. Historical note blank-name batch full922native/39MCP passed; no entire workflow completion claimed."
     ]
   },
   "blockers": [],
