@@ -7,6 +7,43 @@ import Testing
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("Removing a logo while its bytes download never restores the old image")
+    func accountProfileChangedLogoDuringDownload() async throws {
+        let context = try RuntimeTestContext(suffix: "profile-changed-logo")
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        let gate = ManualGate()
+        let bytes = Data([1, 2, 3])
+        let hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_accounts(id,display_name) VALUES('account-runtime','Design studio')", parameters: nil)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_business_profiles(id,account_id,logo_attachment_id,
+                logo_content_sha256,logo_byte_count,logo_media_type,logo_storage_path)
+                VALUES('account-runtime','account-runtime','old-logo',?,'3','image/png',?)
+                """, parameters: [hash, "accounts/account-runtime/attachments/old-logo/\(hash)"])
+            databases.append(database)
+        }
+        dependencies.downloadAccountLogo = { _ in await gate.wait(); return bytes }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        var iterator = runtime.watchAccountBusinessProfile(accountId: context.accountId).makeAsyncIterator()
+        #expect(try await iterator.next()?.logo == .notDownloaded)
+        await gate.waitUntilEntered()
+        let database = try #require(databases.values.first)
+        _ = try await database.execute(sql: """
+            UPDATE spike_account_business_profiles SET logo_attachment_id=NULL,
+            logo_content_sha256=NULL,logo_byte_count=NULL,logo_media_type=NULL,logo_storage_path=NULL
+            WHERE id='account-runtime'
+            """, parameters: nil)
+        await gate.release()
+        #expect(try await iterator.next()?.logo == .absent)
+        #expect(try await runtime.readAccountBusinessProfile(accountId: context.accountId).logo == .absent)
+        try await runtime.close()
+        context.remove()
+    }
+
     @Test("Profile first download arrives through selected subscription; disappearing evidence ends access")
     func accountProfileFirstDownloadAndDisappearance() async throws {
         let context = try RuntimeTestContext(suffix: "profile-first-download")

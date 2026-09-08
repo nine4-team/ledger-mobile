@@ -125,6 +125,7 @@ jobs:
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
             -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testAccountSettingsDownloadedProfileRefreshAndDismiss \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementEmptyAndUnavailableStates \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss \

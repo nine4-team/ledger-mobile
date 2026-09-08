@@ -8,6 +8,14 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    private func displayedText(_ element: XCUIElement) -> String {
+        #if os(macOS)
+        return element.value as? String ?? ""
+        #else
+        return element.label
+        #endif
+    }
+
     func testAccountSettingsDownloadedProfileRefreshAndDismiss() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -19,12 +27,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         settings.tap()
         let name = app.staticTexts["target-account-profile-name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))
-        XCTAssertEqual(name.label, "Design studio")
+        XCTAssertEqual(displayedText(name), "Design studio")
         XCTAssertTrue(app.staticTexts["No business logo"].exists)
         XCTAssertTrue(app.staticTexts["target-account-profile-stale"].exists)
         app.buttons["target-account-profile-refresh"].tap()
         XCTAssertTrue(name.waitForExistence(timeout: 5))
-        XCTAssertEqual(name.label, "Design studio")
+        XCTAssertEqual(displayedText(name), "Design studio")
         app.buttons["target-account-settings-done"].tap()
         XCTAssertTrue(settings.waitForExistence(timeout: 5))
         XCTAssertFalse(name.exists)
@@ -33,7 +41,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(report.waitForExistence(timeout: 5))
         report.tap()
         XCTAssertTrue(name.waitForExistence(timeout: 5))
-        XCTAssertEqual(name.label, "Design studio")
+        XCTAssertEqual(displayedText(name), "Design studio")
         XCTAssertTrue(app.staticTexts["No business logo"].exists)
         let share = app.buttons["target-property-report-share"]
         XCTAssertTrue(share.waitForExistence(timeout: 5))
@@ -1004,7 +1012,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(status, in: app)
         XCTAssertTrue(status.exists)
         XCTAssertTrue(waitUntil {
-            status.label == "Checklist synchronization: queued — accepted locally"
+            self.displayedText(status) == "Checklist synchronization: queued — accepted locally"
         }, app.debugDescription)
 
         // The same exact-Space read-only route works in Project and Inventory.
