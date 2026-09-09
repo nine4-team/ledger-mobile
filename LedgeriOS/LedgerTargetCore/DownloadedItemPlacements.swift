@@ -101,6 +101,15 @@ public struct DownloadedItemSelection: Equatable, Sendable {
 
     public init() {}
 
+    /// Preserve the shipped newline-separated, sorted ID format. Never export
+    /// a stale selection that is no longer in the caller's current results.
+    public func copyPayload(visible: [ItemID]) -> String? {
+        let eligible = Set(visible.map { Array($0.rawValue.utf8) })
+        let current = ids.filter { eligible.contains(Array($0.rawValue.utf8)) }
+            .map(\.rawValue).sorted { $0.utf8.lexicographicallyPrecedes($1.utf8) }
+        return current.isEmpty ? nil : current.joined(separator: "\n")
+    }
+
     public mutating func reconcile(visible: [ItemID]) {
         ids.formIntersection(visible)
     }

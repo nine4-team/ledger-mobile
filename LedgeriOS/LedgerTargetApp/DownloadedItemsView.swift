@@ -1,6 +1,11 @@
 import LedgerTargetCore
 import LedgerTargetAppModel
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// Real workspace reader; missing downloads never prove zero or Unaccounted.
 struct DownloadedItemsView: View {
@@ -15,6 +20,7 @@ struct DownloadedItemsView: View {
     @State private var order = DownloadedItemOrder.newest
     @State private var filters = DownloadedItemFilters()
     @State private var selection = DownloadedItemSelection()
+    @State private var copyFailed = false
     @State private var collapsedSections: Set<ProjectItemAccountingResolution> = []
     @State private var expandedItemGroups: Set<GroupExpansionID> = []
     @FocusState private var searchFocused: Bool
@@ -191,6 +197,22 @@ struct DownloadedItemsView: View {
             Text("\(selection.ids.intersection(ids).count) selected")
                 .accessibilityIdentifier("target-items-selected-count")
             if !selection.ids.intersection(ids).isEmpty {
+                Button("Copy IDs") {
+                    // Re-read eligibility at the actual click, not from the
+                    // snapshot that happened to render this button.
+                    guard let current = selectionEvidence,
+                          let payload = selection.copyPayload(visible: current) else { return }
+                    #if os(iOS)
+                    UIPasteboard.general.string = payload
+                    #elseif os(macOS)
+                    NSPasteboard.general.clearContents()
+                    copyFailed = !NSPasteboard.general.setString(payload, forType: .string)
+                    #endif
+                }
+                .accessibilityIdentifier("target-items-copy-ids")
+                .alert("Could not copy Item IDs", isPresented: $copyFailed) {
+                    Button("OK", role: .cancel) {}
+                } message: { Text("Try copying the selected IDs again.") }
                 Button("Clear selection") { selection.clear() }
                     .accessibilityIdentifier("target-items-selection-clear")
                 Text("Selected price totals and bulk edits are not available yet.")

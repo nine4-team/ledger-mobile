@@ -205,13 +205,10 @@ function validateWorkflowSafety(lines) {
       line === "        if: failure()" &&
       lines[index - 1] === "      - name: Preserve failed native UI test evidence" &&
       lines[index + 1] === "        uses: actions/upload-artifact@v4";
-    const deferredMacUIFailure = line === "        continue-on-error: true"
-      && lines[index - 1] === "        id: macos_ui"
-      && lines.slice(index - 5, index - 1).join("\n") === nativeUIClipboardStep;
-    const requiredMacUIFailure = line === "        if: always() && steps.macos_ui.outcome != 'success'"
-      && lines[index - 1] === "      - name: Require successful macOS UI tests"
-      && lines[index + 1] === "        run: exit 1";
-    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || deferredMacUIFailure || requiredMacUIFailure,
+    const requiredAggregate = line === "    if: always()"
+      && jobLines(lines, "target-environment").includes(line)
+      && lines[index - 1] === "    needs: [conversion-control, local-supabase-provider-slices, native-macos, native-ios]";
+    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || requiredAggregate,
       "jobs must not conditionally skip or tolerate failures");
   }
 }
@@ -244,7 +241,35 @@ function validateConversionJob(lines) {
 }
 
 function validateTargetJob(lines) {
-  const target = jobLines(lines, "target-environment");
+  const aggregate = jobLines(lines, "target-environment");
+  requireCondition(JSON.stringify(aggregate.filter(line => line.trim() && !line.trim().startsWith("#"))) === JSON.stringify([
+    "  target-environment:",
+    "    name: Isolated target environment",
+    "    needs: [conversion-control, local-supabase-provider-slices, native-macos, native-ios]",
+    "    if: always()",
+    "    runs-on: ubuntu-latest",
+    "    timeout-minutes: 60",
+    "    steps:",
+    "      - name: Require every target verification job",
+    "        run: |",
+    "          test '${{ needs.conversion-control.result }}' = 'success'",
+    "          test '${{ needs.local-supabase-provider-slices.result }}' = 'success'",
+    "          test '${{ needs.native-macos.result }}' = 'success'",
+    "          test '${{ needs.native-ios.result }}' = 'success'",
+  ]), "target aggregate must preserve its required-check identity and strictly require every dependency success");
+  const target = jobLines(lines, "native-macos");
+  const ios = jobLines(lines, "native-ios");
+  for (const worker of [target, ios]) {
+    requireExactLine(worker, "    needs: [conversion-control, local-supabase-provider-slices]", "target same-commit database dependency");
+    requireExactLine(worker, "    runs-on: macos-26", "target macOS runner");
+    requireExactLine(worker, "    timeout-minutes: 60", "native worker timeout");
+    requireExactLine(worker, "        uses: actions/checkout@v4", "native same-commit checkout");
+    requireCondition(!worker.some(line => /^\s+(?:ref|repository):/.test(line)), "native checkout must use this PR commit");
+    requireExactLine(worker, "          node-version: 24.14.0", "native pinned Node version");
+    requireExactLine(worker, "        run: npm ci --ignore-scripts", "native pinned dependency install");
+    const diff = uniqueLineIndex(worker, /^      - name: Confirm target checks did not rewrite tracked artifacts$/, "target read-only diff step");
+    requireCondition(worker[diff + 1] === "        run: git diff --exit-code", "target job must retain its exact read-only diff guard");
+  }
   requireExactLine(target, "    needs: [conversion-control, local-supabase-provider-slices]", "target same-commit database dependency");
   requireCondition(target.join("\n").includes([
     "      - name: Load same-commit report parity fixture",
@@ -256,14 +281,7 @@ function validateTargetJob(lines) {
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
   requireCondition(target.join("\n").includes(nativeUIClipboardStep),
     "native UI Copy verification requires its exact isolated test-runner flag");
-  requireCondition(target.join("\n").includes(nativeUIClipboardStep + "\n        id: macos_ui\n        continue-on-error: true"),
-    "macOS UI failure must be deferred until iOS verification");
-  const macResult = uniqueLineIndex(target, /^      - name: Require successful macOS UI tests$/, "macOS UI result gate");
-  requireCondition(target[macResult + 1] === "        if: always() && steps.macos_ui.outcome != 'success'"
-    && target[macResult + 2] === "        run: exit 1"
-    && macResult > target.indexOf("      - name: Exercise iOS workspace and report UI"),
-    "macOS UI failure must fail the job after iOS verification");
-  const iosUI = commandsForNamedStep(target, "Exercise iOS workspace and report UI").join("\n");
+  const iosUI = commandsForNamedStep(ios, "Exercise iOS workspace and report UI").join("\n");
   const iosSelections = iosUI.match(/-only-testing:[^\s\\]+/g) ?? [];
   requireCondition(iosSelections.length === 1
     && iosSelections[0] === "-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests"
@@ -271,6 +289,15 @@ function validateTargetJob(lines) {
   "iOS UI must run the whole platform-compatible workspace test class without exclusions");
   requireCondition(iosUI.includes("TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild"),
     "iOS UI Copy verification requires its isolated test-runner flag");
+  for (const fragment of [
+    "-parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO",
+    '-destination "platform=iOS Simulator,id=$report_device_id"',
+    '-resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult"',
+    "-test-timeouts-enabled YES -default-test-execution-time-allowance 300",
+    'Number(runtime.match(/iOS-(\\d+)/)[1]) >= 18',
+    'device.name.startsWith("iPhone")',
+  ]) requireCondition(iosUI.includes(fragment), "iOS UI must preserve simulator, signing, serial execution, result bundle and timeout settings");
+  requireExactLine(ios, "        run: npm run target:staging:build:ios", "target gate npm run target:staging:build:ios");
   for (const command of [
     "          node --check scripts/check-target-environment.mjs",
     "          npm run target:environment:check",
@@ -279,13 +306,15 @@ function validateTargetJob(lines) {
     "          npm run target:mcp:test",
     "        run: npm run target:staging:build:macos",
     "        run: npm run target:staging:ui:test:macos",
-    "        run: npm run target:staging:build:ios",
+    "          node --test scripts/tests/local-vendor-parser-boundary.test.mjs",
+    "          bash scripts/test-local-vendor-pdf-parser.sh",
   ]) {
     const label = command.trim().replace(/^run:\s+/, "");
     requireExactLine(target, command, `target gate ${label}`);
   }
   requireCondition(
-    target.filter((line) => line === "          swift test --package-path LedgeriOS --no-parallel").length === 1,
+    lines.filter((line) => line === "          swift test --package-path LedgeriOS --no-parallel").length === 1
+      && target.includes("          swift test --package-path LedgeriOS --no-parallel"),
     "target job must retain one complete nonparallel Swift test gate",
   );
   requireCondition(!target.some(line => /^\s+--(?:filter|skip)\b/.test(line)),
@@ -316,6 +345,17 @@ function validateTargetJob(lines) {
     target[guard + 1] === "        run: git diff --exit-code",
     "target job must retain its exact read-only diff guard",
   );
+  for (const [worker, platform, paths] of [
+    [target, "macos", ["          path: /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult"]],
+    [ios, "ios", ["          path: |", "            ${{ runner.temp }}/ledger-report-ios.xcresult", "            /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult"]],
+  ]) {
+    requireCondition(worker.join("\n").includes([
+      "      - name: Preserve failed native UI test evidence", "        if: failure()",
+      "        uses: actions/upload-artifact@v4", "        with:",
+      `          name: native-ui-failure-${platform}-` + "${{ github.sha }}",
+      ...paths, "          if-no-files-found: warn", "          retention-days: 1",
+    ].join("\n")), "native UI evidence must retain platform-separated same-commit artifacts");
+  }
 }
 
 function validateLocalSupabaseJob(lines) {
@@ -366,12 +406,13 @@ function validateLocalSupabaseJob(lines) {
 
 function validateFullHistory(lines) {
   const conversion = jobLines(lines, "conversion-control");
-  const target = jobLines(lines, "target-environment");
+  const target = jobLines(lines, "native-macos");
   requireExactLine(conversion, "          fetch-depth: 0", "conversion full-history checkout");
   requireExactLine(target, "          fetch-depth: 0", "target full-history checkout");
+  requireExactLine(jobLines(lines, "native-ios"), "          fetch-depth: 0", "iOS full-history checkout");
   requireCondition(
-    lines.filter((line) => line === "          fetch-depth: 0").length === 2,
-    "workflow must retain the two full-history checkouts",
+    lines.filter((line) => line === "          fetch-depth: 0").length === 3,
+    "workflow must retain the three full-history checkouts",
   );
 }
 
@@ -387,7 +428,7 @@ export function validateConversionCI(packageJson, workflowText) {
     conversionCommands: conversionCommands.length,
     packageGates: Object.keys(requiredScripts).length,
     legacyScripts: Object.keys(legacyScripts).length,
-    jobs: 3,
+    jobs: 5,
   };
 }
 

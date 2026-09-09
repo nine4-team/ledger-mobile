@@ -38,14 +38,27 @@ jobs:
 
   target-environment:
     name: Isolated target environment
+    needs: [conversion-control, local-supabase-provider-slices, native-macos, native-ios]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Require every target verification job
+        run: |
+          test '${{ needs.conversion-control.result }}' = 'success'
+          test '${{ needs.local-supabase-provider-slices.result }}' = 'success'
+          test '${{ needs.native-macos.result }}' = 'success'
+          test '${{ needs.native-ios.result }}' = 'success'
+
+  native-macos:
+    name: Native macOS verification
     needs: [conversion-control, local-supabase-provider-slices]
     # PowerSync 1.16.1 uses swift-collections BasicContainers APIs that require
     # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
     # CI exercises the same supported compiler floor as the target app.
     runs-on: macos-26
-    # Run 34268641520 passed macOS UI and both builds, then GitHub canceled
-    # the combined job at 45 minutes during iOS UI. Allow the expanded workload
-    # plus failure evidence; individual test/stall limits remain unchanged.
+    # Independent workers overlap platform UI runs without sharing UI/build state.
+    # Preserve the existing job budget and individual test/stall limits.
     timeout-minutes: 60
 
     steps:
@@ -110,8 +123,38 @@ jobs:
         env:
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"
         run: npm run target:staging:ui:test:macos
-        id: macos_ui
-        continue-on-error: true
+
+      - name: Preserve failed native UI test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-failure-macos-${{ github.sha }}
+          path: /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+  native-ios:
+    name: Native iOS verification
+    needs: [conversion-control, local-supabase-provider-slices]
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24 for the pinned PowerSync service parser
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+
+      - name: Install pinned local validation dependencies
+        run: npm ci --ignore-scripts
 
       - name: Build target staging for iOS Simulator
         run: npm run target:staging:build:ios
@@ -133,15 +176,11 @@ jobs:
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test
 
-      - name: Require successful macOS UI tests
-        if: always() && steps.macos_ui.outcome != 'success'
-        run: exit 1
-
       - name: Preserve failed native UI test evidence
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: native-ui-failure-${{ github.sha }}
+          name: native-ui-failure-ios-${{ github.sha }}
           path: |
             ${{ runner.temp }}/ledger-report-ios.xcresult
             /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult

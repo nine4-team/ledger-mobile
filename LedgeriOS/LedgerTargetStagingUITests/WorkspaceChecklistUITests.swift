@@ -1023,18 +1023,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     private func revealImageControls(in app: XCUIApplication) {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
-        if !zoomIn.isHittable {
-            let image = app.images["target-item-image-rendered"]
-            XCTAssertTrue(image.waitForExistence(timeout: 5))
-            image.tap()
-        }
+        // Already-visible controls may legitimately auto-hide while a redundant
+        // predicate wait starts. Only await a reveal after actually requesting it.
+        if zoomIn.isHittable { return }
+        let image = app.images["target-item-image-rendered"]
+        XCTAssertTrue(image.waitForExistence(timeout: 5))
+        image.tap()
         XCTAssertTrue(waitUntil { zoomIn.isHittable }, "Single tap reveals image controls")
     }
 
     private func tapImageControl(_ identifier: String, in app: XCUIApplication) {
         revealImageControls(in: app)
         let control = app.buttons[identifier]
-        XCTAssertTrue(waitUntil { control.isHittable }, "Image control must be revealed: \(identifier)")
+        XCTAssertTrue(control.isHittable, "Image control must be revealed: \(identifier)")
         control.tap()
     }
 
@@ -1068,6 +1069,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         groupSelect.tap()
         let count = app.staticTexts["target-items-selected-count"]
         XCTAssertTrue(waitUntil { count.label == "2 selected" || (count.value as? String) == "2 selected" })
+        let copyIDs = app.buttons["target-items-copy-ids"]
+        reveal(copyIDs, in: app, fullyInsideScrollView: true)
+        copyIDs.tap()
+        #if os(macOS)
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), "group-a\ngroup-b")
+        #else
+        XCTAssertEqual(UIPasteboard.general.string, "group-a\ngroup-b")
+        #endif
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "2 selected" })
+        reveal(expand, in: app, fullyInsideScrollView: true)
         expand.tap()
         XCTAssertTrue(first.waitForExistence(timeout: 5))
         XCTAssertTrue(second.exists)

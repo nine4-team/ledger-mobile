@@ -4,6 +4,27 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Copy IDs preserves sorted lines, current eligibility and selection")
+    func copySelectedIDs() throws {
+        let a = try ItemID(validating: "item-a")
+        let b = try ItemID(validating: "item-b")
+        let other = try ItemID(validating: "item-other")
+        var selection = DownloadedItemSelection()
+        #expect(selection.copyPayload(visible: [b, a]) == nil)
+        selection.toggleAll(visible: [b, a])
+        #expect(selection.copyPayload(visible: [b, a, a, other]) == "item-a\nitem-b")
+        #expect(selection.copyPayload(visible: [b, other]) == "item-b")
+        #expect(selection.copyPayload(visible: []) == nil)
+        #expect(selection.copyPayload(visible: [other]) == nil)
+        #expect(selection.ids == [a, b]) // Copy does not clear or change selection.
+        let composed = try ItemID(validating: "item-\u{e9}")
+        let decomposed = try ItemID(validating: "item-e\u{301}")
+        selection.clear()
+        selection.toggleAll(visible: [composed])
+        #expect(selection.copyPayload(visible: [decomposed]) == nil)
+        #expect(selection.copyPayload(visible: [composed])?.utf8.elementsEqual(composed.rawValue.utf8) == true)
+    }
+
     @Test("Image filter preserves explicit empty, positive count and missing metadata separately")
     func imageEvidenceFilter() throws {
         func row(_ id: String, count: Int64?) throws -> PhysicalItemPlacement {

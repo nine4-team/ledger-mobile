@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import {
@@ -42,18 +43,68 @@ test("iPhone UI cannot silently omit new Item or report interactions", () => {
   }, /iOS UI Copy verification requires its isolated/);
 });
 
-test("deferred Mac UI failures still fail the gate after iPhone verification", () => {
-  for (const original of ["      - name: Require successful macOS UI tests\n",
-                         "        id: macos_ui\n", "        continue-on-error: true\n"]) {
-    expectFailure(value => { value.workflow = value.workflow.replace(original, ""); },
-      /macOS UI|conditionally skip/);
+test("stable aggregate rejects failed, cancelled, skipped, or missing dependencies", () => {
+  for (const dependency of ["conversion-control", "local-supabase-provider-slices", "native-macos", "native-ios"]) {
+    const assertion = `          test '\${{ needs.${dependency}.result }}' = 'success'`;
+    for (const replacement of ["", assertion.replace("= 'success'", "!= 'failure'"), assertion + " || true"]) {
+      expectFailure(value => { value.workflow = value.workflow.replace(assertion, replacement); }, /target aggregate/);
+    }
   }
+  for (const [original, replacement] of [
+    ["    if: always()", "    if: success()"],
+    ["    if: always()\n", ""],
+    ["    name: Isolated target environment", "    name: Renamed gate"],
+    ["local-supabase-provider-slices, native-macos, native-ios]", "local-supabase-provider-slices, native-macos]"],
+  ]) expectFailure(value => { value.workflow = value.workflow.replace(original, replacement); }, /target aggregate|conditionally skip/);
   expectFailure(value => {
-    value.workflow = value.workflow.replace("        run: exit 1", "        run: exit 0");
-  }, /conditionally skip|macOS UI/);
-  expectFailure(value => {
-    value.workflow = value.workflow.replace("steps.macos_ui.outcome != 'success'", "steps.macos_ui.conclusion != 'success'");
-  }, /conditionally skip|macOS UI/);
+    value.workflow = value.workflow.replace("        run: npm run target:staging:ui:test:macos", "        continue-on-error: true\n        run: npm run target:staging:ui:test:macos");
+  }, /conditionally skip|execution overrides/);
+});
+
+test("actual aggregate shell rejects each unsuccessful dependency result", () => {
+  const block = inputs().workflow.split("      - name: Require every target verification job\n        run: |\n")[1]
+    .split("\n\n")[0];
+  const dependencies = ["conversion-control", "local-supabase-provider-slices", "native-macos", "native-ios"];
+  function execute(results) {
+    const script = block.replace(/\$\{\{ needs\.([\w-]+)\.result \}\}/g, (_, dependency) => results[dependency]);
+    return spawnSync("bash", ["-e", "-c", script], { encoding: "utf8" });
+  }
+  const successful = Object.fromEntries(dependencies.map(dependency => [dependency, "success"]));
+  assert.equal(execute(successful).status, 0);
+  for (const dependency of dependencies) {
+    for (const result of ["failure", "cancelled", "skipped", ""]) {
+      const actual = execute({ ...successful, [dependency]: result });
+      assert.ifError(actual.error);
+      assert.equal(actual.status, 1, `${dependency}: ${result || "missing"} must fail`);
+    }
+  }
+});
+
+test("native workers remain independent, same-commit and retain separate failure evidence", () => {
+  for (const platform of ["macos", "ios"]) {
+    expectFailure(value => {
+      value.workflow = value.workflow.replace(`name: native-ui-failure-${platform}-`, "name: native-ui-failure-");
+    }, /platform-separated/);
+    expectFailure(value => {
+      const start = value.workflow.indexOf(`  native-${platform}:`);
+      value.workflow = value.workflow.slice(0, start) + value.workflow.slice(start).replace(
+        "    needs: [conversion-control, local-supabase-provider-slices]",
+        "    needs: [conversion-control, local-supabase-provider-slices, native-other]");
+    }, /same-commit database dependency/);
+    expectFailure(value => {
+      const start = value.workflow.indexOf(`  native-${platform}:`);
+      value.workflow = value.workflow.slice(0, start) + value.workflow.slice(start).replace(
+        "          fetch-depth: 0", "          ref: main\n          fetch-depth: 0");
+    }, /this PR commit/);
+    expectFailure(value => {
+      const start = value.workflow.indexOf(`  native-${platform}:`);
+      value.workflow = value.workflow.slice(0, start) + value.workflow.slice(start).replace(
+        "        run: git diff --exit-code", "        run: true");
+    }, /read-only diff guard/);
+  }
+  for (const original of ["-parallel-testing-enabled NO", "-default-test-execution-time-allowance 300", "          bash scripts/test-local-vendor-pdf-parser.sh"]) {
+    expectFailure(value => { value.workflow = value.workflow.replace(original, ""); }, /iOS UI must preserve|target gate/);
+  }
 });
 
 test("report parity cannot silently lose its same-commit fixture", () => {
@@ -71,7 +122,7 @@ test("repository conversion CI retains the required product and implementation g
     conversionCommands: 7,
     packageGates: 15,
     legacyScripts: 15,
-    jobs: 3,
+    jobs: 5,
   });
 });
 
