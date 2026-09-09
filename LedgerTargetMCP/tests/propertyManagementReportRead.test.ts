@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { accounted } from "./fixtures/propertyManagementAccounting.js";
 import { SupabasePropertyManagementReportReader } from "../src/propertyManagementReportRead.js";
 import { buildPropertyManagementReportSnapshot } from "../src/propertyManagementReport.js";
 
@@ -14,7 +15,8 @@ golden.provenance.visibilityScopeID = createHash("sha256").update(JSON.stringify
   "physical-property-report-v1",
 ])).digest("hex");
 const facts = () => structuredClone({ project: golden.project, spaces: golden.spaces,
-  items: golden.groups.flatMap((g: any) => g.rows), currency: golden.currency, provenance: golden.provenance });
+  items: golden.groups.flatMap((g: any) => g.rows).map((item: any) => ({ ...item, accounting: accounted(item) })),
+  currency: golden.currency, provenance: golden.provenance });
 const token = (role: string) => `e30.${Buffer.from(JSON.stringify({ role })).toString("base64url")}.signature`;
 const context = { accountId: golden.project.accountId, principalId: golden.provenance.principalId,
   accessToken: token("authenticated") };
@@ -45,6 +47,7 @@ test("rejects mismatched scope, malformed facts and fabricated offline provenanc
     (x: any) => { x.provenance.authorityVersion = "unsupported-v2"; },
     (x: any) => { x.currency = "ZZZ"; x.items = []; },
     (x: any) => { x.items[0].itemRevision = 123; },
+    (x: any) => { x.items[0].accounting.resolution = "unaccountedFor"; },
     (x: any) => { x.provenance.source = { kind: "downloaded" }; },
     (x: any) => { x.items[0] = null; },
   ]) {
@@ -56,6 +59,17 @@ test("rejects mismatched scope, malformed facts and fabricated offline provenanc
     await assert.rejects(reader(async () => new Response(body)).read(input, context),
       { code: "property_report_server_result_mismatch" });
   }
+});
+
+test("missing relationship evidence is not ready, not empty or a mismatched response", async () => {
+  const body = facts();
+  delete body.items[0].accounting;
+  await assert.rejects(reader(async () => Response.json(body)).read(input, context),
+    { code: "property_report_incomplete_readiness" });
+  // Request binding still precedes the incomplete-data distinction.
+  body.provenance.principalId = "foreign";
+  await assert.rejects(reader(async () => Response.json(body)).read(input, context),
+    { code: "property_report_server_result_mismatch" });
 });
 
 test("sanitizes transport and server failures without retrying", async () => {

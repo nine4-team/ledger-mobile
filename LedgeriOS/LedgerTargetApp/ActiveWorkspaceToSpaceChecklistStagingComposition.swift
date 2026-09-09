@@ -23,6 +23,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
     let accountCurrency: CurrencyCode
     @State private var showingPropertyReport = false
+    @State private var showingClientReport = false
     @State private var showingSettings = false
 
     var body: some View {
@@ -251,6 +252,23 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     }
                 if let reader = model.itemReader {
                     DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader)
+                }
+                if let watcher = model.reportWatcher as? any ClientSummaryPhysicalReportWatching,
+                   let reader = model.reportReader as? any ClientSummaryPhysicalReportReading,
+                   let profileReader = model.itemReader as? any AccountBusinessProfileReading {
+                    Button("Client Summary") { showingClientReport = true }
+                        .accessibilityIdentifier("target-client-report-open")
+                        .sheet(isPresented: $showingClientReport) {
+                            NavigationStack {
+                                ClientSummaryPhysicalReportPreview(accountId: model.accountId, projectId: projectId,
+                                    watcher: watcher, reader: reader, profileReader: profileReader)
+                                    .toolbar {
+                                        ToolbarItem(placement: .confirmationAction) {
+                                            Button("Done") { showingClientReport = false }
+                                        }
+                                    }
+                            }.frame(minWidth: 320, minHeight: 400)
+                        }
                 }
                 if let watcher = model.reportWatcher {
                     Button("Property Management Report") { showingPropertyReport = true }

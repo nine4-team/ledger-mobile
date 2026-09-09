@@ -43,7 +43,7 @@ try {
     insert into public.spike_accounts(id,display_name) values ('${account}','Synthetic MCP report fixture') on conflict do nothing;
     insert into public.spike_account_memberships(account_id,principal_id,role,state)
       values ('${account}','principal-restricted','employee','active') on conflict do nothing;
-    update public.spike_account_memberships set state='active' where account_id='${account}' and principal_id='principal-restricted';
+    update public.spike_account_memberships set state='active',financial_access='full' where account_id='${account}' and principal_id='principal-restricted';
     insert into public.spike_clients(id,account_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
       values ('report-mcp-fixture-client','${account}','Synthetic',now(),now(),1,1,'principal-owner') on conflict do nothing;
     insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
@@ -60,6 +60,15 @@ try {
       values ('report-mcp-fixture-p1','${account}','report-mcp-fixture-large','project','${populated}','report-mcp-fixture-room','2026-09-01','principal-owner'),
       ('report-mcp-fixture-p2','${account}','report-mcp-fixture-zero','project','${populated}',null,'2026-09-01','principal-owner'),
       ('report-mcp-fixture-p3','${account}','report-mcp-fixture-unknown','project','${populated}',null,'2026-09-01','principal-owner') on conflict do nothing;
+    insert into public.spike_transactions(id,account_id,project_id,client_id,amount_minor_units,currency)
+      values ('report-mcp-payment','${account}','${populated}','report-mcp-fixture-client',500,'USD') on conflict do nothing;
+    insert into ledger_private.item_client_payment_connections(id,account_id,project_id,client_id,item_id,
+      placement_id,transaction_id,started_at,started_by_principal_id)
+      select 'report-mcp-link-' || placement.id,'${account}','${populated}','report-mcp-fixture-client',
+        placement.item_id,placement.id,'report-mcp-payment','2026-09-02','principal-owner'
+      from public.spike_item_placements placement where placement.account_id='${account}'
+        and placement.project_id='${populated}' and placement.ended_at is null
+      on conflict do nothing;
     notify pgrst, 'reload schema'; commit;`);
   await client.connect(transport);
   const list = await client.listTools();
@@ -96,8 +105,9 @@ try {
     assert.ok(block);
     const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
       .map(match => match[1].replace(/^        /gm, '').trim());
-    assert.equal(queries.length, 4);
-    const tables = ['spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items'];
+    assert.equal(queries.length, 6);
+    const tables = ['spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items',
+      'spike_clients', 'item_client_payment_connections'];
     const captures = queries.map((query, index) => {
       const bound = query.replaceAll("subscription.parameter('account_id')", `'${account}'`)
         .replaceAll("subscription.parameter('project_id')", `'${populated}'`)
@@ -108,7 +118,7 @@ try {
       '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
       input: `begin isolation level repeatable read read only;\n${captures.join('\n')}\ncommit;`, encoding: 'utf8',
     }).trim().split('\n').map(JSON.parse);
-    assert.equal(raw.length, 4);
+    assert.equal(raw.length, 6);
     // Extend the same-commit native artifact with actual private Invoice storage
     // output. This isolated synthetic transaction rolls back even on success;
     // it creates no public collection API or durable accounting fixture graph.
@@ -167,6 +177,11 @@ try {
   }
   const wrongCurrency = await client.callTool({ name: 'get_property_management_report', arguments: { projectId: populated, currency: 'CAD' } });
   assert.equal(wrongCurrency.isError, true);
+  sql(`update public.spike_account_memberships set financial_access='limited' where account_id='${account}' and principal_id='principal-restricted';`);
+  const limited = await readPopulated();
+  assert.equal(limited.isError, true);
+  assert.deepEqual(JSON.parse(limited.content[0].text), { code: 'property_report_incomplete_readiness' });
+  sql(`update public.spike_account_memberships set financial_access='full' where account_id='${account}' and principal_id='principal-restricted';`);
   sql(`update public.spike_account_memberships set state='removed' where account_id='${account}' and principal_id='principal-restricted';`);
   const revoked = await readPopulated();
   assert.equal(revoked.isError, true);

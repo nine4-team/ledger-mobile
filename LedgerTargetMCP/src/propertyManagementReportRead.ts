@@ -53,17 +53,22 @@ export class SupabasePropertyManagementReportReader {
       const facts: unknown = await response.json();
       // The projection validates each consumed field, parents, duplicates, exact
       // amounts and provenance; malformed JS shapes are also caught below.
-      const snapshot = buildPropertyManagementReportSnapshot(facts as PropertyManagementReportInput);
-      if (snapshot.project.accountId !== context.accountId || snapshot.project.projectId !== input.projectId
-          || snapshot.provenance.principalId !== context.principalId || snapshot.currency !== input.currency
-          || snapshot.provenance.authorityVersion !== "property-management-v1"
-          || snapshot.provenance.visibilityScopeID !== createHash("sha256").update(JSON.stringify([
+      const candidate = facts as PropertyManagementReportInput;
+      // Bind the response before allowing an incomplete-data result through.
+      // A foreign or malformed response must not masquerade as "not ready".
+      if (candidate.project.accountId !== context.accountId || candidate.project.projectId !== input.projectId
+          || candidate.provenance.principalId !== context.principalId || candidate.currency !== input.currency
+          || candidate.provenance.authorityVersion !== "property-management-v1"
+          || candidate.provenance.visibilityScopeID !== createHash("sha256").update(JSON.stringify([
             context.accountId, context.principalId, input.projectId, "physical-property-report-v1",
           ])).digest("hex")) {
         throw new Error("scope mismatch");
       }
-      return snapshot;
-    } catch {
+      return buildPropertyManagementReportSnapshot(candidate);
+    } catch (error) {
+      if (error instanceof TargetMCPFailure && error.code === "property_report_incomplete_readiness") {
+        throw new TargetMCPFailure("property_report_incomplete_readiness");
+      }
       throw new TargetMCPFailure("property_report_server_result_mismatch");
     }
   }

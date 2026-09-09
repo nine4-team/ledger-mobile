@@ -60,7 +60,8 @@ select throws_ok($$update public.spike_item_placements set project_id='placement
 select throws_ok($$update public.spike_item_placements set ended_at=null,ended_by_principal_id=null where id='project-first'$$,'55000',null,'Cannot reopen old cycle');
 select throws_ok($$update public.spike_item_placements set space_id='placement-space-a' where id='project-resale'$$,'55000',null,'Active location is not mutable in place');
 select throws_ok($$delete from public.spike_item_placements where id='project-first'$$,'55000',null,'Cannot delete history');
-select throws_ok('truncate public.spike_item_placements','55000',null,'Cannot truncate history');
+-- Payment-link FKs now reject standalone TRUNCATE before the history trigger.
+select throws_ok('truncate public.spike_item_placements','0A000',null,'Cannot truncate referenced placement history');
 select throws_ok($$select pg_temp.place('overlap-past','2026-02-15','2026-02-20')$$,'23P01',null,'Ended historical overlap rejected');
 select throws_ok($$select pg_temp.place('empty-interval','2025-01-01','2025-01-01')$$,'23514',null,'Zero length interval rejected');
 select throws_ok($$select pg_temp.place('infinite-start','-infinity','2025-01-01')$$,'23514',null,'Infinite history bound rejected');

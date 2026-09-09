@@ -27,26 +27,38 @@ public enum PropertyManagementReportDelivery {
         scratchRoot: URL? = nil,
         handoff: @MainActor (URL) async throws -> Void
     ) async throws {
+        try await ProtectedReportDelivery.deliver(data: data, format: format, reference: snapshot.reference,
+            scratchRoot: scratchRoot, revalidate: {
+                let current = try await reader.readDownloadedPropertyManagementReport(
+                    accountId: snapshot.project.accountId, projectId: snapshot.project.projectId,
+                    currency: snapshot.currency, asOf: snapshot.provenance.asOf)
+                guard current.reference == snapshot.reference else {
+                    throw PropertyManagementReportDeliveryFailure.snapshotChanged
+                }
+            }, handoff: handoff)
+    }
+}
+
+/// Shared scratch lifetime only. Concrete report boundaries own authorization
+/// and exact source revalidation; callers cannot omit that required callback.
+enum ProtectedReportDelivery {
+    @MainActor static func deliver(data: Data, format: ReportScratchFormat,
+        reference: ProtectedArtifactSnapshotReference, scratchRoot: URL?,
+        revalidate: @MainActor () async throws -> Void,
+        handoff: @MainActor (URL) async throws -> Void) async throws {
         let store = try ReportScratchStore(rootDirectory: scratchRoot)
         let artifact: ReportScratchArtifact
         do {
             try await store.recoverAbandonedSessions()
             try Task.checkCancellation()
-            artifact = try await store.create(data: data, format: format, snapshotReference: snapshot.reference)
+            artifact = try await store.create(data: data, format: format, snapshotReference: reference)
         } catch {
             try? await store.close()
             throw error
         }
         let result: Result<Void, Error>
         do {
-            // Re-read with the displayed as-of value, so the reference changes
-            // only with source/access evidence, not merely elapsed wall time.
-            let current = try await reader.readDownloadedPropertyManagementReport(
-                accountId: snapshot.project.accountId, projectId: snapshot.project.projectId,
-                currency: snapshot.currency, asOf: snapshot.provenance.asOf)
-            guard current.reference == snapshot.reference else {
-                throw PropertyManagementReportDeliveryFailure.snapshotChanged
-            }
+            try await revalidate()
             try Task.checkCancellation()
             try await handoff(artifact.url)
             result = .success(())

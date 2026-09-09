@@ -25425,6 +25425,52 @@
   "executionRecords": [
     {
       "schemaVersion": 1,
+      "workflowId": "client-summary-physical-readback",
+      "title": "Client Summary physical detail and sharing",
+      "kind": "product_ui",
+      "status": "implementation",
+      "outcome": "Open the Project Client Summary, inspect authorized Client/Item/category/Space detail and share a complete physical-detail report without internal budgets or unapproved financial totals.",
+      "noCurrentBaselineReason": "Initial data/renderer implementation claims no completed source UI controls. Project report entry, preview states and Share remain to be wired and traced before this workflow can claim their preservation.",
+      "targetStoryIds": ["client-summary-report-readback"],
+      "authority": [{"role":"canonical_target","path":"docs/specs/reports.md","section":"Navigation and Presentation"}, {"role":"canonical_target","path":"docs/specs/proto-item-capture.md","section":"Target Real-Item Requirements"}],
+      "affectedComponents": ["LedgeriOS/LedgerTargetCore", "LedgeriOS/LedgerTargetCoreTests", "LedgeriOS/LedgerTargetPowerSync", "LedgeriOS/LedgerTargetPowerSyncTests", "LedgeriOS/LedgerTargetAppModel", "LedgeriOS/LedgerTargetAppModelTests", "LedgeriOS/LedgerTargetApp", "LedgeriOS/LedgerTargetStagingUITests", "LedgerTargetMCP", "supabase/migrations", "supabase/tests", "powersync/sync-streams.yaml", "scripts/test-local-property-management-stream.mjs", "scripts/test-local-property-report-mcp.mjs", "scripts/check-target-environment.mjs", "scripts/sync-output-tables.mjs", "scripts/tests/sync-output-tables.test.mjs", "package.json", "package-lock.json", "scripts/check-conversion-ci.mjs", "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj", ".github/workflows/supabase-conversion-control.yml", "docs/architecture/redesign/architecture-decisions.md"],
+      "layers": ["domain", "app_ui", "app_mcp", "accounting", "postgres_schema", "postgres_handler", "rls", "powersync_sync", "local_offline", "media"],
+      "riskDomains": ["ui_fidelity", "app_mcp_parity", "accounting", "database_integrity", "handler_idempotency", "tenant_authorization", "sync_visibility", "offline_durability", "media_durability"],
+      "baselineJourneyIds": [],
+      "baselineBehaviorRefs": [],
+      "uiJourneys": [{
+        "journeyId":"TARGET-CLIENT-SUMMARY-PHYSICAL",
+        "sourcePage":"Project Reports",
+        "targetPage":"Client Summary",
+        "authority":[{"role":"canonical_target","path":"docs/specs/reports.md","section":"Navigation and Presentation"}],
+        "sourceSurfaceIds":["SWIFT-1772D7B7CE10", "SWIFT-7C0540EDB528", "SWIFT-AC99E4923E17", "SWIFT-CC7424F01DD0", "SWIFT-DA1BA46ED84B", "SWIFT-E09C688A850B"],
+        "controls":[{"label":"Client Summary","options":[],"action":"Open from Project Reports.","result":"Show scoped physical detail and honest readiness.","disposition":"preserve"},{"label":"Share","options":[],"action":"Share a complete authorized physical report.","result":"Revalidate exact data and branding before system handoff.","disposition":"preserve"}],
+        "transitions":[{"from":"Project Reports","event":"Open Client Summary","to":"Report preview","disposition":"preserve"}],
+        "states":[{"name":"Loading, empty, incomplete, ready, failed","expected":"Distinguish missing evidence from empty data and disable incomplete export.","disposition":"redesign"}]
+      }],
+      "acceptanceChecks": [
+        {"id":"CLIENT-PHYSICAL-DB","risk":"database_integrity","expected":"Canonical Item/payment references enforce exact Account, Project, Client, Item and Purchase classification; no new money is created. Scoped business-paid relationships and full report reads also require proof before completion.","command":"supabase/tests/item_client_payment_relationships.test.sql plus remaining relationship/report provider tests","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-HISTORY","risk":"handler_idempotency","expected":"Relationship identity cannot be rewritten or deleted, overlapping duplicate links fail and first closure preserves history. This does not claim an idempotent user-facing Link command, whose writer remains gated.","command":"supabase/tests/item_client_payment_relationships.test.sql","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-PARITY","risk":"app_mcp_parity","expected":"Swift and MCP derive identical report eligibility and report identity from scoped accounting facts; neither trusts supplied resolution or exports unknown eligibility. Shared Property Management path follows the same rule.","command":"Native/MCP golden and report eligibility tests; full provider integration pending","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-ELIGIBILITY","risk":"accounting","expected":"Only authoritative qualifying relationships permit inclusion; Unaccounted For Items contribute no report counts or value. No new accounting writes or financial-summary policy.","command":"Native/MCP report eligibility tests; authoritative relationship source integration pending","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-UI","risk":"ui_fidelity","expected":"Project Reports entry and Share preserve navigation and distinguish loading, empty, incomplete, ready and error states.","command":"Client Summary native UI tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-AUTH","risk":"tenant_authorization","expected":"Reject removed membership and foreign Account relationships at read and delivery.","command":"Client Summary reader and protected delivery tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-SYNC","risk":"sync_visibility","expected":"Require complete authorized Client/category/Space/Item download evidence before export.","command":"Client Summary scoped stream readiness tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-OFFLINE","risk":"offline_durability","expected":"Read a coherent retained authorized snapshot after encrypted database restart, without treating missing downloads as empty.","command":"Client Summary encrypted restart tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-MEDIA","risk":"media_durability","expected":"Deliver protected report bytes with current verified branding and reject changed or revoked snapshots.","command":"Client Summary protected delivery tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-READ","risk":"general","expected":"Exact authorized Project/Client and eligible physical rows preserve identity, names, category and Space evidence; missing data is not empty or uncategorized. Derive report eligibility from authoritative accounting relationships, exclude Unaccounted For Items and reject unknown eligibility; category alone is not eligibility.","command":"swift test --package-path LedgeriOS --filter ClientSummaryPhysicalReport","status":"planned","coversStoryIds":["client-summary-report-readback"]},
+        {"id":"CLIENT-PHYSICAL-DELIVERY","risk":"general","expected":"Project entry, loading/empty/error/incomplete/ready preview and Share use one coherent authorized snapshot; changed or revoked data blocks stale delivery. No budget/financial total or receipt-link substitution.","command":"Integrated Client Summary native UI and delivery tests (not implemented)","status":"planned","coversStoryIds":["client-summary-report-readback"]}
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {"status":"passed","commands":["swift test --package-path LedgeriOS --filter ClientSummaryPhysicalReport", "swift test --package-path LedgeriOS --filter 'PropertyManagementReportEligibilityTests|PropertyManagementReportTests'", "npm run check --prefix LedgerTargetMCP", "cd LedgerTargetMCP && npx tsx --test tests/propertyManagementReport.test.ts", "git diff --check"]},
+        "review": {"required":true,"status":"not_run","summary":"Partial review, not workflow completion. Root reviewed Client model/PDF, protected delivery and MCP parity. Independent review found no blocking issues in Client-payment schema, alias correction or native relationship reader. Private schema:23 local SQL checks and security advisors pass. Both native report readers now load positive full-access Client-payment evidence coherently; unknown absence/category still blocks export. Six actual stream projections pass allowed/restricted/foreign/removed/closed/departed cases. Native focused checks cover malformed links, access downgrade, live closure invalidation and encrypted reopen. Integrated native run:996 tests/148 suites,994 passed and2 CSV fixture failures; repaired typed fixtures, all3 CSV tests then passed. Full MCP46 and conversion:check pass. Screen/model/watch/runtime/Share wired; macOS app+fixture typecheck passed, iPhone UI test not executed. A-034 real parser0.41.0 validates35 queries/17 outputs;4 parser/name tests and environment/CI-contract checks pass. Business-paid/category sources, restricted policy, private-schema replication and hosted/UI proof remain unfinished. Historical cfc7 CI does not verify this uncommitted batch. Online invoker RPC now supplies current Client-payment evidence via narrow column grants/full-current RLS:29 focused SQL checks and advisors pass. Independent review no blocking findings; duplicate Item and departed-placement tests added. Real local MCP/HTTP plus actual6 stream rows→native differential parity passed, including accounting-bound sourceSetHash. Evidence artifact tmp/report-payment-parity.JoBrH4/actual.json; native log /tmp/ledger-report-payment-native-parity.log. Actual parity caught redundant Client timestamp fields, removed from this projection. No UI/hosted completion claim."},
+        "ci": {"status":"not_run"}
+      },
+      "implementationEvidence": []
+    },
+    {
+      "schemaVersion": 1,
       "workflowId": "account-profile-readback",
       "noCurrentBaselineReason": "Canonical read-only branding composition has no standalone inventoried journey: the legacy Business logo control performs replacement, and Account info also contains role/email. Those broader Settings/editor behaviors are not claimed by this viewing workflow; the canonical Account Business Profile outcome governs its name/logo and report composition.",
       "title": "Account branding in Settings and reports",
@@ -25641,9 +25687,9 @@
           "summary": "Local batch evidence: full swift test2825 passed957tests/142suites; after review, finite profile-read rename/removal-during-download test72064 and export status comparison82633 passed. Current app typecheck18592 passed; environment97176f/conversion04f3fd passed. Independent profile_integration_review found stale-model handoff (fixed with authorized finite read, reviewer confirmed) and unavailable/notDownloaded mismatch (fixed with branding comparison). Earlier cache repair/exclusion81720/23337 and restart/SDK first-download7062 passed. PDF47671 tests and oversized-image88352 passed; main inspected all5 synthetic Poppler pages without overlap/clipping. Settings/report UI tests await exact-commit CI; schema/RLS/Storage tests await database execution. Actual authenticated app session/PowerSync connection, HTTP Storage semantics and complete hosted/offline media workflow remain unverified. No complete workflow claim."
         },
         "ci": {
-          "status": "failed",
-          "commit": "3e37bb0a0562e47666b57f53e111f5c363b73bf9",
-          "run": 34293241873
+      "status": "passed",
+      "commit": "cfc7c000d35d6e93765a78782142cb68965aabae",
+      "run": 34298822080
         }
       },
       "implementationEvidence": []

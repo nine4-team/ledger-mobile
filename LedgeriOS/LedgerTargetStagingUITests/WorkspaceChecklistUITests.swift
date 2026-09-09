@@ -8,6 +8,37 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testClientSummaryPhysicalPreviewAndIncompleteShare() throws {
+        continueAfterFailure = false
+        for incomplete in [false, true] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+            if incomplete { app.launchArguments.append("--ledger-ui-test-report-incomplete") }
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let report = app.buttons["target-client-report-open"]
+            reveal(report, in: app)
+            XCTAssertTrue(report.waitForExistence(timeout: 5))
+            report.tap()
+            let share = app.buttons["target-client-report-share"]
+            XCTAssertTrue(share.waitForExistence(timeout: 5))
+            if incomplete {
+                XCTAssertTrue(app.staticTexts["target-client-report-incomplete"].waitForExistence(timeout: 5))
+                XCTAssertFalse(share.isEnabled)
+            } else {
+                let item = app.descendants(matching: .any).matching(identifier: "target-client-report-item-report-ui-chair").firstMatch
+                XCTAssertTrue(item.waitForExistence(timeout: 5))
+                XCTAssertTrue(app.staticTexts["Client: Report Client"].exists)
+                XCTAssertTrue(waitUntil { share.isEnabled })
+            }
+            app.buttons["target-client-report-refresh"].tap()
+            XCTAssertTrue(share.waitForExistence(timeout: 5))
+        }
+    }
+
     func testAccountSettingsDownloadedProfileRefreshAndDismiss() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -961,7 +992,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         submitSearch.tap()
         // Let XCTest own disappearance polling rather than nesting its retrying
         // accessibility query inside a separate predicate timeout.
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let keyboardDismissed = app.keyboards.firstMatch.waitForNonExistence(timeout: 5)
+        if !keyboardDismissed {
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = "Space search keyboard dismissal failure"
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+        }
+        XCTAssertTrue(keyboardDismissed)
         #endif
         let space = app.buttons[spaceIdentifier]
         reveal(space, in: app)

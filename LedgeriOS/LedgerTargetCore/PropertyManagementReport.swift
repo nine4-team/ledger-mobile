@@ -76,11 +76,14 @@ public struct PropertyManagementReportItem: Encodable, Equatable, Sendable {
     public let sku: String?
     public let marketValue: Money?
     public let itemRevision: UInt64
+    public let accounting: ProjectItemAccountingRow?
 
     public init(accountId: AccountID, projectId: ProjectID, itemId: ItemID, placementId: EntityID,
-                spaceId: SpaceID?, name: String, sku: String?, marketValue: Money?, itemRevision: UInt64) {
+                spaceId: SpaceID?, name: String, sku: String?, marketValue: Money?, itemRevision: UInt64,
+                accounting: ProjectItemAccountingRow? = nil) {
         self.accountId = accountId; self.projectId = projectId; self.itemId = itemId; self.placementId = placementId
         self.spaceId = spaceId; self.name = name; self.sku = sku; self.marketValue = marketValue; self.itemRevision = itemRevision
+        self.accounting = accounting
     }
 
     // JSON consumers must not round exact cents through a JavaScript Number.
@@ -234,7 +237,20 @@ public struct PropertyManagementReportSnapshot: Encodable, Equatable, Sendable {
             guard itemIDs.insert(item.itemId).inserted else { throw PropertyManagementReportFailure.duplicateItem }
             guard placementIDs.insert(item.placementId).inserted else { throw PropertyManagementReportFailure.duplicatePlacement }
             if let spaceId = item.spaceId, !spaceIDs.contains(spaceId) { throw PropertyManagementReportFailure.missingSpace }
-            if let amount = item.marketValue, amount.currency != currency { throw PropertyManagementReportFailure.mixedCurrency }
+            if item.accounting?.resolution == .accountedFor,
+               let amount = item.marketValue, amount.currency != currency {
+                throw PropertyManagementReportFailure.mixedCurrency
+            }
+            guard let accounting = item.accounting,
+                  accounting.resolution != .relationshipEvidenceIncomplete else {
+                throw PropertyManagementReportFailure.incompleteReadiness
+            }
+            guard accounting.evidence.accountId == item.accountId,
+                  accounting.evidence.projectId == item.projectId,
+                  accounting.evidence.itemId == item.itemId,
+                  accounting.evidence.spaceId == item.spaceId else {
+                throw PropertyManagementReportFailure.scopeMismatch
+            }
         }
         // Locale-independent byte order, with exact identity as the tie-breaker.
         func ordered(_ nameA: String, _ idA: String, _ nameB: String, _ idB: String) -> Bool {
@@ -242,7 +258,8 @@ public struct PropertyManagementReportSnapshot: Encodable, Equatable, Sendable {
             return a == b ? idA.utf8.lexicographicallyPrecedes(idB.utf8) : a.lexicographicallyPrecedes(b)
         }
         let sortedSpaces = spaces.sorted { ordered($0.name, $0.spaceId.rawValue, $1.name, $1.spaceId.rawValue) }
-        let sortedItems = items.sorted { ordered($0.name, $0.itemId.rawValue, $1.name, $1.itemId.rawValue) }
+        let sortedItems = items.filter { $0.accounting?.resolution == .accountedFor }
+            .sorted { ordered($0.name, $0.itemId.rawValue, $1.name, $1.itemId.rawValue) }
         func summarize(_ rows: [PropertyManagementReportItem]) throws -> PropertyManagementReportTotals {
             var known = Money.zero(currency: currency)
             var unknown = 0
@@ -259,7 +276,13 @@ public struct PropertyManagementReportSnapshot: Encodable, Equatable, Sendable {
         let unplaced = sortedItems.filter { $0.spaceId == nil }
         if !unplaced.isEmpty { groups.append(.init(spaceId: nil, name: "No Space", rows: unplaced, totals: try summarize(unplaced))) }
         let totals = try summarize(sortedItems)
-        let sourceHash = try ProtectedArtifactSHA256.make(bytes: encode(SourceSet(project: project, spaces: sortedSpaces, items: sortedItems)))
+        // Bind exclusion decisions too, without exporting excluded Item details
+        // or their private accounting relationships in the report envelope.
+        let accountingHash = try ProtectedArtifactSHA256.make(bytes: encode(items
+            .sorted { $0.itemId.rawValue.utf8.lexicographicallyPrecedes($1.itemId.rawValue.utf8) }
+            .map(\.accounting)))
+        let sourceHash = try ProtectedArtifactSHA256.make(bytes: encode(SourceSet(project: project, spaces: sortedSpaces,
+            items: sortedItems, accountingEvidenceHash: accountingHash)))
         let payload = Content(reportKind: "property_management", project: project, provenance: provenance, currency: currency,
             spaces: sortedSpaces, groups: groups, totals: totals, sourceSetHash: sourceHash)
         let hash = try ProtectedArtifactSHA256.make(bytes: encode(payload))
@@ -290,6 +313,7 @@ public struct PropertyManagementReportSnapshot: Encodable, Equatable, Sendable {
         let project: PropertyManagementReportProject
         let spaces: [PropertyManagementReportSpace]
         let items: [PropertyManagementReportItem]
+        let accountingEvidenceHash: ProtectedArtifactSHA256
     }
     private struct Content: Encodable {
         let reportKind: String

@@ -68,10 +68,18 @@ struct PropertyManagementReportCSVTests {
     }
 
     private func item(_ id: String, space: SpaceID? = nil, name: String = "Item", value: Int64? = nil) throws -> PropertyManagementReportItem {
-        try .init(accountId: AccountID(validating: "account"), projectId: ProjectID(validating: "project"),
-                  itemId: ItemID(validating: id), placementId: EntityID(validating: "placement-" + id),
+        let account = try AccountID(validating: "account"), project = try ProjectID(validating: "project")
+        let itemId = try ItemID(validating: id)
+        let accounting = try ProjectItemAccountingRow(evidence: .init(accountId: account, projectId: project,
+            clientId: ClientID(validating: "client"), itemId: itemId, spaceId: space,
+            billableOccurrences: [.init(id: BillableItemOccurrenceID(validating: "charge-" + id),
+                accountId: account, projectId: project, itemId: itemId, polarity: .charge,
+                phase: .availableToInvoice)]), relationshipAbsenceIsAuthoritative: true)
+        return try .init(accountId: account, projectId: project,
+                  itemId: itemId, placementId: EntityID(validating: "placement-" + id),
                   spaceId: space, name: name, sku: "@SKU",
-                  marketValue: value.map { Money(minorUnits: $0, currency: try! CurrencyCode(validating: "USD")) }, itemRevision: 4)
+                  marketValue: value.map { Money(minorUnits: $0, currency: try! CurrencyCode(validating: "USD")) },
+                  itemRevision: 4, accounting: accounting)
     }
     private func snapshot(spaces: [PropertyManagementReportSpace] = [], items: [PropertyManagementReportItem] = []) throws -> PropertyManagementReportSnapshot {
         let account = try AccountID(validating: "account"), project = try ProjectID(validating: "project")

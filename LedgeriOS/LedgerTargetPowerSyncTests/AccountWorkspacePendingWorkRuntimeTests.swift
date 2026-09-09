@@ -178,6 +178,45 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Client physical report uses runtime access and retains incomplete evidence across encrypted restart")
+    func clientPhysicalReportFacade() async throws {
+        let context = try RuntimeTestContext(suffix: "client-physical-report")
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "UPDATE spike_projects SET client_id='report-client',display_name='Property',lifecycle='active',revision=1 WHERE id='project-physical'", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO spike_clients(id,account_id,display_name,lifecycle,revision) VALUES('report-client','account-runtime','Client','active',1)", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('property_management_report',1,0,?,1000000)", parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "project-physical")
+        let asOf = try ProtectedArtifactEpochMilliseconds(validating: 1_800_000_000_000)
+        let snapshot = try await runtime.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+            projectId: project, asOf: asOf)
+        #expect(!snapshot.isComplete && snapshot.items.count == 1)
+        #expect(snapshot.items.first?.name == "Chair")
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readDownloadedClientSummaryPhysicalReport(accountId: AccountID(validating: "foreign-account"),
+                projectId: project, asOf: asOf)
+        }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+                projectId: project, asOf: asOf)
+        }
+        let reopened = try await context.openRuntime()
+        let restored = try await reopened.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+            projectId: project, asOf: asOf)
+        #expect(restored.reference == snapshot.reference && !restored.isComplete)
+        try await reopened.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await reopened.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+                projectId: project, asOf: asOf)
+        }
+        context.remove()
+    }
+
     @Test("Property report facade preserves downloaded snapshot across encrypted restart and denies foreign or closed access")
     func propertyReportFacade() async throws {
         let context = try RuntimeTestContext(suffix: "property-report")
@@ -185,7 +224,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let validate = dependencies.validateStructuredDatabase
         dependencies.validateStructuredDatabase = { database in
             try await validate(database)
-            _ = try await database.execute(sql: "UPDATE spike_projects SET display_name='Property',lifecycle='active',revision=1 WHERE id='project-physical'", parameters: nil)
+            _ = try await database.execute(sql: "UPDATE spike_projects SET client_id='report-client',display_name='Property',lifecycle='active',revision=1 WHERE id='project-physical'", parameters: nil)
+            _ = try await database.execute(sql: "UPDATE spike_account_memberships SET financial_access='full' WHERE account_id='account-runtime'", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO item_client_payment_connections(id,account_id,project_id,client_id,item_id,placement_id,transaction_id,transaction_type,transaction_role) SELECT 'runtime-payment-link',account_id,project_id,'report-client',item_id,id,'report-purchase','purchase','standalone' FROM spike_item_placements WHERE project_id='project-physical' AND ended_at IS NULL", parameters: nil)
             _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('property_management_report',1,0,?,1000000)", parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
         }
         let runtime = try await context.openRuntime(dependencies: dependencies)

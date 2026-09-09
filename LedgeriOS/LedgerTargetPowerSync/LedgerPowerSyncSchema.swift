@@ -12,6 +12,7 @@ public enum LedgerPowerSyncTable {
     public static let spaces = "spike_spaces"
     public static let items = "spike_items"
     public static let itemPlacements = "spike_item_placements"
+    public static let itemClientPaymentConnections = "item_client_payment_connections"
     public static let spaceCoreDetails = "spike_space_core_details"
     public static let spaceChecklists = "spike_space_checklists"
     public static let spaceChecklistItems = "spike_space_checklist_items"
@@ -36,6 +37,11 @@ public enum LedgerPowerSyncTable {
 
 public enum LedgerPowerSyncSchema {
     public static let schema = Schema(
+        Table(name: LedgerPowerSyncTable.itemClientPaymentConnections,
+            columns: [.text("account_id"), .text("project_id"), .text("client_id"), .text("item_id"),
+                      .text("placement_id"), .text("transaction_id"), .text("transaction_type"),
+                      .text("transaction_role"), .text("ended_at")],
+            indexes: [.ascending(name: "item_payment_project", columns: ["account_id", "project_id", "placement_id"])]),
         Table(
             name: LedgerPowerSyncTable.items,
             columns: [.text("account_id"), .text("name"), .text("description"), .text("sku"),

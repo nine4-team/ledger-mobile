@@ -28,7 +28,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
-    PropertyManagementReportWatching, AccountBusinessProfileReading, Sendable
+    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
@@ -82,6 +82,20 @@ public final class LedgerOfflineClientRuntime:
         trackedStream { id, continuation in
             await self.lifecycleOwner.startDownloadedItemPlacementsWatch(id: id,
                 accountId: accountId, scope: scope, continuation: continuation)
+        }
+    }
+
+    public func readDownloadedClientSummaryPhysicalReport(accountId: AccountID, projectId: ProjectID,
+        asOf: ProtectedArtifactEpochMilliseconds) async throws -> ClientSummaryPhysicalReportSnapshot {
+        try await lifecycleOwner.readDownloadedClientSummaryPhysicalReport(accountId: accountId,
+            projectId: projectId, asOf: asOf)
+    }
+
+    public func watchClientSummaryPhysicalReport(accountId: AccountID, projectId: ProjectID)
+        -> AsyncThrowingStream<ClientSummaryPhysicalReportUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startClientSummaryPhysicalReportWatch(id: id,
+                accountId: accountId, projectId: projectId, continuation: continuation)
         }
     }
 

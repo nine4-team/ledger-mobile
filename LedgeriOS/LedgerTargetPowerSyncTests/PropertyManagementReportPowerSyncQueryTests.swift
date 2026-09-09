@@ -51,10 +51,14 @@ struct PropertyManagementReportPowerSyncQueryTests {
                 "active_streams": [["name": identity.name, "params": ["account_id": account.rawValue, "project_id": project.rawValue]]],
                 "app_metadata": [:], "checkpoint_mode": "legacy"]
             let facts: [(String, String, [String: Any])] = [
-                ("spike_account_memberships", "report-member", ["account_id": account.rawValue, "principal_id": principal.rawValue, "state": "active"]),
-                ("spike_projects", project.rawValue, ["account_id": account.rawValue, "display_name": "Offline property", "property_address": "123 Synthetic Street", "lifecycle": "active", "revision": 1]),
+                ("spike_account_memberships", "report-member", ["account_id": account.rawValue, "principal_id": principal.rawValue, "state": "active", "financial_access": "full"]),
+                ("spike_projects", project.rawValue, ["account_id": account.rawValue, "client_id": "report-client", "display_name": "Offline property", "property_address": "123 Synthetic Street", "lifecycle": "active", "revision": 1]),
                 ("spike_items", "offline-chair", ["account_id": account.rawValue, "name": "Offline chair", "sku": "CHAIR-1", "market_value_minor_units": "9007199254740993", "market_value_currency": "USD", "revision": 1]),
                 ("spike_item_placements", "offline-placement", ["account_id": account.rawValue, "item_id": "offline-chair", "project_id": project.rawValue, "scope_kind": "project"]),
+                ("item_client_payment_connections", "offline-payment-link", ["account_id": account.rawValue,
+                    "project_id": project.rawValue, "client_id": "report-client", "item_id": "offline-chair",
+                    "placement_id": "offline-placement", "transaction_id": "report-purchase",
+                    "transaction_type": "purchase", "transaction_role": "standalone"]),
             ]
             let rows = try facts.enumerated().map { index, fact -> [String: Any] in
                 ["checksum": 0, "op_id": String(index + 1), "object_id": fact.1,
@@ -62,9 +66,9 @@ struct PropertyManagementReportPowerSyncQueryTests {
             }
             let controls: [(String, String?)] = [
                 ("start", try json(start)), ("connection", "established"),
-                ("line_text", try json(["checkpoint": ["last_op_id": "4", "buckets": [["bucket": "report-reopen-bucket", "priority": 3, "checksum": 0, "subscriptions": [["sub": 0]]]], "streams": [["name": identity.name, "is_default": false, "errors": []]]]])),
+                ("line_text", try json(["checkpoint": ["last_op_id": "5", "buckets": [["bucket": "report-reopen-bucket", "priority": 3, "checksum": 0, "subscriptions": [["sub": 0]]]], "streams": [["name": identity.name, "is_default": false, "errors": []]]]])),
                 ("line_text", try json(["data": ["bucket": "report-reopen-bucket", "data": rows, "has_more": false]])),
-                ("line_text", try json(["checkpoint_complete": ["last_op_id": "4"]])), ("stop", nil),
+                ("line_text", try json(["checkpoint_complete": ["last_op_id": "5"]])), ("stop", nil),
             ]
             for (operation, parameter) in controls {
                 _ = try await db.writeTransaction { tx in

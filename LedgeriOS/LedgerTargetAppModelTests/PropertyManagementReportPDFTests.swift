@@ -105,12 +105,19 @@ struct PropertyManagementReportPDFTests {
         let currency = try CurrencyCode(validating: "USD")
         let space = try SpaceID(validating: "pdf-space")
         let items = try (0..<count).map { index in
-            PropertyManagementReportItem(accountId: account, projectId: project,
-                itemId: try ItemID(validating: "item-\(String(format: "%03d", index))"),
-                placementId: try EntityID(validating: "placement-\(index)"), spaceId: index % 2 == 0 ? space : nil,
+            let itemId = try ItemID(validating: "item-\(String(format: "%03d", index))")
+            let spaceId = index % 2 == 0 ? space : nil
+            let accounting = try ProjectItemAccountingRow(evidence: .init(accountId: account, projectId: project,
+                clientId: ClientID(validating: "pdf-client"), itemId: itemId, spaceId: spaceId,
+                billableOccurrences: [.init(id: BillableItemOccurrenceID(validating: "charge-\(index)"),
+                    accountId: account, projectId: project, itemId: itemId, polarity: .charge,
+                    phase: .availableToInvoice)]), relationshipAbsenceIsAuthoritative: true)
+            return PropertyManagementReportItem(accountId: account, projectId: project,
+                itemId: itemId,
+                placementId: try EntityID(validating: "placement-\(index)"), spaceId: spaceId,
                 name: longName ? String(repeating: "Long descriptive Item name with dimensions and finishes. ", count: 400) + "END-OF-LONG-NAME" : "Furnishing \(index)",
                 sku: "SKU-\(index)", marketValue: index == 0 ? Money(minorUnits: 9_007_199_254_740_993, currency: currency) : nil,
-                itemRevision: 1)
+                itemRevision: 1, accounting: accounting)
         }
         return try .build(project: .init(accountId: account, projectId: project, name: "Synthetic property",
             address: "123 Example Street", revision: 1),

@@ -58,6 +58,29 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-030 | accepted, implementation verification pending | Preserve original Project notes as distinct detail content |
 | A-031 | accepted, target integration pending | Preserve individual-note provenance without inventing missing metadata |
 | A-032 | implementation in progress, integration unverified | Keep downloaded Account branding separate from pending uploads |
+| A-033 | implementation in progress, integration unverified | Derive report eligibility from existing Item accounting relationships |
+| A-034 | corrected locally, hosted validation pending | Preserve native table names in PowerSync query outputs |
+
+## A-034 — PowerSync Output Names Must Match the Native Schema
+
+PowerSync's primary `FROM ... AS alias` changes the downloaded table name,
+not merely the SQL qualifier ([documented contract](https://docs.powersync.com/sync/advanced/multiple-client-versions)).
+Our shorthand primary aliases therefore did not match the native `spike_*`
+tables. `item` also aliased two different source tables. Remove primary aliases
+and qualify fields with the original table names; keep ordinary join/subquery
+aliases. This changes no product relationships, permissions or retained history.
+
+The native schema now checks the output names of all 35 current stream queries.
+Regression tests reject shorthand and cross-table output aliases. Existing exact
+SQL expectation checks were updated without relaxing their predicates. Actual
+report and physical-Item SQL authorization/projection tests pass after the rename.
+The pinned `@powersync/service-sync-rules` 0.41.0 parser now also compiles the
+checked-in YAML with zero errors and verifies all 17 native output-table names.
+Its regression reproduces the original alias bug using the real compiler.
+This tooling requires Node 24 (CI pins 24.14.0); it is not an app dependency.
+Four parser/name tests and target environment checks pass. Source-column validation,
+replication and hosted download validation remain required. Prior synthetic engine tests supplied
+their own correct table names and could not establish this configuration contract.
 
 ## A-032 — Downloaded Account Branding Is Not Pending Work
 
@@ -1268,3 +1291,73 @@ The target-only Swift package and local executable are checked by active workflo
 and environment checks, not frozen Firebase-source hashes. Correcting that scope
 removed one target configuration entry from the passive source audit; it did not
 remove or re-audit any shipped product behavior.
+
+## A-033 — Report Eligibility Reuses Item Accounting Evidence
+
+**Decision (implementation in progress):** Physical report rows use the existing
+`ProjectItemAccountingRow` relationship-derived resolution. Do not persist a
+second report-eligibility flag or infer accounting from placement, category,
+price, or an arbitrary historical Invoice. Canonical
+`docs/specs/proto-item-capture.md` requires Unaccounted For Items to contribute
+nothing to reports or exports.
+
+**Preserved behavior:** Accounted For Items keep their physical identity, Space,
+and report detail. Proven Unaccounted For rows are excluded. Unknown relationship
+evidence prevents completed export, rather than becoming an empty result or
+silently included value. Report identity binds the accounting evidence used for
+inclusion and exclusion, without exposing excluded physical detail in the output.
+
+**Tradeoff and remaining work:** A completed physical download alone cannot now
+make a nonempty report ready. The provider must read current scoped accounting
+relationships coherently with physical rows. Native readers and the invoker
+online report RPC now supply positive Client-payment evidence. Business-paid
+relationships and complete absence evidence remain missing. This is
+an implementation gap, not authorization to settle open posting or writer-role
+decisions. No source relationship or historical fact is deleted.
+
+The first source relationship is private
+`ledger_private.item_client_payment_connections`: a scoped placement-to-real-
+Purchase link, with fixed classification foreign keys and retained closure
+history. It creates no payment or allocation and grants no app/MCP access.
+Connection timestamps are relationship history, not a claim that every historic
+link interval equals a custody interval. Trusted Link writers must separately
+enforce current-placement and Unaccounted-For preconditions. Business-paid
+occurrences and full source completeness remain separate
+unfinished implementation—not implied by the presence of this table.
+
+The physical-report stream and both native readers now consume active links
+for the exact current placement, Project, Client and Account. The read is one
+bulk query in the physical snapshot's transaction, not one query per Item.
+Until restricted provenance policy is resolved, only active full-financial-access
+members receive link evidence. A local downgrade immediately stops using retained
+links; watches observe membership and link changes. Missing links remain unknown,
+never proof of Unaccounted For status. This does not resolve O-060 or authorize
+broader financial disclosure. Six actual stream SQL projections, native positive/
+closed/old/malformed-link checks, live closure invalidation and encrypted-reopen
+checks pass. The online RPC uses column-only SELECT grants and the same full/
+active/current-placement restrictions in RLS, not a SECURITY DEFINER bypass.
+Actor history and all writes remain ungranted. Its 29 SQL checks, real local
+MCP/HTTP read and native differential comparison of actual stream rows pass;
+the comparison includes accounting-bound source hashes. Security advisors report
+no issues. Private-schema replication/publication access is still unverified.
+
+Both concrete report delivery boundaries reuse one internal protected scratch
+lifetime helper. Each requires its own exact-source revalidation callback before
+OS handoff; the helper introduces no new authorization source. Incomplete Client
+Summary snapshots cannot enter delivery. UI branding revalidation and actual
+provider wiring remain required before that report is usable end to end.
+The concrete Client reader now shares the physical report stream and runtime
+lease instead of introducing another sync lifetime. The stream includes the
+Project's exact Client (including archived Clients); the Client read ignores
+money and reads metadata plus its retained checkpoint in one transaction.
+Missing accounting/category evidence still blocks completed export. Focused
+query, encrypted runtime restart/access, and actual stream-SQL scope tests pass;
+hosted delivery and UI composition are not established by those checks.
+
+**Verification:** Focused Client Summary and Property Management eligibility
+tests cover unknown evidence, exclusion from counts/value/output, evidence-bound
+identity and mismatched relationships. The private Client-payment relationship
+migration executed atomically on the isolated local database; all 23 focused
+pgTAP checks passed, and local Supabase security advisors reported no issues.
+Provider/Sync/MCP and full native UI
+verification remain required; earlier green CI predates this correction.

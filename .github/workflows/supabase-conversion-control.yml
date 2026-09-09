@@ -54,10 +54,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 22
+      - name: Use Node.js 24 for the pinned PowerSync service parser
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.14.0
+
+      - name: Install pinned local validation dependencies
+        run: npm ci --ignore-scripts
 
       - name: Validate target dependency and environment boundaries
         run: |
@@ -126,6 +129,7 @@ jobs:
             -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testAccountSettingsDownloadedProfileRefreshAndDismiss \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testClientSummaryPhysicalPreviewAndIncompleteShare \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementEmptyAndUnavailableStates \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss \

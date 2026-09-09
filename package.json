@@ -12,7 +12,7 @@
     "legacy:conversion:residuals:generate": "node scripts/generate-m2-residual-register.mjs generate",
     "legacy:conversion:residuals:check": "node scripts/generate-m2-residual-register.mjs check",
     "conversion:profiles:check-readonly": "node scripts/check-firebase-readonly-profilers.mjs",
-    "target:environment:check": "node scripts/check-target-environment.mjs",
+    "target:environment:check": "node --test scripts/tests/sync-output-tables.test.mjs && node scripts/check-target-environment.mjs",
     "target:environment:test": "swift test --package-path LedgeriOS --filter TargetEnvironmentManifestTests",
     "target:contracts:generate": "node scripts/generate-target-contracts.mjs generate",
     "target:contracts:check": "node scripts/generate-target-contracts.mjs check && npm --prefix LedgerTargetMCP run check",
@@ -47,6 +47,7 @@
     "conversion:gate:m5": "node scripts/supabase-conversion-ledger.mjs gate M5"
   },
   "devDependencies": {
+    "@powersync/service-sync-rules": "0.41.0",
     "vitest": "^2.1.9"
   }
 }

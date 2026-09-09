@@ -26,7 +26,19 @@ struct PropertyManagementReportLocalReader: Sendable {
     /// transaction; never independently check membership before opening it.
     static func read(transaction: any Transaction, accountId: AccountID, principalId: PrincipalID,
                      projectId: ProjectID) throws -> PropertyManagementReportLocalInputs {
-        let project = try transaction.get(sql: """
+        let project = try readProject(transaction: transaction, accountId: accountId,
+                                      principalId: principalId, projectId: projectId)
+        let spaces = try readSpaces(transaction: transaction, accountId: accountId, projectId: projectId)
+        let items = try readItems(transaction: transaction, accountId: accountId,
+                                  principalId: principalId, projectId: projectId, spaces: spaces)
+        return .init(project: project, spaces: spaces, items: items)
+    }
+
+    // Shared physical report metadata. Client Summary uses these within its own
+    // single read transaction without reading Property Management money fields.
+    static func readProject(transaction: any Transaction, accountId: AccountID,
+                            principalId: PrincipalID, projectId: ProjectID) throws -> PropertyManagementReportProject {
+        try transaction.get(sql: """
           WITH access AS (SELECT EXISTS(SELECT 1 FROM spike_account_memberships
             WHERE account_id=? AND principal_id=? AND state='active') AS allowed)
           SELECT access.allowed,p.id,p.display_name,p.property_address,p.revision,
@@ -44,7 +56,11 @@ struct PropertyManagementReportLocalReader: Sendable {
             return PropertyManagementReportProject(accountId: accountId, projectId: projectId, name: name,
                 address: try cursor.getStringOptional(name: "property_address"), revision: UInt64(revision))
         }
-        let spaces = try transaction.getAll(sql: """
+    }
+
+    static func readSpaces(transaction: any Transaction, accountId: AccountID,
+                           projectId: ProjectID) throws -> [PropertyManagementReportSpace] {
+        try transaction.getAll(sql: """
           SELECT s.id,s.account_id,s.project_id,s.scope_kind,s.display_name,s.revision,
             typeof(s.revision) AS revision_type,s.lifecycle
           FROM spike_spaces s WHERE s.project_id=? AND (s.lifecycle='active' OR s.id IN (
@@ -62,8 +78,14 @@ struct PropertyManagementReportLocalReader: Sendable {
                 spaceId: SpaceID(validating: cursor.getString(name: "id")),
                 name: cursor.getString(name: "display_name"), revision: UInt64(revision))
         }
+    }
+
+    private static func readItems(transaction: any Transaction, accountId: AccountID,
+                                   principalId: PrincipalID, projectId: ProjectID, spaces: [PropertyManagementReportSpace]) throws -> [PropertyManagementReportItem] {
+        let accounting = try ItemClientPaymentConnectionLocalReader.read(transaction: transaction,
+            accountId: accountId, principalId: principalId, projectId: projectId)
         let spaceIDs = Set(spaces.map(\.spaceId))
-        let items = try transaction.getAll(sql: """
+        return try transaction.getAll(sql: """
           SELECT p.id AS placement_id,p.account_id,p.scope_kind,p.space_id,
             i.id AS item_id,i.name,i.description,i.sku,i.market_value_minor_units,i.market_value_currency,i.revision,
             typeof(i.revision) AS revision_type,
@@ -102,8 +124,8 @@ struct PropertyManagementReportLocalReader: Sendable {
             return try PropertyManagementReportItem(accountId: accountId, projectId: projectId,
                 itemId: ItemID(validating: itemID), placementId: EntityID(validating: cursor.getString(name: "placement_id")),
                 spaceId: space, name: display, sku: cursor.getStringOptional(name: "sku"), marketValue: money,
-                itemRevision: UInt64(revision))
+                itemRevision: UInt64(revision),
+                accounting: accounting[EntityID(validating: cursor.getString(name: "placement_id"))])
         }
-        return .init(project: project, spaces: spaces, items: items)
     }
 }

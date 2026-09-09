@@ -32,9 +32,10 @@ struct PropertyManagementReportLocalReaderTests {
             #expect(provenance["projectId"] as? String == project.rawValue)
             #expect(expected["currency"] as? String == currency.rawValue)
             let tables = try #require(fixture["tables"] as? [[String: Any]])
-            let allowed = Set(["spike_projects", "spike_spaces", "spike_item_placements", "spike_items"])
+            let allowed = Set(["spike_projects", "spike_spaces", "spike_item_placements", "spike_items",
+                "spike_clients", "item_client_payment_connections"])
             #expect(Set(tables.compactMap { $0["table"] as? String }) == allowed)
-            #expect(tables.count == 4)
+            #expect(tables.count == 6)
             for table in tables {
                 let name = try #require(table["table"] as? String)
                 guard allowed.contains(name) else { throw CocoaError(.coderInvalidValue) }
@@ -49,7 +50,7 @@ struct PropertyManagementReportLocalReaderTests {
                         parameters: columns.map { _ in json })
                 }
             }
-            _ = try await db.execute(sql: "INSERT INTO spike_account_memberships(id,account_id,principal_id,state) VALUES('parity-member',?,?, 'active')",
+            _ = try await db.execute(sql: "INSERT INTO spike_account_memberships(id,account_id,principal_id,state,financial_access) VALUES('parity-member',?,?, 'active','full')",
                 parameters: [account.rawValue, principal.rawValue])
             let inputs = try await PropertyManagementReportLocalReader(database: db)
                 .read(accountId: account, principalId: principal, projectId: project)

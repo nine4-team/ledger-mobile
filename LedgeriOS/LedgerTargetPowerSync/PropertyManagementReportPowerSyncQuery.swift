@@ -17,6 +17,32 @@ struct PropertyManagementReportStreamIdentity: SyncStreamDescription, Sendable {
 struct PropertyManagementReportPowerSyncQuery: Sendable {
     let database: any PowerSyncDatabaseProtocol
 
+    // Both report kinds consume the same scoped physical download. Client
+    // Summary reads no money fields and cannot export missing category or
+    // accounting evidence merely because the physical stream completed.
+    func readDownloadedClientSummary(accountId: AccountID, principalId: PrincipalID,
+        projectId: ProjectID, asOf: ProtectedArtifactEpochMilliseconds) async throws
+        -> ClientSummaryPhysicalReportSnapshot {
+        let identity = PropertyManagementReportStreamIdentity(accountId: accountId, projectId: projectId)
+        return try await database.readTransaction { transaction in
+            let inputs = try ClientSummaryPhysicalReportLocalReader.read(transaction: transaction,
+                accountId: accountId, principalId: principalId, projectId: projectId)
+            let checkpoint = try Self.completedCheckpoint(transaction: transaction, identity: identity)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+            let version = try ProtectedArtifactSHA256.make(bytes: encoder.encode(inputs))
+            let visibility = try ProtectedArtifactSHA256.make(bytes: encoder.encode(
+                [accountId.rawValue, principalId.rawValue, projectId.rawValue, "client-summary-physical-v1"]))
+            return try ClientSummaryPhysicalReportSnapshot.build(project: inputs.project,
+                client: inputs.client, spaces: inputs.spaces, items: inputs.items,
+                provenance: .init(accountId: accountId, projectId: projectId, principalId: principalId,
+                    visibilityScopeID: .init(validating: visibility.rawValue),
+                    localDataVersion: .init(validating: "client-summary-\(version.rawValue)"),
+                    authorityVersion: .init(validating: "client-summary-physical-v1"), asOf: asOf,
+                    readiness: .ready, lastSyncedAt: checkpoint))
+        }
+    }
+
     func readDownloaded(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
                         currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws
         -> PropertyManagementReportSnapshot {

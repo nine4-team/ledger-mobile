@@ -41,7 +41,7 @@ const requiredScripts = Object.freeze({
   "conversion:capabilities:check":
     "node scripts/extract-current-capability-surfaces.mjs check",
   "conversion:queries:check": "node scripts/extract-firestore-query-contract.mjs check",
-  "target:environment:check": "node scripts/check-target-environment.mjs",
+  "target:environment:check": "node --test scripts/tests/sync-output-tables.test.mjs && node scripts/check-target-environment.mjs",
   "target:contracts:check":
     "node scripts/generate-target-contracts.mjs check && npm --prefix LedgerTargetMCP run check",
   "target:mcp:test": "npm --prefix LedgerTargetMCP test",

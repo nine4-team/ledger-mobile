@@ -95,7 +95,16 @@ struct PropertyManagementReportTests {
         func item(_ id: String, space: SpaceID? = nil, value: Int64? = nil, name: String? = nil) throws -> PropertyManagementReportItem {
             try .init(accountId: account, projectId: projectID, itemId: ItemID(validating: id),
                 placementId: EntityID(validating: "placement-" + id), spaceId: space, name: name ?? id, sku: "SKU-" + id,
-                marketValue: value.map { Money(minorUnits: $0, currency: currency) }, itemRevision: 9)
+                marketValue: value.map { Money(minorUnits: $0, currency: currency) }, itemRevision: 9,
+                accounting: accounting(id, space: space))
+        }
+        func accounting(_ id: String, space: SpaceID? = nil) throws -> ProjectItemAccountingRow {
+            let itemId = try ItemID(validating: id)
+            return try .init(evidence: .init(accountId: account, projectId: projectID,
+                clientId: ClientID(validating: "client"), itemId: itemId, spaceId: space,
+                billableOccurrences: [.init(id: BillableItemOccurrenceID(validating: "charge-" + id),
+                    accountId: account, projectId: projectID, itemId: itemId,
+                    polarity: .charge, phase: .availableToInvoice)]), relationshipAbsenceIsAuthoritative: true)
         }
         func snapshot(spaces: [PropertyManagementReportSpace] = [], items: [PropertyManagementReportItem] = [],
                       provenance: PropertyManagementReportProvenance? = nil) throws -> PropertyManagementReportSnapshot {
@@ -173,7 +182,8 @@ struct PropertyManagementReportTests {
         let eur = try Money(minorUnits: 1, currency: CurrencyCode(validating: "EUR"))
         let item = try PropertyManagementReportItem(accountId: f.account, projectId: f.projectID,
             itemId: ItemID(validating: "item"), placementId: EntityID(validating: "placement"), spaceId: nil,
-            name: "Item", sku: nil, marketValue: eur, itemRevision: 1)
+            name: "Item", sku: nil, marketValue: eur, itemRevision: 1,
+            accounting: f.accounting("item"))
         #expect(throws: PropertyManagementReportFailure.mixedCurrency) { try f.snapshot(items: [item]) }
         #expect(throws: DomainPrimitiveFailure.arithmeticOverflow(.addition)) {
             try f.snapshot(items: [f.item("a", value: Int64.max), f.item("b", value: 1)])
@@ -221,7 +231,8 @@ struct PropertyManagementReportTests {
             spaceId: SpaceID(validating: "space"), name: "Space", revision: UInt64.max)
         let item = try PropertyManagementReportItem(accountId: f.account, projectId: f.projectID,
             itemId: ItemID(validating: "item"), placementId: EntityID(validating: "placement"), spaceId: space.spaceId,
-            name: "Item", sku: nil, marketValue: nil, itemRevision: UInt64.max)
+            name: "Item", sku: nil, marketValue: nil, itemRevision: UInt64.max,
+            accounting: f.accounting("item", space: space.spaceId))
         let snapshot = try PropertyManagementReportSnapshot.build(project: project, spaces: [space], items: [item],
             currency: f.currency, provenance: f.provenance())
         #expect(try ProtectedArtifactSHA256.make(bytes: snapshot.canonicalContentData()) == snapshot.reference.snapshotHash)

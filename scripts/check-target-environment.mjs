@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateSyncOutputTables } from "./sync-output-tables.mjs";
 import { sharedVendorParserPaths, validateLocalVendorParserBoundary } from "./local-vendor-parser-boundary.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -611,6 +612,7 @@ if (
     "pendingUploadCount",
     "pendingWorkSummary",
     "readAccountBusinessProfile",
+    "readDownloadedClientSummaryPhysicalReport",
     "readDownloadedItemPlacementHistory",
     "readDownloadedItemPlacements",
     "readDownloadedPropertyManagementReport",
@@ -622,6 +624,7 @@ if (
     "watchBudgetCategories",
     "watchClient",
     "watchClientArchiveOperation",
+    "watchClientSummaryPhysicalReport",
     "watchClients",
     "watchDownloadedItemPlacementHistory",
     "watchDownloadedItemPlacements",
@@ -1213,7 +1216,7 @@ if (
         fail("target_project_note_provider_incomplete", required);
       }
     }
-    if (!syncSection.includes("note.id AS keyset_id")) {
+    if (!syncSection.includes("spike_project_notes.id AS keyset_id")) {
       fail("target_project_note_sync_keyset_missing", relative(syncPath));
     }
     if (/public\s+(?:final\s+)?class\s+ProjectNotePowerSyncQuery/.test(provider)) {
@@ -1260,7 +1263,7 @@ if (
       "subscription.parameter('project_id')",
       "principal.auth_user_id = auth.user_id()",
       "state = 'active'",
-      "FROM spike_project_notes AS note",
+      "FROM spike_project_notes",
     ]) {
       if (!syncSection.includes(required)) {
         fail("target_project_note_sync_scope_incomplete", required);
@@ -1367,10 +1370,10 @@ if (
       "subscription.parameter('space_id')",
       "principal.auth_user_id = auth.user_id()",
       "membership.state = 'active'",
-      "FROM spike_spaces AS space",
-      "FROM spike_space_core_details AS detail",
-      "FROM spike_space_checklists AS checklist",
-      "FROM spike_space_checklist_items AS item",
+      "FROM spike_spaces",
+      "FROM spike_space_core_details",
+      "FROM spike_space_checklists",
+      "FROM spike_space_checklist_items",
     ]) {
       if (!syncSection.includes(required)) {
         fail("target_space_core_details_sync_scope_incomplete", required);
@@ -1552,10 +1555,10 @@ if (
       "subscription.parameter('project_id')",
       "principal.auth_user_id = auth.user_id()",
       "membership.state = 'active'",
-      "FROM spike_spaces AS space",
-      "FROM spike_space_core_details AS detail",
-      "FROM spike_space_checklists AS checklist",
-      "FROM spike_space_checklist_items AS item",
+      "FROM spike_spaces",
+      "FROM spike_space_core_details",
+      "FROM spike_space_checklists",
+      "FROM spike_space_checklist_items",
     ]) {
       if (!syncSection.includes(required)) {
         fail("target_space_browser_sync_scope_incomplete", required);
@@ -2394,6 +2397,11 @@ const projectSetupStorePath = path.join(
   "ProjectSetupPowerSyncStore.swift",
 );
 const syncStreamsPath = path.join(repositoryRoot, "powersync/sync-streams.yaml");
+try {
+  validateSyncOutputTables(fs.readFileSync(syncStreamsPath, "utf8"), fs.readFileSync(powerSyncSchemaPath, "utf8"));
+} catch (error) {
+  fail("target_sync_output_table_mismatch", error.message);
+}
 for (const requiredPath of [
   categoryRevisionMigrationPath,
   powerSyncSchemaPath,
@@ -2521,13 +2529,13 @@ if (
       /^      - \|\n([\s\S]*?)(?=^      - \|\n|(?![\s\S]))/gm,
     )].map((match) => match[1].replace(/\s+/g, " ").trim());
   const expectedBroadProjectQueries = [
-    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.legacy_notes, project.property_address, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project WHERE project.account_id IN ( SELECT membership.account_id FROM spike_account_memberships AS membership JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' )",
-    "SELECT category.* FROM spike_budget_categories AS category JOIN spike_account_memberships AS membership ON membership.account_id = category.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
-    "SELECT allocation.* FROM spike_project_category_allocations AS allocation JOIN spike_budget_categories AS category ON category.account_id = allocation.account_id AND category.id = allocation.category_id JOIN spike_account_memberships AS membership ON membership.account_id = allocation.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
+    "SELECT spike_projects.id, spike_projects.account_id, spike_projects.client_id, spike_projects.display_name, spike_projects.description, spike_projects.legacy_notes, spike_projects.property_address, spike_projects.lifecycle, spike_projects.revision, spike_projects.category_configuration_revision::text AS category_configuration_revision, spike_projects.created_at_ms, spike_projects.updated_at_ms, spike_projects.created_by_principal_id FROM spike_projects WHERE spike_projects.account_id IN ( SELECT membership.account_id FROM spike_account_memberships AS membership JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' )",
+    "SELECT spike_budget_categories.* FROM spike_budget_categories JOIN spike_account_memberships AS membership ON membership.account_id = spike_budget_categories.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( spike_budget_categories.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
+    "SELECT spike_project_category_allocations.* FROM spike_project_category_allocations JOIN spike_budget_categories AS category ON category.account_id = spike_project_category_allocations.account_id AND category.id = spike_project_category_allocations.category_id JOIN spike_account_memberships AS membership ON membership.account_id = spike_project_category_allocations.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
   ];
   const expectedProjectNoteQueries = [
-    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.legacy_notes, project.property_address, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE project.account_id = subscription.parameter('account_id') AND project.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
-    "SELECT note.id, note.account_id, note.project_id, note.id AS keyset_id, note.content_kind, note.note_text, note.source, note.created_by_principal_id, note.original_creator_id, note.creator_display_name, note.created_at_ms, note.created_at_submillis, note.revision::text AS revision, note.last_edited_by_principal_id, note.last_edited_at_ms, note.last_edited_at_submillis, note.deleted_by_principal_id, note.deleted_at_ms, note.deleted_at_submillis FROM spike_project_notes AS note JOIN spike_projects AS project ON project.account_id = note.account_id AND project.id = note.project_id JOIN spike_account_memberships AS membership ON membership.account_id = note.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE note.account_id = subscription.parameter('account_id') AND note.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+    "SELECT spike_projects.id, spike_projects.account_id, spike_projects.client_id, spike_projects.display_name, spike_projects.description, spike_projects.legacy_notes, spike_projects.property_address, spike_projects.lifecycle, spike_projects.revision, spike_projects.category_configuration_revision::text AS category_configuration_revision, spike_projects.created_at_ms, spike_projects.updated_at_ms, spike_projects.created_by_principal_id FROM spike_projects JOIN spike_account_memberships AS membership ON membership.account_id = spike_projects.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE spike_projects.account_id = subscription.parameter('account_id') AND spike_projects.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+    "SELECT spike_project_notes.id, spike_project_notes.account_id, spike_project_notes.project_id, spike_project_notes.id AS keyset_id, spike_project_notes.content_kind, spike_project_notes.note_text, spike_project_notes.source, spike_project_notes.created_by_principal_id, spike_project_notes.original_creator_id, spike_project_notes.creator_display_name, spike_project_notes.created_at_ms, spike_project_notes.created_at_submillis, spike_project_notes.revision::text AS revision, spike_project_notes.last_edited_by_principal_id, spike_project_notes.last_edited_at_ms, spike_project_notes.last_edited_at_submillis, spike_project_notes.deleted_by_principal_id, spike_project_notes.deleted_at_ms, spike_project_notes.deleted_at_submillis FROM spike_project_notes JOIN spike_projects AS project ON project.account_id = spike_project_notes.account_id AND project.id = spike_project_notes.project_id JOIN spike_account_memberships AS membership ON membership.account_id = spike_project_notes.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE spike_project_notes.account_id = subscription.parameter('account_id') AND spike_project_notes.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
   ];
   if (
     JSON.stringify(normalizedQueries(broadProjectSection)) !==
@@ -2549,9 +2557,9 @@ if (
   }
   if (
     (sync.match(
-      /project\.category_configuration_revision::text\s+AS category_configuration_revision/g,
+      /spike_projects\.category_configuration_revision::text\s+AS category_configuration_revision/g,
     ) ?? []).length !== 3 ||
-    /SELECT\s+project\.\*/i.test(sync)
+    /SELECT\s+spike_projects\.\*/i.test(sync)
   ) {
     fail(
       "target_project_category_revision_sync_incomplete",
@@ -3058,7 +3066,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,AccountBusinessProfileReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,Sendable",
     )
   ) {
     fail(
@@ -3370,7 +3378,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,AccountBusinessProfileReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,Sendable",
     )
   ) {
     fail(

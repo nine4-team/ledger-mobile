@@ -594,7 +594,56 @@ private struct UITestReportCopyReceiver: View {
 }
 #endif
 
-private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, PropertyManagementReportReading {
+private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, PropertyManagementReportReading,
+    ClientSummaryPhysicalReportWatching, ClientSummaryPhysicalReportReading {
+    func watchClientSummaryPhysicalReport(accountId: AccountID, projectId: ProjectID)
+        -> AsyncThrowingStream<ClientSummaryPhysicalReportUpdate, Error> {
+        AsyncThrowingStream { continuation in
+            let arguments = ProcessInfo.processInfo.arguments
+            if arguments.contains("--ledger-ui-test-report-loading") { return }
+            if arguments.contains("--ledger-ui-test-report-incomplete") { continuation.yield(.incomplete); return }
+            if arguments.contains("--ledger-ui-test-report-failed") {
+                continuation.finish(throwing: ClientSummaryPhysicalReportFailure.scopeMismatch)
+                return
+            }
+            do {
+                continuation.yield(.ready(try clientSnapshot(accountId: accountId, projectId: projectId,
+                    asOf: .init(validating: 1_789_500_000_000))))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+
+    func readDownloadedClientSummaryPhysicalReport(accountId: AccountID, projectId: ProjectID,
+        asOf: ProtectedArtifactEpochMilliseconds) async throws -> ClientSummaryPhysicalReportSnapshot {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-export-denied") {
+            throw ClientSummaryPhysicalReportFailure.scopeMismatch
+        }
+        return try clientSnapshot(accountId: accountId, projectId: projectId, asOf: asOf)
+    }
+
+    private func clientSnapshot(accountId: AccountID, projectId: ProjectID,
+        asOf: ProtectedArtifactEpochMilliseconds) throws -> ClientSummaryPhysicalReportSnapshot {
+        let physical = try snapshot(accountId: accountId, projectId: projectId,
+            currency: CurrencyCode(validating: "USD"), asOf: asOf)
+        let items = try physical.groups.flatMap(\.rows).map { item in
+            ClientSummaryPhysicalReportItem(accountId: accountId, projectId: projectId,
+                itemId: item.itemId, placementId: item.placementId, spaceId: item.spaceId,
+                name: item.name, sku: item.sku,
+                category: .known(categoryId: try BudgetCategoryID(validating: "furnishings-ui"), name: "Furnishings"),
+                itemRevision: item.itemRevision, accounting: item.accounting)
+        }
+        return try .build(project: physical.project,
+            client: .known(clientId: ClientID(validating: "client-ui-test"), name: "Report Client", revision: 1),
+            spaces: physical.groups.compactMap { group in
+                group.spaceId.map { .init(accountId: accountId, projectId: projectId, spaceId: $0, name: group.name, revision: 1) }
+            }, items: items, provenance: .init(accountId: accountId, projectId: projectId,
+                principalId: PrincipalID(validating: "principal-ui-test"),
+                visibilityScopeID: .make(bytes: Data("client-report-ui".utf8)),
+                localDataVersion: .init(validating: "client-report-ui-1"),
+                authorityVersion: .init(validating: "client-summary-physical-v1"),
+                asOf: asOf, readiness: .ready, lastSyncedAt: .init(validating: 1_789_500_000_000)))
+    }
+
     func watchPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode) -> AsyncThrowingStream<PropertyManagementReportUpdate, Error> {
         AsyncThrowingStream { continuation in
@@ -626,10 +675,29 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
 
     private func snapshot(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode,
         asOf: ProtectedArtifactEpochMilliseconds) throws -> PropertyManagementReportSnapshot {
+                func accounting(_ id: String, spaceId: SpaceID? = nil, accounted: Bool = true) throws -> ProjectItemAccountingRow {
+                    let itemId = try ItemID(validating: id)
+                    let occurrences: [BillableItemAccountingOccurrence] = accounted ? [
+                        .init(id: try BillableItemOccurrenceID(validating: "charge-" + id),
+                              accountId: accountId, projectId: projectId, itemId: itemId,
+                              polarity: .charge, phase: .availableToInvoice)
+                    ] : []
+                    return try .init(evidence: .init(accountId: accountId, projectId: projectId,
+                        clientId: ClientID(validating: "client-ui-test"), itemId: itemId, spaceId: spaceId,
+                        billableOccurrences: occurrences), relationshipAbsenceIsAuthoritative: true)
+                }
                 let item = try PropertyManagementReportItem(accountId: accountId, projectId: projectId,
                     itemId: ItemID(validating: "report-ui-chair"), placementId: EntityID(validating: "report-ui-placement"),
-                    spaceId: nil, name: "Report test chair", sku: "CHAIR-001", marketValue: nil, itemRevision: 1)
-                var items = [item]
+                    spaceId: nil, name: "Report test chair", sku: "CHAIR-001", marketValue: nil, itemRevision: 1,
+                    accounting: accounting("report-ui-chair"))
+                // Existing report count/value assertions must exclude this
+                // known capture, even though it has a price in another currency.
+                let excluded = try PropertyManagementReportItem(accountId: accountId, projectId: projectId,
+                    itemId: ItemID(validating: "report-ui-capture"), placementId: EntityID(validating: "report-ui-capture-placement"),
+                    spaceId: nil, name: "Report excluded capture", sku: nil,
+                    marketValue: Money(minorUnits: 99999, currency: CurrencyCode(validating: "EUR")), itemRevision: 1,
+                    accounting: accounting("report-ui-capture", accounted: false))
+                var items = [item, excluded]
                 var spaces: [PropertyManagementReportSpace] = []
                 if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-grouped") {
                     let room = try SpaceID(validating: "report-ui-living-room")
@@ -639,11 +707,13 @@ private struct UITestFixtureReportWatcher: PropertyManagementReportWatching, Pro
                         .init(accountId: accountId, projectId: projectId,
                             itemId: ItemID(validating: "report-ui-table"), placementId: EntityID(validating: "report-ui-table-placement"),
                             spaceId: room, name: "Report test table", sku: "TABLE-002",
-                            marketValue: .init(minorUnits: 12345, currency: currency), itemRevision: 1),
+                            marketValue: .init(minorUnits: 12345, currency: currency), itemRevision: 1,
+                            accounting: accounting("report-ui-table", spaceId: room)),
                         .init(accountId: accountId, projectId: projectId,
                             itemId: ItemID(validating: "report-ui-lamp"), placementId: EntityID(validating: "report-ui-lamp-placement"),
                             spaceId: room, name: "Report test lamp", sku: nil,
-                            marketValue: .zero(currency: currency), itemRevision: 1)
+                            marketValue: .zero(currency: currency), itemRevision: 1,
+                            accounting: accounting("report-ui-lamp", spaceId: room))
                     ]
                 }
                 return try PropertyManagementReportSnapshot.build(
