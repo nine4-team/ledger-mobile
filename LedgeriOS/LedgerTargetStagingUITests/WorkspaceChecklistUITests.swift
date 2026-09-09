@@ -8,6 +8,28 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    private nonisolated let failureScreenshotLock = NSLock()
+
+    override func record(_ issue: XCTIssue) {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true",
+              issue.type == .assertionFailure, Thread.isMainThread,
+              failureScreenshotLock.try() else {
+            super.record(issue)
+            return
+        }
+        defer { failureScreenshotLock.unlock() }
+        // Attach to the issue itself so xcresulttool --only-failures exports
+        // the image. Do not capture a developer's desktop during local QA.
+        MainActor.assumeIsolated {
+            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            attachment.name = "Failure screen"
+            attachment.lifetime = .keepAlways
+            var captured = issue
+            captured.attachments.append(attachment)
+            super.record(captured)
+        }
+    }
+
     func testClientSummaryPhysicalPreviewAndIncompleteShare() throws {
         continueAfterFailure = false
         for incomplete in [false, true] {
@@ -982,6 +1004,67 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     #if os(iOS)
+    func testDownloadedItemImagePhotosDenied() throws {
+        try exerciseItemPhotosSaving(allow: false)
+    }
+
+    func testDownloadedItemImagePhotosSaved() throws {
+        try exerciseItemPhotosSaving(allow: true)
+    }
+
+    private func exerciseItemPhotosSaving(allow: Bool) throws {
+        // The existing CI flag identifies the disposable simulator. Never
+        // reset a developer's Photos permissions or save into their library.
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
+            throw XCTSkip("Photos permission/save checks require the disposable CI simulator")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.resetAuthorizationStatus(for: .photos)
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images"]
+        app.launch()
+        defer { app.terminate(); app.resetAuthorizationStatus(for: .photos) }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        item.tap()
+        openItemImages(in: app)
+        XCTAssertTrue(app.images["target-item-image-rendered"].waitForExistence(timeout: 10))
+        let save = app.buttons["target-item-image-save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        save.tap()
+        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let permission = system.alerts.firstMatch
+        XCTAssertTrue(permission.waitForExistence(timeout: 10), system.debugDescription)
+        XCTAssertTrue(permission.staticTexts.matching(NSPredicate(format:
+            "label CONTAINS[c] %@", "Photos")).firstMatch.exists)
+        let choices = permission.buttons.matching(NSPredicate(format: allow
+            ? "label CONTAINS[c] 'Allow' AND NOT (label BEGINSWITH[c] 'Don')"
+            : "label CONTAINS[c] 'Allow' AND label BEGINSWITH[c] 'Don'"))
+        XCTAssertEqual(choices.count, 1, system.debugDescription)
+        choices.firstMatch.tap()
+        let result = app.alerts["Image"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
+        let expected = allow ? "Image saved to Photos."
+            : "Allow Ledger to add photos in Settings, then try saving again."
+        XCTAssertTrue(result.staticTexts[expected].exists, app.debugDescription)
+        result.buttons["OK"].tap()
+        XCTAssertTrue(waitUntil { save.isEnabled })
+        XCTAssertFalse(app.descendants(matching: .any)
+            .matching(identifier: "target-item-image-exporting").firstMatch.exists)
+        XCTAssertTrue(app.images["target-item-image-rendered"].exists)
+        if !allow {
+            // Denied access stays explicit on retry, without another OS prompt.
+            save.tap()
+            XCTAssertTrue(result.waitForExistence(timeout: 5))
+            XCTAssertTrue(result.staticTexts[expected].exists)
+            result.buttons["OK"].tap()
+            XCTAssertTrue(waitUntil { save.isEnabled })
+        }
+    }
+
     func testDownloadedItemImageSwipeNavigationAndDismissal() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1773,12 +1856,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
         XCTAssertTrue(list.exists)
         for _ in 0..<6 {
-            if element.waitForExistence(timeout: 1) {
+            // XCTest's predicate wait polls after a second even for rows
+            // already present. Keep that wait only for genuinely missing rows.
+            if element.exists || element.waitForExistence(timeout: 1) {
                 // macOS can report a TextField hittable when only its bottom
                 // few pixels intersect the list; tapping its clipped center
                 // then focuses the Outline instead of the input.
                 if fullyInsideScrollView {
-                    let viewport = list.frame.insetBy(dx: 0, dy: 2)
+                    // A fully visible first row may touch the scroll view's
+                    // top edge. An inset incorrectly makes it unrevealable.
+                    let viewport = list.frame
                     if viewport.contains(element.frame), element.isHittable { return }
                     #if os(macOS)
                     // A full swipe overshoots this short field in the 366-point
@@ -1810,7 +1897,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         XCTAssertTrue(element.isHittable, app.debugDescription)
         if fullyInsideScrollView {
-            XCTAssertTrue(list.frame.insetBy(dx: 0, dy: 2).contains(element.frame), app.debugDescription)
+            XCTAssertTrue(list.frame.contains(element.frame), app.debugDescription)
         }
     }
 

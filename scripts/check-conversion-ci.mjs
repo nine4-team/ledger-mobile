@@ -208,7 +208,13 @@ function validateWorkflowSafety(lines) {
     const requiredAggregate = line === "    if: always()"
       && jobLines(lines, "target-environment").includes(line)
       && lines[index - 1] === "    needs: [conversion-control, local-supabase-provider-slices, native-macos, native-ios]";
-    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || requiredAggregate,
+    const owningJob = lines.slice(0, index).findLast(candidate => /^  [A-Za-z0-9_-]+:\s*$/.test(candidate));
+    const allowedFailureImages = ["  native-macos:", "  native-ios:"].includes(owningJob)
+      && line === "        if: failure()" && (
+      (lines[index - 1] === "      - name: Export native UI failure screenshots" && lines[index + 1] === "        run: |") ||
+      (lines[index - 1] === "      - name: Preserve native UI failure screenshots" && lines[index + 1] === "        uses: actions/upload-artifact@v4")
+    );
+    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || allowedFailureImages || requiredAggregate,
       "jobs must not conditionally skip or tolerate failures");
   }
 }
@@ -355,6 +361,32 @@ function validateTargetJob(lines) {
       `          name: native-ui-failure-${platform}-` + "${{ github.sha }}",
       ...paths, "          if-no-files-found: warn", "          retention-days: 1",
     ].join("\n")), "native UI evidence must retain platform-separated same-commit artifacts");
+    const extraction = platform === "macos" ? [
+      '          for result in /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult; do',
+      '            [ -d "$result" ] || continue',
+      '            xcrun xcresulttool export attachments --only-failures --path "$result" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/$(basename "$result")"',
+      '          done',
+    ] : [
+      '          if [ -d "$RUNNER_TEMP/ledger-report-ios.xcresult" ]; then',
+      '            xcrun xcresulttool export attachments --only-failures --path "$RUNNER_TEMP/ledger-report-ios.xcresult" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/ios"',
+      '          fi',
+    ];
+    const extractionStart = uniqueLineIndex(worker, /^      - name: Export native UI failure screenshots$/, "failure screenshot extraction");
+    const extractionEndOffset = worker.slice(extractionStart + 1).findIndex(line => /^      - name:/.test(line));
+    const extractionStep = worker.slice(extractionStart, extractionEndOffset < 0 ? worker.length : extractionStart + 1 + extractionEndOffset);
+    requireCondition(extractionStep.join("\n").trimEnd() === [
+      "      - name: Export native UI failure screenshots", "        if: failure()", "        run: |", ...extraction,
+    ].join("\n"), "failure screenshot extraction must retain its scoped native commands");
+    requireCondition(worker.join("\n").includes([
+      "      - name: Preserve native UI failure screenshots", "        if: failure()",
+      "        uses: actions/upload-artifact@v4", "        with:",
+      `          name: native-ui-screenshots-${platform}-` + "${{ github.sha }}",
+      "          path: |",
+      "            ${{ runner.temp }}/ledger-ui-failure-images/**/*.png",
+      "            ${{ runner.temp }}/ledger-ui-failure-images/**/*.jpg",
+      "            ${{ runner.temp }}/ledger-ui-failure-images/**/manifest.json",
+      "          if-no-files-found: warn", "          retention-days: 1",
+    ].join("\n")), "failure screenshot artifacts must exclude full bundles and videos");
   }
 }
 

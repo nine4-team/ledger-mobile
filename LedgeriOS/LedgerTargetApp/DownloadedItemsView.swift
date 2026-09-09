@@ -388,7 +388,7 @@ struct DownloadedItemsView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(selection.ids.isEmpty && !(reader is any DownloadedItemPlacementHistoryReading))
-                .accessibilityHint(selection.ids.isEmpty ? "Show downloaded location history" : "Toggle selection")
+                .accessibilityHint(selection.ids.isEmpty ? "Show downloaded Item details" : "Toggle selection")
                 .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
                 Text("Workflow: \(row.workflowStatus.displayLabel)")
                     .font(.caption).foregroundStyle(.secondary)

@@ -133,6 +133,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
 
+      - name: Export native UI failure screenshots
+        if: failure()
+        run: |
+          for result in /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult; do
+            [ -d "$result" ] || continue
+            xcrun xcresulttool export attachments --only-failures --path "$result" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/$(basename "$result")"
+          done
+
+      - name: Preserve native UI failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-screenshots-macos-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.png
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.jpg
+            ${{ runner.temp }}/ledger-ui-failure-images/**/manifest.json
+          if-no-files-found: warn
+          retention-days: 1
+
       - name: Confirm target checks did not rewrite tracked artifacts
         run: git diff --exit-code
 
@@ -184,6 +204,25 @@ jobs:
           path: |
             ${{ runner.temp }}/ledger-report-ios.xcresult
             /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Export native UI failure screenshots
+        if: failure()
+        run: |
+          if [ -d "$RUNNER_TEMP/ledger-report-ios.xcresult" ]; then
+            xcrun xcresulttool export attachments --only-failures --path "$RUNNER_TEMP/ledger-report-ios.xcresult" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/ios"
+          fi
+
+      - name: Preserve native UI failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-screenshots-ios-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.png
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.jpg
+            ${{ runner.temp }}/ledger-ui-failure-images/**/manifest.json
           if-no-files-found: warn
           retention-days: 1
 

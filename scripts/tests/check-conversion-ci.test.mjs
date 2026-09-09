@@ -29,6 +29,24 @@ function expectFailure(mutate, pattern) {
   assert.throws(() => validateConversionCI(value.packageJson, value.workflow), pattern);
 }
 
+test("small failure screenshots retain scoped extraction and never replace full evidence", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace('          done\n', '          done\n          echo extra-command\n');
+  }, /failure screenshot extraction/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace('  conversion-control:\n', '  conversion-control:\n      - name: Export native UI failure screenshots\n        if: failure()\n        run: |\n          echo unexpected\n');
+  }, /conditionally skip/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("xcrun xcresulttool export attachments --only-failures", "echo skipped");
+  }, /failure screenshot extraction/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("ledger-ui-failure-images/**/*.png", "ledger-ui-failure-images/**/*");
+  }, /failure screenshot artifacts/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("native-ui-screenshots-ios-${{ github.sha }}", "native-ui-screenshots-ios-latest");
+  }, /failure screenshot artifacts/);
+});
+
 test("iPhone UI cannot silently omit new Item or report interactions", () => {
   const selector = "-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test";
   for (const replacement of [
