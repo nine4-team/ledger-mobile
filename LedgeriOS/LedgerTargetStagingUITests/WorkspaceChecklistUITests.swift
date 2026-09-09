@@ -907,6 +907,73 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(rendered.exists)
     }
 
+    #if os(iOS)
+    func testDownloadedItemImageSwipeNavigationAndDismissal() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app)
+        item.tap()
+        let open = app.buttons["target-item-images-open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.tap()
+        let rendered = app.images["target-item-image-rendered"]
+        XCTAssertTrue(rendered.waitForExistence(timeout: 10))
+        let count = app.staticTexts["target-item-images-counter"]
+        rendered.swipeLeft()
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "2 of 2" })
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        rendered.swipeRight()
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "1 of 2" })
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        let fitFrame = rendered.frame
+        let viewportCenter = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: fitFrame.midX, dy: fitFrame.midY))
+        rendered.pinch(withScale: 2, velocity: 1)
+        let zoomOut = app.buttons["target-item-image-zoom-out"]
+        XCTAssertTrue(waitUntil { zoomOut.isEnabled }, "Native pinch must enlarge the image")
+        app.buttons["target-item-image-zoom-reset"].tap()
+        XCTAssertTrue(waitUntil { !zoomOut.isEnabled })
+        rendered.doubleTap()
+        let zoom = app.staticTexts["target-item-image-zoom-level"]
+        XCTAssertTrue(waitUntil { self.displayedText(zoom) == "2.5×" })
+        let zoomedX = rendered.frame.minX
+        viewportCenter.press(forDuration: 0.05,
+            thenDragTo: viewportCenter.withOffset(CGVector(dx: -60, dy: 0)))
+        XCTAssertTrue(waitUntil { abs(rendered.frame.minX - zoomedX) > 10 },
+            "Zoomed drag must actually move the image")
+        viewportCenter.press(forDuration: 0.05,
+            thenDragTo: viewportCenter.withOffset(CGVector(dx: 0, dy: 100)))
+        XCTAssertEqual(displayedText(count), "1 of 2", "Zoomed drags must pan, not page or dismiss")
+        XCTAssertTrue(app.buttons["target-item-images-done"].exists)
+        app.buttons["target-item-image-zoom-reset"].tap()
+        XCTAssertTrue(waitUntil { self.displayedText(zoom) == "1.0×" })
+        let start = rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 50)))
+        XCTAssertTrue(app.buttons["target-item-images-done"].exists, "Short drag must snap back")
+        rendered.swipeDown()
+        XCTAssertTrue(waitUntil { !app.buttons["target-item-images-done"].exists })
+        XCTAssertTrue(open.exists)
+        open.tap()
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        app.buttons["target-item-image-pin"].tap()
+        let unpin = app.buttons["target-item-image-unpin"]
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        rendered.swipeLeft()
+        let pinnedCount = app.staticTexts["target-pinned-images-counter"]
+        XCTAssertTrue(waitUntil { self.displayedText(pinnedCount) == "2 of 2" })
+        rendered.swipeDown()
+        XCTAssertTrue(unpin.exists, "Vertical swipe must not dismiss the pinned reference")
+    }
+    #endif
+
     func testDownloadedItemGroupsAndImmediateSource() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

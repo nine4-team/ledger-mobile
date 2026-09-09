@@ -5,9 +5,16 @@ import SwiftUI
 struct DownloadedImageZoomSurface: View {
     let image: CGImage
     @Binding var zoomScale: CGFloat
+    var onPage: ((Int) -> Void)? = nil
+    var onDismiss: (() -> Void)? = nil
 
     var body: some View {
+        #if os(iOS)
+        DownloadedImageNativeSurface(image: image, zoomScale: $zoomScale,
+            onPage: onPage, onDismiss: onDismiss)
+        #else
         DownloadedImageNativeSurface(image: image, zoomScale: $zoomScale)
+        #endif
     }
 }
 
@@ -26,9 +33,13 @@ import UIKit
 private struct DownloadedImageNativeSurface: UIViewRepresentable {
     let image: CGImage
     @Binding var zoomScale: CGFloat
+    let onPage: ((Int) -> Void)?
+    let onDismiss: (() -> Void)?
 
     func makeUIView(context: Context) -> ImageScrollView { ImageScrollView() }
     func updateUIView(_ view: ImageScrollView, context: Context) {
+        view.onPage = onPage
+        view.onDismiss = onDismiss
         view.onZoom = { value, expected in
             guard zoomScale == expected else { return false }
             zoomScale = value
@@ -36,9 +47,11 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
         }
         view.update(image: image, zoom: zoomScale)
     }
-    static func dismantleUIView(_ view: ImageScrollView, coordinator: ()) { view.onZoom = nil }
+    static func dismantleUIView(_ view: ImageScrollView, coordinator: ()) {
+        view.onZoom = nil; view.onPage = nil; view.onDismiss = nil
+    }
 
-    final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
+    final class ImageScrollView: UIScrollView, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         let pixels = UIImageView()
         var source: CGImage?
         var viewport = CGSize.zero
@@ -46,6 +59,10 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
         var boundZoom: CGFloat = 1
         var reporting = false
         var arranging = false
+        var onPage: ((Int) -> Void)?
+        var onDismiss: (() -> Void)?
+        private lazy var navigationPan = UIPanGestureRecognizer(target: self, action: #selector(navigate(_:)))
+        private var draggingVertically = false
 
         init() {
             super.init(frame: .zero)
@@ -63,8 +80,47 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
             let gesture = UITapGestureRecognizer(target: self, action: #selector(doubleTap(_:)))
             gesture.numberOfTapsRequired = 2
             addGestureRecognizer(gesture)
+            navigationPan.maximumNumberOfTouches = 1
+            navigationPan.delegate = self
+            addGestureRecognizer(navigationPan)
+            // At fit, this gesture owns paging/dismissal. When zoomed it
+            // declines immediately, leaving the native scroll view's pan intact.
+            panGestureRecognizer.require(toFail: navigationPan)
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            guard gestureRecognizer === navigationPan else {
+                return super.gestureRecognizerShouldBegin(gestureRecognizer)
+            }
+            guard zoomScale <= 1.01 else { return false }
+            let velocity = navigationPan.velocity(in: self)
+            return abs(velocity.x) > abs(velocity.y) ? onPage != nil : onDismiss != nil
+        }
+
+        @objc private func navigate(_ gesture: UIPanGestureRecognizer) {
+            let delta = gesture.translation(in: superview)
+            switch gesture.state {
+            case .began:
+                let velocity = gesture.velocity(in: superview)
+                draggingVertically = abs(velocity.y) >= abs(velocity.x)
+            case .changed:
+                if draggingVertically, onDismiss != nil {
+                    transform = CGAffineTransform(translationX: 0, y: max(-300, min(300, delta.y)))
+                    alpha = max(0.4, 1 - abs(delta.y) / 300)
+                }
+            case .ended, .cancelled, .failed:
+                let completed = gesture.state == .ended && zoomScale <= 1.01
+                UIView.animate(withDuration: 0.2) { self.transform = .identity; self.alpha = 1 }
+                if completed {
+                    if draggingVertically {
+                        if abs(delta.y) > 90 { onDismiss?() }
+                    } else if abs(delta.x) > 50 { onPage?(delta.x < 0 ? 1 : -1) }
+                }
+                draggingVertically = false
+            default: break
+            }
+        }
 
         func update(image: CGImage, zoom: CGFloat) {
             // An unchanged SwiftUI echo must not undo a newer native gesture;

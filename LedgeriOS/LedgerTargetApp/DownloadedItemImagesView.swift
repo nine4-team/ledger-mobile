@@ -55,12 +55,16 @@ struct DownloadedItemImagesView: View {
                         let selected = catalog.images.first {
                             $0.id.rawValue.utf8.elementsEqual((selection?.rawValue ?? "").utf8)
                         } ?? catalog.primaryImage!
+                        let index = catalog.images.firstIndex { $0 == selected } ?? 0
                         DownloadedItemPhotoView(accountId: accountId, itemId: itemId, image: selected,
-                            reader: reader, compact: isPinned)
+                            reader: reader, compact: isPinned,
+                            onPage: catalog.images.count > 1 ? { direction in
+                                selection = catalog.images[(index + direction + catalog.images.count) % catalog.images.count].id
+                            } : nil,
+                            onDismiss: isPinned ? nil : { dismiss() })
                             .id([accountId.rawValue, itemId.rawValue, selected.referenceId.rawValue,
                                  String(selected.setRevision), selected.object.attachmentId.rawValue,
                                  selected.object.contentSHA256.rawValue])
-                        let index = catalog.images.firstIndex { $0 == selected } ?? 0
                         if catalog.images.count > 1 { HStack {
                             Button("Previous") { selection = catalog.images[(index + catalog.images.count - 1) % catalog.images.count].id }
                                 .accessibilityIdentifier(isPinned ? "target-pinned-images-previous" : "target-item-images-previous")
@@ -101,6 +105,8 @@ private struct DownloadedItemPhotoView: View {
     let image: DownloadedItemImage
     let reader: any DownloadedItemImageReading
     var compact = false
+    var onPage: ((Int) -> Void)? = nil
+    var onDismiss: (() -> Void)? = nil
     @State private var rendered: CGImage?
     @State private var message = "Loading image…"
     @State private var refresh = UUID()
@@ -113,7 +119,8 @@ private struct DownloadedItemPhotoView: View {
     var body: some View {
         VStack {
             if let rendered {
-                DownloadedImageZoomSurface(image: rendered, zoomScale: $scale)
+                DownloadedImageZoomSurface(image: rendered, zoomScale: $scale,
+                    onPage: onPage, onDismiss: onDismiss)
                     .frame(minHeight: compact ? 0 : 200)
                 if !compact { HStack {
                     Button("Zoom out") { scale = max(1, scale - 0.5) }
