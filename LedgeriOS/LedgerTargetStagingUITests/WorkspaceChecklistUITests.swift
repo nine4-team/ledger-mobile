@@ -849,7 +849,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testDownloadedItemReadOnlyDetails() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -886,8 +886,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let history = app.staticTexts["target-item-history-partial"]
         reveal(history, in: app, fullyInsideScrollView: true, within: scroll)
         XCTAssertTrue(displayedText(history).contains("Payments, sales and refunds are not shown here."))
+        let actions = app.descendants(matching: .any)
+            .matching(identifier: "target-item-detail-actions").firstMatch
+        XCTAssertTrue(actions.exists)
+        let exerciseClipboard = ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true"
+        if exerciseClipboard {
+            actions.tap()
+            #if os(macOS)
+            let copyID = app.menuItems["Copy ID"]
+            #else
+            let copyID = app.buttons["Copy ID"]
+            #endif
+            XCTAssertTrue(copyID.waitForExistence(timeout: 5))
+            copyID.tap()
+        }
         app.buttons["target-item-history-done"].tap()
         XCTAssertTrue(item.waitForExistence(timeout: 5))
+        if exerciseClipboard {
+            #if os(macOS)
+            XCTAssertEqual(NSPasteboard.general.string(forType: .string), "physical-ui-chair")
+            #else
+            assertPastedItemIDs("physical-ui-chair", in: app)
+            #endif
+        }
     }
 
     func testDownloadedItemImageGallery() throws {
@@ -916,8 +937,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let rendered = app.images["target-item-image-rendered"]
         XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
         revealImageControls(in: app)
-        let count = app.staticTexts["target-item-images-counter"]
-        XCTAssertTrue(count.label == "1 of 2" || (count.value as? String) == "1 of 2")
+        assertImageCounter("1 of 2", in: app)
         let imageFrame = rendered.frame
         XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
             "Controls auto-hide at fit zoom\n\(app.debugDescription)")
@@ -955,17 +975,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { zoomOut.exists && !zoomOut.isEnabled })
         tapImageControl("target-item-image-zoom-in", in: app)
         tapImageControl("target-item-images-next", in: app)
-        XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
+        assertImageCounter("2 of 2", in: app)
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         revealImageControls(in: app)
         XCTAssertTrue(waitUntil { zoomOut.exists && !zoomOut.isEnabled && !resetZoom.exists })
         // Both directions wrap through the source set, as in the shipped viewer.
         tapImageControl("target-item-images-next", in: app)
-        XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
+        assertImageCounter("1 of 2", in: app)
         tapImageControl("target-item-images-previous", in: app)
-        XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
+        assertImageCounter("2 of 2", in: app)
         tapImageControl("target-item-images-next", in: app)
-        XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
+        assertImageCounter("1 of 2", in: app)
         let pin = app.buttons["target-item-image-pin"]
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         pin.tap()
@@ -1164,11 +1184,21 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
         // Already-visible controls may legitimately auto-hide while a redundant
         // predicate wait starts. Only await a reveal after actually requesting it.
-        if zoomIn.isHittable { return }
+        if zoomIn.exists && zoomIn.isHittable { return }
         let image = app.images["target-item-image-rendered"]
-        XCTAssertTrue(image.waitForExistence(timeout: 5))
+        XCTAssertTrue(image.exists || image.waitForExistence(timeout: 5))
         image.tap()
-        XCTAssertTrue(waitUntil { zoomIn.isHittable }, "Single tap reveals image controls")
+        // Do not insert XCTest's one-second predicate polling delay after an
+        // already-completed tap: these controls intentionally auto-hide.
+        XCTAssertTrue(zoomIn.exists || zoomIn.waitForExistence(timeout: 5))
+        XCTAssertTrue(zoomIn.isHittable, "Single tap reveals image controls")
+    }
+
+    private func assertImageCounter(_ expected: String, in app: XCUIApplication) {
+        revealImageControls(in: app)
+        let counter = app.staticTexts["target-item-images-counter"]
+        XCTAssertTrue(counter.exists)
+        XCTAssertEqual(displayedText(counter), expected)
     }
 
     private func tapImageControl(_ identifier: String, in app: XCUIApplication) {
@@ -1871,7 +1901,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true,
                         fullyInsideScrollView: Bool = false, within scrollView: XCUIElement? = nil) {
         #if os(iOS)
-        let list = scrollView ?? app.collectionViews.firstMatch
+        let workspace = app.scrollViews["target-workspace-scroll"]
+        let list = scrollView ?? (workspace.exists ? workspace : app.collectionViews.firstMatch)
         #elseif os(macOS)
         let list = scrollView ?? app.scrollViews.firstMatch
         #endif

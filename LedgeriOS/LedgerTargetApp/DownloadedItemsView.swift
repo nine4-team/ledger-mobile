@@ -421,12 +421,7 @@ struct DownloadedItemsView: View {
     }
 
     private func copyToClipboard(_ payload: String) {
-        #if os(iOS)
-        UIPasteboard.general.string = payload
-        #elseif os(macOS)
-        NSPasteboard.general.clearContents()
-        copyFailed = !NSPasteboard.general.setString(payload, forType: .string)
-        #endif
+        copyFailed = !copyItemIDsToClipboard(payload)
     }
 
     private func resetContext() {
@@ -447,6 +442,16 @@ struct DownloadedItemsView: View {
     }
 }
 
+@MainActor private func copyItemIDsToClipboard(_ payload: String) -> Bool {
+    #if os(iOS)
+    UIPasteboard.general.string = payload
+    return true
+    #elseif os(macOS)
+    NSPasteboard.general.clearContents()
+    return NSPasteboard.general.setString(payload, forType: .string)
+    #endif
+}
+
 private struct DownloadedItemDetailView: View {
     let accountId: AccountID
     let itemId: ItemID
@@ -463,6 +468,7 @@ private struct DownloadedItemDetailView: View {
     @State private var notesExpanded = true
     @State private var detailsExpanded = true
     @State private var historyExpanded = true
+    @State private var copyFailed = false
     private struct Request: Equatable {
         let accountBytes: [UInt8]
         let itemBytes: [UInt8]
@@ -523,6 +529,14 @@ private struct DownloadedItemDetailView: View {
             HStack {
                 Text("Item details").font(.headline)
                 Spacer()
+                if hasCurrentItem {
+                    Menu("Item actions") {
+                        Button("Copy ID") {
+                            guard hasCurrentItem else { return }
+                            copyFailed = !copyItemIDsToClipboard(itemId.rawValue)
+                        }.accessibilityIdentifier("target-item-detail-copy-id")
+                    }.accessibilityIdentifier("target-item-detail-actions")
+                }
                 Button("Done") { dismiss() }.accessibilityIdentifier("target-item-history-done")
             }
             ScrollView {
@@ -550,6 +564,9 @@ private struct DownloadedItemDetailView: View {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
         .onDisappear { model.clear() }
+        .alert("Could not copy Item ID", isPresented: $copyFailed) {
+            Button("OK", role: .cancel) {}
+        } message: { Text("Try copying the Item ID again.") }
         #if os(iOS)
         .fullScreenCover(isPresented: $showImages) { imageGallery }
         #else
@@ -557,6 +574,12 @@ private struct DownloadedItemDetailView: View {
             imageGallery
         }
         #endif
+    }
+
+    private var hasCurrentItem: Bool {
+        guard case .downloaded(let history) = model.state else { return false }
+        return history.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8)
+            && history.itemId.rawValue.utf8.elementsEqual(itemId.rawValue.utf8)
     }
 
     @ViewBuilder private func itemDetails(_ history: DownloadedItemPlacementHistory) -> some View {

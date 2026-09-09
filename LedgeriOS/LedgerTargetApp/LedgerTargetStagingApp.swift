@@ -72,7 +72,8 @@ private struct TargetStagingRootView: View {
             Group {
                 if let environment {
                     let diagnostics = environment.diagnostics
-                    List {
+                    ScrollView {
+                      VStack(alignment: .leading, spacing: 16) {
                         Section("Target Environment") {
                             LabeledContent("Environment", value: diagnostics.environment.rawValue)
                             LabeledContent("Build profile", value: diagnostics.buildProfile.rawValue)
@@ -91,8 +92,10 @@ private struct TargetStagingRootView: View {
                         }
 
                         OfflineProviderSpikeView(environment: environment)
+                      }.frame(maxWidth: .infinity, alignment: .leading).padding()
                     }
                     .itemThumbnailViewport()
+                    .accessibilityIdentifier("target-workspace-scroll")
                 } else {
                     ContentUnavailableView(
                         "Target Startup Refused",

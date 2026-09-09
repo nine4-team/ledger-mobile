@@ -29,13 +29,16 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
 
             #if os(iOS)
             if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-copy-receiver") ||
+                ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-detail-copy") ||
                 ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-groups") {
                 UITestReportCopyReceiver(showsExactText:
+                    ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-detail-copy") ||
                     ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-groups"))
             }
             #endif
 
-            List {
+            ScrollView {
+              VStack(alignment: .leading, spacing: 16) {
                 Section("Fixture evidence") {
                     Button("Simulate Account removal") { fixture.simulateRemoval() }
                         .accessibilityIdentifier("target-ui-fixture-remove-account")
@@ -50,8 +53,10 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                     ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model,
                         accountCurrency: try! CurrencyCode(validating: "USD"))
                 }
+              }.frame(maxWidth: .infinity, alignment: .leading).padding()
             }
             .itemThumbnailViewport()
+            .accessibilityIdentifier("target-workspace-scroll")
         }
         .task { await fixture.start() }
         .onChange(of: fixture.access.isLocked) { _, locked in
