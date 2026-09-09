@@ -1929,9 +1929,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     private func displayedText(_ element: XCUIElement) -> String {
-        // Native macOS StaticText exposes its content as AXValue; iOS uses
-        // AXLabel. Keep the exact expected text assertion on both platforms.
+        // Native macOS StaticText exposes content as AXValue, but Buttons use
+        // AXLabel (their AXValue may be an empty string). Do not treat an empty
+        // StaticText value as missing: exact empty-content assertions stay exact.
         #if os(macOS)
+        if element.elementType == .button { return element.label }
         return (element.value as? String) ?? element.label
         #else
         return element.label

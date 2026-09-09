@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 404,
+  "stateVersion": 405,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,9 +23,9 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Navigation batch2e2c41208917874c3efcb2d9de2ad240c8aa9437 is pushed. Automatic CI34384262085: conversion102576471122/provider102576692448 PASS; Mac102577464261 and iPhone102577464417 running. No watcher for this run. Observe native results, including new Item→Space tests; do not claim runtime success yet.",
+      "Navigation batch2e2c41208917874c3efcb2d9de2ad240c8aa9437 CI34384262085: conversion/provider PASS; Mac1076native/156suites PASS, UI18/24. Five failures read empty Button AXValue; one gallery ambiguity fixed6db. Both new Space navigation tests stopped before tapping. iPhone102577464417 remains running; watch32148 follows this run. Current follow-on fixes Mac Button text extraction without weakening exact StaticText assertions; focused Mac typecheck and conversion checks passed. Await exact-commit UI proof.",
       "Prior CI34380834552/9123b68 TERMINAL FAILED. Watch34676 consumed exit1; do not resume. iPhone25/27 in1419.848s: gallery helper matched both pinned/full images; detail Copy receiver stayed Reading copied report. GroupCopy, Photos, both checklist interactions and refresh/removal passed. Mac1073native/1obsolete source-token expectation prevented UI; fixed2e2. Exact log /tmp/ledger-9123-ios-ci.log. Unified checklist owns per-behavior evidence.",
-      "Uncommitted follow-on: scope gallery helper image to existing full viewer container; use typed native String PasteButton only for exact-text clipboard fixture, PDF/CSV unchanged. Exact content assertions retained. Independent review found no concrete defect; app/iOS XCTest/native typed-Paste API compiles passed. Next conversion/diff gate then commit/push four scoped files once; workflow has no cancellation concurrency, so do not impose a prior-run serialization barrier. New automatic CI still required.",
+      "Follow-on committed/pushed6db74ff213b38a99a2c4cb76cd10f4516e1aed52. Automatic CI34385657700 running; no watcher. Gallery helper now scopes full viewer image; exact-text fixture uses typed native String paste, retaining exact clipboard assertions. Independent review and focused compiles/conversion/diff checks passed; runtime confirmation pending. Keep both running batch results distinct; no duplicate same-commit CI.",
       "Disk remains constrained; do not full-build or download large artifacts. Removed only regenerable Supabase debug/index159MiB, not sources/evidence/Firebase. Updated AppModel module /tmp/ledger-space-navigation-modules.YnrHwS. Node24 /Users/benjaminmackenzie/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node; Node20 cannot parse provider dependency. Do not repeat successful model/app checks merely for continuity. Product audit complete; O-065 remains unresolved; no hosted/migration/cutover completion."
     ]
   },
