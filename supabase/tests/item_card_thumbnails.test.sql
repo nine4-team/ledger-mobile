@@ -91,96 +91,96 @@ select ok(not has_function_privilege(role_name,
  'EXECUTE'),role_name||' cannot execute trusted publisher')
 from (values ('anon'),('authenticated'),('service_role')) r(role_name);
 insert into public.spike_items(id,account_id,description,created_by_principal_id)
-values ('thumb-item','account-primary','Thumbnail','principal-owner'),
- ('thumb-other','account-other','Foreign','principal-other');
+values ('tap-thumb-item','account-primary','Thumbnail','principal-owner'),
+ ('tap-thumb-other','account-other','Foreign','principal-other');
 insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
 select id,account,repeat('a',64),123,'image/jpeg',
  'accounts/'||account||'/attachments/'||id||'/'||repeat('a',64)
-from (values ('thumb-original','account-primary'),('thumb-small','account-primary'),
- ('thumb-orphan','account-primary'),('thumb-orphan-small','account-primary'),
- ('thumb-foreign','account-other'),('thumb-foreign-small','account-other')) f(id,account);
+from (values ('tap-thumb-original','account-primary'),('tap-thumb-small','account-primary'),
+ ('tap-thumb-orphan','account-primary'),('tap-thumb-orphan-small','account-primary'),
+ ('tap-thumb-foreign','account-other'),('tap-thumb-foreign-small','account-other')) f(id,account);
 insert into public.item_image_sets(id,account_id,item_id,revision,expected_count)
-values ('thumb-item','account-primary','thumb-item',1,1),
- ('thumb-other','account-other','thumb-other',1,1);
+values ('tap-thumb-item','account-primary','tap-thumb-item',1,1),
+ ('tap-thumb-other','account-other','tap-thumb-other',1,1);
 insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
-values ('thumb-ref','account-primary','thumb-item','thumb-original',1,0,true),
- ('thumb-other-ref','account-other','thumb-other','thumb-foreign',1,0,true);
+values ('tap-thumb-ref','account-primary','tap-thumb-item','tap-thumb-original',1,0,true),
+ ('tap-thumb-other-ref','account-other','tap-thumb-other','tap-thumb-foreign',1,0,true);
 insert into public.item_card_thumbnails values
- ('thumb-link','account-primary','thumb-original','thumb-small','item-card-300-jpeg-v1',300,200),
- ('thumb-orphan-link','account-primary','thumb-orphan','thumb-orphan-small','item-card-300-jpeg-v1',200,100),
- ('thumb-foreign-link','account-other','thumb-foreign','thumb-foreign-small','item-card-300-jpeg-v1',300,200);
+ ('tap-thumb-link','account-primary','tap-thumb-original','tap-thumb-small','item-card-300-jpeg-v1',300,200),
+ ('tap-thumb-orphan-link','account-primary','tap-thumb-orphan','tap-thumb-orphan-small','item-card-300-jpeg-v1',200,100),
+ ('tap-thumb-foreign-link','account-other','tap-thumb-foreign','tap-thumb-foreign-small','item-card-300-jpeg-v1',300,200);
 set constraints all immediate;
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-cross','account-primary','thumb-orphan-small','thumb-foreign-small','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-cross','account-primary','tap-thumb-orphan-small','tap-thumb-foreign-small','item-card-300-jpeg-v1',100,100)$$,
  '23503',null,'Cannot borrow another Account derivative');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-cross-source','account-primary','thumb-foreign','thumb-small','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-cross-source','account-primary','tap-thumb-foreign','tap-thumb-small','item-card-300-jpeg-v1',100,100)$$,
  '23503',null,'Cannot borrow another Account original');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-self','account-primary','thumb-small','thumb-small','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-self','account-primary','tap-thumb-small','tap-thumb-small','item-card-300-jpeg-v1',100,100)$$,
  '23514',null,'Original cannot masquerade as its own thumbnail');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-duplicate','account-primary','thumb-original','thumb-orphan-small','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-duplicate','account-primary','tap-thumb-original','tap-thumb-orphan-small','item-card-300-jpeg-v1',100,100)$$,
  '23505',null,'One derivative per immutable original and recipe');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-big','account-primary','thumb-small','thumb-original','item-card-300-jpeg-v1',301,100)$$,
+ ('tap-thumb-big','account-primary','tap-thumb-small','tap-thumb-original','item-card-300-jpeg-v1',301,100)$$,
  '23514',null,'Thumbnail dimensions bounded');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-recipe','account-primary','thumb-small','thumb-original','unknown',100,100)$$,
+ ('tap-thumb-recipe','account-primary','tap-thumb-small','tap-thumb-original','unknown',100,100)$$,
  '23514',null,'Unknown recipe rejected');
-insert into public.item_image_objects values ('thumb-png','account-primary',repeat('a',64),123,'image/png',
- 'accounts/account-primary/attachments/thumb-png/'||repeat('a',64));
+insert into public.item_image_objects values ('tap-thumb-png','account-primary',repeat('a',64),123,'image/png',
+ 'accounts/account-primary/attachments/tap-thumb-png/'||repeat('a',64));
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-wrong-format','account-primary','thumb-small','thumb-png','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-wrong-format','account-primary','tap-thumb-small','tap-thumb-png','item-card-300-jpeg-v1',100,100)$$,
  '23514',null,'JPEG recipe cannot point to PNG metadata');
-select throws_ok($$update public.item_card_thumbnails set thumbnail_attachment_id='thumb-orphan-small' where id='thumb-link'$$,
+select throws_ok($$update public.item_card_thumbnails set thumbnail_attachment_id='tap-thumb-orphan-small' where id='tap-thumb-link'$$,
  '55000',null,'Derivative identity immutable');
-select throws_ok($$delete from public.item_card_thumbnails where id='thumb-link'$$,
+select throws_ok($$delete from public.item_card_thumbnails where id='tap-thumb-link'$$,
  '55000',null,'No implicit derivative purge');
 select throws_ok('truncate public.item_card_thumbnails','55000',null,'No truncate bypass');
 insert into storage.objects(bucket_id,name)
-select 'ledger-attachments',storage_path from public.item_image_objects where id like 'thumb-%';
+select 'ledger-attachments',storage_path from public.item_image_objects where id like 'tap-thumb-%';
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
-select is((select count(*) from public.item_card_thumbnails where id like 'thumb-%'),1::bigint,
+select is((select count(*) from public.item_card_thumbnails where id like 'tap-thumb-%'),1::bigint,
  'Only live same-Account original exposes its derivative link');
-select is((select count(*) from public.item_image_objects where id like 'thumb-%'),2::bigint,
+select is((select count(*) from public.item_image_objects where id like 'tap-thumb-%'),2::bigint,
  'Original and small bytes metadata readable without recursive RLS');
 select set_config('storage.operation','storage.object.get_authenticated',true);
-select is((select count(*) from storage.objects where name like '%/thumb-%'),2::bigint,
+select is((select count(*) from storage.objects where name like '%/tap-thumb-%'),2::bigint,
  'GET admits original and derivative, not foreign or orphan bytes');
 select set_config('storage.operation','storage.object.sign',true);
-select is((select count(*) from storage.objects where name like '%/thumb-%'),0::bigint,'No signed URLs');
+select is((select count(*) from storage.objects where name like '%/tap-thumb-%'),0::bigint,'No signed URLs');
 select set_config('storage.operation','storage.object.list',true);
-select is((select count(*) from storage.objects where name like '%/thumb-%'),0::bigint,'No bucket listing');
+select is((select count(*) from storage.objects where name like '%/tap-thumb-%'),0::bigint,'No bucket listing');
 select throws_ok($$insert into public.item_card_thumbnails values
- ('thumb-forged','account-primary','thumb-small','thumb-orphan','item-card-300-jpeg-v1',100,100)$$,
+ ('tap-thumb-forged','account-primary','tap-thumb-small','tap-thumb-orphan','item-card-300-jpeg-v1',100,100)$$,
  '42501',null,'Readers cannot publish or forge derivative authority');
-select throws_ok($$update public.item_card_thumbnails set pixel_width=200 where id='thumb-link'$$,
+select throws_ok($$update public.item_card_thumbnails set pixel_width=200 where id='tap-thumb-link'$$,
  '42501',null,'Readers cannot rewrite metadata');
-select throws_ok($$delete from public.item_card_thumbnails where id='thumb-link'$$,
+select throws_ok($$delete from public.item_card_thumbnails where id='tap-thumb-link'$$,
  '42501',null,'Readers cannot remove link');
 reset role;
 -- Old references remain as evidence but must no longer authorize bytes.
-update public.item_image_sets set revision=2,expected_count=0 where id='thumb-item';
+update public.item_image_sets set revision=2,expected_count=0 where id='tap-thumb-item';
 set local role authenticated;
 select set_config('storage.operation','storage.object.get_authenticated',true);
-select is((select count(*) from public.item_card_thumbnails where id like 'thumb-%'),0::bigint,'Old reference does not authorize derivative');
-select is((select count(*) from public.item_image_objects where id like 'thumb-%'),0::bigint,'Old reference loses both objects');
-select is((select count(*) from storage.objects where name like '%/thumb-%'),0::bigint,'Old reference loses both GET paths');
+select is((select count(*) from public.item_card_thumbnails where id like 'tap-thumb-%'),0::bigint,'Old reference does not authorize derivative');
+select is((select count(*) from public.item_image_objects where id like 'tap-thumb-%'),0::bigint,'Old reference loses both objects');
+select is((select count(*) from storage.objects where name like '%/tap-thumb-%'),0::bigint,'Old reference loses both GET paths');
 reset role;
 set constraints all deferred;
-update public.item_image_sets set revision=3,expected_count=1 where id='thumb-item';
-insert into public.item_image_references values ('thumb-current','account-primary','thumb-item','thumb-original',3,0,true);
+update public.item_image_sets set revision=3,expected_count=1 where id='tap-thumb-item';
+insert into public.item_image_references values ('tap-thumb-current','account-primary','tap-thumb-item','tap-thumb-original',3,0,true);
 set constraints all immediate;
 set local role authenticated;
-select is((select count(*) from public.item_card_thumbnails where id like 'thumb-%'),1::bigint,'Reattached original reuses explicit immutable derivative');
+select is((select count(*) from public.item_card_thumbnails where id like 'tap-thumb-%'),1::bigint,'Reattached original reuses explicit immutable derivative');
 reset role;
 update public.spike_account_memberships set state='removed'
  where account_id='account-primary' and principal_id='principal-restricted';
 set local role authenticated;
-select is((select count(*) from public.item_card_thumbnails where id like 'thumb-%'),0::bigint,'Same JWT loses links after removal');
-select is((select count(*) from storage.objects where name like '%/thumb-%'),0::bigint,'Same JWT loses bytes after removal');
+select is((select count(*) from public.item_card_thumbnails where id like 'tap-thumb-%'),0::bigint,'Same JWT loses links after removal');
+select is((select count(*) from storage.objects where name like '%/tap-thumb-%'),0::bigint,'Same JWT loses bytes after removal');
 reset role;
 set local role anon;
 select throws_ok('select * from public.item_card_thumbnails','42501',null,'Anonymous access ungranted');

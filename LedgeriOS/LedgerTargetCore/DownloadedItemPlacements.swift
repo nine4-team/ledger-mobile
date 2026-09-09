@@ -376,6 +376,31 @@ public struct PhysicalItemPlacementHistoryInterval: Equatable, Sendable {
     }
 }
 
+/// Raw descriptive physical evidence only; no financial or command authority.
+public struct DownloadedItemDescriptiveDetails: Equatable, Sendable {
+    public let name: String?
+    public let description: String
+    public let sku: String?
+    public let source: String?
+    public let currentSource: String?
+    public let notes: String?
+    public let workflowStatusRaw: String?
+    public let isBookmarked: Bool?
+    public let createdAt: String?
+    public var displayName: String { name ?? description }
+    public var displaySource: String? { currentSource ?? source }
+    public var workflowStatus: ItemWorkflowStatus { .init(sourceValue: workflowStatusRaw) }
+
+    public init(name: String? = nil, description: String, sku: String? = nil,
+                source: String? = nil, currentSource: String? = nil, notes: String? = nil,
+                workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil, createdAt: String? = nil) {
+        self.name = name; self.description = description; self.sku = sku
+        self.source = source; self.currentSource = currentSource; self.notes = notes
+        self.workflowStatusRaw = workflowStatusRaw; self.isBookmarked = isBookmarked
+        self.createdAt = createdAt
+    }
+}
+
 /// Newest intervals first. Never asserts complete history: older placements or
 /// labels may not be downloaded, and financial provenance is not included.
 public struct DownloadedItemPlacementHistory: Equatable, Sendable {
@@ -383,15 +408,16 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let itemId: ItemID
     public let description: String
     public let intervals: [PhysicalItemPlacementHistoryInterval]
+    public let details: DownloadedItemDescriptiveDetails?
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
-                intervals: [PhysicalItemPlacementHistoryInterval]) throws {
+                intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
         self.accountId = accountId; self.itemId = itemId; self.description = description
-        self.intervals = intervals
+        self.intervals = intervals; self.details = details
     }
 }
 

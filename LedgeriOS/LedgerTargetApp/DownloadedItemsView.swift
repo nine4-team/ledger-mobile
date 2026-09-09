@@ -161,9 +161,12 @@ struct DownloadedItemsView: View {
         .sheet(item: $selectedItem) { selection in
             if selection.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8),
                let historyReader = reader as? any DownloadedItemPlacementHistoryReading {
-                DownloadedItemHistoryView(accountId: accountId, itemId: selection.itemId, reader: historyReader)
+                DownloadedItemDetailView(accountId: accountId, itemId: selection.itemId, reader: historyReader)
             }
         }
+        .alert("Could not copy Item IDs", isPresented: $copyFailed) {
+            Button("OK", role: .cancel) {}
+        } message: { Text("Try copying the Item IDs again.") }
         .onChange(of: accountId) { _, _ in resetContext() }
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
@@ -202,17 +205,9 @@ struct DownloadedItemsView: View {
                     // snapshot that happened to render this button.
                     guard let current = selectionEvidence,
                           let payload = selection.copyPayload(visible: current) else { return }
-                    #if os(iOS)
-                    UIPasteboard.general.string = payload
-                    #elseif os(macOS)
-                    NSPasteboard.general.clearContents()
-                    copyFailed = !NSPasteboard.general.setString(payload, forType: .string)
-                    #endif
+                    copyToClipboard(payload)
                 }
                 .accessibilityIdentifier("target-items-copy-ids")
-                .alert("Could not copy Item IDs", isPresented: $copyFailed) {
-                    Button("OK", role: .cancel) {}
-                } message: { Text("Try copying the selected IDs again.") }
                 Button("Clear selection") { selection.clear() }
                     .accessibilityIdentifier("target-items-selection-clear")
                 Text("Selected price totals and bulk edits are not available yet.")
@@ -410,6 +405,25 @@ struct DownloadedItemsView: View {
                     .accessibilityIdentifier("target-item-bookmark-\(row.itemId.rawValue)")
             }
         }
+        .contextMenu {
+            Button("Copy ID") {
+                guard let current = selectionEvidence else { return }
+                var selectedRow = DownloadedItemSelection()
+                selectedRow.toggle(itemId: row.itemId, visible: [row.itemId])
+                guard let payload = selectedRow.copyPayload(visible: current) else { return }
+                copyToClipboard(payload)
+            }
+            .accessibilityIdentifier("target-item-copy-id-\(row.itemId.rawValue)")
+        }
+    }
+
+    private func copyToClipboard(_ payload: String) {
+        #if os(iOS)
+        UIPasteboard.general.string = payload
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents()
+        copyFailed = !NSPasteboard.general.setString(payload, forType: .string)
+        #endif
     }
 
     private func resetContext() {
@@ -430,7 +444,7 @@ struct DownloadedItemsView: View {
     }
 }
 
-private struct DownloadedItemHistoryView: View {
+private struct DownloadedItemDetailView: View {
     let accountId: AccountID
     let itemId: ItemID
     let reader: any DownloadedItemPlacementHistoryReading
@@ -442,6 +456,10 @@ private struct DownloadedItemHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model = DownloadedItemHistoryModel()
     @State private var refresh = UUID()
+    @State private var mediaExpanded = true
+    @State private var notesExpanded = true
+    @State private var detailsExpanded = true
+    @State private var historyExpanded = true
     private struct Request: Equatable {
         let accountBytes: [UInt8]
         let itemBytes: [UInt8]
@@ -500,16 +518,10 @@ private struct DownloadedItemHistoryView: View {
     private var historyContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Location history").font(.headline)
+                Text("Item details").font(.headline)
                 Spacer()
-                if reader is any DownloadedItemImageReading {
-                    Button("Images") { showImages = true }.accessibilityIdentifier("target-item-images-open")
-                }
                 Button("Done") { dismiss() }.accessibilityIdentifier("target-item-history-done")
             }
-            Text("Downloaded locations only. Older moves may be missing. Payments, sales and refunds are not shown here.")
-                .font(.caption).foregroundStyle(.secondary)
-                .accessibilityIdentifier("target-item-history-partial")
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     switch model.state {
@@ -520,26 +532,12 @@ private struct DownloadedItemHistoryView: View {
                     case .downloaded(let history):
                         if history.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8),
                            history.itemId.rawValue.utf8.elementsEqual(itemId.rawValue.utf8) {
-                            Text(history.description.isEmpty ? "Untitled Item" : history.description).font(.title3)
-                            if history.intervals.isEmpty {
-                                Text("No location history is downloaded for this Item yet.")
-                            }
-                            ForEach(history.intervals, id: \.placementId) { interval in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(location(interval)).font(.subheadline)
-                                    if interval.spaceId != nil {
-                                        Text(interval.spaceDisplayName ?? "Space name not downloaded")
-                                    }
-                                    Text("From: \(interval.startedAt)")
-                                    Text(interval.endedAt.map { "Until: \($0)" } ?? "Current downloaded location")
-                                }
-                                .accessibilityIdentifier("target-item-history-\(interval.placementId.rawValue)")
-                            }
+                            itemDetails(history)
                         } else { ProgressView("Loading location history…") }
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
-            }
-            Button("Refresh history") { refresh = UUID() }
+            }.accessibilityIdentifier("target-item-detail-scroll")
+            Button("Refresh details") { refresh = UUID() }
                 .accessibilityIdentifier("target-item-history-refresh")
         }
         .padding()
@@ -556,6 +554,87 @@ private struct DownloadedItemHistoryView: View {
             imageGallery
         }
         #endif
+    }
+
+    @ViewBuilder private func itemDetails(_ history: DownloadedItemPlacementHistory) -> some View {
+        let name = history.details?.displayName ?? history.description
+        Text(name.isEmpty ? "Untitled Item" : name).font(.title3)
+            .accessibilityIdentifier("target-item-detail-name")
+        if let current = history.intervals.first(where: { $0.endedAt == nil }) {
+            detailField("Current location", location(current), id: "target-item-detail-current-location")
+            detailField("Space", current.spaceId == nil ? "Not assigned to a Space"
+                : (current.spaceDisplayName ?? "Space name not downloaded"), id: "target-item-detail-space")
+        } else {
+            Text("Current location not downloaded").foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-item-detail-current-location")
+        }
+        detailSection("Media", id: "target-item-detail-media-section", isExpanded: $mediaExpanded) {
+            if reader is any DownloadedItemImageReading {
+                Button("Images") { showImages = true }.accessibilityIdentifier("target-item-images-open")
+            } else { Text("Images are not available in this download.") }
+        }
+        detailSection("Notes", id: "target-item-detail-notes-section", isExpanded: $notesExpanded) {
+            if let details = history.details {
+                Text(details.notes.flatMap { $0.isEmpty ? nil : $0 } ?? "No notes")
+                    .textSelection(.enabled)
+                    .accessibilityIdentifier("target-item-detail-notes")
+            } else { Text("Notes not downloaded").accessibilityIdentifier("target-item-detail-notes-unavailable") }
+        }
+        detailSection("Details", id: "target-item-detail-details-section", isExpanded: $detailsExpanded) {
+            if let details = history.details {
+                VStack(alignment: .leading, spacing: 8) {
+                    detailField("Description", details.description.isEmpty ? "No description" : details.description,
+                                id: "target-item-detail-description")
+                    detailField("Source / vendor", details.source, id: "target-item-detail-source")
+                    detailField("Immediate source", details.displaySource, id: "target-item-detail-current-source")
+                    detailField("SKU", details.sku, id: "target-item-detail-sku")
+                    detailField("Workflow status", details.workflowStatus.displayLabel, id: "target-item-detail-workflow")
+                    detailField("Bookmarked", details.isBookmarked.map { $0 ? "Yes" : "No" }, id: "target-item-detail-bookmark")
+                    detailField("Created", details.createdAt, id: "target-item-detail-created")
+                    Text("Editing and financial details are not available here yet.").font(.caption).foregroundStyle(.secondary)
+                }
+            } else { Text("Descriptive details not downloaded").accessibilityIdentifier("target-item-detail-unavailable") }
+        }
+        detailSection("History", id: "target-item-detail-history-section", isExpanded: $historyExpanded) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Downloaded locations only. Older moves may be missing. Payments, sales and refunds are not shown here.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-item-history-partial")
+                if history.intervals.isEmpty { Text("No location history is downloaded for this Item yet.") }
+                ForEach(history.intervals, id: \.placementId) { interval in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(location(interval)).font(.subheadline)
+                        if interval.spaceId != nil { Text(interval.spaceDisplayName ?? "Space name not downloaded") }
+                        Text("From: \(interval.startedAt)")
+                        Text(interval.endedAt.map { "Until: \($0)" } ?? "Current downloaded location")
+                    }.accessibilityIdentifier("target-item-history-\(interval.placementId.rawValue)")
+                }
+            }
+        }
+    }
+
+    private func detailSection<Content: View>(_ title: String, id: String,
+        isExpanded: Binding<Bool>, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { isExpanded.wrappedValue.toggle() } label: {
+                HStack {
+                    Image(systemName: isExpanded.wrappedValue ? "chevron.down" : "chevron.right")
+                    Text(title).font(.headline)
+                    Spacer()
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(title)
+                .accessibilityValue(isExpanded.wrappedValue ? "Expanded" : "Collapsed")
+                .accessibilityIdentifier(id)
+            if isExpanded.wrappedValue { content().padding(.leading, 12) }
+        }
+    }
+
+    private func detailField(_ label: String, _ value: String?, id: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(value.flatMap { $0.isEmpty ? nil : $0 } ?? "Not recorded")
+                .textSelection(.enabled).accessibilityIdentifier(id)
+        }
     }
 
     @ViewBuilder private var imageGallery: some View {

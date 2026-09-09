@@ -584,14 +584,17 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 .init(placementId: EntityID(validating: "history-earlier"),
                     scope: .businessInventory, spaceId: SpaceID(validating: "old-space"),
                     startedAt: "2026-09-01T12:00:00Z", endedAt: "2026-09-02T12:00:00Z")
-            ])
+            ], details: .init(name: "Downloaded test chair", description: "Oak chair with woven seat",
+                sku: "CHAIR-001", source: "Original vendor", currentSource: "Design Inventory",
+                notes: "Keep the woven seat dry.\nPlace beside the window.",
+                workflowStatusRaw: "to-purchase", isBookmarked: true, createdAt: "2026-09-01T11:00:00Z"))
     }
     func watchDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemPlacementHistory, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     continuation.yield(try await readDownloadedItemPlacementHistory(accountId: accountId, itemId: itemId))
-                    continuation.finish()
+                    // Remain a live subscription until the Item route cancels.
                 } catch { continuation.finish(throwing: error) }
             }
             continuation.onTermination = { _ in task.cancel() }

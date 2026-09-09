@@ -10,6 +10,64 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Exact Item details preserve raw notes and timestamp across encrypted reopen")
+    func descriptiveDetails() async throws {
+        let item = try ItemID(validating: "chair")
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let history = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            let details = try #require(history.details)
+            #expect(details.name == "" && details.displayName == "")
+            #expect(details.description == "Chair")
+            #expect(details.notes == "  Notes\nsecond line  ")
+            #expect(details.sku == " SKU " && details.source == " Vendor ")
+            #expect(details.currentSource == "" && details.displaySource == "")
+            #expect(details.createdAt == "2026-01-01T12:34:56.123456789Z")
+            #expect(details.workflowStatus == .toPurchase && details.workflowStatusRaw == "to-purchase")
+            #expect(details.isBookmarked == true)
+            _ = try await db.execute(sql: "UPDATE spike_items SET notes='',name=NULL,current_source=NULL,bookmark=NULL WHERE id='chair'", parameters: nil)
+            let empty = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            #expect(empty.details?.notes == "" && empty.details?.displayName == "Chair")
+            #expect(empty.details?.displaySource == " Vendor " && empty.details?.isBookmarked == nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "missing"))
+            }
+            _ = try await db.execute(sql: "UPDATE spike_items SET account_id='foreign' WHERE id='chair'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            }
+        }) { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).details?.notes == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET name='',sku=' SKU ',source=' Vendor ',current_source='',notes=?,workflow_status='to-purchase',bookmark=1,created_at='2026-01-01T12:34:56.123456789Z' WHERE id='chair'", parameters: ["  Notes\nsecond line  "])
+        }
+    }
+
+    @Test("One history watch delivers descriptive changes and rejects removed Items")
+    func descriptiveHistoryWatch() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            var iterator = try reader.watchHistory(accountId: account, principalId: principal, itemId: item).makeAsyncIterator()
+            let initial = try await iterator.next()
+            #expect(initial?.first?.details?.notes == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET notes='Updated',source='Original',current_source='Immediate' WHERE id='chair'", parameters: nil)
+            var changed = false
+            while let rows = try await iterator.next() {
+                if rows.first?.details?.notes == "Updated" {
+                    #expect(rows.first?.details?.source == "Original")
+                    #expect(rows.first?.details?.displaySource == "Immediate")
+                    changed = true; break
+                }
+            }
+            #expect(changed)
+            _ = try await db.execute(sql: "DELETE FROM spike_items WHERE id='chair'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                while try await iterator.next() != nil { }
+            }
+        }
+    }
+
     @Test("Image count is explicit scoped metadata, survives restart and never invents No Image")
     func imageCountMetadata() async throws {
         try await withDatabase(reopen: { db in

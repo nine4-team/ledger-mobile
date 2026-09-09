@@ -11,11 +11,28 @@ struct DownloadedItemHistoryModelTests {
     func downloaded() async throws {
         let snapshot = try history()
         let model = DownloadedItemHistoryModel()
-        await model.load(accountId: account, itemId: item, reader: HistoryReader(values: [snapshot]))
+        let reader = HistoryReader(values: [snapshot], finishes: false)
+        let task = Task { await model.load(accountId: account, itemId: item, reader: reader) }
+        for _ in 0..<1000 {
+            if model.state == .downloaded(snapshot) { break }
+            await Task.yield()
+        }
         #expect(model.state == .downloaded(snapshot))
         #expect(snapshot.isPartial)
         model.clear()
+        task.cancel()
+        await task.value
         #expect(model.state == .idle)
+    }
+
+    @Test("Normal watch termination discards previously downloaded Item details")
+    func endedWatch() async throws {
+        let snapshot = try DownloadedItemPlacementHistory(accountId: account, itemId: item,
+            description: "Chair", intervals: [],
+            details: .init(description: "Chair", notes: "Protected notes"))
+        let model = DownloadedItemHistoryModel()
+        await model.load(accountId: account, itemId: item, reader: HistoryReader(values: [snapshot]))
+        #expect(model.state == .unavailable)
     }
 
     @Test("Foreign Account or Item update clears previously shown history", arguments: [false, true])
@@ -56,6 +73,7 @@ struct DownloadedItemHistoryModelTests {
 private struct HistoryReader: DownloadedItemPlacementHistoryReading {
     let values: [DownloadedItemPlacementHistory]
     var fails = false
+    var finishes = true
     enum Failure: Error { case unavailable }
     func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
         guard let first = values.first else { throw Failure.unavailable }
@@ -65,7 +83,7 @@ private struct HistoryReader: DownloadedItemPlacementHistoryReading {
         AsyncThrowingStream { continuation in
             for value in values { continuation.yield(value) }
             if fails { continuation.finish(throwing: Failure.unavailable) }
-            else { continuation.finish() }
+            else if finishes { continuation.finish() }
         }
     }
 }

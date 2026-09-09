@@ -823,6 +823,50 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testDownloadedItemReadOnlyDetails() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        item.tap()
+        let scroll = app.scrollViews["target-item-detail-scroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5))
+        for (id, expected) in [
+            ("name", "Downloaded test chair"), ("current-location", "Current test Project"),
+            ("space", "Current test Space"),
+            ("notes", "Keep the woven seat dry.\nPlace beside the window."),
+            ("description", "Oak chair with woven seat"), ("source", "Original vendor"),
+            ("current-source", "Design Inventory"),
+            ("sku", "CHAIR-001"), ("workflow", "To Purchase"), ("bookmark", "Yes"),
+            ("created", "2026-09-01T11:00:00Z")
+        ] {
+            let field = app.staticTexts["target-item-detail-\(id)"]
+            reveal(field, in: app, fullyInsideScrollView: true, within: scroll)
+            XCTAssertEqual(displayedText(field), expected)
+        }
+        for (section, fieldID) in [("notes", "notes"), ("details", "sku")] {
+            let toggle = app.buttons["target-item-detail-\(section)-section"]
+            reveal(toggle, in: app, fullyInsideScrollView: true, within: scroll)
+            XCTAssertEqual(toggle.value as? String, "Expanded")
+            toggle.tap()
+            let field = app.staticTexts["target-item-detail-\(fieldID)"]
+            XCTAssertTrue(field.waitForNonExistence(timeout: 5))
+            toggle.tap()
+            XCTAssertTrue(field.waitForExistence(timeout: 5))
+        }
+        let history = app.staticTexts["target-item-history-partial"]
+        reveal(history, in: app, fullyInsideScrollView: true, within: scroll)
+        XCTAssertTrue(displayedText(history).contains("Payments, sales and refunds are not shown here."))
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+    }
+
     func testDownloadedItemImageGallery() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -843,7 +887,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         item.tap()
         let images = app.buttons["target-item-images-open"]
         XCTAssertTrue(images.waitForExistence(timeout: 5))
-        images.tap()
+        openItemImages(in: app)
         let rendered = app.images["target-item-image-rendered"]
         XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
         revealImageControls(in: app)
@@ -907,13 +951,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(historyRefresh.isHittable)
         historyRefresh.tap()
         XCTAssertTrue(unpin.exists)
-        images.tap()
+        openItemImages(in: app)
         XCTAssertTrue(app.buttons["target-item-images-done"].waitForExistence(timeout: 5))
         app.buttons["target-item-images-done"].tap()
         XCTAssertTrue(unpin.waitForExistence(timeout: 5), "Opening and closing the gallery retains the existing pin")
         XCTAssertTrue(historyRefresh.waitForExistence(timeout: 5), "The parent Item route remains open")
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
-        images.tap()
+        openItemImages(in: app)
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         // Select and pin another reference without an intermediate unpin.
         tapImageControl("target-item-images-next", in: app)
@@ -923,14 +967,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
         app.buttons["target-pinned-images-next"].tap()
         XCTAssertTrue(waitUntil { pinnedCount.label == "1 of 2" || (pinnedCount.value as? String) == "1 of 2" })
-        images.tap()
+        openItemImages(in: app)
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         tapImageControl("target-item-images-next", in: app)
         pin.tap()
         XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
         unpin.tap()
         XCTAssertTrue(waitUntil { !unpin.exists && !rendered.exists })
-        images.tap()
+        openItemImages(in: app)
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         app.buttons["target-item-images-done"].tap()
         XCTAssertTrue(images.waitForExistence(timeout: 5))
@@ -952,7 +996,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         item.tap()
         let open = app.buttons["target-item-images-open"]
         XCTAssertTrue(open.waitForExistence(timeout: 5))
-        open.tap()
+        openItemImages(in: app)
         let viewer = app.otherElements["target-item-image-viewer"]
         XCTAssertTrue(viewer.waitForExistence(timeout: 5))
         XCTAssertGreaterThan(viewer.frame.height, app.frame.height * 0.85,
@@ -1005,7 +1049,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         rendered.swipeDown()
         XCTAssertTrue(waitUntil { !app.buttons["target-item-images-done"].exists })
         XCTAssertTrue(open.exists)
-        open.tap()
+        openItemImages(in: app)
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         app.buttons["target-item-image-pin"].tap()
         let unpin = app.buttons["target-item-image-unpin"]
@@ -1020,6 +1064,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
                       "The enclosing Item route must remain open after dragging its pinned image")
     }
     #endif
+
+    private func openItemImages(in app: XCUIApplication) {
+        let images = app.buttons["target-item-images-open"]
+        let scroll = app.scrollViews["target-item-detail-scroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5))
+        reveal(images, in: app, fullyInsideScrollView: true, within: scroll)
+        images.tap()
+    }
 
     private func revealImageControls(in app: XCUIApplication) {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
@@ -1114,6 +1166,22 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["target-items-filters-clear"].tap()
         XCTAssertTrue(expand.waitForExistence(timeout: 5))
         XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
+        reveal(other, in: app, fullyInsideScrollView: true)
+        #if os(macOS)
+        other.rightClick()
+        let copyID = app.menuItems["Copy ID"]
+        #else
+        other.press(forDuration: 1)
+        let copyID = app.buttons["Copy ID"]
+        #endif
+        XCTAssertTrue(copyID.waitForExistence(timeout: 5))
+        copyID.tap()
+        #if os(macOS)
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), "group-c")
+        #else
+        XCTAssertEqual(UIPasteboard.general.string, "group-c")
+        #endif
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "0 selected" })
     }
 
     func testDownloadedItemWorkflowStatusAndBookmarkFilters() throws {
@@ -1325,7 +1393,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(item, in: app)
         item.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Current test Project"].exists)
+        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-current-location"]), "Current test Project")
         XCTAssertTrue(app.staticTexts["Business Inventory"].exists)
         XCTAssertTrue(app.staticTexts["Space name not downloaded"].exists)
         app.buttons["target-item-history-refresh"].tap()
@@ -1621,12 +1689,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(physicalItem, in: app)
         physicalItem.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Current test Space"].exists)
+        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-space"]), "Current test Space")
         XCTAssertTrue(app.staticTexts["Current downloaded location"].exists)
         if inventory {
-            XCTAssertFalse(app.staticTexts["Current test Project"].exists)
+            XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-current-location"]), "Business Inventory")
         } else {
-            XCTAssertTrue(app.staticTexts["Current test Project"].exists)
+            XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-current-location"]), "Current test Project")
         }
         app.buttons["target-item-history-done"].tap()
         XCTAssertTrue(physicalItem.waitForExistence(timeout: 5))
@@ -1674,11 +1742,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true,
-                        fullyInsideScrollView: Bool = false) {
+                        fullyInsideScrollView: Bool = false, within scrollView: XCUIElement? = nil) {
         #if os(iOS)
-        let list = app.collectionViews.firstMatch
+        let list = scrollView ?? app.collectionViews.firstMatch
         #elseif os(macOS)
-        let list = app.scrollViews.firstMatch
+        let list = scrollView ?? app.scrollViews.firstMatch
         #endif
         XCTAssertTrue(list.exists)
         for _ in 0..<6 {
@@ -1701,6 +1769,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
                     continue
                 }
                 if element.isHittable { return }
+                // Once a row exists, scroll toward its measured position.
+                // Repeating swipeUp after overshooting a short Item row moves
+                // it farther above the viewport on every attempt.
+                if !element.frame.isEmpty {
+                    let viewport = list.frame.insetBy(dx: 0, dy: 2)
+                    #if os(macOS)
+                    list.scroll(byDeltaX: 0, deltaY: viewport.midY - element.frame.midY)
+                    #else
+                    if element.frame.midY < viewport.midY { list.swipeDown() }
+                    else { list.swipeUp() }
+                    #endif
+                    continue
+                }
             }
             if upwards { list.swipeUp() } else { list.swipeDown() }
         }

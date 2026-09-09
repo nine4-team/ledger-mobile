@@ -31,8 +31,10 @@ public final class DownloadedItemHistoryModel {
                 state = .downloaded(snapshot)
             }
             guard generation == request else { return }
-            if Task.isCancelled { state = .idle }
-            else if state == .loading { state = .unavailable }
+            // A completed watch can no longer deliver access removal or Item
+            // deletion. Offline is supported by a live local database watch,
+            // not by keeping a snapshot after that watch has ended.
+            state = Task.isCancelled ? .idle : .unavailable
         } catch {
             guard generation == request else { return }
             state = Task.isCancelled ? .idle : .unavailable

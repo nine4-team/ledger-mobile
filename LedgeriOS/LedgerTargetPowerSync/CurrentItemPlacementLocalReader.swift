@@ -16,6 +16,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
     struct HistoryRow: Sendable {
         let description: String
         let interval: PhysicalItemPlacementHistoryInterval?
+        var details: DownloadedItemDescriptiveDetails? = nil
     }
 
     func readHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
@@ -56,7 +57,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
             previousEnd = value.end; hasOpenInterval = value.end == nil
         }
         return try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,
-            description: description, intervals: intervals.reversed().map(\.interval))
+            description: description, intervals: intervals.reversed().map(\.interval), details: rows.first?.details)
     }
 
     /// Comparison key only; raw downloaded timestamps remain the displayed
@@ -121,8 +122,17 @@ struct CurrentItemPlacementLocalReader: Sendable {
               try cursor.getInt(name: "invalid_count") == 0 else {
             throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
         }
+        let bookmark = try cursor.getIntOptional(name: "bookmark")
+        guard bookmark == nil || bookmark == 0 || bookmark == 1 else {
+            throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+        }
+        let details = try DownloadedItemDescriptiveDetails(name: cursor.getStringOptional(name: "name"),
+            description: cursor.getString(name: "raw_description"), sku: cursor.getStringOptional(name: "sku"),
+            source: cursor.getStringOptional(name: "source"), currentSource: cursor.getStringOptional(name: "current_source"),
+            notes: cursor.getStringOptional(name: "notes"), workflowStatusRaw: cursor.getStringOptional(name: "workflow_status"),
+            isBookmarked: bookmark.map { $0 == 1 }, createdAt: cursor.getStringOptional(name: "created_at"))
         guard let id = try cursor.getStringOptional(name: "placement_id") else {
-            return HistoryRow(description: description, interval: nil)
+            return HistoryRow(description: description, interval: nil, details: details)
         }
         let scope: ItemPlacementScope
         switch try cursor.getString(name: "scope_kind") {
@@ -135,7 +145,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
             spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
             projectDisplayName: cursor.getStringOptional(name: "project_name"),
             spaceDisplayName: cursor.getStringOptional(name: "space_name"),
-            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at")))
+            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at")), details: details)
     }
 
     private static let historySQL = """
@@ -143,7 +153,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
         SELECT EXISTS(SELECT 1 FROM spike_account_memberships
           WHERE account_id=? AND principal_id=? AND state='active') AS is_active
       ), selected_item AS (
-        SELECT id,account_id,name,description,revision FROM spike_items WHERE account_id=? AND id=?
+        SELECT id,account_id,name,description,revision,sku,source,current_source,notes,workflow_status,bookmark,created_at
+        FROM spike_items WHERE account_id=? AND id=?
       ), placements AS (
         SELECT p.* FROM spike_item_placements p JOIN selected_item i
           ON p.account_id=i.account_id AND p.item_id=i.id
@@ -157,6 +168,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
             AND (s.scope_kind IS NOT p.scope_kind OR s.project_id IS NOT p.project_id))
       )
       SELECT access.is_active,COALESCE(i.name,i.description) AS description,i.revision,validity.invalid_count,
+        i.name,i.description AS raw_description,i.sku,i.source,i.current_source,i.notes,i.workflow_status,i.bookmark,i.created_at,
         p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,
         project.display_name AS project_name,space.display_name AS space_name
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
