@@ -9,6 +9,10 @@ struct DownloadedItemImagesView: View {
     let accountId: AccountID
     let itemId: ItemID
     let reader: any DownloadedItemImageReading
+    var initialSelection: EntityID? = nil
+    var onPin: ((EntityID) -> Void)? = nil
+    var onUnpin: (() -> Void)? = nil
+    private var isPinned: Bool { onUnpin != nil }
     @Environment(\.dismiss) private var dismiss
     @State private var model = DownloadedItemImagesModel()
     @State private var selection: EntityID?
@@ -20,11 +24,17 @@ struct DownloadedItemImagesView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: isPinned ? 2 : 12) {
             HStack {
-                Text("Item images").font(.headline)
+                Text(isPinned ? "Pinned reference image" : "Item images")
+                    .font(isPinned ? .caption : .headline).lineLimit(1)
                 Spacer()
-                Button("Done") { dismiss() }.accessibilityIdentifier("target-item-images-done")
+                if let onUnpin {
+                    Button("Unpin image", action: onUnpin)
+                        .accessibilityIdentifier("target-item-image-unpin")
+                } else {
+                    Button("Done") { dismiss() }.accessibilityIdentifier("target-item-images-done")
+                }
             }
             switch model.state {
             case .idle, .loading: ProgressView("Loading image information…")
@@ -45,27 +55,39 @@ struct DownloadedItemImagesView: View {
                         let selected = catalog.images.first {
                             $0.id.rawValue.utf8.elementsEqual((selection?.rawValue ?? "").utf8)
                         } ?? catalog.primaryImage!
-                        DownloadedItemPhotoView(accountId: accountId, itemId: itemId, image: selected, reader: reader)
+                        DownloadedItemPhotoView(accountId: accountId, itemId: itemId, image: selected,
+                            reader: reader, compact: isPinned)
                             .id([accountId.rawValue, itemId.rawValue, selected.referenceId.rawValue,
                                  String(selected.setRevision), selected.object.attachmentId.rawValue,
                                  selected.object.contentSHA256.rawValue])
                         let index = catalog.images.firstIndex { $0 == selected } ?? 0
                         if catalog.images.count > 1 { HStack {
                             Button("Previous") { selection = catalog.images[(index + catalog.images.count - 1) % catalog.images.count].id }
-                                .accessibilityIdentifier("target-item-images-previous")
+                                .accessibilityIdentifier(isPinned ? "target-pinned-images-previous" : "target-item-images-previous")
                             Text("\(index + 1) of \(catalog.images.count)")
-                                .accessibilityIdentifier("target-item-images-counter")
+                                .accessibilityIdentifier(isPinned ? "target-pinned-images-counter" : "target-item-images-counter")
                             Button("Next") { selection = catalog.images[(index + 1) % catalog.images.count].id }
-                                .accessibilityIdentifier("target-item-images-next")
+                                .accessibilityIdentifier(isPinned ? "target-pinned-images-next" : "target-item-images-next")
                         } }
-                        if selected.isPrimary { Text("Primary image").font(.caption) }
+                        if !isPinned {
+                            if selected.isPrimary { Text("Primary image").font(.caption) }
+                            if let onPin {
+                                Button("Pin image for reference") { onPin(selected.id); dismiss() }
+                                    .accessibilityIdentifier("target-item-image-pin")
+                            }
+                        }
                     }
                 }
             }
-            Button("Refresh images") { refresh = UUID() }
-                .accessibilityIdentifier("target-item-images-refresh")
+            if !isPinned {
+                Button("Refresh images") { refresh = UUID() }
+                    .accessibilityIdentifier("target-item-images-refresh")
+            }
         }
-        .padding().frame(minWidth: 280, minHeight: 360)
+        .padding(isPinned ? 8 : 16).frame(minWidth: 280, minHeight: isPinned ? 80 : 360)
+        .onChange(of: initialSelection?.rawValue.utf8.map { $0 }, initial: true) { _, _ in
+            selection = initialSelection
+        }
         .task(id: Request(accountId: accountId, itemId: itemId, refresh: refresh)) {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
@@ -78,6 +100,7 @@ private struct DownloadedItemPhotoView: View {
     let itemId: ItemID
     let image: DownloadedItemImage
     let reader: any DownloadedItemImageReading
+    var compact = false
     @State private var rendered: CGImage?
     @State private var message = "Loading image…"
     @State private var refresh = UUID()
@@ -91,8 +114,8 @@ private struct DownloadedItemPhotoView: View {
         VStack {
             if let rendered {
                 DownloadedImageZoomSurface(image: rendered, zoomScale: $scale)
-                    .frame(minHeight: 200)
-                HStack {
+                    .frame(minHeight: compact ? 0 : 200)
+                if !compact { HStack {
                     Button("Zoom out") { scale = max(1, scale - 0.5) }
                         .disabled(scale <= 1).accessibilityIdentifier("target-item-image-zoom-out")
                     Text(Double(scale).formatted(.number.precision(.fractionLength(1))) + "×")
@@ -108,14 +131,14 @@ private struct DownloadedItemPhotoView: View {
                         Button("Reset zoom") { scale = 1 }
                             .accessibilityIdentifier("target-item-image-zoom-reset")
                     }
-                }.frame(height: 32)
+                }.frame(height: 32) }
             } else {
                 Text(message).accessibilityIdentifier("target-item-image-state")
                 Button("Retry image") { refresh = UUID() }
                     .accessibilityIdentifier("target-item-image-retry")
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 240, maxHeight: 400).clipped()
+        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: compact ? .infinity : 400).clipped()
         .task(id: Request(image: image, refresh: refresh)) {
             rendered = nil; message = "Loading image…"; scale = 1
             do {

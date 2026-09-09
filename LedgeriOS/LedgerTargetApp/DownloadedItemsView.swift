@@ -365,6 +365,10 @@ private struct DownloadedItemHistoryView: View {
     let itemId: ItemID
     let reader: any DownloadedItemPlacementHistoryReading
     @State private var showImages = false
+    @State private var pinnedImage: EntityID?
+    @State private var pinRequest = UUID()
+    @State private var pinFraction: CGFloat = 0.33
+    @GestureState private var pinDrag: CGFloat = 0
     @Environment(\.dismiss) private var dismiss
     @State private var model = DownloadedItemHistoryModel()
     @State private var refresh = UUID()
@@ -375,6 +379,54 @@ private struct DownloadedItemHistoryView: View {
     }
 
     var body: some View {
+        GeometryReader { geometry in
+            let compact = geometry.size.width < 700
+            let layout = compact ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+            layout {
+                if let pinnedImage, let imageReader = reader as? any DownloadedItemImageReading {
+                    VStack(spacing: 0) {
+                        DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader,
+                            initialSelection: pinnedImage, onUnpin: { self.pinnedImage = nil })
+                            .id(pinRequest)
+                            .accessibilityIdentifier("target-item-pinned-panel")
+                        if compact {
+                            Capsule().fill(.secondary).frame(width: 44, height: 5)
+                                .frame(maxWidth: .infinity).frame(height: 20).contentShape(Rectangle())
+                                .gesture(DragGesture().updating($pinDrag) { value, state, _ in
+                                    state = value.translation.height / max(1, geometry.size.height)
+                                }.onEnded { value in
+                                    pinFraction = min(0.5, max(0.2, pinFraction + value.translation.height / max(1, geometry.size.height)))
+                                })
+                                .accessibilityElement()
+                                .accessibilityLabel("Resize pinned image panel")
+                                .accessibilityValue("\(Int(pinFraction * 100)) percent")
+                                .accessibilityAdjustableAction { direction in
+                                    switch direction {
+                                    case .increment: pinFraction = min(0.5, pinFraction + 0.05)
+                                    case .decrement: pinFraction = max(0.2, pinFraction - 0.05)
+                                    @unknown default: break
+                                    }
+                                }
+                                .accessibilityIdentifier("target-item-pin-resize")
+                        }
+                    }
+                    .frame(width: compact ? nil : 384,
+                           height: compact ? geometry.size.height * min(0.5, max(0.2, pinFraction + pinDrag)) : nil)
+                    .clipped()
+                    Divider()
+                }
+                historyContent
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 280, minHeight: pinnedImage == nil ? 300 : 600)
+        #else
+        .frame(minWidth: 280, minHeight: 300)
+        #endif
+        .onDisappear { pinnedImage = nil; pinFraction = 0.33 }
+    }
+
+    private var historyContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Location history").font(.headline)
@@ -420,7 +472,7 @@ private struct DownloadedItemHistoryView: View {
                 .accessibilityIdentifier("target-item-history-refresh")
         }
         .padding()
-        .frame(minWidth: 280, minHeight: 300)
+        .frame(minWidth: 280)
         .task(id: Request(accountBytes: Array(accountId.rawValue.utf8),
                           itemBytes: Array(itemId.rawValue.utf8), refresh: refresh)) {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
@@ -428,7 +480,8 @@ private struct DownloadedItemHistoryView: View {
         .onDisappear { model.clear() }
         .sheet(isPresented: $showImages) {
             if let imageReader = reader as? any DownloadedItemImageReading {
-                DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader)
+                DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader,
+                    onPin: { pinnedImage = $0; pinRequest = UUID() })
             }
         }
     }

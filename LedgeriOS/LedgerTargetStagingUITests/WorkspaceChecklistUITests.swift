@@ -829,6 +829,36 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
         app.buttons["target-item-images-next"].tap()
         XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
+        let pin = app.buttons["target-item-image-pin"]
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        pin.tap()
+        let unpin = app.buttons["target-item-image-unpin"]
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-item-images-done"].exists)
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        let historyRefresh = app.buttons["target-item-history-refresh"]
+        XCTAssertTrue(historyRefresh.isHittable)
+        historyRefresh.tap()
+        XCTAssertTrue(unpin.exists)
+        images.tap()
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        // Select and pin another reference without an intermediate unpin.
+        app.buttons["target-item-images-next"].tap()
+        pin.tap()
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        let pinnedCount = app.staticTexts["target-pinned-images-counter"]
+        XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
+        app.buttons["target-pinned-images-next"].tap()
+        XCTAssertTrue(waitUntil { pinnedCount.label == "1 of 2" || (pinnedCount.value as? String) == "1 of 2" })
+        images.tap()
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        app.buttons["target-item-images-next"].tap()
+        pin.tap()
+        XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
+        unpin.tap()
+        XCTAssertTrue(waitUntil { !unpin.exists && !rendered.exists })
+        images.tap()
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         app.buttons["target-item-images-done"].tap()
         XCTAssertTrue(images.waitForExistence(timeout: 5))
         XCTAssertFalse(rendered.exists)
@@ -878,7 +908,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         groupSelect.tap()
         XCTAssertTrue(waitUntil { count.label == "2 selected" || (count.value as? String) == "2 selected" })
         let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
-        reveal(filters, in: app)
+        reveal(filters, in: app, fullyInsideScrollView: true)
         filters.tap()
         #if os(macOS)
         app.menuItems["Source"].tap()
@@ -1012,11 +1042,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         clearSelection.tap()
         assertSelectedCount(0)
         let selectAll = app.buttons["target-items-select-all"]
-        reveal(selectAll, in: app)
+        reveal(selectAll, in: app, fullyInsideScrollView: true)
         selectAll.tap()
         assertSelectedCount(3)
+        reveal(selectAll, in: app, fullyInsideScrollView: true)
         selectAll.tap()
         assertSelectedCount(0)
+        reveal(selectAll, in: app, fullyInsideScrollView: true)
         selectAll.tap()
         assertSelectedCount(3)
         reveal(itemFilters, in: app)
@@ -1039,17 +1071,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
         assertSelectedCount(0)
         XCTAssertFalse(app.staticTexts["target-item-history-partial"].exists)
         func chooseItemSpace(_ choice: String) {
-            reveal(itemFilters, in: app)
+            reveal(itemFilters, in: app, fullyInsideScrollView: true)
             itemFilters.tap()
             #if os(macOS)
             app.menuItems["Space"].tap()
-            app.menuItems[choice].tap()
+            app.menuItems["Space"].menuItems[choice].tap()
             #else
             app.buttons["Space"].tap()
             app.buttons[choice].tap()
             #endif
         }
-        reveal(selectAll, in: app)
+        reveal(selectAll, in: app, fullyInsideScrollView: true)
         selectAll.tap()
         assertSelectedCount(3)
         chooseItemSpace("None")
@@ -1378,7 +1410,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #else
         XCTAssertTrue(app.buttons["Name"].exists)
         XCTAssertFalse(app.buttons["Space"].exists)
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
+        // Choosing the already-active All option dismisses the native menu
+        // without targeting the system status bar or changing the result set.
+        app.buttons["Name"].tap()
+        app.buttons["All"].tap()
         XCTAssertTrue(app.buttons["Name"].waitForNonExistence(timeout: 5))
         #endif
         reveal(physicalItem, in: app)

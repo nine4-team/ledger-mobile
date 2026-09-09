@@ -864,6 +864,14 @@ if (
     fail("target_local_vendor_parser_boundary", message);
   }
   const project = fs.readFileSync(targetProject, "utf8");
+  // Glob-based Swift typechecks can pass while the committed Xcode target omits
+  // a newly added view. Catch that concrete build failure before native CI.
+  for (const source of swiftFiles(targetAppRoot)) {
+    if (!project.includes(`/* ${path.basename(source)} in Sources */`)) {
+      fail("target_app_source_not_in_xcode_project",
+        `${relative(source)}: regenerate LedgerTargetProject.yml with xcodegen`);
+    }
+  }
   const scheme = fs.readFileSync(targetScheme, "utf8");
   const targetAppSource = swiftFiles(targetAppRoot)
     .map((filePath) => fs.readFileSync(filePath, "utf8"))

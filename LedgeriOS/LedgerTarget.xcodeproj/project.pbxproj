@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */; };
 		0A53F59B5B919D495BA465BC /* AmazonInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */; };
+		0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */; };
 		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
 		1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */; };
@@ -54,6 +55,7 @@
 		EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */; };
 		F2CB21E76A8E0FA10B5177A8 /* WorkspaceChecklistUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62700BF64DE8954F3A5FF993 /* WorkspaceChecklistUITests.swift */; };
 		F6A138DF43D73431C691AE26 /* WayfairInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */; };
+		FB847FDB51FE1765BFB4CAEC /* DownloadedImageZoomSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */; };
 		FB9EB47CFF1DBC601104089A /* SpaceCoreDetailsStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */; };
 /* End PBXBuildFile section */
 
@@ -75,6 +77,7 @@
 		130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingExerciseView.swift; sourceTree = "<group>"; };
 		189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
 		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemImagesView.swift; sourceTree = "<group>"; };
 		23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportPreview.swift; sourceTree = "<group>"; };
 		33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectNoteHistoryStagingExerciseView.swift; sourceTree = "<group>"; };
 		3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -102,6 +105,7 @@
 		A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfTextExtractor.swift; sourceTree = "<group>"; };
 		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
+		B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedImageZoomSurface.swift; sourceTree = "<group>"; };
 		BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerTargetStagingApp.swift; sourceTree = "<group>"; };
 		BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBrowserStagingComposition.swift; sourceTree = "<group>"; };
 		BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryStagingExercise.swift; sourceTree = "<group>"; };
@@ -154,6 +158,8 @@
 				E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */,
 				76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */,
 				0F92563B3412AB38B9B6C6F5 /* ClientSummaryPhysicalReportPreview.swift */,
+				B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */,
+				20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */,
 				BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */,
 				BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */,
 				059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */,
@@ -338,6 +344,8 @@
 				AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */,
 				A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */,
 				9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */,
+				FB847FDB51FE1765BFB4CAEC /* DownloadedImageZoomSurface.swift in Sources */,
+				0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */,
 				C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */,
 				9111FCD4DDBEEB39A4A43F03 /* InvoiceDateParsing.swift in Sources */,
 				CC0347DF1AD9CF0DD5753F92 /* InvoiceMoneyParsing.swift in Sources */,
