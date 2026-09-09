@@ -1234,7 +1234,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     private func revealImageControls(in app: XCUIApplication) {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
-        let image = app.images["target-item-image-rendered"]
+        // A pinned reference may remain in the accessibility tree underneath
+        // this gallery. Interact with the full-screen viewer, never that image.
+        let image = app.otherElements["target-item-image-viewer"].images["target-item-image-rendered"]
         XCTAssertTrue(image.exists || image.waitForExistence(timeout: 5))
         // Start a fresh visibility interval. Reusing controls near the end of
         // their timeout races XCTest's snapshot and event-delivery overhead.

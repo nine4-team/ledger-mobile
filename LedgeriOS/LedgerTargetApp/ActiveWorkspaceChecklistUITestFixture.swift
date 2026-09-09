@@ -662,7 +662,15 @@ private struct UITestReportCopyReceiver: View {
 
     var body: some View {
         VStack {
-            PasteButton(supportedContentTypes: [.pdf, .commaSeparatedText, .utf8PlainText, .fileURL]) { providers in
+            if showsExactText {
+                // Materialize text through the native typed paste API. Item ID
+                // assertions still inspect the actual clipboard payload.
+                PasteButton(payloadType: String.self) { strings in
+                    result = strings.first ?? "Missing copied text"
+                }
+                .accessibilityIdentifier("target-ui-fixture-paste-report")
+            } else {
+              PasteButton(supportedContentTypes: [.pdf, .commaSeparatedText, .utf8PlainText, .fileURL]) { providers in
                 result = "Reading copied report"
                 guard let provider = providers.first else { result = "Missing copied report"; return }
                 let contentTypes: [UTType] = [.pdf, .commaSeparatedText, .utf8PlainText]
@@ -682,6 +690,7 @@ private struct UITestReportCopyReceiver: View {
                 }
             }
             .accessibilityIdentifier("target-ui-fixture-paste-report")
+            }
             Text(result).accessibilityIdentifier("target-ui-fixture-paste-result")
         }
     }
