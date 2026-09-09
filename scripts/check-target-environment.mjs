@@ -343,6 +343,12 @@ if (description) {
   const migrationCore = targets.get("LedgerTargetMigrationCore");
   const migrationTests = targets.get("LedgerTargetMigrationCoreTests");
   const localPaymentImport = targets.get("LedgerLocalPaymentImport");
+  const thumbnailTool = targets.get("LedgerItemThumbnail");
+  if (!thumbnailTool || thumbnailTool.type !== "executable" ||
+      JSON.stringify([...(thumbnailTool.target_dependencies ?? [])].sort()) !==
+      JSON.stringify(["LedgerTargetAppModel", "LedgerTargetCore"])) {
+    fail("target_thumbnail_tool_boundary", "Offline thumbnail tool must reuse only AppModel and Core; no provider or production connection.");
+  }
   if (!localPaymentImport || localPaymentImport.type !== "executable" ||
       JSON.stringify([...(localPaymentImport.target_dependencies ?? [])].sort()) !==
       JSON.stringify(["LedgerTargetCore", "LedgerTargetMigrationCore"])) {

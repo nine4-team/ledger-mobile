@@ -851,7 +851,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(count.label == "1 of 2" || (count.value as? String) == "1 of 2")
         let imageFrame = rendered.frame
         XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
-            "Controls auto-hide at fit zoom")
+            "Controls auto-hide at fit zoom\n\(app.debugDescription)")
         XCTAssertTrue(app.buttons["target-item-images-done"].isHittable)
         XCTAssertTrue(app.buttons["target-item-image-pin"].isHittable)
         XCTAssertEqual(rendered.frame.width, imageFrame.width, accuracy: 1)
@@ -1015,7 +1015,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let pinnedCount = app.staticTexts["target-pinned-images-counter"]
         XCTAssertTrue(waitUntil { self.displayedText(pinnedCount) == "2 of 2" })
         rendered.swipeDown()
-        XCTAssertTrue(unpin.exists, "Vertical swipe must not dismiss the pinned reference")
+        XCTAssertTrue(unpin.exists, "Vertical swipe must not dismiss the pinned reference\n\(app.debugDescription)")
     }
     #endif
 

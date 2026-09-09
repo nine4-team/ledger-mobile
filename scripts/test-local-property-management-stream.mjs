@@ -55,7 +55,13 @@ sameProjection("spike_projects", noteQueries, "Report and note-history Project v
 for (const table of ["spike_items", "spike_item_placements", "spike_spaces", "item_image_sets"]) {
   sameProjection(table, physicalQueries, `Overlapping ${table} values must match exactly`);
 }
-sameProjection("item_image_sets", byTable(section("item_images")), "Gallery and list marker values must match exactly");
+// Only the marker overlaps this report. Gallery original and derivative
+// queries intentionally both output item_image_objects; do not impose a
+// one-query-per-table rule on that independent media subscription.
+const galleryMarkers = section("item_images").filter(query =>
+  query.match(/\bFROM\s+([a-z_]+)/)?.[1] === "item_image_sets");
+assert.equal(galleryMarkers.length, 1, "Exactly one gallery marker projection");
+sameProjection("item_image_sets", byTable(galleryMarkers), "Gallery and list marker values must match exactly");
 for (const query of queries) {
   assert.match(query, /^SELECT /);
   assert.ok(!query.includes(";") && !query.split(/\bFROM\b/)[0].includes("*"));
