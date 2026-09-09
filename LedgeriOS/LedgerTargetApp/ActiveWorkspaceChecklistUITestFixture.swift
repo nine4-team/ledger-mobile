@@ -569,10 +569,11 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         let elsewhere = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-other-space"),
             description: "Item assigned to another Space", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-other-placement"), scope: scope,
-            spaceId: SpaceID(validating: "other-space-ui-test"))
+            spaceId: SpaceID(validating: "other-space-ui-test"), createdAt: Date(timeIntervalSince1970: 1))
         let unassigned = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-unassigned"),
             description: "Unassigned test Item", itemRevision: 1,
-            placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil)
+            placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil,
+            createdAt: Date(timeIntervalSince1970: 2))
         return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row, elsewhere, unassigned])
     }
 }

@@ -131,6 +131,7 @@ struct DownloadedItemsView: View {
                     .font(.subheadline).bold()
                     .accessibilityIdentifier("target-items-section-\(resolution.rawValue)")
             }
+            .accessibilityIdentifier("target-items-group-\(resolution.rawValue)")
         }
     }
 

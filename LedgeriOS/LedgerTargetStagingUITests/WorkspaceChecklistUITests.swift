@@ -809,6 +809,36 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["target-items-search-clear"].tap()
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
+        let unknownGroup = "target-items-group-relationshipEvidenceIncomplete"
+        #if os(macOS)
+        let disclosure = app.disclosureTriangles[unknownGroup]
+        #else
+        let disclosure = app.buttons[unknownGroup]
+        #endif
+        reveal(disclosure, in: app)
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5), app.debugDescription)
+        disclosure.tap()
+        let elsewhere = app.buttons["target-physical-item-physical-ui-other-space"]
+        let unassigned = app.buttons["target-physical-item-physical-ui-unassigned"]
+        XCTAssertTrue(elsewhere.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(unassigned.exists)
+        disclosure.tap()
+        XCTAssertTrue(elsewhere.waitForExistence(timeout: 5))
+        for (choice, unassignedFirst) in [("Oldest first", false), ("Newest first", true),
+                                         ("Name A–Z", false), ("Name Z–A", true)] {
+            let sort = app.descendants(matching: .any).matching(identifier: "target-items-sort").firstMatch
+            reveal(sort, in: app)
+            sort.tap()
+            #if os(macOS)
+            app.menuItems[choice].tap()
+            #else
+            app.buttons[choice].tap()
+            #endif
+            reveal(elsewhere, in: app)
+            XCTAssertTrue(unassigned.waitForExistence(timeout: 5))
+            XCTAssertEqual(unassigned.frame.minY < elsewhere.frame.minY, unassignedFirst, app.debugDescription)
+        }
+        reveal(item, in: app)
         item.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Current test Project"].exists)

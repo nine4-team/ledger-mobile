@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 336,
+  "stateVersion": 338,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,8 +23,8 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "686939fe5fa1d162eb07cb383732aed9464bbdf0 browsing implementation committed/pushed; CI34324276727 must fail saved-state gate (6 actions and switched workflow excluded prior MCP diff). This state corrects gate; run conversion:check directly, then commit/push repair and follow exact automatic CI. Native1018tests151suites passed /tmp/ledger-item-browsing-full-native-fixed.log; app typecheck/environment passed. Earlier conversion-pass statement was wrong (shell later command masked exit). No native suite repeat for state-only repair.",
-      "Previous5538ef14635d2e38818bfe8e958d28d15a557cb8 atomic Project Item snapshot/UI CI34323220368 and af7ff57d959894f147bf14cf2953eff55ed4a614 charge/report CI34321387603 confirmed live. Follow each exact run, no redispatch. Checklist active-workspace review owns Item evidence; retain client-summary active scope until whole green baseline excludes earlier MCP changes. Broad Item facets/cards/detail/selection/writes unfinished; sort/collapse interactions still lack UI proof.",
+      "Item browsing interaction follow-on ready to commit: native UI test selects all4sort choices, checks actual row order and collapses/reopens unknown section; stable fixture dates and group accessibility identifier added. Full app typecheck and Mac/iPhone XCTest typechecks pass (/tmp/ledger-item-ui-{typecheck,ios-typecheck}.log). Reuse unchanged1018native151suite evidence; no domain/provider edits. Run conversion:check directly, commit/push and follow exact automatic CI. UI selectors/order assertions remain unverified until real execution.",
+      "67c433b2 checkpoint repair CI34324450033 confirmed live in environment validation;5538ef14 atomic Project Item CI34323220368 live in Mac UI;af7ff57d charge/report CI34321387603 live in iPhone UI. Follow exact runs, no redispatch.686939fe CI34324276727 terminal saved-state gate failure fixed in67c433b2, no native failure. Checklist active-workspace review owns Item evidence; keep client-summary active scope until new green baseline excludes prior MCP diff. Broad Item facets/cards/detail/selection/writes unfinished.",
       "be7060fd CI34318832216 terminal14/15iPhone failure: stale XCUI snapshot, /tmp/ledger-profile-ci-34318832216.hq4i3n. Test now waits report-ready then directly asserts Share enabled; no app eligibility change. Do not poll terminal runs. O016/O027/O065 scoped Item-writing questions remain unanswered; continue independent approved work. Live Invoice membership still must extend report readers before Invoice workflow ships.",
       "Local schema manually applied without history through064122 INCLUDING060126. Prior803DB/1002native,9two-session races+6isolation,97stream captures,actual HTTP/native report parity remain valid for unchanged backend. No hosted/hardware/migration/cutover readiness. Disk~670MiB: avoid large builds/downloads and preserve existing artifacts."
     ]
