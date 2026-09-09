@@ -86,9 +86,7 @@ struct DownloadedItemImagesView: View {
                             Button("Next") { selection = catalog.images[(index + 1) % catalog.images.count].id }
                                 .accessibilityIdentifier(isPinned ? "target-pinned-images-next" : "target-item-images-next")
                         }
-                        .opacity(isPinned || controlsVisible ? 1 : 0)
-                        .allowsHitTesting(isPinned || controlsVisible)
-                        .accessibilityHidden(!isPinned && !controlsVisible)
+                        .modifier(ImageControlsVisibility(visible: isPinned || controlsVisible))
                         }
                         if !isPinned {
                             if selected.isPrimary { Text("Primary image").font(.caption) }
@@ -237,9 +235,7 @@ private struct DownloadedItemPhotoView: View {
                     }
                 }.frame(height: 32)
                 }
-                .opacity(controlsVisible ? 1 : 0)
-                .allowsHitTesting(controlsVisible)
-                .accessibilityHidden(!controlsVisible)
+                .modifier(ImageControlsVisibility(visible: controlsVisible))
                 }
             } else {
                 Text(message).accessibilityIdentifier("target-item-image-state")
@@ -274,5 +270,20 @@ private struct DownloadedItemPhotoView: View {
         }
         .onChange(of: scale) { _, value in onZoomChange?(value) }
         .onDisappear { rendered = nil }
+    }
+}
+
+/// Unlike transparent controls, hidden controls cannot remain tappable or
+/// accessible. SwiftUI still reserves their layout, keeping image zoom stable.
+private struct ImageControlsVisibility: ViewModifier {
+    let visible: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if visible {
+            content
+        } else {
+            content.hidden().allowsHitTesting(false).accessibilityHidden(true)
+        }
     }
 }

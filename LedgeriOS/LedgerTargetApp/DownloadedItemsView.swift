@@ -214,6 +214,9 @@ struct DownloadedItemsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
+        // These actions share a List cell. Automatic button styling can
+        // activate sibling actions too: Copy must not select all or clear.
+        .buttonStyle(.borderless)
     }
 
     private var partialNotice: String {
