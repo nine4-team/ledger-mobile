@@ -7,6 +7,34 @@ struct DownloadedItemHistoryModelTests {
     private let account = try! AccountID(validating: "account-history")
     private let item = try! ItemID(validating: "item-history")
 
+    @Test("Current accounting evidence replaces old labels and is removed on access loss")
+    func accountingUpdates() async throws {
+        let (stream, continuation) = AsyncThrowingStream<DownloadedItemPlacementHistory, Error>.makeStream()
+        let model = DownloadedItemHistoryModel()
+        let task = Task {
+            await model.load(accountId: account, itemId: item,
+                reader: HistoryReader(values: [], stream: stream))
+        }
+        defer { continuation.finish(); task.cancel() }
+        for resolution in [ProjectItemAccountingResolution.accountedFor, .relationshipEvidenceIncomplete, nil] {
+            let snapshot = try DownloadedItemPlacementHistory(accountId: account, itemId: item,
+                description: "Chair", intervals: [
+                    .init(placementId: EntityID(validating: "placement"),
+                        scope: .project(ProjectID(validating: "project")), spaceId: nil,
+                        startedAt: "2026-09-01T00:00:00Z", endedAt: nil)
+                ], currentAccountingResolution: resolution)
+            continuation.yield(snapshot)
+            for _ in 0..<1000 {
+                if model.state == .downloaded(snapshot) { break }
+                await Task.yield()
+            }
+            #expect(model.state == .downloaded(snapshot))
+        }
+        continuation.finish(throwing: HistoryReader.Failure.unavailable)
+        await task.value
+        #expect(model.state == .unavailable)
+    }
+
     @Test("Category readback changes and unavailable evidence replace the displayed label")
     func categoryUpdates() async throws {
         let (stream, continuation) = AsyncThrowingStream<DownloadedItemPlacementHistory, Error>.makeStream()

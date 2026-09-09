@@ -10,6 +10,78 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Current accounting association is scoped, access checked and survives reopen without historical fallback")
+    func currentAccountingAssociation() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .accountedFor)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='project-now'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('inventory-now','account-item','chair','business_inventory','2026-03-01')", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == nil)
+        }) { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .relationshipEvidenceIncomplete)
+            try await seedAccounting(db)
+            // A malformed different placement must not poison this exact Item.
+            _ = try await db.execute(sql: "INSERT INTO item_client_payment_connections(id,account_id,project_id,placement_id) VALUES('unrelated','foreign','project-item','other-placement')", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .accountedFor)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .relationshipEvidenceIncomplete)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+            for field in ["account_id", "client_id", "item_id"] {
+                _ = try await db.execute(sql: "UPDATE item_client_payment_connections SET \(field)='wrong' WHERE id='payment'", parameters: nil)
+                #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .relationshipEvidenceIncomplete)
+                _ = try await db.execute(sql: "UPDATE item_client_payment_connections SET account_id='account-item',client_id='client',item_id='chair' WHERE id='payment'", parameters: nil)
+            }
+        }
+    }
+
+    @Test("History accounting invalidates for same-count payment, charge, frozen-line and Invoice updates")
+    func currentAccountingWatch() async throws {
+        try await withDatabase { db in
+            try await seedAccounting(db)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            var iterator = try reader.watchHistory(accountId: account, principalId: principal, itemId: item).makeAsyncIterator()
+            // Match the runtime: notifications trigger a new atomic physical +
+            // accounting read, not a category/history-only opening snapshot.
+            _ = try #require(await iterator.next())
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == .accountedFor)
+            let steps: [(String, ProjectItemAccountingResolution?)] = [
+                ("UPDATE item_client_payment_connections SET transaction_type='refund'", .relationshipEvidenceIncomplete),
+                ("UPDATE item_client_payment_connections SET transaction_type='purchase'", .accountedFor),
+                ("UPDATE item_client_payment_connections SET ended_at='2026-03-01'", .relationshipEvidenceIncomplete),
+                ("INSERT INTO item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,revision) VALUES('charge','account-item','project-item','chair','project-now','category','100','USD',1)", .accountedFor),
+                ("UPDATE item_charge_occurrences SET amount_minor_units='0'", .relationshipEvidenceIncomplete),
+                ("UPDATE item_charge_occurrences SET amount_minor_units='100'", .accountedFor),
+                ("INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,category_id,source_revision,signed_amount_minor_units,currency) VALUES('line','account-item','invoice','item','charge','chair','category',1,'100','USD')", .relationshipEvidenceIncomplete),
+                ("INSERT INTO collected_invoices(id,account_id,project_id,client_id,sealed) VALUES('invoice','account-item','project-item','client',1)", .accountedFor),
+                ("UPDATE collected_invoices SET sealed=0", .relationshipEvidenceIncomplete),
+                ("UPDATE collected_invoices SET sealed=1", .accountedFor),
+                ("UPDATE collected_invoice_lines SET signed_amount_minor_units='99'", .relationshipEvidenceIncomplete),
+                ("UPDATE collected_invoice_lines SET signed_amount_minor_units='100'", .accountedFor),
+                ("UPDATE spike_account_memberships SET financial_access='none'", .relationshipEvidenceIncomplete)
+            ]
+            for (sql, expected) in steps {
+                _ = try await db.execute(sql: sql, parameters: nil)
+                _ = try #require(await iterator.next())
+                #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentAccountingResolution == expected)
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                while try await iterator.next() != nil {}
+            }
+        }
+    }
+
+    private func seedAccounting(_ db: any PowerSyncDatabaseProtocol) async throws {
+        _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+        _ = try await db.execute(sql: "UPDATE spike_projects SET client_id='client'", parameters: nil)
+        _ = try await db.execute(sql: "INSERT INTO item_client_payment_connections(id,account_id,project_id,client_id,item_id,placement_id,transaction_id,transaction_type,transaction_role) VALUES('payment','account-item','project-item','client','chair','project-now','purchase','purchase','standalone')", parameters: nil)
+    }
+
     @Test("Current category preserves authorized labels across restart and never uses historical assignment")
     func currentBudgetCategory() async throws {
         try await withDatabase(reopen: { db in

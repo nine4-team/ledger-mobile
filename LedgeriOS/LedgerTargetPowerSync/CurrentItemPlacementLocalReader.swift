@@ -7,7 +7,8 @@ enum CurrentItemPlacementReadFailure: Error, Equatable {
     case incompleteOrConflictingPlacement
 }
 
-/// Downloaded physical facts only. Not a complete inventory/accounting snapshot
+/// Downloaded physical facts and scoped current accounting evidence.
+/// Not a complete inventory/accounting snapshot
 /// or an assignment precondition: movement commands must first share a proven
 /// revision contract. No subscription or new server access is granted here.
 struct CurrentItemPlacementLocalReader: Sendable {
@@ -21,10 +22,29 @@ struct CurrentItemPlacementLocalReader: Sendable {
     }
 
     func readHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
-        let rows = try await database.getAll(sql: Self.historySQL,
-            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue, principalId.rawValue],
-            mapper: Self.historyRow)
-        return try Self.history(accountId: accountId, itemId: itemId, rows: rows)
+        try await database.readTransaction { transaction in
+            let rows = try transaction.getAll(sql: Self.historySQL,
+                parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue, principalId.rawValue],
+                mapper: Self.historyRow)
+            let physical = try Self.history(accountId: accountId, itemId: itemId, rows: rows)
+            var accounting: ProjectItemAccountingResolution?
+            if let current = physical.intervals.first(where: { $0.endedAt == nil }),
+               case .project(let projectId) = current.scope {
+                do {
+                    accounting = try ItemClientPaymentConnectionLocalReader.read(transaction: transaction,
+                        accountId: accountId, principalId: principalId, projectId: projectId,
+                        placementId: current.placementId)[current.placementId]?.resolution ?? .relationshipEvidenceIncomplete
+                } catch PropertyManagementReportLocalReadFailure.malformedEvidence {
+                    accounting = .relationshipEvidenceIncomplete
+                } catch is ProjectItemAccountingSectionFailure {
+                    accounting = .relationshipEvidenceIncomplete
+                }
+            }
+            return try .init(accountId: accountId, itemId: itemId, description: physical.description,
+                intervals: physical.intervals, details: physical.details,
+                currentBudgetCategoryName: physical.currentBudgetCategoryName,
+                currentAccountingResolution: accounting)
+        }
     }
 
     func watchHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) throws -> AsyncThrowingStream<[HistoryRow], Error> {
@@ -191,7 +211,13 @@ struct CurrentItemPlacementLocalReader: Sendable {
         i.account_id AS item_account,i.id AS history_item_id,
         assignment.id AS category_assignment_id,assignment.account_id AS category_account,
         assignment.project_id AS category_project,assignment.item_id AS category_item,
-        category.id AS category_id,category.display_name AS category_name
+        category.id AS category_id,category.display_name AS category_name,
+        -- PowerSync observes source-table notifications, not value changes.
+        -- These dependencies invalidate even when an update keeps row counts.
+        EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=i.account_id) AS payment_changes,
+        EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=i.account_id) AS charge_changes,
+        EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=i.account_id) AS line_changes,
+        EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=i.account_id) AS invoice_changes
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
       LEFT JOIN placements p ON access.is_active
       LEFT JOIN spike_projects project ON project.id=p.project_id AND project.account_id=p.account_id

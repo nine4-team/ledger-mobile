@@ -605,6 +605,12 @@ private struct DownloadedItemDetailView: View {
             if case .project = current.scope {
                 detailField("Budget category", history.currentBudgetCategoryName ?? "Category unavailable",
                     id: "target-item-detail-budget-category")
+                let accounting: String = switch history.currentAccountingResolution {
+                case .accountedFor: "Accounted For"
+                case .unaccountedFor: "Unaccounted For"
+                case .relationshipEvidenceIncomplete, nil: "Accounting information unavailable"
+                }
+                detailField("Accounting", accounting, id: "target-item-detail-accounting")
             }
             if let spaceId = current.spaceId, let name = current.spaceDisplayName,
                spaceNavigation != nil, reader is any DownloadedItemPlacementReading {

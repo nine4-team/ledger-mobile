@@ -835,9 +835,9 @@ actor AccountWorkspacePendingWorkRuntime {
                 let reader = CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
                 // Observe already downloaded evidence; no historical subscription
                 // or broader access is created by opening this detail screen.
-                for try await rows in try reader.watchHistory(accountId: accountId, principalId: resources.principalId, itemId: itemId) {
+                for try await _ in try reader.watchHistory(accountId: accountId, principalId: resources.principalId, itemId: itemId) {
                     try Task.checkCancellation()
-                    let value = try CurrentItemPlacementLocalReader.history(accountId: accountId, itemId: itemId, rows: rows)
+                    let value = try await reader.readHistory(accountId: accountId, principalId: resources.principalId, itemId: itemId)
                     guard await self.forwardStreamValue(value, to: continuation) else { break }
                 }
                 continuation.finish()

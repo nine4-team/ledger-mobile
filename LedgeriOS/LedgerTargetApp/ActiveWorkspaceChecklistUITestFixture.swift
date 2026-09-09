@@ -597,7 +597,9 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 notes: "Keep the woven seat dry.\nPlace beside the window.",
                 workflowStatusRaw: "to-purchase", isBookmarked: true, createdAt: "2026-09-01T11:00:00Z"),
             currentBudgetCategoryName: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-category-unavailable")
-                ? nil : "Furniture")
+                ? nil : "Furniture",
+            currentAccountingResolution: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-accounting-unavailable")
+                ? nil : .accountedFor)
     }
     func watchDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemPlacementHistory, Error> {
         AsyncThrowingStream { continuation in

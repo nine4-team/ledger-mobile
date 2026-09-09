@@ -411,17 +411,21 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let details: DownloadedItemDescriptiveDetails?
     /// Current Project placement only. Nil is unavailable, never Uncategorized.
     public let currentBudgetCategoryName: String?
+    /// Current Project association only; nil does not establish Unaccounted.
+    public let currentAccountingResolution: ProjectItemAccountingResolution?
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
                 intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil,
-                currentBudgetCategoryName: String? = nil) throws {
+                currentBudgetCategoryName: String? = nil,
+                currentAccountingResolution: ProjectItemAccountingResolution? = nil) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
         self.accountId = accountId; self.itemId = itemId; self.description = description
         self.intervals = intervals; self.details = details
         self.currentBudgetCategoryName = currentBudgetCategoryName
+        self.currentAccountingResolution = currentAccountingResolution
     }
 }
 

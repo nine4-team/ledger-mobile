@@ -863,6 +863,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         for (id, expected) in [
             ("name", "Downloaded test chair"), ("current-location", "Current test Project"),
             ("budget-category", "Furniture"),
+            ("accounting", "Accounted For"),
             ("space", "Current test Space"),
             ("notes", "Keep the woven seat dry.\nPlace beside the window."),
             ("description", "Oak chair with woven seat"), ("source", "Original vendor"),
@@ -929,7 +930,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
             app.launchArguments += ["--ledger-ui-test-inventory-space", "--ledger-ui-test-reset-inventory-section"]
         }
         if archived { app.launchArguments.append("--ledger-ui-test-linked-space-archived") }
-        if !inventory { app.launchArguments.append("--ledger-ui-test-category-unavailable") }
+        if !inventory {
+            app.launchArguments += ["--ledger-ui-test-category-unavailable", "--ledger-ui-test-accounting-unavailable"]
+        }
         app.launch()
         defer { app.terminate() }
         let workspace = app.buttons[inventory ? "target-business-inventory-card" : "target-active-project-card-project-ui-test"]
@@ -942,12 +945,18 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(link.waitForExistence(timeout: 5))
         XCTAssertEqual(displayedText(link), "Current test Space")
         let category = app.staticTexts["target-item-detail-budget-category"]
+        let accounting = app.staticTexts["target-item-detail-accounting"]
         if inventory {
             XCTAssertFalse(category.exists, "Inventory must not display an old Project's category")
+            XCTAssertFalse(accounting.exists, "Inventory must not display an old Project's accounting association")
         } else {
             XCTAssertEqual(displayedText(category), "Category unavailable",
                 "Missing category evidence is not an uncategorized Item")
+            XCTAssertEqual(displayedText(accounting), "Accounting information unavailable",
+                "Missing accounting evidence must not imply Unaccounted For or Paid")
         }
+        reveal(link, in: app, fullyInsideScrollView: true,
+            within: app.scrollViews["target-item-detail-scroll"])
         link.tap()
         let name = app.staticTexts["target-item-space-name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))
@@ -1086,7 +1095,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertGreaterThan(rendered.frame.height, 40, "Gallery must retain a usable image after unpinning")
         let done = app.buttons["target-item-images-done"]
         XCTAssertTrue(done.isHittable, "Gallery close must not be clipped after unpinning")
+        #if os(macOS)
+        // A macOS application accessibility element is not its window bounds.
+        let galleryWindow = app.windows.containing(.button, identifier: "target-item-images-done").firstMatch
+        XCTAssertTrue(galleryWindow.exists)
+        XCTAssertTrue(galleryWindow.frame.contains(done.frame), "Gallery close stays inside its window")
+        #else
         XCTAssertTrue(app.frame.contains(done.frame), "Gallery close stays inside the app window")
+        #endif
         done.tap()
         XCTAssertTrue(images.waitForExistence(timeout: 5))
         XCTAssertTrue(rendered.waitForNonExistence(timeout: 5), "Closing the unpinned gallery removes its image")
