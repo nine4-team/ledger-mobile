@@ -234,7 +234,11 @@ streams:
         JOIN spike_account_memberships AS membership ON membership.account_id = spike_spaces.account_id
         JOIN spike_principals AS principal ON principal.id = membership.principal_id
         WHERE spike_spaces.account_id = subscription.parameter('account_id')
-        AND spike_spaces.lifecycle = 'active'
+        AND (spike_spaces.lifecycle = 'active' OR spike_spaces.id IN (
+          SELECT placement.space_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.ended_at IS NULL
+        ))
         AND principal.auth_user_id = auth.user_id()
         AND membership.state = 'active'
 

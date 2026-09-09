@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 342,
+  "stateVersion": 343,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Current selection follow-on: individual/select-all/Clear, exact-ID open-vs-toggle, prune hidden/removed/scope/loading/access state. Root reviewed delegated Core helper; independent UI review GO.8focused+1023native151suites passed; app and Mac/iPhone XCTest typechecks passed. Native UI assertions cover selection/clear/all/filter pruning/non-restoration and removal while selected. Commit/push scoped batch after final checks, then follow single automatic exact-commit CI; no broad Item completion.",
-      "2c0421adf234113b60a9f116e125cea92be6b80f CI34327248788 still live (state/provider passed, native tests running last observed). Contains explicit Item expansion rendering fix and Name/SKU filters.34324450033/34324884277 terminal same two Mac Item failures are corrected there; do not poll terminal runs or redispatch.5538ef14 whole-green recorded as baseline.",
-      "O016/O027/O065 Item-write decisions remain unanswered. Additional facets/cards/detail/selection totals/bulk writes remain incomplete. Source grouping uses SKU plus source boundaries and unambiguous name fallback, not naive name-only grouping; inspect existing grouping authority before implementing. Live Invoice membership must extend report readers before Invoice workflow ships.",
-      "Local schema manually applied through064122 INCLUDING060126; unchanged backend evidence remains valid. Hosted/hardware/migration/cutover incomplete. Disk~539MiB: avoid large builds/downloads; preserve artifacts."
+      "Archived Inventory parent fix ready: migration081820 ALTERs existing archived-Project read policy to exact current physical parents in both scopes; physical_account_items downloads active/current-parent Spaces. No new writes/unrelated archived access. Root SQL review and independent stream/native review GO.820DB27files+1024native151suites,24actualSQLcaptures,4realparser tests passed; environment passed. Advisors only existing Space multiple-permissive warning. Final conversion check then commit/push scoped batch and follow exact automatic CI.",
+      "e8aa4365 selection CI34327982123 confirmed live, native tests at08:19:29UTC;2c0421ad rendering/filter CI34327248788 confirmed live, MacUI at08:16:44UTC. Follow exact runs without redispatch. Other referenced runs terminal;5538ef14 whole-green remains baseline.",
+      "Next Space facet: use No Space and exact stable IDs, include active zero-Item Spaces plus current archived parents; hidden in Space Detail. Parent spaceBrowser.spaces provides Inventory choices, but Project starts only on Spaces tab then stops on return. Need retain existing scoped watch or include already-downloaded Spaces in atomic Item read; do not claim facet from row-only options. Current reader already joins exact parent and can project display_name. Source grouping uses SKU/source plus unambiguous name fallback; do not implement naive name-only grouping.",
+      "O016/O027/O065 write decisions unanswered. Additional facets/cards/detail/selection totals/bulk writes and live Invoice evidence unfinished. Local schema manually applied through081820 INCLUDING060126/064122, no migration-history rewrite. Hosted/hardware/migration/cutover incomplete. Disk~530MiB; preserve artifacts, avoid large local builds."
     ]
   },
   "blockers": [],
