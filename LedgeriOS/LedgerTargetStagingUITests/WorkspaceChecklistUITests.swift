@@ -1083,9 +1083,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { !unpin.exists && !rendered.exists })
         openItemImages(in: app)
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
-        app.buttons["target-item-images-done"].tap()
+        XCTAssertGreaterThan(rendered.frame.height, 40, "Gallery must retain a usable image after unpinning")
+        let done = app.buttons["target-item-images-done"]
+        XCTAssertTrue(done.isHittable, "Gallery close must not be clipped after unpinning")
+        XCTAssertTrue(app.frame.contains(done.frame), "Gallery close stays inside the app window")
+        done.tap()
         XCTAssertTrue(images.waitForExistence(timeout: 5))
-        XCTAssertFalse(rendered.exists)
+        XCTAssertTrue(rendered.waitForNonExistence(timeout: 5), "Closing the unpinned gallery removes its image")
     }
 
     #if os(iOS)

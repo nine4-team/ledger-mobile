@@ -216,7 +216,14 @@ private struct DownloadedItemPhotoView: View {
             if let rendered {
                 DownloadedImageZoomSurface(image: rendered, zoomScale: $scale,
                     onPage: onPage, onDismiss: onDismiss, onTap: onTap)
+                    #if os(macOS)
+                    // Let the image yield space before the fixed-size controls
+                    // in a short sheet; the native surface fits these bounds.
+                    .frame(minHeight: 0)
+                    .layoutPriority(compact ? 0 : -1)
+                    #else
                     .frame(minHeight: compact ? 0 : 200)
+                    #endif
                 if !compact { VStack(spacing: 8) { HStack {
                     Button("Zoom out") { scale = max(1, scale - 0.5) }
                         .disabled(scale <= 1).accessibilityIdentifier("target-item-image-zoom-out")
@@ -246,7 +253,8 @@ private struct DownloadedItemPhotoView: View {
         #if os(iOS)
         .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: .infinity)
         #else
-        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: compact ? .infinity : 400)
+        .frame(maxWidth: .infinity, minHeight: 0, maxHeight: compact ? .infinity : 400)
+        .layoutPriority(compact ? 0 : -1)
         #endif
         .clipped()
         .task(id: Request(image: image, refresh: refresh)) {

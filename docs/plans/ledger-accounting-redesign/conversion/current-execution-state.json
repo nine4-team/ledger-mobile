@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 407,
+  "stateVersion": 408,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Current category-label batch implemented in9files: current Project category from same history SQL/watch, exact association scope/financial visibility; Inventory omitted, missing Category unavailable. Existing UI tests extended; new reader restart/watch/malformed-scope and AppModel update/failure tests. Root reviewed data and independent agent reviewed UI. Exact SQL12 SQLite assertions, Core/AppModel module emits, full reader/app typechecks, focused model/reader tests and both XCTest compiles PASS; conversion/diff PASS. Commit/push integrated batch once; native tests NOT yet executed for this change.",
-      "Latest prior e3f4ba9afafea889b188600ac8d673a5b18677a5 CI34389224602 (gallery prompt wait) live; watch46754 follows it, resume/filter output, do not duplicate. Prior cb491004 CI34388753264 and01ca6c5b CI34388379167 also pending native results. These commits respectively fix native gallery container type and Mac Button label. No aggregate checkpoint promotion until exact batch fully green.",
-      "Completed6db CI34385657700 FAILED: Mac1076native PASS/UI18of24 (fixes later); iPhone28of29, sole gallery reveal race. Group/detail Copy and both Item→Space navigation PASS. Log /tmp/ledger-6db-ios-ci.log. Watches68321/32148 terminal consumed; do not resume. Checklist owns evidence. No speculative gallery change before e3f4 result.",
-      "Fresh modules /tmp/ledger-category-modules.oGKryQ used for compiles. Disk~320MiB, no full localbuild/large download. No schema/server/Auth changes. Product audit complete; O-065 unresolved. Supabase changelog checked via public docs; no API change used. Hosted/offline end-to-end/migration/cutover remain unverified. Preserve full goal and Firebase exclusion."
+      "Current follow-on fixes actual Mac gallery clipping after unpin: photo/surface yield height before fixed controls; parent no longer switches300/600 minimum. iPhone layout unchanged. Test requires image>40pt, hittable/in-window Done and eventual image disappearance. Both XCTest and full app typechecks PASS; independent review found no defect. Run integrated conversion/diff, commit/push once. Native short-window layout proof pending.",
+      "Category6a4951a4f5bfc89fe8b1018fe0a87178740a807b/CI34391233972 conversion/provider PASS; native iPhone102601180674/Mac102601180737 running. Category exactSQL12checks/full compiles/review passed, native new reader/watch/restart/model/UI tests still pending. No completion or re-dispatch.",
+      "e3f4/CI34389224602 Mac1076native PASS/UI23of24: gallery reached finalclose1079; screenshot /tmp/ledger-e3-gallery.gJdszT/Test-LedgerTargetStaging-2026.09.09_18-42-50-+0000.xcresult/15D1B4AE-1EFB-422A-B5D8-29FC02F4F3C7.png proves clipped header/footer. Current follow-on addresses layout. iPhone102594223063 still LIVE; watch46754 followsrun, resume/filter, no duplicate. Log /tmp/ledger-e3f4-macos-ci.log.",
+      "01ca/CI34388379167 TERMINAL FAILED: Mac23of24, iPhone28of29, both Space links/Copy pass; only gallery failures already addressed later. Logs /tmp/ledger-01ca-{macos,ios}-ci.log. Superseded cb491/34388753264 CANCELLED, verified ancestor of newer full runs. Old watches68321/32148 terminal consumed. Preserve untracked evidence. Disk~300MiB; fresh compile modules /tmp/ledger-category-modules.oGKryQ. Product audit complete; O-065 unresolved; hosted/migration/cutover unverified."
     ]
   },
   "blockers": [],

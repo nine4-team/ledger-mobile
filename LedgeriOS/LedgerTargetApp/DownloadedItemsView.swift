@@ -524,7 +524,7 @@ private struct DownloadedItemDetailView: View {
             }
         }
         #if os(macOS)
-        .frame(minWidth: 280, minHeight: pinnedImage == nil ? 300 : 600)
+        .frame(minWidth: 280, minHeight: 300)
         #else
         .frame(minWidth: 280, minHeight: 300)
         #endif
