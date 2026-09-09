@@ -4,6 +4,59 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Row selection prunes removed IDs and cannot select an ineligible Item")
+    func selectionEligibility() throws {
+        let a = try ItemID(validating: "a"), b = try ItemID(validating: "b")
+        let outside = try ItemID(validating: "outside")
+        var selection = DownloadedItemSelection()
+        selection.toggle(itemId: a, visible: [a, b])
+        #expect(selection.ids == [a])
+        selection.toggle(itemId: outside, visible: [b])
+        #expect(selection.ids.isEmpty)
+        selection.toggle(itemId: b, visible: [b])
+        #expect(selection.ids == [b])
+        selection.toggle(itemId: b, visible: [b])
+        #expect(selection.ids.isEmpty)
+    }
+
+    @Test("Select all fills partial selection, deselects all and never selects an empty list")
+    func selectionAllAndEmpty() throws {
+        let a = try ItemID(validating: "a"), b = try ItemID(validating: "b")
+        var selection = DownloadedItemSelection()
+        #expect(!selection.isAllSelected(visible: []))
+        selection.toggle(itemId: a, visible: [a, b])
+        #expect(!selection.isAllSelected(visible: [a, b]))
+        selection.toggleAll(visible: [a, b, b])
+        #expect(selection.ids == [a, b])
+        #expect(selection.isAllSelected(visible: [b, a]))
+        selection.toggleAll(visible: [b, a])
+        #expect(selection.ids.isEmpty)
+        selection.toggleAll(visible: [a])
+        selection.toggleAll(visible: [])
+        #expect(selection.ids.isEmpty)
+        #expect(!selection.isAllSelected(visible: []))
+        selection.toggleAll(visible: [a, b])
+        selection.clear()
+        #expect(selection == DownloadedItemSelection())
+    }
+
+    @Test("Clearing a filter or reordering does not restore removed selection")
+    func selectionReconciliation() throws {
+        let a = try ItemID(validating: "a"), b = try ItemID(validating: "b")
+        var selection = DownloadedItemSelection()
+        selection.toggleAll(visible: [a, b])
+        selection.reconcile(visible: [b, a])
+        #expect(selection.ids == [a, b])
+        selection.reconcile(visible: [b])
+        #expect(selection.ids == [b])
+        selection.reconcile(visible: [a, b])
+        #expect(selection.ids == [b])
+        selection.toggleAll(visible: [a])
+        #expect(selection.ids == [a])
+        selection.reconcile(visible: [])
+        #expect(selection.ids.isEmpty)
+    }
+
     @Test("All-except and Only preserve intent when values appear later")
     func facetModes() {
         var selection = DownloadedItemFacetSelection.all

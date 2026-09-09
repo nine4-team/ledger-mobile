@@ -810,6 +810,33 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         let itemFilters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        let selectedCount = app.staticTexts["target-items-selected-count"]
+        func assertSelectedCount(_ count: Int) {
+            XCTAssertTrue(waitUntil {
+                selectedCount.label == "\(count) selected" || (selectedCount.value as? String) == "\(count) selected"
+            }, app.debugDescription)
+        }
+        let chairSelection = app.buttons["target-item-select-physical-ui-chair"]
+        reveal(chairSelection, in: app)
+        chairSelection.tap()
+        assertSelectedCount(1)
+        let unassignedSelectionRow = app.buttons["target-physical-item-physical-ui-unassigned"]
+        reveal(unassignedSelectionRow, in: app)
+        unassignedSelectionRow.tap()
+        assertSelectedCount(2)
+        XCTAssertFalse(app.staticTexts["target-item-history-partial"].exists)
+        let clearSelection = app.buttons["target-items-selection-clear"]
+        reveal(clearSelection, in: app)
+        clearSelection.tap()
+        assertSelectedCount(0)
+        let selectAll = app.buttons["target-items-select-all"]
+        reveal(selectAll, in: app)
+        selectAll.tap()
+        assertSelectedCount(3)
+        selectAll.tap()
+        assertSelectedCount(0)
+        selectAll.tap()
+        assertSelectedCount(3)
         reveal(itemFilters, in: app)
         itemFilters.tap()
         #if os(macOS)
@@ -820,9 +847,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["No SKU"].tap()
         #endif
         XCTAssertTrue(item.waitForNonExistence(timeout: 5))
+        assertSelectedCount(1)
         XCTAssertTrue(app.buttons["target-physical-item-physical-ui-unassigned"].exists)
         app.buttons["target-items-filters-clear"].tap()
         XCTAssertTrue(item.waitForExistence(timeout: 5))
+        assertSelectedCount(1) // Clearing filters does not restore discarded selections.
+        reveal(unassignedSelectionRow, in: app)
+        unassignedSelectionRow.tap()
+        assertSelectedCount(0)
+        XCTAssertFalse(app.staticTexts["target-item-history-partial"].exists)
         let unknownGroup = "target-items-group-relationshipEvidenceIncomplete"
         let disclosure = app.buttons[unknownGroup]
         reveal(disclosure, in: app)
@@ -862,6 +895,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(refresh, in: app)
         refresh.tap()
         XCTAssertTrue(item.waitForExistence(timeout: 5))
+        reveal(chairSelection, in: app)
+        chairSelection.tap()
+        assertSelectedCount(1)
         let remove = app.buttons["target-ui-fixture-remove-account"]
         reveal(remove, in: app, upwards: false)
         remove.tap()
@@ -869,6 +905,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             .matching(identifier: "target-workspace-access-removed").firstMatch.waitForExistence(timeout: 5))
         XCTAssertFalse(item.exists)
         XCTAssertFalse(refresh.exists)
+        XCTAssertFalse(selectedCount.exists)
+        XCTAssertFalse(selectAll.exists)
     }
 
     func testArchivedProjectHistoryNavigation() throws {

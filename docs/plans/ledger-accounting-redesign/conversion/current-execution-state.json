@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 341,
+  "stateVersion": 342,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "CHARGE-REPORT-BOTH-PLATFORMS-GREEN",
-    "commit": "af7ff57d959894f147bf14cf2953eff55ed4a614",
-    "ciRun": 34321387603,
+    "name": "ATOMIC-PROJECT-ITEMS-BOTH-PLATFORMS-GREEN",
+    "commit": "5538ef14635d2e38818bfe8e958d28d15a557cb8",
+    "ciRun": 34323220368,
     "ciStatus": "passed",
-    "meaning": "Exact CI passed803 database checks,1002 native tests148 suites,17MacUI,15iPhoneUI and both builds. Shared Client-paid/open/frozen charge report evidence verified. Newer Item browsing and interactions have separate live CI. Hosted/hardware, Item writes, migration and cutover remain incomplete."
+    "meaning": "Exact CI passed803DB,1014native150suites,17MacUI,15iPhoneUI and both builds. Atomic physical/accounting Item readback and history/refresh/removal verified. Later filters/expansion/selection need their own UI runs. No broad Item, hosted, migration or cutover completion."
   },
   "activeWorkflow": {
     "id": "active-workspace-to-space-checklist",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Current checkpoint replaces broken native DisclosureGroup with explicit expansion buttons/rows and adds Name/SKU facets (All/Only/All-except, OR within/AND across, clear/reset). Independent review GO;5focused and1020native151suites passed, app/Mac+iPhone XCTest typechecks and environment passed. UI test covers SKU exclusion/Clear, search, four sorts and collapse/reopen. Commit/push scoped batch and follow its single automatic exact-commit CI; real UI correction remains unverified.",
-      "34324450033/67c433b2 and34324884277/a491d1a6 TERMINAL FAILED: same two Mac Item tests, labels rendered but no Item rows in embedded List cell. Current explicit-button fix addresses observed rendering, not weakened assertions. iPhone skipped.34323220368/5538ef14 still live, iPhone started07:44:33UTC. Do not poll terminal runs or redispatch.",
-      "O016/O027/O065 Item-write decisions unanswered; do not invent approval. Continue approved read-only Item behavior; additional facets/cards/detail/selection/writes unfinished. Live Invoice membership must extend report readers before Invoice workflow ships. No broad Item completion claim.",
-      "Baseline af7ff57d whole-green recorded above. Local schema manually applied through064122 INCLUDING060126; prior803DB,9two-session races+6isolation,97stream captures,HTTP/native parity valid for unchanged backend. Hosted/hardware/migration/cutover incomplete. Disk~565MiB: avoid large builds/downloads; preserve artifacts."
+      "Current selection follow-on: individual/select-all/Clear, exact-ID open-vs-toggle, prune hidden/removed/scope/loading/access state. Root reviewed delegated Core helper; independent UI review GO.8focused+1023native151suites passed; app and Mac/iPhone XCTest typechecks passed. Native UI assertions cover selection/clear/all/filter pruning/non-restoration and removal while selected. Commit/push scoped batch after final checks, then follow single automatic exact-commit CI; no broad Item completion.",
+      "2c0421adf234113b60a9f116e125cea92be6b80f CI34327248788 still live (state/provider passed, native tests running last observed). Contains explicit Item expansion rendering fix and Name/SKU filters.34324450033/34324884277 terminal same two Mac Item failures are corrected there; do not poll terminal runs or redispatch.5538ef14 whole-green recorded as baseline.",
+      "O016/O027/O065 Item-write decisions remain unanswered. Additional facets/cards/detail/selection totals/bulk writes remain incomplete. Source grouping uses SKU plus source boundaries and unambiguous name fallback, not naive name-only grouping; inspect existing grouping authority before implementing. Live Invoice membership must extend report readers before Invoice workflow ships.",
+      "Local schema manually applied through064122 INCLUDING060126; unchanged backend evidence remains valid. Hosted/hardware/migration/cutover incomplete. Disk~539MiB: avoid large builds/downloads; preserve artifacts."
     ]
   },
   "blockers": [],

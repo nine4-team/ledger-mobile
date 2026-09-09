@@ -35,6 +35,39 @@ public enum DownloadedItemOrder: String, CaseIterable, Sendable {
     case nameAscending = "Name A–Z", nameDescending = "Name Z–A"
 }
 
+/// Selection owns stable physical identities, never rows or financial authority.
+/// Callers supply their current scoped, filtered eligible IDs on every action.
+public struct DownloadedItemSelection: Equatable, Sendable {
+    public private(set) var ids: Set<ItemID> = []
+
+    public init() {}
+
+    public mutating func reconcile(visible: [ItemID]) {
+        ids.formIntersection(visible)
+    }
+
+    public mutating func toggle(itemId: ItemID, visible: [ItemID]) {
+        let eligible = Set(visible)
+        ids.formIntersection(eligible)
+        guard eligible.contains(itemId) else { return }
+        if !ids.insert(itemId).inserted { ids.remove(itemId) }
+    }
+
+    public mutating func toggleAll(visible: [ItemID]) {
+        let eligible = Set(visible)
+        ids.formIntersection(eligible)
+        if ids == eligible { ids.removeAll() }
+        else { ids = eligible }
+    }
+
+    public mutating func clear() { ids.removeAll() }
+
+    public func isAllSelected(visible: [ItemID]) -> Bool {
+        let eligible = Set(visible)
+        return !eligible.isEmpty && eligible.isSubset(of: ids)
+    }
+}
+
 /// Same All/None-then-toggle interaction as the shared Item facets. Keep Only
 /// distinct from All-except so selection intent survives changing option sets.
 public enum DownloadedItemFacetSelection: Equatable, Sendable {

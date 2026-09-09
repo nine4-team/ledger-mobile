@@ -14,6 +14,7 @@ struct DownloadedItemsView: View {
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
     @State private var filters = DownloadedItemFilters()
+    @State private var selection = DownloadedItemSelection()
     @State private var collapsedSections: Set<ProjectItemAccountingResolution> = []
     @FocusState private var searchFocused: Bool
 
@@ -76,6 +77,7 @@ struct DownloadedItemsView: View {
                         : "Matching Items: \(rows.count) of \(snapshot.rows(in: spaceId).count) downloaded")
                         .font(.caption)
                         .accessibilityIdentifier("target-items-downloaded-count")
+                    selectionControls(rows.map(\.itemId))
                 }
                 if snapshot.accountId != accountId || snapshot.scope != scope {
                     ProgressView("Loading downloaded Items…")
@@ -113,7 +115,32 @@ struct DownloadedItemsView: View {
         .onChange(of: accountId) { _, _ in resetContext() }
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
-        .onDisappear { model.clear(); selectedItem = nil }
+        .onChange(of: visibleItemIds, initial: true) { _, ids in selection.reconcile(visible: ids) }
+        .onDisappear { model.clear(); selectedItem = nil; selection.clear() }
+    }
+
+    private var visibleItemIds: [ItemID] {
+        guard case .downloaded(let snapshot) = model.state,
+              snapshot.accountId == accountId, snapshot.scope == scope else { return [] }
+        return snapshot.rows(in: spaceId, matching: search, order: order, filters: filters).map(\.itemId)
+    }
+
+    private func selectionControls(_ ids: [ItemID]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button(selection.isAllSelected(visible: ids) ? "Deselect all visible" : "Select all visible") {
+                selection.toggleAll(visible: visibleItemIds)
+            }
+            .disabled(ids.isEmpty)
+            .accessibilityIdentifier("target-items-select-all")
+            Text("\(selection.ids.intersection(ids).count) selected")
+                .accessibilityIdentifier("target-items-selected-count")
+            if !selection.ids.intersection(ids).isEmpty {
+                Button("Clear selection") { selection.clear() }
+                    .accessibilityIdentifier("target-items-selection-clear")
+                Text("Selected price totals and bulk edits are not available yet.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 
     private var partialNotice: String {
@@ -168,13 +195,30 @@ struct DownloadedItemsView: View {
     }
 
     private func itemButton(_ row: PhysicalItemPlacement) -> some View {
-        Button(row.displayName.isEmpty ? "Untitled Item" : row.displayName) {
-            selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
+        HStack {
+            Button {
+                selection.toggle(itemId: row.itemId, visible: visibleItemIds)
+            } label: {
+                Image(systemName: selection.ids.contains(row.itemId) ? "checkmark.circle.fill" : "circle")
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Select \(row.displayName.isEmpty ? "Untitled Item" : row.displayName)")
+            .accessibilityValue(selection.ids.contains(row.itemId) ? "Selected" : "Not selected")
+            .accessibilityIdentifier("target-item-select-\(row.itemId.rawValue)")
+            Button(row.displayName.isEmpty ? "Untitled Item" : row.displayName) {
+                selection.reconcile(visible: visibleItemIds)
+                guard visibleItemIds.contains(row.itemId) else { return }
+                if selection.ids.isEmpty {
+                    selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
+                } else {
+                    selection.toggle(itemId: row.itemId, visible: visibleItemIds)
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(selection.ids.isEmpty && !(reader is any DownloadedItemPlacementHistoryReading))
+            .accessibilityHint(selection.ids.isEmpty ? "Show downloaded location history" : "Toggle selection")
+            .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
         }
-        .buttonStyle(.plain)
-        .disabled(!(reader is any DownloadedItemPlacementHistoryReading))
-        .accessibilityHint("Show downloaded location history")
-        .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
     }
 
     private func resetContext() {
@@ -182,6 +226,7 @@ struct DownloadedItemsView: View {
         search = ""
         order = .newest
         filters = .init()
+        selection.clear()
         collapsedSections = []
         searchFocused = false
     }
