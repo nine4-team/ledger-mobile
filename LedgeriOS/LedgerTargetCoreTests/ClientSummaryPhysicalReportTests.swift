@@ -4,6 +4,37 @@ import Testing
 
 @Suite("ClientSummaryPhysicalReport snapshot")
 struct ClientSummaryPhysicalReportTests {
+    @Test("MCP shares exact native physical report bytes, including incomplete previews")
+    func onlineGoldenParity() throws {
+        let base = try fixture(indices: [2, 1], clientRevision: 9_007_199_254_740_993)
+        let p = base.provenance
+        let online = PropertyManagementReportProvenance(accountId: p.accountId, projectId: p.projectId,
+            principalId: p.principalId, visibilityScopeID: p.visibilityScopeID, source: .authoritative,
+            authorityVersion: p.authorityVersion, asOf: p.asOf, readiness: .ready)
+        let snapshots = try [true, false].map { complete in
+            let source = try fixture(indices: [2, 1], clientRevision: 9_007_199_254_740_993,
+                                     knownCategory: complete)
+            return try ClientSummaryPhysicalReportSnapshot.build(project: source.project,
+                client: complete ? source.client : .unavailable(clientId: ClientID(validating: "client")),
+                spaces: source.spaces, items: source.items.map { item in
+                    ClientSummaryPhysicalReportItem(accountId: item.accountId, projectId: item.projectId,
+                        itemId: item.itemId, placementId: item.placementId, spaceId: item.spaceId,
+                        name: "Chair / \"青\"\nblue", sku: nil, category: item.category,
+                        itemRevision: item.itemRevision, accounting: complete ? item.accounting : nil)
+                }, provenance: online)
+        }
+        let data = Data((try snapshots.map { String(decoding: try $0.canonicalData(), as: UTF8.self) }
+            .joined(separator: "\n") + "\n").utf8)
+        if let path = ProcessInfo.processInfo.environment["LEDGER_CLIENT_REPORT_GOLDEN_OUTPUT"] {
+            try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        } else {
+            let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+                .deletingLastPathComponent().deletingLastPathComponent()
+            let fixture = repository.appendingPathComponent("LedgerTargetMCP/tests/fixtures/client-summary-physical-online.jsonl")
+            #expect(try Data(contentsOf: fixture) == data)
+        }
+    }
+
     @Test func stableOrderingAndIdentity() throws {
         let a = try fixture(indices: [2, 1]), b = try fixture(indices: [1, 2])
         #expect(a == b)

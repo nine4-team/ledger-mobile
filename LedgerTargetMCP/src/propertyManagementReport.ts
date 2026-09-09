@@ -66,6 +66,10 @@ export type PropertyManagementReportSnapshot = PropertyManagementReportContent &
 }>;
 
 const MIN = -(1n << 63n), MAX = (1n << 63n) - 1n, UINT_MAX = (1n << 64n) - 1n;
+// Shared validation/encoding for the two concrete report builders, not provider
+// authority. Callers still validate each report's own scopes and completeness.
+export const propertyReportSupport = Object.freeze({ string, nullableText, id, revision,
+  scope, unique, ordered, record, accounting, hash, canonical });
 function fail(code: string): never { throw new TargetMCPFailure(`property_report_${code}`); }
 function string(value: unknown): string {
   if (typeof value !== "string") fail("invalid_text");
@@ -111,7 +115,9 @@ function record(value: unknown): Record<string, unknown> {
 }
 /** Decode the same constrained relationships as Swift, rebuilding derived state
  * and optional fields before hashing; a caller-supplied resolution is not proof. */
-function accounting(value: unknown, item: PropertyManagementReportItem): ProjectItemAccountingRow {
+function accounting(value: unknown,
+  item: Pick<PropertyManagementReportItem, "accountId" | "projectId" | "itemId" | "spaceId">,
+  allowIncomplete = false): ProjectItemAccountingRow {
   if (value === undefined || value === null) fail("incomplete_readiness");
   const row = record(value), evidence = record(row.evidence);
   const accountId = id(evidence.accountId), projectId = id(evidence.projectId);
@@ -154,7 +160,7 @@ function accounting(value: unknown, item: PropertyManagementReportItem): Project
   const resolution = clientPaidPurchases.length || billableOccurrences.length ? "accountedFor"
     : row.relationshipAbsenceIsAuthoritative ? "unaccountedFor" : "relationshipEvidenceIncomplete";
   if (row.resolution !== resolution) fail("invalid_accounting");
-  if (resolution === "relationshipEvidenceIncomplete") fail("incomplete_readiness");
+  if (resolution === "relationshipEvidenceIncomplete" && !allowIncomplete) fail("incomplete_readiness");
   if (accountId !== item.accountId || projectId !== item.projectId || itemId !== item.itemId
       || spaceId !== item.spaceId) fail("scope_mismatch");
   return { evidence: { accountId, projectId, clientId, itemId, ...(spaceId === null ? {} : { spaceId }),

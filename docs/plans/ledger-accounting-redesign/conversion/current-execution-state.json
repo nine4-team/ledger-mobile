@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 322,
+  "stateVersion": 325,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Implement correctly eligible Client Summary physical detail and repair the shared Property Management eligibility gap before report completion.",
     "nextActions": [
-      "Category report increment prepared for commit; inspect HEAD/run first to avoid duplicate work. Prior5c3a1639 CI34315667293 TERMINAL FAILURE: sole reported stream test expected removed Client created_at/updated_at. Corrected with8-query contract in current batch. Next normal automatic CI should reach native/iPhone tests. Continue business-paid Item source afterwards; no hosted provisioning or policy guesses.",
-      "Current category source/read implemented: spike_item_project_categories exact placement/Account category metadata, existing category visibility and archived label retention; no writer grants. Native full Client-paid Client Summary becomes complete, renames bind identity and downgrade hides retained labels.8 actual SQL streams/real MCP HTTP/native differential passed (tmp/report-category-parity.TSVrzx/actual.json).37 actual PowerSync queries/18outputs compile; environment passed. Independent review no blocking read findings; row-lock correction plus rollback-only concurrency test passed.",
+      "Client Summary MCP integrated: physical-only invoker RPC20260909061518, tool/stdio/read, independently reviewed.23 focused SQL/775 full DB,59 MCP/typecheck, native complete/incomplete golden and actual Supabase→MCP→8stream rows→native full snapshot/hash differential pass (/tmp/ledger-client-rpc-parity-20260909.json). Unicode blank category mismatch corrected. Commit/push this report increment excluding draft charge migration; follow its single automatic CI. Business-paid source remains next product gap, not full report completion.",
+      "Uncommitted20260909060126_item_charge_occurrence_source.sql is a draft only, NOT applied or tested; no writer/Sync/read integration. Before accepting: serialize collection with charge mutation, preserve final values on withdrawal, validate actual source/role/price/category. O016 missing-Purchase question remains unanswered. Do not infer eligibility from this unused table or frozen Invoice JSON.",
+      "Category report increment27355441eaf1ec1dc2c934f1308941af7c5a856d committed/pushed. Automatic CI34316890317 confirmed IN_PROGRESS; follow exact run, no redispatch/restart. Prior5c3a1639 CI34315667293 terminal failure solely stale Client timestamp expectation, now corrected. Continue business-paid Item source while CI runs. iPhone UI remains unverified; cfc7 is last green checkpoint.",
       "Integrated DB752 tests passed;12 focused category checks pass after lock-only trigger improvement. Full native997 had one note-pagination assertion racing watch registration; corrected to assert actual page reads,13 focused note tests pass (/tmp/ledger-category-note-race-fix.log). Other996 passed incl actual Client Summary source test. Conversion check passed. No need rerun all suites to resume. iPhone UI, business-paid source, Client Summary MCP and hosted replication remain incomplete.",
-      "Local DB current schema manually applied WITHOUT migration history through20260909054104; guard_item_project_category replaced after adding placement lock. Earlier20260908 post024101 migrations also manually applied. Do not blindly migration-up/reapply/reset. Docker healthy,~2.5GiB disk; preserve diagnostic artifacts and avoid full local Xcode builds. A-033 records category separation/history/correction boundary. Pending O057/O033/O027/O065/O053/O032/O060 affect only linked outcomes. Audit complete."
+      "Local DB schema manually applied WITHOUT history through20260909054104 plus20260909061518 Client report RPC;060126 charge draft NOT applied. Do not blindly migration-up/reapply/reset. Docker healthy,~2.5GiB disk; preserve artifacts/avoid full local Xcode builds. Advisor only existing spike_spaces multiple-permissive SELECT warning. Pending O057/O033/O027/O065/O053/O032/O060 affect linked outcomes only. Audit complete."
     ]
   },
   "blockers": [],

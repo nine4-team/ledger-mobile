@@ -72,10 +72,25 @@ struct PropertyManagementReportLocalReaderTests {
                 if case .known(_, "Furnishings") = item.category { return true }
                 return false
             })
+            let expectedClient = try #require(fixture["clientReport"] as? [String: Any])
+            let clientProvenance = try #require(expectedClient["provenance"] as? [String: Any])
+            #expect(clientProvenance["principalId"] as? String == principal.rawValue)
+            #expect(clientProvenance["authorityVersion"] as? String == "client-summary-physical-v1")
+            let scopeEncoder = JSONEncoder()
+            scopeEncoder.outputFormatting = [.withoutEscapingSlashes]
+            let scope = try ProtectedArtifactVisibilityScopeID.make(bytes: scopeEncoder.encode([
+                account.rawValue, principal.rawValue, project.rawValue, "client-summary-physical-v1"]))
+            #expect(clientProvenance["visibilityScopeID"] as? String == scope.rawValue)
             let clientSummary = try ClientSummaryPhysicalReportSnapshot.build(project: clientInputs.project,
                 client: clientInputs.client, spaces: clientInputs.spaces, items: clientInputs.items,
-                provenance: snapshot.provenance)
+                provenance: .init(accountId: account, projectId: project, principalId: principal,
+                    visibilityScopeID: scope, source: .authoritative,
+                    authorityVersion: .init(validating: "client-summary-physical-v1"),
+                    asOf: .init(validating: #require(clientProvenance["asOf"] as? Int64)), readiness: .ready))
             #expect(clientSummary.isComplete)
+            let actualClient = try #require(JSONSerialization.jsonObject(with: clientSummary.canonicalData()) as? [String: Any])
+            #expect(NSDictionary(dictionary: actualClient).isEqual(to: expectedClient),
+                "Actual online MCP and downloaded native Client source, provenance and all hashes must agree")
             // Deliberately exclude online-versus-downloaded provenance and the
             // resulting snapshot reference; source data and calculation must match.
             for key in ["reportKind", "project", "spaces", "groups", "totals", "currency", "sourceSetHash"] {

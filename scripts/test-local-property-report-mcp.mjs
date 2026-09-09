@@ -105,7 +105,7 @@ try {
   await verifyCategoryDepartureSerialization();
   await client.connect(transport);
   const list = await client.listTools();
-  assert.deepEqual(list.tools.map(t => t.name), ['get_property_management_report']);
+  assert.deepEqual(list.tools.map(t => t.name), ['get_property_management_report', 'get_client_summary_physical_report']);
   const result = await client.callTool({ name: 'get_property_management_report', arguments: { projectId: project, currency: 'USD' } });
   assert.notEqual(result.isError, true);
   const snapshot = JSON.parse(result.content[0].text);
@@ -128,6 +128,17 @@ try {
   assert.equal(rows.find(r => r.itemId.endsWith('-unknown')).name, 'Unknown chair');
   assert.equal(rows.find(r => r.itemId.endsWith('-zero')).marketValueMinorUnits, '0');
   assert.ok(report.groups.some(g => g.name === 'No Space' && g.rows.length === 2));
+  const readClient = () => client.callTool({ name: 'get_client_summary_physical_report', arguments: { projectId: populated } });
+  const clientResult = await readClient();
+  assert.notEqual(clientResult.isError, true);
+  const clientReport = JSON.parse(clientResult.content[0].text);
+  assert.equal(clientReport.reportKind, 'client_summary_physical');
+  assert.equal(clientReport.items.length, 3);
+  assert.equal(clientReport.client.kind, 'known');
+  assert.ok(clientReport.items.every(item => item.category.known.name === 'Furnishings'
+    && item.accounting.resolution === 'accountedFor'));
+  assert.ok(!Object.hasOwn(clientReport, 'totals') && !Object.hasOwn(clientReport, 'currency'));
+  assert.ok(clientReport.items.every(item => !Object.hasOwn(item, 'marketValueMinorUnits')));
   // Optional differential artifact: actual stream projections, not a second
   // hand-maintained fixture. The native test consumes these exact source rows.
   const parityOutput = process.env.LEDGER_REPORT_PARITY_OUTPUT
@@ -204,7 +215,7 @@ try {
     assert.equal(frozenInvoice.lines[3].item_id, null);
     writeFileSync(parityOutput, JSON.stringify({
       accountId: account, principalId: 'principal-restricted', projectId: populated,
-      currency: 'USD', tables: raw, report, frozenInvoice,
+      currency: 'USD', tables: raw, report, clientReport, frozenInvoice,
     }), { mode: 0o600, flag: 'wx' });
     console.log('Captured actual scoped stream rows, MCP snapshot and SQL frozen Invoice for native differential verification.');
   }
@@ -214,8 +225,13 @@ try {
   const limited = await readPopulated();
   assert.equal(limited.isError, true);
   assert.deepEqual(JSON.parse(limited.content[0].text), { code: 'property_report_incomplete_readiness' });
+  const limitedClient = await readClient();
+  assert.notEqual(limitedClient.isError, true);
+  assert.ok(JSON.parse(limitedClient.content[0].text).items.every(item => item.accounting === null),
+    'Physical preview retains unknown eligibility without leaking hidden payment links');
   sql(`update public.spike_account_memberships set financial_access='full' where account_id='${account}' and principal_id='principal-restricted';`);
   sql(`update public.spike_account_memberships set state='removed' where account_id='${account}' and principal_id='principal-restricted';`);
+  assert.equal((await readClient()).isError, true, 'Removed membership denies Client report with same JWT');
   const revoked = await readPopulated();
   assert.equal(revoked.isError, true);
   assert.deepEqual(JSON.parse(revoked.content[0].text), { code: 'account_not_authorized' });

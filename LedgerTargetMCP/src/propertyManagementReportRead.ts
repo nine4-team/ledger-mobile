@@ -12,14 +12,7 @@ export class SupabasePropertyManagementReportReader {
   readonly #fetch: typeof fetch;
 
   constructor(url: URL, publishableKey: string, fetchImplementation: typeof fetch = fetch) {
-    if ((url.protocol !== "https:" && !(url.protocol === "http:"
-        && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))
-        || url.username || url.password || url.search || url.hash || url.pathname !== "/") {
-      throw new TargetMCPFailure("property_report_configuration_invalid");
-    }
-    if (!credential(publishableKey, "anon") && !/^sb_publishable_[A-Za-z0-9_-]+$/.test(publishableKey)) {
-      throw new TargetMCPFailure("property_report_configuration_invalid");
-    }
+    validateReportConfiguration(url, publishableKey, "property_report_configuration_invalid");
     this.#url = new URL("/rest/v1/rpc/spike_read_property_management_report", url);
     this.#key = publishableKey;
     this.#fetch = fetchImplementation;
@@ -92,10 +85,19 @@ export class SupabasePropertyManagementReportReader {
 
 /** Reject obvious privileged/malformed credentials before transmission. This is
  * not JWT verification: Supabase verifies signature, expiry and authorization. */
-function credential(value: string, role: "anon" | "authenticated"): boolean {
+export function credential(value: string, role: "anon" | "authenticated"): boolean {
   if (typeof value !== "string" || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value)) return false;
   try {
     const claims = JSON.parse(Buffer.from(value.split(".")[1], "base64url").toString("utf8"));
     return claims !== null && typeof claims === "object" && claims.role === role;
   } catch { return false; }
+}
+
+export function validateReportConfiguration(url: URL, publishableKey: string, code: string): void {
+  if ((url.protocol !== "https:" && !(url.protocol === "http:"
+      && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))
+      || url.username || url.password || url.search || url.hash || url.pathname !== "/"
+      || (!credential(publishableKey, "anon") && !/^sb_publishable_[A-Za-z0-9_-]+$/.test(publishableKey))) {
+    throw new TargetMCPFailure(code);
+  }
 }
