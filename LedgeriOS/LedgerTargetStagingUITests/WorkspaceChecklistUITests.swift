@@ -951,6 +951,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(viewer.waitForExistence(timeout: 5))
         XCTAssertGreaterThan(viewer.frame.height, app.frame.height * 0.85,
             "The iPhone viewer must occupy the screen, not a partial-height sheet")
+        let share = app.buttons["target-item-image-share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5))
+        share.tap()
+        let activity = app.otherElements["ActivityListView"].firstMatch
+        XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
+        let dismissShare = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(waitUntil { dismissShare.isHittable }, app.debugDescription)
+        dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { share.isEnabled })
+        XCTAssertFalse(app.alerts["Image"].exists, "Canceling Share is not an export error")
         let rendered = app.images["target-item-image-rendered"]
         XCTAssertTrue(rendered.waitForExistence(timeout: 10))
         let count = app.staticTexts["target-item-images-counter"]
@@ -1109,8 +1120,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
             #if os(macOS)
             XCTAssertTrue(app.menuItems[facet].waitForExistence(timeout: 5), app.debugDescription)
             app.menuItems[facet].tap()
-            XCTAssertTrue(app.menuItems[option].waitForExistence(timeout: 5), app.debugDescription)
-            app.menuItems[option].tap()
+            let choice = app.menuItems[facet].menuItems[option]
+            XCTAssertTrue(choice.waitForExistence(timeout: 5), app.debugDescription)
+            choice.tap()
             #else
             XCTAssertTrue(app.buttons[facet].waitForExistence(timeout: 5), app.debugDescription)
             app.buttons[facet].tap()
@@ -1269,7 +1281,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         for (choice, unassignedFirst) in [("Oldest first", false), ("Newest first", true),
                                          ("Name A–Z", false), ("Name Z–A", true)] {
             let sort = app.descendants(matching: .any).matching(identifier: "target-items-sort").firstMatch
-            reveal(sort, in: app)
+            reveal(sort, in: app, fullyInsideScrollView: true)
             sort.tap()
             #if os(macOS)
             app.menuItems[choice].tap()

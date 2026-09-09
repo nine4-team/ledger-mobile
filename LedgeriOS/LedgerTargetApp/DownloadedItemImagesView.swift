@@ -20,6 +20,7 @@ struct DownloadedItemImagesView: View {
     @State private var controlsVisible = true
     @State private var controlsActivity = UUID()
     @State private var imageScale: CGFloat = 1
+    @State private var exportNotice: String?
     private struct Request: Equatable {
         let accountId: AccountID
         let itemId: ItemID
@@ -95,6 +96,18 @@ struct DownloadedItemImagesView: View {
                                 Button("Pin image for reference") { onPin(selected.id); dismiss() }
                                     .accessibilityIdentifier("target-item-image-pin")
                             }
+                            HStack {
+                                Button("Share image") { export(selected, saveToPhotos: false) }
+                                    .accessibilityIdentifier("target-item-image-share")
+                                #if os(iOS)
+                                Button("Save image to Photos") { export(selected, saveToPhotos: true) }
+                                    .accessibilityIdentifier("target-item-image-save")
+                                #endif
+                            }.disabled(model.isExporting)
+                            if model.isExporting {
+                                ProgressView("Preparing or delivering image…")
+                                    .accessibilityIdentifier("target-item-image-exporting")
+                            }
                         }
                     }
                 }
@@ -110,6 +123,9 @@ struct DownloadedItemImagesView: View {
         #endif
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(isPinned ? "target-pinned-image-viewer" : "target-item-image-viewer")
+        .alert("Image", isPresented: Binding(get: { exportNotice != nil }, set: { if !$0 { exportNotice = nil } })) {
+            Button("OK") { exportNotice = nil }
+        } message: { Text(exportNotice ?? "") }
         .onChange(of: initialSelection?.rawValue.utf8.map { $0 }, initial: true) { _, _ in
             selection = initialSelection
         }
@@ -132,6 +148,46 @@ struct DownloadedItemImagesView: View {
     private func revealControls() {
         controlsVisible = true
         controlsActivity = UUID()
+    }
+
+    private func export(_ image: DownloadedItemImage, saveToPhotos: Bool) {
+        guard !model.isExporting else { return }
+        Task { @MainActor in
+            do {
+                try await model.exportImage(accountId: accountId, itemId: itemId, image: image,
+                    reader: reader, prepareDestination: {
+                        #if os(iOS)
+                        if saveToPhotos { try await DownloadedImagePhotoSaving.requestPermission() }
+                        #endif
+                    }, handoff: { bytes in
+                        #if os(iOS)
+                        if saveToPhotos { try await DownloadedImagePhotoSaving.save(bytes); return }
+                        #endif
+                        try await PropertyManagementReportSystemDelivery.handoffImage(bytes)
+                    })
+                if saveToPhotos { exportNotice = "Image saved to Photos." }
+            } catch {
+                if let failure = error as? DownloadedItemImagesModel.ExportFailure {
+                    switch failure {
+                    case .alreadyExporting: exportNotice = "Finish the current image export first."
+                    case .unavailable: exportNotice = "The image or your access changed. Refresh the image and try again."
+                    case .missingBytes: exportNotice = "This image is not downloaded. Reconnect and try again."
+                    }
+                    return
+                }
+                #if os(iOS)
+                if let permission = error as? DownloadedImagePhotoSaving.Failure {
+                    exportNotice = permission.localizedDescription
+                    return
+                }
+                if saveToPhotos {
+                    exportNotice = "The image could not be saved. \(error.localizedDescription)"
+                    return
+                }
+                #endif
+                exportNotice = "The image could not be exported. Its data or your access may have changed. Reconnect and try again."
+            }
+        }
     }
 }
 

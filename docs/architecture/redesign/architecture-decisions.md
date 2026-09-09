@@ -1507,3 +1507,22 @@ through the approved sign-in composition remain required. List thumbnails, Image
 filtering, complete zoom/pan/pinning, media editing and import are not complete.
 Authority remains `docs/specs/items.md` and `docs/specs/ui/image-pinning.md`; this
 read batch changes no product deletion or accounting policy.
+
+### Item image export uses the existing authorization and native handoff boundary
+
+Save/share requests capture one exact Item image reference. The gallery model
+checks its live scope, reference and load generation before destination preparation,
+after permission prompts and after loading original bytes through the existing
+authorized image reader. Clear/reload, reference removal, missing bytes and
+pre-handoff cancellation prevent delivery; duplicate requests remain blocked
+until the destination finishes. No separate export writer, public Storage URL,
+byte cache or scratch-file store is introduced.
+
+iOS saving requests add-only Photos permission and submits the original resource.
+Native sharing reuses the report delivery lock and completion lifetime with an
+in-memory platform image; the OS chooses its exported representation. Once the
+OS accepts the handoff, access changes cannot recall a destination's copy, and
+caller cancellation does not mean the destination has finished reading it.
+Model tests cover these preparation/lifetime boundaries. Native Photos permission,
+save success and image share completion still require device evidence; this is
+not authorization for background exports, production access or hosted resources.

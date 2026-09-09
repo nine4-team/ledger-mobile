@@ -260,6 +260,7 @@ private struct DownloadedImageNativeSurface: NSViewRepresentable {
             hasVerticalScroller = false
             pixels.imageScaling = .scaleAxesIndependently
             pixels.setAccessibilityElement(true)
+            pixels.setAccessibilityRole(.image)
             pixels.setAccessibilityIdentifier("target-item-image-rendered")
             pixels.setAccessibilityLabel("Item image")
             documentView = pixels

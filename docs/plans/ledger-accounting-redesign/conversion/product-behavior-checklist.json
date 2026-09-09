@@ -27284,6 +27284,13 @@
           "status": "planned"
         },
         {
+          "id": "ITEM-IMAGE-EXPORT",
+          "risk": "media_durability",
+          "expected": "Save/share exports the selected authorized image only after destination preparation and revalidation. Clear/reload/reference removal, unavailable bytes and pre-handoff cancellation reject delivery. Duplicate requests stay blocked until OS completion. iOS add-only Photos saving reports success only after actual save; sharing cancellation is not an error. External destination copies cannot be recalled.",
+          "command": "DownloadedItemImagesModel.exportImage and tests:12focused tests/28cases plus full1058native155suites passed; root reviewed delegated code. Native share reuses existing presentation lock/Mac session with in-memory platform image; Photos uses original bytes and generated add-only purpose string. iOS native delivery,bothXCTest,Macapp/environment checks passed; final UI error-copy check pending. Added native iOS Share cancellation/re-enable assertion; Photos success/denial and image share completion still unverified. ADR records authorization and destination lifetime. CI5721c40f terminal20Mac/3fail,22iPhone/2fail; exact logs identified Mac image AXrole,ambiguous Workflow option,Sort reveal corrected in this batch. iPhonePin/SelectAll remain unproved against newer code.",
+          "status": "planned"
+        },
+        {
           "id": "ITEM-IMAGE-PROTECTED-READ",
           "risk": "media_durability",
           "expected": "Only the same live authorized Item reference may return verified protected bytes; reference replacement, Account removal and close reject in-flight results. Cached bytes remain reusable offline without being mistaken for Item authority. Missing catalog metadata is not No Image.",

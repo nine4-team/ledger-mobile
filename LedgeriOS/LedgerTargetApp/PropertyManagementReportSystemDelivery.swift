@@ -6,6 +6,29 @@ import ApplicationServices
 import PDFKit
 #elseif os(iOS)
 import UIKit
+import Photos
+#endif
+
+#if os(iOS)
+@MainActor enum DownloadedImagePhotoSaving {
+    enum Failure: LocalizedError {
+        case permissionDenied
+        var errorDescription: String? { "Allow Ledger to add photos in Settings, then try saving again." }
+    }
+
+    static func requestPermission() async throws {
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized else { throw Failure.permissionDenied }
+    }
+
+    static func save(_ data: Data) async throws {
+        try Task.checkCancellation()
+        // Use the original image resource, not the viewer's downsampled pixels.
+        try await PHPhotoLibrary.shared().performChanges {
+            PHAssetCreationRequest.forAsset().addResource(with: .photo, data: data, options: nil)
+        }
+    }
+}
 #endif
 
 /// Native handoff only. The caller owns authorization, the exact report bytes,
@@ -29,6 +52,49 @@ enum PropertyManagementReportSystemDelivery {
             case .presentationFailed: "The system could not open the report delivery controls."
             }
         }
+    }
+
+    /// Images share the same native presentation lock and completion lifetime
+    /// as reports. Original authorized bytes stay in memory; no public URL or
+    /// second scratch-file store is introduced for image export.
+    static func handoffImage(_ data: Data) async throws {
+        try Task.checkCancellation()
+        guard !presenting else { throw Failure.alreadyPresenting }
+        presenting = true
+        defer { presenting = false }
+        #if os(macOS)
+        guard let image = NSImage(data: data) else { throw Failure.unreadableFile }
+        guard let window = NSApp.keyWindow ?? NSApp.mainWindow, let view = window.contentView,
+              window.attachedSheet == nil else { throw Failure.unavailablePresenter }
+        let session = MacShareSession()
+        defer { withExtendedLifetime(session) {} }
+        try await session.run(items: [image], view: view)
+        #elseif os(iOS)
+        guard let image = UIImage(data: data) else { throw Failure.unreadableFile }
+        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive }.flatMap(\.windows).filter(\.isKeyWindow)
+        guard windows.count == 1, var presenter = windows[0].rootViewController else { throw Failure.unavailablePresenter }
+        while let presented = presenter.presentedViewController { presenter = presented }
+        guard presenter.viewIfLoaded?.window != nil, !presenter.isBeingDismissed, !presenter.isBeingPresented else {
+            throw Failure.unavailablePresenter
+        }
+        let activity = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        if let popover = activity.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = anchor(in: presenter.view)
+            popover.permittedArrowDirections = []
+        }
+        defer { withExtendedLifetime(activity) {} }
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let completion = Completion(continuation)
+            activity.completionWithItemsHandler = { _, _, _, error in
+                Task { @MainActor in completion.finish(error: error) }
+            }
+            presenter.present(activity, animated: true)
+        }
+        #else
+        throw Failure.unavailablePresenter
+        #endif
     }
 
     static func handoff(_ url: URL, action: Action) async throws {
@@ -136,9 +202,13 @@ enum PropertyManagementReportSystemDelivery {
         private var sourceView: NSView?
 
         func run(url: URL, view: NSView) async throws {
-            sourceView = view
             let item = try PropertyManagementReportShareItem.make(fileURL: url)
-            let picker = NSSharingServicePicker(items: [item])
+            try await run(items: [item], view: view)
+        }
+
+        func run(items: [Any], view: NSView) async throws {
+            sourceView = view
+            let picker = NSSharingServicePicker(items: items)
             self.picker = picker
             picker.delegate = self
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

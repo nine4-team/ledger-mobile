@@ -39,6 +39,7 @@ targets:
         ENABLE_USER_SCRIPT_SANDBOXING: YES
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Ledger STAGING
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Save selected Ledger images to your photo library.
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]":
           - "$(inherited)"
