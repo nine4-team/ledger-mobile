@@ -562,6 +562,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         }
     }
     func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-groups") {
+            let rows = try [("group-a", "Group chair", "Store", "Design Inventory"),
+                            ("group-b", "Renamed copy", "store", "Design Inventory"),
+                            ("group-c", "Other vendor chair", "Other vendor", "Other vendor")].map { id, name, source, current in
+                try PhysicalItemPlacement(itemId: .init(validating: id), description: name, itemRevision: 1,
+                    placementId: .init(validating: "placement-\(id)"), scope: scope, spaceId: nil,
+                    sku: "CHAIR-1", source: source, currentSource: current)
+            }
+            return try .init(accountId: accountId, scope: scope, rows: rows)
+        }
         let row = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-chair"),
             description: "Downloaded test chair", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-placement"), scope: scope,

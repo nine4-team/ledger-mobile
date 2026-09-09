@@ -58,8 +58,8 @@ for (const [index, project] of projects.entries()) {
     values (${q(project)},'account-primary',${q(clients[index])},'Synthetic property','Not a property address',now(),now(),1,1,'principal-owner');`);
   sql.push(`insert into public.spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle)
     values (${q(ids[0][index])},'account-primary','project',${q(project)},'Archived actual room','archived');`);
-  sql.push(`insert into public.spike_items(id,account_id,name,description,sku,market_value_minor_units,market_value_currency,created_by_principal_id)
-    values (${q(ids[2][index])},'account-primary',${index === 0 ? "'Actual Item name'" : "null"},'Not the Item name','SKU',${index === 0 ? "0,'USD'" : "null,null"},'principal-owner');`);
+  sql.push(`insert into public.spike_items(id,account_id,name,description,sku,source,current_source,market_value_minor_units,market_value_currency,created_by_principal_id)
+    values (${q(ids[2][index])},'account-primary',${index === 0 ? "'Actual Item name'" : "null"},'Not the Item name','SKU','Original vendor',${index === 0 ? "'Inventory'" : "''"},${index === 0 ? "0,'USD'" : "null,null"},'principal-owner');`);
   sql.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,space_id,started_at,started_by_principal_id)
     values (${q(ids[1][index])},'account-primary',${q(ids[2][index])},'project',${q(project)},${q(ids[0][index])},'2026-09-01','principal-owner');`);
   sql.push(`insert into public.spike_transactions(id,account_id,project_id,client_id,amount_minor_units,currency)
@@ -115,7 +115,7 @@ const columns = [
   ["id", "account_id", "client_id", "display_name", "description", "legacy_notes", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
   ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
-  ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
+  ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "source", "current_source", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
   ["id", "account_id", "display_name", "lifecycle", "revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   ["id", "account_id", "project_id", "client_id", "item_id", "placement_id", "transaction_id", "transaction_type", "transaction_role", "ended_at"],
   ["id", "account_id", "project_id", "item_id", "category_id", "revision"],
@@ -141,6 +141,8 @@ for (const { label, index, rows } of results) {
   if (index === 4) assert.equal(row.lifecycle, selected === 0 ? "archived" : "active", "Retain exact historical Client without including another Project's Client");
   if (index === 3) {
     assert.equal(row.name, selected === 0 ? "Actual Item name" : null);
+    assert.equal(row.source, "Original vendor");
+    assert.equal(row.current_source, selected === 0 ? "Inventory" : "");
     assert.equal(row.market_value_minor_units, selected === 0 ? "0" : null);
     assert.equal(row.market_value_currency, selected === 0 ? "USD" : null);
   }

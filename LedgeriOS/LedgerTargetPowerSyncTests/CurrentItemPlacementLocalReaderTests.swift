@@ -10,6 +10,30 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Original source and immediate origin stay distinct across encrypted restart")
+    func sourceOriginMetadata() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let row = try #require(try await reader.readSnapshot(accountId: account, principalId: principal,
+                scope: .project(project)).rows.first)
+            #expect(row.source == " Original vendor ")
+            #expect(row.currentSource == "Design Inventory")
+            _ = try await db.execute(sql: "UPDATE spike_items SET current_source='',revision=2 WHERE id='chair'", parameters: nil)
+            let blank = try #require(try await reader.readSnapshot(accountId: account, principalId: principal,
+                scope: .project(project)).rows.first)
+            #expect(blank.currentSource == "")
+            #expect(blank.source == " Original vendor ")
+            _ = try await db.execute(sql: "UPDATE spike_items SET current_source=NULL,revision=3 WHERE id='chair'", parameters: nil)
+            #expect(try await reader.readSnapshot(accountId: account, principalId: principal,
+                scope: .project(project)).rows.first?.currentSource == nil)
+        }) { db in
+            let absent = try #require(try await CurrentItemPlacementLocalReader(database: db)
+                .readSnapshot(accountId: account, principalId: principal, scope: .project(project)).rows.first)
+            #expect(absent.source == nil && absent.currentSource == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET source=' Original vendor ',current_source='Design Inventory' WHERE id='chair'", parameters: nil)
+        }
+    }
+
     @Test("Raw workflow and nullable bookmark survive encrypted restart without accounting inference")
     func workflowBookmarkMetadata() async throws {
         try await withDatabase(reopen: { db in

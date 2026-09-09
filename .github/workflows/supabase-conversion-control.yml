@@ -110,6 +110,8 @@ jobs:
         env:
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"
         run: npm run target:staging:ui:test:macos
+        id: macos_ui
+        continue-on-error: true
 
       - name: Build target staging for iOS Simulator
         run: npm run target:staging:build:ios
@@ -130,6 +132,10 @@ jobs:
             -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test
+
+      - name: Require successful macOS UI tests
+        if: always() && steps.macos_ui.outcome != 'success'
+        run: exit 1
 
       - name: Preserve failed native UI test evidence
         if: failure()

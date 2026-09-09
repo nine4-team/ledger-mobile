@@ -780,6 +780,69 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(item.exists)
     }
 
+    func testDownloadedItemGroupsAndImmediateSource() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-groups",
+                               "--ledger-ui-test-reset-inventory-section"]
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        let expand = app.buttons["target-item-group-expand-group-a"]
+        reveal(expand, in: app)
+        XCTAssertTrue(expand.exists)
+        XCTAssertTrue(expand.label.contains("×2") || (expand.value as? String)?.contains("×2") == true)
+        let first = app.buttons["target-physical-item-group-a"]
+        let second = app.buttons["target-physical-item-group-b"]
+        let other = app.buttons["target-physical-item-group-c"]
+        XCTAssertFalse(first.exists)
+        XCTAssertFalse(second.exists)
+        XCTAssertTrue(other.exists)
+        let source = app.staticTexts["target-item-source-group-a"]
+        XCTAssertTrue(source.label == "Design Inventory" || (source.value as? String) == "Design Inventory")
+        let groupSelect = app.buttons["target-item-group-select-group-a"]
+        groupSelect.tap()
+        let count = app.staticTexts["target-items-selected-count"]
+        XCTAssertTrue(waitUntil { count.label == "2 selected" || (count.value as? String) == "2 selected" })
+        expand.tap()
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertTrue(second.exists)
+        expand.tap()
+        XCTAssertTrue(first.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(second.exists)
+        XCTAssertTrue(other.exists)
+        expand.tap()
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertTrue(second.exists)
+        reveal(second, in: app)
+        second.tap()
+        XCTAssertTrue(waitUntil { count.label == "1 selected" || (count.value as? String) == "1 selected" })
+        XCTAssertFalse(app.staticTexts["target-item-history-partial"].exists)
+        reveal(groupSelect, in: app)
+        groupSelect.tap()
+        XCTAssertTrue(waitUntil { count.label == "2 selected" || (count.value as? String) == "2 selected" })
+        let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        reveal(filters, in: app)
+        filters.tap()
+        #if os(macOS)
+        app.menuItems["Source"].tap()
+        XCTAssertFalse(app.menuItems["Store"].exists)
+        app.menuItems["Design Inventory"].tap()
+        #else
+        app.buttons["Source"].tap()
+        XCTAssertFalse(app.buttons["Store"].exists)
+        app.buttons["Design Inventory"].tap()
+        #endif
+        XCTAssertTrue(expand.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(other.exists)
+        XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
+        app.buttons["target-items-filters-clear"].tap()
+        XCTAssertTrue(expand.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
+    }
+
     func testDownloadedItemWorkflowStatusAndBookmarkFilters() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1329,8 +1392,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 if fullyInsideScrollView {
                     let viewport = list.frame.insetBy(dx: 0, dy: 2)
                     if viewport.contains(element.frame), element.isHittable { return }
+                    #if os(macOS)
+                    // A full swipe overshoots this short field in the 366-point
+                    // CI viewport and alternates between opposite clipped edges.
+                    // Move by the measured distance instead of another page.
+                    list.scroll(byDeltaX: 0, deltaY: viewport.midY - element.frame.midY)
+                    #else
                     if element.frame.midY < viewport.midY { list.swipeDown() }
                     else { list.swipeUp() }
+                    #endif
                     continue
                 }
                 if element.isHittable { return }

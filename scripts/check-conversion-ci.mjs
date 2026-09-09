@@ -205,7 +205,13 @@ function validateWorkflowSafety(lines) {
       line === "        if: failure()" &&
       lines[index - 1] === "      - name: Preserve failed native UI test evidence" &&
       lines[index + 1] === "        uses: actions/upload-artifact@v4";
-    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence,
+    const deferredMacUIFailure = line === "        continue-on-error: true"
+      && lines[index - 1] === "        id: macos_ui"
+      && lines.slice(index - 5, index - 1).join("\n") === nativeUIClipboardStep;
+    const requiredMacUIFailure = line === "        if: always() && steps.macos_ui.outcome != 'success'"
+      && lines[index - 1] === "      - name: Require successful macOS UI tests"
+      && lines[index + 1] === "        run: exit 1";
+    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || deferredMacUIFailure || requiredMacUIFailure,
       "jobs must not conditionally skip or tolerate failures");
   }
 }
@@ -250,6 +256,13 @@ function validateTargetJob(lines) {
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
   requireCondition(target.join("\n").includes(nativeUIClipboardStep),
     "native UI Copy verification requires its exact isolated test-runner flag");
+  requireCondition(target.join("\n").includes(nativeUIClipboardStep + "\n        id: macos_ui\n        continue-on-error: true"),
+    "macOS UI failure must be deferred until iOS verification");
+  const macResult = uniqueLineIndex(target, /^      - name: Require successful macOS UI tests$/, "macOS UI result gate");
+  requireCondition(target[macResult + 1] === "        if: always() && steps.macos_ui.outcome != 'success'"
+    && target[macResult + 2] === "        run: exit 1"
+    && macResult > target.indexOf("      - name: Exercise iOS workspace and report UI"),
+    "macOS UI failure must fail the job after iOS verification");
   const iosUI = commandsForNamedStep(target, "Exercise iOS workspace and report UI").join("\n");
   const iosSelections = iosUI.match(/-only-testing:[^\s\\]+/g) ?? [];
   requireCondition(iosSelections.length === 1

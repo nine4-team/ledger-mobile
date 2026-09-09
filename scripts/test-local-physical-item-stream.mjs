@@ -40,7 +40,7 @@ const userA = "10000000-0000-0000-0000-000000000002"; // Employee: no financial 
 const userB = "10000000-0000-0000-0000-000000000003";
 const statements = ["begin; set local standard_conforming_strings=on; set local statement_timeout='5s';"];
 for (const [index, account, principal] of [[0, "account-primary", "principal-restricted"], [1, "account-other", "principal-other"]]) {
-  statements.push(`insert into public.spike_items(id,account_id,description,workflow_status,bookmark,created_by_principal_id) values (${quote(fixtureIDs[0][index])},${quote(account)},'Synthetic physical stream test','legacy sold',${index === 0 ? 'true' : 'null'},${quote(principal)});`);
+  statements.push(`insert into public.spike_items(id,account_id,description,workflow_status,bookmark,source,current_source,created_by_principal_id) values (${quote(fixtureIDs[0][index])},${quote(account)},'Synthetic physical stream test','legacy sold',${index === 0 ? 'true' : 'null'},'Original vendor','Design Inventory',${quote(principal)});`);
   statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,display_name) values (${quote(fixtureIDs[2][index])},${quote(account)},'business_inventory','Synthetic stream space');`);
   statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id) values (${quote(fixtureIDs[1][index])},${quote(account)},${quote(fixtureIDs[0][index])},'business_inventory',${quote(fixtureIDs[2][index])},'2026-09-01',${quote(principal)});`);
 }
@@ -74,7 +74,7 @@ const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-
 const results = output.trim().split("\n").map((line) => JSON.parse(line));
 assert.equal(results.length, 24);
 const columns = [
-  ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
+  ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "source", "current_source", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
   ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
 ];
@@ -92,6 +92,8 @@ for (const { label, index, rows } of results) {
     if (index === 0 && row.id === fixtureIDs[0][fixtureIndex]) {
       assert.equal(row.workflow_status, 'legacy sold');
       assert.equal(row.bookmark, fixtureIndex === 0 ? true : null);
+      assert.equal(row.source, 'Original vendor');
+      assert.equal(row.current_source, 'Design Inventory');
     }
     if (index === 2) {
       assert.notEqual(row.id, unusedArchivedSpace, "Unreferenced archived Space is not downloaded");

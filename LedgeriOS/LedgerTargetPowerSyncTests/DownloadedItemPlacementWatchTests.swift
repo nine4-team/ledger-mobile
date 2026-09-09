@@ -108,18 +108,22 @@ struct DownloadedItemPlacementWatchTests {
             updated = try #require(await iterator.next())
         }
         #expect(updated.rows.first?.itemRevision == 2)
-        _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status='legacy sold',bookmark=1,revision=3 WHERE id='chair'", parameters: nil)
+        _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status='legacy sold',bookmark=1,source='Vendor',current_source='Inventory',revision=3 WHERE id='chair'", parameters: nil)
         while updated.rows.first?.workflowStatusRaw != "legacy sold" {
             updated = try #require(await iterator.next())
         }
         #expect(updated.rows.first?.isBookmarked == true)
+        #expect(updated.rows.first?.source == "Vendor")
+        #expect(updated.rows.first?.currentSource == "Inventory")
         #expect(updated.rows.first?.itemRevision == 3)
-        _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status=NULL,bookmark=NULL,revision=4 WHERE id='chair'", parameters: nil)
+        _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status=NULL,bookmark=NULL,current_source='',revision=4 WHERE id='chair'", parameters: nil)
         while updated.rows.first?.itemRevision != 4 {
             updated = try #require(await iterator.next())
         }
         #expect(updated.rows.first?.workflowStatusRaw == nil)
         #expect(updated.rows.first?.isBookmarked == nil)
+        #expect(updated.rows.first?.source == "Vendor")
+        #expect(updated.rows.first?.currentSource == "")
         // Cancel while subscribe is still suspended. A late subscription must
         // still be released, not escape the runtime's drain bookkeeping.
         task.cancel()

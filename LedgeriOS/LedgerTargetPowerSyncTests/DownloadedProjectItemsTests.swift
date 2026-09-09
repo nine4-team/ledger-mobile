@@ -13,13 +13,14 @@ struct DownloadedProjectItemsTests {
     @Test("Browsing reads canonical names, SKU and optional creation evidence")
     func browsingFields() async throws {
         try await withDatabase { db in
-            _ = try await db.execute(sql: "UPDATE spike_items SET name='Named chair',sku='SKU-7',workflow_status='to_return',bookmark=1,created_at='2026-09-09T07:00:00.123456Z' WHERE id='paid'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET name='Named chair',sku='SKU-7',workflow_status='to_return',bookmark=1,source='Original vendor',current_source='Inventory',created_at='2026-09-09T07:00:00.123456Z' WHERE id='paid'", parameters: nil)
             let value = try await read(db)
             let row = try #require(value.placements.rows.first { $0.itemId.rawValue == "paid" })
             #expect(row.name == "Named chair")
             #expect(row.description == "paid")
             #expect(row.sku == "SKU-7")
             #expect(row.workflowStatusRaw == "to_return" && row.isBookmarked == true)
+            #expect(row.source == "Original vendor" && row.currentSource == "Inventory")
             #expect(value.accounting?.rows.first { $0.evidence.itemId == row.itemId }?.resolution == .accountedFor)
             #expect(row.createdAt != nil)
             #expect(value.placements.rows.first { $0.itemId.rawValue == "unknown" }?.createdAt == nil)

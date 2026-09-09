@@ -16,12 +16,18 @@ struct DownloadedItemsView: View {
     @State private var filters = DownloadedItemFilters()
     @State private var selection = DownloadedItemSelection()
     @State private var collapsedSections: Set<ProjectItemAccountingResolution> = []
+    @State private var expandedItemGroups: Set<GroupExpansionID> = []
     @FocusState private var searchFocused: Bool
 
     private struct ItemSelection: Identifiable {
         let accountId: AccountID
         let itemId: ItemID
         var id: String { itemId.rawValue }
+    }
+
+    private struct GroupExpansionID: Hashable {
+        let group: DownloadedItemGroup.ID
+        let section: ProjectItemAccountingResolution?
     }
 
     private struct Request: Equatable {
@@ -37,7 +43,7 @@ struct DownloadedItemsView: View {
             Text(partialNotice)
                 .font(.caption).foregroundStyle(.secondary)
                 .accessibilityIdentifier("target-items-partial-notice")
-            TextField("Search downloaded names, descriptions or SKU", text: $search)
+            TextField("Search downloaded names, descriptions, SKU or source", text: $search)
                 .textFieldStyle(.roundedBorder)
                 .focused($searchFocused)
                 .submitLabel(.search)
@@ -72,6 +78,18 @@ struct DownloadedItemsView: View {
                 if spaceId == nil, case .downloaded(let snapshot) = model.state,
                    snapshot.accountId == accountId, snapshot.scope == scope {
                     spaceFacetMenu(snapshot.spaceChoices)
+                }
+                if case .downloaded(let snapshot) = model.state,
+                   snapshot.accountId == accountId, snapshot.scope == scope {
+                    Menu("Source") {
+                        Button("All") { filters.source = .all }
+                        Button("None") { filters.source = .only([]) }
+                        Divider()
+                        facetToggle("", label: "No Source", selection: $filters.source)
+                        ForEach(snapshot.sourceChoices(in: spaceId), id: \.self) { label in
+                            facetToggle(label.lowercased(), label: label, selection: $filters.source)
+                        }
+                    }
                 }
             }
             .accessibilityIdentifier("target-items-filters")
@@ -115,7 +133,7 @@ struct DownloadedItemsView: View {
                         accountingGroup("Accounted For Items", resolution: .accountedFor, rows: rows)
                         accountingGroup("Accounting status unknown", resolution: .relationshipEvidenceIncomplete, rows: rows)
                     } else {
-                        ForEach(rows, id: \.itemId) { row in itemButton(row) }
+                        groupedItems(rows, section: nil)
                     }
                 }
             }
@@ -232,8 +250,63 @@ struct DownloadedItemsView: View {
             .accessibilityValue(collapsedSections.contains(resolution) ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("target-items-group-\(resolution.rawValue)")
             if !collapsedSections.contains(resolution) {
-                ForEach(matching, id: \.itemId) { row in itemButton(row) }
+                groupedItems(matching, section: resolution)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func groupedItems(_ rows: [PhysicalItemPlacement], section: ProjectItemAccountingResolution?) -> some View {
+        if case .downloaded(let snapshot) = model.state {
+            ForEach(snapshot.groups(for: rows.map(\.itemId), in: spaceId)) { group in
+                if group.rows.count == 1 {
+                    itemButton(group.representative)
+                } else {
+                    let key = GroupExpansionID(group: group.id, section: section)
+                    let ids = group.rows.map(\.itemId)
+                    HStack {
+                        Button {
+                            selection.toggleGroup(itemIds: ids, visible: visibleItemIds)
+                        } label: {
+                            Image(systemName: Set(ids).isSubset(of: selection.ids) ? "checkmark.circle.fill" : "circle")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Select group \(group.representative.displayName)")
+                        .accessibilityValue(Set(ids).isSubset(of: selection.ids) ? "Selected" : "Not selected")
+                        .accessibilityIdentifier("target-item-group-select-\(group.rows[0].itemId.rawValue)")
+                        Button {
+                            if !expandedItemGroups.insert(key).inserted { expandedItemGroups.remove(key) }
+                        } label: {
+                            Image(systemName: expandedItemGroups.contains(key) ? "chevron.down" : "chevron.right")
+                            Text("\(group.representative.displayName.isEmpty ? "Untitled Item" : group.representative.displayName) ×\(group.rows.count)")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityValue(expandedItemGroups.contains(key) ? "Expanded" : "Collapsed")
+                        .accessibilityIdentifier("target-item-group-expand-\(group.rows[0].itemId.rawValue)")
+                    }
+                    itemSourceAndSKU(group.representative)
+                    Text("Group price total not available yet").font(.caption).foregroundStyle(.secondary)
+                    if expandedItemGroups.contains(key) {
+                        ForEach(Array(group.rows.enumerated()), id: \.element.itemId) { index, row in
+                            HStack(alignment: .top) {
+                                Text("\(index + 1)/\(group.rows.count)").font(.caption)
+                                itemButton(row)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func itemSourceAndSKU(_ row: PhysicalItemPlacement) -> some View {
+        if let source = row.displaySource, !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text(source).font(.caption).foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-item-source-\(row.itemId.rawValue)")
+        }
+        if let sku = row.sku, !sku.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text("SKU: \(sku)").font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -265,6 +338,7 @@ struct DownloadedItemsView: View {
                 Text("Workflow: \(row.workflowStatus.displayLabel)")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-item-workflow-status-\(row.itemId.rawValue)")
+                itemSourceAndSKU(row)
             }
             if row.isBookmarked == true {
                 Image(systemName: "bookmark.fill")
@@ -281,6 +355,7 @@ struct DownloadedItemsView: View {
         filters = .init()
         selection.clear()
         collapsedSections = []
+        expandedItemGroups = []
         searchFocused = false
     }
 }

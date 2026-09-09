@@ -42,6 +42,20 @@ test("iPhone UI cannot silently omit new Item or report interactions", () => {
   }, /iOS UI Copy verification requires its isolated/);
 });
 
+test("deferred Mac UI failures still fail the gate after iPhone verification", () => {
+  for (const original of ["      - name: Require successful macOS UI tests\n",
+                         "        id: macos_ui\n", "        continue-on-error: true\n"]) {
+    expectFailure(value => { value.workflow = value.workflow.replace(original, ""); },
+      /macOS UI|conditionally skip/);
+  }
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("        run: exit 1", "        run: exit 0");
+  }, /conditionally skip|macOS UI/);
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("steps.macos_ui.outcome != 'success'", "steps.macos_ui.conclusion != 'success'");
+  }, /conditionally skip|macOS UI/);
+});
+
 test("report parity cannot silently lose its same-commit fixture", () => {
   expectFailure(value => {
     value.workflow = value.workflow.replace("          name: report-parity-${{ github.sha }}", "          name: report-parity-unbound");
@@ -157,7 +171,7 @@ test("target job cannot bypass native, MCP, build, or dependency gates", () => {
   expectFailure(value => {
     value.workflow = value.workflow.replace(
       '        env:\n          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"\n', "");
-  }, /isolated test-runner flag/);
+  }, /isolated test-runner flag|conditionally skip/);
   expectFailure(value => {
     value.workflow = value.workflow.replace('TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"',
       'TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "false"');

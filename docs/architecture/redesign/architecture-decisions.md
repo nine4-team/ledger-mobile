@@ -1444,3 +1444,32 @@ The small combined snapshot replaces two independently timed UI reads, while
 the existing accounting domain model remains authority. Scope, old/new visits,
 limited/removed access and runtime close are tested; full native tests pass.
 Actual UI CI and hosted stream behavior remain separate required evidence.
+
+### Item source labels and presentation groups
+
+Keep original vendor (`source`) and immediate-origin label (`current_source`)
+as distinct nullable Item metadata. Grouping uses original vendor and normalized
+SKU, with name fallback only when the full unfiltered location identifies one
+SKU group. Cards and Source filters use immediate origin before original vendor;
+an explicit blank is not null. Structured group keys replace delimiter-concatenated
+keys, avoiding collisions in vendor/SKU text. Groups retain all physical Item IDs;
+selection and expansion are presentation state, never new inventory identities.
+
+Current placements cannot reconstruct these labels: Inventory can mean either
+direct acquisition or return, and scope alone does not explain a sale. Imports
+must preserve both source fields without guessed backfills. This is retained
+presentation evidence, not a new Transaction-derived history or accounting
+authority. Future authorized create/move commands must maintain immediate origin
+atomically: initial acquisition uses its vendor; inventory sale/return and the
+specified inventory-mediated project sale use the Account inventory label;
+within-project reassignment preserves it. Moves never overwrite original vendor.
+Those writers and Item import conversion are not implemented by this read batch.
+
+The shared downloaded reader and Core grouping serve Project, Inventory and
+Space views. Fixed Space scope limits candidate resolution before dynamic filters;
+filtering out a competing SKU cannot make an ambiguous Item merge into another
+group. Tests cover this distinction, raw/blank/null labels, cross-Account denial,
+encrypted restart, source updates and selection pruning. Native interaction and
+hosted verification remain separate; thumbnails and financial group totals still
+require their authorized readers. Authority: `docs/specs/items.md` Target Everyday
+Workspace and Source facet, with the reviewed source grouping/Item model semantics.

@@ -68,6 +68,7 @@ streams:
       - |
         SELECT spike_items.id, spike_items.account_id, spike_items.name, spike_items.description, spike_items.sku,
           spike_items.workflow_status, spike_items.bookmark,
+          spike_items.source, spike_items.current_source,
           spike_items.market_value_minor_units::text AS market_value_minor_units, spike_items.market_value_currency, spike_items.revision,
           spike_items.created_at, spike_items.created_by_principal_id
         FROM spike_items
@@ -211,6 +212,7 @@ streams:
       - |
         SELECT spike_items.id, spike_items.account_id, spike_items.name, spike_items.description, spike_items.sku,
           spike_items.workflow_status, spike_items.bookmark,
+          spike_items.source, spike_items.current_source,
           spike_items.market_value_minor_units::text AS market_value_minor_units, spike_items.market_value_currency, spike_items.revision,
           spike_items.created_at, spike_items.created_by_principal_id
         FROM spike_items

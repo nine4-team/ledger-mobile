@@ -4,6 +4,92 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Fixed Space limits grouping resolution and source choices before dynamic filtering")
+    func fixedSpaceGrouping() throws {
+        let space = try SpaceID(validating: "room")
+        let rows = try [("a", Optional("A"), Optional(space), "Local Store"),
+                        ("b", nil, Optional(space), "Local Store"),
+                        ("c", Optional("B"), nil, "Other origin")].map { id, sku, location, origin in
+            try PhysicalItemPlacement(itemId: .init(validating: id), description: "Chair", itemRevision: 1,
+                placementId: .init(validating: "p-\(id)"), scope: .businessInventory, spaceId: location,
+                sku: sku, source: "Store", currentSource: origin)
+        }
+        let snapshot = try DownloadedItemPlacements(accountId: .init(validating: "account"), scope: .businessInventory, rows: rows)
+        #expect(snapshot.groups(for: rows.map(\.itemId)).count == 3)
+        let groups = snapshot.groups(for: rows.map(\.itemId), in: space)
+        #expect(groups.count == 1)
+        #expect(groups.first?.rows.map(\.itemId.rawValue) == ["a", "b"])
+        #expect(snapshot.sourceChoices(in: space) == ["Local Store"])
+    }
+
+    @Test("Grouping respects original vendors and resolves SKU-less names against the full download")
+    func originalSourceGrouping() throws {
+        func row(_ id: String, _ name: String, _ sku: String?, _ source: String) throws -> PhysicalItemPlacement {
+            try .init(itemId: .init(validating: id), description: name, itemRevision: 1,
+                placementId: .init(validating: "p-\(id)"), scope: .businessInventory, spaceId: nil,
+                sku: sku, source: source, currentSource: "Design Inventory")
+        }
+        let rows = try [row("a", "Chair", "A", " Store "), row("b", "Another name", " a ", "store"),
+            row("c", "Chair", nil, "Store"), row("d", "Chair", "B", "Store"),
+            row("e", "Chair", "A", "Other Store")]
+        let snapshot = try DownloadedItemPlacements(accountId: .init(validating: "account"), scope: .businessInventory, rows: rows)
+        let groups = snapshot.groups(for: rows.map(\.itemId))
+        #expect(groups.map { $0.rows.map(\.itemId.rawValue) } == [["a", "b"], ["c"], ["d"], ["e"]])
+        // Filtering away B must not turn an ambiguous Chair into an A copy.
+        #expect(snapshot.groups(for: [rows[0].itemId, rows[2].itemId]).count == 2)
+        let unique = try DownloadedItemPlacements(accountId: snapshot.accountId, scope: snapshot.scope,
+            rows: rows.filter { $0.itemId.rawValue != "d" })
+        let joined = unique.groups(for: [rows[2].itemId, rows[0].itemId, rows[1].itemId])
+        #expect(joined.count == 1)
+        #expect(joined.first?.rows.map(\.itemId.rawValue) == ["c", "a", "b"])
+        #expect(joined.first?.representative.itemId.rawValue == "a")
+        #expect(joined.first?.representative.displaySource == "Design Inventory")
+        let outside = try ItemID(validating: "outside")
+        #expect(snapshot.groups(for: [rows[0].itemId, rows[0].itemId, outside]).first?.rows.count == 1)
+        #expect(DownloadedItemGroup.ID.sku(source: "a::b", sku: "c") != .sku(source: "a", sku: "b::c"))
+    }
+
+    @Test("Immediate source drives labels and filters without losing original or explicit blank evidence")
+    func immediateSourceFacet() throws {
+        let rows = try [("a", "Original", Optional("Design Inventory")), ("b", "Direct", nil),
+                        ("c", "Original", Optional("")), ("d", "Other", Optional(" design inventory "))].map { id, source, current in
+            try PhysicalItemPlacement(itemId: .init(validating: id), description: id, itemRevision: 1,
+                placementId: .init(validating: "p-\(id)"), scope: .businessInventory, spaceId: nil,
+                source: source, currentSource: current)
+        }
+        let value = try DownloadedItemPlacements(accountId: .init(validating: "account"), scope: .businessInventory, rows: rows)
+        #expect(value.sourceChoices() == ["Design Inventory", "Direct"])
+        #expect(rows[2].displaySource == "" && rows[2].source == "Original")
+        #expect(value.rows(in: nil, matching: "original", order: .newest).map(\.itemId.rawValue) == ["a", "c"])
+        #expect(value.rows(in: nil, matching: "inventory", order: .newest).map(\.itemId.rawValue) == ["a", "d"])
+        var filters = DownloadedItemFilters()
+        filters.source = .only(["design inventory"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["a", "d"])
+        filters.source = .allExcept(["design inventory"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["b", "c"])
+        filters.source = .only([""])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["c"])
+        #expect(filters.isActive)
+    }
+
+    @Test("Group selection selects eligible members only and preserves unrelated selection")
+    func groupSelection() throws {
+        let a = try ItemID(validating: "a"), b = try ItemID(validating: "b"), c = try ItemID(validating: "c")
+        var selection = DownloadedItemSelection()
+        selection.toggle(itemId: c, visible: [a, b, c])
+        selection.toggle(itemId: a, visible: [a, b, c])
+        selection.toggleGroup(itemIds: [a, b], visible: [a, b, c])
+        #expect(selection.ids == [a, b, c])
+        selection.toggleGroup(itemIds: [a, b], visible: [a, b, c])
+        #expect(selection.ids == [c])
+        selection.toggleGroup(itemIds: [a, b], visible: [a, c])
+        #expect(selection.ids == [a, c])
+        selection.toggleGroup(itemIds: [b], visible: [a, c])
+        #expect(selection.ids == [a, c])
+        selection.toggleGroup(itemIds: [a, b], visible: [])
+        #expect(selection.ids.isEmpty)
+    }
+
     @Test("Workflow status aliases share meaning without rewriting legacy evidence")
     func workflowStatusEvidence() throws {
         for raw in ["to-purchase", "to purchase", " TO PURCHASE "] {
