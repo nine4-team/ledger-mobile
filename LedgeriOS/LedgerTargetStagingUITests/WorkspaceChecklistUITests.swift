@@ -978,7 +978,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         assertImageCounter("2 of 2", in: app)
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         revealImageControls(in: app)
-        XCTAssertTrue(waitUntil { zoomOut.exists && !zoomOut.isEnabled && !resetZoom.exists })
+        XCTAssertTrue(zoomOut.exists && !zoomOut.isEnabled && !resetZoom.exists)
         // Both directions wrap through the source set, as in the shipped viewer.
         tapImageControl("target-item-images-next", in: app)
         assertImageCounter("1 of 2", in: app)
@@ -1182,11 +1182,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     private func revealImageControls(in app: XCUIApplication) {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
-        // Already-visible controls may legitimately auto-hide while a redundant
-        // predicate wait starts. Only await a reveal after actually requesting it.
-        if zoomIn.exists && zoomIn.isHittable { return }
         let image = app.images["target-item-image-rendered"]
         XCTAssertTrue(image.exists || image.waitForExistence(timeout: 5))
+        // Start a fresh visibility interval. Reusing controls near the end of
+        // their timeout races XCTest's snapshot and event-delivery overhead.
+        // Exercise the real hide/reveal gestures; do not disable auto-hide.
+        if zoomIn.exists {
+            image.tap()
+            XCTAssertTrue(waitUntil { !zoomIn.exists }, "Single tap hides image controls")
+        }
         image.tap()
         // Do not insert XCTest's one-second predicate polling delay after an
         // already-completed tap: these controls intentionally auto-hide.
@@ -1463,7 +1467,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let selectAll = app.buttons["target-items-select-all"]
         reveal(selectAll, in: app, fullyInsideScrollView: true)
         #if os(iOS)
-        XCTAssertGreaterThanOrEqual(selectAll.frame.height, 44, "Select all needs a usable touch target")
+        XCTAssertGreaterThanOrEqual(selectAll.frame.height, 44 - 0.000001,
+            "Select all needs a usable touch target (allowing floating-point coordinate rounding)")
         #endif
         selectAll.tap()
         assertSelectedCount(3)
@@ -1779,21 +1784,23 @@ final class WorkspaceChecklistUITests: XCTestCase {
             .matching(identifier: "target-active-space-checklists-section").firstMatch
         reveal(section, in: app)
         XCTAssertTrue(section.waitForExistence(timeout: 5))
-        #if os(macOS)
-        let expanders = app.descendants(matching: .disclosureTriangle)
-        XCTAssertEqual(expanders.count, 1, "This fixture exposes exactly one checklist disclosure")
-        let expander = expanders.firstMatch
+        let expander = app.buttons["target-active-space-checklists-section"]
         XCTAssertTrue(expander.exists, app.debugDescription)
-        #else
-        let expander = section
+        #if os(iOS)
+        XCTAssertGreaterThanOrEqual(expander.frame.height, 44)
         #endif
         let item = app.buttons["target-active-space-checklist-item-checklist-ui-test-item-ui-test"]
         // Exercise both directions regardless of the initial expansion state.
-        if !item.exists { expander.tap() }
+        if !item.exists {
+            reveal(expander, in: app, fullyInsideScrollView: true)
+            expander.tap()
+        }
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription)
+        reveal(expander, in: app, fullyInsideScrollView: true)
         expander.tap()
         XCTAssertTrue(waitUntil { !item.exists })
+        reveal(expander, in: app, fullyInsideScrollView: true)
         expander.tap()
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))

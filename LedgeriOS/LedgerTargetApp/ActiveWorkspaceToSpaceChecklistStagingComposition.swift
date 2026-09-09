@@ -401,69 +401,71 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
 
     @ViewBuilder
     private var checklists: some View {
-        DisclosureGroup(isExpanded: Binding(
-            get: { model.isChecklistsExpanded },
-            set: { expanded in
-                if expanded != model.isChecklistsExpanded {
-                    model.toggleChecklistsExpanded()
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            Button { model.toggleChecklistsExpanded() } label: {
+                Label("CHECKLISTS", systemImage: model.isChecklistsExpanded ? "chevron.down" : "chevron.right")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    #if os(iOS)
+                    .frame(minHeight: 44)
+                    #endif
+                    .contentShape(Rectangle())
             }
-        )) {
-            if let collection = model.checklistToggle.displayedCollection {
-                if collection.checklists.isEmpty {
-                    Text("No checklists.")
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("target-active-space-checklists-empty")
-                } else {
-                    ForEach(collection.checklists, id: \.id.rawValue) { checklist in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(checklist.name.rawValue)
-                                .font(.headline)
-                            ForEach(checklist.items, id: \.id.rawValue) { item in
-                                Button {
-                                    Task {
-                                        await model.toggleChecklistItem(
-                                            checklistId: checklist.id,
-                                            itemId: item.id
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("target-active-space-checklists-section")
+            .accessibilityValue(model.isChecklistsExpanded ? "Expanded" : "Collapsed")
+            if model.isChecklistsExpanded {
+                if let collection = model.checklistToggle.displayedCollection {
+                    if collection.checklists.isEmpty {
+                        Text("No checklists.")
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("target-active-space-checklists-empty")
+                    } else {
+                        ForEach(collection.checklists, id: \.id.rawValue) { checklist in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(checklist.name.rawValue)
+                                    .font(.headline)
+                                ForEach(checklist.items, id: \.id.rawValue) { item in
+                                    Button {
+                                        Task {
+                                            await model.toggleChecklistItem(
+                                                checklistId: checklist.id,
+                                                itemId: item.id
+                                            )
+                                        }
+                                    } label: {
+                                        Label(
+                                            item.text.rawValue,
+                                            systemImage: item.isChecked
+                                                ? "checkmark.circle.fill"
+                                                : "circle"
                                         )
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     }
-                                } label: {
-                                    Label(
-                                        item.text.rawValue,
-                                        systemImage: item.isChecked
-                                            ? "checkmark.circle.fill"
-                                            : "circle"
+                                    .buttonStyle(.plain)
+                                    .disabled(!model.checklistToggle.canToggle(
+                                        checklistId: checklist.id,
+                                        itemId: item.id
+                                    ))
+                                    .accessibilityIdentifier(
+                                        "target-active-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
                                     )
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .accessibilityLabel(item.text.rawValue)
+                                    .accessibilityValue(item.isChecked ? "Checked" : "Not checked")
+                                    .accessibilityHint(
+                                        item.isChecked
+                                            ? "Marks this checklist item incomplete"
+                                            : "Marks this checklist item complete"
+                                    )
                                 }
-                                .buttonStyle(.plain)
-                                .disabled(!model.checklistToggle.canToggle(
-                                    checklistId: checklist.id,
-                                    itemId: item.id
-                                ))
-                                .accessibilityIdentifier(
-                                    "target-active-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
-                                )
-                                .accessibilityLabel(item.text.rawValue)
-                                .accessibilityValue(item.isChecked ? "Checked" : "Not checked")
-                                .accessibilityHint(
-                                    item.isChecked
-                                        ? "Marks this checklist item incomplete"
-                                        : "Marks this checklist item complete"
-                                )
                             }
                         }
                     }
+                } else {
+                    Text(model.checklistToggle.admission.explanation)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-space-checklists-unavailable")
                 }
-            } else {
-                Text(model.checklistToggle.admission.explanation)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("target-active-space-checklists-unavailable")
             }
-        } label: {
-            Text("CHECKLISTS")
-                .accessibilityIdentifier("target-active-space-checklists-section")
-                .accessibilityValue(model.isChecklistsExpanded ? "Expanded" : "Collapsed")
         }
     }
 
