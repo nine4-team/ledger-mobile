@@ -1248,10 +1248,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(waitUntil { !zoomIn.exists }, "Single tap hides image controls")
         }
         image.tap()
-        // Do not insert XCTest's one-second predicate polling delay after an
-        // already-completed tap: these controls intentionally auto-hide.
-        XCTAssertTrue(zoomIn.exists || zoomIn.waitForExistence(timeout: 5))
-        XCTAssertTrue(zoomIn.isHittable, "Single tap reveals image controls")
+        // XCTest's built-in existence wait polls at roughly one second. That
+        // consumes most of this control's 2.2-second visibility window before
+        // event delivery even starts. Poll just this transient control promptly;
+        // retain the real app timer and the same five-second failure deadline.
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if zoomIn.exists && zoomIn.isHittable { return }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        XCTFail("Single tap reveals image controls")
     }
 
     private func assertImageCounter(_ expected: String, in app: XCUIApplication) {
