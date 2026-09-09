@@ -30,6 +30,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(name.exists)
         app.buttons["target-active-project-card-project-ui-test"].tap()
         let report = app.buttons["target-property-report-open"]
+        reveal(report, in: app)
         XCTAssertTrue(report.waitForExistence(timeout: 5))
         report.tap()
         XCTAssertTrue(name.waitForExistence(timeout: 5))

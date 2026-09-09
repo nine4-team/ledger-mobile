@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 288,
+  "stateVersion": 290,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,7 +23,7 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Show selected Account branding in Settings and reports with authorized offline logo durability and honest failure states.",
     "nextActions": [
-      "CI34289197709/d90607fb terminal FAILED before UI execution: duplicate displayedText helper (logs999213). Removed the newly added duplicate and reused existing platform-aware helper. Full standalone Swift6 macOS UI-file typecheck7ae300 PASSED with XCTest framework and Developer/usr/lib import paths (syntax-only check had missed redeclaration). Commit/push this correction and follow its single automatic CI. Native contracts/database/PDF/macOS app build passed on d90607fb; no UI proof. Watcher43450 terminal. Local disk3.7GiB prevents safe full Xcode build.",
+      "CI34290205804/afc6f329 FAILED: macOS UI passed;13/14 iPhone UI passed, including failed-logo PDF/CSV export. Only Settings→report failed at report button existence after Project navigation (logs6b8b82/dcc50a). Existing passing report tests reveal the offscreen button first; added same reveal call to new test. Both platform Swift6 UI-file typechecks246e3c pass. Submit correction with single automatic CI; do not rerun old commit. Watcher73306 belongs to terminal run. Local disk3.7GiB prevents safe full Xcode build.",
       "Verified checkpoint remains fd57d6a4 until exact-commit full CI succeeds. Do not mistake changed UI assertions or passing compilation for interaction proof.",
       "Batch checks already passed: changed-logo regression52815, environment0d4572, assertion syntax0727f3, final conversion/diffb4caec. Reuse this evidence; await native interaction proof from34289197709 rather than repeating checks on resume.",
       "Local profile Settings/report/cache implementation is committed; do not redo completed wiring/tests. Remaining product proof: native UI CI, real authenticated app session/PowerSync connection/private Storage HTTP, and full offline media lifecycle integration. Synthetic credential/HTTP checks are not hosted proof. Auth entry currently synthetic staging identity; no extra credential path.",
