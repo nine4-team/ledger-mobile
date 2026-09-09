@@ -92,6 +92,7 @@ private struct TargetStagingRootView: View {
 
                         OfflineProviderSpikeView(environment: environment)
                     }
+                    .itemThumbnailViewport()
                 } else {
                     ContentUnavailableView(
                         "Target Startup Refused",

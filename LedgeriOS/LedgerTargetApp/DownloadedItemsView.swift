@@ -175,8 +175,14 @@ struct DownloadedItemsView: View {
 
     private func selectionControls(_ ids: [ItemID]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Button(selection.isAllSelected(visible: ids) ? "Deselect all visible" : "Select all visible") {
+            Button {
                 selection.toggleAll(visible: visibleItemIds)
+            } label: {
+                Text(selection.isAllSelected(visible: ids) ? "Deselect all visible" : "Select all visible")
+                    #if os(iOS)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                    #endif
             }
             .disabled(ids.isEmpty)
             .accessibilityIdentifier("target-items-select-all")
@@ -275,10 +281,25 @@ struct DownloadedItemsView: View {
                     let key = GroupExpansionID(group: group.id, section: section)
                     let ids = group.rows.map(\.itemId)
                     HStack {
+                        // An unknown earlier Item cannot establish that a later
+                        // Item owns the group's first image. Its marker resolves
+                        // through the existing watched physical Item projection.
+                        if let imageRow = group.rows.first(where: { $0.imageCount != 0 }) {
+                            itemThumbnail(imageRow)
+                        } else {
+                            Image(systemName: "photo").foregroundStyle(.secondary)
+                                .frame(width: 108,height: 108)
+                                .background(.quaternary,in: RoundedRectangle(cornerRadius: 8))
+                                .accessibilityLabel("Group has no images")
+                        }
                         Button {
                             selection.toggleGroup(itemIds: ids, visible: visibleItemIds)
                         } label: {
                             Image(systemName: Set(ids).isSubset(of: selection.ids) ? "checkmark.circle.fill" : "circle")
+                                #if os(iOS)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                                #endif
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Select group \(group.representative.displayName)")
@@ -322,10 +343,15 @@ struct DownloadedItemsView: View {
 
     private func itemButton(_ row: PhysicalItemPlacement) -> some View {
         HStack {
+            itemThumbnail(row)
             Button {
                 selection.toggle(itemId: row.itemId, visible: visibleItemIds)
             } label: {
                 Image(systemName: selection.ids.contains(row.itemId) ? "checkmark.circle.fill" : "circle")
+                    #if os(iOS)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    #endif
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Select \(row.displayName.isEmpty ? "Untitled Item" : row.displayName)")
@@ -371,6 +397,12 @@ struct DownloadedItemsView: View {
         collapsedSections = []
         expandedItemGroups = []
         searchFocused = false
+    }
+
+    @ViewBuilder private func itemThumbnail(_ row: PhysicalItemPlacement) -> some View {
+        if let imageReader = reader as? any DownloadedItemImageReading {
+            DownloadedItemThumbnailView(accountId: accountId,itemId: row.itemId,reader: imageReader)
+        }
     }
 }
 

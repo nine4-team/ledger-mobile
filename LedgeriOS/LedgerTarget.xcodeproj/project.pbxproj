@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02FBD688AE114E544993B5E0 /* DownloadedItemThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */; };
 		080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */; };
 		0A53F59B5B919D495BA465BC /* AmazonInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */; };
 		0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */; };
@@ -112,6 +113,7 @@
 		BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemsView.swift; sourceTree = "<group>"; };
 		C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WayfairInvoiceParser.swift; sourceTree = "<group>"; };
 		CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemThumbnailView.swift; sourceTree = "<group>"; };
 		DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerRuntimeAdapter.swift; sourceTree = "<group>"; };
 		E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingExerciseView.swift; sourceTree = "<group>"; };
 		E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 				B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */,
 				20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */,
 				BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */,
+				CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */,
 				BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */,
 				059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */,
 				6E76110BA471691343CFD6FF /* LocalVendorPDFParser.swift */,
@@ -346,6 +349,7 @@
 				9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */,
 				FB847FDB51FE1765BFB4CAEC /* DownloadedImageZoomSurface.swift in Sources */,
 				0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */,
+				02FBD688AE114E544993B5E0 /* DownloadedItemThumbnailView.swift in Sources */,
 				C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */,
 				9111FCD4DDBEEB39A4A43F03 /* InvoiceDateParsing.swift in Sources */,
 				CC0347DF1AD9CF0DD5753F92 /* InvoiceMoneyParsing.swift in Sources */,

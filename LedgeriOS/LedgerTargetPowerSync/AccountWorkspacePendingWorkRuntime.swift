@@ -884,7 +884,7 @@ actor AccountWorkspacePendingWorkRuntime {
     }
 
     func loadDownloadedItemImage(accountId: AccountID, itemId: ItemID,
-        image: DownloadedItemImage, allowDownload: Bool) async throws -> Data? {
+        image: DownloadedItemImage, allowDownload: Bool, thumbnail: Bool = false) async throws -> Data? {
         try await withFiniteLease(.loadDownloadedItemImage) { resources in
             guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8),
                   image.itemId.rawValue.utf8.elementsEqual(itemId.rawValue.utf8),
@@ -892,28 +892,31 @@ actor AccountWorkspacePendingWorkRuntime {
                 throw DownloadedItemImageFailure.scopeMismatch
             }
             let reader = ItemImageCatalogLocalReader(database: resources.structuredDatabase)
+            let object = thumbnail ? image.thumbnail?.object : image.object
             @Sendable func authorize() async throws {
                 try Task.checkCancellation()
                 guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
                 let current = try await reader.read(accountId: accountId, principalId: resources.principalId, itemId: itemId)
                 guard current.images.contains(image) else { throw DownloadedItemImageFailure.unavailable }
+                if thumbnail, !current.isComplete { throw DownloadedItemImageFailure.unavailable }
                 guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             }
             try await authorize()
+            guard let object else { return nil }
             guard let cache = resources.attachmentStore as? any DownloadedImageCaching else {
                 throw DownloadedItemImageFailure.unavailable
             }
             var bytes: Data?
-            do { bytes = try await cache.cachedDownloadedImage(image.object) }
+            do { bytes = try await cache.cachedDownloadedImage(object) }
             catch AttachmentLocalByteVaultFailure.missingObject { }
             catch AttachmentLocalByteVaultFailure.corruptObject { }
             try await authorize()
             if bytes == nil, allowDownload, let download = resources.downloadImage {
-                let downloaded = try await download(image.object)
+                let downloaded = try await download(object)
                 try await authorize()
                 // Cache independently verifies length/hash even for injected
                 // transports. A changed reference cannot authorize admission.
-                try await cache.cacheDownloadedImage(downloaded, reference: image.object)
+                try await cache.cacheDownloadedImage(downloaded, reference: object)
                 try await authorize()
                 bytes = downloaded
             }

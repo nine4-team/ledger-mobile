@@ -77,6 +77,12 @@ public final class LedgerOfflineClientRuntime:
             image: image, allowDownload: allowDownload)
     }
 
+    public func loadDownloadedItemThumbnail(accountId: AccountID, itemId: ItemID,
+        image: DownloadedItemImage, allowDownload: Bool) async throws -> Data? {
+        try await lifecycleOwner.loadDownloadedItemImage(accountId: accountId, itemId: itemId,
+            image: image, allowDownload: allowDownload, thumbnail: true)
+    }
+
     public func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
         try await lifecycleOwner.readDownloadedItemPlacements(accountId: accountId, scope: scope)
     }

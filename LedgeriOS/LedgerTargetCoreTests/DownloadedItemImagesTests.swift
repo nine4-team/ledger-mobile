@@ -71,6 +71,28 @@ struct DownloadedItemImagesTests {
         }
     }
 
+    @Test("Thumbnail identity cannot be borrowed from another original, even in the same Account")
+    func thumbnailIdentity() throws {
+        let first = try image("first",position: 0), other = try image("other",position: 0)
+        let hash = String(repeating: "b",count: 64)
+        let small = try DownloadedImageObjectReference(accountId: account,attachmentId: "small",sha256: hash,
+            byteCount: "3",mediaType: "image/jpeg",storagePath: "accounts/account/attachments/small/\(hash)")
+        let thumbnail = try DownloadedItemCardThumbnail(original: first.object,object: small,
+            recipe: "item-card-300-jpeg-v1",width: 300,height: 200)
+        #expect(throws: DownloadedItemImageFailure.scopeMismatch) {
+            try DownloadedItemImage(referenceId: other.referenceId,itemId: item,object: other.object,
+                position: 0,isPrimary: false,setRevision: 1,thumbnail: thumbnail)
+        }
+        for (recipe,width,height) in [("unknown",300,200),("item-card-300-jpeg-v1",301,200),("item-card-300-jpeg-v1",300,0)] {
+            #expect(throws: DownloadedItemImageFailure.malformed) {
+                try DownloadedItemCardThumbnail(original: first.object,object: small,recipe: recipe,width: width,height: height)
+            }
+        }
+        #expect(throws: DownloadedItemImageFailure.malformed) {
+            try DownloadedItemCardThumbnail(original: small,object: small,recipe: "item-card-300-jpeg-v1",width: 300,height: 200)
+        }
+    }
+
     private func image(_ id: String, position: Int, primary: Bool = false, revision: Int64 = 1) throws -> DownloadedItemImage {
         let hash = String(repeating: "a", count: 64)
         let object = try DownloadedImageObjectReference(accountId: account, attachmentId: id, sha256: hash,

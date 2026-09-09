@@ -610,6 +610,7 @@ if (
     "createProject",
     "encryptionCipher",
     "loadDownloadedItemImage",
+    "loadDownloadedItemThumbnail",
     "pendingUploadCount",
     "pendingWorkSummary",
     "readAccountBusinessProfile",

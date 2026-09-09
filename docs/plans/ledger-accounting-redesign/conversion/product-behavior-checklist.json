@@ -27263,6 +27263,20 @@
           "status": "planned"
         },
         {
+          "id": "ITEM-CARD-THUMBNAILS",
+          "risk": "media_durability",
+          "expected": "Visible Item cards use verified small derivatives with explicit original links, faithful primary/order selection and the existing protected offline cache. No full-list original downloads. Revocation or reference changes clear access; missing derivatives remain distinguishable from no image. Trusted publication is retry-safe and preserves original bytes/history.",
+          "command": "Uncommitted ItemCardThumbnailGenerator.swift:7focused tests/12cases pass for actual encoded identity, orientation, no-upscale, corruption and limits; root reviewed. Migration20260909114122 adds immutable same-Account original/recipe/derivative links with live-reference RLS;45actual SQL checks pass across item_card_thumbnails.test.sql and existing catalog tests. Independent RLS review found JPEG metadata gap, now rejected/tested by invoker trigger. Follow-on root-reviewed private invoker publication metadata function and replay/conflict/no-orphan tests:77SQL checks pass.30actualSQL stream captures,4service-parser tests (47queries/25tables),5local reader tests and8runtime original/thumbnail authorization cases pass. Explicit original-bound thumbnail contract prevents foreign/same-Account original substitution; optional derivative failures preserve original completeness. Native108px Item/group cards now use measured root List viewport, scoped original-bound selection and cancellable detached decode; independent review prompted scope guard/cancellation/empty-group placeholder fixes. Actual generated-JPEG UI fixture and native gallery card assertion added; final Macapp and iOSXCTest typechecks pass. Full1067native156suites passed78.134s. Actual byte-upload integration, concurrency-session proof and native viewport/card interaction still missing. Environment check caught missing explicit new runtime API allowlist entry; corrected, rerun pending. No workflow completion claimed.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-SELECTION-TOUCH-TARGETS",
+          "risk": "ui_fidelity",
+          "expected": "iPhone Select All has at least44pt touch height; physical Item and grouped Item selectors have44x44pt hit areas. Existing select/deselect/filter-pruning semantics remain unchanged and must pass actual interaction tests.",
+          "command": "DownloadedItemsView.swift enlarges label hit areas only on iOS; existing group and refresh/removal UI tests retain selection-count assertions and add size checks. Mac app/iOS XCTest typechecks passed. CI5721c40f had clipped SelectAll with0 selected; this usability correction is not proof of that failure's resolution. Native verification pending next batch.",
+          "status": "planned"
+        },
+        {
           "id": "ITEM-IMAGE-COUNT-LIST-FIDELITY",
           "risk": "sync_visibility",
           "expected": "Image filtering distinguishes authorized marker count zero, positive count, and unavailable metadata; unknown is never No Image. Existing physical/report subscriptions deliver marker changes to atomic readers without photo downloads. Filter choices combine with other facets and clear normally.",

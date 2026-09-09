@@ -1526,3 +1526,27 @@ caller cancellation does not mean the destination has finished reading it.
 Model tests cover these preparation/lifetime boundaries. Native Photos permission,
 save success and image share completion still require device evidence; this is
 not authorization for background exports, production access or hosted resources.
+
+### Item cards use explicit pre-generated derivatives, not inferred image URLs
+
+Small card images reuse the immutable image-object store and protected byte cache.
+An immutable same-Account link identifies the original, derivative and versioned
+`item-card-300-jpeg-v1` recipe. The producer verifies the original hash/length,
+applies orientation and encodes a JPEG no larger than300px without upscaling.
+It reports actual output digest/length/dimensions; recipe identity does not promise
+byte-identical ImageIO encoding across OS versions. Retry-safe publication must
+reuse the first verified object. Original bytes, Item identity and history remain
+unchanged; derivative links are not additional Item image references.
+
+This avoids an unapproved dependency on hosted, usage-billed image transformations
+and avoids full-size photo downloads for list rendering. Reads follow the current
+original reference and active membership, including Storage GET; orphaned or old
+references cannot independently authorize a thumbnail. The database checks JPEG
+metadata, while trusted publication must verify actual encoded bytes/dimensions.
+No public URL, new write grant or retention/purge policy is introduced.
+
+Focused producer tests and original/derivative SQL authorization tests pass;
+independent review informed the JPEG metadata check. Publication, Sync integration,
+viewport-bounded loading and native card evidence remain required before this
+design constitutes working thumbnails. Track that work only in the existing
+`ITEM-CARD-THUMBNAILS` checklist entry.

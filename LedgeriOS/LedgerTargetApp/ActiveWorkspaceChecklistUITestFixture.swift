@@ -49,6 +49,7 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                         accountCurrency: try! CurrencyCode(validating: "USD"))
                 }
             }
+            .itemThumbnailViewport()
         }
         .task { await fixture.start() }
         .onChange(of: fixture.access.isLocked) { _, locked in
@@ -495,8 +496,14 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                     let object = try DownloadedImageObjectReference(accountId: accountId, attachmentId: id,
                         sha256: hash, byteCount: String(imageBytes.count), mediaType: "image/gif",
                         storagePath: "accounts/\(accountId.rawValue)/attachments/\(id)/\(hash)")
+                    let generated = try ItemCardThumbnailGenerator.generate(originalBytes: imageBytes,expectedOriginal: object)
+                    let smallId = "small-\(id)"
+                    let small = try DownloadedImageObjectReference(accountId: accountId,attachmentId: smallId,
+                        sha256: generated.contentSHA256.rawValue,byteCount: String(generated.byteCount),mediaType: generated.mediaType,
+                        storagePath: "accounts/\(accountId.rawValue)/attachments/\(smallId)/\(generated.contentSHA256.rawValue)")
                     return try .init(referenceId: .init(validating: "fixture-reference-\(index)"), itemId: itemId,
-                        object: object, position: index, isPrimary: index == 0, setRevision: 1)
+                        object: object, position: index, isPrimary: index == 0, setRevision: 1,
+                        thumbnail: .init(original: object,object: small,recipe: generated.recipe,width: generated.width,height: generated.height))
                 }
                 continuation.yield(try .init(accountId: accountId, itemId: itemId,
                     isComplete: itemId.rawValue != "physical-ui-unassigned", images: images))
@@ -509,6 +516,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             throw DownloadedItemImageFailure.scopeMismatch
         }
         return imageBytes
+    }
+    func loadDownloadedItemThumbnail(accountId: AccountID,itemId: ItemID,
+        image: DownloadedItemImage,allowDownload: Bool) async throws -> Data? {
+        guard image.itemId == itemId, image.object.accountId == accountId,let thumbnail = image.thumbnail else {
+            throw DownloadedItemImageFailure.scopeMismatch
+        }
+        let generated = try ItemCardThumbnailGenerator.generate(originalBytes: imageBytes,expectedOriginal: image.object)
+        guard generated.contentSHA256 == thumbnail.object.contentSHA256,
+              generated.byteCount == thumbnail.object.byteCount else { throw DownloadedItemImageFailure.malformed }
+        return generated.bytes
     }
     func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<DownloadedProjectItems, Error> {
         AsyncThrowingStream { continuation in

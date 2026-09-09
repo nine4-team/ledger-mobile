@@ -14,6 +14,7 @@ public enum LedgerPowerSyncTable {
     public static let itemImageSets = "item_image_sets"
     public static let itemImageReferences = "item_image_references"
     public static let itemImageObjects = "item_image_objects"
+    public static let itemCardThumbnails = "item_card_thumbnails"
     public static let itemPlacements = "spike_item_placements"
     public static let itemClientPaymentConnections = "item_client_payment_connections"
     public static let itemChargeOccurrences = "item_charge_occurrences"
@@ -78,6 +79,10 @@ public enum LedgerPowerSyncSchema {
             indexes: [.ascending(name: "image_reference_item", columns: ["account_id","item_id"])]),
         Table(name: LedgerPowerSyncTable.itemImageObjects, columns: [.text("account_id"),.text("content_sha256"),
             .text("byte_count"),.text("media_type"),.text("storage_path")]),
+        Table(name: LedgerPowerSyncTable.itemCardThumbnails, columns: [.text("account_id"),
+            .text("original_attachment_id"),.text("thumbnail_attachment_id"),.text("recipe"),
+            .integer("pixel_width"),.integer("pixel_height")],
+            indexes: [.ascending(name: "thumbnail_original", columns: ["account_id","original_attachment_id"])]),
         Table(
             name: LedgerPowerSyncTable.itemPlacements,
             columns: [.text("account_id"), .text("item_id"), .text("scope_kind"),

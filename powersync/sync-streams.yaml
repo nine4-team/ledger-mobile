@@ -40,6 +40,39 @@ streams:
           AND reference.item_id=subscription.parameter('item_id')
         )
         AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_card_thumbnails.id,item_card_thumbnails.account_id,item_card_thumbnails.original_attachment_id,
+          item_card_thumbnails.thumbnail_attachment_id,item_card_thumbnails.recipe,
+          item_card_thumbnails.pixel_width,item_card_thumbnails.pixel_height
+        FROM item_card_thumbnails
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_card_thumbnails.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_card_thumbnails.account_id=subscription.parameter('account_id')
+        AND item_card_thumbnails.original_attachment_id IN (
+          SELECT reference.attachment_id FROM item_image_references AS reference
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_objects.id,item_image_objects.account_id,item_image_objects.content_sha256,
+          item_image_objects.byte_count::text AS byte_count,item_image_objects.media_type,item_image_objects.storage_path
+        FROM item_image_objects
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_objects.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_objects.account_id=subscription.parameter('account_id')
+        AND item_image_objects.id IN (
+          SELECT thumbnail.thumbnail_attachment_id FROM item_card_thumbnails AS thumbnail
+          JOIN item_image_references AS reference ON reference.account_id=thumbnail.account_id
+            AND reference.attachment_id=thumbnail.original_attachment_id
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
   account_business_profile:
     queries:
       - |

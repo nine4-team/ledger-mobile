@@ -834,6 +834,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         project.tap()
         let item = app.buttons["target-physical-item-physical-ui-chair"]
         reveal(item, in: app)
+        let thumbnail = app.descendants(matching: .any)
+            .matching(identifier: "target-item-thumbnail-physical-ui-chair").firstMatch
+        reveal(thumbnail, in: app, fullyInsideScrollView: true)
+        XCTAssertTrue(waitUntil { (thumbnail.value as? String) == "Downloaded" }, app.debugDescription)
+        XCTAssertEqual(thumbnail.frame.width, 108, accuracy: 1)
+        XCTAssertEqual(thumbnail.frame.height, 108, accuracy: 1)
         item.tap()
         let images = app.buttons["target-item-images-open"]
         XCTAssertTrue(images.waitForExistence(timeout: 5))
@@ -1053,6 +1059,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let source = app.staticTexts["target-item-source-group-a"]
         XCTAssertTrue(source.label == "Design Inventory" || (source.value as? String) == "Design Inventory")
         let groupSelect = app.buttons["target-item-group-select-group-a"]
+        #if os(iOS)
+        XCTAssertGreaterThanOrEqual(groupSelect.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(groupSelect.frame.height, 44)
+        #endif
         groupSelect.tap()
         let count = app.staticTexts["target-items-selected-count"]
         XCTAssertTrue(waitUntil { count.label == "2 selected" || (count.value as? String) == "2 selected" })
@@ -1197,6 +1207,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         let chairSelection = app.buttons["target-item-select-physical-ui-chair"]
         reveal(chairSelection, in: app)
+        #if os(iOS)
+        XCTAssertGreaterThanOrEqual(chairSelection.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(chairSelection.frame.height, 44)
+        #endif
         chairSelection.tap()
         assertSelectedCount(1)
         let unassignedSelectionRow = app.buttons["target-physical-item-physical-ui-unassigned"]
@@ -1210,6 +1224,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         assertSelectedCount(0)
         let selectAll = app.buttons["target-items-select-all"]
         reveal(selectAll, in: app, fullyInsideScrollView: true)
+        #if os(iOS)
+        XCTAssertGreaterThanOrEqual(selectAll.frame.height, 44, "Select all needs a usable touch target")
+        #endif
         selectAll.tap()
         assertSelectedCount(3)
         reveal(selectAll, in: app, fullyInsideScrollView: true)

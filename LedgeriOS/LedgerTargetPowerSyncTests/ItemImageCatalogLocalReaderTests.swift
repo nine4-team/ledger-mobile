@@ -86,6 +86,34 @@ struct ItemImageCatalogLocalReaderTests {
     func read(_ db: any PowerSyncDatabaseProtocol) async throws -> DownloadedItemImageCatalog {
         try await ItemImageCatalogLocalReader(database: db).read(accountId: account,principalId: principal,itemId: item)
     }
+    @Test("Explicit derivative arrival does not change original completeness; malformed and foreign links fail closed")
+    func thumbnails() async throws {
+        try await withDatabase { db in
+            try await seed(db)
+            #expect(try await read(db).images.first?.thumbnail == nil)
+            let hash = String(repeating: "b",count: 64)
+            _ = try await db.execute(sql: "INSERT INTO item_card_thumbnails(id,account_id,original_attachment_id,thumbnail_attachment_id,recipe,pixel_width,pixel_height) VALUES('small-link','image-account','object','small','item-card-300-jpeg-v1',300,200)",parameters: nil)
+            #expect(try await read(db).isComplete)
+            #expect(try await read(db).images.first?.thumbnail == nil)
+            _ = try await db.execute(sql: "INSERT INTO item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path) VALUES('small','image-account',?,'100','image/jpeg',?)",
+                parameters: [hash,"accounts/image-account/attachments/small/\(hash)"])
+            let image = try #require(try await read(db).primaryImage)
+            #expect(image.object.attachmentId.rawValue == "object")
+            #expect(image.thumbnail?.object.attachmentId.rawValue == "small")
+            #expect(image.thumbnail?.width == 300)
+            for mutation in ["UPDATE item_card_thumbnails SET pixel_width=301",
+                             "UPDATE item_card_thumbnails SET pixel_width=300,account_id='foreign'",
+                             "UPDATE item_card_thumbnails SET account_id='image-account',original_attachment_id='another'",
+                             "UPDATE item_card_thumbnails SET original_attachment_id='object'; UPDATE item_image_objects SET media_type='image/png' WHERE id='small'"] {
+                for sql in mutation.components(separatedBy: "; ") {
+                    _ = try await db.execute(sql: sql,parameters: nil)
+                }
+                let catalog = try await read(db)
+                #expect(catalog.isComplete)
+                #expect(catalog.primaryImage?.thumbnail == nil)
+            }
+        }
+    }
     func addObject(_ db: any PowerSyncDatabaseProtocol) async throws {
         let hash = String(repeating: "a",count: 64)
         _ = try await db.execute(sql: "INSERT INTO item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path) VALUES('object','image-account',?,'123','image/png',?)",

@@ -29,9 +29,17 @@ struct ItemImageCatalogLocalReader: Sendable {
             let projected = try transaction.getAll(sql: """
                 SELECT reference.id,reference.set_revision,reference.position,reference.is_primary,
                   typeof(reference.position) AS position_type,typeof(reference.is_primary) AS primary_type,
-                  object.id AS object_id,object.content_sha256,object.byte_count,object.media_type,object.storage_path
+                  object.id AS object_id,object.content_sha256,object.byte_count,object.media_type,object.storage_path,
+                  thumb.recipe,thumb.pixel_width,thumb.pixel_height,
+                  typeof(thumb.pixel_width) AS width_type,typeof(thumb.pixel_height) AS height_type,
+                  small.id AS small_id,small.content_sha256 AS small_hash,small.byte_count AS small_bytes,
+                  small.media_type AS small_media_type,small.storage_path AS small_path
                 FROM item_image_references reference LEFT JOIN item_image_objects object
                   ON object.account_id=reference.account_id AND object.id=reference.attachment_id
+                LEFT JOIN item_card_thumbnails thumb ON thumb.account_id=object.account_id
+                  AND thumb.original_attachment_id=object.id AND thumb.recipe='item-card-300-jpeg-v1'
+                LEFT JOIN item_image_objects small ON small.account_id=thumb.account_id
+                  AND small.id=thumb.thumbnail_attachment_id
                 WHERE reference.account_id=? AND reference.item_id=?
                 ORDER BY reference.position,reference.id
                 """, parameters: [accountId.rawValue,itemId.rawValue]) { cursor -> DownloadedItemImage? in
@@ -46,8 +54,24 @@ struct ItemImageCatalogLocalReader: Sendable {
                             attachmentId: cursor.getString(name: "object_id"),sha256: cursor.getString(name: "content_sha256"),
                             byteCount: cursor.getString(name: "byte_count"),mediaType: cursor.getString(name: "media_type"),
                             storagePath: cursor.getString(name: "storage_path"))
+                        // Missing/malformed derivatives never erase an otherwise
+                        // valid original or turn its Item into No Image.
+                        let thumbnail: DownloadedItemCardThumbnail?
+                        do {
+                            guard try cursor.getString(name: "width_type")=="integer",
+                                  try cursor.getString(name: "height_type")=="integer" else {
+                                throw DownloadedItemImageFailure.malformed
+                            }
+                            let small = try DownloadedImageObjectReference(accountId: accountId,
+                                attachmentId: cursor.getString(name: "small_id"),sha256: cursor.getString(name: "small_hash"),
+                                byteCount: cursor.getString(name: "small_bytes"),mediaType: cursor.getString(name: "small_media_type"),
+                                storagePath: cursor.getString(name: "small_path"))
+                            thumbnail = try .init(original: object,object: small,recipe: cursor.getString(name: "recipe"),
+                                width: cursor.getInt(name: "pixel_width"),height: cursor.getInt(name: "pixel_height"))
+                        } catch { thumbnail = nil }
                         return try DownloadedItemImage(referenceId: EntityID(validating: cursor.getString(name: "id")),
-                            itemId: itemId,object: object,position: position,isPrimary: primary==1,setRevision: revision)
+                            itemId: itemId,object: object,position: position,isPrimary: primary==1,setRevision: revision,
+                            thumbnail: thumbnail)
                     } catch { return nil }
                 }
             let images = projected.compactMap { $0 }
@@ -85,7 +109,8 @@ struct ItemImageCatalogLocalReader: Sendable {
                         UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_sets WHERE account_id=?)
                         UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_references WHERE account_id=?)
                         UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_objects WHERE account_id=?)
-                        """, parameters: Array(repeating: accountId.rawValue,count: 5)) { try $0.getInt(index: 0) }
+                        UNION ALL SELECT EXISTS(SELECT 1 FROM item_card_thumbnails WHERE account_id=?)
+                        """, parameters: Array(repeating: accountId.rawValue,count: 6)) { try $0.getInt(index: 0) }
         for try await _ in changes {
             try Task.checkCancellation()
             let value = try await read(accountId: accountId,principalId: principalId,itemId: itemId)

@@ -7,9 +7,10 @@ import Testing
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
-    @Test("Item image bytes require the same live reference after download", arguments: ["unchanged", "reference", "removed"])
-    func itemImageDownloadAuthorization(change: String) async throws {
-        let context = try RuntimeTestContext(suffix: "item-image-\(change)")
+    @Test("Item original and thumbnail bytes require the same live reference after download",
+          arguments: ["unchanged", "reference", "removed", "thumbnail-link"], [false,true])
+    func itemImageDownloadAuthorization(change: String, thumbnail: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "item-image-\(change)-\(thumbnail)")
         let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
         let gate = ManualGate()
         let bytes = Data([1, 2, 3])
@@ -23,39 +24,51 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 parameters: [hash, "accounts/account-runtime/attachments/image/\(hash)"])
             _ = try await database.execute(sql: "INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('physical-chair','account-runtime','physical-chair','1',1)", parameters: nil)
             _ = try await database.execute(sql: "INSERT INTO item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary) VALUES('image-ref','account-runtime','physical-chair','image','1',0,1)", parameters: nil)
+            if thumbnail {
+                _ = try await database.execute(sql: "INSERT INTO item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path) VALUES('small','account-runtime',?,'3','image/jpeg',?)",
+                    parameters: [hash,"accounts/account-runtime/attachments/small/\(hash)"])
+                _ = try await database.execute(sql: "INSERT INTO item_card_thumbnails(id,account_id,original_attachment_id,thumbnail_attachment_id,recipe,pixel_width,pixel_height) VALUES('small-link','account-runtime','image','small','item-card-300-jpeg-v1',300,200)",parameters: nil)
+            }
             databases.append(database)
         }
-        dependencies.downloadImage = { _ in await gate.wait(); return bytes }
+        dependencies.downloadImage = { object in
+            #expect(object.attachmentId.rawValue == (thumbnail ? "small" : "image"))
+            await gate.wait(); return bytes
+        }
         let runtime = try await context.openRuntime(dependencies: dependencies)
         let database = try #require(databases.values.first)
         var images = runtime.watchDownloadedItemImages(accountId: context.accountId, itemId: itemId).makeAsyncIterator()
         let catalog = try #require(await images.next())
         #expect(catalog.isComplete)
         let image = try #require(catalog.images.first)
-        #expect(try await runtime.loadDownloadedItemImage(accountId: context.accountId, itemId: itemId,
-            image: image, allowDownload: false) == nil)
-        let download = Task {
-            try await runtime.loadDownloadedItemImage(accountId: context.accountId, itemId: itemId,
-                image: image, allowDownload: true)
+        @Sendable func load(_ allowDownload: Bool) async throws -> Data? {
+            if thumbnail {
+                return try await runtime.loadDownloadedItemThumbnail(accountId: context.accountId,itemId: itemId,
+                    image: image,allowDownload: allowDownload)
+            }
+            return try await runtime.loadDownloadedItemImage(accountId: context.accountId,itemId: itemId,
+                image: image,allowDownload: allowDownload)
         }
+        #expect(try await load(false) == nil)
+        let download = Task { try await load(true) }
         await gate.waitUntilEntered()
         if change == "reference" {
             _ = try await database.execute(sql: "UPDATE item_image_sets SET revision='2',expected_count=0", parameters: nil)
         } else if change == "removed" {
             _ = try await database.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+        } else if change == "thumbnail-link", thumbnail {
+            _ = try await database.execute(sql: "DELETE FROM item_card_thumbnails",parameters: nil)
         }
         await gate.release()
-        if change == "unchanged" {
+        if change == "unchanged" || (change == "thumbnail-link" && !thumbnail) {
             #expect(try await download.value == bytes)
-            #expect(try await runtime.loadDownloadedItemImage(accountId: context.accountId, itemId: itemId,
-                image: image, allowDownload: false) == bytes)
+            #expect(try await load(false) == bytes)
         } else {
             await #expect(throws: (any Error).self) { try await download.value }
         }
         try await runtime.close()
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await runtime.loadDownloadedItemImage(accountId: context.accountId, itemId: itemId,
-                image: image, allowDownload: false)
+            try await load(false)
         }
         context.remove()
     }
