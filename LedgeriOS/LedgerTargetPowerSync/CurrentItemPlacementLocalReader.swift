@@ -265,7 +265,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 workflowStatusRaw: cursor.getStringOptional(name: "workflow_status"),
                 isBookmarked: bookmark.map { $0 == 1 },
                 source: cursor.getStringOptional(name: "source"),
-                currentSource: cursor.getStringOptional(name: "current_source"))
+                currentSource: cursor.getStringOptional(name: "current_source"),
+                imageCount: cursor.getIntOptional(name: "image_count").map(Int64.init))
     }
 
     private static func creationDate(_ raw: String?) -> Date? {
@@ -286,6 +287,10 @@ struct CurrentItemPlacementLocalReader: Sendable {
         SELECT p.id AS placement_id, i.id AS item_id, i.name, i.description, i.sku, i.created_at, i.revision, p.space_id,
           i.workflow_status, i.bookmark, typeof(i.bookmark) AS bookmark_type,
           i.source,i.current_source,
+          CASE WHEN CAST(image_set.revision AS INTEGER)>0
+            AND image_set.revision=CAST(CAST(image_set.revision AS INTEGER) AS TEXT)
+            AND typeof(image_set.expected_count)='integer' AND image_set.expected_count>=0
+            THEN image_set.expected_count END AS image_count,
           (SELECT count(*) FROM spike_item_placements other
             WHERE other.account_id = p.account_id AND other.item_id = p.item_id
               AND other.ended_at IS NULL) AS active_count,
@@ -293,6 +298,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
           (p.scope_kind = 'business_inventory' OR project.id IS NOT NULL) AS project_valid
         FROM spike_item_placements p
         LEFT JOIN spike_items i ON i.account_id = p.account_id AND i.id = p.item_id
+        LEFT JOIN item_image_sets image_set ON image_set.account_id=i.account_id
+          AND image_set.item_id=i.id AND image_set.id=i.id
         LEFT JOIN spike_projects project ON project.id = p.project_id AND project.account_id = p.account_id
         LEFT JOIN spike_spaces s ON s.id = p.space_id AND s.account_id = p.account_id
           AND s.scope_kind = p.scope_kind AND s.project_id IS p.project_id

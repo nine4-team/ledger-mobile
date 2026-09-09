@@ -59,6 +59,14 @@ struct DownloadedItemsView: View {
             Menu("Filter Items") {
                 facetMenu("Name", selection: $filters.name)
                 facetMenu("SKU", selection: $filters.sku)
+                Menu("Image") {
+                    Button("All") { filters.image = .all }
+                    Button("None") { filters.image = .only([]) }
+                    Divider()
+                    facetToggle("has", label: "Has Image", selection: $filters.image)
+                    facetToggle("missing", label: "No Image", selection: $filters.image)
+                    facetToggle("unavailable", label: "Image information unavailable", selection: $filters.image)
+                }
                 Menu("Workflow Status") {
                     Button("All") { filters.workflowStatus = .all }
                     Button("None") { filters.workflowStatus = .only([]) }
@@ -339,6 +347,10 @@ struct DownloadedItemsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-item-workflow-status-\(row.itemId.rawValue)")
                 itemSourceAndSKU(row)
+                Text(row.imageCount.map { $0 == 0 ? "No Image" : "\($0) image\($0 == 1 ? "" : "s")" }
+                    ?? "Image information unavailable")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-item-image-count-\(row.itemId.rawValue)")
             }
             if row.isBookmarked == true {
                 Image(systemName: "bookmark.fill")

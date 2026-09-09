@@ -10,6 +10,55 @@ struct DownloadedProjectItemsTests {
     private let principal = try! PrincipalID(validating: "principal")
     private let project = try! ProjectID(validating: "project")
 
+    @Test("Combined Project snapshot reacts to marker-only changes and revocation")
+    func imageMarkerWatch() async throws {
+        try await withDatabase { db in
+            let values = AsyncThrowingStream<DownloadedProjectItems,Error>.makeStream()
+            let task = Task {
+                do {
+                    try await DownloadedProjectItemsWatch(database: db).run(accountId: account,principalId: principal,projectId: project) {
+                        values.continuation.yield($0)
+                        return true
+                    }
+                    values.continuation.finish()
+                } catch { values.continuation.finish(throwing: error) }
+            }
+            let deadline = Task { try await Task.sleep(for: .seconds(10));task.cancel() }
+            defer { task.cancel();deadline.cancel() }
+            var iterator = values.stream.makeAsyncIterator()
+            let initial = try await nextMatching(&iterator) { _ in true }
+            #expect(initial.placements.rows.allSatisfy { $0.imageCount == nil })
+            _ = try await db.execute(sql: "INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('paid','account','paid','1',0)",parameters: nil)
+            let empty = try await nextMatching(&iterator) {
+                $0.placements.rows.first(where: { $0.itemId.rawValue == "paid" })?.imageCount == 0
+            }
+            #expect(empty.accounting?.rows.count == empty.placements.rows.count)
+            _ = try await db.execute(sql: "UPDATE item_image_sets SET revision='2',expected_count=2",parameters: nil)
+            _ = try await nextMatching(&iterator) {
+                $0.placements.rows.first(where: { $0.itemId.rawValue == "paid" })?.imageCount == 2
+            }
+            _ = try await db.execute(sql: "DELETE FROM item_image_sets",parameters: nil)
+            _ = try await nextMatching(&iterator) { $0.placements.rows.allSatisfy { $0.imageCount == nil } }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'",parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                while try await iterator.next() != nil {}
+            }
+            await task.value
+        }
+    }
+
+    private func nextMatching(
+        _ iterator: inout AsyncThrowingStream<DownloadedProjectItems,Error>.Iterator,
+        predicate: (DownloadedProjectItems) -> Bool
+    ) async throws -> DownloadedProjectItems {
+        while let snapshot = try await iterator.next() {
+            if predicate(snapshot) { return snapshot }
+        }
+        throw MarkerTestFailure.streamEnded
+    }
+
+    private enum MarkerTestFailure: Error { case streamEnded }
+
     @Test("Browsing reads canonical names, SKU and optional creation evidence")
     func browsingFields() async throws {
         try await withDatabase { db in

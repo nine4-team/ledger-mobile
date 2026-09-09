@@ -487,8 +487,10 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         AsyncThrowingStream { continuation in
             do {
                 let populated = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-images")
+                let count = itemId.rawValue == "physical-ui-other-space" ? 1
+                    : (itemId.rawValue == "physical-ui-chair" && populated ? 2 : 0)
                 let hash = try AttachmentContentSHA256.make(bytes: imageBytes).rawValue
-                let images: [DownloadedItemImage] = try (populated ? [0, 1] : []).map { index in
+                let images: [DownloadedItemImage] = try (0..<count).map { index in
                     let id = "fixture-image-\(index)"
                     let object = try DownloadedImageObjectReference(accountId: accountId, attachmentId: id,
                         sha256: hash, byteCount: String(imageBytes.count), mediaType: "image/gif",
@@ -496,7 +498,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                     return try .init(referenceId: .init(validating: "fixture-reference-\(index)"), itemId: itemId,
                         object: object, position: index, isPrimary: index == 0, setRevision: 1)
                 }
-                continuation.yield(try .init(accountId: accountId, itemId: itemId, isComplete: true, images: images))
+                continuation.yield(try .init(accountId: accountId, itemId: itemId,
+                    isComplete: itemId.rawValue != "physical-ui-unassigned", images: images))
             } catch { continuation.finish(throwing: error) }
         }
     }
@@ -602,12 +605,13 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         let row = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-chair"),
             description: "Downloaded test chair", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-placement"), scope: scope,
-            spaceId: SpaceID(validating: "space-ui-test"), workflowStatusRaw: "to-purchase", isBookmarked: true)
+            spaceId: SpaceID(validating: "space-ui-test"), workflowStatusRaw: "to-purchase", isBookmarked: true,
+            imageCount: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-images") ? 2 : 0)
         let elsewhere = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-other-space"),
             description: "Item assigned to another Space", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-other-placement"), scope: scope,
             spaceId: SpaceID(validating: "other-space-ui-test"), createdAt: Date(timeIntervalSince1970: 1),
-            workflowStatusRaw: "returned", isBookmarked: false)
+            workflowStatusRaw: "returned", isBookmarked: false, imageCount: 1)
         let unassigned = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-unassigned"),
             description: "Unassigned test Item", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil,

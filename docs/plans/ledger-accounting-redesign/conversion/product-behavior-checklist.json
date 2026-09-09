@@ -27263,6 +27263,13 @@
           "status": "planned"
         },
         {
+          "id": "ITEM-IMAGE-COUNT-LIST-FIDELITY",
+          "risk": "sync_visibility",
+          "expected": "Image filtering distinguishes authorized marker count zero, positive count, and unavailable metadata; unknown is never No Image. Existing physical/report subscriptions deliver marker changes to atomic readers without photo downloads. Filter choices combine with other facets and clear normally.",
+          "command": "DownloadedItemPlacements.swift and DownloadedItemsView.swift implement Image facets/count labels; CurrentItemPlacementLocalReader.swift and both existing Sync Streams add marker projections.16Core browsing tests,27clean focused provider tests,36actual SQL captures,4parser checks passed. Original full1050native/155suites passed1049 and failed new watch test. Trace disproved missed delivery: correct snapshots produced,enqueued,and consumed within130ms. Immutable per-event test helper preserves immediate marker INSERT/UPDATE/DELETE and revocation;6clean strict passes plus focused suite (/tmp/ledger-image-count-provider-reviewed.log). Precise old mutable-loop failure cause unproven; no production workaround or timing crutch retained. Native image-evidence filter UI test added, pending CI. Thumbnails not implemented.",
+          "status": "planned"
+        },
+        {
           "id": "ITEM-IMAGE-PROTECTED-READ",
           "risk": "media_durability",
           "expected": "Only the same live authorized Item reference may return verified protected bytes; reference replacement, Account removal and close reject in-flight results. Cached bytes remain reusable offline without being mistaken for Item authority. Missing catalog metadata is not No Image.",

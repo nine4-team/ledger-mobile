@@ -10,6 +10,35 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Image count is explicit scoped metadata, survives restart and never invents No Image")
+    func imageCountMetadata() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            #expect(try await reader.readSnapshot(accountId: account,principalId: principal,scope: .project(project)).rows.first?.imageCount == 2)
+            for sql in [
+                "UPDATE item_image_sets SET revision='0'",
+                "UPDATE item_image_sets SET revision='9223372036854775808'",
+                "UPDATE item_image_sets SET revision='1',expected_count=-1",
+                "UPDATE item_image_sets SET expected_count=0,account_id='foreign'",
+                "DELETE FROM item_image_sets"
+            ] {
+                _ = try await db.execute(sql: sql,parameters: nil)
+                #expect(try await reader.readSnapshot(accountId: account,principalId: principal,scope: .project(project)).rows.first?.imageCount == nil)
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'",parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readSnapshot(accountId: account,principalId: principal,scope: .project(project))
+            }
+        }) { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            #expect(try await reader.readSnapshot(accountId: account,principalId: principal,scope: .project(project)).rows.first?.imageCount == nil)
+            _ = try await db.execute(sql: "INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('chair','account-item','chair','1',0)",parameters: nil)
+            #expect(try await reader.readSnapshot(accountId: account,principalId: principal,scope: .project(project)).rows.first?.imageCount == 0)
+            _ = try await db.execute(sql: "UPDATE item_image_sets SET revision='2',expected_count=2",parameters: nil)
+            // No references or bytes are needed to know the authoritative count.
+        }
+    }
+
     @Test("Original source and immediate origin stay distinct across encrypted restart")
     func sourceOriginMetadata() async throws {
         try await withDatabase(reopen: { db in

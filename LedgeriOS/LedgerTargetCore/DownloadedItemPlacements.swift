@@ -1,7 +1,7 @@
 import Foundation
 
 public enum DownloadedItemPlacementsFailure: Error, Equatable, Sendable {
-    case invalidRevision, invalidTimestamp, duplicateItem, duplicateSpace, scopeMismatch
+    case invalidRevision, invalidTimestamp, invalidImageCount, duplicateItem, duplicateSpace, scopeMismatch
 }
 
 /// Read-only physical facts. Item revision is not a placement mutation token.
@@ -17,6 +17,12 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
     public let createdAt: Date?
     public let workflowStatusRaw: String?
     public let isBookmarked: Bool?
+    /// Nil means image metadata has not downloaded; only explicit zero proves No Image.
+    public let imageCount: Int64?
+    public var imageFacetValue: String {
+        guard let imageCount else { return "unavailable" }
+        return imageCount == 0 ? "missing" : "has"
+    }
     public var workflowStatus: ItemWorkflowStatus { .init(sourceValue: workflowStatusRaw) }
     public var displayName: String { name ?? description }
     public let itemRevision: Int64
@@ -28,16 +34,18 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
                 placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?,
                 name: String? = nil, sku: String? = nil, createdAt: Date? = nil,
                 workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil,
-                source: String? = nil, currentSource: String? = nil) throws {
+                source: String? = nil, currentSource: String? = nil, imageCount: Int64? = nil) throws {
         guard itemRevision > 0 else { throw DownloadedItemPlacementsFailure.invalidRevision }
         guard createdAt?.timeIntervalSinceReferenceDate.isFinite != false else {
             throw DownloadedItemPlacementsFailure.invalidTimestamp
         }
+        guard imageCount.map({ $0 >= 0 }) ?? true else { throw DownloadedItemPlacementsFailure.invalidImageCount }
         self.itemId = itemId; self.description = description; self.itemRevision = itemRevision
         self.placementId = placementId; self.scope = scope; self.spaceId = spaceId
         self.name = name; self.sku = sku; self.createdAt = createdAt
         self.workflowStatusRaw = workflowStatusRaw; self.isBookmarked = isBookmarked
         self.source = source; self.currentSource = currentSource
+        self.imageCount = imageCount
     }
 }
 
@@ -161,9 +169,10 @@ public struct DownloadedItemFilters: Equatable, Sendable {
     public var workflowStatus: DownloadedItemFacetSelection = .all
     public var bookmark: DownloadedItemFacetSelection = .all
     public var source: DownloadedItemFacetSelection = .all
+    public var image: DownloadedItemFacetSelection = .all
     public init() {}
     public var isActive: Bool {
-        name != .all || sku != .all || space != .all || workflowStatus != .all || bookmark != .all || source != .all
+        name != .all || sku != .all || space != .all || workflowStatus != .all || bookmark != .all || source != .all || image != .all
     }
 
     public func includes(_ row: PhysicalItemPlacement) -> Bool {
@@ -173,6 +182,7 @@ public struct DownloadedItemFilters: Equatable, Sendable {
             && workflowStatus.includes(row.workflowStatus.facetValue)
             && bookmark.includes(row.isBookmarked == true ? "bookmarked" : "not bookmarked")
             && source.includes(row.sourceFacetValue)
+            && image.includes(row.imageFacetValue)
     }
 }
 

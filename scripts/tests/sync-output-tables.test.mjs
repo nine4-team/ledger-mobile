@@ -23,7 +23,7 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  assert.equal(count, 43);
+  assert.equal(count, 45);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));

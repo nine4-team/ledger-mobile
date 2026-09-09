@@ -4,6 +4,36 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Image filter preserves explicit empty, positive count and missing metadata separately")
+    func imageEvidenceFilter() throws {
+        func row(_ id: String, count: Int64?) throws -> PhysicalItemPlacement {
+            try .init(itemId: .init(validating: id), description: "Chair", itemRevision: 1,
+                placementId: .init(validating: "placement-\(id)"), scope: .businessInventory,
+                spaceId: nil, imageCount: count)
+        }
+        let rows = try [row("empty", count: 0), row("image", count: 2), row("unknown", count: nil)]
+        let snapshot = try DownloadedItemPlacements(accountId: .init(validating: "account"),
+            scope: .businessInventory, rows: rows)
+        func visible(_ filters: DownloadedItemFilters) -> [PhysicalItemPlacement] {
+            snapshot.rows(in: nil, matching: "", order: .newest, filters: filters)
+        }
+        var filters = DownloadedItemFilters()
+        #expect(!filters.isActive)
+        for (value, expected) in [("missing", "empty"), ("has", "image"), ("unavailable", "unknown")] {
+            filters.image = .only([value])
+            #expect(filters.isActive)
+            #expect(visible(filters).map(\.itemId.rawValue) == [expected])
+        }
+        filters.image = .only([])
+        #expect(visible(filters).isEmpty)
+        filters.image = .allExcept(["has"])
+        #expect(Set(visible(filters).map(\.itemId.rawValue)) == ["empty", "unknown"])
+        filters.name = .only(["missing"])
+        #expect(visible(filters).isEmpty) // Different facets combine with AND.
+        #expect(throws: DownloadedItemPlacementsFailure.invalidImageCount) { try row("invalid", count: -1) }
+        #expect(try row("large", count: Int64.max).imageCount == Int64.max)
+    }
+
     @Test("Fixed Space limits grouping resolution and source choices before dynamic filtering")
     func fixedSpaceGrouping() throws {
         let space = try SpaceID(validating: "room")

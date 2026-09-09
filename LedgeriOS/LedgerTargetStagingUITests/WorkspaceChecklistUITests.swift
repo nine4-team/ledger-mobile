@@ -780,6 +780,49 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(item.exists)
     }
 
+    func testDownloadedItemImageEvidenceFilter() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        func choose(_ option: String) {
+            reveal(filters, in: app, fullyInsideScrollView: true)
+            filters.tap()
+            #if os(macOS)
+            let facet = app.menuItems["Image"]
+            XCTAssertTrue(facet.waitForExistence(timeout: 5))
+            facet.tap()
+            facet.menuItems[option].tap()
+            #else
+            let facet = app.buttons["Image"]
+            XCTAssertTrue(facet.waitForExistence(timeout: 5))
+            facet.tap()
+            app.buttons[option].tap()
+            #endif
+        }
+        for (label, itemId, evidence) in [
+            ("No Image", "physical-ui-chair", "No Image"),
+            ("Has Image", "physical-ui-other-space", "1 image"),
+            ("Image information unavailable", "physical-ui-unassigned", "Image information unavailable")
+        ] {
+            choose("None")
+            choose(label)
+            let item = app.buttons["target-physical-item-\(itemId)"]
+            XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription)
+            let count = app.staticTexts["target-items-downloaded-count"]
+            XCTAssertTrue(waitUntil { self.displayedText(count) == "Matching Items: 1 of 3 downloaded" })
+            XCTAssertEqual(displayedText(app.staticTexts["target-item-image-count-\(itemId)"]), evidence)
+            let clear = app.buttons["target-items-filters-clear"]
+            reveal(clear, in: app, fullyInsideScrollView: true)
+            clear.tap()
+        }
+    }
+
     func testDownloadedItemImageGallery() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

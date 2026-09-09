@@ -64,6 +64,20 @@ streams:
   property_management_report:
     queries:
       - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND item_image_sets.item_id IN (
+          SELECT placement.item_id FROM spike_item_placements AS placement
+          WHERE placement.account_id=subscription.parameter('account_id')
+          AND placement.scope_kind='project' AND placement.project_id=subscription.parameter('project_id')
+          AND placement.ended_at IS NULL
+        )
+        AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+      - |
         SELECT spike_projects.id, spike_projects.account_id, spike_projects.client_id, spike_projects.display_name,
           spike_projects.description, spike_projects.legacy_notes, spike_projects.property_address, spike_projects.lifecycle, spike_projects.revision,
           spike_projects.category_configuration_revision::text AS category_configuration_revision,
@@ -247,6 +261,14 @@ streams:
 
   physical_account_items:
     queries:
+      - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND principal.auth_user_id=auth.user_id() AND membership.state='active'
       - |
         SELECT spike_items.id, spike_items.account_id, spike_items.name, spike_items.description, spike_items.sku,
           spike_items.workflow_status, spike_items.bookmark,

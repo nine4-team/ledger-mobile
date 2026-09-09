@@ -174,8 +174,8 @@ try {
     assert.ok(block);
     const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
       .map(match => match[1].replace(/^        /gm, '').trim());
-    assert.equal(queries.length, 11);
-    const tables = ['spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items',
+    assert.equal(queries.length, 12);
+    const tables = ['item_image_sets', 'spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items',
       'spike_clients', 'item_client_payment_connections', 'spike_item_project_categories', 'spike_budget_categories',
       'item_charge_occurrences', 'collected_invoice_lines', 'collected_invoices'];
     const captures = queries.map((query, index) => {
@@ -188,7 +188,7 @@ try {
       '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
       input: `begin isolation level repeatable read read only;\n${captures.join('\n')}\ncommit;`, encoding: 'utf8',
     }).trim().split('\n').map(JSON.parse);
-    assert.equal(raw.length, 11);
+    assert.equal(raw.length, 12);
     // Extend the same-commit native artifact with actual private Invoice storage
     // output. This isolated synthetic transaction rolls back even on success;
     // it creates no public collection API or durable accounting fixture graph.

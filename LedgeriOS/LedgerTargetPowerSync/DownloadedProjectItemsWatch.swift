@@ -54,13 +54,14 @@ struct DownloadedProjectItemsWatch: Sendable {
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_clients WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_spaces WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_sets WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_item_placements WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions WHERE stream_name='property_management_report')
-                """, parameters: Array(repeating: accountId.rawValue, count: 10)) { try $0.getInt(index: 0) }
+                """, parameters: Array(repeating: accountId.rawValue, count: 11)) { try $0.getInt(index: 0) }
             for try await _ in changes {
                 try Task.checkCancellation()
                 let value = try await read(accountId: accountId, principalId: principalId, projectId: projectId)

@@ -32,11 +32,11 @@ struct PropertyManagementReportLocalReaderTests {
             #expect(provenance["projectId"] as? String == project.rawValue)
             #expect(expected["currency"] as? String == currency.rawValue)
             let tables = try #require(fixture["tables"] as? [[String: Any]])
-            let allowed = Set(["spike_projects", "spike_spaces", "spike_item_placements", "spike_items",
+            let allowed = Set(["item_image_sets", "spike_projects", "spike_spaces", "spike_item_placements", "spike_items",
                 "spike_clients", "item_client_payment_connections", "spike_item_project_categories", "spike_budget_categories",
                 "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"])
             #expect(Set(tables.compactMap { $0["table"] as? String }) == allowed)
-            #expect(tables.count == 11)
+            #expect(tables.count == 12)
             for table in tables {
                 let name = try #require(table["table"] as? String)
                 guard allowed.contains(name) else { throw CocoaError(.coderInvalidValue) }

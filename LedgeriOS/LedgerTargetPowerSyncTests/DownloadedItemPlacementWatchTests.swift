@@ -124,6 +124,13 @@ struct DownloadedItemPlacementWatchTests {
         #expect(updated.rows.first?.isBookmarked == nil)
         #expect(updated.rows.first?.source == "Vendor")
         #expect(updated.rows.first?.currentSource == "")
+        #expect(updated.rows.first?.imageCount == nil)
+        _ = try await db.execute(sql: "INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('chair','watch-account','chair','1',0)", parameters: nil)
+        while updated.rows.first?.imageCount != 0 { updated = try #require(await iterator.next()) }
+        _ = try await db.execute(sql: "UPDATE item_image_sets SET revision='2',expected_count=3", parameters: nil)
+        while updated.rows.first?.imageCount != 3 { updated = try #require(await iterator.next()) }
+        _ = try await db.execute(sql: "DELETE FROM item_image_sets", parameters: nil)
+        while updated.rows.first?.imageCount != nil { updated = try #require(await iterator.next()) }
         // Cancel while subscribe is still suspended. A late subscription must
         // still be released, not escape the runtime's drain bookkeeping.
         task.cancel()
