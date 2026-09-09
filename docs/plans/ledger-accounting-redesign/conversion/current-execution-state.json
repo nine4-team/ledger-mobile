@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 348,
+  "stateVersion": 349,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Item original-image gallery batch uncommitted. Core/catalog, protected shared cache/transport, SQL/RLS/Storage/Sync reader, runtime lease/reference rechecks, model and actual-image gallery implemented. Root and independent boundary review complete; exact UTF8 regression fixed. Full1046native155suites/863DB30files passed;9focused4suites after final identity changes passed. Checklist and ADR record precise gaps.",
-      "Final environment, CI guard tests, direct conversion and app typecheck passed; both XCTest typechecks passed. Logs /tmp/ledger-item-images-{environment,ci-guard,conversion,app-typecheck}.log. Commit/push media batch once and follow automatic exact-commit PR CI. No full suite repeat for continuity. Gallery acceptance remains pending native UI; do not claim complete media workflow.",
+      "Item original-image gallery committed/pushed6355430e4663feb1b5287e17ca7b9945e2f4c78a. Automatic CI34338531249 confirmed IN_PROGRESS; follow same run without redispatch. Core/catalog, protected cache, SQL/RLS/Storage/Sync reader, runtime reference checks, model/gallery implemented. Root and independent review complete; exact UTF8 regression fixed. Full1046native155suites/863DB30files and9focused4suites after identity changes passed. Checklist/ADR record gaps.",
+      "Gallery native zoom follow-on ready: UIScrollView/NSScrollView decoded-pixel-only fit1-5,pinch/pan,double gesture2.5;0.5buttons/reset, stable viewport, exact selection and wrapping navigation. Root/independent review fixed reset-layout and queued-binding races. Both native platform/XCTest and integrated app typechecks passed. Environment/conversion session70789 logs /tmp/ledger-image-zoom-{environment,conversion}.log. Commit/push once after checks; extended UI acceptance still pending. Reuse unchanged1046native/863DB evidence, no rerun for UI-only changes.",
       "Prior source/grouping commit ffd1b55ae9074501442f385bade0d86d8c0f7194 CI34335057826 confirmed live in iPhone UI; Mac UI and both builds passed. Poll same run, no redispatch.34333349025/2a9e80aa terminal failed status filter clipped tap; current batch fully reveals Filter before interaction and keeps assertions.5538ef14 latest whole green until fresh result.",
-      "Continue faithful Item gaps: thumbnails/Image facet, full zoom/pan/pinning, complete cards/detail/category/price facets, financial totals, bulk/edit/media writes and approved auth download wiring. O016/O027/O065 writer decisions and O023 retention unresolved; do not infer policies. Hosted/hardware/migration/cutover remain incomplete.",
+      "Continue faithful Item gaps: view-local pin panel per docs/specs/ui/image-pinning.md, swipe pager/dismiss and chrome, save/share, thumbnails/Image facet, complete cards/detail/category/price facets, financial totals, bulk/edit/media writes and approved auth download wiring. O016/O027/O065 writer decisions and O023 retention unresolved; do not infer policies. Hosted/hardware/migration/cutover incomplete.",
       "Local schema applied through20260909093555 with primary uniqueness index; history not rewritten. Preserve diagnostic artifacts; disk constrained, no full local Xcode builds. Work only Supabase worktree."
     ]
   },

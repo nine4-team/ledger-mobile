@@ -799,12 +799,35 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
         let count = app.staticTexts["target-item-images-counter"]
         XCTAssertTrue(count.label == "1 of 2" || (count.value as? String) == "1 of 2")
-        XCTAssertFalse(app.buttons["target-item-images-previous"].isEnabled)
+        let zoomIn = app.buttons["target-item-image-zoom-in"]
+        let zoomOut = app.buttons["target-item-image-zoom-out"]
+        let resetZoom = app.buttons["target-item-image-zoom-reset"]
+        XCTAssertFalse(zoomOut.isEnabled)
+        zoomIn.tap()
+        XCTAssertTrue(resetZoom.waitForExistence(timeout: 5))
+        let zoom = app.staticTexts["target-item-image-zoom-level"]
+        XCTAssertTrue(waitUntil { zoom.label == "1.5×" || (zoom.value as? String) == "1.5×" })
+        resetZoom.tap()
+        XCTAssertTrue(waitUntil { !zoomOut.isEnabled && !resetZoom.exists })
+        #if os(macOS)
+        rendered.doubleClick()
+        #else
+        rendered.doubleTap()
+        #endif
+        XCTAssertTrue(waitUntil { zoom.label == "2.5×" || (zoom.value as? String) == "2.5×" })
+        resetZoom.tap()
+        XCTAssertTrue(waitUntil { !zoomOut.isEnabled })
+        zoomIn.tap()
         app.buttons["target-item-images-next"].tap()
         XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["target-item-images-next"].isEnabled)
+        XCTAssertTrue(waitUntil { !zoomOut.isEnabled && !resetZoom.exists })
+        // Both directions wrap through the source set, as in the shipped viewer.
+        app.buttons["target-item-images-next"].tap()
+        XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
         app.buttons["target-item-images-previous"].tap()
+        XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
+        app.buttons["target-item-images-next"].tap()
         XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
         app.buttons["target-item-images-done"].tap()
         XCTAssertTrue(images.waitForExistence(timeout: 5))

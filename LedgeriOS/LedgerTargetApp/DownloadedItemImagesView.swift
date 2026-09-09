@@ -42,20 +42,22 @@ struct DownloadedItemImagesView: View {
                         Text(catalog.isComplete ? "No images" : "No image references downloaded yet")
                             .accessibilityIdentifier("target-item-images-empty")
                     } else {
-                        let selected = catalog.images.first { $0.id == selection } ?? catalog.primaryImage!
+                        let selected = catalog.images.first {
+                            $0.id.rawValue.utf8.elementsEqual((selection?.rawValue ?? "").utf8)
+                        } ?? catalog.primaryImage!
                         DownloadedItemPhotoView(accountId: accountId, itemId: itemId, image: selected, reader: reader)
                             .id([accountId.rawValue, itemId.rawValue, selected.referenceId.rawValue,
                                  String(selected.setRevision), selected.object.attachmentId.rawValue,
                                  selected.object.contentSHA256.rawValue])
-                        let index = catalog.images.firstIndex { $0.id == selected.id } ?? 0
-                        HStack {
-                            Button("Previous") { selection = catalog.images[index - 1].id }
-                                .disabled(index == 0).accessibilityIdentifier("target-item-images-previous")
+                        let index = catalog.images.firstIndex { $0 == selected } ?? 0
+                        if catalog.images.count > 1 { HStack {
+                            Button("Previous") { selection = catalog.images[(index + catalog.images.count - 1) % catalog.images.count].id }
+                                .accessibilityIdentifier("target-item-images-previous")
                             Text("\(index + 1) of \(catalog.images.count)")
                                 .accessibilityIdentifier("target-item-images-counter")
-                            Button("Next") { selection = catalog.images[index + 1].id }
-                                .disabled(index + 1 >= catalog.images.count).accessibilityIdentifier("target-item-images-next")
-                        }
+                            Button("Next") { selection = catalog.images[(index + 1) % catalog.images.count].id }
+                                .accessibilityIdentifier("target-item-images-next")
+                        } }
                         if selected.isPrimary { Text("Primary image").font(.caption) }
                     }
                 }
@@ -80,7 +82,6 @@ private struct DownloadedItemPhotoView: View {
     @State private var message = "Loading image…"
     @State private var refresh = UUID()
     @State private var scale: CGFloat = 1
-    @GestureState private var magnification: CGFloat = 1
     private struct Request: Equatable {
         let image: DownloadedItemImage
         let refresh: UUID
@@ -89,14 +90,25 @@ private struct DownloadedItemPhotoView: View {
     var body: some View {
         VStack {
             if let rendered {
-                Image(decorative: rendered, scale: 1).resizable().scaledToFit()
-                    .scaleEffect(min(5, max(1, scale * magnification)))
-                    .gesture(MagnifyGesture().updating($magnification) { value, state, _ in state = value.magnification }
-                        .onEnded { scale = min(5, max(1, scale * $0.magnification)) })
-                    .onTapGesture(count: 2) { scale = scale > 1 ? 1 : 2.5 }
-                    .accessibilityLabel("Downloaded Item image")
-                    .accessibilityHidden(false)
-                    .accessibilityIdentifier("target-item-image-rendered")
+                DownloadedImageZoomSurface(image: rendered, zoomScale: $scale)
+                    .frame(minHeight: 200)
+                HStack {
+                    Button("Zoom out") { scale = max(1, scale - 0.5) }
+                        .disabled(scale <= 1).accessibilityIdentifier("target-item-image-zoom-out")
+                    Text(Double(scale).formatted(.number.precision(.fractionLength(1))) + "×")
+                        .accessibilityIdentifier("target-item-image-zoom-level")
+                    Button("Zoom in") { scale = min(5, scale + 0.5) }
+                        .disabled(scale >= 5).accessibilityIdentifier("target-item-image-zoom-in")
+                }
+                // Keep the image viewport stable when Reset appears. A real
+                // viewport resize intentionally resets the native surface to fit.
+                ZStack {
+                    Color.clear
+                    if scale > 1.01 {
+                        Button("Reset zoom") { scale = 1 }
+                            .accessibilityIdentifier("target-item-image-zoom-reset")
+                    }
+                }.frame(height: 32)
             } else {
                 Text(message).accessibilityIdentifier("target-item-image-state")
                 Button("Retry image") { refresh = UUID() }
