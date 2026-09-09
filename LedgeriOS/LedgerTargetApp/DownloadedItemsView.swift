@@ -161,17 +161,19 @@ struct DownloadedItemsView: View {
         .onChange(of: accountId) { _, _ in resetContext() }
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
-        .onChange(of: visibleItemIds, initial: true) { _, ids in selection.reconcile(visible: ids) }
+        .onChange(of: selectionEvidence, initial: true) { _, ids in
+            if let ids { selection.reconcile(visible: ids) }
+        }
         // A full-screen image can cover this route without ending it. Scope
         // changes clear selection explicitly; actual route removal releases State.
         .onDisappear { model.clear() }
     }
 
-    private var visibleItemIds: [ItemID] {
-        guard case .downloaded(let snapshot) = model.state,
-              snapshot.accountId == accountId, snapshot.scope == scope else { return [] }
-        return snapshot.rows(in: spaceId, matching: search, order: order, filters: filters).map(\.itemId)
+    private var selectionEvidence: [ItemID]? {
+        model.selectionEvidence(accountId: accountId,scope: scope,spaceId: spaceId,
+                                search: search,order: order,filters: filters)
     }
+    private var visibleItemIds: [ItemID] { selectionEvidence ?? [] }
 
     private func selectionControls(_ ids: [ItemID]) -> some View {
         VStack(alignment: .leading, spacing: 4) {

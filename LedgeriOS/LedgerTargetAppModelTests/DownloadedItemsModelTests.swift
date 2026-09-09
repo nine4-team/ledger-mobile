@@ -7,6 +7,36 @@ import Testing
 struct DownloadedItemsModelTests {
     private let account = try! AccountID(validating: "account-items")
 
+    @Test("Temporary missing snapshots preserve selection; real empty/filter results prune it")
+    func selectionRequiresDownloadedEvidence() async throws {
+        let snapshot = try projectSnapshot()
+        let scope = snapshot.placements.scope
+        let item = try #require(snapshot.placements.rows.first?.itemId)
+        let model = DownloadedItemsModel()
+        var selection = DownloadedItemSelection()
+        selection.toggle(itemId: item,visible: [item])
+        func evidence() -> [ItemID]? { model.selectionEvidence(accountId: account,scope: scope) }
+        #expect(evidence() == nil)
+        await model.load(accountId: account,scope: scope,reader: ProjectReader(snapshots: [snapshot]))
+        #expect(evidence() == [item])
+        model.clear()
+        if let ids = evidence() { selection.reconcile(visible: ids) }
+        #expect(selection.ids.contains(item))
+        await model.load(accountId: account,scope: scope,reader: ProjectReader(snapshots: [snapshot]))
+        if let ids = evidence() { selection.reconcile(visible: ids) }
+        #expect(selection.ids.contains(item))
+        #expect(model.selectionEvidence(accountId: account,scope: .businessInventory) == nil)
+        let filtered = try #require(model.selectionEvidence(accountId: account,scope: scope,search: "no matching item"))
+        #expect(filtered.isEmpty)
+        selection.reconcile(visible: filtered)
+        #expect(selection.ids.isEmpty)
+        selection.toggle(itemId: item,visible: [item])
+        let empty = try DownloadedProjectItems(placements: .init(accountId: account,scope: scope,rows: []),accounting: nil)
+        await model.load(accountId: account,scope: scope,reader: ProjectReader(snapshots: [empty]))
+        selection.reconcile(visible: try #require(evidence()))
+        #expect(selection.ids.isEmpty)
+    }
+
     @Test("Project Items consume one combined stream and keep unknown Items visible")
     func combinedProjectRead() async throws {
         let snapshot = try projectSnapshot()

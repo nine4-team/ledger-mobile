@@ -1016,6 +1016,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { self.displayedText(pinnedCount) == "2 of 2" })
         rendered.swipeDown()
         XCTAssertTrue(unpin.exists, "Vertical swipe must not dismiss the pinned reference\n\(app.debugDescription)")
+        XCTAssertTrue(app.staticTexts["target-item-history-partial"].exists,
+                      "The enclosing Item route must remain open after dragging its pinned image")
     }
     #endif
 
@@ -1326,6 +1328,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(chairSelection, in: app)
         chairSelection.tap()
         assertSelectedCount(1)
+        reveal(refresh, in: app, fullyInsideScrollView: true)
+        refresh.tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        reveal(selectedCount, in: app)
+        assertSelectedCount(1) // Loading is not evidence that the selected Item was deleted.
         let remove = app.buttons["target-ui-fixture-remove-account"]
         reveal(remove, in: app, upwards: false)
         remove.tap()

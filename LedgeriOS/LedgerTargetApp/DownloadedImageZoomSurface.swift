@@ -104,7 +104,11 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
             }
             guard zoomScale <= 1.01 else { return false }
             let velocity = navigationPan.velocity(in: self)
-            return abs(velocity.x) > abs(velocity.y) ? onPage != nil : onDismiss != nil
+            // A vertical drag belongs to this image even when it has no
+            // dismissal action (the pinned panel). Declining it releases the
+            // scroll pan and can hand the same drag to the enclosing sheet.
+            // Gestures outside the image and zoomed native panning are unchanged.
+            return abs(velocity.x) > abs(velocity.y) ? onPage != nil : true
         }
 
         @objc private func navigate(_ gesture: UIPanGestureRecognizer) {

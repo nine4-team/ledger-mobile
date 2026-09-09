@@ -14,6 +14,18 @@ public final class DownloadedItemsModel {
     private var generation = UUID()
     public init() {}
 
+    /// Nil is temporary absence of evidence, not an authoritative empty list.
+    /// Selection must survive loading/covering; actual filtered empty results
+    /// still prune it once a matching snapshot arrives.
+    public func selectionEvidence(accountId: AccountID, scope: ItemPlacementScope,
+                                  spaceId: SpaceID? = nil, search: String = "",
+                                  order: DownloadedItemOrder = .newest,
+                                  filters: DownloadedItemFilters = .init()) -> [ItemID]? {
+        guard case .downloaded(let snapshot) = state,
+              snapshot.accountId == accountId, snapshot.scope == scope else { return nil }
+        return snapshot.rows(in: spaceId,matching: search,order: order,filters: filters).map(\.itemId)
+    }
+
     public func load(accountId: AccountID, scope: ItemPlacementScope, reader: any DownloadedItemPlacementReading) async {
         let request = UUID()
         generation = request
