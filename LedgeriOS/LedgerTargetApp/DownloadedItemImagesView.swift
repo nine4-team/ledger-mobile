@@ -123,6 +123,8 @@ struct DownloadedItemImagesView: View {
         #endif
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(isPinned ? "target-pinned-image-viewer" : "target-item-image-viewer")
+        .accessibilityValue(isPinned ? "Pinned reference" :
+            (controlsVisible ? "Image controls visible" : "Image controls hidden"))
         .alert("Image", isPresented: Binding(get: { exportNotice != nil }, set: { if !$0 { exportNotice = nil } })) {
             Button("OK") { exportNotice = nil }
         } message: { Text(exportNotice ?? "") }

@@ -1092,6 +1092,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testDownloadedItemGroupsAndImmediateSource() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
+            throw XCTSkip("Item Copy checks use only the disposable CI clipboard")
+        }
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-groups",
@@ -1127,8 +1130,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #if os(macOS)
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "group-a\ngroup-b")
         #else
-        XCTAssertEqual(UIPasteboard.general.string, "group-a\ngroup-b")
+        assertPastedItemIDs("group-a\ngroup-b", in: app)
         #endif
+        reveal(count, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(waitUntil { self.displayedText(count) == "2 selected" })
         reveal(expand, in: app, fullyInsideScrollView: true)
         expand.tap()
@@ -1165,6 +1169,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
         app.buttons["target-items-filters-clear"].tap()
         XCTAssertTrue(expand.waitForExistence(timeout: 5))
+        reveal(count, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
         reveal(other, in: app, fullyInsideScrollView: true)
         #if os(macOS)
@@ -1179,10 +1184,25 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #if os(macOS)
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "group-c")
         #else
-        XCTAssertEqual(UIPasteboard.general.string, "group-c")
+        assertPastedItemIDs("group-c", in: app)
         #endif
+        reveal(count, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(waitUntil { self.displayedText(count) == "0 selected" })
     }
+
+    #if os(iOS)
+    private func assertPastedItemIDs(_ expected: String, in app: XCUIApplication) {
+        // Reuse the explicit native paste receiver used by report Copy tests.
+        // Reading UIPasteboard.string in the background runner blocked CI until
+        // its five-minute timeout; this exercises actual copied bytes instead.
+        let paste = app.buttons["target-ui-fixture-paste-report"]
+        XCTAssertTrue(paste.waitForExistence(timeout: 5))
+        XCTAssertTrue(paste.isEnabled)
+        paste.tap()
+        let result = app.staticTexts["target-ui-fixture-paste-result"]
+        XCTAssertTrue(waitUntil { self.displayedText(result) == expected }, app.debugDescription)
+    }
+    #endif
 
     func testDownloadedItemWorkflowStatusAndBookmarkFilters() throws {
         continueAfterFailure = false
@@ -1282,6 +1302,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let itemFilters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
         let selectedCount = app.staticTexts["target-items-selected-count"]
         func assertSelectedCount(_ count: Int) {
+            // Clearing filters can enlarge the enclosing list cell and move
+            // this label offscreen. Read the visible count, not a stale AX row.
+            reveal(selectedCount, in: app, fullyInsideScrollView: true)
             XCTAssertTrue(waitUntil {
                 selectedCount.label == "\(count) selected" || (selectedCount.value as? String) == "\(count) selected"
             }, app.debugDescription)

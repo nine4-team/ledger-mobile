@@ -28,8 +28,10 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                 .accessibilityValue(String(fixture.acceptedInvocationCount))
 
             #if os(iOS)
-            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-copy-receiver") {
-                UITestReportCopyReceiver()
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-report-copy-receiver") ||
+                ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-groups") {
+                UITestReportCopyReceiver(showsExactText:
+                    ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-groups"))
             }
             #endif
 
@@ -649,6 +651,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
 /// from the XCTest runner. Only the isolated Copy test enables this receiver.
 /// https://developer.apple.com/documentation/swiftui/pastebutton
 private struct UITestReportCopyReceiver: View {
+    let showsExactText: Bool
     @State private var result = "No copied report received"
 
     var body: some View {
@@ -679,7 +682,8 @@ private struct UITestReportCopyReceiver: View {
 
     private nonisolated func finish(_ data: Data?) {
         let message: String
-        if let data, data.starts(with: Data("%PDF-".utf8)) { message = "PDF content received" }
+        if showsExactText, let data, let text = String(data: data, encoding: .utf8) { message = text }
+        else if let data, data.starts(with: Data("%PDF-".utf8)) { message = "PDF content received" }
         else if let data, String(decoding: data, as: UTF8.self).contains("Report test chair") { message = "CSV content received" }
         else { message = "Copied report content unavailable" }
         Task { @MainActor in result = message }
