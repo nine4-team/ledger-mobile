@@ -101,6 +101,26 @@ try {
       from public.spike_item_placements placement where placement.account_id='${account}'
         and placement.project_id='${populated}' and placement.ended_at is null
       on conflict do nothing;
+    insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,
+      amount_minor_units,currency,created_at,created_by_principal_id)
+      select 'report-mcp-charge-'||placement.id,'${account}','${populated}',placement.item_id,placement.id,
+        'report-mcp-category',case when placement.id='report-mcp-fixture-p3' then 9007199254740993 else 250 end,
+        'USD','2026-09-02','principal-owner'
+      from public.spike_item_placements placement where placement.id in ('report-mcp-fixture-p2','report-mcp-fixture-p3')
+        and not exists(select 1 from ledger_private.item_charge_occurrences charge where charge.id='report-mcp-charge-'||placement.id);
+    update ledger_private.item_client_payment_connections set ended_at='2026-09-03',ended_by_principal_id='principal-owner'
+      where id in ('report-mcp-link-report-mcp-fixture-p2','report-mcp-link-report-mcp-fixture-p3') and ended_at is null;
+    insert into public.spike_transactions(id,account_id,project_id,client_id,amount_minor_units,currency)
+      values('report-mcp-charge-payment','${account}','${populated}','report-mcp-fixture-client',250,'USD') on conflict do nothing;
+    insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
+      select 'report-mcp-charge-invoice','${account}','${populated}','report-mcp-fixture-client','report-mcp-charge-payment',1,'USD',250
+      where not exists(select 1 from ledger_private.collected_invoices where id='report-mcp-charge-invoice');
+    insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,item_id,
+      source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
+      select 'report-mcp-charge-line','${account}','report-mcp-charge-invoice',0,'USD','item','report-mcp-charge-report-mcp-fixture-p2',
+        'report-mcp-fixture-zero',1,'report-mcp-category',250,'Synthetic charge','{}'::jsonb
+      where not exists(select 1 from ledger_private.collected_invoice_lines where id='report-mcp-charge-line');
+    update ledger_private.collected_invoices set sealed=true where id='report-mcp-charge-invoice' and not sealed;
     notify pgrst, 'reload schema'; commit;`);
   await verifyCategoryDepartureSerialization();
   await client.connect(transport);
@@ -139,6 +159,11 @@ try {
     && item.accounting.resolution === 'accountedFor'));
   assert.ok(!Object.hasOwn(clientReport, 'totals') && !Object.hasOwn(clientReport, 'currency'));
   assert.ok(clientReport.items.every(item => !Object.hasOwn(item, 'marketValueMinorUnits')));
+  const charged = clientReport.items.filter(item => item.accounting.evidence.billableOccurrences.length);
+  assert.equal(charged.length, 2);
+  assert.ok(charged.every(item => item.accounting.evidence.clientPaidPurchases.length === 0));
+  assert.deepEqual(charged.map(item => item.accounting.evidence.billableOccurrences[0].phase.kind).sort(),
+    ['availableToInvoice','frozenPaid']);
   // Optional differential artifact: actual stream projections, not a second
   // hand-maintained fixture. The native test consumes these exact source rows.
   const parityOutput = process.env.LEDGER_REPORT_PARITY_OUTPUT
@@ -149,9 +174,10 @@ try {
     assert.ok(block);
     const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
       .map(match => match[1].replace(/^        /gm, '').trim());
-    assert.equal(queries.length, 8);
+    assert.equal(queries.length, 11);
     const tables = ['spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items',
-      'spike_clients', 'item_client_payment_connections', 'spike_item_project_categories', 'spike_budget_categories'];
+      'spike_clients', 'item_client_payment_connections', 'spike_item_project_categories', 'spike_budget_categories',
+      'item_charge_occurrences', 'collected_invoice_lines', 'collected_invoices'];
     const captures = queries.map((query, index) => {
       const bound = query.replaceAll("subscription.parameter('account_id')", `'${account}'`)
         .replaceAll("subscription.parameter('project_id')", `'${populated}'`)
@@ -162,7 +188,7 @@ try {
       '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
       input: `begin isolation level repeatable read read only;\n${captures.join('\n')}\ncommit;`, encoding: 'utf8',
     }).trim().split('\n').map(JSON.parse);
-    assert.equal(raw.length, 8);
+    assert.equal(raw.length, 11);
     // Extend the same-commit native artifact with actual private Invoice storage
     // output. This isolated synthetic transaction rolls back even on success;
     // it creates no public collection API or durable accounting fixture graph.

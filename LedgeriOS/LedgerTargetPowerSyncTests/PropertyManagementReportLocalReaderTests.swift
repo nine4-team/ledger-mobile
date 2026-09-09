@@ -33,9 +33,10 @@ struct PropertyManagementReportLocalReaderTests {
             #expect(expected["currency"] as? String == currency.rawValue)
             let tables = try #require(fixture["tables"] as? [[String: Any]])
             let allowed = Set(["spike_projects", "spike_spaces", "spike_item_placements", "spike_items",
-                "spike_clients", "item_client_payment_connections", "spike_item_project_categories", "spike_budget_categories"])
+                "spike_clients", "item_client_payment_connections", "spike_item_project_categories", "spike_budget_categories",
+                "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"])
             #expect(Set(tables.compactMap { $0["table"] as? String }) == allowed)
-            #expect(tables.count == 8)
+            #expect(tables.count == 11)
             for table in tables {
                 let name = try #require(table["table"] as? String)
                 guard allowed.contains(name) else { throw CocoaError(.coderInvalidValue) }
@@ -258,6 +259,113 @@ struct PropertyManagementReportLocalReaderTests {
             #expect(read.items.map(\.itemId.rawValue) == ["chair"])
             #expect(read.project.projectId == project)
         }
+    }
+
+    @Test("Real charge evidence joins payment relationships and freezes only against an exact sealed Invoice")
+    func chargeEvidence() async throws {
+        try await withDatabase { db in
+            try await seedCharge(db)
+            let open = try await accounting(db)
+            #expect(open?.evidence.billableOccurrences.first?.phase.kind == .availableToInvoice)
+            let report = try await PropertyManagementReportLocalReader(database: db)
+                .read(accountId: account, principalId: principal, projectId: project)
+            #expect(report.items.first?.accounting == open)
+            for id in ["payment-one", "payment-two"] {
+                _ = try await db.execute(sql: "INSERT INTO item_client_payment_connections(id,account_id,project_id,client_id,item_id,placement_id,transaction_id,transaction_type,transaction_role) VALUES(?,'report-account','report-project','client','chair','placement',?,'purchase','standalone')", parameters: [id, "transaction-" + id])
+            }
+            #expect(try await accounting(db)?.evidence.clientPaidPurchases.count == 2)
+            try await seedCollectedCharge(db)
+            _ = try await db.execute(sql: "UPDATE item_charge_occurrences SET amount_minor_units='9007199254740993'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE collected_invoice_lines SET signed_amount_minor_units='9007199254740993'", parameters: nil)
+            let paid = try await accounting(db)
+            #expect(paid?.evidence.billableOccurrences.first?.phase == .frozenPaid(invoiceId: try InvoiceID(validating: "invoice")))
+            #expect(paid?.evidence.clientPaidPurchases.count == 2)
+            _ = try await db.execute(sql: "UPDATE collected_invoice_lines SET source_kind='expense'", parameters: nil)
+            #expect(try await accounting(db)?.evidence.billableOccurrences.first?.phase.kind == .availableToInvoice)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            #expect(try await accounting(db) == nil)
+        }
+    }
+
+    @Test("Withdrawn and departed charges do not prove current accounting; absent relationships stay unknown")
+    func withdrawnCharge() async throws {
+        for sql in ["UPDATE item_charge_occurrences SET withdrawn_at='2026-09-09'",
+                    "UPDATE spike_item_placements SET ended_at='2026-09-09'",
+                    "DELETE FROM item_charge_occurrences"] {
+            try await withDatabase { db in
+                try await seedCharge(db)
+                _ = try await db.execute(sql: sql, parameters: nil)
+                #expect(try await accounting(db) == nil)
+            }
+        }
+    }
+
+    @Test("Frozen source identities in another Account cannot pay or invalidate this Item")
+    func foreignChargeReference() async throws {
+        try await withDatabase { db in
+            try await seedCharge(db)
+            try await seedCollectedCharge(db)
+            let paid = try await accounting(db)
+            _ = try await db.execute(sql: "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency) SELECT 'foreign-line','foreign-account','foreign-invoice',source_kind,source_id,'foreign-item',source_revision,'foreign-category',signed_amount_minor_units,currency FROM collected_invoice_lines", parameters: nil)
+            #expect(try await accounting(db) == paid)
+            _ = try await db.execute(sql: "DELETE FROM collected_invoice_lines WHERE id='line'", parameters: nil)
+            #expect(try await accounting(db)?.evidence.billableOccurrences.first?.phase.kind == .availableToInvoice)
+        }
+    }
+
+    @Test("Malformed or incomplete frozen charge evidence cannot become available or paid")
+    func malformedCharge() async throws {
+        for sql in [
+            "UPDATE item_charge_occurrences SET account_id='foreign'",
+            "UPDATE item_charge_occurrences SET item_id='foreign'",
+            "UPDATE item_charge_occurrences SET placement_id='missing'",
+            "UPDATE item_charge_occurrences SET amount_minor_units=0",
+            "UPDATE item_charge_occurrences SET amount_minor_units=1.5",
+            "UPDATE item_charge_occurrences SET amount_minor_units='9223372036854775808'",
+            "UPDATE item_charge_occurrences SET currency='bad'",
+            "INSERT INTO item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,revision) SELECT 'second-charge',account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,revision FROM item_charge_occurrences",
+            "UPDATE item_charge_occurrences SET revision=0",
+            "UPDATE collected_invoice_lines SET source_revision=2",
+            "UPDATE collected_invoice_lines SET signed_amount_minor_units=99",
+            "UPDATE collected_invoice_lines SET category_id='foreign'",
+            "UPDATE collected_invoice_lines SET item_id='foreign'",
+            "UPDATE collected_invoice_lines SET currency='EUR'",
+            "UPDATE collected_invoices SET sealed=0",
+            "UPDATE collected_invoices SET client_id='foreign'",
+            "UPDATE collected_invoices SET project_id='foreign'",
+            "UPDATE collected_invoices SET account_id='foreign'",
+            "DELETE FROM collected_invoices",
+            "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency) SELECT 'duplicate',account_id,invoice_id,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency FROM collected_invoice_lines"
+        ] {
+            try await withDatabase { db in
+                try await seedCharge(db)
+                try await seedCollectedCharge(db)
+                _ = try await db.execute(sql: sql, parameters: nil)
+                await #expect(throws: PropertyManagementReportLocalReadFailure.malformedEvidence) { try await accounting(db) }
+            }
+        }
+    }
+
+    private func accounting(_ db: any PowerSyncDatabaseProtocol) async throws -> ProjectItemAccountingRow? {
+        try await db.readTransaction { tx in
+            try ItemClientPaymentConnectionLocalReader.read(transaction: tx, accountId: account,
+                principalId: principal, projectId: project)[EntityID(validating: "placement")]
+        }
+    }
+
+    private func seedCharge(_ db: any PowerSyncDatabaseProtocol) async throws {
+        for sql in [
+            "UPDATE spike_account_memberships SET financial_access='full'",
+            "UPDATE spike_projects SET client_id='client'",
+            "INSERT INTO item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,revision) VALUES('charge','report-account','report-project','chair','placement','furnishings',100,'USD',1)"
+        ] { _ = try await db.execute(sql: sql, parameters: nil) }
+    }
+
+    private func seedCollectedCharge(_ db: any PowerSyncDatabaseProtocol) async throws {
+        for sql in [
+            "INSERT INTO collected_invoices(id,account_id,project_id,client_id,sealed) VALUES('invoice','report-account','report-project','client',1)",
+            "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency) VALUES('line','report-account','invoice','item','charge','chair',1,'furnishings',100,'USD')"
+        ] { _ = try await db.execute(sql: sql, parameters: nil) }
     }
 
     private func withDatabase(seed: Bool = true, _ body: (any PowerSyncDatabaseProtocol) async throws -> Void) async throws {

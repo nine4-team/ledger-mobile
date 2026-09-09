@@ -1380,3 +1380,53 @@ migration executed atomically on the isolated local database; all 23 focused
 pgTAP checks passed, and local Supabase security advisors reported no issues.
 Provider/Sync/MCP and full native UI
 verification remain required; earlier green CI predates this correction.
+
+## Charge Collection Serialization and Report Evidence
+
+The positive Item charge source and Item frozen-line insertion share a
+transaction-scoped advisory lock keyed by an unambiguous namespaced
+Account/occurrence tuple. These writes require Read Committed. Volatile PL/pgSQL
+triggers acquire the lock and then run separate validation queries, so a waiter
+checks committed state after its predecessor finishes. Read-only report
+snapshots retain their existing stable read contract.
+
+This avoids a second paid-membership field: the immutable frozen Invoice line
+remains the membership authority. Collection verifies an existing charge's
+Project, Item, category, amount, currency and source revision and rejects a
+withdrawn charge. Later corrections and withdrawals reject frozen membership.
+The same lock covers absent sources: retained generic legacy frozen evidence
+cannot be followed by a newly editable charge with that identity. Migration
+must import canonical charge sources before their frozen membership; unresolved
+legacy sources need explicit reconciliation, not invented charges.
+
+Tradeoffs: these writes reject Repeatable Read and Serializable transactions;
+future multi-Item writers must use deterministic lock ordering or retry database
+deadlock failures. No public writer, financial policy or production migration is
+authorized. This constraint preserves the lifecycle's distinct unpaid removal
+and paid credit stories, physical identity and immutable paid history.
+
+Verification: independent design review and 20 rollback-only pgTAP checks pass.
+`scripts/test-local-item-charge-concurrency.mjs` additionally passed nine real
+two-session races and six isolation-mode rejection cases; the main agent reviewed
+and independently reran it. Each competing operation was observed waiting on
+its predecessor's advisory lock. The disposable local clone was removed and
+the source database stayed unchanged. Authorized source creation, acquisition
+evidence and user-facing mutation integration remain required; these checks do
+not prove a complete Link or collection command. The integrated read now uses
+one invoker SQL accounting projection for both reports and one bulk native
+reader merging Client Purchases and charges. Three actual source tables sync
+only to active full-financial members; raw snapshots, actor metadata and Invoice
+totals are not granted. Exact frozen membership supplies paid phase, while
+missing charge sources never establish absence. Live-Invoice membership must
+extend these readers before that future workflow ships. Typed readers reject
+an incomplete frozen header rather than presenting it as an open charge.
+
+Local integration passed803 database checks,1002 native tests/148 suites,
+97 scoped stream captures and the real PowerSync parser (40queries/21outputs).
+Actual Supabase/MCP and11stream tables into native SQLite produce identical
+complete report snapshots for Client-paid, open and frozen-paid charges,
+including amounts above JavaScript's safe-integer limit. Hosted replication
+and the new exact-commit CI remain separate verification requirements.
+PostgreSQL's documented volatile-function snapshot
+behavior is cached in `.firecrawl/postgres-function-volatility.md` from
+https://www.postgresql.org/docs/17/xfunc-volatility.html.

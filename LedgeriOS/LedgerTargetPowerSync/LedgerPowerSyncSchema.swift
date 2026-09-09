@@ -13,6 +13,9 @@ public enum LedgerPowerSyncTable {
     public static let items = "spike_items"
     public static let itemPlacements = "spike_item_placements"
     public static let itemClientPaymentConnections = "item_client_payment_connections"
+    public static let itemChargeOccurrences = "item_charge_occurrences"
+    public static let collectedInvoiceLines = "collected_invoice_lines"
+    public static let collectedInvoices = "collected_invoices"
     public static let itemProjectCategories = "spike_item_project_categories"
     public static let spaceCoreDetails = "spike_space_core_details"
     public static let spaceChecklists = "spike_space_checklists"
@@ -38,6 +41,18 @@ public enum LedgerPowerSyncTable {
 
 public enum LedgerPowerSyncSchema {
     public static let schema = Schema(
+        Table(name: LedgerPowerSyncTable.itemChargeOccurrences,
+            columns: [.text("account_id"), .text("project_id"), .text("item_id"), .text("placement_id"),
+                      .text("category_id"), .text("amount_minor_units"), .text("currency"),
+                      .integer("revision"), .text("withdrawn_at")],
+            indexes: [.ascending(name: "charge_project", columns: ["account_id", "project_id", "placement_id"])]),
+        Table(name: LedgerPowerSyncTable.collectedInvoiceLines,
+            columns: [.text("account_id"), .text("invoice_id"), .text("source_kind"), .text("source_id"),
+                      .text("item_id"), .integer("source_revision"), .text("category_id"),
+                      .text("signed_amount_minor_units"), .text("currency")],
+            indexes: [.ascending(name: "collected_line_source", columns: ["source_kind", "source_id"])]),
+        Table(name: LedgerPowerSyncTable.collectedInvoices,
+            columns: [.text("account_id"), .text("project_id"), .text("client_id"), .integer("sealed")]),
         Table(name: LedgerPowerSyncTable.itemClientPaymentConnections,
             columns: [.text("account_id"), .text("project_id"), .text("client_id"), .text("item_id"),
                       .text("placement_id"), .text("transaction_id"), .text("transaction_type"),

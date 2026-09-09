@@ -19,10 +19,13 @@ struct ClientSummaryPhysicalReportWatch: Sendable {
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_item_placements WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_item_project_categories WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions WHERE stream_name='property_management_report')
-                """, parameters: Array(repeating: accountId.rawValue, count: 9)) { try $0.getInt(index: 0) }
+                """, parameters: Array(repeating: accountId.rawValue, count: 12)) { try $0.getInt(index: 0) }
             for try await _ in changes {
                 try Task.checkCancellation()
                 let update: ClientSummaryPhysicalReportUpdate

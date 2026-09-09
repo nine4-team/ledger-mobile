@@ -152,6 +152,59 @@ streams:
         AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'
         AND (spike_budget_categories.visibility_class = 'ordinary' OR membership.financial_access = 'full')
 
+      - |
+        SELECT item_charge_occurrences.id, item_charge_occurrences.account_id, item_charge_occurrences.project_id,
+          item_charge_occurrences.item_id, item_charge_occurrences.placement_id, item_charge_occurrences.category_id,
+          item_charge_occurrences.amount_minor_units::text AS amount_minor_units, item_charge_occurrences.currency,
+          item_charge_occurrences.revision, item_charge_occurrences.withdrawn_at
+        FROM ledger_private.item_charge_occurrences
+        JOIN spike_item_placements AS placement ON placement.id = item_charge_occurrences.placement_id
+          AND placement.account_id = item_charge_occurrences.account_id AND placement.item_id = item_charge_occurrences.item_id
+          AND placement.project_id = item_charge_occurrences.project_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = item_charge_occurrences.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE item_charge_occurrences.account_id = subscription.parameter('account_id')
+        AND item_charge_occurrences.project_id = subscription.parameter('project_id')
+        AND item_charge_occurrences.withdrawn_at IS NULL AND placement.ended_at IS NULL
+        AND placement.scope_kind = 'project' AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active' AND membership.financial_access = 'full'
+
+      - |
+        SELECT collected_invoice_lines.id, collected_invoice_lines.account_id, collected_invoice_lines.invoice_id,
+          collected_invoice_lines.source_kind, collected_invoice_lines.source_id, collected_invoice_lines.item_id,
+          collected_invoice_lines.source_revision, collected_invoice_lines.category_id,
+          collected_invoice_lines.signed_amount_minor_units::text AS signed_amount_minor_units, collected_invoice_lines.currency
+        FROM ledger_private.collected_invoice_lines
+        JOIN ledger_private.item_charge_occurrences AS charge ON charge.account_id = collected_invoice_lines.account_id
+          AND charge.id = collected_invoice_lines.source_id
+        JOIN spike_item_placements AS placement ON placement.account_id = charge.account_id AND placement.id = charge.placement_id
+          AND placement.item_id = charge.item_id AND placement.project_id = charge.project_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = collected_invoice_lines.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE collected_invoice_lines.account_id = subscription.parameter('account_id')
+        AND collected_invoice_lines.source_kind = 'item' AND charge.project_id = subscription.parameter('project_id')
+        AND charge.withdrawn_at IS NULL AND placement.ended_at IS NULL AND placement.scope_kind = 'project'
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+
+      - |
+        SELECT collected_invoices.id, collected_invoices.account_id, collected_invoices.project_id,
+          collected_invoices.client_id, collected_invoices.sealed
+        FROM ledger_private.collected_invoices
+        JOIN spike_account_memberships AS membership ON membership.account_id = collected_invoices.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE collected_invoices.account_id = subscription.parameter('account_id')
+        AND collected_invoices.project_id = subscription.parameter('project_id') AND collected_invoices.sealed = true
+        AND collected_invoices.id IN (
+          SELECT line.invoice_id FROM ledger_private.collected_invoice_lines AS line
+          JOIN ledger_private.item_charge_occurrences AS charge ON charge.account_id = line.account_id AND charge.id = line.source_id
+          JOIN spike_item_placements AS placement ON placement.account_id = charge.account_id AND placement.id = charge.placement_id
+            AND placement.item_id = charge.item_id AND placement.project_id = charge.project_id
+          WHERE line.source_kind = 'item' AND charge.account_id = subscription.parameter('account_id')
+          AND charge.project_id = subscription.parameter('project_id') AND charge.withdrawn_at IS NULL
+          AND placement.ended_at IS NULL AND placement.scope_kind = 'project'
+        )
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+
   physical_account_items:
     queries:
       - |

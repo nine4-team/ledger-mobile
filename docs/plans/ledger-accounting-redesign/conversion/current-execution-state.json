@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 325,
+  "stateVersion": 330,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,11 +10,11 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "ACCOUNT-BRANDING-BOTH-PLATFORMS-GREEN",
-    "commit": "cfc7c000d35d6e93765a78782142cb68965aabae",
-    "ciRun": 34298822080,
+    "name": "CLIENT-SUMMARY-CATEGORY-BOTH-PLATFORMS-GREEN",
+    "commit": "27355441eaf1ec1dc2c934f1308941af7c5a856d",
+    "ciRun": 34316890317,
     "ciStatus": "passed",
-    "meaning": "Exact-commit CI passed:703 database checks,959 native tests/142 suites,16 macOS UI and14 iPhone UI tests,both builds. Branding integration and keyboard-wait correction verified in this run. Subsequent uncommitted report eligibility correction is NOT covered; provider integration is now known incomplete. Hosted/hardware/migration/cutover unverified."
+    "meaning": "Exact CI green:752 database checks,997 native tests/148 suites,17 Mac UI and15 iPhone UI tests,both builds. Client Summary preview/incomplete Share passed on both platforms. Newer be7060fd MCP integration has its own live CI; business-paid eligibility, hosted/hardware/migration/cutover remain incomplete."
   },
   "activeWorkflow": {
     "id": "client-summary-physical-readback",
@@ -23,11 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Implement correctly eligible Client Summary physical detail and repair the shared Property Management eligibility gap before report completion.",
     "nextActions": [
-      "Client Summary MCP integrated: physical-only invoker RPC20260909061518, tool/stdio/read, independently reviewed.23 focused SQL/775 full DB,59 MCP/typecheck, native complete/incomplete golden and actual Supabase→MCP→8stream rows→native full snapshot/hash differential pass (/tmp/ledger-client-rpc-parity-20260909.json). Unicode blank category mismatch corrected. Commit/push this report increment excluding draft charge migration; follow its single automatic CI. Business-paid source remains next product gap, not full report completion.",
-      "Uncommitted20260909060126_item_charge_occurrence_source.sql is a draft only, NOT applied or tested; no writer/Sync/read integration. Before accepting: serialize collection with charge mutation, preserve final values on withdrawal, validate actual source/role/price/category. O016 missing-Purchase question remains unanswered. Do not infer eligibility from this unused table or frozen Invoice JSON.",
-      "Category report increment27355441eaf1ec1dc2c934f1308941af7c5a856d committed/pushed. Automatic CI34316890317 confirmed IN_PROGRESS; follow exact run, no redispatch/restart. Prior5c3a1639 CI34315667293 terminal failure solely stale Client timestamp expectation, now corrected. Continue business-paid Item source while CI runs. iPhone UI remains unverified; cfc7 is last green checkpoint.",
-      "Integrated DB752 tests passed;12 focused category checks pass after lock-only trigger improvement. Full native997 had one note-pagination assertion racing watch registration; corrected to assert actual page reads,13 focused note tests pass (/tmp/ledger-category-note-race-fix.log). Other996 passed incl actual Client Summary source test. Conversion check passed. No need rerun all suites to resume. iPhone UI, business-paid source, Client Summary MCP and hosted replication remain incomplete.",
-      "Local DB schema manually applied WITHOUT history through20260909054104 plus20260909061518 Client report RPC;060126 charge draft NOT applied. Do not blindly migration-up/reapply/reset. Docker healthy,~2.5GiB disk; preserve artifacts/avoid full local Xcode builds. Advisor only existing spike_spaces multiple-permissive SELECT warning. Pending O057/O033/O027/O065/O053/O032/O060 affect linked outcomes only. Audit complete."
+      "Charge evidence integrated locally:060126 storage/collection guards +064122 narrow RLS/shared report helper,11Sync queries, merged native read and watches. Commit/push current batch then follow one automatic CI. Full803DB/1002native148suites,97stream captures40parserqueries21outputs, real HTTP→11stream tables→native exact report parity pass. /tmp/ledger-charge-report-parity-20260909.json and /tmp/ledger-charge-full-native.log. Review corrected native Account/source-kind join namespace; no blocking findings.",
+      "Next product work: actual Business-paid/Client-paid Link creation and offline command/readback remain unfinished. O016 missing-acquisition representation and O065 writer authority unresolved. Do not invent source evidence or mark absence authoritative. Live Invoice membership must extend shared report read before Invoice workflow ships; existing phases only open/frozen. No hosted replication/hardware/migration readiness claim.",
+      "be7060fd MCP CI34318832216 remains live in actual iPhone UI; don't restart/cancel.27355441 CI34316890317 terminal green, checkpoint above. Don't poll terminal run or rerun full suites just to resume.",
+      "Local schema now manually applied without history through064122, INCLUDING060126 (no longer absent).9 observed two-session races+6 isolation tests rerun successfully on cloned installed schema; clone removed. Source-first import/RC-only writes documented; no duplicate paid membership. Existing spike_spaces multi-policy performance advisor only. Preserve artifacts; avoid full local Xcode builds."
     ]
   },
   "blockers": [],
