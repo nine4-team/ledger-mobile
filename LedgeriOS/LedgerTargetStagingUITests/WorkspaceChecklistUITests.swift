@@ -959,7 +959,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let submitSearch = app.keyboards.buttons["Search"]
         XCTAssertTrue(submitSearch.waitForExistence(timeout: 5))
         submitSearch.tap()
-        XCTAssertTrue(waitUntil { !app.keyboards.firstMatch.exists })
+        // Let XCTest own disappearance polling rather than nesting its retrying
+        // accessibility query inside a separate predicate timeout.
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         #endif
         let space = app.buttons[spaceIdentifier]
         reveal(space, in: app)
