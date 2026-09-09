@@ -1236,7 +1236,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let zoomIn = app.buttons["target-item-image-zoom-in"]
         // A pinned reference may remain in the accessibility tree underneath
         // this gallery. Interact with the full-screen viewer, never that image.
-        let image = app.otherElements["target-item-image-viewer"].images["target-item-image-rendered"]
+        // SwiftUI exposes this container as Group on macOS and Other on iOS.
+        let viewer = app.descendants(matching: .any)["target-item-image-viewer"]
+        let image = viewer.images["target-item-image-rendered"]
         XCTAssertTrue(image.exists || image.waitForExistence(timeout: 5))
         // Start a fresh visibility interval. Reusing controls near the end of
         // their timeout races XCTest's snapshot and event-delivery overhead.
