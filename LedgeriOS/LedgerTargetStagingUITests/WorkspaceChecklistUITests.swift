@@ -869,7 +869,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             ("sku", "CHAIR-001"), ("workflow", "To Purchase"), ("bookmark", "Yes"),
             ("created", "2026-09-01T11:00:00Z")
         ] {
-            let field = app.staticTexts["target-item-detail-\(id)"]
+            let field = id == "space" ? app.buttons["target-item-detail-space"]
+                : app.staticTexts["target-item-detail-\(id)"]
             reveal(field, in: app, fullyInsideScrollView: true, within: scroll)
             XCTAssertEqual(displayedText(field), expected)
         }
@@ -909,6 +910,57 @@ final class WorkspaceChecklistUITests: XCTestCase {
             assertPastedItemIDs("physical-ui-chair", in: app)
             #endif
         }
+    }
+
+    func testItemOpensAssignedProjectSpaceAndReturns() throws {
+        try exerciseItemSpaceLink(inventory: false, archived: false)
+    }
+
+    func testItemOpensArchivedInventorySpaceReadOnlyAndReturns() throws {
+        try exerciseItemSpaceLink(inventory: true, archived: true)
+    }
+
+    private func exerciseItemSpaceLink(inventory: Bool, archived: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        if inventory {
+            app.launchArguments += ["--ledger-ui-test-inventory-space", "--ledger-ui-test-reset-inventory-section"]
+        }
+        if archived { app.launchArguments.append("--ledger-ui-test-linked-space-archived") }
+        app.launch()
+        defer { app.terminate() }
+        let workspace = app.buttons[inventory ? "target-business-inventory-card" : "target-active-project-card-project-ui-test"]
+        XCTAssertTrue(workspace.waitForExistence(timeout: 10))
+        workspace.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        item.tap()
+        let link = app.buttons["target-item-detail-space"]
+        XCTAssertTrue(link.waitForExistence(timeout: 5))
+        XCTAssertEqual(displayedText(link), "Current test Space")
+        link.tap()
+        let name = app.staticTexts["target-item-space-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        XCTAssertEqual(displayedText(name), "UI Test Space")
+        XCTAssertEqual(app.staticTexts["target-item-space-archived"].exists, archived)
+        let checklistItem = app.buttons["target-active-space-checklist-item-checklist-ui-test-item-ui-test"]
+        XCTAssertTrue(checklistItem.waitForExistence(timeout: 5))
+        if archived {
+            XCTAssertFalse(checklistItem.isEnabled, "Historical navigation must not allow archived Space edits")
+        } else {
+            XCTAssertTrue(waitUntil { checklistItem.isEnabled })
+            checklistItem.tap()
+            XCTAssertTrue(waitUntil { checklistItem.value as? String == "Checked" })
+        }
+        let refreshSpace = app.buttons["target-referenced-space-refresh"]
+        refreshSpace.tap()
+        refreshSpace.tap()
+        app.buttons["target-item-space-back"].tap()
+        XCTAssertTrue(link.waitForExistence(timeout: 5), "Back restores the originating Item")
+        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-name"]), "Downloaded test chair")
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
     }
 
     func testDownloadedItemImageGallery() throws {
@@ -1853,7 +1905,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(physicalItem, in: app)
         physicalItem.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
-        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-space"]), "Current test Space")
+        XCTAssertEqual(displayedText(app.buttons["target-item-detail-space"]), "Current test Space")
         XCTAssertTrue(app.staticTexts["Current downloaded location"].exists)
         if inventory {
             XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-current-location"]), "Business Inventory")

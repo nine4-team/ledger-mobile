@@ -27279,6 +27279,13 @@
           "status": "planned"
         },
         {
+          "id": "ITEM-SPACE-REFERENCE-NAVIGATION",
+          "risk": "ui_fidelity",
+          "expected": "Resolved current Item Space opens the same authorized stable-ID Project/Inventory Space; Back restores originating Item. Archived references remain readable outside active browser and cannot enable mutations. Missing metadata is noninteractive. Scope mismatch, observer failure and route cancellation must not retain usable stale evidence or leak pending operation state between routes.",
+          "command": "Item detail Space link and ReferencedSpaceDetailView reuse exact-ID SpaceCoreDetailsStagingExercise with expectedScope, same query provider, independent existing checklist sessions and extracted SpaceChecklistSection; active browser unchanged. Authority UIBASE-ITEM-DETAIL-001, specs/items.md:322, specs/spaces.md:65-68. Native tests added for active Project checklist interaction+Back and archived Inventory read-only+Back; presenter tests cover archived read and wrong Project/Inventory evidence including cached failure; adapter test verifies no active-list dependency. Root reviewed delegated UI and corrected notes field plus startup/cleanup synchronization races. AppModel module, app, new model tests and iOS XCTest typechecks passed; final app typecheck also passed with synchronization-ready guard. Independent final review found no further concrete defect. Native tests also exercise repeated refresh then Back; no runtime success claimed. Full local native run unavailable under disk pressure. Regenerated existing Xcode project includes new view. Existing source-token regression from9123b68 corrected;29source assertions pass. Next integrated automatic CI must prove runtime behavior.",
+          "status": "planned"
+        },
+        {
           "id": "ITEM-COPY-SELECTED-IDS",
           "risk": "ui_fidelity",
           "expected": "Copy IDs preserves the shipped sorted newline-separated stable IDs, limited to current scoped query eligibility. Copy neither clears selection nor mutates the backend; loading/removed/filter-excluded IDs cannot be copied. Governing authority: items.md Target Everyday Editing and existing Item bulk-action Copy IDs disposition.",

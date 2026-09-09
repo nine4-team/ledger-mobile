@@ -13,6 +13,7 @@ struct DownloadedItemsView: View {
     let scope: ItemPlacementScope
     let reader: any DownloadedItemPlacementReading
     var spaceId: SpaceID? = nil
+    var spaceNavigation: ItemSpaceNavigation? = nil
     @State private var model = DownloadedItemsModel()
     @State private var refresh = UUID()
     @State private var selectedItem: ItemSelection?
@@ -161,7 +162,8 @@ struct DownloadedItemsView: View {
         .sheet(item: $selectedItem) { selection in
             if selection.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8),
                let historyReader = reader as? any DownloadedItemPlacementHistoryReading {
-                DownloadedItemDetailView(accountId: accountId, itemId: selection.itemId, reader: historyReader)
+                DownloadedItemDetailView(accountId: accountId, itemId: selection.itemId, reader: historyReader,
+                    spaceNavigation: spaceNavigation)
             }
         }
         .alert("Could not copy Item IDs", isPresented: $copyFailed) {
@@ -456,6 +458,12 @@ private struct DownloadedItemDetailView: View {
     let accountId: AccountID
     let itemId: ItemID
     let reader: any DownloadedItemPlacementHistoryReading
+    var spaceNavigation: ItemSpaceNavigation? = nil
+    @State private var selectedSpace: ReferencedSpaceSelection?
+    private struct ReferencedSpaceSelection: Identifiable {
+        let id: SpaceID
+        let scope: SpaceCreationScope
+    }
     @State private var showImages = false
     @State private var pinnedImage: EntityID?
     @State private var pinRequest = UUID()
@@ -564,6 +572,12 @@ private struct DownloadedItemDetailView: View {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
         .onDisappear { model.clear() }
+        .sheet(item: $selectedSpace) { selected in
+            if let spaceNavigation, let itemReader = reader as? any DownloadedItemPlacementReading {
+                ReferencedSpaceDetailView(accountId: accountId, spaceId: selected.id,
+                    scope: selected.scope, reader: itemReader, navigation: spaceNavigation)
+            }
+        }
         .alert("Could not copy Item ID", isPresented: $copyFailed) {
             Button("OK", role: .cancel) {}
         } message: { Text("Try copying the Item ID again.") }
@@ -588,8 +602,34 @@ private struct DownloadedItemDetailView: View {
             .accessibilityIdentifier("target-item-detail-name")
         if let current = history.intervals.first(where: { $0.endedAt == nil }) {
             detailField("Current location", location(current), id: "target-item-detail-current-location")
-            detailField("Space", current.spaceId == nil ? "Not assigned to a Space"
-                : (current.spaceDisplayName ?? "Space name not downloaded"), id: "target-item-detail-space")
+            if let spaceId = current.spaceId, let name = current.spaceDisplayName,
+               spaceNavigation != nil, reader is any DownloadedItemPlacementReading {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Space").font(.caption).foregroundStyle(.secondary)
+                    Button {
+                        guard hasCurrentItem, case .downloaded(let latest) = model.state,
+                              let placement = latest.intervals.first(where: { $0.endedAt == nil }),
+                              placement == current, placement.spaceId == spaceId else { return }
+                        let scope: SpaceCreationScope
+                        switch placement.scope {
+                        case .businessInventory: scope = .businessInventory
+                        case .project(let projectId): scope = .project(projectId)
+                        }
+                        selectedSpace = .init(id: spaceId, scope: scope)
+                    } label: {
+                        Text(name.isEmpty ? "Untitled Space" : name)
+                            #if os(iOS)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                            #endif
+                    }
+                    .accessibilityIdentifier("target-item-detail-space")
+                    .accessibilityHint("Open Space details")
+                }
+            } else {
+                detailField("Space", current.spaceId == nil ? "Not assigned to a Space"
+                    : (current.spaceDisplayName ?? "Space name not downloaded"), id: "target-item-detail-space")
+            }
         } else {
             Text("Current location not downloaded").foregroundStyle(.secondary)
                 .accessibilityIdentifier("target-item-detail-current-location")

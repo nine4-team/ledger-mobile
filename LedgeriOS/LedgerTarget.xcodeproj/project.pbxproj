@@ -15,6 +15,7 @@
 		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
 		1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */; };
 		24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */; };
+		30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */; };
 		31CED7215B80D142B786C8EE /* VendorSuggestionPickerRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */; };
 		356BCEB9D62083D2DE910432 /* PdfTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */; };
 		38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */; };
@@ -122,6 +123,7 @@
 		F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingExerciseView.swift; sourceTree = "<group>"; };
 		F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceChecklistEditorStagingExerciseView.swift; sourceTree = "<group>"; };
+		FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferencedSpaceDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +180,7 @@
 				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
 				23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */,
 				A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */,
+				FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */,
 				F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */,
 				0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */,
 				BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */,
@@ -368,6 +371,7 @@
 				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,
 				7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */,
 				5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */,
+				30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */,
 				24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */,
 				723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */,
 				5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 401,
+  "stateVersion": 402,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "CI34375623690 at07712b11568063f165d67a39da68ca7e70fbe65f is TERMINAL FAILED: Mac19/22, iPhone25/27. No live watch. Latest per-behavior results are in the unified checklist; logs /tmp/ledger-077-{macos,ios}-ci.log, small screenshots /tmp/ledger-077-ui.fk4OQz/images. Both group/detail Copy ID and Photos tests passed; gallery and Mac checklist regressions remain to confirm.",
-      "Uncommitted fixes: explicit checklist expand/collapse header (iOS44pt), genuine gallery hide/reveal before interactions, immediate reset assertion, SelectAll1e-6 coordinate-rounding tolerance. Independent review and app/macOS/iOS XCTest typechecks passed. Next run conversion:check and diff check, commit/push the four scoped files once, follow its automatic PR CI; do not duplicate runs or call these fixes runtime-verified.",
-      "O-065 Item edit-role decision remains unresolved; do not infer employee financial or paid-history grants. Other unblocked Item work can continue. Product audit is complete; checklist owns remaining features/evidence.",
-      "Local full UI remains unavailable after LocalAuthentication -4 and severe disk pressure (about283MiB free). Only exact regenerable Supabase ModuleCache and recoverable downloaded ZIPs were removed; no source or Firebase changes. Use small artifacts and focused compiles, not full local builds/downloads. Do not revisit historical runs unless a new failure requires them."
+      "CI34380834552 at9123b68a41b701f538e57c081657d4f517db5d16: conversion102564985689 and provider102566166816 PASS; Mac102566933836 terminal failed1073native tests with1 obsolete source-token assertion (expected Text CHECKLISTS, now Label), before native UI. Corrected current test and all29source tokens independently checked. iPhone102566933690 still running native UI; observe same run until terminal, do not restart/cancel. Watch process34676 follows this run; resume that process, never create another watcher.",
+      "Integrated Item→Space navigation now implemented (not runtime verified): new ReferencedSpaceDetailView, Item links/context, shared checklist extraction, independent toggle sessions, exact-ID adapter and expectedScope validation. New model and native activeProject/archivedInventory tests; archived fixture excludes Space from active directory. Xcode project regenerated. Root reviewed agent UI and fixed notes API, synchronization startup/dismiss/refresh races, test selectors and Inventory setup. Final app+AppModel+3model-test-file+both XCTest typechecks passed;29source-token checks, conversion/diff and Node24 environment/4parser tests passed. Next: capture terminal9123 CI evidence, push this integrated15-file batch once after its local commit for automatic PR CI. No full local suite: disk constraint, runtime proof pending.",
+      "Focused compile support: /tmp/ledger-space-navigation-modules.YnrHwS holds updated AppModel module. Swift Testing typecheck needs -load-plugin-library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing/libTestingMacros.dylib plus platform Developer/usr/lib and frameworks. Node24: /Users/benjaminmackenzie/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node (24.19.0). Default Node20 cannot parse dependency using syntax. Do not repeat successful checks for continuity.",
+      "Only Supabase generated debug/index159MiB removed after disk-full compiler failure; regenerable, no source/evidence/Firebase removal. About242MiB free; no full local builds or large artifact downloads. O-065 edit-role question remains unresolved; product audit remains complete. Unified checklist ITEM-SPACE-REFERENCE-NAVIGATION owns new evidence and remaining runtime gap; no whole Item/migration/hosted/cutover completion."
     ]
   },
   "blockers": [],

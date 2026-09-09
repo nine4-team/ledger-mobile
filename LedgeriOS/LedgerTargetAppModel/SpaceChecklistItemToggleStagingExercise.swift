@@ -222,6 +222,14 @@ public final class SpaceChecklistItemToggleStagingExercise {
         self.now = now
     }
 
+    /// A nested Space route shares dependencies, never another route's pending
+    /// selection or operation state. Starting its runtime remains explicit.
+    public func makeIndependentSession() -> SpaceChecklistItemToggleStagingExercise {
+        SpaceChecklistItemToggleStagingExercise(accountId: accountId,
+            actorPrincipalId: actorPrincipalId, operationContractVersion: operationContractVersion,
+            makeIdentity: makeIdentity, now: now)
+    }
+
     public func start(runtime: SpaceChecklistItemToggleStagingRuntime) async {
         lifecycleGeneration = UUID()
         selectionGeneration = UUID()

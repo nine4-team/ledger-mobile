@@ -200,6 +200,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         let spaceScope: SpaceCreationScope = ProcessInfo.processInfo.arguments
             .contains("--ledger-ui-test-inventory-space") ? .businessInventory : .project(projectId)
         self.spaceScope = spaceScope
+        let linkedSpaceArchived = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-linked-space-archived")
         let spaceRow = SpaceListSourceRow(
             id: spaceId,
             accountId: accountId,
@@ -217,8 +218,8 @@ private final class ActiveWorkspaceChecklistUITestFixture {
             request: spaceListRequest,
             state: .snapshot(SpaceListLocalSnapshot(
                 request: spaceListRequest,
-                rows: [spaceRow],
-                visibleRowCountBeforeFiltering: 1,
+                rows: linkedSpaceArchived ? [] : [spaceRow],
+                visibleRowCountBeforeFiltering: linkedSpaceArchived ? 0 : 1,
                 isCompleteForQuery: true,
                 quality: .ready,
                 localDataVersion: LocalDataVersion(validating: "ui-test-spaces"),
@@ -236,7 +237,7 @@ private final class ActiveWorkspaceChecklistUITestFixture {
             scope: spaceScope,
             displayName: SpaceDisplayName(validating: "UI Test Space"),
             notes: SpaceCreationNotes(nil),
-            lifecycle: .active,
+            lifecycle: linkedSpaceArchived ? .archived : .active,
             revision: 3,
             createdAt: Self.observedAt,
             updatedAt: Self.observedAt,

@@ -13,6 +13,24 @@ public struct SpaceBrowserStagingRuntime: Sendable {
         self.listQuery = listQuery
         self.detailQuery = detailQuery
     }
+
+    /// Exact-ID navigation is independent of the active-only directory.
+    public func detailRuntime(accountId: AccountID) -> any SpaceCoreDetailsStagingRuntime {
+        ReferencedSpaceRuntime(accountId: accountId, query: detailQuery)
+    }
+}
+
+private struct ReferencedSpaceRuntime: SpaceCoreDetailsStagingRuntime {
+    let accountId: AccountID
+    let query: any SpaceCoreDetailsQuerying
+
+    func watchSpaceCoreDetails(spaceId: SpaceID) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
+        do {
+            return query.watchSpaceCoreDetails(try SpaceCoreDetailsRequest(accountId: accountId, spaceId: spaceId))
+        } catch {
+            return AsyncThrowingStream { $0.finish(throwing: error) }
+        }
+    }
 }
 
 public struct SpaceBrowserFailure: Equatable, Sendable {

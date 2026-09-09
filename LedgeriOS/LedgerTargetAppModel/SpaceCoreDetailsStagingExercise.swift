@@ -97,7 +97,8 @@ public final class SpaceCoreDetailsStagingExercise {
 
     public func select(
         spaceId: SpaceID,
-        runtime: any SpaceCoreDetailsStagingRuntime
+        runtime: any SpaceCoreDetailsStagingRuntime,
+        expectedScope: SpaceCreationScope? = nil
     ) async {
         generation &+= 1
         let activeGeneration = generation
@@ -126,6 +127,7 @@ public final class SpaceCoreDetailsStagingExercise {
             await self?.observe(
                 request: request,
                 runtime: runtime,
+                expectedScope: expectedScope,
                 generation: activeGeneration
             )
         }
@@ -158,6 +160,7 @@ public final class SpaceCoreDetailsStagingExercise {
     private func observe(
         request: SpaceCoreDetailsRequest,
         runtime: any SpaceCoreDetailsStagingRuntime,
+        expectedScope: SpaceCreationScope?,
         generation: UInt64
     ) async {
         do {
@@ -166,9 +169,16 @@ public final class SpaceCoreDetailsStagingExercise {
                 guard self.generation == generation,
                       selectedSpaceId == request.spaceId else { return }
                 let validated = try update.validating(request: request)
+                let projected = try Self.project(validated.state)
+                // A referenced Space can be archived, but cannot silently move
+                // this route into a different Project or Inventory scope.
+                if let expectedScope, let row = projected.row,
+                   row.scope != expectedScope {
+                    throw SpaceCoreDetailsFailure.invalidSpaceScope
+                }
                 currentUpdate = validated
                 evidenceSequence &+= 1
-                presentation = try Self.project(validated.state)
+                presentation = projected
             }
             guard !Task.isCancelled,
                   self.generation == generation,

@@ -26,6 +26,13 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @State private var showingClientReport = false
     @State private var showingSettings = false
 
+    private var itemSpaceNavigation: ItemSpaceNavigation? {
+        guard let detailRuntime = model.referencedSpaceRuntime,
+              let toggleRuntime = model.checklistRuntime else { return nil }
+        return ItemSpaceNavigation(detailRuntime: detailRuntime, toggleRuntime: toggleRuntime,
+            makeToggle: { model.checklistToggle.makeIndependentSession() })
+    }
+
     var body: some View {
         switch model.route {
         case .projectDirectory:
@@ -168,7 +175,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             switch model.inventorySection {
             case .items:
                 if let reader = model.itemReader {
-                    DownloadedItemsView(accountId: model.accountId, scope: .businessInventory, reader: reader)
+                    DownloadedItemsView(accountId: model.accountId, scope: .businessInventory, reader: reader,
+                        spaceNavigation: itemSpaceNavigation)
                 } else {
                     Text("Item data is unavailable.")
                 }
@@ -251,7 +259,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                         .frame(minWidth: 320, minHeight: 400)
                     }
                 if let reader = model.itemReader {
-                    DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader)
+                    DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader,
+                        spaceNavigation: itemSpaceNavigation)
                 }
                 if let watcher = model.reportWatcher as? any ClientSummaryPhysicalReportWatching,
                    let reader = model.reportReader as? any ClientSummaryPhysicalReportReading,
@@ -360,7 +369,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 checklists
                 if let reader = model.itemReader {
                     DownloadedItemsView(accountId: model.accountId,
-                        scope: placementScope(scope), reader: reader, spaceId: spaceId)
+                        scope: placementScope(scope), reader: reader, spaceId: spaceId,
+                        spaceNavigation: itemSpaceNavigation)
                 }
             } else if model.representedSpaceScopeIsAvailable,
                       model.spaceBrowser.scope == scope,
@@ -399,96 +409,17 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         }
     }
 
-    @ViewBuilder
     private var checklists: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button { model.toggleChecklistsExpanded() } label: {
-                Label("CHECKLISTS", systemImage: model.isChecklistsExpanded ? "chevron.down" : "chevron.right")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    #if os(iOS)
-                    .frame(minHeight: 44)
-                    #endif
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("target-active-space-checklists-section")
-            .accessibilityValue(model.isChecklistsExpanded ? "Expanded" : "Collapsed")
-            if model.isChecklistsExpanded {
-                if let collection = model.checklistToggle.displayedCollection {
-                    if collection.checklists.isEmpty {
-                        Text("No checklists.")
-                            .foregroundStyle(.secondary)
-                            .accessibilityIdentifier("target-active-space-checklists-empty")
-                    } else {
-                        ForEach(collection.checklists, id: \.id.rawValue) { checklist in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(checklist.name.rawValue)
-                                    .font(.headline)
-                                ForEach(checklist.items, id: \.id.rawValue) { item in
-                                    Button {
-                                        Task {
-                                            await model.toggleChecklistItem(
-                                                checklistId: checklist.id,
-                                                itemId: item.id
-                                            )
-                                        }
-                                    } label: {
-                                        Label(
-                                            item.text.rawValue,
-                                            systemImage: item.isChecked
-                                                ? "checkmark.circle.fill"
-                                                : "circle"
-                                        )
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(!model.checklistToggle.canToggle(
-                                        checklistId: checklist.id,
-                                        itemId: item.id
-                                    ))
-                                    .accessibilityIdentifier(
-                                        "target-active-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
-                                    )
-                                    .accessibilityLabel(item.text.rawValue)
-                                    .accessibilityValue(item.isChecked ? "Checked" : "Not checked")
-                                    .accessibilityHint(
-                                        item.isChecked
-                                            ? "Marks this checklist item incomplete"
-                                            : "Marks this checklist item complete"
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    Text(model.checklistToggle.admission.explanation)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("target-active-space-checklists-unavailable")
-                }
-            }
+        SpaceChecklistSection(toggle: model.checklistToggle, expanded: Binding(
+            get: { model.isChecklistsExpanded },
+            set: { if $0 != model.isChecklistsExpanded { model.toggleChecklistsExpanded() } }
+        ), showsLifecycle: false) { checklistId, itemId in
+            await model.toggleChecklistItem(checklistId: checklistId, itemId: itemId)
         }
     }
 
-    @ViewBuilder
     private var checklistLifecycle: some View {
-        Text("Checklist synchronization: \(model.checklistToggle.operationStatus)")
-        .accessibilityIdentifier("target-active-space-checklist-operation-status")
-
-        if !model.checklistToggle.admission.permitsToggle {
-            Text(model.checklistToggle.admission.explanation)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("target-active-space-checklist-admission")
-        }
-        if model.checklistToggle.rejectedRecovery != nil {
-            Text("Rejected checklist changes are preserved for review.")
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("target-active-space-checklist-rejected")
-        }
-        if let diagnostic = model.checklistToggle.diagnostic {
-            Text(diagnostic)
-                .foregroundStyle(.red)
-                .accessibilityIdentifier("target-active-space-checklist-diagnostic")
-        }
+        SpaceChecklistLifecycle(toggle: model.checklistToggle)
     }
 
     private var backButton: some View {
@@ -539,4 +470,111 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
         case .stopped: "Stopped"
         }
     }
+}
+
+/// Nested Item links reuse the same dependencies with independent route state.
+struct ItemSpaceNavigation {
+    let detailRuntime: any SpaceCoreDetailsStagingRuntime
+    let toggleRuntime: SpaceChecklistItemToggleStagingRuntime
+    let makeToggle: @MainActor () -> SpaceChecklistItemToggleStagingExercise
+}
+
+struct SpaceChecklistSection: View {
+    @Bindable var toggle: SpaceChecklistItemToggleStagingExercise
+    @Binding var expanded: Bool
+    var showsLifecycle = true
+    let onToggle: @MainActor (SpaceChecklistID, SpaceChecklistItemID) async -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { expanded.toggle() } label: {
+                Label("CHECKLISTS", systemImage: expanded ? "chevron.down" : "chevron.right")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    #if os(iOS)
+                    .frame(minHeight: 44)
+                    #endif
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("target-active-space-checklists-section")
+            .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+            if expanded {
+                if let collection = toggle.displayedCollection {
+                    if collection.checklists.isEmpty {
+                        Text("No checklists.")
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("target-active-space-checklists-empty")
+                    } else {
+                        ForEach(collection.checklists, id: \.id.rawValue) { checklist in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(checklist.name.rawValue)
+                                    .font(.headline)
+                                ForEach(checklist.items, id: \.id.rawValue) { item in
+                                    Button {
+                                        Task {
+                                            await onToggle(checklist.id, item.id)
+                                        }
+                                    } label: {
+                                        Label(
+                                            item.text.rawValue,
+                                            systemImage: item.isChecked
+                                                ? "checkmark.circle.fill"
+                                                : "circle"
+                                        )
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(!toggle.canToggle(
+                                        checklistId: checklist.id,
+                                        itemId: item.id
+                                    ))
+                                    .accessibilityIdentifier(
+                                        "target-active-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
+                                    )
+                                    .accessibilityLabel(item.text.rawValue)
+                                    .accessibilityValue(item.isChecked ? "Checked" : "Not checked")
+                                    .accessibilityHint(
+                                        item.isChecked
+                                            ? "Marks this checklist item incomplete"
+                                            : "Marks this checklist item complete"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Text(toggle.admission.explanation)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-space-checklists-unavailable")
+                }
+            }
+            if showsLifecycle { SpaceChecklistLifecycle(toggle: toggle) }
+        }
+    }
+
+}
+
+private struct SpaceChecklistLifecycle: View {
+    @Bindable var toggle: SpaceChecklistItemToggleStagingExercise
+    @ViewBuilder var body: some View {
+        Text("Checklist synchronization: \(toggle.operationStatus)")
+        .accessibilityIdentifier("target-active-space-checklist-operation-status")
+
+        if !toggle.admission.permitsToggle {
+            Text(toggle.admission.explanation)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-space-checklist-admission")
+        }
+        if toggle.rejectedRecovery != nil {
+            Text("Rejected checklist changes are preserved for review.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-space-checklist-rejected")
+        }
+        if let diagnostic = toggle.diagnostic {
+            Text(diagnostic)
+                .foregroundStyle(.red)
+                .accessibilityIdentifier("target-active-space-checklist-diagnostic")
+        }
+    }
+
 }

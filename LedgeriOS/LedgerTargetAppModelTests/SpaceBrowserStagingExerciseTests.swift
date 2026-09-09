@@ -6,6 +6,25 @@ import Testing
 @Suite("Scoped active Space browser staging orchestration")
 @MainActor
 struct SpaceBrowserStagingExerciseTests {
+    @Test("Referenced Space runtime forwards the exact Account and ID without opening the active directory")
+    func referencedDetailRuntime() async throws {
+        let source = BrowserControlledSource<SpaceCoreDetailsUpdate>()
+        let requests = BrowserRecorder<SpaceCoreDetailsRequest>()
+        let runtime = Self.runtime(list: { _ in
+            Issue.record("A referenced detail must not depend on the active Space list")
+            return AsyncThrowingStream { $0.finish() }
+        }, detail: { request in requests.record(request); return source.stream })
+        let id = try SpaceID(validating: "referenced-space")
+        let stream = runtime.detailRuntime(accountId: Self.accountId).watchSpaceCoreDetails(spaceId: id)
+        #expect(requests.values == [try SpaceCoreDetailsRequest(accountId: Self.accountId, spaceId: id)])
+        let update = try Self.detailSnapshotUpdate(id: id, rows: [Self.detail(id: id)])
+        source.yield(update)
+        source.finish()
+        var iterator = stream.makeAsyncIterator()
+        #expect(try await iterator.next() == update)
+        #expect(try await iterator.next() == nil)
+    }
+
     @Test("Space name search is case-insensitive, literal and locale-independent")
     func nameSearch() {
         #expect(SpaceNameSearch.matches("Living Room", query: " ROOM \n"))

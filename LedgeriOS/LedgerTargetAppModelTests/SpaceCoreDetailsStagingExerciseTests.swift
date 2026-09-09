@@ -6,6 +6,50 @@ import Testing
 @Suite("Space core-details staging presenter")
 @MainActor
 struct SpaceCoreDetailsStagingExerciseTests {
+    @Test("Referenced archived Space keeps its captured scope without active-directory membership")
+    func referencedArchivedSpace() async throws {
+        let source = SpaceDetailsControlledStream()
+        let model = Self.model()
+        await model.select(spaceId: Self.spaceA,
+            runtime: Self.runtime(source: source, requests: SpaceDetailsRequestRecorder()),
+            expectedScope: .businessInventory)
+        let archived = try Self.space(scope: .businessInventory, lifecycle: .archived)
+        source.yield(try Self.snapshotUpdate(rows: [archived], quality: .ready, complete: true))
+        await Self.waitUntil { model.row == archived }
+        #expect(model.currentUpdate != nil)
+        #expect(model.progressCountsAreAuthoritative)
+        await model.stop()
+        #expect(model.row == nil && model.currentUpdate == nil)
+    }
+
+    @Test("Referenced Space rejects scope changes in ready, partial, stale and cached-failure evidence")
+    func referencedScopeMismatch() async throws {
+        let wrongScope = try Self.space(scope: .businessInventory)
+        let updates = try [
+            Self.snapshotUpdate(rows: [wrongScope], quality: .ready, complete: true),
+            Self.snapshotUpdate(rows: [wrongScope], quality: .partial),
+            Self.snapshotUpdate(rows: [wrongScope], quality: .stale),
+            Self.update(.failed(failure: .retryable, cached:
+                Self.local(rows: [wrongScope], quality: .stale))),
+            Self.snapshotUpdate(rows: [Self.space(scope: .project(
+                ProjectID(validating: "another-project")))], quality: .ready, complete: true)
+        ]
+        for update in updates {
+            let source = SpaceDetailsControlledStream()
+            let model = Self.model()
+            await model.select(spaceId: Self.spaceA,
+                runtime: Self.runtime(source: source, requests: SpaceDetailsRequestRecorder()),
+                expectedScope: .project(Self.projectId))
+            let original = try Self.space()
+            source.yield(try Self.snapshotUpdate(rows: [original], quality: .ready, complete: true))
+            await Self.waitUntil { model.row == original }
+            source.yield(update)
+            await Self.waitUntil { model.diagnostic == SpaceCoreDetailsFailure.invalidSpaceScope.diagnosticCode }
+            #expect(model.row == nil && model.currentUpdate == nil)
+            await model.stop()
+        }
+    }
+
     @Test("Waiting, partial, stale, ready and authoritative-empty truth stay distinct")
     func presentationStates() async throws {
         let source = SpaceDetailsControlledStream()

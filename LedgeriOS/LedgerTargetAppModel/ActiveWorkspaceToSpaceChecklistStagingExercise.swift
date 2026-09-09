@@ -163,6 +163,10 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public let accountId: AccountID
     public var itemReader: (any DownloadedItemPlacementReading)? { runtime?.itemReader }
+    public var referencedSpaceRuntime: (any SpaceCoreDetailsStagingRuntime)? {
+        runtime?.spaceBrowsing.detailRuntime(accountId: accountId)
+    }
+    public var checklistRuntime: SpaceChecklistItemToggleStagingRuntime? { runtime?.checklistToggle }
     public var reportWatcher: (any PropertyManagementReportWatching)? { runtime?.reportWatcher }
     public var reportReader: (any PropertyManagementReportReading)? { runtime?.reportReader }
     public var categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? { runtime?.categoryWatch }
