@@ -1,22 +1,38 @@
+import Foundation
+
 public enum DownloadedItemPlacementsFailure: Error, Equatable, Sendable {
-    case invalidRevision, duplicateItem, scopeMismatch
+    case invalidRevision, invalidTimestamp, duplicateItem, scopeMismatch
 }
 
 /// Read-only physical facts. Item revision is not a placement mutation token.
 public struct PhysicalItemPlacement: Equatable, Sendable {
     public let itemId: ItemID
     public let description: String
+    public let name: String?
+    public let sku: String?
+    public let createdAt: Date?
+    public var displayName: String { name ?? description }
     public let itemRevision: Int64
     public let placementId: EntityID
     public let scope: ItemPlacementScope
     public let spaceId: SpaceID?
 
     public init(itemId: ItemID, description: String, itemRevision: Int64,
-                placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?) throws {
+                placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?,
+                name: String? = nil, sku: String? = nil, createdAt: Date? = nil) throws {
         guard itemRevision > 0 else { throw DownloadedItemPlacementsFailure.invalidRevision }
+        guard createdAt?.timeIntervalSinceReferenceDate.isFinite != false else {
+            throw DownloadedItemPlacementsFailure.invalidTimestamp
+        }
         self.itemId = itemId; self.description = description; self.itemRevision = itemRevision
         self.placementId = placementId; self.scope = scope; self.spaceId = spaceId
+        self.name = name; self.sku = sku; self.createdAt = createdAt
     }
+}
+
+public enum DownloadedItemOrder: String, CaseIterable, Sendable {
+    case newest = "Newest first", oldest = "Oldest first"
+    case nameAscending = "Name A–Z", nameDescending = "Name Z–A"
 }
 
 /// This query reports downloaded rows, never authoritative inventory totals or
@@ -41,6 +57,30 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
         guard let spaceId else { return rows }
         return rows.filter { row in
             row.spaceId.map { $0.rawValue.utf8.elementsEqual(spaceId.rawValue.utf8) } ?? false
+        }
+    }
+
+    /// Search only downloaded descriptive fields. Unknown creation dates sort
+    /// last in both directions; missing evidence is never a fabricated date.
+    public func rows(in spaceId: SpaceID?, matching query: String, order: DownloadedItemOrder) -> [PhysicalItemPlacement] {
+        let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return rows(in: spaceId).filter { row in
+            term.isEmpty || [row.displayName, row.description, row.sku ?? ""]
+                .contains { $0.localizedCaseInsensitiveContains(term) }
+        }.sorted { lhs, rhs in
+            switch order {
+            case .newest, .oldest:
+                if let left = lhs.createdAt, let right = rhs.createdAt, left != right {
+                    return order == .newest ? left > right : left < right
+                }
+                if (lhs.createdAt == nil) != (rhs.createdAt == nil) { return lhs.createdAt != nil }
+            case .nameAscending, .nameDescending:
+                let comparison = lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
+                if comparison != .orderedSame {
+                    return order == .nameAscending ? comparison == .orderedAscending : comparison == .orderedDescending
+                }
+            }
+            return lhs.itemId.rawValue.utf8.lexicographicallyPrecedes(rhs.itemId.rawValue.utf8)
         }
     }
 }

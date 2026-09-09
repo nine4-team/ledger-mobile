@@ -143,7 +143,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
         SELECT EXISTS(SELECT 1 FROM spike_account_memberships
           WHERE account_id=? AND principal_id=? AND state='active') AS is_active
       ), selected_item AS (
-        SELECT id,account_id,description,revision FROM spike_items WHERE account_id=? AND id=?
+        SELECT id,account_id,name,description,revision FROM spike_items WHERE account_id=? AND id=?
       ), placements AS (
         SELECT p.* FROM spike_item_placements p JOIN selected_item i
           ON p.account_id=i.account_id AND p.item_id=i.id
@@ -156,7 +156,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
           OR EXISTS(SELECT 1 FROM spike_spaces s WHERE s.id=p.space_id AND s.account_id=p.account_id
             AND (s.scope_kind IS NOT p.scope_kind OR s.project_id IS NOT p.project_id))
       )
-      SELECT access.is_active,i.description,i.revision,validity.invalid_count,
+      SELECT access.is_active,COALESCE(i.name,i.description) AS description,i.revision,validity.invalid_count,
         p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,
         project.display_name AS project_name,space.display_name AS space_name
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
@@ -216,7 +216,18 @@ struct CurrentItemPlacementLocalReader: Sendable {
             return try PhysicalItemPlacement(itemId: ItemID(validating: item),
                 description: description, itemRevision: Int64(revision),
                 placementId: EntityID(validating: placement), scope: scope,
-                spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) })
+                spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
+                name: cursor.getStringOptional(name: "name"), sku: cursor.getStringOptional(name: "sku"),
+                createdAt: Self.creationDate(cursor.getStringOptional(name: "created_at")))
+    }
+
+    private static func creationDate(_ raw: String?) -> Date? {
+        guard let raw else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: raw) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: raw)
     }
 
     private static let sql = """
@@ -225,7 +236,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
         SELECT EXISTS (SELECT 1 FROM spike_account_memberships
           WHERE account_id = ? AND principal_id = ? AND state = 'active') AS is_active
       ), selected AS (
-        SELECT p.id AS placement_id, i.id AS item_id, i.description, i.revision, p.space_id,
+        SELECT p.id AS placement_id, i.id AS item_id, i.name, i.description, i.sku, i.created_at, i.revision, p.space_id,
           (SELECT count(*) FROM spike_item_placements other
             WHERE other.account_id = p.account_id AND other.item_id = p.item_id
               AND other.ended_at IS NULL) AS active_count,

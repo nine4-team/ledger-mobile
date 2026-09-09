@@ -10,6 +10,30 @@ struct DownloadedProjectItemsTests {
     private let principal = try! PrincipalID(validating: "principal")
     private let project = try! ProjectID(validating: "project")
 
+    @Test("Browsing reads canonical names, SKU and optional creation evidence")
+    func browsingFields() async throws {
+        try await withDatabase { db in
+            _ = try await db.execute(sql: "UPDATE spike_items SET name='Named chair',sku='SKU-7',created_at='2026-09-09T07:00:00.123456Z' WHERE id='paid'", parameters: nil)
+            let value = try await read(db)
+            let row = try #require(value.placements.rows.first { $0.itemId.rawValue == "paid" })
+            #expect(row.name == "Named chair")
+            #expect(row.description == "paid")
+            #expect(row.sku == "SKU-7")
+            #expect(row.createdAt != nil)
+            #expect(value.placements.rows.first { $0.itemId.rawValue == "unknown" }?.createdAt == nil)
+            for timestamp in ["2026-09-08T05:53:09.335662+00:00", "2026-09-09T07:00:00Z"] {
+                _ = try await db.execute(sql: "UPDATE spike_items SET created_at=? WHERE id='paid'", parameters: [timestamp])
+                #expect(try await read(db).placements.rows.first { $0.itemId.rawValue == "paid" }?.createdAt != nil)
+            }
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET started_at='2026-09-08T05:00:00Z' WHERE item_id='paid'", parameters: nil)
+            let history = try await CurrentItemPlacementLocalReader(database: db)
+                .readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "paid"))
+            #expect(history.description == "Named chair")
+            _ = try await db.execute(sql: "UPDATE spike_items SET created_at='invalid' WHERE id='paid'", parameters: nil)
+            #expect(try await read(db).placements.rows.first { $0.itemId.rawValue == "paid" }?.createdAt == nil)
+        }
+    }
+
     @Test("All physical Items remain visible alongside paid, charge and unknown evidence")
     func allPhysicalRows() async throws {
         try await withDatabase { db in

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 332,
+  "stateVersion": 334,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -17,13 +17,14 @@
     "meaning": "Exact CI green:752 database checks,997 native tests/148 suites,17 Mac UI and15 iPhone UI tests,both builds. Client Summary preview/incomplete Share passed on both platforms. Newer be7060fd MCP integration has its own live CI; business-paid eligibility, hosted/hardware/migration/cutover remain incomplete."
   },
   "activeWorkflow": {
-    "id": "client-summary-physical-readback",
+    "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Implement correctly eligible Client Summary physical detail and repair the shared Property Management eligibility gap before report completion.",
+    "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Project Item read/UI follow-on ready for checkpoint: atomic DownloadedProjectItems+watch, runtime owns scoped stream, model uses unified physical/accounting read, Project/Space groups retain unknowns and Inventory unchanged. Root reviewed agent provider/Core/lifecycle changes;19 focused +full1014native150suites passed, full app typecheck and environment/conversion passed. Logs /tmp/ledger-project-items-{root-tests,full-native,environment,conversion}.log. Commit/push integrated batch then follow its automatic UI CI. No Item writes or full workspace completeness claim.",
+      "Item browsing follow-on ready for commit: existing name/SKU/created_at columns feed canonical display/history names, scoped search, four stable sort orders, unknown-date-last behavior and expandable groups. Search/clear native UI path added; sort/collapse interaction proof still missing. Reviewer-found history CTE regression corrected. Full1018native151suites, full app typecheck, environment/conversion pass. Logs /tmp/ledger-item-browsing-{full-native-fixed,environment,conversion}.log. Commit/push and follow exact automatic CI; broad facets/cards/detail/selection/write flows remain incomplete, do not claim full Item workspace.",
+      "Project Item read/UI committed+pushed5538ef14635d2e38818bfe8e958d28d15a557cb8; automatic CI34323220368 confirmed IN_PROGRESS. Follow exact run, no redispatch. Atomic DownloadedProjectItems+watch, owned scoped stream, unified physical/accounting read and Project/Space groups; unknowns retained, Inventory unchanged. Root reviewed agent provider/Core/lifecycle;19 focused +full1014native150suites, app typecheck/environment/conversion passed. Logs /tmp/ledger-project-items-{root-tests,full-native,environment,conversion}.log. No Item writes/full workspace completeness claim. O016/O027/O065 scoped questions remain unanswered; continue independent approved work.",
       "Charge evidence af7ff57d959894f147bf14cf2953eff55ed4a614 committed/pushed; automatic CI34321387603 confirmed IN_PROGRESS. Follow exact run, no redispatch.060126 storage/collection guards +064122 narrow RLS/shared report helper,11Sync queries, merged native read/watches. Full803DB/1002native148suites,97stream captures40parserqueries21outputs, real HTTP→11stream tables→native exact report parity pass. /tmp/ledger-charge-report-parity-20260909.json and /tmp/ledger-charge-full-native.log. Review corrected Account/source-kind namespace; no blocking findings.",
       "Next product work: actual Business-paid/Client-paid Link creation and offline command/readback remain unfinished. O016 missing-acquisition representation and O065 writer authority unresolved. Do not invent source evidence or mark absence authoritative. Live Invoice membership must extend shared report read before Invoice workflow ships; existing phases only open/frozen. No hosted replication/hardware/migration readiness claim.",
       "be7060fd CI34318832216 TERMINAL FAILURE:14/15iPhone passed, Share enabled5s predicate timed out. Independent artifact review proves stale pre-report snapshot reused at failure; /tmp/ledger-profile-ci-34318832216.hq4i3n. Test now waits actual report-ready marker then directly asserts enabled with hierarchy diagnostic. No app eligibility change; fresh UI proof pending. af7ff57d CI34321387603 live in Mac UI.27355441 last whole green. Do not poll terminal runs or rerun full suites merely to resume.",

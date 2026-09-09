@@ -11,6 +11,10 @@ struct DownloadedItemsView: View {
     @State private var model = DownloadedItemsModel()
     @State private var refresh = UUID()
     @State private var selectedItem: ItemSelection?
+    @State private var search = ""
+    @State private var order = DownloadedItemOrder.newest
+    @State private var collapsedSections: Set<ProjectItemAccountingResolution> = []
+    @FocusState private var searchFocused: Bool
 
     private struct ItemSelection: Identifiable {
         let accountId: AccountID
@@ -31,6 +35,23 @@ struct DownloadedItemsView: View {
             Text(partialNotice)
                 .font(.caption).foregroundStyle(.secondary)
                 .accessibilityIdentifier("target-items-partial-notice")
+            TextField("Search downloaded names, descriptions or SKU", text: $search)
+                .textFieldStyle(.roundedBorder)
+                .focused($searchFocused)
+                .submitLabel(.search)
+                .onSubmit { searchFocused = false }
+                .accessibilityIdentifier("target-items-search")
+            Picker("Sort Items", selection: $order) {
+                ForEach(DownloadedItemOrder.allCases, id: \.self) { value in
+                    Text(value.rawValue).tag(value)
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("target-items-sort")
+            if !search.isEmpty {
+                Button("Clear search") { search = ""; searchFocused = false }
+                    .accessibilityIdentifier("target-items-search-clear")
+            }
             switch model.state {
             case .idle, .loading:
                 ProgressView("Loading downloaded Items…")
@@ -38,17 +59,24 @@ struct DownloadedItemsView: View {
                 Text("Item data is unavailable or incomplete. Reconnect and try again.")
                     .accessibilityIdentifier("target-items-unavailable")
             case .downloaded(let snapshot):
-                let rows = snapshot.rows(in: spaceId)
+                let rows = snapshot.rows(in: spaceId, matching: search, order: order)
                 if snapshot.accountId == accountId, snapshot.scope == scope {
-                    Text("Downloaded Items: \(rows.count)")
+                    Text(search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? "Downloaded Items: \(rows.count)"
+                        : "Matching Items: \(rows.count) of \(snapshot.rows(in: spaceId).count) downloaded")
                         .font(.caption)
                         .accessibilityIdentifier("target-items-downloaded-count")
                 }
                 if snapshot.accountId != accountId || snapshot.scope != scope {
                     ProgressView("Loading downloaded Items…")
                 } else if rows.isEmpty {
-                    Text("No Item placements are downloaded for this location yet.")
-                        .accessibilityIdentifier("target-items-downloaded-empty")
+                    if !snapshot.rows(in: spaceId).isEmpty {
+                        Text("No downloaded Items match this search.")
+                            .accessibilityIdentifier("target-items-no-match")
+                    } else {
+                        Text("No Item placements are downloaded for this location yet.")
+                            .accessibilityIdentifier("target-items-downloaded-empty")
+                    }
                 } else {
                     if case .project = scope {
                         accountingGroup("Unaccounted For Items", resolution: .unaccountedFor, rows: rows)
@@ -72,9 +100,9 @@ struct DownloadedItemsView: View {
                 DownloadedItemHistoryView(accountId: accountId, itemId: selection.itemId, reader: historyReader)
             }
         }
-        .onChange(of: accountId) { _, _ in selectedItem = nil }
-        .onChange(of: scope) { _, _ in selectedItem = nil }
-        .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in selectedItem = nil }
+        .onChange(of: accountId) { _, _ in resetContext() }
+        .onChange(of: scope) { _, _ in resetContext() }
+        .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
         .onDisappear { model.clear(); selectedItem = nil }
     }
 
@@ -93,21 +121,35 @@ struct DownloadedItemsView: View {
             (model.accounting?.rows ?? []).map { ($0.evidence.itemId, $0.resolution) })
         let matching = rows.filter { (resolutions[$0.itemId] ?? .relationshipEvidenceIncomplete) == resolution }
         if !matching.isEmpty {
-            Text("\(title) (\(matching.count))")
-                .font(.subheadline).bold()
-                .accessibilityIdentifier("target-items-section-\(resolution.rawValue)")
-            ForEach(matching, id: \.itemId) { row in itemButton(row) }
+            DisclosureGroup(isExpanded: Binding(
+                get: { !collapsedSections.contains(resolution) },
+                set: { if $0 { collapsedSections.remove(resolution) } else { collapsedSections.insert(resolution) } }
+            )) {
+                ForEach(matching, id: \.itemId) { row in itemButton(row) }
+            } label: {
+                Text("\(title) (\(matching.count))")
+                    .font(.subheadline).bold()
+                    .accessibilityIdentifier("target-items-section-\(resolution.rawValue)")
+            }
         }
     }
 
     private func itemButton(_ row: PhysicalItemPlacement) -> some View {
-        Button(row.description.isEmpty ? "Untitled Item" : row.description) {
+        Button(row.displayName.isEmpty ? "Untitled Item" : row.displayName) {
             selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
         }
         .buttonStyle(.plain)
         .disabled(!(reader is any DownloadedItemPlacementHistoryReading))
         .accessibilityHint("Show downloaded location history")
         .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
+    }
+
+    private func resetContext() {
+        selectedItem = nil
+        search = ""
+        order = .newest
+        collapsedSections = []
+        searchFocused = false
     }
 }
 

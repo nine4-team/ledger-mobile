@@ -797,6 +797,18 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["target-items-section-accountedFor"].exists)
         XCTAssertTrue(app.staticTexts["target-items-section-relationshipEvidenceIncomplete"].exists)
         XCTAssertFalse(app.staticTexts["target-items-section-unaccountedFor"].exists)
+        let itemSearch = app.textFields["target-items-search"]
+        reveal(itemSearch, in: app)
+        itemSearch.tap()
+        itemSearch.typeText("no matching item")
+        #if os(iOS)
+        app.keyboards.buttons["Search"].tap()
+        #endif
+        XCTAssertTrue(app.staticTexts["target-items-no-match"].waitForExistence(timeout: 5))
+        XCTAssertFalse(item.exists)
+        app.buttons["target-items-search-clear"].tap()
+        reveal(item, in: app)
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
         item.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Current test Project"].exists)
