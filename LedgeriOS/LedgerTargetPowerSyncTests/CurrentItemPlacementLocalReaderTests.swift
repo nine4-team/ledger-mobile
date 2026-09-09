@@ -10,6 +10,79 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Current category preserves authorized labels across restart and never uses historical assignment")
+    func currentBudgetCategory() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentBudgetCategoryName == "Archived furnishings")
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='project-now'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('inventory-now','account-item','chair','business_inventory','2026-03-01')", parameters: nil)
+            let moved = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            #expect(moved.currentBudgetCategoryName == nil)
+            #expect(moved.intervals.contains { $0.placementId.rawValue == "project-now" })
+        }) { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentBudgetCategoryName == nil)
+            try await seedCategory(db)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentBudgetCategoryName == "Archived furnishings")
+            _ = try await db.execute(sql: "DELETE FROM spike_budget_categories", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentBudgetCategoryName == nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_budget_categories(id,account_id,display_name,visibility_class,lifecycle,revision) VALUES('furnishings','account-item','Archived furnishings','ordinary','archived',1)", parameters: nil)
+        }
+    }
+
+    @Test("Category history watch reacts to labels and financial visibility without exposing restricted names")
+    func currentBudgetCategoryWatch() async throws {
+        try await withDatabase { db in
+            try await seedCategory(db)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            var iterator = try reader.watchHistory(accountId: account, principalId: principal,
+                itemId: ItemID(validating: "chair")).makeAsyncIterator()
+            func category(_ rows: [CurrentItemPlacementLocalReader.HistoryRow]) throws -> String? {
+                try CurrentItemPlacementLocalReader.history(accountId: account,
+                    itemId: ItemID(validating: "chair"), rows: rows).currentBudgetCategoryName
+            }
+            #expect(try category(try #require(await iterator.next())) == "Archived furnishings")
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET display_name='Updated name'", parameters: nil)
+            while try category(try #require(await iterator.next())) != "Updated name" {}
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='restricted'", parameters: nil)
+            while try category(try #require(await iterator.next())) != nil {}
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+            while try category(try #require(await iterator.next())) != "Updated name" {}
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            while try category(try #require(await iterator.next())) != nil {}
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                while try await iterator.next() != nil {}
+            }
+        }
+    }
+
+    @Test("Current category rejects mismatched assignment account, Project and Item")
+    func invalidBudgetCategoryAssignment() async throws {
+        for mutation in [
+            "UPDATE spike_item_project_categories SET account_id='foreign'",
+            "UPDATE spike_item_project_categories SET project_id='other-project'",
+            "UPDATE spike_item_project_categories SET item_id='other-item'"
+        ] {
+            try await withDatabase { db in
+                try await seedCategory(db)
+                _ = try await db.execute(sql: mutation, parameters: nil)
+                await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                    try await CurrentItemPlacementLocalReader(database: db).readHistory(accountId: account,
+                        principalId: principal, itemId: ItemID(validating: "chair"))
+                }
+            }
+        }
+    }
+
+    private func seedCategory(_ db: any PowerSyncDatabaseProtocol) async throws {
+        _ = try await db.execute(sql: "INSERT INTO spike_budget_categories(id,account_id,display_name,visibility_class,lifecycle,revision) VALUES('furnishings','account-item','Archived furnishings','ordinary','archived',1)", parameters: nil)
+        _ = try await db.execute(sql: "INSERT INTO spike_item_project_categories(id,account_id,project_id,item_id,category_id,revision) VALUES('project-now','account-item','project-item','chair','furnishings',1)", parameters: nil)
+    }
+
     @Test("Exact Item details preserve raw notes and timestamp across encrypted reopen")
     func descriptiveDetails() async throws {
         let item = try ItemID(validating: "chair")

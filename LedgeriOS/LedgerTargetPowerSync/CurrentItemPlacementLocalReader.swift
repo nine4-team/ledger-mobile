@@ -17,18 +17,19 @@ struct CurrentItemPlacementLocalReader: Sendable {
         let description: String
         let interval: PhysicalItemPlacementHistoryInterval?
         var details: DownloadedItemDescriptiveDetails? = nil
+        var currentBudgetCategoryName: String? = nil
     }
 
     func readHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
         let rows = try await database.getAll(sql: Self.historySQL,
-            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue],
+            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue, principalId.rawValue],
             mapper: Self.historyRow)
         return try Self.history(accountId: accountId, itemId: itemId, rows: rows)
     }
 
     func watchHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) throws -> AsyncThrowingStream<[HistoryRow], Error> {
         try database.watch(sql: Self.historySQL,
-            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue],
+            parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue, itemId.rawValue, principalId.rawValue],
             mapper: Self.historyRow)
     }
 
@@ -57,7 +58,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
             previousEnd = value.end; hasOpenInterval = value.end == nil
         }
         return try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,
-            description: description, intervals: intervals.reversed().map(\.interval), details: rows.first?.details)
+            description: description, intervals: intervals.reversed().map(\.interval), details: rows.first?.details,
+            currentBudgetCategoryName: rows.first(where: { $0.interval?.endedAt == nil && $0.interval != nil })?.currentBudgetCategoryName)
     }
 
     /// Comparison key only; raw downloaded timestamps remain the displayed
@@ -140,12 +142,27 @@ struct CurrentItemPlacementLocalReader: Sendable {
         case "project": scope = .project(try ProjectID(validating: cursor.getString(name: "project_id")))
         default: throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
         }
+        var categoryName: String?
+        if try cursor.getStringOptional(name: "category_assignment_id") != nil {
+            guard try cursor.getStringOptional(name: "category_account") == cursor.getString(name: "item_account"),
+                  try cursor.getStringOptional(name: "category_project") == cursor.getStringOptional(name: "project_id"),
+                  try cursor.getStringOptional(name: "category_item") == cursor.getString(name: "history_item_id") else {
+                throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+            }
+            if let categoryId = try cursor.getStringOptional(name: "category_id"),
+               let name = try cursor.getStringOptional(name: "category_name"),
+               !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                _ = try BudgetCategoryID(validating: categoryId)
+                categoryName = name
+            }
+        }
         return try HistoryRow(description: description, interval: PhysicalItemPlacementHistoryInterval(
             placementId: EntityID(validating: id), scope: scope,
             spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
             projectDisplayName: cursor.getStringOptional(name: "project_name"),
             spaceDisplayName: cursor.getStringOptional(name: "space_name"),
-            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at")), details: details)
+            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at")),
+            details: details, currentBudgetCategoryName: categoryName)
     }
 
     private static let historySQL = """
@@ -170,12 +187,24 @@ struct CurrentItemPlacementLocalReader: Sendable {
       SELECT access.is_active,COALESCE(i.name,i.description) AS description,i.revision,validity.invalid_count,
         i.name,i.description AS raw_description,i.sku,i.source,i.current_source,i.notes,i.workflow_status,i.bookmark,i.created_at,
         p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,
-        project.display_name AS project_name,space.display_name AS space_name
+        project.display_name AS project_name,space.display_name AS space_name,
+        i.account_id AS item_account,i.id AS history_item_id,
+        assignment.id AS category_assignment_id,assignment.account_id AS category_account,
+        assignment.project_id AS category_project,assignment.item_id AS category_item,
+        category.id AS category_id,category.display_name AS category_name
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
       LEFT JOIN placements p ON access.is_active
       LEFT JOIN spike_projects project ON project.id=p.project_id AND project.account_id=p.account_id
       LEFT JOIN spike_spaces space ON space.id=p.space_id AND space.account_id=p.account_id
         AND space.scope_kind=p.scope_kind AND space.project_id IS p.project_id
+      LEFT JOIN spike_item_project_categories assignment ON assignment.id=p.id
+        AND p.ended_at IS NULL AND p.scope_kind='project'
+      LEFT JOIN spike_budget_categories category ON category.id=assignment.category_id
+        AND category.account_id=assignment.account_id
+        AND (category.visibility_class='ordinary' OR EXISTS(
+          SELECT 1 FROM spike_account_memberships membership
+          WHERE membership.account_id=assignment.account_id AND membership.principal_id=?
+            AND membership.state='active' AND membership.financial_access='full'))
       ORDER BY p.id
       """
 

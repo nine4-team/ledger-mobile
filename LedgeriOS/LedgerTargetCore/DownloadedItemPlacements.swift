@@ -409,15 +409,19 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let description: String
     public let intervals: [PhysicalItemPlacementHistoryInterval]
     public let details: DownloadedItemDescriptiveDetails?
+    /// Current Project placement only. Nil is unavailable, never Uncategorized.
+    public let currentBudgetCategoryName: String?
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
-                intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil) throws {
+                intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil,
+                currentBudgetCategoryName: String? = nil) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
         self.accountId = accountId; self.itemId = itemId; self.description = description
         self.intervals = intervals; self.details = details
+        self.currentBudgetCategoryName = currentBudgetCategoryName
     }
 }
 

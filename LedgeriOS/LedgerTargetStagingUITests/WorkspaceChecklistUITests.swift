@@ -862,6 +862,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(scroll.waitForExistence(timeout: 5))
         for (id, expected) in [
             ("name", "Downloaded test chair"), ("current-location", "Current test Project"),
+            ("budget-category", "Furniture"),
             ("space", "Current test Space"),
             ("notes", "Keep the woven seat dry.\nPlace beside the window."),
             ("description", "Oak chair with woven seat"), ("source", "Original vendor"),
@@ -928,6 +929,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             app.launchArguments += ["--ledger-ui-test-inventory-space", "--ledger-ui-test-reset-inventory-section"]
         }
         if archived { app.launchArguments.append("--ledger-ui-test-linked-space-archived") }
+        if !inventory { app.launchArguments.append("--ledger-ui-test-category-unavailable") }
         app.launch()
         defer { app.terminate() }
         let workspace = app.buttons[inventory ? "target-business-inventory-card" : "target-active-project-card-project-ui-test"]
@@ -939,6 +941,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let link = app.buttons["target-item-detail-space"]
         XCTAssertTrue(link.waitForExistence(timeout: 5))
         XCTAssertEqual(displayedText(link), "Current test Space")
+        let category = app.staticTexts["target-item-detail-budget-category"]
+        if inventory {
+            XCTAssertFalse(category.exists, "Inventory must not display an old Project's category")
+        } else {
+            XCTAssertEqual(displayedText(category), "Category unavailable",
+                "Missing category evidence is not an uncategorized Item")
+        }
         link.tap()
         let name = app.staticTexts["target-item-space-name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))

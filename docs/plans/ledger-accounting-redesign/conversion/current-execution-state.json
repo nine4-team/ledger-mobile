@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 406,
+  "stateVersion": 407,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Current follow-on replaces gallery one-second existence polling with prompt bounded50ms polling (unchanged5s deadline, real exists+hittable assertion). Actual2e2 Previous tap arrived after2.2s timer; both strict XCTest compiles and independent review pass. Integrate conversion check/commit/push once; runtime proof remains required. Prior container fix cb491004 is pushed with automatic CI34388753264.",
-      "01ca6c5bd03eb58a127de435a87b2e23a860af53 pushed; automatic CI34388379167 validates Mac Button-label helper. Conversion/provider passed, native pending. Prior6db CI34385657700 Mac1076native PASS/UI18of24: five Button-label failures addressed01ca; gallery container addressedcb491. iPhone102582153439 still live; watch68321 follows34385657700, resume/filter it, do not duplicate.",
-      "Navigation2e2 CI34384262085 TERMINAL FAILED; watch32148 consumed exit1. iPhone27of29: BOTH new Space navigation tests PASS, active23.156s/archived19.501s. Failures group-copy paste result1393 and gallery counter1257 (1of2 vs2of2). Log /tmp/ledger-2e2-ios-ci.log. Newer typed-paste/gallery-scoping fixes await6db/01ca/cb491 results; avoid speculative duplicate fixes. Current gallery follow-on pushed cb4910048cee65aad7d22de005fc5e1d1753c51a, automatic CI34388753264 live. No watcher for newer runs.",
-      "Disk366MiB; avoid full local builds/large artifact downloads or deleting source/evidence. Product audit complete; O-065 unresolved. No hosted/migration/cutover completion. Two-runner iOS parallelization review recommends measured isolated trial, not simply toggling workers: single test class/config/coverage guards and clipboard isolation need validation. No CI parallelization change made."
+      "Current category-label batch implemented in9files: current Project category from same history SQL/watch, exact association scope/financial visibility; Inventory omitted, missing Category unavailable. Existing UI tests extended; new reader restart/watch/malformed-scope and AppModel update/failure tests. Root reviewed data and independent agent reviewed UI. Exact SQL12 SQLite assertions, Core/AppModel module emits, full reader/app typechecks, focused model/reader tests and both XCTest compiles PASS; conversion/diff PASS. Commit/push integrated batch once; native tests NOT yet executed for this change.",
+      "Latest prior e3f4ba9afafea889b188600ac8d673a5b18677a5 CI34389224602 (gallery prompt wait) live; watch46754 follows it, resume/filter output, do not duplicate. Prior cb491004 CI34388753264 and01ca6c5b CI34388379167 also pending native results. These commits respectively fix native gallery container type and Mac Button label. No aggregate checkpoint promotion until exact batch fully green.",
+      "Completed6db CI34385657700 FAILED: Mac1076native PASS/UI18of24 (fixes later); iPhone28of29, sole gallery reveal race. Group/detail Copy and both Item→Space navigation PASS. Log /tmp/ledger-6db-ios-ci.log. Watches68321/32148 terminal consumed; do not resume. Checklist owns evidence. No speculative gallery change before e3f4 result.",
+      "Fresh modules /tmp/ledger-category-modules.oGKryQ used for compiles. Disk~320MiB, no full localbuild/large download. No schema/server/Auth changes. Product audit complete; O-065 unresolved. Supabase changelog checked via public docs; no API change used. Hosted/offline end-to-end/migration/cutover remain unverified. Preserve full goal and Firebase exclusion."
     ]
   },
   "blockers": [],

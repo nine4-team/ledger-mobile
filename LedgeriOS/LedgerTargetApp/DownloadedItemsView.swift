@@ -602,6 +602,10 @@ private struct DownloadedItemDetailView: View {
             .accessibilityIdentifier("target-item-detail-name")
         if let current = history.intervals.first(where: { $0.endedAt == nil }) {
             detailField("Current location", location(current), id: "target-item-detail-current-location")
+            if case .project = current.scope {
+                detailField("Budget category", history.currentBudgetCategoryName ?? "Category unavailable",
+                    id: "target-item-detail-budget-category")
+            }
             if let spaceId = current.spaceId, let name = current.spaceDisplayName,
                spaceNavigation != nil, reader is any DownloadedItemPlacementReading {
                 VStack(alignment: .leading, spacing: 2) {

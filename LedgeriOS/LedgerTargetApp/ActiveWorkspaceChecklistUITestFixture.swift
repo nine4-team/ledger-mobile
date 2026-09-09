@@ -595,7 +595,9 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             ], details: .init(name: "Downloaded test chair", description: "Oak chair with woven seat",
                 sku: "CHAIR-001", source: "Original vendor", currentSource: "Design Inventory",
                 notes: "Keep the woven seat dry.\nPlace beside the window.",
-                workflowStatusRaw: "to-purchase", isBookmarked: true, createdAt: "2026-09-01T11:00:00Z"))
+                workflowStatusRaw: "to-purchase", isBookmarked: true, createdAt: "2026-09-01T11:00:00Z"),
+            currentBudgetCategoryName: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-category-unavailable")
+                ? nil : "Furniture")
     }
     func watchDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemPlacementHistory, Error> {
         AsyncThrowingStream { continuation in
