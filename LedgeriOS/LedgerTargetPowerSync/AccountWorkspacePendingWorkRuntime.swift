@@ -181,6 +181,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case downloadedProjectItems
     case accountBusinessProfile
     case propertyManagementReport
     case clientSummaryPhysicalReport
@@ -1009,6 +1010,36 @@ actor AccountWorkspacePendingWorkRuntime {
             } catch {
                 await self.finishStream(continuation, error: error)
             }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func startDownloadedProjectItemsWatch(id: UUID, accountId: AccountID, projectId: ProjectID,
+        continuation: AsyncThrowingStream<DownloadedProjectItems, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
+            return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError())
+            return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch)
+            return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.downloadedProjectItems)
+                try Task.checkCancellation()
+                try await DownloadedProjectItemsWatch(database: resources.structuredDatabase).run(
+                    accountId: resources.accountId, principalId: resources.principalId, projectId: projectId) { value in
+                        await self.forwardStreamValue(value, to: continuation)
+                    }
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation, error: error) }
             await self.streamFinished(id: id)
         }
         streamTasks[id] = task

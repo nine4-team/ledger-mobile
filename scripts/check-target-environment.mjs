@@ -628,6 +628,7 @@ if (
     "watchClients",
     "watchDownloadedItemPlacementHistory",
     "watchDownloadedItemPlacements",
+    "watchDownloadedProjectItems",
     "watchItemSpaceAssignmentOperation",
     "watchItemSpaceClearingOperation",
     "watchOperation",
@@ -3066,7 +3067,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,Sendable",
     )
   ) {
     fail(
@@ -3378,7 +3379,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,Sendable",
     )
   ) {
     fail(

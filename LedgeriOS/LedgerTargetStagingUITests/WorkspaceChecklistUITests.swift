@@ -68,10 +68,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertEqual(displayedText(name), "Design studio")
         XCTAssertTrue(app.staticTexts["No business logo"].exists)
         let share = app.buttons["target-property-report-share"]
+        // Profile and report load independently. Wait for report readiness,
+        // then check the actual control; a slow XCUI snapshot must not consume
+        // a separate five-second enabled-predicate deadline.
+        XCTAssertTrue(app.descendants(matching: .any)["target-property-report-totals"]
+            .waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertTrue(share.waitForExistence(timeout: 5))
-        let enabled = NSPredicate(format: "enabled == true")
-        expectation(for: enabled, evaluatedWith: share)
-        waitForExpectations(timeout: 5)
+        XCTAssertTrue(share.isEnabled, app.debugDescription)
     }
 
     func testInventoryNavigationAndRememberedSection() throws {
@@ -791,6 +794,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 || (item.value as? String) == "Downloaded test chair"
         })
         XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
+        XCTAssertTrue(app.staticTexts["target-items-section-accountedFor"].exists)
+        XCTAssertTrue(app.staticTexts["target-items-section-relationshipEvidenceIncomplete"].exists)
+        XCTAssertFalse(app.staticTexts["target-items-section-unaccountedFor"].exists)
         item.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Current test Project"].exists)

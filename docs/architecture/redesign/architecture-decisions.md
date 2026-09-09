@@ -1430,3 +1430,17 @@ and the new exact-commit CI remain separate verification requirements.
 PostgreSQL's documented volatile-function snapshot
 behavior is cached in `.firecrawl/postgres-function-volatility.md` from
 https://www.postgresql.org/docs/17/xfunc-volatility.html.
+
+### Atomic Project Item presentation
+
+Project Item lists now consume physical placements and derived accounting in
+one SQLite read transaction through `DownloadedProjectItemsReading`. Joining
+independent UI streams could show a new placement with a previous visit's
+accounting. The reader reuses the existing physical and accounting readers and
+scoped report subscription; it adds no backend state or duplicate history.
+All physical Items remain visible. Incomplete or restricted accounting stays
+unknown, never Unaccounted For; Inventory retains its physical-only query.
+The small combined snapshot replaces two independently timed UI reads, while
+the existing accounting domain model remains authority. Scope, old/new visits,
+limited/removed access and runtime close are tested; full native tests pass.
+Actual UI CI and hosted stream behavior remain separate required evidence.

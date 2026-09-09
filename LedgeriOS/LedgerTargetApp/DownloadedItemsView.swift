@@ -2,8 +2,7 @@ import LedgerTargetCore
 import LedgerTargetAppModel
 import SwiftUI
 
-/// Real workspace reader; no synthetic rows and no claim that missing downloads
-/// prove zero Items. Financial sections/actions await their complete query.
+/// Real workspace reader; missing downloads never prove zero or Unaccounted.
 struct DownloadedItemsView: View {
     let accountId: AccountID
     let scope: ItemPlacementScope
@@ -29,7 +28,7 @@ struct DownloadedItemsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Items").font(.headline)
-            Text("Downloaded physical data only. Accounting and full inventory coverage are not yet available.")
+            Text(partialNotice)
                 .font(.caption).foregroundStyle(.secondary)
                 .accessibilityIdentifier("target-items-partial-notice")
             switch model.state {
@@ -51,14 +50,12 @@ struct DownloadedItemsView: View {
                     Text("No Item placements are downloaded for this location yet.")
                         .accessibilityIdentifier("target-items-downloaded-empty")
                 } else {
-                    ForEach(rows, id: \.itemId) { row in
-                        Button(row.description.isEmpty ? "Untitled Item" : row.description) {
-                            selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
-                        }
-                            .buttonStyle(.plain)
-                            .disabled(!(reader is any DownloadedItemPlacementHistoryReading))
-                            .accessibilityHint("Show downloaded location history")
-                            .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
+                    if case .project = scope {
+                        accountingGroup("Unaccounted For Items", resolution: .unaccountedFor, rows: rows)
+                        accountingGroup("Accounted For Items", resolution: .accountedFor, rows: rows)
+                        accountingGroup("Accounting status unknown", resolution: .relationshipEvidenceIncomplete, rows: rows)
+                    } else {
+                        ForEach(rows, id: \.itemId) { row in itemButton(row) }
                     }
                 }
             }
@@ -79,6 +76,38 @@ struct DownloadedItemsView: View {
         .onChange(of: scope) { _, _ in selectedItem = nil }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in selectedItem = nil }
         .onDisappear { model.clear(); selectedItem = nil }
+    }
+
+    private var partialNotice: String {
+        if case .project = scope {
+            "Downloaded Items only. Missing or restricted accounting evidence is shown as unknown, not Unaccounted For. Linking and editing are not available yet."
+        } else {
+            "Downloaded physical data only. Accounting and full inventory coverage are not yet available."
+        }
+    }
+
+    @ViewBuilder
+    private func accountingGroup(_ title: String, resolution: ProjectItemAccountingResolution,
+                                 rows: [PhysicalItemPlacement]) -> some View {
+        let resolutions = Dictionary(uniqueKeysWithValues:
+            (model.accounting?.rows ?? []).map { ($0.evidence.itemId, $0.resolution) })
+        let matching = rows.filter { (resolutions[$0.itemId] ?? .relationshipEvidenceIncomplete) == resolution }
+        if !matching.isEmpty {
+            Text("\(title) (\(matching.count))")
+                .font(.subheadline).bold()
+                .accessibilityIdentifier("target-items-section-\(resolution.rawValue)")
+            ForEach(matching, id: \.itemId) { row in itemButton(row) }
+        }
+    }
+
+    private func itemButton(_ row: PhysicalItemPlacement) -> some View {
+        Button(row.description.isEmpty ? "Untitled Item" : row.description) {
+            selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
+        }
+        .buttonStyle(.plain)
+        .disabled(!(reader is any DownloadedItemPlacementHistoryReading))
+        .accessibilityHint("Show downloaded location history")
+        .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
     }
 }
 

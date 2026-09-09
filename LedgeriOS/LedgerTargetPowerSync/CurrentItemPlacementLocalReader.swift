@@ -175,6 +175,14 @@ struct CurrentItemPlacementLocalReader: Sendable {
         return rows.compactMap { $0 }
     }
 
+    static func read(transaction: any Transaction, accountId: AccountID,
+                     principalId: PrincipalID, scope: ItemPlacementScope) throws -> [PhysicalItemPlacement] {
+        try transaction.getAll(sql: sql,
+            parameters: parameters(accountId: accountId, principalId: principalId, scope: scope)) {
+                try row(cursor: $0, scope: scope)
+            }.compactMap { $0 }
+    }
+
     func watch(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) throws -> AsyncThrowingStream<[PhysicalItemPlacement?], Error> {
         try database.watch(sql: Self.sql,
             parameters: Self.parameters(accountId: accountId, principalId: principalId, scope: scope)) {

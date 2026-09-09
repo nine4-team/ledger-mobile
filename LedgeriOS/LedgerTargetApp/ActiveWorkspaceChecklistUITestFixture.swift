@@ -479,7 +479,33 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading {
+    func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<DownloadedProjectItems, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let physical = try await readDownloadedItemPlacements(accountId: accountId, scope: .project(projectId))
+                    let clientId = try ClientID(validating: "client-ui-test")
+                    let evidence = try physical.rows.map { row in
+                        try ProjectItemAccountingEvidence(accountId: accountId, projectId: projectId,
+                            clientId: clientId, itemId: row.itemId, spaceId: row.spaceId,
+                            billableOccurrences: row.itemId.rawValue == "physical-ui-chair" ? [
+                                BillableItemAccountingOccurrence(id: .init(validating: "ui-charge"),
+                                    accountId: accountId, projectId: projectId, itemId: row.itemId,
+                                    polarity: .charge, phase: .availableToInvoice)
+                            ] : [])
+                    }
+                    let accounting = try ProjectItemAccountingSectionsSnapshot(accountId: accountId,
+                        projectId: projectId, clientId: clientId, items: evidence,
+                        isCompleteForAccounting: false, quality: .ready,
+                        localDataVersion: .init(validating: "ui-item-accounting"), asOf: Date())
+                    continuation.yield(try DownloadedProjectItems(placements: physical, accounting: accounting))
+                    continuation.finish()
+                } catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
     private var failedLogoDownload: Bool {
         ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-profile-logo-unavailable")
     }

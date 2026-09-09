@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 330,
+  "stateVersion": 332,
   "resumeAfterWorkflowId": "property-management-report-delivery",
-  "updatedAt": "2026-09-08",
+  "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {
@@ -23,9 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Implement correctly eligible Client Summary physical detail and repair the shared Property Management eligibility gap before report completion.",
     "nextActions": [
-      "Charge evidence integrated locally:060126 storage/collection guards +064122 narrow RLS/shared report helper,11Sync queries, merged native read and watches. Commit/push current batch then follow one automatic CI. Full803DB/1002native148suites,97stream captures40parserqueries21outputs, real HTTP→11stream tables→native exact report parity pass. /tmp/ledger-charge-report-parity-20260909.json and /tmp/ledger-charge-full-native.log. Review corrected native Account/source-kind join namespace; no blocking findings.",
+      "Project Item read/UI follow-on ready for checkpoint: atomic DownloadedProjectItems+watch, runtime owns scoped stream, model uses unified physical/accounting read, Project/Space groups retain unknowns and Inventory unchanged. Root reviewed agent provider/Core/lifecycle changes;19 focused +full1014native150suites passed, full app typecheck and environment/conversion passed. Logs /tmp/ledger-project-items-{root-tests,full-native,environment,conversion}.log. Commit/push integrated batch then follow its automatic UI CI. No Item writes or full workspace completeness claim.",
+      "Charge evidence af7ff57d959894f147bf14cf2953eff55ed4a614 committed/pushed; automatic CI34321387603 confirmed IN_PROGRESS. Follow exact run, no redispatch.060126 storage/collection guards +064122 narrow RLS/shared report helper,11Sync queries, merged native read/watches. Full803DB/1002native148suites,97stream captures40parserqueries21outputs, real HTTP→11stream tables→native exact report parity pass. /tmp/ledger-charge-report-parity-20260909.json and /tmp/ledger-charge-full-native.log. Review corrected Account/source-kind namespace; no blocking findings.",
       "Next product work: actual Business-paid/Client-paid Link creation and offline command/readback remain unfinished. O016 missing-acquisition representation and O065 writer authority unresolved. Do not invent source evidence or mark absence authoritative. Live Invoice membership must extend shared report read before Invoice workflow ships; existing phases only open/frozen. No hosted replication/hardware/migration readiness claim.",
-      "be7060fd MCP CI34318832216 remains live in actual iPhone UI; don't restart/cancel.27355441 CI34316890317 terminal green, checkpoint above. Don't poll terminal run or rerun full suites just to resume.",
+      "be7060fd CI34318832216 TERMINAL FAILURE:14/15iPhone passed, Share enabled5s predicate timed out. Independent artifact review proves stale pre-report snapshot reused at failure; /tmp/ledger-profile-ci-34318832216.hq4i3n. Test now waits actual report-ready marker then directly asserts enabled with hierarchy diagnostic. No app eligibility change; fresh UI proof pending. af7ff57d CI34321387603 live in Mac UI.27355441 last whole green. Do not poll terminal runs or rerun full suites merely to resume.",
       "Local schema now manually applied without history through064122, INCLUDING060126 (no longer absent).9 observed two-session races+6 isolation tests rerun successfully on cloned installed schema; clone removed. Source-first import/RC-only writes documented; no duplicate paid membership. Existing spike_spaces multi-policy performance advisor only. Preserve artifacts; avoid full local Xcode builds."
     ]
   },

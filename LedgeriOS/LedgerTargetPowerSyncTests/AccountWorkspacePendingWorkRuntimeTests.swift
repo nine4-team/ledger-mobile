@@ -1212,6 +1212,37 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         closeContext.remove()
     }
 
+    @Test("Project Items watch rejects foreign scope and drains on workspace close")
+    func downloadedProjectItemsLifecycle() async throws {
+        let context = try RuntimeTestContext(suffix: "project-items-lifecycle")
+        let entered = EntryCounter()
+        var dependencies = physicalItemDependencies(context)
+        dependencies.streamOperationCheckpoint = { operation in
+            if operation == .downloadedProjectItems {
+                await entered.enter(operation)
+                try await Task.sleep(for: .seconds(30))
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        var foreign = runtime.watchDownloadedProjectItems(accountId: try AccountID(validating: "foreign"),
+            projectId: try ProjectID(validating: "project-physical")).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await foreign.next()
+        }
+        let consumer = Task {
+            var values = runtime.watchDownloadedProjectItems(accountId: context.accountId,
+                projectId: try ProjectID(validating: "project-physical")).makeAsyncIterator()
+            await #expect(throws: CancellationError.self) { try await values.next() }
+        }
+        await entered.waitUntilEntered(1)
+        try await runtime.close()
+        try await consumer.value
+        var closed = runtime.watchDownloadedProjectItems(accountId: context.accountId,
+            projectId: try ProjectID(validating: "project-physical")).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await closed.next() }
+        context.remove()
+    }
+
     @Test("Removal signal reaches current and late presentation observers without unlocking")
     func removalSignalIsMonotonic() async {
         let fence = LedgerWorkspaceAccessFence()

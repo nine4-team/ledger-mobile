@@ -1,3 +1,4 @@
+import Foundation
 import LedgerTargetCore
 import LedgerTargetAppModel
 import Testing
@@ -5,6 +6,66 @@ import Testing
 @Suite("Downloaded Items presentation") @MainActor
 struct DownloadedItemsModelTests {
     private let account = try! AccountID(validating: "account-items")
+
+    @Test("Project Items consume one combined stream and keep unknown Items visible")
+    func combinedProjectRead() async throws {
+        let snapshot = try projectSnapshot()
+        let model = DownloadedItemsModel()
+        await model.load(accountId: account, scope: snapshot.placements.scope,
+                         reader: ProjectReader(snapshots: [snapshot]))
+        #expect(model.state == .downloaded(snapshot.placements))
+        #expect(model.accounting == snapshot.accounting)
+        #expect(model.accounting?.unresolvedRows.count == 1)
+        model.clear()
+        #expect(model.accounting == nil)
+        #expect(model.state == .idle)
+    }
+
+    @Test("Loss of accounting evidence retains physical Items without stale accounting")
+    func accountingBecomesUnavailable() async throws {
+        let known = try projectSnapshot()
+        let unknown = try DownloadedProjectItems(placements: known.placements, accounting: nil)
+        let model = DownloadedItemsModel()
+        await model.load(accountId: account, scope: known.placements.scope,
+                         reader: ProjectReader(snapshots: [known, unknown]))
+        #expect(model.state == .downloaded(known.placements))
+        #expect(model.accounting == nil)
+    }
+
+    @Test("Project stream failure removes both physical and accounting data")
+    func projectStreamFailure() async throws {
+        let snapshot = try projectSnapshot()
+        let model = DownloadedItemsModel()
+        await model.load(accountId: account, scope: snapshot.placements.scope,
+                         reader: ProjectReader(snapshots: [snapshot], fails: true))
+        #expect(model.state == .unavailable)
+        #expect(model.accounting == nil)
+    }
+
+    @Test("Wrong Project snapshot is rejected after a valid snapshot")
+    func wrongProjectCombinedRead() async throws {
+        let snapshot = try projectSnapshot()
+        let foreign = try projectSnapshot(project: "foreign-project")
+        let model = DownloadedItemsModel()
+        await model.load(accountId: account, scope: snapshot.placements.scope,
+                         reader: ProjectReader(snapshots: [snapshot, foreign]))
+        #expect(model.state == .unavailable)
+        #expect(model.accounting == nil)
+    }
+
+    private func projectSnapshot(project: String = "project-items") throws -> DownloadedProjectItems {
+        let projectId = try ProjectID(validating: project)
+        let itemId = try ItemID(validating: "project-chair")
+        let clientId = try ClientID(validating: "client-items")
+        let physical = try DownloadedItemPlacements(accountId: account, scope: .project(projectId), rows: [
+            PhysicalItemPlacement(itemId: itemId, description: "Chair", itemRevision: 1,
+                placementId: .init(validating: "placement-chair"), scope: .project(projectId), spaceId: nil)
+        ])
+        let accounting = try ProjectItemAccountingSectionsSnapshot(accountId: account, projectId: projectId,
+            clientId: clientId, items: [.init(accountId: account, projectId: projectId, clientId: clientId, itemId: itemId)],
+            isCompleteForAccounting: false, quality: .ready, localDataVersion: .init(validating: "project-items-v1"), asOf: Date())
+        return try .init(placements: physical, accounting: accounting)
+    }
 
     @Test("Later downloaded rows replace the initial snapshot without another load")
     func reactiveUpdates() async throws {
@@ -94,6 +155,25 @@ struct DownloadedItemsModelTests {
         await reader.finish(try DownloadedItemPlacements(accountId: account, scope: .businessInventory, rows: []))
         await task.value
         #expect(model.state == .idle)
+    }
+}
+
+private struct ProjectReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading {
+    let snapshots: [DownloadedProjectItems]
+    var fails = false
+    enum Failure: Error { case unavailable, separatePhysicalRead }
+    func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<DownloadedProjectItems, Error> {
+        AsyncThrowingStream { continuation in
+            for snapshot in snapshots { continuation.yield(snapshot) }
+            if fails { continuation.finish(throwing: Failure.unavailable) }
+            else { continuation.finish() }
+        }
+    }
+    func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        throw Failure.separatePhysicalRead
+    }
+    func watchDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) -> AsyncThrowingStream<DownloadedItemPlacements, Error> {
+        AsyncThrowingStream { $0.finish(throwing: Failure.separatePhysicalRead) }
     }
 }
 
