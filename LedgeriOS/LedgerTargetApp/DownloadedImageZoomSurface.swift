@@ -7,13 +7,14 @@ struct DownloadedImageZoomSurface: View {
     @Binding var zoomScale: CGFloat
     var onPage: ((Int) -> Void)? = nil
     var onDismiss: (() -> Void)? = nil
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
         #if os(iOS)
         DownloadedImageNativeSurface(image: image, zoomScale: $zoomScale,
-            onPage: onPage, onDismiss: onDismiss)
+            onPage: onPage, onDismiss: onDismiss, onTap: onTap)
         #else
-        DownloadedImageNativeSurface(image: image, zoomScale: $zoomScale)
+        DownloadedImageNativeSurface(image: image, zoomScale: $zoomScale, onTap: onTap)
         #endif
     }
 }
@@ -35,11 +36,13 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
     @Binding var zoomScale: CGFloat
     let onPage: ((Int) -> Void)?
     let onDismiss: (() -> Void)?
+    let onTap: (() -> Void)?
 
     func makeUIView(context: Context) -> ImageScrollView { ImageScrollView() }
     func updateUIView(_ view: ImageScrollView, context: Context) {
         view.onPage = onPage
         view.onDismiss = onDismiss
+        view.onTap = onTap
         view.onZoom = { value, expected in
             guard zoomScale == expected else { return false }
             zoomScale = value
@@ -48,7 +51,7 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
         view.update(image: image, zoom: zoomScale)
     }
     static func dismantleUIView(_ view: ImageScrollView, coordinator: ()) {
-        view.onZoom = nil; view.onPage = nil; view.onDismiss = nil
+        view.onZoom = nil; view.onPage = nil; view.onDismiss = nil; view.onTap = nil
     }
 
     final class ImageScrollView: UIScrollView, UIScrollViewDelegate, UIGestureRecognizerDelegate {
@@ -61,6 +64,7 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
         var arranging = false
         var onPage: ((Int) -> Void)?
         var onDismiss: (() -> Void)?
+        var onTap: (() -> Void)?
         private lazy var navigationPan = UIPanGestureRecognizer(target: self, action: #selector(navigate(_:)))
         private var draggingVertically = false
 
@@ -80,6 +84,9 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
             let gesture = UITapGestureRecognizer(target: self, action: #selector(doubleTap(_:)))
             gesture.numberOfTapsRequired = 2
             addGestureRecognizer(gesture)
+            let singleTap = UITapGestureRecognizer(target: self, action: #selector(tap))
+            singleTap.require(toFail: gesture)
+            addGestureRecognizer(singleTap)
             navigationPan.maximumNumberOfTouches = 1
             navigationPan.delegate = self
             addGestureRecognizer(navigationPan)
@@ -88,6 +95,8 @@ private struct DownloadedImageNativeSurface: UIViewRepresentable {
             panGestureRecognizer.require(toFail: navigationPan)
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        @objc private func tap() { onTap?() }
 
         override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
             guard gestureRecognizer === navigationPan else {
@@ -194,9 +203,11 @@ import AppKit
 private struct DownloadedImageNativeSurface: NSViewRepresentable {
     let image: CGImage
     @Binding var zoomScale: CGFloat
+    let onTap: (() -> Void)?
 
     func makeNSView(context: Context) -> ImageScrollView { ImageScrollView() }
     func updateNSView(_ view: ImageScrollView, context: Context) {
+        view.onTap = onTap
         view.onZoom = { value, expected in
             guard zoomScale == expected else { return false }
             zoomScale = value
@@ -206,6 +217,7 @@ private struct DownloadedImageNativeSurface: NSViewRepresentable {
     }
     static func dismantleNSView(_ view: ImageScrollView, coordinator: ()) {
         view.onZoom = nil
+        view.onTap = nil
         view.observation = nil
     }
 
@@ -224,11 +236,12 @@ private struct DownloadedImageNativeSurface: NSViewRepresentable {
         }
     }
 
-    final class ImageScrollView: NSScrollView {
+    final class ImageScrollView: NSScrollView, NSGestureRecognizerDelegate {
         let pixels = NSImageView()
         var source: CGImage?
         var viewport = CGSize.zero
         var onZoom: ((CGFloat, CGFloat) -> Bool)?
+        var onTap: (() -> Void)?
         var boundZoom: CGFloat = 1
         var observation: NSKeyValueObservation?
         var reporting = false
@@ -253,6 +266,9 @@ private struct DownloadedImageNativeSurface: NSViewRepresentable {
             let doubleClick = NSClickGestureRecognizer(target: self, action: #selector(doubleClick(_:)))
             doubleClick.numberOfClicksRequired = 2
             addGestureRecognizer(doubleClick)
+            let singleClick = NSClickGestureRecognizer(target: self, action: #selector(tap))
+            singleClick.delegate = self
+            addGestureRecognizer(singleClick)
             addGestureRecognizer(NSPanGestureRecognizer(target: self, action: #selector(pan(_:))))
             observation = observe(\.magnification, options: [.new]) { [weak self] _, _ in
                 // AppKit magnification changes are main-thread events.
@@ -260,6 +276,13 @@ private struct DownloadedImageNativeSurface: NSViewRepresentable {
             }
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        @objc private func tap() { onTap?() }
+
+        func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer,
+                               shouldRequireFailureOf otherGestureRecognizer: NSGestureRecognizer) -> Bool {
+            (otherGestureRecognizer as? NSClickGestureRecognizer)?.numberOfClicksRequired == 2
+        }
 
         func update(image: CGImage, zoom: CGFloat) {
             // An unchanged SwiftUI echo must not undo a newer native gesture;

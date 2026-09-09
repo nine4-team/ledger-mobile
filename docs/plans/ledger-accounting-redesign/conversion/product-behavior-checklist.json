@@ -27273,7 +27273,14 @@
           "id": "ITEM-IMAGE-NATIVE-GESTURES",
           "risk": "ui_fidelity",
           "expected": "At fit on iPhone, horizontal swipe changes the selected image and resets zoom; vertical drag dismisses the full viewer only beyond90pt and otherwise snaps back. Native pinch and zoomed pan remain functional. Pinned images share paging but not vertical dismissal. No new media storage or authorization boundary.",
-          "command": "DownloadedImageZoomSurface.swift and DownloadedItemImagesView.swift share native gesture callbacks; testDownloadedItemImageSwipeNavigationAndDismissal checks both directions, pinch, actual zoomed pan movement, no zoomed paging/dismissal, short drag, full dismissal and pinned behavior. App and iOS surface/XCTest typechecks passed; independent read-only review found no confirmed defect and prompted stronger pan/pinch assertions. Runtime interaction proof pending automatic CI. Chrome,save/share,full-screen host and full editing/pin layout remain unfinished.",
+          "command": "Commit48e4dd96 CI34343950038 pending: shared native gesture callbacks and testDownloadedItemImageSwipeNavigationAndDismissal cover both directions,pinch,actual pan movement,no zoomed paging/dismissal,short drag,full dismissal,pinned behavior. App/iOSsurface/XCTest typechecks pass; independent review prompted stronger pan/pinch assertions. Follow-on uncommitted: iOS fullScreenCover and flexible image viewport,Mac sheet unchanged; viewer height assertion added,Mac app/iOS XCTest typecheck pass. Runtime host lifecycle and gesture proof still pending. Chrome,save/share and full editing/pin layout remain unfinished.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-IMAGE-VIEWER-CONTROLS",
+          "risk": "ui_fidelity",
+          "expected": "Full iPhone gallery occupies the screen; covering the parent route preserves its existing pin. At fit, navigation/zoom controls hide after2.2s and single tap toggles visibility; zoom/page changes reveal controls. Close and Pin remain usable. Hiding controls does not resize the image or reset zoom. Pinned viewer remains compact with visible navigation.",
+          "command": "DownloadedItemsView.swift,DownloadedItemImagesView.swift,DownloadedImageZoomSurface.swift implement native presentation/tap handling and cancellable view-local timer. Expanded existing gallery/gesture XCTest assertions for fullheight,pin→gallery→Done retention,auto-hide,tap hide/reveal,zoomed visibility,stable image geometry. Independent review identified onDisappear route/pin cleanup risk; removed those resets while retaining explicit account/scope reset and model cleanup. Typecheck and runtime CI evidence pending this batch; save/share and full Item editing still unfinished.",
           "status": "planned"
         },
         {

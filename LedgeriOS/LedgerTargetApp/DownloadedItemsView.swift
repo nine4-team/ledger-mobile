@@ -162,7 +162,9 @@ struct DownloadedItemsView: View {
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
         .onChange(of: visibleItemIds, initial: true) { _, ids in selection.reconcile(visible: ids) }
-        .onDisappear { model.clear(); selectedItem = nil; selection.clear() }
+        // A full-screen image can cover this route without ending it. Scope
+        // changes clear selection explicitly; actual route removal releases State.
+        .onDisappear { model.clear() }
     }
 
     private var visibleItemIds: [ItemID] {
@@ -435,7 +437,8 @@ private struct DownloadedItemHistoryView: View {
         #else
         .frame(minWidth: 280, minHeight: 300)
         #endif
-        .onDisappear { pinnedImage = nil; pinFraction = 0.33 }
+        // Pinning is route-local State. Covering the route with its gallery is
+        // not navigation away and must not discard the existing reference panel.
     }
 
     private var historyContent: some View {
@@ -490,11 +493,19 @@ private struct DownloadedItemHistoryView: View {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
         .onDisappear { model.clear() }
+        #if os(iOS)
+        .fullScreenCover(isPresented: $showImages) { imageGallery }
+        #else
         .sheet(isPresented: $showImages) {
-            if let imageReader = reader as? any DownloadedItemImageReading {
-                DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader,
-                    onPin: { pinnedImage = $0; pinRequest = UUID() })
-            }
+            imageGallery
+        }
+        #endif
+    }
+
+    @ViewBuilder private var imageGallery: some View {
+        if let imageReader = reader as? any DownloadedItemImageReading {
+            DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader,
+                onPin: { pinnedImage = $0; pinRequest = UUID() })
         }
     }
 

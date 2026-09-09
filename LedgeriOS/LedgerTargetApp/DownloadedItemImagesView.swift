@@ -17,6 +17,9 @@ struct DownloadedItemImagesView: View {
     @State private var model = DownloadedItemImagesModel()
     @State private var selection: EntityID?
     @State private var refresh = UUID()
+    @State private var controlsVisible = true
+    @State private var controlsActivity = UUID()
+    @State private var imageScale: CGFloat = 1
     private struct Request: Equatable {
         let accountId: AccountID
         let itemId: ItemID
@@ -61,7 +64,16 @@ struct DownloadedItemImagesView: View {
                             onPage: catalog.images.count > 1 ? { direction in
                                 selection = catalog.images[(index + direction + catalog.images.count) % catalog.images.count].id
                             } : nil,
-                            onDismiss: isPinned ? nil : { dismiss() })
+                            onDismiss: isPinned ? nil : { dismiss() },
+                            controlsVisible: controlsVisible,
+                            onTap: isPinned ? nil : {
+                                controlsVisible.toggle()
+                                controlsActivity = UUID()
+                            },
+                            onZoomChange: { scale in
+                                imageScale = scale
+                                revealControls()
+                            })
                             .id([accountId.rawValue, itemId.rawValue, selected.referenceId.rawValue,
                                  String(selected.setRevision), selected.object.attachmentId.rawValue,
                                  selected.object.contentSHA256.rawValue])
@@ -72,7 +84,11 @@ struct DownloadedItemImagesView: View {
                                 .accessibilityIdentifier(isPinned ? "target-pinned-images-counter" : "target-item-images-counter")
                             Button("Next") { selection = catalog.images[(index + 1) % catalog.images.count].id }
                                 .accessibilityIdentifier(isPinned ? "target-pinned-images-next" : "target-item-images-next")
-                        } }
+                        }
+                        .opacity(isPinned || controlsVisible ? 1 : 0)
+                        .allowsHitTesting(isPinned || controlsVisible)
+                        .accessibilityHidden(!isPinned && !controlsVisible)
+                        }
                         if !isPinned {
                             if selected.isPrimary { Text("Primary image").font(.caption) }
                             if let onPin {
@@ -89,13 +105,33 @@ struct DownloadedItemImagesView: View {
             }
         }
         .padding(isPinned ? 8 : 16).frame(minWidth: 280, minHeight: isPinned ? 80 : 360)
+        #if os(iOS)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(isPinned ? "target-pinned-image-viewer" : "target-item-image-viewer")
         .onChange(of: initialSelection?.rawValue.utf8.map { $0 }, initial: true) { _, _ in
             selection = initialSelection
         }
         .task(id: Request(accountId: accountId, itemId: itemId, refresh: refresh)) {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
+        .task(id: controlsActivity) {
+            guard !isPinned, controlsVisible, imageScale <= 1.01 else { return }
+            do { try await Task.sleep(for: .milliseconds(2200)) } catch { return }
+            guard !Task.isCancelled else { return }
+            controlsVisible = false
+        }
+        .onChange(of: selection?.rawValue.utf8.map { $0 }) { _, _ in
+            imageScale = 1
+            revealControls()
+        }
         .onDisappear { model.clear(); selection = nil }
+    }
+
+    private func revealControls() {
+        controlsVisible = true
+        controlsActivity = UUID()
     }
 }
 
@@ -107,6 +143,9 @@ private struct DownloadedItemPhotoView: View {
     var compact = false
     var onPage: ((Int) -> Void)? = nil
     var onDismiss: (() -> Void)? = nil
+    var controlsVisible = true
+    var onTap: (() -> Void)? = nil
+    var onZoomChange: ((CGFloat) -> Void)? = nil
     @State private var rendered: CGImage?
     @State private var message = "Loading image…"
     @State private var refresh = UUID()
@@ -120,9 +159,9 @@ private struct DownloadedItemPhotoView: View {
         VStack {
             if let rendered {
                 DownloadedImageZoomSurface(image: rendered, zoomScale: $scale,
-                    onPage: onPage, onDismiss: onDismiss)
+                    onPage: onPage, onDismiss: onDismiss, onTap: onTap)
                     .frame(minHeight: compact ? 0 : 200)
-                if !compact { HStack {
+                if !compact { VStack(spacing: 8) { HStack {
                     Button("Zoom out") { scale = max(1, scale - 0.5) }
                         .disabled(scale <= 1).accessibilityIdentifier("target-item-image-zoom-out")
                     Text(Double(scale).formatted(.number.precision(.fractionLength(1))) + "×")
@@ -138,14 +177,24 @@ private struct DownloadedItemPhotoView: View {
                         Button("Reset zoom") { scale = 1 }
                             .accessibilityIdentifier("target-item-image-zoom-reset")
                     }
-                }.frame(height: 32) }
+                }.frame(height: 32)
+                }
+                .opacity(controlsVisible ? 1 : 0)
+                .allowsHitTesting(controlsVisible)
+                .accessibilityHidden(!controlsVisible)
+                }
             } else {
                 Text(message).accessibilityIdentifier("target-item-image-state")
                 Button("Retry image") { refresh = UUID() }
                     .accessibilityIdentifier("target-item-image-retry")
             }
         }
-        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: compact ? .infinity : 400).clipped()
+        #if os(iOS)
+        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: .infinity)
+        #else
+        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: compact ? .infinity : 400)
+        #endif
+        .clipped()
         .task(id: Request(image: image, refresh: refresh)) {
             rendered = nil; message = "Loading image…"; scale = 1
             do {
@@ -162,8 +211,10 @@ private struct DownloadedItemPhotoView: View {
                       ] as CFDictionary) else { throw DownloadedItemImageFailure.malformed }
                 try Task.checkCancellation()
                 rendered = decoded
+                onZoomChange?(scale)
             } catch { if !Task.isCancelled { message = "Image unavailable. Retry when connected." } }
         }
+        .onChange(of: scale) { _, value in onZoomChange?(value) }
         .onDisappear { rendered = nil }
     }
 }

@@ -840,17 +840,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         images.tap()
         let rendered = app.images["target-item-image-rendered"]
         XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
+        revealImageControls(in: app)
         let count = app.staticTexts["target-item-images-counter"]
         XCTAssertTrue(count.label == "1 of 2" || (count.value as? String) == "1 of 2")
-        let zoomIn = app.buttons["target-item-image-zoom-in"]
+        let imageFrame = rendered.frame
+        XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
+            "Controls auto-hide at fit zoom")
+        XCTAssertTrue(app.buttons["target-item-images-done"].isHittable)
+        XCTAssertTrue(app.buttons["target-item-image-pin"].isHittable)
+        XCTAssertEqual(rendered.frame.width, imageFrame.width, accuracy: 1)
+        XCTAssertEqual(rendered.frame.height, imageFrame.height, accuracy: 1)
+        revealImageControls(in: app)
+        rendered.tap()
+        XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
+            "Single tap hides controls without dismissing")
+        revealImageControls(in: app)
         let zoomOut = app.buttons["target-item-image-zoom-out"]
         let resetZoom = app.buttons["target-item-image-zoom-reset"]
         XCTAssertFalse(zoomOut.isEnabled)
-        zoomIn.tap()
+        tapImageControl("target-item-image-zoom-in", in: app)
         XCTAssertTrue(resetZoom.waitForExistence(timeout: 5))
         let zoom = app.staticTexts["target-item-image-zoom-level"]
         XCTAssertTrue(waitUntil { zoom.label == "1.5×" || (zoom.value as? String) == "1.5×" })
-        resetZoom.tap()
+        tapImageControl("target-item-image-zoom-reset", in: app)
         XCTAssertTrue(waitUntil { !zoomOut.isEnabled && !resetZoom.exists })
         #if os(macOS)
         rendered.doubleClick()
@@ -858,19 +870,25 @@ final class WorkspaceChecklistUITests: XCTestCase {
         rendered.doubleTap()
         #endif
         XCTAssertTrue(waitUntil { zoom.label == "2.5×" || (zoom.value as? String) == "2.5×" })
-        resetZoom.tap()
+        let hiddenWhileZoomed = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in !app.buttons["target-item-image-zoom-reset"].isHittable },
+            object: nil)
+        hiddenWhileZoomed.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [hiddenWhileZoomed], timeout: 2.5), .completed,
+            "Controls must remain visible while zoomed")
+        tapImageControl("target-item-image-zoom-reset", in: app)
         XCTAssertTrue(waitUntil { !zoomOut.isEnabled })
-        zoomIn.tap()
-        app.buttons["target-item-images-next"].tap()
+        tapImageControl("target-item-image-zoom-in", in: app)
+        tapImageControl("target-item-images-next", in: app)
         XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
         XCTAssertTrue(waitUntil { !zoomOut.isEnabled && !resetZoom.exists })
         // Both directions wrap through the source set, as in the shipped viewer.
-        app.buttons["target-item-images-next"].tap()
+        tapImageControl("target-item-images-next", in: app)
         XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
-        app.buttons["target-item-images-previous"].tap()
+        tapImageControl("target-item-images-previous", in: app)
         XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
-        app.buttons["target-item-images-next"].tap()
+        tapImageControl("target-item-images-next", in: app)
         XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
         let pin = app.buttons["target-item-image-pin"]
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
@@ -884,9 +902,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         historyRefresh.tap()
         XCTAssertTrue(unpin.exists)
         images.tap()
+        XCTAssertTrue(app.buttons["target-item-images-done"].waitForExistence(timeout: 5))
+        app.buttons["target-item-images-done"].tap()
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5), "Opening and closing the gallery retains the existing pin")
+        XCTAssertTrue(historyRefresh.waitForExistence(timeout: 5), "The parent Item route remains open")
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        images.tap()
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         // Select and pin another reference without an intermediate unpin.
-        app.buttons["target-item-images-next"].tap()
+        tapImageControl("target-item-images-next", in: app)
         pin.tap()
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         let pinnedCount = app.staticTexts["target-pinned-images-counter"]
@@ -895,7 +919,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(waitUntil { pinnedCount.label == "1 of 2" || (pinnedCount.value as? String) == "1 of 2" })
         images.tap()
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
-        app.buttons["target-item-images-next"].tap()
+        tapImageControl("target-item-images-next", in: app)
         pin.tap()
         XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
         unpin.tap()
@@ -923,6 +947,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let open = app.buttons["target-item-images-open"]
         XCTAssertTrue(open.waitForExistence(timeout: 5))
         open.tap()
+        let viewer = app.otherElements["target-item-image-viewer"]
+        XCTAssertTrue(viewer.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(viewer.frame.height, app.frame.height * 0.85,
+            "The iPhone viewer must occupy the screen, not a partial-height sheet")
         let rendered = app.images["target-item-image-rendered"]
         XCTAssertTrue(rendered.waitForExistence(timeout: 10))
         let count = app.staticTexts["target-item-images-counter"]
@@ -938,7 +966,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         rendered.pinch(withScale: 2, velocity: 1)
         let zoomOut = app.buttons["target-item-image-zoom-out"]
         XCTAssertTrue(waitUntil { zoomOut.isEnabled }, "Native pinch must enlarge the image")
-        app.buttons["target-item-image-zoom-reset"].tap()
+        tapImageControl("target-item-image-zoom-reset", in: app)
         XCTAssertTrue(waitUntil { !zoomOut.isEnabled })
         rendered.doubleTap()
         let zoom = app.staticTexts["target-item-image-zoom-level"]
@@ -952,7 +980,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             thenDragTo: viewportCenter.withOffset(CGVector(dx: 0, dy: 100)))
         XCTAssertEqual(displayedText(count), "1 of 2", "Zoomed drags must pan, not page or dismiss")
         XCTAssertTrue(app.buttons["target-item-images-done"].exists)
-        app.buttons["target-item-image-zoom-reset"].tap()
+        tapImageControl("target-item-image-zoom-reset", in: app)
         XCTAssertTrue(waitUntil { self.displayedText(zoom) == "1.0×" })
         let start = rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 50)))
@@ -973,6 +1001,23 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(unpin.exists, "Vertical swipe must not dismiss the pinned reference")
     }
     #endif
+
+    private func revealImageControls(in app: XCUIApplication) {
+        let zoomIn = app.buttons["target-item-image-zoom-in"]
+        if !zoomIn.isHittable {
+            let image = app.images["target-item-image-rendered"]
+            XCTAssertTrue(image.waitForExistence(timeout: 5))
+            image.tap()
+        }
+        XCTAssertTrue(waitUntil { zoomIn.isHittable }, "Single tap reveals image controls")
+    }
+
+    private func tapImageControl(_ identifier: String, in app: XCUIApplication) {
+        revealImageControls(in: app)
+        let control = app.buttons[identifier]
+        XCTAssertTrue(waitUntil { control.isHittable }, "Image control must be revealed: \(identifier)")
+        control.tap()
+    }
 
     func testDownloadedItemGroupsAndImmediateSource() throws {
         continueAfterFailure = false

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 354,
+  "stateVersion": 356,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -25,9 +25,9 @@
     "nextActions": [
       "Image list facet129a1c7032e9780c1de13479af21b14e27064a49 CI34343168430 terminal FAILED stale report test11vs12queries and shifted positions. Script now uses named tables, retains prior guards and adds marker overlap/allowed/denied checks;106actualSQLcaptures and real MCP/HTTP report checks passed. Root reviewed complete agent diff. Logs /tmp/ledger-property-stream-named{,-mcp}.log. No schema changes or active local processes. Do not poll terminal CI again.",
       "Verification: original full --no-parallel1050native155suites passed1049 and failed only new imageMarkerWatch (/tmp/ledger-image-count-full-native.log). After test-harness simplification,37focused provider tests in5suites passed clean (/tmp/ledger-image-count-provider-reviewed.log);36actualSQL/4parser,environment,app and both XCTest typechecks passed. Report importer12projections. Schema unchanged; no repeat full DB suite needed.",
-      "Uncommitted native image gestures reuse decoded-pixel surface: iPhone horizontal paging at fit, verticaldismiss above90pt with short-drag snapback, zoomednativepan, pinned paging but no verticaldismiss. App and iOS surface/XCTest typechecks pass. Read-only independent review found no confirmed defect; strengthened new gesture UI test with actual pan frame movement, pinch, visible-coordinate drags. Native gesture interactions pending CI; no local full Xcode build due disk constraint.",
+      "Gesture/report-test batch committed/pushed48e4dd9663a2626c1e9725a468e94221fa647132. Automatic CI34343950038 confirmed IN_PROGRESS local Supabase startup. Native gesture interactions pending CI; no local full Xcode build due disk constraint. Root reviewed delegated report test and independent gesture review; all earlier local checks passed.",
       "Pin/project/testfix5721c40f CI34340411033 last confirmed IN_PROGRESS iPhone UI started10:58:53UTC. Follow exact run; continued-error Mac step is not pass evidence.5538ef14 remains last whole green. Older terminal runs recorded in checklist; do not repoll.",
-      "Combined gesture/report-test batch reviewed; app,iOSsurface,bothXCTest,environment and direct conversion checks passed. Commit/push once and follow automatic exact CI; no full SwiftPM repeat for native-only gestures. Image-count1049passed plus37focused and6strictwatch passes remain valid. Remaining thumbnails, full pin/edit layout, chrome/save/share, category/price/totals/writers/auth wiring; O016/O027/O065/O023 unresolved. Local schema093555; preserve diagnostics/disk; no Firebase/production/hosted access."
+      "Gallery batch ready to commit: iOS fullScreenCover/flexible viewport; fit controls auto-hide2.2s, native single-tap toggle with doubletap arbitration, stable layout/AXhidden controls, zoom/page activity resets timer. Independent review caught covering-presentation cleanup: removed onDisappear pin/selectedItem reset; route-local State and explicit scope reset own cleanup. Added pin→open→Done retention, fullheight, auto-hide/single-toggle/zoom-stays-visible/stable-image-frame assertions; existing tests reveal controls before tapping. App/iOSsurface/bothXCTest typechecks,environment,directconversion,diffcheck passed; no local processes active. Commit/push once, follow automatic exactCI. Runtime proof pending. Remaining save/share, thumbnails, full pin/edit layout, category/price/totals/writers/auth wiring; O016/O027/O065/O023 unresolved. No full SwiftPM repeat for presentation-only changes. Local schema093555; preserve diagnostics/disk; no Firebase/production/hosted access."
     ]
   },
   "blockers": [],
