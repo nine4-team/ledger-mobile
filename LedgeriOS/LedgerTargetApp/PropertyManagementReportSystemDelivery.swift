@@ -24,7 +24,9 @@ import Photos
     static func save(_ data: Data) async throws {
         try Task.checkCancellation()
         // Use the original image resource, not the viewer's downsampled pixels.
-        try await PHPhotoLibrary.shared().performChanges {
+        // PhotoKit invokes this block on its own changes queue. Do not inherit
+        // MainActor isolation from this UI-facing async method.
+        try await PHPhotoLibrary.shared().performChanges { @Sendable in
             PHAssetCreationRequest.forAsset().addResource(with: .photo, data: data, options: nil)
         }
     }

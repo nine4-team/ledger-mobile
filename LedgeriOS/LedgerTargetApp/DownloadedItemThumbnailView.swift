@@ -74,7 +74,21 @@ struct DownloadedItemThumbnailView: View {
         .accessibilityValue(renderedFor != nil && renderedFor == selected ? "Downloaded" : "Unavailable")
         .accessibilityIdentifier("target-item-thumbnail-\(itemId.rawValue)")
         .accessibilityAction(named: "Retry thumbnail") { retry = UUID() }
-        .contextMenu { Button("Retry thumbnail") { retry = UUID() } }
+        // A nested context menu can replace the Item's Copy ID menu for the
+        // whole AppKit List cell. Keep retry as an explicit local control.
+        .overlay(alignment: .bottomTrailing) {
+            if renderedFor == nil {
+                Button("Retry thumbnail", systemImage: "arrow.clockwise") { retry = UUID() }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    #if os(iOS)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    #endif
+                    .accessibilityIdentifier("target-item-thumbnail-retry-\(itemId.rawValue)")
+                    .padding(6)
+            }
+        }
         .background(GeometryReader { geometry in
             Color.clear.onChange(of: geometry.frame(in: .global), initial: true) { _, value in frame = value }
         })

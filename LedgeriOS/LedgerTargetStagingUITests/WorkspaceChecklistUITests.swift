@@ -952,12 +952,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [hiddenWhileZoomed], timeout: 2.5), .completed,
             "Controls must remain visible while zoomed")
         tapImageControl("target-item-image-zoom-reset", in: app)
-        XCTAssertTrue(waitUntil { !zoomOut.isEnabled })
+        XCTAssertTrue(waitUntil { zoomOut.exists && !zoomOut.isEnabled })
         tapImageControl("target-item-image-zoom-in", in: app)
         tapImageControl("target-item-images-next", in: app)
         XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
         XCTAssertTrue(rendered.waitForExistence(timeout: 5))
-        XCTAssertTrue(waitUntil { !zoomOut.isEnabled && !resetZoom.exists })
+        revealImageControls(in: app)
+        XCTAssertTrue(waitUntil { zoomOut.exists && !zoomOut.isEnabled && !resetZoom.exists })
         // Both directions wrap through the source set, as in the shipped viewer.
         tapImageControl("target-item-images-next", in: app)
         XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
@@ -1257,21 +1258,38 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(expand.waitForExistence(timeout: 5))
         reveal(count, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(waitUntil { count.label == "0 selected" || (count.value as? String) == "0 selected" })
-        reveal(other, in: app, fullyInsideScrollView: true)
-        #if os(macOS)
-        other.rightClick()
-        let copyID = app.menuItems["Copy ID"]
-        #else
-        other.press(forDuration: 1)
-        let copyID = app.buttons["Copy ID"]
+        if !first.exists {
+            reveal(expand, in: app, fullyInsideScrollView: true)
+            expand.tap()
+            XCTAssertTrue(first.waitForExistence(timeout: 5))
+        }
+        // Menus must belong to the clicked Item, not another thumbnail or
+        // the last Item sharing this native List cell.
+        let retryThumbnail = app.buttons["target-item-thumbnail-retry-group-c"]
+        reveal(retryThumbnail, in: app, fullyInsideScrollView: true)
+        #if os(iOS)
+        XCTAssertGreaterThanOrEqual(retryThumbnail.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(retryThumbnail.frame.height, 44)
         #endif
-        XCTAssertTrue(copyID.waitForExistence(timeout: 5))
-        copyID.tap()
-        #if os(macOS)
-        XCTAssertEqual(NSPasteboard.general.string(forType: .string), "group-c")
-        #else
-        assertPastedItemIDs("group-c", in: app)
-        #endif
+        retryThumbnail.tap()
+        XCTAssertTrue(other.exists)
+        for (row, expected) in [(other, "group-c"), (first, "group-a")] {
+            reveal(row, in: app, fullyInsideScrollView: true)
+            #if os(macOS)
+            row.rightClick()
+            let copyID = app.menuItems["Copy ID"]
+            #else
+            row.press(forDuration: 1)
+            let copyID = app.buttons["Copy ID"]
+            #endif
+            XCTAssertTrue(copyID.waitForExistence(timeout: 5), app.debugDescription)
+            copyID.tap()
+            #if os(macOS)
+            XCTAssertEqual(NSPasteboard.general.string(forType: .string), expected)
+            #else
+            assertPastedItemIDs(expected, in: app)
+            #endif
+        }
         reveal(count, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(waitUntil { self.displayedText(count) == "0 selected" })
     }
@@ -1868,7 +1886,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 if fullyInsideScrollView {
                     // A fully visible first row may touch the scroll view's
                     // top edge. An inset incorrectly makes it unrevealable.
-                    let viewport = list.frame
+                    // AppKit reports some LabeledContent text one point
+                    // outside the scroll frame despite fully visible pixels.
+                    let viewport = list.frame.insetBy(dx: -1, dy: -1)
                     if viewport.contains(element.frame), element.isHittable { return }
                     #if os(macOS)
                     // A full swipe overshoots this short field in the 366-point
@@ -1900,7 +1920,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         XCTAssertTrue(element.isHittable, app.debugDescription)
         if fullyInsideScrollView {
-            XCTAssertTrue(list.frame.contains(element.frame), app.debugDescription)
+            XCTAssertTrue(list.frame.insetBy(dx: -1, dy: -1).contains(element.frame), app.debugDescription)
         }
     }
 
