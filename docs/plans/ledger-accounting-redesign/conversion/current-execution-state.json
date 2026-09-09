@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 347,
+  "stateVersion": 348,
   "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,11 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Source/grouping batch ready: nullable original/immediate source metadata and scoped facets/search; SKU/vendor grouping, unambiguous namefallback, structured keys, fixedSpace context and groupselect/expand. Root provider review and independent Core/UI review;40focused and1034native151suites/843DB29files passed, stream/parser/advisor/typechecks/environment passed. Native UI group/source test added, pending exact-commit CI. Run direct conversion, commit/push once after CI sequencing review.",
-      "34331154071/09451172 and34331900121/d2194923 terminal FAILED at Mac full-field reveal: six page swipes oscillated with search at y122–148 vs viewport144–510. Narrow macOS helper uses measured pixel scroll; iOS unchanged, strict containment remains. New CI allows MacUI failure to proceed to iPhone then mandatory outcome gate fails job; both-platform assertions/artifacts retained.12guardtests pass; independent sequencing review pending.",
-      "34333349025/2a9e80aa status/bookmark run last confirmed live; inspect compact state once next needed.5538ef14 remains latest wholegreen. No manual redispatch or repeat terminal polling. Item UI and isolated fixtures do not prove hosted behavior.",
-      "Next Item gaps: fullcards/detail/media/category/price facets, financial group/selection totals and bulk/edit commands. O016/O027/O065 writer decisions unanswered. Category missing/restricted evidence is unavailable, not inferred Uncategorized. Original/immediate source writer/import requirements recorded in existing ADR; no target physical move writer yet. No broad Item completion.",
-      "Local schema appliedthrough091747 including090456/081820/060126/064122; historynotrewritten. Preserve diagnostic artifacts; disk constrained, no full local Xcode builds. Hosted/hardware/migration/cutover incomplete."
+      "Item original-image gallery batch uncommitted. Core/catalog, protected shared cache/transport, SQL/RLS/Storage/Sync reader, runtime lease/reference rechecks, model and actual-image gallery implemented. Root and independent boundary review complete; exact UTF8 regression fixed. Full1046native155suites/863DB30files passed;9focused4suites after final identity changes passed. Checklist and ADR record precise gaps.",
+      "Final environment, CI guard tests, direct conversion and app typecheck passed; both XCTest typechecks passed. Logs /tmp/ledger-item-images-{environment,ci-guard,conversion,app-typecheck}.log. Commit/push media batch once and follow automatic exact-commit PR CI. No full suite repeat for continuity. Gallery acceptance remains pending native UI; do not claim complete media workflow.",
+      "Prior source/grouping commit ffd1b55ae9074501442f385bade0d86d8c0f7194 CI34335057826 confirmed live in iPhone UI; Mac UI and both builds passed. Poll same run, no redispatch.34333349025/2a9e80aa terminal failed status filter clipped tap; current batch fully reveals Filter before interaction and keeps assertions.5538ef14 latest whole green until fresh result.",
+      "Continue faithful Item gaps: thumbnails/Image facet, full zoom/pan/pinning, complete cards/detail/category/price facets, financial totals, bulk/edit/media writes and approved auth download wiring. O016/O027/O065 writer decisions and O023 retention unresolved; do not infer policies. Hosted/hardware/migration/cutover remain incomplete.",
+      "Local schema applied through20260909093555 with primary uniqueness index; history not rewritten. Preserve diagnostic artifacts; disk constrained, no full local Xcode builds. Work only Supabase worktree."
     ]
   },
   "blockers": [],

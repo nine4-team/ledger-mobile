@@ -1473,3 +1473,37 @@ encrypted restart, source updates and selection pruning. Native interaction and
 hosted verification remain separate; thumbnails and financial group totals still
 require their authorized readers. Authority: `docs/specs/items.md` Target Everyday
 Workspace and Source facet, with the reviewed source grouping/Item model semantics.
+
+### Read-only Item images reuse the protected media path
+
+Item image objects carry immutable Account/Attachment/hash/length/type/path
+identity. Separate versioned Item references own order and primary choice. A
+current-set revision and expected count distinguish a fully downloaded empty
+gallery from missing metadata; partial local rows never prove No Image. Composite
+ownership constraints, current-set validation and a unique primary index protect
+the source. Old reference versions remain retained evidence, not current access.
+This is not approval for upload, reference edits, detach, purge or a retention
+period: O-065 and O-023 still gate those outcomes.
+
+The existing logo HTTP transport and encrypted downloaded-byte cache now share
+`DownloadedImageObjectReference` with the Item reader. The compatibility-named
+local logo cache table is reused; no second vault or upload queue is introduced.
+Account-parent encryption identifies the cache namespace, not permission to any
+Item. Pending upload receipts remain separate and cannot be rebound as downloaded
+cache entries. Length/hash, safe image MIME, private authenticated GET, no redirects,
+bounded bytes, collision exclusion and orphan accounting remain enforced.
+
+The workspace owns the Item image subscription and finite byte-read leases.
+Every cache/download await is followed by exact current-reference and membership
+validation; removal fences prevent return/display after access is lost. Storage
+GET requires a current authorized Item reference to the exact immutable path,
+independently of logo access. The gallery loads only its selected image and uses
+bounded decoded previews, avoiding an eager download for every listed Item.
+
+Focused tests cover incomplete/empty/mixed references, tenant denial, encrypted
+cache reuse, metadata changes during download, removal, and stale UI results.
+Actual native gallery interaction, hosted Storage/replication and transport wiring
+through the approved sign-in composition remain required. List thumbnails, Image
+filtering, complete zoom/pan/pinning, media editing and import are not complete.
+Authority remains `docs/specs/items.md` and `docs/specs/ui/image-pinning.md`; this
+read batch changes no product deletion or accounting policy.

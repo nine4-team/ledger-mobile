@@ -345,6 +345,7 @@ function validateLocalSupabaseJob(lines) {
     "          npm run target:supabase:test:payment-import",
     "          node scripts/test-local-item-placement-concurrency.mjs",
     "          node scripts/test-local-physical-item-stream.mjs",
+    "          node scripts/test-local-item-image-stream.mjs",
     "          node scripts/test-local-property-management-stream.mjs",
     "          node scripts/test-local-property-report-mcp.mjs",
     "          npm --prefix LedgerTargetMCP ci --ignore-scripts",

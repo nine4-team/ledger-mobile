@@ -2,6 +2,44 @@ config:
   edition: 3
 
 streams:
+  item_images:
+    queries:
+      - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND item_image_sets.item_id=subscription.parameter('item_id')
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_references.id,item_image_references.account_id,item_image_references.item_id,
+          item_image_references.attachment_id,item_image_references.set_revision::text AS set_revision,
+          item_image_references.position,item_image_references.is_primary
+        FROM item_image_references
+        JOIN item_image_sets AS image_set ON image_set.account_id=item_image_references.account_id
+          AND image_set.item_id=item_image_references.item_id AND image_set.revision=item_image_references.set_revision
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_references.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_references.account_id=subscription.parameter('account_id')
+        AND item_image_references.item_id=subscription.parameter('item_id')
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_objects.id,item_image_objects.account_id,item_image_objects.content_sha256,
+          item_image_objects.byte_count::text AS byte_count,item_image_objects.media_type,item_image_objects.storage_path
+        FROM item_image_objects
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_objects.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_objects.account_id=subscription.parameter('account_id')
+        AND item_image_objects.id IN (
+          SELECT reference.attachment_id FROM item_image_references AS reference
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
   account_business_profile:
     queries:
       - |

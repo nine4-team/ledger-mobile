@@ -28,7 +28,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
-    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, Sendable
+    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     public func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID)
@@ -62,6 +62,19 @@ public final class LedgerOfflineClientRuntime:
 
     public func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
         try await lifecycleOwner.readAccountBusinessProfile(accountId: accountId)
+    }
+
+    public func watchDownloadedItemImages(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemImageCatalog, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startDownloadedItemImagesWatch(id: id, accountId: accountId,
+                itemId: itemId, continuation: continuation)
+        }
+    }
+
+    public func loadDownloadedItemImage(accountId: AccountID, itemId: ItemID,
+        image: DownloadedItemImage, allowDownload: Bool) async throws -> Data? {
+        try await lifecycleOwner.loadDownloadedItemImage(accountId: accountId, itemId: itemId,
+            image: image, allowDownload: allowDownload)
     }
 
     public func readDownloadedItemPlacements(accountId: AccountID, scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {

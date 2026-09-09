@@ -2,9 +2,36 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
+/// Byte cache only. Parent reference authorization belongs to the calling runtime
+/// and must be checked before and after awaiting cached or downloaded bytes.
+protocol DownloadedImageCaching: Sendable {
+    func cachedDownloadedImage(_ reference: DownloadedImageObjectReference) async throws -> Data?
+    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedImageObjectReference) async throws
+}
+
+extension AccountBusinessLogoReference {
+    init(downloadedImage reference: DownloadedImageObjectReference) throws {
+        try self.init(accountId: reference.accountId, attachmentId: reference.attachmentId.rawValue,
+            sha256: reference.contentSHA256.rawValue, byteCount: String(reference.byteCount),
+            mediaType: reference.mediaType, storagePath: reference.storagePath)
+    }
+
+    var downloadedImageReference: DownloadedImageObjectReference {
+        get throws {
+            try DownloadedImageObjectReference(accountId: accountId,
+                attachmentId: attachmentId.rawValue, sha256: contentSHA256.rawValue,
+                byteCount: String(byteCount), mediaType: mediaType, storagePath: storagePath)
+        }
+    }
+}
+
+extension AttachmentCapturePowerSyncStore: DownloadedImageCaching {}
+
 public enum AttachmentCapturePowerSyncTable {
     public static let queue = "local_attachment_durability_queue"
     public static let scopeBinding = "local_attachment_durability_scope_binding"
+    // Preserve the existing local table and encrypted evidence on upgrade. It now
+    // caches authorized image objects shared by Account profile and Item readers.
     public static let downloadedLogos = "local_downloaded_account_logos"
 }
 
@@ -472,8 +499,12 @@ actor AttachmentCapturePowerSyncStore:
     }
 
     /// Download caching never creates a locally pending upload or a capture receipt.
-    /// Callers must still authorize the current profile before displaying these bytes.
+    /// Callers must still authorize the current parent reference before displaying bytes.
     func cachedAccountLogo(_ reference: AccountBusinessLogoReference) async throws -> Data? {
+        try await cachedDownloadedImage(reference.downloadedImageReference)
+    }
+
+    func cachedDownloadedImage(_ reference: DownloadedImageObjectReference) async throws -> Data? {
         try await ensureScopeBinding()
         guard reference.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8) else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
@@ -493,6 +524,10 @@ actor AttachmentCapturePowerSyncStore:
     }
 
     func cacheAccountLogo(_ bytes: Data, reference: AccountBusinessLogoReference) async throws {
+        try await cacheDownloadedImage(bytes, reference: reference.downloadedImageReference)
+    }
+
+    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedImageObjectReference) async throws {
         let id = reference.attachmentId.rawValue
         guard inFlight[id] == nil, !cachingAttachmentIDs.contains(id) else {
             throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
@@ -510,12 +545,12 @@ actor AttachmentCapturePowerSyncStore:
         let timestamp = try timestamp(now())
         var repair = false
         do {
-            if try await cachedAccountLogo(reference) == bytes { return }
+            if try await cachedDownloadedImage(reference) == bytes { return }
         } catch AttachmentLocalByteVaultFailure.missingObject {
             // The validated cache manifest survives; normal exclusive promotion
             // can restore the missing file without replacing any existing bytes.
         } catch AttachmentLocalByteVaultFailure.corruptObject {
-            // cachedAccountLogo already validated the exact cache manifest.
+            // cachedDownloadedImage already validated the exact cache manifest.
             // Never overwrite bytes owned by an accepted local upload receipt.
             guard try await existingRow(attachmentIdentifier: reference.attachmentId.rawValue) == nil else {
                 throw AttachmentCapturePowerSyncStoreFailure.corruptBytes
@@ -545,7 +580,7 @@ actor AttachmentCapturePowerSyncStore:
             }
         }
         // Verify durable readback even when another identical download won the insert.
-        guard try await cachedAccountLogo(reference) == bytes else {
+        guard try await cachedDownloadedImage(reference) == bytes else {
             throw AttachmentCapturePowerSyncStoreFailure.corruptBytes
         }
     }

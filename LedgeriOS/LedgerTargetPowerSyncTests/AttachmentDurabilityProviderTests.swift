@@ -41,15 +41,20 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         try await database.close()
     }
 
-    @Test("Downloaded logo survives encrypted restart without pending uploads or orphan classification")
-    func downloadedLogoRestart() async throws {
+    @Test("Downloaded images and legacy logos share encrypted restart without pending uploads or orphans", arguments: [false, true])
+    func downloadedLogoRestart(generic: Bool) async throws {
         let fixture = try Fixture()
         defer { fixture.removeDirectory() }
         let reference = try logoReference()
         let database = try fixture.openDatabase()
         let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
         #expect(try await store.cachedAccountLogo(reference) == nil)
-        try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        if generic {
+            let cache: any DownloadedImageCaching = store
+            try await cache.cacheDownloadedImage(Fixture.bytes, reference: reference.downloadedImageReference)
+        } else {
+            try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
+        }
         try await store.cacheAccountLogo(Fixture.bytes, reference: reference)
         #expect(try await store.cachedAccountLogo(reference) == Fixture.bytes)
         #expect(try await store.pendingCount() == 0)
@@ -62,6 +67,7 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         let reopened = try fixture.openDatabase()
         let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
         #expect(try await restored.cachedAccountLogo(reference) == Fixture.bytes)
+        #expect(try await restored.cachedDownloadedImage(reference.downloadedImageReference) == Fixture.bytes)
         #expect(try await restored.pendingCount() == 0)
         #expect(try await restored.orphanInventory().isEmpty)
         try await reopened.close()

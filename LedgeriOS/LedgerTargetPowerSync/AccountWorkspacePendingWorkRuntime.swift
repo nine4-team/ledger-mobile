@@ -178,11 +178,13 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readDownloadedPropertyManagementReport
     case readDownloadedClientSummaryPhysicalReport
     case readAccountBusinessProfile
+    case loadDownloadedItemImage
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case downloadedProjectItems
     case accountBusinessProfile
+    case itemImages
     case propertyManagementReport
     case clientSummaryPhysicalReport
     case downloadedItemPlacements
@@ -335,7 +337,7 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
         ) async throws -> Void
     var lifecycleEvent: @Sendable (AccountWorkspaceRuntimeLifecycleEvent) -> Void
     var now: @Sendable () -> Date
-    var downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)? = nil
+    var downloadImage: (@Sendable (DownloadedImageObjectReference) async throws -> Data)? = nil
 
     static let live = LedgerPowerSyncLocalBootstrapDependencies(
         accessCoordinator: .shared,
@@ -538,7 +540,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let transferDestinationQuery:
         any AccountWorkspaceTransferDestinationSelectionQuerying
     let attachmentStore: any AccountWorkspaceAttachmentStoring
-    let downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)?
+    let downloadImage: (@Sendable (DownloadedImageObjectReference) async throws -> Data)?
     let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
     let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
     let spaceAssignmentDestinationQuery:
@@ -595,9 +597,9 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         now: @Sendable @escaping () -> Date,
         accessFence: LedgerWorkspaceAccessFence,
         subscribePhysicalItems: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil,
-        downloadAccountLogo: (@Sendable (AccountBusinessLogoReference) async throws -> Data)? = nil
+        downloadImage: (@Sendable (DownloadedImageObjectReference) async throws -> Data)? = nil
     ) {
-        self.downloadAccountLogo = downloadAccountLogo
+        self.downloadImage = downloadImage
         self.subscribePhysicalItems = subscribePhysicalItems
         self.accessFence = accessFence
         self.now = now
@@ -849,6 +851,77 @@ actor AccountWorkspacePendingWorkRuntime {
         streamTasks[id] = task
     }
 
+    func startDownloadedItemImagesWatch(id: UUID, accountId: AccountID, itemId: ItemID,
+        continuation: AsyncThrowingStream<DownloadedItemImageCatalog, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.itemImages)
+                try Task.checkCancellation()
+                let reader = ItemImageCatalogLocalReader(database: resources.structuredDatabase)
+                try await withOwnedSyncStreamWatch(subscribe: {
+                    try await resources.structuredDatabase.syncStream(name: "item_images",
+                        params: ["account_id": .string(accountId.rawValue), "item_id": .string(itemId.rawValue)]).subscribe()
+                }, observe: {
+                    try await reader.run(accountId: accountId, principalId: resources.principalId, itemId: itemId) { value in
+                        await self.forwardStreamValue(value, to: continuation)
+                    }
+                })
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation, error: error) }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func loadDownloadedItemImage(accountId: AccountID, itemId: ItemID,
+        image: DownloadedItemImage, allowDownload: Bool) async throws -> Data? {
+        try await withFiniteLease(.loadDownloadedItemImage) { resources in
+            guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8),
+                  image.itemId.rawValue.utf8.elementsEqual(itemId.rawValue.utf8),
+                  image.object.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8) else {
+                throw DownloadedItemImageFailure.scopeMismatch
+            }
+            let reader = ItemImageCatalogLocalReader(database: resources.structuredDatabase)
+            @Sendable func authorize() async throws {
+                try Task.checkCancellation()
+                guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                let current = try await reader.read(accountId: accountId, principalId: resources.principalId, itemId: itemId)
+                guard current.images.contains(image) else { throw DownloadedItemImageFailure.unavailable }
+                guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            }
+            try await authorize()
+            guard let cache = resources.attachmentStore as? any DownloadedImageCaching else {
+                throw DownloadedItemImageFailure.unavailable
+            }
+            var bytes: Data?
+            do { bytes = try await cache.cachedDownloadedImage(image.object) }
+            catch AttachmentLocalByteVaultFailure.missingObject { }
+            catch AttachmentLocalByteVaultFailure.corruptObject { }
+            try await authorize()
+            if bytes == nil, allowDownload, let download = resources.downloadImage {
+                let downloaded = try await download(image.object)
+                try await authorize()
+                // Cache independently verifies length/hash even for injected
+                // transports. A changed reference cannot authorize admission.
+                try await cache.cacheDownloadedImage(downloaded, reference: image.object)
+                try await authorize()
+                bytes = downloaded
+            }
+            try await authorize()
+            return bytes
+        }
+    }
+
     func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
         try await withFiniteLease(.readAccountBusinessProfile) { resources in
             guard accountId.rawValue.utf8.elementsEqual(resources.accountId.rawValue.utf8) else {
@@ -916,14 +989,14 @@ actor AccountWorkspacePendingWorkRuntime {
                             if let bytes = try await cache?.cachedAccountLogo(reference) { logo = .downloaded(bytes) }
                         } catch is CancellationError { throw CancellationError() }
                         catch { logo = .unavailable }
-                        if case .downloaded = logo {} else if let download = resources.downloadAccountLogo, let cache {
+                        if case .downloaded = logo {} else if let download = resources.downloadImage, let cache {
                             let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
                             guard current.logo == reference else { continue }
                             // Render honest saved metadata while retrieval is in progress.
                             guard await self.forwardStreamValue(AccountBusinessProfile(accountId: accountId,
                                 name: current.name, logo: logo, isStale: true), to: continuation) else { break }
                             do {
-                                let bytes = try await download(reference)
+                                let bytes = try await download(reference.downloadedImageReference)
                                 try Task.checkCancellation()
                                 let current = try await reader.read(accountId: accountId, principalId: resources.principalId)
                                 guard current.logo == reference else { continue }
@@ -1995,7 +2068,7 @@ public enum LedgerPowerSyncLocalBootstrap {
                 now: dependencies.now,
                 accessFence: accessFence,
                 subscribePhysicalItems: dependencies.subscribePhysicalItems,
-                downloadAccountLogo: dependencies.downloadAccountLogo
+                downloadImage: dependencies.downloadImage
             )
             runtimeResources = madeRuntimeResources
 

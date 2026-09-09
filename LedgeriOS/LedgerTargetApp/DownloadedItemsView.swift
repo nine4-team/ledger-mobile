@@ -364,6 +364,7 @@ private struct DownloadedItemHistoryView: View {
     let accountId: AccountID
     let itemId: ItemID
     let reader: any DownloadedItemPlacementHistoryReading
+    @State private var showImages = false
     @Environment(\.dismiss) private var dismiss
     @State private var model = DownloadedItemHistoryModel()
     @State private var refresh = UUID()
@@ -378,6 +379,9 @@ private struct DownloadedItemHistoryView: View {
             HStack {
                 Text("Location history").font(.headline)
                 Spacer()
+                if reader is any DownloadedItemImageReading {
+                    Button("Images") { showImages = true }.accessibilityIdentifier("target-item-images-open")
+                }
                 Button("Done") { dismiss() }.accessibilityIdentifier("target-item-history-done")
             }
             Text("Downloaded locations only. Older moves may be missing. Payments, sales and refunds are not shown here.")
@@ -422,6 +426,11 @@ private struct DownloadedItemHistoryView: View {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
         .onDisappear { model.clear() }
+        .sheet(isPresented: $showImages) {
+            if let imageReader = reader as? any DownloadedItemImageReading {
+                DownloadedItemImagesView(accountId: accountId, itemId: itemId, reader: imageReader)
+            }
+        }
     }
 
     private func location(_ interval: PhysicalItemPlacementHistoryInterval) -> String {

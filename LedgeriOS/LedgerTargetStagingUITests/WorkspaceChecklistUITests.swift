@@ -780,6 +780,37 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(item.exists)
     }
 
+    func testDownloadedItemImageGallery() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app)
+        item.tap()
+        let images = app.buttons["target-item-images-open"]
+        XCTAssertTrue(images.waitForExistence(timeout: 5))
+        images.tap()
+        let rendered = app.images["target-item-image-rendered"]
+        XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
+        let count = app.staticTexts["target-item-images-counter"]
+        XCTAssertTrue(count.label == "1 of 2" || (count.value as? String) == "1 of 2")
+        XCTAssertFalse(app.buttons["target-item-images-previous"].isEnabled)
+        app.buttons["target-item-images-next"].tap()
+        XCTAssertTrue(waitUntil { count.label == "2 of 2" || (count.value as? String) == "2 of 2" })
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-item-images-next"].isEnabled)
+        app.buttons["target-item-images-previous"].tap()
+        XCTAssertTrue(waitUntil { count.label == "1 of 2" || (count.value as? String) == "1 of 2" })
+        app.buttons["target-item-images-done"].tap()
+        XCTAssertTrue(images.waitForExistence(timeout: 5))
+        XCTAssertFalse(rendered.exists)
+    }
+
     func testDownloadedItemGroupsAndImmediateSource() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -863,13 +894,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.images["target-item-bookmark-physical-ui-chair"].exists)
         let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
         func choose(_ facet: String, _ option: String) {
-            reveal(filters, in: app)
+            // MenuButton can report hittable while clipped at the viewport edge;
+            // require a real visible control before opening its native submenu.
+            reveal(filters, in: app, fullyInsideScrollView: true)
             filters.tap()
             #if os(macOS)
+            XCTAssertTrue(app.menuItems[facet].waitForExistence(timeout: 5), app.debugDescription)
             app.menuItems[facet].tap()
+            XCTAssertTrue(app.menuItems[option].waitForExistence(timeout: 5), app.debugDescription)
             app.menuItems[option].tap()
             #else
+            XCTAssertTrue(app.buttons[facet].waitForExistence(timeout: 5), app.debugDescription)
             app.buttons[facet].tap()
+            XCTAssertTrue(app.buttons[option].waitForExistence(timeout: 5), app.debugDescription)
             app.buttons[option].tap()
             #endif
         }

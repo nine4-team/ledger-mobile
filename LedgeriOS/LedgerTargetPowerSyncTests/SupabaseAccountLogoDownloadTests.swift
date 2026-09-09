@@ -17,6 +17,7 @@ struct SupabaseAccountLogoDownloadTests {
         }
         let client = try client()
         #expect(try await client.download(reference) == Data([1, 2, 3]))
+        #expect(try await client.download(reference.downloadedImageReference) == Data([1, 2, 3]))
     }
 
     @Test("Reject HTTP denial, redirect, length mismatch, extra bytes and wrong hash", arguments: [0, 1, 2, 3, 4])
@@ -32,6 +33,9 @@ struct SupabaseAccountLogoDownloadTests {
         }
         let client = try client()
         await #expect(throws: AccountLogoDownloadFailure.self) { try await client.download(reference()) }
+        await #expect(throws: AccountLogoDownloadFailure.self) {
+            try await client.download(reference().downloadedImageReference)
+        }
     }
 
     @Test("Unsafe endpoint, secret key, service token and oversized evidence fail before HTTP")

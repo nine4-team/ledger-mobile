@@ -11,6 +11,9 @@ public enum LedgerPowerSyncTable {
     public static let budgetCategories = "spike_budget_categories"
     public static let spaces = "spike_spaces"
     public static let items = "spike_items"
+    public static let itemImageSets = "item_image_sets"
+    public static let itemImageReferences = "item_image_references"
+    public static let itemImageObjects = "item_image_objects"
     public static let itemPlacements = "spike_item_placements"
     public static let itemClientPaymentConnections = "item_client_payment_connections"
     public static let itemChargeOccurrences = "item_charge_occurrences"
@@ -68,6 +71,13 @@ public enum LedgerPowerSyncSchema {
                       .text("created_at"), .text("created_by_principal_id")],
             indexes: [.ascending(name: "item_account", columns: ["account_id"])]
         ),
+        Table(name: LedgerPowerSyncTable.itemImageSets, columns: [.text("account_id"),.text("item_id"),
+            .text("revision"),.integer("expected_count")]),
+        Table(name: LedgerPowerSyncTable.itemImageReferences, columns: [.text("account_id"),.text("item_id"),
+            .text("attachment_id"),.text("set_revision"),.integer("position"),.integer("is_primary")],
+            indexes: [.ascending(name: "image_reference_item", columns: ["account_id","item_id"])]),
+        Table(name: LedgerPowerSyncTable.itemImageObjects, columns: [.text("account_id"),.text("content_sha256"),
+            .text("byte_count"),.text("media_type"),.text("storage_path")]),
         Table(
             name: LedgerPowerSyncTable.itemPlacements,
             columns: [.text("account_id"), .text("item_id"), .text("scope_kind"),

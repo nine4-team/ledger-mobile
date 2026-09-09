@@ -479,7 +479,34 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading {
+    private var imageBytes: Data {
+        Data(base64Encoded: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")!
+    }
+    func watchDownloadedItemImages(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemImageCatalog, Error> {
+        AsyncThrowingStream { continuation in
+            do {
+                let populated = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-images")
+                let hash = try AttachmentContentSHA256.make(bytes: imageBytes).rawValue
+                let images: [DownloadedItemImage] = try (populated ? [0, 1] : []).map { index in
+                    let id = "fixture-image-\(index)"
+                    let object = try DownloadedImageObjectReference(accountId: accountId, attachmentId: id,
+                        sha256: hash, byteCount: String(imageBytes.count), mediaType: "image/gif",
+                        storagePath: "accounts/\(accountId.rawValue)/attachments/\(id)/\(hash)")
+                    return try .init(referenceId: .init(validating: "fixture-reference-\(index)"), itemId: itemId,
+                        object: object, position: index, isPrimary: index == 0, setRevision: 1)
+                }
+                continuation.yield(try .init(accountId: accountId, itemId: itemId, isComplete: true, images: images))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    func loadDownloadedItemImage(accountId: AccountID, itemId: ItemID,
+        image: DownloadedItemImage, allowDownload: Bool) async throws -> Data? {
+        guard image.itemId == itemId, image.object.accountId == accountId else {
+            throw DownloadedItemImageFailure.scopeMismatch
+        }
+        return imageBytes
+    }
     func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<DownloadedProjectItems, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {

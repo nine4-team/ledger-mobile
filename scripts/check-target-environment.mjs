@@ -609,6 +609,7 @@ if (
     "createClient",
     "createProject",
     "encryptionCipher",
+    "loadDownloadedItemImage",
     "pendingUploadCount",
     "pendingWorkSummary",
     "readAccountBusinessProfile",
@@ -626,6 +627,7 @@ if (
     "watchClientArchiveOperation",
     "watchClientSummaryPhysicalReport",
     "watchClients",
+    "watchDownloadedItemImages",
     "watchDownloadedItemPlacementHistory",
     "watchDownloadedItemPlacements",
     "watchDownloadedProjectItems",
@@ -2497,6 +2499,7 @@ if (
     ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
   ].map((match) => match[1]);
   const expectedStreamNames = [
+    "item_images",
     "account_business_profile",
     "property_management_report",
     "physical_account_items",
@@ -3067,7 +3070,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
     )
   ) {
     fail(
@@ -3379,7 +3382,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
     )
   ) {
     fail(
