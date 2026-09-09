@@ -250,6 +250,14 @@ function validateTargetJob(lines) {
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
   requireCondition(target.join("\n").includes(nativeUIClipboardStep),
     "native UI Copy verification requires its exact isolated test-runner flag");
+  const iosUI = commandsForNamedStep(target, "Exercise iOS workspace and report UI").join("\n");
+  const iosSelections = iosUI.match(/-only-testing:[^\s\\]+/g) ?? [];
+  requireCondition(iosSelections.length === 1
+    && iosSelections[0] === "-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests"
+    && !iosUI.includes("-skip-testing:"),
+  "iOS UI must run the whole platform-compatible workspace test class without exclusions");
+  requireCondition(iosUI.includes("TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild"),
+    "iOS UI Copy verification requires its isolated test-runner flag");
   for (const command of [
     "          node --check scripts/check-target-environment.mjs",
     "          npm run target:environment:check",

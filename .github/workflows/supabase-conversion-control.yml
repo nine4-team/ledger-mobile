@@ -114,7 +114,7 @@ jobs:
       - name: Build target staging for iOS Simulator
         run: npm run target:staging:build:ios
 
-      - name: Exercise iOS Property Management report UI
+      - name: Exercise iOS workspace and report UI
         run: |
           report_device_id="$(xcrun simctl list devices available -j | node --input-type=module -e '
             let input=""; for await (const chunk of process.stdin) input+=chunk;
@@ -128,22 +128,8 @@ jobs:
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
             -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testAccountSettingsDownloadedProfileRefreshAndDismiss \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testClientSummaryPhysicalPreviewAndIncompleteShare \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementEmptyAndUnavailableStates \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementExportFailureAllowsRetry \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementPreviewRefreshAndDismiss \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSSystemDialogCancellation \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testProjectSpaceChecklistInteraction \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFSelectionCancellation \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFIOSLoadedReview \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFIOSFailureAndEmptyStates \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testVendorPDFRemovalClosesLoadedReview \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testInventoryNavigationAndRememberedSection \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testInventorySpaceChecklistInteraction \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testLegacyProjectNotesRemainSeparate \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
-            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSCopyCompletion test
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test
 
       - name: Preserve failed native UI test evidence
         if: failure()

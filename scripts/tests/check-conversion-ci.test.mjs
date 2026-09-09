@@ -28,6 +28,20 @@ function expectFailure(mutate, pattern) {
   assert.throws(() => validateConversionCI(value.packageJson, value.workflow), pattern);
 }
 
+test("iPhone UI cannot silently omit new Item or report interactions", () => {
+  const selector = "-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test";
+  for (const replacement of [
+    "-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testPropertyManagementIOSPDFCopyCompletion test",
+    "-skip-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/testDownloadedItemsRefreshAndRemoval " + selector,
+  ]) {
+    expectFailure(value => { value.workflow = value.workflow.replace(selector, replacement); },
+      /iOS UI must run the whole/);
+  }
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild", "xcodebuild");
+  }, /iOS UI Copy verification requires its isolated/);
+});
+
 test("report parity cannot silently lose its same-commit fixture", () => {
   expectFailure(value => {
     value.workflow = value.workflow.replace("          name: report-parity-${{ github.sha }}", "          name: report-parity-unbound");

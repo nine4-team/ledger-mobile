@@ -475,8 +475,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
     }
 
-    func testPropertyManagementIOSCopyCompletion() throws {
+    func testPropertyManagementIOSPDFCopyCompletion() throws {
         executionTimeAllowance = 120
+        try exercisePropertyManagementIOSCopy(identifier: "target-property-report-share", expectedPayload: "PDF content received")
+    }
+
+    func testPropertyManagementIOSCSVCopyCompletion() throws {
+        executionTimeAllowance = 120
+        try exercisePropertyManagementIOSCopy(identifier: "target-property-report-csv", expectedPayload: "CSV content received")
+    }
+
+    private func exercisePropertyManagementIOSCopy(identifier: String, expectedPayload: String) throws {
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
             throw XCTSkip("Native Copy completion uses only the isolated CI simulator clipboard")
         }
@@ -494,33 +503,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
         let busy = app.descendants(matching: .any).matching(identifier: "target-property-report-exporting").firstMatch
         let failure = app.descendants(matching: .any).matching(identifier: "target-property-report-export-error").firstMatch
-        for identifier in ["target-property-report-share", "target-property-report-csv"] {
-            UIPasteboard.general.items = []
-            reveal(openReport, in: app)
-            openReport.tap()
-            XCTAssertTrue(app.staticTexts["Business logo unavailable. Refresh to try again."].waitForExistence(timeout: 5))
-            let button = app.buttons[identifier]
-            XCTAssertTrue(button.waitForExistence(timeout: 5))
-            XCTAssertTrue(button.isEnabled)
-            button.tap()
-            let copy = app.otherElements["ActivityListView"].cells["Copy"].firstMatch
-            XCTAssertTrue(copy.waitForExistence(timeout: 10), app.debugDescription)
-            copy.tap()
-            // Each AX query can wait for a fresh hierarchy during dismissal.
-            // Do not spend one predicate deadline fetching three snapshots.
-            XCTAssertTrue(copy.waitForNonExistence(timeout: 5), app.debugDescription)
-            XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
-            XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
-            XCTAssertFalse(failure.exists)
-            let isPDF = identifier == "target-property-report-share"
-            app.buttons["Done"].tap()
-            let paste = app.buttons["target-ui-fixture-paste-report"]
-            XCTAssertTrue(paste.waitForExistence(timeout: 5))
-            XCTAssertTrue(paste.isEnabled)
-            paste.tap()
-            let result = app.staticTexts["target-ui-fixture-paste-result"]
-            XCTAssertTrue(waitUntil { result.label == (isPDF ? "PDF content received" : "CSV content received") }, app.debugDescription)
-        }
+        UIPasteboard.general.items = []
+        openReport.tap()
+        XCTAssertTrue(app.staticTexts["Business logo unavailable. Refresh to try again."].waitForExistence(timeout: 5))
+        let button = app.buttons[identifier]
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        XCTAssertTrue(button.isEnabled)
+        button.tap()
+        let copy = app.otherElements["ActivityListView"].cells["Copy"].firstMatch
+        XCTAssertTrue(copy.waitForExistence(timeout: 10), app.debugDescription)
+        copy.tap()
+        // Each AX query can wait for a fresh hierarchy during dismissal.
+        // Do not spend one predicate deadline fetching three snapshots.
+        XCTAssertTrue(app.otherElements["ActivityListView"].firstMatch.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(busy.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(waitUntil { button.isEnabled }, app.debugDescription)
+        XCTAssertFalse(failure.exists)
+        app.buttons["Done"].tap()
+        let paste = app.buttons["target-ui-fixture-paste-report"]
+        XCTAssertTrue(paste.waitForExistence(timeout: 5))
+        XCTAssertTrue(paste.isEnabled)
+        paste.tap()
+        let result = app.staticTexts["target-ui-fixture-paste-result"]
+        XCTAssertTrue(waitUntil { result.label == expectedPayload }, app.debugDescription)
         XCTAssertTrue(openReport.waitForExistence(timeout: 5))
     }
     #endif
