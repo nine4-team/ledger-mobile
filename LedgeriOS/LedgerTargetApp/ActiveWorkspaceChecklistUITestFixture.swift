@@ -573,7 +573,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         let unassigned = try PhysicalItemPlacement(itemId: ItemID(validating: "physical-ui-unassigned"),
             description: "Unassigned test Item", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil,
-            createdAt: Date(timeIntervalSince1970: 2))
+            sku: "SKU-UNASSIGNED", createdAt: Date(timeIntervalSince1970: 2))
         return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row, elsewhere, unassigned])
     }
 }

@@ -13,6 +13,7 @@ struct DownloadedItemsView: View {
     @State private var selectedItem: ItemSelection?
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
+    @State private var filters = DownloadedItemFilters()
     @State private var collapsedSections: Set<ProjectItemAccountingResolution> = []
     @FocusState private var searchFocused: Bool
 
@@ -48,6 +49,15 @@ struct DownloadedItemsView: View {
             }
             .pickerStyle(.menu)
             .accessibilityIdentifier("target-items-sort")
+            Menu("Filter Items") {
+                facetMenu("Name", selection: $filters.name)
+                facetMenu("SKU", selection: $filters.sku)
+            }
+            .accessibilityIdentifier("target-items-filters")
+            if filters.isActive {
+                Button("Clear filters") { filters = .init() }
+                    .accessibilityIdentifier("target-items-filters-clear")
+            }
             if !search.isEmpty {
                 Button("Clear search") { search = ""; searchFocused = false }
                     .accessibilityIdentifier("target-items-search-clear")
@@ -59,9 +69,9 @@ struct DownloadedItemsView: View {
                 Text("Item data is unavailable or incomplete. Reconnect and try again.")
                     .accessibilityIdentifier("target-items-unavailable")
             case .downloaded(let snapshot):
-                let rows = snapshot.rows(in: spaceId, matching: search, order: order)
+                let rows = snapshot.rows(in: spaceId, matching: search, order: order, filters: filters)
                 if snapshot.accountId == accountId, snapshot.scope == scope {
-                    Text(search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    Text(search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !filters.isActive
                         ? "Downloaded Items: \(rows.count)"
                         : "Matching Items: \(rows.count) of \(snapshot.rows(in: spaceId).count) downloaded")
                         .font(.caption)
@@ -71,7 +81,7 @@ struct DownloadedItemsView: View {
                     ProgressView("Loading downloaded Items…")
                 } else if rows.isEmpty {
                     if !snapshot.rows(in: spaceId).isEmpty {
-                        Text("No downloaded Items match this search.")
+                        Text("No downloaded Items match this search or these filters.")
                             .accessibilityIdentifier("target-items-no-match")
                     } else {
                         Text("No Item placements are downloaded for this location yet.")
@@ -114,6 +124,22 @@ struct DownloadedItemsView: View {
         }
     }
 
+    private func facetMenu(_ title: String, selection: Binding<DownloadedItemFacetSelection>) -> some View {
+        Menu(title) {
+            Button("All") { selection.wrappedValue = .all }
+            Button("None") { selection.wrappedValue = .only([]) }
+            Divider()
+            ForEach(["has", "missing"], id: \.self) { value in
+                Toggle(value == "has" ? "Has \(title)" : "No \(title)", isOn: Binding(
+                    get: { selection.wrappedValue.includes(value) },
+                    set: { desired in
+                        if desired != selection.wrappedValue.includes(value) { selection.wrappedValue.toggle(value) }
+                    }
+                ))
+            }
+        }
+    }
+
     @ViewBuilder
     private func accountingGroup(_ title: String, resolution: ProjectItemAccountingResolution,
                                  rows: [PhysicalItemPlacement]) -> some View {
@@ -121,17 +147,23 @@ struct DownloadedItemsView: View {
             (model.accounting?.rows ?? []).map { ($0.evidence.itemId, $0.resolution) })
         let matching = rows.filter { (resolutions[$0.itemId] ?? .relationshipEvidenceIncomplete) == resolution }
         if !matching.isEmpty {
-            DisclosureGroup(isExpanded: Binding(
-                get: { !collapsedSections.contains(resolution) },
-                set: { if $0 { collapsedSections.remove(resolution) } else { collapsedSections.insert(resolution) } }
-            )) {
-                ForEach(matching, id: \.itemId) { row in itemButton(row) }
+            // Native DisclosureGroup loses its content inside the macOS List
+            // cell that embeds this view. Keep the expansion control and rows
+            // explicit so both platforms expose the same real controls.
+            Button {
+                if !collapsedSections.insert(resolution).inserted { collapsedSections.remove(resolution) }
             } label: {
-                Text("\(title) (\(matching.count))")
-                    .font(.subheadline).bold()
-                    .accessibilityIdentifier("target-items-section-\(resolution.rawValue)")
+                HStack {
+                    Image(systemName: collapsedSections.contains(resolution) ? "chevron.right" : "chevron.down")
+                    Text("\(title) (\(matching.count))").font(.subheadline).bold()
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityValue(collapsedSections.contains(resolution) ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("target-items-group-\(resolution.rawValue)")
+            if !collapsedSections.contains(resolution) {
+                ForEach(matching, id: \.itemId) { row in itemButton(row) }
+            }
         }
     }
 
@@ -149,6 +181,7 @@ struct DownloadedItemsView: View {
         selectedItem = nil
         search = ""
         order = .newest
+        filters = .init()
         collapsedSections = []
         searchFocused = false
     }

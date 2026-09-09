@@ -794,9 +794,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 || (item.value as? String) == "Downloaded test chair"
         })
         XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
-        XCTAssertTrue(app.staticTexts["target-items-section-accountedFor"].exists)
-        XCTAssertTrue(app.staticTexts["target-items-section-relationshipEvidenceIncomplete"].exists)
-        XCTAssertFalse(app.staticTexts["target-items-section-unaccountedFor"].exists)
+        XCTAssertTrue(app.buttons["target-items-group-accountedFor"].exists)
+        XCTAssertTrue(app.buttons["target-items-group-relationshipEvidenceIncomplete"].exists)
+        XCTAssertFalse(app.buttons["target-items-group-unaccountedFor"].exists)
         let itemSearch = app.textFields["target-items-search"]
         reveal(itemSearch, in: app)
         itemSearch.tap()
@@ -809,12 +809,22 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["target-items-search-clear"].tap()
         reveal(item, in: app)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
-        let unknownGroup = "target-items-group-relationshipEvidenceIncomplete"
+        let itemFilters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        reveal(itemFilters, in: app)
+        itemFilters.tap()
         #if os(macOS)
-        let disclosure = app.disclosureTriangles[unknownGroup]
+        app.menuItems["SKU"].tap()
+        app.menuItems["No SKU"].tap()
         #else
-        let disclosure = app.buttons[unknownGroup]
+        app.buttons["SKU"].tap()
+        app.buttons["No SKU"].tap()
         #endif
+        XCTAssertTrue(item.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["target-physical-item-physical-ui-unassigned"].exists)
+        app.buttons["target-items-filters-clear"].tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        let unknownGroup = "target-items-group-relationshipEvidenceIncomplete"
+        let disclosure = app.buttons[unknownGroup]
         reveal(disclosure, in: app)
         XCTAssertTrue(disclosure.waitForExistence(timeout: 5), app.debugDescription)
         disclosure.tap()

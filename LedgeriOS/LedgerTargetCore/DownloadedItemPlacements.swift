@@ -35,6 +35,44 @@ public enum DownloadedItemOrder: String, CaseIterable, Sendable {
     case nameAscending = "Name A–Z", nameDescending = "Name Z–A"
 }
 
+/// Same All/None-then-toggle interaction as the shared Item facets. Keep Only
+/// distinct from All-except so selection intent survives changing option sets.
+public enum DownloadedItemFacetSelection: Equatable, Sendable {
+    case all, only(Set<String>), allExcept(Set<String>)
+
+    public func includes(_ value: String) -> Bool {
+        switch self {
+        case .all: true
+        case .only(let values): values.contains(value)
+        case .allExcept(let values): !values.contains(value)
+        }
+    }
+
+    public mutating func toggle(_ value: String) {
+        switch self {
+        case .all: self = .allExcept([value])
+        case .only(var values):
+            if !values.insert(value).inserted { values.remove(value) }
+            self = .only(values)
+        case .allExcept(var values):
+            if !values.insert(value).inserted { values.remove(value) }
+            self = values.isEmpty ? .all : .allExcept(values)
+        }
+    }
+}
+
+public struct DownloadedItemFilters: Equatable, Sendable {
+    public var name: DownloadedItemFacetSelection = .all
+    public var sku: DownloadedItemFacetSelection = .all
+    public init() {}
+    public var isActive: Bool { name != .all || sku != .all }
+
+    public func includes(_ row: PhysicalItemPlacement) -> Bool {
+        name.includes(row.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
+            && sku.includes((row.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
+    }
+}
+
 /// This query reports downloaded rows, never authoritative inventory totals or
 /// accounting completeness. A missing row may simply not have downloaded yet.
 public struct DownloadedItemPlacements: Equatable, Sendable {
@@ -62,11 +100,12 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
 
     /// Search only downloaded descriptive fields. Unknown creation dates sort
     /// last in both directions; missing evidence is never a fabricated date.
-    public func rows(in spaceId: SpaceID?, matching query: String, order: DownloadedItemOrder) -> [PhysicalItemPlacement] {
+    public func rows(in spaceId: SpaceID?, matching query: String, order: DownloadedItemOrder,
+                     filters: DownloadedItemFilters = .init()) -> [PhysicalItemPlacement] {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return rows(in: spaceId).filter { row in
-            term.isEmpty || [row.displayName, row.description, row.sku ?? ""]
-                .contains { $0.localizedCaseInsensitiveContains(term) }
+            filters.includes(row) && (term.isEmpty || [row.displayName, row.description, row.sku ?? ""]
+                .contains { $0.localizedCaseInsensitiveContains(term) })
         }.sorted { lhs, rhs in
             switch order {
             case .newest, .oldest:

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 338,
+  "stateVersion": 341,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -10,23 +10,23 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "CLIENT-SUMMARY-CATEGORY-BOTH-PLATFORMS-GREEN",
-    "commit": "27355441eaf1ec1dc2c934f1308941af7c5a856d",
-    "ciRun": 34316890317,
+    "name": "CHARGE-REPORT-BOTH-PLATFORMS-GREEN",
+    "commit": "af7ff57d959894f147bf14cf2953eff55ed4a614",
+    "ciRun": 34321387603,
     "ciStatus": "passed",
-    "meaning": "Exact CI green:752 database checks,997 native tests/148 suites,17 Mac UI and15 iPhone UI tests,both builds. Client Summary preview/incomplete Share passed on both platforms. Newer be7060fd MCP integration has its own live CI; business-paid eligibility, hosted/hardware/migration/cutover remain incomplete."
+    "meaning": "Exact CI passed803 database checks,1002 native tests148 suites,17MacUI,15iPhoneUI and both builds. Shared Client-paid/open/frozen charge report evidence verified. Newer Item browsing and interactions have separate live CI. Hosted/hardware, Item writes, migration and cutover remain incomplete."
   },
   "activeWorkflow": {
-    "id": "client-summary-physical-readback",
+    "id": "active-workspace-to-space-checklist",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Item browsing interaction follow-on ready to commit: native UI test selects all4sort choices, checks actual row order and collapses/reopens unknown section; stable fixture dates and group accessibility identifier added. Full app typecheck and Mac/iPhone XCTest typechecks pass (/tmp/ledger-item-ui-{typecheck,ios-typecheck}.log). Reuse unchanged1018native151suite evidence; no domain/provider edits. Run conversion:check directly, commit/push and follow exact automatic CI. UI selectors/order assertions remain unverified until real execution.",
-      "67c433b2 checkpoint repair CI34324450033 confirmed live in environment validation;5538ef14 atomic Project Item CI34323220368 live in Mac UI;af7ff57d charge/report CI34321387603 live in iPhone UI. Follow exact runs, no redispatch.686939fe CI34324276727 terminal saved-state gate failure fixed in67c433b2, no native failure. Checklist active-workspace review owns Item evidence; keep client-summary active scope until new green baseline excludes prior MCP diff. Broad Item facets/cards/detail/selection/writes unfinished.",
-      "be7060fd CI34318832216 terminal14/15iPhone failure: stale XCUI snapshot, /tmp/ledger-profile-ci-34318832216.hq4i3n. Test now waits report-ready then directly asserts Share enabled; no app eligibility change. Do not poll terminal runs. O016/O027/O065 scoped Item-writing questions remain unanswered; continue independent approved work. Live Invoice membership still must extend report readers before Invoice workflow ships.",
-      "Local schema manually applied without history through064122 INCLUDING060126. Prior803DB/1002native,9two-session races+6isolation,97stream captures,actual HTTP/native report parity remain valid for unchanged backend. No hosted/hardware/migration/cutover readiness. Disk~670MiB: avoid large builds/downloads and preserve existing artifacts."
+      "Current checkpoint replaces broken native DisclosureGroup with explicit expansion buttons/rows and adds Name/SKU facets (All/Only/All-except, OR within/AND across, clear/reset). Independent review GO;5focused and1020native151suites passed, app/Mac+iPhone XCTest typechecks and environment passed. UI test covers SKU exclusion/Clear, search, four sorts and collapse/reopen. Commit/push scoped batch and follow its single automatic exact-commit CI; real UI correction remains unverified.",
+      "34324450033/67c433b2 and34324884277/a491d1a6 TERMINAL FAILED: same two Mac Item tests, labels rendered but no Item rows in embedded List cell. Current explicit-button fix addresses observed rendering, not weakened assertions. iPhone skipped.34323220368/5538ef14 still live, iPhone started07:44:33UTC. Do not poll terminal runs or redispatch.",
+      "O016/O027/O065 Item-write decisions unanswered; do not invent approval. Continue approved read-only Item behavior; additional facets/cards/detail/selection/writes unfinished. Live Invoice membership must extend report readers before Invoice workflow ships. No broad Item completion claim.",
+      "Baseline af7ff57d whole-green recorded above. Local schema manually applied through064122 INCLUDING060126; prior803DB,9two-session races+6isolation,97stream captures,HTTP/native parity valid for unchanged backend. Hosted/hardware/migration/cutover incomplete. Disk~565MiB: avoid large builds/downloads; preserve artifacts."
     ]
   },
   "blockers": [],

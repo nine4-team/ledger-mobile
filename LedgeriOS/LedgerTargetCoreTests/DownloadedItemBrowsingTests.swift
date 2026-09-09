@@ -4,6 +4,46 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("All-except and Only preserve intent when values appear later")
+    func facetModes() {
+        var selection = DownloadedItemFacetSelection.all
+        selection.toggle("has")
+        #expect(selection == .allExcept(["has"]))
+        #expect(selection.includes("missing"))
+        #expect(selection.includes("later"))
+        selection.toggle("has")
+        #expect(selection == .all)
+        selection = .only([])
+        #expect(!selection.includes("has"))
+        selection.toggle("has")
+        #expect(selection.includes("has"))
+        #expect(!selection.includes("missing"))
+        #expect(!selection.includes("later"))
+        selection.toggle("has")
+        #expect(selection == .only([]))
+    }
+
+    @Test("Facets use OR within and AND across, intersecting search and Space")
+    func descriptiveFilters() throws {
+        let value = try snapshot()
+        var filters = DownloadedItemFilters()
+        filters.name = .only(["has"])
+        filters.sku = .only(["has"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["b"])
+        #expect(value.rows(in: try SpaceID(validating: "room"), matching: "", order: .newest, filters: filters).isEmpty)
+        #expect(value.rows(in: nil, matching: "chair", order: .newest, filters: filters).isEmpty)
+        filters.sku = .all
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).count == 2)
+        filters.name = .only(["has", "missing"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).count == 3)
+        filters.name = .allExcept(["has"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["c"])
+        #expect(filters.isActive)
+        filters = .init()
+        #expect(!filters.isActive)
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).count == 3)
+    }
+
     @Test("Canonical name wins, including empty name; legacy description remains searchable")
     func namesAndSearch() throws {
         let value = try snapshot()
