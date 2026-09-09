@@ -46,6 +46,9 @@ enum ClientSummaryPhysicalReportLocalReader {
         return try transaction.getAll(sql: """
             SELECT placement.id AS placement_id, placement.account_id,
               placement.scope_kind, placement.space_id,
+              assignment.id AS category_assignment_id, assignment.account_id AS category_account,
+              assignment.project_id AS category_project, assignment.item_id AS category_item,
+              category.id AS category_id, category.display_name AS category_name,
               item.id AS item_id, item.name, item.description, item.sku,
               item.revision, typeof(item.revision) AS revision_type,
               (SELECT count(*) FROM spike_item_placements other
@@ -53,9 +56,16 @@ enum ClientSummaryPhysicalReportLocalReader {
             FROM spike_item_placements placement
             LEFT JOIN spike_items item
               ON item.id=placement.item_id AND item.account_id=placement.account_id
+            LEFT JOIN spike_item_project_categories assignment ON assignment.id=placement.id
+            LEFT JOIN spike_budget_categories category ON category.id=assignment.category_id
+              AND category.account_id=assignment.account_id
+              AND (category.visibility_class='ordinary' OR EXISTS(
+                SELECT 1 FROM spike_account_memberships membership
+                WHERE membership.account_id=assignment.account_id AND membership.principal_id=?
+                  AND membership.state='active' AND membership.financial_access='full'))
             WHERE placement.project_id=? AND placement.ended_at IS NULL
             ORDER BY placement.item_id, placement.id
-            """, parameters: [projectId.rawValue]) { cursor in
+            """, parameters: [principalId.rawValue, projectId.rawValue]) { cursor in
                 guard try cursor.getString(name: "account_id") == accountId.rawValue,
                       try cursor.getString(name: "scope_kind") == "project",
                       try cursor.getInt(name: "active_count") == 1,
@@ -64,12 +74,25 @@ enum ClientSummaryPhysicalReportLocalReader {
                       try cursor.getString(name: "revision_type") == "integer" else {
                     throw ClientSummaryPhysicalReportLocalReadFailure.malformedItem
                 }
+                var category: ClientSummaryPhysicalReportCategory = .unavailable
+                if try cursor.getStringOptional(name: "category_assignment_id") != nil {
+                    guard try cursor.getStringOptional(name: "category_account") == accountId.rawValue,
+                          try cursor.getStringOptional(name: "category_project") == projectId.rawValue,
+                          try cursor.getStringOptional(name: "category_item") == itemId else {
+                        throw ClientSummaryPhysicalReportLocalReadFailure.malformedItem
+                    }
+                    if let id = try cursor.getStringOptional(name: "category_id"),
+                       let name = try cursor.getStringOptional(name: "category_name"),
+                       !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        category = .known(categoryId: try BudgetCategoryID(validating: id), name: name)
+                    }
+                }
                 return try ClientSummaryPhysicalReportItem(accountId: accountId, projectId: projectId,
                     itemId: ItemID(validating: itemId),
                     placementId: EntityID(validating: cursor.getString(name: "placement_id")),
                     spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
                     name: cursor.getStringOptional(name: "name") ?? cursor.getStringOptional(name: "description") ?? "",
-                    sku: cursor.getStringOptional(name: "sku"), category: .unavailable,
+                    sku: cursor.getStringOptional(name: "sku"), category: category,
                     itemRevision: UInt64(revision),
                     accounting: accounting[EntityID(validating: cursor.getString(name: "placement_id"))])
             }

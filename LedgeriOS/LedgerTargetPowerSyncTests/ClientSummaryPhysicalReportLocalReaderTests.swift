@@ -10,6 +10,32 @@ struct ClientSummaryPhysicalReportLocalReaderTests {
     private let principal = try! PrincipalID(validating: "summary-principal")
     private let project = try! ProjectID(validating: "summary-project")
 
+    @Test func physicalCategoryCompletesReportAndRevalidatesChanges() async throws {
+        try await withDatabase { db in
+            try await installPaymentFixture(db)
+            for sql in [
+                "INSERT INTO spike_budget_categories(id,account_id,display_name,visibility_class,lifecycle,revision) VALUES('furnishings','summary-account','Archived furnishings','ordinary','archived',1)",
+                "INSERT INTO spike_item_project_categories(id,account_id,project_id,item_id,category_id,revision) VALUES('placement','summary-account','summary-project','chair','furnishings',1)"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            func report() async throws -> ClientSummaryPhysicalReportSnapshot {
+                try await PropertyManagementReportPowerSyncQuery(database: db)
+                    .readDownloadedClientSummary(accountId: account, principalId: principal,
+                        projectId: project, asOf: .init(validating: 1_800_000_000_000))
+            }
+            let first = try await report()
+            #expect(first.isComplete && first.items.count == 1)
+            #expect(first.items.first?.category == .known(categoryId: try BudgetCategoryID(validating: "furnishings"), name: "Archived furnishings"))
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET display_name='Renamed category',revision=2", parameters: nil)
+            #expect(try await report().reference != first.reference)
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='company_financial'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            #expect(try await readItems(db).first?.category == .unavailable)
+            #expect(try await report().isComplete == false)
+            _ = try await db.execute(sql: "UPDATE spike_item_project_categories SET item_id='wrong-item'", parameters: nil)
+            await #expect(throws: ClientSummaryPhysicalReportLocalReadFailure.malformedItem) { try await readItems(db) }
+        }
+    }
+
     @Test func preservesArchivedClientNameAndRevision() async throws {
         try await withDatabase { db in
             let client = try await read(db)

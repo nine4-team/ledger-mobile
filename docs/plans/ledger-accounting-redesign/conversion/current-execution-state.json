@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 320,
+  "stateVersion": 322,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-08",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Implement correctly eligible Client Summary physical detail and repair the shared Property Management eligibility gap before report completion.",
     "nextActions": [
-      "Report increment ready for normal commit/automatic PR CI: inspect HEAD first, do not duplicate a commit/push/run if already completed. New iPhone Client Summary UI test is included but unexecuted. Existing cfc7 CI does not cover this batch. Continue business-paid Item evidence/category integration after this checkpoint; category configuration and writer policies must follow existing decisions, never infer from financial allocations.",
-      "Native/online Client-paid report evidence now agrees on actual SQL stream rows: artifact tmp/report-payment-parity.JoBrH4/actual.json; /tmp/ledger-report-payment-native-parity.log passed. Real local MCP/HTTP passed incl immediate financial downgrade, removal/restoration and bad JWT.29 RPC SQL +23 relationship tests pass; independent review no blocking findings; advisors clear. Narrow column SELECT/current/full RLS only, no accounting writer. Six report stream projections; real parser35 queries/17 outputs and environment check pass.",
-      "Integrated native996 tests/148 suites had only2 CSV fixture failures; repaired and3 focused CSV pass, other994 passed. Full MCP46 and conversion checks pass. Full local DB found missing already-committed migrations plus test count/TRUNCATE expectations; applied missing baseline schema without reset and all6 affected suites216 checks pass (/tmp/ledger-report-db-repaired-tests.log). No need rerun to resume; automatic clean CI still required.",
-      "Local DB all recent schema now present but manual applications did NOT insert migration history: 20260908 035218/054221 previously present; 172150,173157,190139,192948,194745,200541,213000 and20260909 020752/052817 manually applied. Do not blindly migration-up/reapply/reset. Docker healthy;~2.5GiB disk, preserve diagnostics/avoid full local Xcode build. Missing hosted private replication and UI runtime proof remain explicit. O057/O033/O027/O065/O053/O032/O060 affected work gated. Audit complete."
+      "Category report increment prepared for commit; inspect HEAD/run first to avoid duplicate work. Prior5c3a1639 CI34315667293 TERMINAL FAILURE: sole reported stream test expected removed Client created_at/updated_at. Corrected with8-query contract in current batch. Next normal automatic CI should reach native/iPhone tests. Continue business-paid Item source afterwards; no hosted provisioning or policy guesses.",
+      "Current category source/read implemented: spike_item_project_categories exact placement/Account category metadata, existing category visibility and archived label retention; no writer grants. Native full Client-paid Client Summary becomes complete, renames bind identity and downgrade hides retained labels.8 actual SQL streams/real MCP HTTP/native differential passed (tmp/report-category-parity.TSVrzx/actual.json).37 actual PowerSync queries/18outputs compile; environment passed. Independent review no blocking read findings; row-lock correction plus rollback-only concurrency test passed.",
+      "Integrated DB752 tests passed;12 focused category checks pass after lock-only trigger improvement. Full native997 had one note-pagination assertion racing watch registration; corrected to assert actual page reads,13 focused note tests pass (/tmp/ledger-category-note-race-fix.log). Other996 passed incl actual Client Summary source test. Conversion check passed. No need rerun all suites to resume. iPhone UI, business-paid source, Client Summary MCP and hosted replication remain incomplete.",
+      "Local DB current schema manually applied WITHOUT migration history through20260909054104; guard_item_project_category replaced after adding placement lock. Earlier20260908 post024101 migrations also manually applied. Do not blindly migration-up/reapply/reset. Docker healthy,~2.5GiB disk; preserve diagnostic artifacts and avoid full local Xcode builds. A-033 records category separation/history/correction boundary. Pending O057/O033/O027/O065/O053/O032/O060 affect only linked outcomes. Audit complete."
     ]
   },
   "blockers": [],

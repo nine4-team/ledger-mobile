@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { createHmac, randomUUID } from 'node:crypto';
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { Client } from '../LedgerTargetMCP/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js';
@@ -22,6 +22,31 @@ assert.equal(endpoint.protocol, 'http:');
 assert.ok(['localhost', '127.0.0.1'].includes(endpoint.hostname));
 const sql = text => execFileSync('docker', ['exec', '-i', container, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'],
   { input: text, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+// Reuse this script's fixed synthetic placement. Both attempted changes roll
+// back; the test adds no history and never needs to defeat retention triggers.
+async function verifyCategoryDepartureSerialization() {
+  const holder = spawn('docker', ['exec', '-i', container, 'psql', '-X', '-q', '-A', '-t',
+    '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  const closed = new Promise(resolve => holder.once('close', resolve));
+  let output = '', timer;
+  try {
+    await new Promise((resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('Category lock holder did not become ready')), 5000);
+      holder.once('error', reject);
+      holder.stderr.on('data', () => reject(new Error('Category lock holder failed')));
+      holder.stdout.on('data', data => { output += data; if (output.includes('CATEGORY_LOCK_HELD')) resolve(); });
+      holder.stdin.write("begin; set local idle_in_transaction_session_timeout='5s'; update public.spike_item_project_categories set revision=revision+1 where id='report-mcp-fixture-p1'; select 'CATEGORY_LOCK_HELD';\n");
+    });
+    clearTimeout(timer);
+    assert.throws(() => sql("begin; set local lock_timeout='250ms'; update public.spike_item_placements set ended_at='2026-09-10',ended_by_principal_id='principal-owner' where id='report-mcp-fixture-p1'; rollback;"),
+      error => error.status === 3 && /lock timeout/.test(String(error.stderr)),
+      'A category correction holds the placement lock against concurrent departure');
+  } finally {
+    clearTimeout(timer);
+    holder.stdin.end('rollback;\n');
+    await closed;
+  }
+}
 const project = `report-mcp-${randomUUID()}`;
 // Fixed synthetic fixture: repeat runs reuse immutable placement history rather
 // than deleting it or creating another permanent graph each time.
@@ -69,7 +94,15 @@ try {
       from public.spike_item_placements placement where placement.account_id='${account}'
         and placement.project_id='${populated}' and placement.ended_at is null
       on conflict do nothing;
+    insert into public.spike_budget_categories(id,account_id,display_name,kind,lifecycle,visibility_class,presentation_order,created_at_ms,updated_at_ms)
+      values ('report-mcp-category','${account}','Furnishings','itemized','archived','ordinary',10,1,1) on conflict do nothing;
+    insert into public.spike_item_project_categories(id,account_id,project_id,item_id,category_id)
+      select placement.id,'${account}','${populated}',placement.item_id,'report-mcp-category'
+      from public.spike_item_placements placement where placement.account_id='${account}'
+        and placement.project_id='${populated}' and placement.ended_at is null
+      on conflict do nothing;
     notify pgrst, 'reload schema'; commit;`);
+  await verifyCategoryDepartureSerialization();
   await client.connect(transport);
   const list = await client.listTools();
   assert.deepEqual(list.tools.map(t => t.name), ['get_property_management_report']);
@@ -105,9 +138,9 @@ try {
     assert.ok(block);
     const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
       .map(match => match[1].replace(/^        /gm, '').trim());
-    assert.equal(queries.length, 6);
+    assert.equal(queries.length, 8);
     const tables = ['spike_projects', 'spike_spaces', 'spike_item_placements', 'spike_items',
-      'spike_clients', 'item_client_payment_connections'];
+      'spike_clients', 'item_client_payment_connections', 'spike_item_project_categories', 'spike_budget_categories'];
     const captures = queries.map((query, index) => {
       const bound = query.replaceAll("subscription.parameter('account_id')", `'${account}'`)
         .replaceAll("subscription.parameter('project_id')", `'${populated}'`)
@@ -118,7 +151,7 @@ try {
       '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
       input: `begin isolation level repeatable read read only;\n${captures.join('\n')}\ncommit;`, encoding: 'utf8',
     }).trim().split('\n').map(JSON.parse);
-    assert.equal(raw.length, 6);
+    assert.equal(raw.length, 8);
     // Extend the same-commit native artifact with actual private Invoice storage
     // output. This isolated synthetic transaction rolls back even on success;
     // it creates no public collection API or durable accounting fixture graph.

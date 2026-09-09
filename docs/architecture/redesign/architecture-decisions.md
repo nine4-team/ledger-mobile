@@ -70,12 +70,12 @@ tables. `item` also aliased two different source tables. Remove primary aliases
 and qualify fields with the original table names; keep ordinary join/subquery
 aliases. This changes no product relationships, permissions or retained history.
 
-The native schema now checks the output names of all 35 current stream queries.
+The native schema now checks the output names of all 37 current stream queries.
 Regression tests reject shorthand and cross-table output aliases. Existing exact
 SQL expectation checks were updated without relaxing their predicates. Actual
 report and physical-Item SQL authorization/projection tests pass after the rename.
 The pinned `@powersync/service-sync-rules` 0.41.0 parser now also compiles the
-checked-in YAML with zero errors and verifies all 17 native output-table names.
+checked-in YAML with zero errors and verifies all 18 native output-table names.
 Its regression reproduces the original alias bug using the real compiler.
 This tooling requires Node 24 (CI pins 24.14.0); it is not an app dependency.
 Four parser/name tests and target environment checks pass. Source-column validation,
@@ -1340,6 +1340,25 @@ Actor history and all writes remain ungranted. Its 29 SQL checks, real local
 MCP/HTTP read and native differential comparison of actual stream rows pass;
 the comparison includes accounting-bound source hashes. Security advisors report
 no issues. Private-schema replication/publication access is still unverified.
+
+Current physical category attribution uses `spike_item_project_categories`,
+keyed by exact Project placement and referencing the existing Account category.
+It is separate from immutable custody rows so a permitted category correction
+need not invent physical movement. It is not a Project budget allocation or a
+replacement for frozen financial category snapshots. Closed-placement attribution
+is retained and cannot be rewritten. Corrections lock the placement row to
+serialize with departure; a rollback-only two-session local test verifies that
+departure blocks while correction owns the lock. Missing attribution is incomplete source/
+download evidence, not an approved uncategorized Project Item state. The future
+ordinary writer still must assign enabled Furnishings and preserve atomic batch
+correction, prior accounting snapshots and correction evidence; no writer grants
+are added here. Inventory placements cannot satisfy the non-null Project FK.
+Association and label follow existing category visibility, including retained
+local data after access reduction. Archived labels remain resolvable. Native
+Client Summary watches both sources; a rename changes report identity. Twelve
+SQL checks, positive native readiness/access checks, eight stream projections
+and actual stream-to-native readback pass. Business-paid source completion and
+live hosted replication remain separate work.
 
 Both concrete report delivery boundaries reuse one internal protected scratch
 lifetime helper. Each requires its own exact-source revalidation callback before

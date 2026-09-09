@@ -128,7 +128,7 @@ struct ProjectNotePowerSyncQueryTests {
         #expect(one.local.rows.count == 1)
         #expect(one.isCompleteForProjectHistory)
         #expect(one.nextCursor == nil)
-        #expect(oneReader.fetchLimits == [2])
+        #expect(!oneReader.readFetchLimits.isEmpty && oneReader.readFetchLimits.allSatisfy { $0 == 2 })
 
         let base = Int64(Self.t3.timeIntervalSince1970 * 1_000)
         let rows = (0...200).map { offset in
@@ -145,7 +145,7 @@ struct ProjectNotePowerSyncQueryTests {
         #expect(!first.isCompleteForProjectHistory)
         #expect(first.nextCursor?.noteId == first.local.rows.last?.id)
         #expect(first.nextCursor?.createdAt == first.local.rows.last?.createdAt)
-        #expect(reader.fetchLimits == [201])
+        #expect(!reader.readFetchLimits.isEmpty && reader.readFetchLimits.allSatisfy { $0 == 201 })
 
         let cursor = try #require(first.nextCursor)
         let continuationRequest = try Self.request(pageSize: 200, after: cursor)
@@ -160,7 +160,10 @@ struct ProjectNotePowerSyncQueryTests {
         #expect(tail.local.rows.map(\.id) == [rows[200].decodedID])
         #expect(tail.isCompleteForProjectHistory)
         #expect(tail.nextCursor == nil)
-        #expect(continuationReader.requests == [continuationRequest])
+        // Completeness can produce the first page from readRows before the
+        // asynchronous live watch registers. Verify the actual page read.
+        #expect(!continuationReader.readRequests.isEmpty
+            && continuationReader.readRequests.allSatisfy { $0 == continuationRequest })
 
         let tiedRows = [
             Self.row(id: "note-z", createdAt: Self.t2),
@@ -703,6 +706,8 @@ private final class ControlledProjectNoteReader:
     private var continuation:
         AsyncThrowingStream<[ProjectNotePowerSyncRow], Error>.Continuation?
     private var recordedRequests: [ProjectNotePageRequest] = []
+    private var recordedReadRequests: [ProjectNotePageRequest] = []
+    private var recordedReadFetchLimits: [Int] = []
     private var recordedPrincipals: [PrincipalID] = []
     private var recordedFetchLimits: [Int] = []
     private var reads = 0
@@ -715,6 +720,8 @@ private final class ControlledProjectNoteReader:
     }
 
     var requests: [ProjectNotePageRequest] { lock.withLock { recordedRequests } }
+    var readRequests: [ProjectNotePageRequest] { lock.withLock { recordedReadRequests } }
+    var readFetchLimits: [Int] { lock.withLock { recordedReadFetchLimits } }
     var principals: [PrincipalID] { lock.withLock { recordedPrincipals } }
     var fetchLimits: [Int] { lock.withLock { recordedFetchLimits } }
     var readCount: Int { lock.withLock { reads } }
@@ -728,6 +735,8 @@ private final class ControlledProjectNoteReader:
     ) async throws -> [ProjectNotePowerSyncRow] {
         lock.withLock {
             reads += 1
+            recordedReadRequests.append(request)
+            recordedReadFetchLimits.append(fetchLimit)
             return currentRows
         }
     }

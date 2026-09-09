@@ -33,9 +33,9 @@ struct PropertyManagementReportLocalReaderTests {
             #expect(expected["currency"] as? String == currency.rawValue)
             let tables = try #require(fixture["tables"] as? [[String: Any]])
             let allowed = Set(["spike_projects", "spike_spaces", "spike_item_placements", "spike_items",
-                "spike_clients", "item_client_payment_connections"])
+                "spike_clients", "item_client_payment_connections", "spike_item_project_categories", "spike_budget_categories"])
             #expect(Set(tables.compactMap { $0["table"] as? String }) == allowed)
-            #expect(tables.count == 6)
+            #expect(tables.count == 8)
             for table in tables {
                 let name = try #require(table["table"] as? String)
                 guard allowed.contains(name) else { throw CocoaError(.coderInvalidValue) }
@@ -63,6 +63,19 @@ struct PropertyManagementReportLocalReaderTests {
                     asOf: .init(validating: 1_800_000_000_000), readiness: .ready,
                     lastSyncedAt: .init(validating: 1_800_000_000_000)))
             let actual = try #require(JSONSerialization.jsonObject(with: snapshot.canonicalData()) as? [String: Any])
+            let clientInputs = try await db.readTransaction { transaction in
+                try ClientSummaryPhysicalReportLocalReader.read(transaction: transaction,
+                    accountId: account, principalId: principal, projectId: project)
+            }
+            #expect(clientInputs.items.count == 3)
+            #expect(clientInputs.items.allSatisfy { item in
+                if case .known(_, "Furnishings") = item.category { return true }
+                return false
+            })
+            let clientSummary = try ClientSummaryPhysicalReportSnapshot.build(project: clientInputs.project,
+                client: clientInputs.client, spaces: clientInputs.spaces, items: clientInputs.items,
+                provenance: snapshot.provenance)
+            #expect(clientSummary.isComplete)
             // Deliberately exclude online-versus-downloaded provenance and the
             // resulting snapshot reference; source data and calculation must match.
             for key in ["reportKind", "project", "spaces", "groups", "totals", "currency", "sourceSetHash"] {

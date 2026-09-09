@@ -116,6 +116,42 @@ streams:
         AND principal.auth_user_id = auth.user_id()
         AND membership.state = 'active' AND membership.financial_access = 'full'
 
+      - |
+        SELECT spike_item_project_categories.id, spike_item_project_categories.account_id,
+          spike_item_project_categories.project_id, spike_item_project_categories.item_id,
+          spike_item_project_categories.category_id, spike_item_project_categories.revision
+        FROM spike_item_project_categories
+        JOIN spike_item_placements AS placement ON placement.account_id = spike_item_project_categories.account_id
+          AND placement.id = spike_item_project_categories.id AND placement.ended_at IS NULL
+        JOIN spike_budget_categories AS category ON category.account_id = spike_item_project_categories.account_id
+          AND category.id = spike_item_project_categories.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_item_project_categories.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_item_project_categories.account_id = subscription.parameter('account_id')
+        AND spike_item_project_categories.project_id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'
+        AND (category.visibility_class = 'ordinary' OR membership.financial_access = 'full')
+
+      - |
+        SELECT spike_budget_categories.id, spike_budget_categories.account_id, spike_budget_categories.display_name,
+          spike_budget_categories.kind, spike_budget_categories.lifecycle, spike_budget_categories.is_system,
+          spike_budget_categories.excludes_from_overall_budget, spike_budget_categories.visibility_class,
+          spike_budget_categories.presentation_order, spike_budget_categories.revision,
+          spike_budget_categories.created_at_ms, spike_budget_categories.updated_at_ms
+        FROM spike_budget_categories
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_budget_categories.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_budget_categories.account_id = subscription.parameter('account_id')
+        AND spike_budget_categories.id IN (
+          SELECT assignment.category_id FROM spike_item_project_categories AS assignment
+          JOIN spike_item_placements AS placement ON placement.account_id = assignment.account_id
+            AND placement.id = assignment.id AND placement.ended_at IS NULL
+          WHERE assignment.account_id = subscription.parameter('account_id')
+          AND assignment.project_id = subscription.parameter('project_id')
+        )
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'
+        AND (spike_budget_categories.visibility_class = 'ordinary' OR membership.financial_access = 'full')
+
   physical_account_items:
     queries:
       - |

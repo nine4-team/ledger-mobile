@@ -16,7 +16,7 @@ const block = yaml.match(/^  property_management_report:\n([\s\S]*?)(?=^  \S|$(?
 assert.ok(block);
 const pattern = /^      - \|\n((?:        .*(?:\n|$))+)/gm;
 const queries = [...block.matchAll(pattern)].map((match) => match[1].replace(/^        /gm, "").trim());
-assert.equal(queries.length, 6);
+assert.equal(queries.length, 8);
 assert.equal(block.replace(/^    queries:\n/, "").replace(pattern, "").trim(), "");
 // Overlapping buckets can contain the same table/id. Keep the complete SELECT
 // expressions identical, including casts/aliases—not merely the output keys.
@@ -66,11 +66,13 @@ for (const [index, project] of projects.entries()) {
     values (${q(`payment-${project}`)},'account-primary',${q(project)},${q(clients[index])},500,'USD');
     insert into ledger_private.item_client_payment_connections(id,account_id,project_id,client_id,item_id,placement_id,transaction_id,started_at,started_by_principal_id)
     values (${q(`link-${project}`)},'account-primary',${q(project)},${q(clients[index])},${q(ids[2][index])},${q(ids[1][index])},${q(`payment-${project}`)},'2026-09-02','principal-owner');`);
+  sql.push(`insert into public.spike_item_project_categories(id,account_id,project_id,item_id,category_id)
+    values (${q(ids[1][index])},'account-primary',${q(project)},${q(ids[2][index])},'category-furnishings');`);
 }
 const user = "10000000-0000-0000-0000-000000000002";
-function capture(label, account, project, principal = user, linkOnly = false) {
+function capture(label, account, project, principal = user, only = []) {
   for (const [index, query] of queries.entries()) {
-    if (linkOnly && index !== 5) continue;
+    if (only.length && !only.includes(index)) continue;
     const bound = query.replaceAll("subscription.parameter('account_id')", q(account))
       .replaceAll("subscription.parameter('project_id')", q(project))
       .replace("auth.user_id()", `${q(principal)}::uuid`);
@@ -83,9 +85,11 @@ const owner = "10000000-0000-0000-0000-000000000001";
 capture("owner-a", "account-primary", projects[0], owner);
 capture("owner-b", "account-primary", projects[1], owner);
 sql.push(`update ledger_private.item_client_payment_connections set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(`link-${projects[0]}`)};`);
-capture("closed-link", "account-primary", projects[0], owner, true);
+capture("closed-link", "account-primary", projects[0], owner, [5]);
 sql.push(`update public.spike_item_placements set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(ids[1][1])};`);
-capture("departed-placement", "account-primary", projects[1], owner, true);
+capture("departed-placement", "account-primary", projects[1], owner, [5,6,7]);
+sql.push("update public.spike_budget_categories set visibility_class='company_financial' where id='category-furnishings';");
+capture("hidden-category", "account-primary", projects[0], user, [6,7]);
 capture("wrong-account", "account-other", projects[0]);
 capture("other-user", "account-primary", projects[0], "10000000-0000-0000-0000-000000000003");
 sql.push("update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';");
@@ -94,14 +98,16 @@ sql.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: sql.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map(JSON.parse);
-assert.equal(results.length, 44);
+assert.equal(results.length, 62);
 const columns = [
   ["id", "account_id", "client_id", "display_name", "description", "legacy_notes", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
   ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
   ["id", "account_id", "name", "description", "sku", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
-  ["id", "account_id", "display_name", "lifecycle", "revision", "created_at", "updated_at", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
+  ["id", "account_id", "display_name", "lifecycle", "revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   ["id", "account_id", "project_id", "client_id", "item_id", "placement_id", "transaction_id", "transaction_type", "transaction_role", "ended_at"],
+  ["id", "account_id", "project_id", "item_id", "category_id", "revision"],
+  ["id", "account_id", "display_name", "kind", "lifecycle", "is_system", "excludes_from_overall_budget", "visibility_class", "presentation_order", "revision", "created_at_ms", "updated_at_ms"],
 ];
 for (const { label, index, rows } of results) {
   if (!["project-a", "project-b", "owner-a", "owner-b"].includes(label)) { assert.deepEqual(rows, [], label); continue; }
@@ -109,7 +115,7 @@ for (const { label, index, rows } of results) {
   const selected = label.endsWith("-a") ? 0 : 1;
   assert.equal(rows.length, 1, `${label}: exact Project projection ${index}`);
   const row = rows[0];
-  assert.equal(row.id, index === 5 ? `link-${projects[selected]}` : index === 4 ? clients[selected] : index === 0 ? projects[selected] : ids[index - 1][selected]);
+  assert.equal(row.id, index === 7 ? 'category-furnishings' : index === 6 ? ids[1][selected] : index === 5 ? `link-${projects[selected]}` : index === 4 ? clients[selected] : index === 0 ? projects[selected] : ids[index - 1][selected]);
   assert.deepEqual(Object.keys(row).sort(), [...columns[index]].sort());
   assert.equal(row.account_id, "account-primary");
   if (index === 0) {
@@ -124,4 +130,4 @@ for (const { label, index, rows } of results) {
     assert.equal(row.market_value_currency, selected === 0 ? "USD" : null);
   }
 }
-console.log("shared report stream: 6 actual SQL projections preserve exact scope and deny restricted payment provenance, closed links, departed placement, cross-Account/user/removal; fixtures rolled back (not live replication validation)");
+console.log("shared report stream: 8 actual SQL projections preserve exact scope and deny hidden categories, restricted payment provenance, closed links, departed placement, cross-Account/user/removal; fixtures rolled back (not live replication validation)");
