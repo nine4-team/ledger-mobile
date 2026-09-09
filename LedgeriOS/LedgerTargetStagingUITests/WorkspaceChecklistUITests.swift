@@ -20,14 +20,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         defer { failureScreenshotLock.unlock() }
         // Attach to the issue itself so xcresulttool --only-failures exports
         // the image. Do not capture a developer's desktop during local QA.
-        MainActor.assumeIsolated {
-            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            attachment.name = "Failure screen"
-            attachment.lifetime = .keepAlways
-            var captured = issue
-            captured.attachments.append(attachment)
-            super.record(captured)
-        }
+        // Only Sendable image bytes cross actor isolation. XCTIssue and this
+        // XCTestCase remain in record's original context on newer compilers.
+        let imageData = MainActor.assumeIsolated { XCUIScreen.main.screenshot().pngRepresentation }
+        let attachment = XCTAttachment(data: imageData, uniformTypeIdentifier: "public.png")
+        attachment.name = "Failure screen"
+        attachment.lifetime = .keepAlways
+        var captured = issue
+        captured.attachments.append(attachment)
+        super.record(captured)
     }
 
     func testClientSummaryPhysicalPreviewAndIncompleteShare() throws {
@@ -903,7 +904,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let thumbnail = app.descendants(matching: .any)
             .matching(identifier: "target-item-thumbnail-physical-ui-chair").firstMatch
         reveal(thumbnail, in: app, fullyInsideScrollView: true)
-        XCTAssertTrue(waitUntil { (thumbnail.value as? String) == "Downloaded" }, app.debugDescription)
+        XCTAssertTrue(waitUntil {
+            (thumbnail.value as? String) == "Downloaded" || thumbnail.label == "Item thumbnail, Downloaded"
+        }, app.debugDescription)
         XCTAssertEqual(thumbnail.frame.width, 108, accuracy: 1)
         XCTAssertEqual(thumbnail.frame.height, 108, accuracy: 1)
         item.tap()

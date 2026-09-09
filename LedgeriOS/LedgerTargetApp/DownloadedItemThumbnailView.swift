@@ -67,7 +67,10 @@ struct DownloadedItemThumbnailView: View {
         .frame(width: 108, height: 108).clipped()
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Item thumbnail")
+        // AppKit may omit the grouped element's value, so expose the actual
+        // rendered state in its label as well.
+        .accessibilityLabel(renderedFor != nil && renderedFor == selected
+            ? "Item thumbnail, Downloaded" : "Item thumbnail, Unavailable")
         .accessibilityValue(renderedFor != nil && renderedFor == selected ? "Downloaded" : "Unavailable")
         .accessibilityIdentifier("target-item-thumbnail-\(itemId.rawValue)")
         .accessibilityAction(named: "Retry thumbnail") { retry = UUID() }
