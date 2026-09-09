@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 345,
-  "resumeAfterWorkflowId": "property-management-report-delivery",
+  "stateVersion": 346,
+  "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -23,10 +23,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "UI verification fix ready: PDF/CSV iPhoneCopy separated into fresh-app120s tests with shared helper; realCopy, ActivityListView dismissal, completion and pastedpayload assertions retained. iPhone runs entire platform-compatible UI class, removing stale whitelist that omitted Item browsing/archivednavigation/removal. ExistingCIguard prevents narrowing/skips/clipboardflag removal. Independent reviewGO;11CIguardtests and both XCTesttypechecks pass, unchanged1026native evidence reused. Final conversioncheck, commit/push and follow automatic exact-commit CI.",
+      "Read-only Item status/bookmark batch ready to commit: nullable raw metadata through Postgres/read-only grants/both streams/atomic native reader; alias-aware status labels, bookmark indicator and scoped facets. No status/bookmark writes or Sold-specific policy. Root provider review + independent UI/Core review GO;832DB28files/1029native151suites, focusedstream/parser/advisor/typecheck/environment passed. Native UI interaction test added but actual exact-commit CI still required. Run direct conversion check, commit only this batch+existing state change, push once and follow automatic CI.",
+      "d219492373fee0e3a8fd44139d5d52cb9e1732c9 committed+pushed UI verification fix: PDF/CSV iPhoneCopy separated into fresh-app120s tests with shared helper; realCopy, ActivityListView dismissal, completion and pastedpayload assertions retained. iPhone runs entire platform-compatible UI class, removing stale whitelist that omitted Item browsing/archivednavigation/removal. ExistingCIguard prevents narrowing/skips/clipboardflag removal. Independent reviewGO;11CIguardtests and both XCTesttypechecks pass, unchanged1026native evidence reused. Direct conversion and diff checks passed. Automatic exact-commit CI34331900121 confirmed IN_PROGRESS; follow without redispatch.",
       "09451172 Spacefacet CI34331154071 confirmed live, native tests08:53:18UTC. Follow without redispatch. All older runs in priorcheckpoint terminal;5538ef14 remains latestwholegreen.34327982123/34328964782 failedMacclippedsearch, fixed09451172 pendingUI.34327248788 Copyfailure diagnosis:PDFpaste55s;CSVlookup36s+tap17s, tap115s,120scapexpired. Not provenCopybug; secondpayloadunverified. Do not poll terminalruns.",
       "Next Item gaps: cards/detail/bookmark/status/source/category/image/price facets, duplicate groups and selectedtotals/bulk actions. Grouping requires SKU+source boundaries and unambiguous namefallback, not naive name-only. O016/O027/O065 writer decisions unanswered; continue approved independent work. LiveInvoice evidence incomplete; no broad Item completion.",
-      "Local schema appliedthrough081820 INCLUDING060126/064122, historynotrewritten. Prior820DB/24physicalstreamcaptures/parser valid for unchangedbackend. Hosted/hardware/migration/cutover incomplete. Disk~530MiB; preserveartifacts, no large local builds."
+      "Local schema appliedthrough090456 INCLUDING060126/064122/081820; historynotrewritten. Hosted/hardware/migration/cutover incomplete. Disk constrained; preserveartifacts, no large local builds."
     ]
   },
   "blockers": [],

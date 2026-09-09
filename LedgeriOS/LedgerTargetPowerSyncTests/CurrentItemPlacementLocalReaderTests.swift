@@ -10,6 +10,31 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Raw workflow and nullable bookmark survive encrypted restart without accounting inference")
+    func workflowBookmarkMetadata() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let row = try #require(try await reader.readSnapshot(accountId: account, principalId: principal,
+                scope: .project(project)).rows.first)
+            #expect(row.workflowStatusRaw == "  legacy sold  ")
+            #expect(row.isBookmarked == true)
+            _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status='returned',bookmark=0,revision=2 WHERE id='chair'", parameters: nil)
+            let updated = try #require(try await reader.readSnapshot(accountId: account, principalId: principal,
+                scope: .project(project)).rows.first)
+            #expect(updated.workflowStatusRaw == "returned")
+            #expect(updated.isBookmarked == false)
+            _ = try await db.execute(sql: "UPDATE spike_items SET bookmark=2 WHERE id='chair'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readSnapshot(accountId: account, principalId: principal, scope: .project(project))
+            }
+        }) { db in
+            let absent = try #require(try await CurrentItemPlacementLocalReader(database: db)
+                .readSnapshot(accountId: account, principalId: principal, scope: .project(project)).rows.first)
+            #expect(absent.workflowStatusRaw == nil && absent.isBookmarked == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET workflow_status='  legacy sold  ',bookmark=1 WHERE id='chair'", parameters: nil)
+        }
+    }
+
     @Test("Space choices retain empty active and referenced archived parents across encrypted restart")
     func scopedSpaceChoices() async throws {
         try await withDatabase(reopen: { db in

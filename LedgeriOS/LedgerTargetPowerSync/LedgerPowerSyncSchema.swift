@@ -61,6 +61,7 @@ public enum LedgerPowerSyncSchema {
         Table(
             name: LedgerPowerSyncTable.items,
             columns: [.text("account_id"), .text("name"), .text("description"), .text("sku"),
+                      .text("workflow_status"), .integer("bookmark"),
                       .text("market_value_minor_units"), .text("market_value_currency"),
                       .integer("revision"),
                       .text("created_at"), .text("created_by_principal_id")],

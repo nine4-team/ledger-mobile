@@ -4,6 +4,65 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Workflow status aliases share meaning without rewriting legacy evidence")
+    func workflowStatusEvidence() throws {
+        for raw in ["to-purchase", "to purchase", " TO PURCHASE "] {
+            #expect(ItemWorkflowStatus(sourceValue: raw) == .toPurchase)
+        }
+        #expect(ItemWorkflowStatus(sourceValue: "purchased") == .purchased)
+        #expect(ItemWorkflowStatus(sourceValue: "to return") == .toReturn)
+        #expect(ItemWorkflowStatus(sourceValue: "returned") == .returned)
+        #expect(ItemWorkflowStatus(sourceValue: nil) == .notSet)
+        #expect(ItemWorkflowStatus(sourceValue: "  ") == .notSet)
+        for raw in ["sold", "custom-status", " RETURNED-LEGACY "] {
+            let status = ItemWorkflowStatus(sourceValue: raw)
+            #expect(status == .unrecognized(raw))
+            #expect(status.displayLabel == "Legacy status: \(raw)")
+            #expect(status.facetValue == "legacy")
+        }
+    }
+
+    @Test("Status and bookmark facets preserve OR/AND, nullable bookmarks and selection pruning")
+    func workflowAndBookmarkFilters() throws {
+        let data: [(String?, Bool?)] = [("to-purchase", true), ("to purchase", false),
+            ("returned", true), (nil, nil), ("sold", false)]
+        let rows = try data.enumerated().map { index, value in
+            try PhysicalItemPlacement(itemId: .init(validating: "i\(index)"), description: "Item \(index)",
+                itemRevision: 1, placementId: .init(validating: "p\(index)"), scope: .businessInventory,
+                spaceId: nil, workflowStatusRaw: value.0, isBookmarked: value.1)
+        }
+        let snapshot = try DownloadedItemPlacements(accountId: .init(validating: "account"),
+            scope: .businessInventory, rows: rows)
+        #expect(rows[0].workflowStatusRaw == "to-purchase")
+        #expect(rows[3].isBookmarked == nil)
+        var filters = DownloadedItemFilters()
+        func ids() -> [String] {
+            snapshot.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue)
+        }
+        filters.workflowStatus = .only(["to purchase", "returned"])
+        #expect(ids() == ["i0", "i1", "i2"])
+        filters.bookmark = .only(["bookmarked"])
+        #expect(ids() == ["i0", "i2"])
+        filters.workflowStatus = .allExcept(["returned"])
+        #expect(ids() == ["i0"])
+        filters.bookmark = .only(["not bookmarked"])
+        #expect(ids() == ["i1", "i3", "i4"])
+        filters.workflowStatus = .only(["not set"])
+        #expect(ids() == ["i3"])
+        filters.workflowStatus = .only(["legacy"])
+        #expect(ids() == ["i4"])
+        #expect(filters.isActive)
+        var selected = DownloadedItemSelection()
+        selected.toggleAll(visible: rows.map(\.itemId))
+        selected.reconcile(visible: snapshot.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId))
+        #expect(selected.ids.map(\.rawValue) == ["i4"])
+        filters = .init()
+        #expect(!filters.isActive)
+        #expect(ids().count == 5)
+        selected.reconcile(visible: rows.map(\.itemId))
+        #expect(selected.ids.map(\.rawValue) == ["i4"])
+    }
+
     @Test("Space facets use exact IDs, retain empty active choices and hide unrelated archives")
     func spaceChoicesAndFiltering() throws {
         let base = try snapshot()

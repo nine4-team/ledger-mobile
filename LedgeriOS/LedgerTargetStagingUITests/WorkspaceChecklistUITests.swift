@@ -780,6 +780,60 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(item.exists)
     }
 
+    func testDownloadedItemWorkflowStatusAndBookmarkFilters() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let chair = app.buttons["target-physical-item-physical-ui-chair"]
+        let returned = app.buttons["target-physical-item-physical-ui-other-space"]
+        let unset = app.buttons["target-physical-item-physical-ui-unassigned"]
+        reveal(chair, in: app)
+        let status = app.staticTexts["target-item-workflow-status-physical-ui-chair"]
+        XCTAssertTrue(waitUntil {
+            status.label == "Workflow: To Purchase" || (status.value as? String) == "Workflow: To Purchase"
+        })
+        XCTAssertTrue(app.images["target-item-bookmark-physical-ui-chair"].exists)
+        let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        func choose(_ facet: String, _ option: String) {
+            reveal(filters, in: app)
+            filters.tap()
+            #if os(macOS)
+            app.menuItems[facet].tap()
+            app.menuItems[option].tap()
+            #else
+            app.buttons[facet].tap()
+            app.buttons[option].tap()
+            #endif
+        }
+        choose("Bookmark", "Not Bookmarked") // All-except: only the bookmarked chair remains.
+        XCTAssertTrue(chair.waitForExistence(timeout: 5))
+        XCTAssertFalse(returned.exists)
+        XCTAssertFalse(unset.exists)
+        choose("Workflow Status", "To Purchase")
+        XCTAssertTrue(app.staticTexts["target-items-no-match"].waitForExistence(timeout: 5))
+        app.buttons["target-items-filters-clear"].tap()
+        choose("Workflow Status", "None")
+        choose("Workflow Status", "Returned")
+        XCTAssertTrue(returned.waitForExistence(timeout: 5))
+        XCTAssertFalse(chair.exists)
+        XCTAssertFalse(unset.exists)
+        choose("Workflow Status", "Not Set") // Only mode: OR within the facet.
+        XCTAssertTrue(unset.waitForExistence(timeout: 5))
+        XCTAssertTrue(returned.exists)
+        choose("Bookmark", "Bookmarked")
+        XCTAssertTrue(unset.exists) // Absent source bookmark retains Not Bookmarked behavior.
+        XCTAssertTrue(returned.exists)
+        app.buttons["target-items-filters-clear"].tap()
+        XCTAssertTrue(chair.waitForExistence(timeout: 5))
+        XCTAssertTrue(returned.exists)
+        XCTAssertTrue(unset.exists)
+    }
+
     func testDownloadedItemsRefreshAndRemoval() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

@@ -11,6 +11,9 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
     public let name: String?
     public let sku: String?
     public let createdAt: Date?
+    public let workflowStatusRaw: String?
+    public let isBookmarked: Bool?
+    public var workflowStatus: ItemWorkflowStatus { .init(sourceValue: workflowStatusRaw) }
     public var displayName: String { name ?? description }
     public let itemRevision: Int64
     public let placementId: EntityID
@@ -19,7 +22,8 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
 
     public init(itemId: ItemID, description: String, itemRevision: Int64,
                 placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?,
-                name: String? = nil, sku: String? = nil, createdAt: Date? = nil) throws {
+                name: String? = nil, sku: String? = nil, createdAt: Date? = nil,
+                workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil) throws {
         guard itemRevision > 0 else { throw DownloadedItemPlacementsFailure.invalidRevision }
         guard createdAt?.timeIntervalSinceReferenceDate.isFinite != false else {
             throw DownloadedItemPlacementsFailure.invalidTimestamp
@@ -27,6 +31,47 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
         self.itemId = itemId; self.description = description; self.itemRevision = itemRevision
         self.placementId = placementId; self.scope = scope; self.spaceId = spaceId
         self.name = name; self.sku = sku; self.createdAt = createdAt
+        self.workflowStatusRaw = workflowStatusRaw; self.isBookmarked = isBookmarked
+    }
+}
+
+/// Descriptive workflow only: never evidence of purchase, sale, refund or payment.
+/// Preserve the source value on the Item; aliases share a display/filter meaning.
+public enum ItemWorkflowStatus: Equatable, Sendable {
+    case toPurchase, purchased, toReturn, returned, notSet, unrecognized(String)
+
+    public init(sourceValue: String?) {
+        guard let sourceValue else { self = .notSet; return }
+        switch sourceValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "": self = .notSet
+        case "to-purchase", "to purchase": self = .toPurchase
+        case "purchased": self = .purchased
+        case "to return": self = .toReturn
+        case "returned": self = .returned
+        default: self = .unrecognized(sourceValue)
+        }
+    }
+
+    public var displayLabel: String {
+        switch self {
+        case .toPurchase: "To Purchase"
+        case .purchased: "Purchased"
+        case .toReturn: "To Return"
+        case .returned: "Returned"
+        case .notSet: "Not Set"
+        case .unrecognized(let raw): "Legacy status: \(raw)"
+        }
+    }
+
+    public var facetValue: String {
+        switch self {
+        case .toPurchase: "to purchase"
+        case .purchased: "purchased"
+        case .toReturn: "to return"
+        case .returned: "returned"
+        case .notSet: "not set"
+        case .unrecognized: "legacy"
+        }
     }
 }
 
@@ -98,13 +143,19 @@ public struct DownloadedItemFilters: Equatable, Sendable {
     public var name: DownloadedItemFacetSelection = .all
     public var sku: DownloadedItemFacetSelection = .all
     public var space: DownloadedItemFacetSelection = .all
+    public var workflowStatus: DownloadedItemFacetSelection = .all
+    public var bookmark: DownloadedItemFacetSelection = .all
     public init() {}
-    public var isActive: Bool { name != .all || sku != .all || space != .all }
+    public var isActive: Bool {
+        name != .all || sku != .all || space != .all || workflowStatus != .all || bookmark != .all
+    }
 
     public func includes(_ row: PhysicalItemPlacement) -> Bool {
         name.includes(row.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
             && sku.includes((row.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
             && space.includes(row.spaceId?.rawValue ?? "")
+            && workflowStatus.includes(row.workflowStatus.facetValue)
+            && bookmark.includes(row.isBookmarked == true ? "bookmarked" : "not bookmarked")
     }
 }
 

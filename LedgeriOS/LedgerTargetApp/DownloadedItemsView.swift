@@ -53,6 +53,22 @@ struct DownloadedItemsView: View {
             Menu("Filter Items") {
                 facetMenu("Name", selection: $filters.name)
                 facetMenu("SKU", selection: $filters.sku)
+                Menu("Workflow Status") {
+                    Button("All") { filters.workflowStatus = .all }
+                    Button("None") { filters.workflowStatus = .only([]) }
+                    Divider()
+                    ForEach([ItemWorkflowStatus.toPurchase, .purchased, .toReturn, .returned, .notSet], id: \.facetValue) { status in
+                        facetToggle(status.facetValue, label: status.displayLabel, selection: $filters.workflowStatus)
+                    }
+                    facetToggle("legacy", label: "Other legacy statuses", selection: $filters.workflowStatus)
+                }
+                Menu("Bookmark") {
+                    Button("All") { filters.bookmark = .all }
+                    Button("None") { filters.bookmark = .only([]) }
+                    Divider()
+                    facetToggle("bookmarked", label: "Bookmarked", selection: $filters.bookmark)
+                    facetToggle("not bookmarked", label: "Not Bookmarked", selection: $filters.bookmark)
+                }
                 if spaceId == nil, case .downloaded(let snapshot) = model.state,
                    snapshot.accountId == accountId, snapshot.scope == scope {
                     spaceFacetMenu(snapshot.spaceChoices)
@@ -232,19 +248,29 @@ struct DownloadedItemsView: View {
             .accessibilityLabel("Select \(row.displayName.isEmpty ? "Untitled Item" : row.displayName)")
             .accessibilityValue(selection.ids.contains(row.itemId) ? "Selected" : "Not selected")
             .accessibilityIdentifier("target-item-select-\(row.itemId.rawValue)")
-            Button(row.displayName.isEmpty ? "Untitled Item" : row.displayName) {
-                selection.reconcile(visible: visibleItemIds)
-                guard visibleItemIds.contains(row.itemId) else { return }
-                if selection.ids.isEmpty {
-                    selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
-                } else {
-                    selection.toggle(itemId: row.itemId, visible: visibleItemIds)
+            VStack(alignment: .leading, spacing: 2) {
+                Button(row.displayName.isEmpty ? "Untitled Item" : row.displayName) {
+                    selection.reconcile(visible: visibleItemIds)
+                    guard visibleItemIds.contains(row.itemId) else { return }
+                    if selection.ids.isEmpty {
+                        selectedItem = ItemSelection(accountId: accountId, itemId: row.itemId)
+                    } else {
+                        selection.toggle(itemId: row.itemId, visible: visibleItemIds)
+                    }
                 }
+                .buttonStyle(.plain)
+                .disabled(selection.ids.isEmpty && !(reader is any DownloadedItemPlacementHistoryReading))
+                .accessibilityHint(selection.ids.isEmpty ? "Show downloaded location history" : "Toggle selection")
+                .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
+                Text("Workflow: \(row.workflowStatus.displayLabel)")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-item-workflow-status-\(row.itemId.rawValue)")
             }
-            .buttonStyle(.plain)
-            .disabled(selection.ids.isEmpty && !(reader is any DownloadedItemPlacementHistoryReading))
-            .accessibilityHint(selection.ids.isEmpty ? "Show downloaded location history" : "Toggle selection")
-            .accessibilityIdentifier("target-physical-item-\(row.itemId.rawValue)")
+            if row.isBookmarked == true {
+                Image(systemName: "bookmark.fill")
+                    .accessibilityLabel("Bookmarked")
+                    .accessibilityIdentifier("target-item-bookmark-\(row.itemId.rawValue)")
+            }
         }
     }
 

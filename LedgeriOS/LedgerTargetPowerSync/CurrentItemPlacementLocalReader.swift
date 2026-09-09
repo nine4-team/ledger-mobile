@@ -250,12 +250,20 @@ struct CurrentItemPlacementLocalReader: Sendable {
                   try cursor.getInt(name: "project_valid") == 1 else {
                 throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
             }
+            let bookmark = try cursor.getIntOptional(name: "bookmark")
+            let bookmarkType = try cursor.getString(name: "bookmark_type")
+            guard (bookmark == nil && bookmarkType == "null")
+                || (bookmarkType == "integer" && (bookmark == 0 || bookmark == 1)) else {
+                throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+            }
             return try PhysicalItemPlacement(itemId: ItemID(validating: item),
                 description: description, itemRevision: Int64(revision),
                 placementId: EntityID(validating: placement), scope: scope,
                 spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
                 name: cursor.getStringOptional(name: "name"), sku: cursor.getStringOptional(name: "sku"),
-                createdAt: Self.creationDate(cursor.getStringOptional(name: "created_at")))
+                createdAt: Self.creationDate(cursor.getStringOptional(name: "created_at")),
+                workflowStatusRaw: cursor.getStringOptional(name: "workflow_status"),
+                isBookmarked: bookmark.map { $0 == 1 })
     }
 
     private static func creationDate(_ raw: String?) -> Date? {
@@ -274,6 +282,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
           WHERE account_id = ? AND principal_id = ? AND state = 'active') AS is_active
       ), selected AS (
         SELECT p.id AS placement_id, i.id AS item_id, i.name, i.description, i.sku, i.created_at, i.revision, p.space_id,
+          i.workflow_status, i.bookmark, typeof(i.bookmark) AS bookmark_type,
           (SELECT count(*) FROM spike_item_placements other
             WHERE other.account_id = p.account_id AND other.item_id = p.item_id
               AND other.ended_at IS NULL) AS active_count,
