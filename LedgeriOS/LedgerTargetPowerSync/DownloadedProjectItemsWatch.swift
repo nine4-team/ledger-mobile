@@ -8,9 +8,8 @@ struct DownloadedProjectItemsWatch: Sendable {
     func read(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
               asOf: Date = Date()) async throws -> DownloadedProjectItems {
         try await database.readTransaction { transaction in
-            let placements = try DownloadedItemPlacements(accountId: accountId, scope: .project(projectId),
-                rows: CurrentItemPlacementLocalReader.read(transaction: transaction,
-                    accountId: accountId, principalId: principalId, scope: .project(projectId)))
+            let placements = try CurrentItemPlacementLocalReader.readSnapshot(transaction: transaction,
+                accountId: accountId, principalId: principalId, scope: .project(projectId))
             let accounting: ProjectItemAccountingSectionsSnapshot?
             do {
                 _ = try PropertyManagementReportPowerSyncQuery.completedCheckpoint(transaction: transaction,

@@ -798,7 +798,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.buttons["target-items-group-relationshipEvidenceIncomplete"].exists)
         XCTAssertFalse(app.buttons["target-items-group-unaccountedFor"].exists)
         let itemSearch = app.textFields["target-items-search"]
-        reveal(itemSearch, in: app)
+        reveal(itemSearch, in: app, fullyInsideScrollView: true)
         itemSearch.tap()
         itemSearch.typeText("no matching item")
         #if os(iOS)
@@ -856,6 +856,36 @@ final class WorkspaceChecklistUITests: XCTestCase {
         unassignedSelectionRow.tap()
         assertSelectedCount(0)
         XCTAssertFalse(app.staticTexts["target-item-history-partial"].exists)
+        func chooseItemSpace(_ choice: String) {
+            reveal(itemFilters, in: app)
+            itemFilters.tap()
+            #if os(macOS)
+            app.menuItems["Space"].tap()
+            app.menuItems[choice].tap()
+            #else
+            app.buttons["Space"].tap()
+            app.buttons[choice].tap()
+            #endif
+        }
+        reveal(selectAll, in: app)
+        selectAll.tap()
+        assertSelectedCount(3)
+        chooseItemSpace("None")
+        XCTAssertTrue(app.staticTexts["target-items-no-match"].waitForExistence(timeout: 5))
+        assertSelectedCount(0)
+        chooseItemSpace("Empty test Space")
+        XCTAssertTrue(app.staticTexts["target-items-no-match"].exists)
+        chooseItemSpace("Archived test Space — archived")
+        XCTAssertTrue(app.buttons["target-physical-item-physical-ui-other-space"].waitForExistence(timeout: 5))
+        XCTAssertFalse(item.exists)
+        XCTAssertFalse(unassignedSelectionRow.exists)
+        chooseItemSpace("None")
+        chooseItemSpace("No Space")
+        XCTAssertTrue(unassignedSelectionRow.waitForExistence(timeout: 5))
+        XCTAssertFalse(item.exists)
+        XCTAssertFalse(app.buttons["target-physical-item-physical-ui-other-space"].exists)
+        app.buttons["target-items-filters-clear"].tap()
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
         let unknownGroup = "target-items-group-relationshipEvidenceIncomplete"
         let disclosure = app.buttons[unknownGroup]
         reveal(disclosure, in: app)
@@ -1156,6 +1186,20 @@ final class WorkspaceChecklistUITests: XCTestCase {
             downloadedCount.label == "Downloaded Items: 1"
                 || (downloadedCount.value as? String) == "Downloaded Items: 1"
         })
+        let itemFilters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        reveal(itemFilters, in: app)
+        itemFilters.tap()
+        #if os(macOS)
+        XCTAssertTrue(app.menuItems["Name"].exists)
+        XCTAssertFalse(app.menuItems["Space"].exists)
+        app.typeKey(.escape, modifierFlags: [])
+        #else
+        XCTAssertTrue(app.buttons["Name"].exists)
+        XCTAssertFalse(app.buttons["Space"].exists)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
+        XCTAssertTrue(app.buttons["Name"].waitForNonExistence(timeout: 5))
+        #endif
+        reveal(physicalItem, in: app)
         physicalItem.tap()
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Current test Space"].exists)
@@ -1210,7 +1254,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
-    private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true) {
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication, upwards: Bool = true,
+                        fullyInsideScrollView: Bool = false) {
         #if os(iOS)
         let list = app.collectionViews.firstMatch
         #elseif os(macOS)
@@ -1218,10 +1263,25 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
         XCTAssertTrue(list.exists)
         for _ in 0..<6 {
-            if element.waitForExistence(timeout: 1), element.isHittable { return }
+            if element.waitForExistence(timeout: 1) {
+                // macOS can report a TextField hittable when only its bottom
+                // few pixels intersect the list; tapping its clipped center
+                // then focuses the Outline instead of the input.
+                if fullyInsideScrollView {
+                    let viewport = list.frame.insetBy(dx: 0, dy: 2)
+                    if viewport.contains(element.frame), element.isHittable { return }
+                    if element.frame.midY < viewport.midY { list.swipeDown() }
+                    else { list.swipeUp() }
+                    continue
+                }
+                if element.isHittable { return }
+            }
             if upwards { list.swipeUp() } else { list.swipeDown() }
         }
         XCTAssertTrue(element.isHittable, app.debugDescription)
+        if fullyInsideScrollView {
+            XCTAssertTrue(list.frame.insetBy(dx: 0, dy: 2).contains(element.frame), app.debugDescription)
+        }
     }
 
     private func waitUntil(_ condition: @escaping () -> Bool) -> Bool {

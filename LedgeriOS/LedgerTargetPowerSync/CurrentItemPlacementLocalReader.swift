@@ -183,6 +183,43 @@ struct CurrentItemPlacementLocalReader: Sendable {
             }.compactMap { $0 }
     }
 
+    func readSnapshot(accountId: AccountID, principalId: PrincipalID,
+                      scope: ItemPlacementScope) async throws -> DownloadedItemPlacements {
+        try await database.readTransaction { transaction in
+            try Self.readSnapshot(transaction: transaction, accountId: accountId,
+                principalId: principalId, scope: scope)
+        }
+    }
+
+    static func readSnapshot(transaction: any Transaction, accountId: AccountID,
+                             principalId: PrincipalID, scope: ItemPlacementScope) throws -> DownloadedItemPlacements {
+        // This read checks active membership even when there are no Items.
+        let rows = try read(transaction: transaction, accountId: accountId, principalId: principalId, scope: scope)
+        let kind: String
+        let project: String?
+        switch scope {
+        case .businessInventory: kind = "business_inventory"; project = nil
+        case .project(let id): kind = "project"; project = id.rawValue
+        }
+        let spaces = try transaction.getAll(sql: """
+            SELECT space.id,space.display_name,space.lifecycle
+            FROM spike_spaces space
+            WHERE space.account_id=? AND space.scope_kind=? AND space.project_id IS ?
+              AND (space.lifecycle='active' OR (space.lifecycle='archived' AND EXISTS (
+                SELECT 1 FROM spike_item_placements placement
+                WHERE placement.account_id=space.account_id AND placement.space_id=space.id
+                  AND placement.scope_kind=space.scope_kind AND placement.project_id IS space.project_id
+                  AND placement.ended_at IS NULL)))
+            ORDER BY space.id
+            """, parameters: [accountId.rawValue, kind, project]) { cursor in
+                try DownloadedItemSpace(id: SpaceID(validating: cursor.getString(name: "id")),
+                    accountId: accountId, scope: scope,
+                    displayName: cursor.getStringOptional(name: "display_name"),
+                    isArchived: cursor.getString(name: "lifecycle") == "archived")
+            }
+        return try .init(accountId: accountId, scope: scope, rows: rows, spaces: spaces)
+    }
+
     func watch(accountId: AccountID, principalId: PrincipalID, scope: ItemPlacementScope) throws -> AsyncThrowingStream<[PhysicalItemPlacement?], Error> {
         try database.watch(sql: Self.sql,
             parameters: Self.parameters(accountId: accountId, principalId: principalId, scope: scope)) {

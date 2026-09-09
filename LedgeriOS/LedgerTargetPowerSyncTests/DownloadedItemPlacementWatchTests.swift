@@ -26,6 +26,8 @@ struct DownloadedItemPlacementWatchTests {
                 return true
             }
         }
+        let deadline = Task { try await Task.sleep(for: .seconds(10)); task.cancel() }
+        defer { deadline.cancel(); task.cancel() }
         var iterator = values.stream.makeAsyncIterator()
         let first = try #require(await iterator.next())
         #expect(first.accountId == account)
@@ -44,6 +46,19 @@ struct DownloadedItemPlacementWatchTests {
         if let json = parameters.first {
             #expect(try JSONDecoder().decode([String: String].self, from: Data(json.utf8)) == ["account_id": account.rawValue])
         }
+        // No Item rows change: an empty active Space must still refresh choices.
+        _ = try await db.execute(sql: "INSERT INTO spike_spaces(id,account_id,scope_kind,display_name,lifecycle) VALUES('empty-space','sdk-account','business_inventory','Empty warehouse','active')", parameters: nil)
+        var spaces = try #require(await iterator.next())
+        while spaces.spaces.first?.displayName != "Empty warehouse" {
+            spaces = try #require(await iterator.next())
+        }
+        #expect(spaces.rows.isEmpty)
+        _ = try await db.execute(sql: "UPDATE spike_spaces SET display_name='Renamed warehouse' WHERE id='empty-space'", parameters: nil)
+        while spaces.spaces.first?.displayName != "Renamed warehouse" {
+            spaces = try #require(await iterator.next())
+        }
+        _ = try await db.execute(sql: "UPDATE spike_spaces SET lifecycle='archived' WHERE id='empty-space'", parameters: nil)
+        while !spaces.spaces.isEmpty { spaces = try #require(await iterator.next()) }
         _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE id='member'", parameters: nil)
         await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) { try await task.value }
         try await db.close()

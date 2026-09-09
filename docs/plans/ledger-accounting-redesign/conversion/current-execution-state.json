@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 343,
+  "stateVersion": 344,
   "resumeAfterWorkflowId": "property-management-report-delivery",
   "updatedAt": "2026-09-09",
   "branch": "codex/supabase-powersync-implementation",
@@ -23,10 +23,10 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
     "nextActions": [
-      "Archived Inventory parent fix ready: migration081820 ALTERs existing archived-Project read policy to exact current physical parents in both scopes; physical_account_items downloads active/current-parent Spaces. No new writes/unrelated archived access. Root SQL review and independent stream/native review GO.820DB27files+1024native151suites,24actualSQLcaptures,4realparser tests passed; environment passed. Advisors only existing Space multiple-permissive warning. Final conversion check then commit/push scoped batch and follow exact automatic CI.",
-      "e8aa4365 selection CI34327982123 confirmed live, native tests at08:19:29UTC;2c0421ad rendering/filter CI34327248788 confirmed live, MacUI at08:16:44UTC. Follow exact runs without redispatch. Other referenced runs terminal;5538ef14 whole-green remains baseline.",
-      "Next Space facet: use No Space and exact stable IDs, include active zero-Item Spaces plus current archived parents; hidden in Space Detail. Parent spaceBrowser.spaces provides Inventory choices, but Project starts only on Spaces tab then stops on return. Need retain existing scoped watch or include already-downloaded Spaces in atomic Item read; do not claim facet from row-only options. Current reader already joins exact parent and can project display_name. Source grouping uses SKU/source plus unambiguous name fallback; do not implement naive name-only grouping.",
-      "O016/O027/O065 write decisions unanswered. Additional facets/cards/detail/selection totals/bulk writes and live Invoice evidence unfinished. Local schema manually applied through081820 INCLUDING060126/064122, no migration-history rewrite. Hosted/hardware/migration/cutover incomplete. Disk~530MiB; preserve artifacts, avoid large local builds."
+      "Space facet batch ready: atomic physical+scoped Space choices in existing subscriptions, emptyactive/referencedarchived, exactID/NoSpace/Only/AllExcept/Clear, hidden SpaceDetail, selection pruning. Root provider review +independentCore/UI review GO.23provider+9Corefocused and1026native151suites pass; app/Mac+iPhone XCTest typechecks, environment andconversion pass. UI assertions added; no actual new UI proof yet. Commit/push after final checks and follow single automatic exact-commit CI.",
+      "34327982123/e8aa4365 TERMINAL16/17Mac failure: Item search y122h26 mostly above scroll viewport y144. isHittable accepted clippedbottom; keyboard stayed onOutline. Current opt-in reveal requires fullfieldviewportcontainment and direction-aware bounded scrolling; reviewerGO, runtimeCI pending. Do not poll terminal runs.34327248788/2c0421ad MacUI passed andiPhone live(start08:28:11UTC);34328964782/ceba919f live(MacUIstart08:37:54UTC). Follow without redispatch.",
+      "Next Item gaps: cards/detail/bookmark/status/source/category/image/price facets, duplicate groups and selected totals/bulk actions. Source grouping uses SKU+source boundaries and unambiguous namefallback, not naive name-only. O016/O027/O065 writer decisions unanswered; continue independent approved work. Live Invoice evidence must extend readers before Invoice workflow ships. No broad Item completion.",
+      "Local schema applied through081820 INCLUDING060126/064122, history not rewritten. Prior820DB27files/24physical-stream captures/realparser valid for unchanged backend. Hosted/hardware/migration/cutover incomplete. Disk~530MiB; preserve artifacts, avoid large local builds."
     ]
   },
   "blockers": [],

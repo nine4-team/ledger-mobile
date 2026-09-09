@@ -574,7 +574,11 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             description: "Unassigned test Item", itemRevision: 1,
             placementId: EntityID(validating: "physical-ui-unassigned-placement"), scope: scope, spaceId: nil,
             sku: "SKU-UNASSIGNED", createdAt: Date(timeIntervalSince1970: 2))
-        return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row, elsewhere, unassigned])
+        return try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: [row, elsewhere, unassigned], spaces: [
+            .init(id: .init(validating: "space-ui-test"), accountId: accountId, scope: scope, displayName: "Current test Space"),
+            .init(id: .init(validating: "other-space-ui-test"), accountId: accountId, scope: scope, displayName: "Archived test Space", isArchived: true),
+            .init(id: .init(validating: "empty-space-ui-test"), accountId: accountId, scope: scope, displayName: "Empty test Space")
+        ])
     }
 }
 

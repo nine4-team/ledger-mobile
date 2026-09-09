@@ -20,9 +20,12 @@ struct DownloadedItemPlacementWatch: Sendable {
              receive: @Sendable @escaping (DownloadedItemPlacements) async -> Bool) async throws {
         try await withOwnedSyncStreamWatch(subscribe: { try await subscribe(accountId) }, observe: {
             let reader = CurrentItemPlacementLocalReader(database: database)
-            for try await rows in try reader.watch(accountId: accountId, principalId: principalId, scope: scope) {
+            // The existing watch SQL depends on Spaces as well as Items,
+            // placements, Projects and membership, even when it returns no Items.
+            // Each table-change signal is reread atomically with facet choices.
+            for try await _ in try reader.watch(accountId: accountId, principalId: principalId, scope: scope) {
                 try Task.checkCancellation()
-                let value = try DownloadedItemPlacements(accountId: accountId, scope: scope, rows: rows.compactMap { $0 })
+                let value = try await reader.readSnapshot(accountId: accountId, principalId: principalId, scope: scope)
                 guard await receive(value) else { return }
             }
         })

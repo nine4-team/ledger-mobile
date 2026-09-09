@@ -53,6 +53,10 @@ struct DownloadedItemsView: View {
             Menu("Filter Items") {
                 facetMenu("Name", selection: $filters.name)
                 facetMenu("SKU", selection: $filters.sku)
+                if spaceId == nil, case .downloaded(let snapshot) = model.state,
+                   snapshot.accountId == accountId, snapshot.scope == scope {
+                    spaceFacetMenu(snapshot.spaceChoices)
+                }
             }
             .accessibilityIdentifier("target-items-filters")
             if filters.isActive {
@@ -157,14 +161,37 @@ struct DownloadedItemsView: View {
             Button("None") { selection.wrappedValue = .only([]) }
             Divider()
             ForEach(["has", "missing"], id: \.self) { value in
-                Toggle(value == "has" ? "Has \(title)" : "No \(title)", isOn: Binding(
-                    get: { selection.wrappedValue.includes(value) },
-                    set: { desired in
-                        if desired != selection.wrappedValue.includes(value) { selection.wrappedValue.toggle(value) }
-                    }
-                ))
+                facetToggle(value, label: value == "has" ? "Has \(title)" : "No \(title)", selection: selection)
             }
         }
+    }
+
+    private func spaceFacetMenu(_ choices: [DownloadedItemSpace]) -> some View {
+        Menu("Space") {
+            Button("All") { filters.space = .all }
+            Button("None") { filters.space = .only([]) }
+            Divider()
+            facetToggle("", label: "No Space", selection: $filters.space)
+            ForEach(choices, id: \.id) { space in
+                let name = space.displayName.flatMap { $0.isEmpty ? nil : $0 } ?? "Space name not downloaded"
+                let ambiguous = space.displayName?.isEmpty != false || choices.filter { $0.displayName == space.displayName }.count > 1
+                let label = name + (ambiguous ? " (\(space.id.rawValue))" : "") + (space.isArchived ? " — archived" : "")
+                facetToggle(space.id.rawValue, label: label, selection: $filters.space)
+                    .accessibilityIdentifier("target-items-space-choice-\(space.id.rawValue)")
+            }
+            Text("Downloaded Spaces only")
+        }
+        .accessibilityIdentifier("target-items-space-filter")
+    }
+
+    private func facetToggle(_ value: String, label: String,
+                             selection: Binding<DownloadedItemFacetSelection>) -> some View {
+        Toggle(label, isOn: Binding(
+            get: { selection.wrappedValue.includes(value) },
+            set: { desired in
+                if desired != selection.wrappedValue.includes(value) { selection.wrappedValue.toggle(value) }
+            }
+        ))
     }
 
     @ViewBuilder

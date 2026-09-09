@@ -802,9 +802,8 @@ actor AccountWorkspacePendingWorkRuntime {
             guard accountId == resources.accountId else {
                 throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
             }
-            let rows = try await CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
-                .read(accountId: resources.accountId, principalId: resources.principalId, scope: scope)
-            return try DownloadedItemPlacements(accountId: resources.accountId, scope: scope, rows: rows)
+            return try await CurrentItemPlacementLocalReader(database: resources.structuredDatabase)
+                .readSnapshot(accountId: resources.accountId, principalId: resources.principalId, scope: scope)
         }
     }
 

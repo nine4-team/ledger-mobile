@@ -1,7 +1,7 @@
 import Foundation
 
 public enum DownloadedItemPlacementsFailure: Error, Equatable, Sendable {
-    case invalidRevision, invalidTimestamp, duplicateItem, scopeMismatch
+    case invalidRevision, invalidTimestamp, duplicateItem, duplicateSpace, scopeMismatch
 }
 
 /// Read-only physical facts. Item revision is not a placement mutation token.
@@ -97,12 +97,29 @@ public enum DownloadedItemFacetSelection: Equatable, Sendable {
 public struct DownloadedItemFilters: Equatable, Sendable {
     public var name: DownloadedItemFacetSelection = .all
     public var sku: DownloadedItemFacetSelection = .all
+    public var space: DownloadedItemFacetSelection = .all
     public init() {}
-    public var isActive: Bool { name != .all || sku != .all }
+    public var isActive: Bool { name != .all || sku != .all || space != .all }
 
     public func includes(_ row: PhysicalItemPlacement) -> Bool {
         name.includes(row.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
             && sku.includes((row.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
+            && space.includes(row.spaceId?.rawValue ?? "")
+    }
+}
+
+/// Current-scope local Space evidence for Item filtering, not an authoritative
+/// directory. Empty string is reserved for the No Space facet; SpaceID forbids it.
+public struct DownloadedItemSpace: Equatable, Sendable {
+    public let id: SpaceID
+    public let accountId: AccountID
+    public let scope: ItemPlacementScope
+    public let displayName: String?
+    public let isArchived: Bool
+    public init(id: SpaceID, accountId: AccountID, scope: ItemPlacementScope,
+                displayName: String?, isArchived: Bool = false) {
+        self.id = id; self.accountId = accountId; self.scope = scope
+        self.displayName = displayName; self.isArchived = isArchived
     }
 }
 
@@ -112,14 +129,39 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
     public let accountId: AccountID
     public let scope: ItemPlacementScope
     public let rows: [PhysicalItemPlacement]
+    public let spaces: [DownloadedItemSpace]
 
-    public init(accountId: AccountID, scope: ItemPlacementScope, rows: [PhysicalItemPlacement]) throws {
+    public init(accountId: AccountID, scope: ItemPlacementScope, rows: [PhysicalItemPlacement],
+                spaces: [DownloadedItemSpace] = []) throws {
         var identities = Set<ItemID>()
         for row in rows {
             guard row.scope == scope else { throw DownloadedItemPlacementsFailure.scopeMismatch }
             guard identities.insert(row.itemId).inserted else { throw DownloadedItemPlacementsFailure.duplicateItem }
         }
-        self.accountId = accountId; self.scope = scope; self.rows = rows
+        var spaceIds = Set<SpaceID>()
+        let referencedSpaces = Set(rows.compactMap(\.spaceId))
+        for space in spaces {
+            guard space.accountId == accountId, space.scope == scope,
+                  !space.isArchived || referencedSpaces.contains(space.id) else {
+                throw DownloadedItemPlacementsFailure.scopeMismatch
+            }
+            guard spaceIds.insert(space.id).inserted else { throw DownloadedItemPlacementsFailure.duplicateSpace }
+        }
+        self.accountId = accountId; self.scope = scope; self.rows = rows; self.spaces = spaces
+    }
+
+    /// Keep referenced identities selectable when their labels have not arrived.
+    /// Never infer an exhaustive directory from a partial local download.
+    public var spaceChoices: [DownloadedItemSpace] {
+        var values = Dictionary(uniqueKeysWithValues: spaces.map { ($0.id, $0) })
+        for id in rows.compactMap(\.spaceId) where values[id] == nil {
+            values[id] = .init(id: id, accountId: accountId, scope: scope, displayName: nil)
+        }
+        return values.values.sorted { left, right in
+            let comparison = (left.displayName ?? "").localizedCaseInsensitiveCompare(right.displayName ?? "")
+            if comparison != .orderedSame { return comparison == .orderedAscending }
+            return left.id.rawValue.utf8.lexicographicallyPrecedes(right.id.rawValue.utf8)
+        }
     }
 
     /// A Space filter narrows an already Account/scope-bound download; it does

@@ -4,6 +4,48 @@ import Testing
 
 @Suite("Downloaded Item browsing")
 struct DownloadedItemBrowsingTests {
+    @Test("Space facets use exact IDs, retain empty active choices and hide unrelated archives")
+    func spaceChoicesAndFiltering() throws {
+        let base = try snapshot()
+        let room = try SpaceID(validating: "room"), empty = try SpaceID(validating: "empty")
+        let value = try DownloadedItemPlacements(accountId: base.accountId, scope: base.scope, rows: base.rows,
+            spaces: [
+                .init(id: room, accountId: base.accountId, scope: base.scope, displayName: "Same name", isArchived: true),
+                .init(id: empty, accountId: base.accountId, scope: base.scope, displayName: "Same name")
+            ])
+        #expect(value.spaceChoices.map(\.id) == [empty, room])
+        #expect(value.spaceChoices.last?.isArchived == true)
+        var filters = DownloadedItemFilters()
+        filters.space = .only([room.rawValue])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["a"])
+        filters.space = .only([empty.rawValue])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).isEmpty)
+        filters.space = .only([""])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["b", "c"])
+        filters.sku = .only(["has"])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).map(\.itemId.rawValue) == ["b"])
+        filters.space = .allExcept([""])
+        #expect(value.rows(in: nil, matching: "", order: .newest, filters: filters).isEmpty)
+        #expect(base.spaceChoices.map(\.id) == [room])
+        #expect(base.spaceChoices.first?.displayName == nil)
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) {
+            try DownloadedItemPlacements(accountId: base.accountId, scope: base.scope, rows: base.rows,
+                spaces: [.init(id: empty, accountId: base.accountId, scope: base.scope, displayName: "Archive", isArchived: true)])
+        }
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) {
+            try DownloadedItemPlacements(accountId: base.accountId, scope: base.scope, rows: base.rows,
+                spaces: [.init(id: room, accountId: .init(validating: "foreign"), scope: base.scope, displayName: "Secret")])
+        }
+        #expect(throws: DownloadedItemPlacementsFailure.duplicateSpace) {
+            try DownloadedItemPlacements(accountId: value.accountId, scope: value.scope, rows: value.rows,
+                spaces: [value.spaces[0], value.spaces[0]])
+        }
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) {
+            try DownloadedItemPlacements(accountId: base.accountId, scope: base.scope, rows: base.rows,
+                spaces: [.init(id: room, accountId: base.accountId, scope: .project(.init(validating: "other-project")), displayName: "Wrong scope")])
+        }
+    }
+
     @Test("Row selection prunes removed IDs and cannot select an ineligible Item")
     func selectionEligibility() throws {
         let a = try ItemID(validating: "a"), b = try ItemID(validating: "b")

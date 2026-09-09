@@ -10,6 +10,41 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Space choices retain empty active and referenced archived parents across encrypted restart")
+    func scopedSpaceChoices() async throws {
+        try await withDatabase(reopen: { db in
+            let snapshot = try await CurrentItemPlacementLocalReader(database: db)
+                .readSnapshot(accountId: account, principalId: principal, scope: .project(project))
+            #expect(snapshot.spaces.map(\.id.rawValue) == ["empty", "room"])
+            #expect(snapshot.spaces.first?.displayName == "Empty room")
+            #expect(snapshot.spaces.last?.isArchived == true)
+            #expect(snapshot.rows.map(\.spaceId?.rawValue) == ["room"])
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE id='member'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await CurrentItemPlacementLocalReader(database: db)
+                    .readSnapshot(accountId: account, principalId: principal, scope: .project(project))
+            }
+        }) { db in
+            _ = try await db.execute(sql: "UPDATE spike_spaces SET lifecycle='archived',display_name='Archived room' WHERE id='room'", parameters: nil)
+            for sql in [
+                "INSERT INTO spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle) VALUES('empty','account-item','project','project-item','Empty room','active')",
+                "INSERT INTO spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle) VALUES('unused','account-item','project','project-item','Unused archive','archived')",
+                "INSERT INTO spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle) VALUES('foreign','other','project','project-item','Foreign room','active')",
+                "INSERT INTO spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle) VALUES('elsewhere','account-item','project','other-project','Other Project','active')",
+                "INSERT INTO spike_spaces(id,account_id,scope_kind,display_name,lifecycle) VALUES('inventory-empty','account-item','business_inventory','Empty warehouse','active')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let snapshot = try await reader.readSnapshot(accountId: account, principalId: principal, scope: .project(project))
+            #expect(snapshot.spaces.map(\.id.rawValue) == ["empty", "room"])
+            let inventory = try await reader.readSnapshot(accountId: account, principalId: principal, scope: .businessInventory)
+            #expect(inventory.rows.isEmpty)
+            #expect(inventory.spaces.map(\.id.rawValue) == ["inventory-empty"])
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readSnapshot(accountId: account, principalId: PrincipalID(validating: "foreign"), scope: .project(project))
+            }
+        }
+    }
+
     @Test("Physical detail retains ordered raw intervals with missing historical labels")
     func placementHistory() async throws {
         try await withDatabase { db in
