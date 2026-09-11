@@ -16,7 +16,7 @@ const block = yaml.match(/^  property_management_report:\n([\s\S]*?)(?=^  \S|$(?
 assert.ok(block);
 const pattern = /^      - \|\n((?:        .*(?:\n|$))+)/gm;
 const queries = [...block.matchAll(pattern)].map((match) => match[1].replace(/^        /gm, "").trim());
-assert.equal(queries.length, 12);
+assert.equal(queries.length, 13);
 assert.equal(block.replace(/^    queries:\n/, "").replace(pattern, "").trim(), "");
 // Overlapping buckets can contain the same table/id. Keep the complete SELECT
 // expressions identical, including casts/aliases—not merely the output keys.
@@ -96,7 +96,8 @@ for (const [index, project] of projects.entries()) {
       values (${q(`ref-${project}`)},'account-primary',${q(ids[2][index])},${q(imageId)},1,0,true);`);
   }
   sql.push(`insert into public.spike_transactions(id,account_id,project_id,client_id,amount_minor_units,currency)
-    values (${q(`payment-${project}`)},'account-primary',${q(project)},${q(clients[index])},500,'USD');
+    values (${q(`payment-${project}`)},'account-primary',${q(project)},${q(clients[index])},500,'USD'),
+      (${q(`unlinked-${project}`)},'account-primary',${q(project)},${q(clients[index])},777,'USD');
     insert into ledger_private.item_client_payment_connections(id,account_id,project_id,client_id,item_id,placement_id,transaction_id,started_at,started_by_principal_id)
     values (${q(`link-${project}`)},'account-primary',${q(project)},${q(clients[index])},${q(ids[2][index])},${q(ids[1][index])},${q(`payment-${project}`)},'2026-09-02','principal-owner');`);
   sql.push(`insert into public.spike_item_project_categories(id,account_id,project_id,item_id,category_id)
@@ -128,10 +129,13 @@ capture("project-b", "account-primary", projects[1]);
 const owner = "10000000-0000-0000-0000-000000000001";
 capture("owner-a", "account-primary", projects[0], owner);
 capture("owner-b", "account-primary", projects[1], owner);
+sql.push("update public.spike_account_memberships set financial_access='limited' where account_id='account-primary' and principal_id='principal-owner';");
+capture("downgraded-full", "account-primary", projects[0], owner, ["spike_transactions"]);
+sql.push("update public.spike_account_memberships set financial_access='full' where account_id='account-primary' and principal_id='principal-owner';");
 sql.push(`update ledger_private.item_client_payment_connections set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(`link-${projects[0]}`)};`);
-capture("closed-link", "account-primary", projects[0], owner, ["item_client_payment_connections"]);
+capture("closed-link", "account-primary", projects[0], owner, ["item_client_payment_connections", "spike_transactions"]);
 sql.push(`update public.spike_item_placements set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(ids[1][1])};`);
-capture("departed-placement", "account-primary", projects[1], owner, ["item_client_payment_connections", "spike_item_project_categories", "spike_budget_categories", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices", "item_image_sets"]);
+capture("departed-placement", "account-primary", projects[1], owner, ["item_client_payment_connections", "spike_transactions", "spike_item_project_categories", "spike_budget_categories", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices", "item_image_sets"]);
 sql.push("update public.spike_budget_categories set visibility_class='company_financial' where id='category-furnishings';");
 capture("hidden-category", "account-primary", projects[0], user, ["spike_item_project_categories", "spike_budget_categories"]);
 capture("wrong-account", "account-other", projects[0]);
@@ -144,8 +148,9 @@ sql.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: sql.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map(JSON.parse);
-assert.equal(results.length, 106);
+assert.equal(results.length, 117);
 const columns = {
+  spike_transactions: ["id", "account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin"],
   item_image_sets: ["id", "account_id", "item_id", "revision", "expected_count"],
   spike_projects: ["id", "account_id", "client_id", "display_name", "description", "legacy_notes", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   spike_spaces: ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
@@ -160,7 +165,7 @@ const columns = {
   collected_invoices: ["id","account_id","project_id","client_id","sealed"],
 };
 assert.deepEqual([...reportQueries.keys()].sort(), Object.keys(columns).sort(), "Review every report projection");
-const financialTables = new Set(["item_client_payment_connections", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"]);
+const financialTables = new Set(["spike_transactions", "item_client_payment_connections", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"]);
 for (const { label, table, rows } of results) {
   if (!["project-a", "project-b", "owner-a", "owner-b"].includes(label)) { assert.deepEqual(rows, [], label); continue; }
   if (financialTables.has(table) && !label.startsWith("owner-")) { assert.deepEqual(rows, [], 'Restricted members receive no financial provenance'); continue; }
@@ -168,6 +173,7 @@ for (const { label, table, rows } of results) {
   assert.equal(rows.length, 1, `${label}: exact Project projection ${table}`);
   const row = rows[0];
   const expectedIDs = {
+    spike_transactions: `payment-${projects[selected]}`,
     item_image_sets: ids[2][selected],
     spike_projects: projects[selected],
     spike_spaces: ids[0][selected],
@@ -184,6 +190,15 @@ for (const { label, table, rows } of results) {
   assert.equal(row.id, expectedIDs[table]);
   assert.deepEqual(Object.keys(row).sort(), [...columns[table]].sort());
   assert.equal(row.account_id, "account-primary");
+  if (table === "spike_transactions") {
+    assert.equal(row.project_id, projects[selected]);
+    assert.equal(row.client_id, clients[selected]);
+    assert.equal(row.amount_minor_units, "500");
+    assert.equal(row.currency, "USD");
+    assert.equal(row.type, "purchase");
+    assert.equal(row.role, "standalone");
+    assert.equal(row.origin, "firebase_client_payment");
+  }
   if (table === "item_image_sets") {
     assert.equal(row.item_id, ids[2][selected]);
     assert.equal(row.revision, String(selected+1));
@@ -203,4 +218,4 @@ for (const { label, table, rows } of results) {
     assert.equal(row.market_value_currency, selected === 0 ? "USD" : null);
   }
 }
-console.log("shared report stream: 12 named actual SQL projections / 106 captures preserve exact scope and image markers, deny hidden categories, restricted payment/charge/frozen provenance, closed links, departed placement, cross-Account/user/removal; fixtures rolled back (not live replication validation)");
+console.log("shared report stream: 13 named actual SQL projections / 117 captures preserve exact scope and image markers, deny hidden categories, restricted payment/charge/frozen provenance, closed links, departed placement, cross-Account/user/removal and same-count financial downgrade; fixtures rolled back (not live replication validation)");

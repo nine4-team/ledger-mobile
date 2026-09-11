@@ -33,7 +33,7 @@ set local role anon;
 select throws_ok($$select ledger_private.import_client_payment('x','a','p','c',1,'USD','s','d','\x00'::bytea)$$,'42501',null,'Anonymous callers cannot invoke import');
 reset role;
 set local role authenticated;
-select throws_ok('select * from public.spike_transactions','42501',null,'Financial read access remains closed pending policy');
+select is((select count(*) from public.spike_transactions),0::bigint,'Unlinked imported payments remain unreadable');
 reset role;
 set local role service_role;
 select throws_ok($$select ledger_private.import_client_payment('x','a','p','c',1,'USD','s','d','\x00'::bytea)$$,'42501',null,'Service API role cannot invoke operator import');

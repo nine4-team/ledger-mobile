@@ -44,6 +44,14 @@
   abstraction only for a concrete shared problem. Do not create comment-only
   scaffolds, slice dossiers, evidence essays, READY commits, or promotion-only
   commits for ordinary work.
+- Conversion boundary: preserve existing UI and backend-independent utilities;
+  adapt/extract their backend dependencies inside this worktree, not the Firebase
+  checkout. Follow reuse choices and justified replacement exceptions in the
+  approved plan; a Supabase target or separate build is not a reason to rebuild.
+  For an unplanned replacement, pause that replacement, explain the concrete
+  reason and reuse alternative, and obtain user approval before proceeding.
+  Continue independent authorized work. Normal diff review must check new
+  counterparts against approved exceptions; do not add a recurring reuse audit.
 - Record significant technical design changes in
   `docs/architecture/redesign/architecture-decisions.md`: what changed, why,
   preserved behavior/history, tradeoffs, and verification evidence or gaps.
@@ -54,10 +62,20 @@
   reconciliation, and risk-specific evidence. Completion requires concrete
   implementation files and passed story-specific checks for every required
   layer/risk; compilation or prose is not proof.
-- Use focused checks while building, then run `npm run conversion:check` and the
-  applicable full local tests once at the integrated boundary. Use the automatic
-  pull-request CI run for that exact commit; do not manually dispatch duplicate
-  CI for the same commit.
+- Use the method's "Verification execution" commands: focused local checks while
+  building, then `npm run conversion:check` and appropriate broader verification
+  at the integrated batch boundary. Let normal exact-commit CI supply its required
+  broad checks; do not automatically duplicate them locally or dispatch duplicate
+  CI. A local broad run needs a concrete reason (for example unavailable CI or
+  native failure diagnosis), not a new approval or tracking document.
+- Use the method's "Quiet CI waiting" protocol for long test runs. Do not burn
+  model turns polling unchanged status or repeatedly reviewing logs. Save the
+  exact run/attempt and next action in the existing resume pointer. Prefer existing
+  process completion/watcher tools; inexpensive non-AI polling is allowed. A
+  watcher process is not proof of an agent wake-up. If a scheduled return is needed,
+  base it on that suite's observed runtime, never a blanket hour. Review concise
+  results before accepting the batch; retire its watcher. After compaction, reuse
+  saved results rather than repeating discovery, testing, or historical log reads.
 - M3-M5 are cumulative product gates, not surface-stage gates. M3 requires the
   audited checklist and verified target behavior; M4 adds migration/rehearsal;
   M5 adds explicit cutover readiness. Mapped code surfaces never prove product

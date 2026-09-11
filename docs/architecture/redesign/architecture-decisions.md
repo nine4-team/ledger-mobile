@@ -1474,6 +1474,31 @@ hosted verification remain separate; thumbnails and financial group totals still
 require their authorized readers. Authority: `docs/specs/items.md` Target Everyday
 Workspace and Source facet, with the reviewed source grouping/Item model semantics.
 
+### Current Item-linked Purchase read facts
+
+The existing physical Item history reader now includes available canonical
+Purchase facts for its current Project placement. Reuse the existing relationship
+reader, workspace subscription, encrypted database and authorization checks; no
+new UI, payment writer or second history system. Grant authenticated SELECT only
+for active full-financial members with a current Item/placement/payment connection.
+Limited financial visibility remains gated by O-060; source bytes and API writes
+remain inaccessible. This is a conservative full-access read, not approval of the
+unresolved mixed-payment visibility matrix.
+
+Sync money as text and parse exact positive Int64 cents, validating scope,
+classification, currency and currently supported imported-payment origin locally.
+Malformed evidence cannot supply money; missing rows never mean unpaid. A returned
+amount belongs to the whole Purchase, not an Item allocation or an additive Item
+total. Preserve immutable source/payment identity. Ended connections/placements
+and learned financial-access loss remove current read eligibility.
+
+Focused evidence: CurrentItemPlacementLocalReaderTests (including encrypted
+reopen, changes, malformed currency/origin and access loss),
+DownloadedItemPlacementsTests, item_linked_purchase_read.test.sql,
+imported_client_payment_storage.test.sql and actual stream SQL captures. Hosted
+replication, complete Transaction destinations and restricted-role reads are not
+claimed. Existing checklist record `item-linked-purchase-read` owns verification.
+
 ### Read-only Item images reuse the protected media path
 
 Item image objects carry immutable Account/Attachment/hash/length/type/path

@@ -10,6 +10,70 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Current Purchase facts are exact, durable and cleared when the Item leaves its Project")
+    func currentPurchaseFacts() async throws {
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            let loaded = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            #expect(loaded.currentClientPaidPurchases.first?.amount.minorUnits == 12345)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='project-now'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('inventory-now','account-item','chair','business_inventory','2026-03-01')", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.isEmpty)
+        }) { db in
+            try await seedAccounting(db)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.isEmpty)
+            _ = try await db.execute(sql: "INSERT INTO spike_transactions(id,account_id,project_id,client_id,type,role,amount_minor_units,currency,origin) VALUES('purchase','account-item','project-item','client','purchase','standalone','12345','USD','firebase_client_payment')", parameters: nil)
+            var iterator = try reader.watchHistory(accountId: account, principalId: principal, itemId: item).makeAsyncIterator()
+            _ = try #require(await iterator.next())
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.first?.id.rawValue == "purchase")
+            for field in ["account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin"] {
+                _ = try await db.execute(sql: "UPDATE spike_transactions SET \(field)='wrong' WHERE id='purchase'", parameters: nil)
+                _ = try #require(await iterator.next())
+                #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.isEmpty)
+                _ = try await db.execute(sql: "UPDATE spike_transactions SET account_id='account-item',project_id='project-item',client_id='client',type='purchase',role='standalone',amount_minor_units='12345',currency='USD',origin='firebase_client_payment' WHERE id='purchase'", parameters: nil)
+                _ = try #require(await iterator.next())
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            _ = try #require(await iterator.next())
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.isEmpty)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+        }
+    }
+
+    @Test("Purchase reads retain exact cents and omit missing or malformed financial evidence")
+    func purchaseEvidenceBoundaries() async throws {
+        try await withDatabase { db in
+            try await seedAccounting(db)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            _ = try await db.execute(sql: "INSERT INTO spike_transactions(id,account_id,project_id,client_id,type,role,amount_minor_units,currency,origin) VALUES('purchase','account-item','project-item','client','purchase','standalone','9007199254740993','USD','firebase_client_payment')", parameters: nil)
+            let exact = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            #expect(exact.currentClientPaidPurchases.first?.amount.minorUnits == 9_007_199_254_740_993)
+            #expect(exact.currentClientPaidPurchases.first?.amount.currency.rawValue == "USD")
+            for amount in ["0", "-1", "01", "+1", "1.0", "9223372036854775808"] {
+                _ = try await db.execute(sql: "UPDATE spike_transactions SET amount_minor_units=? WHERE id='purchase'", parameters: [amount])
+                let invalid = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+                #expect(invalid.currentClientPaidPurchases.isEmpty)
+                #expect(invalid.currentAccountingResolution == .relationshipEvidenceIncomplete)
+                #expect(invalid.description == "Chair")
+            }
+            _ = try await db.execute(sql: "UPDATE spike_transactions SET amount_minor_units='1' WHERE id='purchase'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE item_client_payment_connections SET ended_at='2026-03-01'", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).currentClientPaidPurchases.isEmpty)
+            _ = try await db.execute(sql: "UPDATE item_client_payment_connections SET ended_at=NULL", parameters: nil)
+            _ = try await db.execute(sql: "DELETE FROM spike_transactions WHERE id='purchase'", parameters: nil)
+            let missing = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            #expect(missing.currentClientPaidPurchases.isEmpty && missing.isPartial)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            }
+        }
+    }
+
     @Test("Current accounting association is scoped, access checked and survives reopen without historical fallback")
     func currentAccountingAssociation() async throws {
         try await withDatabase(reopen: { db in

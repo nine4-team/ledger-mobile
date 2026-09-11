@@ -183,6 +183,28 @@ streams:
         AND membership.state = 'active'
 
       - |
+        SELECT spike_transactions.id, spike_transactions.account_id, spike_transactions.project_id,
+               spike_transactions.client_id, spike_transactions.type, spike_transactions.role,
+               spike_transactions.amount_minor_units::text AS amount_minor_units,
+               spike_transactions.currency, spike_transactions.origin
+        FROM spike_transactions
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_transactions.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_transactions.account_id = subscription.parameter('account_id')
+          AND spike_transactions.project_id = subscription.parameter('project_id')
+          AND principal.auth_user_id = auth.user_id()
+          AND membership.state = 'active' AND membership.financial_access = 'full'
+          AND spike_transactions.id IN (
+            SELECT link.transaction_id FROM ledger_private.item_client_payment_connections AS link
+            JOIN spike_item_placements AS placement ON placement.id = link.placement_id
+              AND placement.account_id = link.account_id AND placement.project_id = link.project_id
+              AND placement.item_id = link.item_id
+            WHERE link.account_id = subscription.parameter('account_id')
+              AND link.project_id = subscription.parameter('project_id')
+              AND link.ended_at IS NULL AND placement.ended_at IS NULL
+              AND placement.scope_kind = 'project'
+          )
+      - |
         SELECT item_client_payment_connections.id, item_client_payment_connections.account_id,
           item_client_payment_connections.project_id, item_client_payment_connections.client_id,
           item_client_payment_connections.item_id, item_client_payment_connections.placement_id,

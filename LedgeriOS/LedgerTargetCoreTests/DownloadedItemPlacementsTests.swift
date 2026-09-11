@@ -3,6 +3,31 @@ import Testing
 
 @Suite("Downloaded physical Item contract")
 struct DownloadedItemPlacementsTests {
+    @Test("A Purchase fact cannot contain zero or negative money", arguments: [Int64.min, -1, 0])
+    func purchaseAmount(_ cents: Int64) throws {
+        #expect(throws: ProjectItemAccountingSectionFailure.invalidPurchaseClassification) {
+            try purchase(cents: cents)
+        }
+    }
+
+    @Test("Purchase facts require a matching current physical placement")
+    func purchasePlacement() throws {
+        let fact = try purchase(cents: Int64.max)
+        #expect(fact.amount.minorUnits == Int64.max)
+        #expect(throws: ProjectItemAccountingSectionFailure.scopeMismatch) {
+            try DownloadedItemPlacementHistory(accountId: AccountID(validating: "account"),
+                itemId: ItemID(validating: "chair"), description: "Chair", intervals: [],
+                currentClientPaidPurchases: [fact])
+        }
+    }
+
+    private func purchase(cents: Int64) throws -> DownloadedItemClientPurchase {
+        try .init(id: TransactionID(validating: "purchase"), accountId: AccountID(validating: "account"),
+            projectId: ProjectID(validating: "project"), clientId: ClientID(validating: "client"),
+            itemId: ItemID(validating: "chair"), placementId: EntityID(validating: "placement"),
+            amount: Money(minorUnits: cents, currency: CurrencyCode(validating: "USD")))
+    }
+
     @Test("Item revision must be positive", arguments: [Int64.min, -1, 0])
     func revision(_ revision: Int64) throws {
         #expect(throws: DownloadedItemPlacementsFailure.invalidRevision) {

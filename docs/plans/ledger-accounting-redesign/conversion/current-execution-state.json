@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 416,
+  "stateVersion": 426,
   "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
-  "updatedAt": "2026-09-10",
+  "updatedAt": "2026-09-11",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {
@@ -10,25 +10,26 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "ITEM-READ-NATIVE-INTEGRATION-GREEN",
-    "commit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631",
-    "ciRun": 34396683481,
+    "name": "ITEM-ACCOUNTING-FILTER-BOTH-PLATFORMS-GREEN",
+    "commit": "505dc2bb658076b0536e705038dd29b020747baf",
+    "ciRun": 34563203081,
     "ciStatus": "passed",
-    "meaning": "Exact automatic CI succeeded in all five jobs, including24MacUI and29iPhoneUI tests. September10 review closed only the gallery-controls and native-gestures acceptance checks. This is evidence for the committed code, not uncommitted Purchase/process changes or broad Item, hosted, migration or cutover completion."
+    "meaning": "All five exact-commit CI jobs passed, including1086native tests/156suites and25Mac/30iPhoneUI tests. Four accounting-filter checks passed; new native interaction passed Mac68.952s/iPhone131.451s. No broad Item, Purchase, hosted, migration or cutover completion. Pre-existing dirty Purchase changes are not part of this committed proof."
   },
   "activeWorkflow": {
-    "id": "downloaded-item-browsing-and-detail",
-    "kind": "product_ui",
-    "status": "implementation",
+    "id": "item-linked-purchase-read",
+    "kind": "backend_control",
+    "status": "local_verification",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Browse downloaded Project/Inventory Items, filter and select them, inspect read-only details and images, and follow the current Space link. Finish the existing read batch through native verification; editing, full Purchase/Invoice destinations and migration are separate work. Preserve incomplete financial/history evidence explicitly.",
+    "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
     "nextActions": [
-      "Active diagnostic goal: ITEM-ACCOUNTING-FILTER-VALUES/COMPOSITION/LIFECYCLE/NATIVE implementation and tests are written. Focused19 tests and full1087 tests/156suites PASS82.151s; process32negative/10positive and15CI guard tests pass. Local Mac app/XCTest build passed but UI startup timed out enabling automation before any interaction. Use automatic PR CI for native proof; do not repeat unchanged local startup. Logs /tmp/ledger-accounting-filter-{focused,full-native,mac}.log. Exact CI remains required before closure.",
-      "Other Item checks remain planned: inspect their id/expected/status first, then only the selected check evidence and relevant CI lines. Do not reload every historical command narrative or rerun green native CI to recover context. No broad Item completion has been claimed.",
-      "Existing uncommitted Purchase projection and all source/test changes remain preserved and unverified. They belong to a subsequent bounded destination batch, not gallery closure. O-065 and other product gates, hosted validation and cutover remain unresolved.",
-      "Keep baseCommit fixed at f66e2927 for this read batch; verifiedCheckpoint does not verify the dirty tree. Record coarse usage intervals in the existing efficiency assessment, including discovery, implementation, tests and closure. Do not expand beyond the four accounting-filter acceptance checks for this implementation observation."
+      "Purchase-read trial only: scoped code review and local checks pass (25reader/7Core tests,47SQL assertions,117actual stream captures,5parser tests,environment). Logs /tmp/ledger-purchase-{read-hardened,core,db-applied,stream-sql,stream-parser-node24,environment}.log. No UI code/tests, payment writes or broad workflow completion.",
+      "Prepare a selective Purchase/process checkpoint excluding pre-existing WorkspaceChecklistUITests.swift dirt and unrelated artifacts. Local conversion checker correctly sees that unrelated dirty path outside this record; clean-commit CI must pass without expanding this batch. Latest verifiedCheckpoint stays505dc2bb. Use existing PR automatic CI only; no full native local duplicate.",
+      "Docker restarted with user approval. Local schema/migration ledger diverge: db push failed on existing name column; applied only20260909195719 transactionally to verified isolated database. FocusedSQL passed; CI must prove fresh migrations. Do not repair unrelated migration history or access hosted systems.",
+      "Live goal counters and limitations recorded under September11 Purchase-read process trial in existing efficiency assessment; latest pre-CI counter144832. Historical session logs stale, cached/uncached/output split unavailable; do not call this subscription usage. Include subsequent CI review/reporting.",
+      "Preserve gallery test patch and all unrelated work; gallery heartbeat stays PAUSED. Broader reuse investigation and remaining-plan correction remain incomplete. This user-authorized backend trial is the only exception to the prior implementation pause."
     ],
-    "baseCommit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631"
+    "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
   },
   "blockers": [],
   "guardrails": [

@@ -4,6 +4,51 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ## Conclusion
 
+### September 11 Purchase-read process trial (in progress)
+
+Bounded work: finish the pre-existing canonical Item-linked Purchase backend read;
+no UI, payment writes, complete Transaction destination or migration delivery.
+New work tightened malformed currency/origin handling and exact-money edge cases,
+documented full-Purchase versus per-Item amounts, and tested the existing reader.
+Unrelated gallery test edits remain outside the batch.
+
+Local evidence: 25 reader tests / 6.964s, 7 core tests / 0.004s (test execution,
+not compilation); 47 SQL assertions passed; 117 actual stream SQL captures passed;
+5 stream-parser tests / 0.378s; environment validation and diff whitespace passed.
+The initial 24-reader baseline also passed. No local UI or full native suite run.
+Clean-environment CI remains required; local checks are not whole-feature readiness.
+
+Observed overhead, not hidden from this trial:
+- Historical token logs were stale; two bounded lookups found no current request
+  boundary. Live goal counters are available, but no cached/uncached/output split.
+- System Node20 failed parsing the service dependency before tests ran. Retrying
+  with CI's Node24.14.0 passed; existing command guidance now records that runtime.
+- Docker was unresponsive; the user approved restart. Its local schema was ahead
+  of its migration ledger, so db push failed on an already-existing column. Only
+  the new read migration was then applied transactionally to the verified local
+  container, and affected SQL tests passed. CI must verify fresh migration replay.
+- New execution-record setup initially failed schema validation; corrected. One
+  remaining local scope-check error attributes the preserved gallery test dirt to
+  this batch. Do not add UI work or weaken the checker to claim a pass. The clean
+  committed batch must exclude that unrelated patch.
+
+Live goal counter checkpoints (reported tokens, not subscription consumption):
+
+| Boundary | Cumulative reported goal tokens | Interval tokens |
+|---|---:|---:|
+| Goal creation (1789159907) | 0 | — |
+| Initial inspection / baseline native test | 17,652 | 17,652 |
+| Implementation, local hardening and environment troubleshooting | 131,132 | 113,480 |
+| Local verification review, before CI preparation | 144,832 | 13,700 |
+
+These mixed activity intervals are not precise per-task attribution. Initial work
+before goal creation and future CI/reporting are not in the latest count; final
+closure must report the later counter and this limitation. Cached input, uncached
+input and output are **unavailable**, not zero. No subscription percentage,
+whole-project completion percentage or controlled savings estimate follows from
+these readings. The test execution itself was fast; setup, environment recovery,
+record updates and review consumed the observed surrounding effort.
+
 The sampled work followed the backend-neutral architecture and added meaningful
 local functionality. It also incurred demonstrated avoidable test repair and
 tracking overhead. The strongest correction is to enforce a stable feature
@@ -329,3 +374,230 @@ the next mixes debugging, successful focused tests, native startup diagnosis,
 review, staging and monitoring. Final task attribution must retain those mixtures,
 not call the entire interval avoidable. Setup still contained oversized reads;
 the old measurement limitations still apply. No new savings claim yet.
+
+Setup baseline located: goal continuation04:31:21.299, preceding counter at
+04:31:20.837 = (1001941162,990067584,2349255,1004290417). Thus setup through
+implementation start reports817246 total (814925input,787456cached,2321output);
+writing/initial build reports607608 total (600038input,586240cached,7570output);
+debugging/integrated-local interval reports1207793 total
+(1202320input,1186048cached,5473output). These are mixed activity intervals,
+not billed usage or task-specific avoidable-cost estimates.
+
+Checkpoint505dc2bb658076b0536e705038dd29b020747baf was pushed with automatic
+CI34563203081 as the sole integrated gate. The local full-suite total included
+pre-existing dirty Purchase tests; CI subsequently verified the committed batch
+without those changes. Native CI and final findings were pending at this checkpoint;
+the completed results follow below.
+
+## Final findings: implementation observation completed
+
+**Delivered:** Project Item accounting filtering, using the existing atomic read
+and shared facet semantics. Four ITEM-ACCOUNTING-FILTER acceptance checks passed
+on [505dc2bb / automatic CI34563203081](https://github.com/nine4-team/ledger-mobile/actions/runs/34563203081).
+All five jobs passed:1086 native tests/156suites,25MacUI and30iPhoneUI.
+The new interaction passed Mac68.952s and iPhone131.451s. Exact job logs:
+`/tmp/ledger-accounting-filter-ci-mac.log` and
+`/tmp/ledger-accounting-filter-ci-ios.log`. Root reviewed the actual assertions,
+shared classification, scope rejection and selection wiring—not just green badges.
+
+The production change added34 lines and removed5 across existing Core, AppModel
+and View files; the fixture and tests are separate. This describes the change,
+not its token value. No new provider, schema, permission, writer or UI rebuild
+was required. No broad Item or migration completion is claimed. Existing Purchase
+work remains untouched by the committed batch. The observation stops here.
+
+### Reconciled task measurements
+
+Reported cumulative-counter differences, UTC September11; cached input is a
+**subset** of input. These are processing counters, not billing or account-quota
+measurements. Reasoning is already included in output. Task labels are coarse:
+implementation includes test writing/first compile; later intervals include
+mixed review and coordination. They do not assign every token to a precise cause.
+
+| Task and interval | Input | Cached input subset | Output | Total |
+|---|---:|---:|---:|---:|
+| Discovery and boundary / coordination (04:31:20.837–04:32:58.870) | 814,925 | 787,456 | 2,321 | 817,246 |
+| Implementation and new tests / mixed first build (04:32:58.870–04:37:04.382) | 600,038 | 586,240 | 7,570 | 607,608 |
+| Debugging, local verification and staging (04:37:04.382–04:40:33.023) | 1,202,320 | 1,186,048 | 5,473 | 1,207,793 |
+| Checkpoint, review and early CI coordination (04:40:33.023–04:44:43.628) | 1,165,532 | 1,153,280 | 6,452 | 1,171,984 |
+| CI waiting, evidence review and monitoring (04:44:43.628–05:26:02.338) | 11,743,612 | 11,614,592 | 25,668 | 11,769,280 |
+| Measured aggregate | 15,526,427 | 15,327,616 | 47,484 | 15,573,911 |
+
+Endpoint05:26:02.338 cumulative tuple:
+(1017467589,1005395200,2396739,1019864328). The additional boundary04:44:43.628
+is (1005723977,993780608,2371071,1008095048), just before starting the single
+background CI watcher. The task rows sum exactly to the aggregate. Input not
+reported cached totals198811; output totals47484. Neither is a dollar/quota proxy.
+
+**Unassigned/unmeasured:** goal creation before the implementation observation,
+the final report/record edits and completion response after the endpoint, and
+fine-grained causes inside mixed intervals. No new agents ran. No counter decrease
+or compaction marker occurred within this implementation window; duplicated
+cumulative notifications are not counted twice. The earlier gallery observation's
+compaction ambiguity remains separate and prevents pretending these tables are a
+complete account-level usage statement.
+
+CI's iPhone UI execution took1724.158s; its job and build involved additional
+time. This elapsed time is not tokens. Model activity while waiting is in the
+last measured interval; that interval must not all be labeled waste.
+
+### What the evidence supports, ranked for action
+
+1. **Reduce unnecessary model interaction during external waits.** The largest
+   measured interval was CI coordination/review, not writing the feature.
+   Initially each55-second wait used an early-yield exec plus a separate resume.
+   Changing the exec yield window to cover the bounded wait eliminated that
+   second model resumption without changing CI polling or verification.
+   Two later waits successfully used one call each. Keep the existing background
+   watcher, single-call bounded waits, and short change-driven evidence retrieval;
+   do not re-review completed code just because CI is running.
+
+   The measured comparison is deliberately limited: a paired wait at
+   05:15:37/05:15:42 reported354452 total processing tokens,352512 cached input
+   and632 output. A single-call wait at05:21:29 reported184037 total,
+   182016 cached and602 output. Calls and largely cached processing decreased;
+   input-not-cached plus output was1940 versus2021, so this pair does **not**
+   demonstrate quota/cost savings. Context/cache conditions were not controlled.
+
+2. **Keep working context small; do not assume cache reuse makes extra calls free.**
+   A watch-log status read at05:15:14.909 reported176281 input tokens, only105600
+   cached, and235 output. Its70681 input tokens not reported cached represent
+   approximately35.6% of that category across this entire measured window.
+   Nearby calls reused much more of their input. The cache-reuse drop is observed;
+   its underlying cause and preventability are unknown. Long retained context
+   makes such a drop consequential. Avoid oversized mixed-file dumps, retrieve
+   current facts before histories, and use the existing compact resume record.
+   Setup still had oversized/truncated reads: this practice improved unevenly,
+   not enough to declare the process fixed or guarantee a savings percentage.
+
+3. **Keep meaningful verification; remove retries that answer no new question.**
+   The new tests caught a real authoring error (missing `try`); correcting it
+   and rerunning focused tests was justified. The local Mac startup failed before
+   tests, so it was not treated as an app defect or retried unchanged. The normal
+   CI gate then verified both platforms on the first submitted implementation.
+   Retain scoped/unknown-accounting, selection and native tests. Repair local
+   automation readiness separately if needed; do not weaken CI to hide it.
+
+4. **Use observed file structure and cheap validation for edits.** One selective
+   staging attempt failed because its generated patch lacked a final newline.
+   The correction succeeded and kept Purchase changes excluded. Together with
+   the earlier indentation retries, this is concrete avoidable editing overhead,
+   not evidence that the app architecture needs redesign. Inspect formatting
+   first and check generation/patch exit status before proceeding.
+
+5. **Retain the bounded workflow and reuse existing implementations.** The four
+   declared checks, outcome and exclusions stayed aligned through closure. No
+   unrelated feature or new tracking structure was added. The repaired checker
+   passed32negative/10positive regression cases;15CI guard tests also passed.
+   This is one successful application of the process—not proof of universal
+   completeness, broad throughput gains, or future accounting/media efficiency.
+
+Necessary work included establishing the correct accounting meaning, rejecting
+foreign/incomplete evidence, keeping displayed and selectable rows aligned,
+reviewing assertions and obtaining native proof. Demonstrably avoidable work
+included excess wait resumptions, some oversized reads and patch retries.
+The avoidable share of each mixed task, cache behavior, recurring native flakiness
+and whole-app savings remain uncertain. No affordability or completion forecast
+is inferred. Future real work should retain these corrections, not start another
+audit solely to chase a desired savings number.
+
+## Quiet CI trial — September 11
+
+Outcome: ending the AI turn eliminated repeated monitoring calls. There were no
+token-count increments between the final setup reply at 15:25:47.681Z and the
+scheduled wake-up at 16:24:29.830Z (58m42s). No compaction/counter reset appeared
+in this measured interval. This proves quiet waiting, not zero-cost setup/review.
+The hourly heartbeat `ledger-quiet-ci-trial` was paused after its first wake-up.
+
+Unchanged [CI34563203081 attempt 2](https://github.com/nine4-team/ledger-mobile/actions/runs/34563203081/attempts/2)
+ran at505dc2bb from15:24:25Z to16:11:29Z. Three jobs passed; iOS failed, and the
+final aggregate gate correctly failed. Native core1086/156suites and MacUI25/25
+passed. iPhoneUI28/30 passed. The accounting filter passed on both platforms.
+Failed iPhone assertions: `testDownloadedItemImageGallery` at line1178 (pinned
+image counter after pinning) and `testDownloadedItemImageSwipeNavigationAndDismissal`
+at line1321 (zoom reset to1.0x). Both passed the prior identical-commit run;
+intermittency is observed but its app/test/environment cause is not diagnosed.
+Job IDs: Mac103318899915, iOS103318900044. No rerun-to-green or code repair.
+
+Tradeoff: wake-up was13m01s after overall completion, and33m41s after the first
+failing assertion (15:50:48.769Z). An hourly check is not an instant failure alert.
+Desktop availability remains a dependency. Future event-driven notification
+could reduce delay, but that mechanism was not implemented or tested here.
+
+Measurement: same cumulative session source as the plan. Input includes cached;
+output includes reasoning. Setup includes documentation lookup, initial invalid
+automation call/correction, launch, checkpoints and Benjamin's two follow-ups.
+The account meter showed8% at early setup,9% at launch,9% at result review, with
+the same weekly reset. Rounded account-wide values cannot isolate this task or
+establish exact subscription savings; unchanged9% does not mean free.
+
+Initial review cutoff16:25:28.003Z (before final report writes):
+
+| Activity | Input | Cached subset | Output |
+|---|---:|---:|---:|
+| Setup and explanatory replies |894,190|865,920|5,541|
+| Idle interval |0|0|0|
+| Scheduled wake-up and result review |256,407|232,448|1,057|
+| Measured total to this cutoff |1,150,597|1,098,368|6,598|
+
+Using the previously checked [published Astra rates](https://learn.chatgpt.com/docs/pricing)
+as a proxy (input:cached:output weights1:0.1:5), review so far is96.3% cheaper
+than the historical mixed monitoring/review interval, or86.3% cheaper including
+this trial's setup. These are NOT subscription savings or a whole-batch estimate.
+Final reporting adds cost, reconciled below; do not present the provisional
+percentages as the completed experiment total.
+
+Comparison limitations: already-reviewed unchanged code requires less review
+than new implementation; context is smaller now; cache reuse and CI outcomes
+differ. The old interval mixed waiting with review. Do not attribute the entire
+difference to scheduling, nor extrapolate35% or another whole-app saving.
+Recommendation: keep quiet waiting and required tests; explicitly accept delayed
+failure detection. Keep the two iPhone failures visible for subsequent authorized
+implementation work, not another efficiency audit.
+
+Reporting reconciliation cutoff16:26:08.064Z: an additional89,534input
+(87,680cached) and1,155output tokens were measured after the initial review
+cutoff. Total from the pre-request counter is1,240,131input
+(1,186,048cached),7,753output,1,247,884total processed tokens. At that explicit
+cutoff, the weighted proxy is85.1% below the historical monitoring/review cost,
+including setup and measured reporting. Cumulative end: input1,020,679,455;
+cached1,008,310,144; output2,419,456; total1,023,098,911.
+The final reconciliation write and final user handoff fall after this cutoff and
+are excluded/unassigned, not zero. This avoids a recursive measure/write loop.
+No exact subscription-savings percentage was established.
+
+## Gallery repair batch — September 11 (in progress)
+
+Authorized workflow: reliable Item photo viewing, restricted to the existing
+ITEM-IMAGE-VIEWER-CONTROLS and ITEM-IMAGE-NATIVE-GESTURES checks. Start505dc2bb;
+preserve unrelated dirty Purchase code. The two checks are reopened, preserving
+historical passes. No full Item-read or new feature-completion claim.
+Counter before user request19:45:16.092Z: input1,021,967,393;
+cached1,009,575,552; output2,424,955; total1,024,392,348. Session source is the
+same as the diagnostic plan. Account-wide weekly meter9% during discovery.
+Measure discovery/repair, verification, quiet waiting, and review/reporting at
+natural boundaries, including this documentation overhead; report the full
+sample without assuming the earlier85% monitoring proxy applies overall.
+
+Evidence: attempt2 screenshots in /tmp/ledger-gallery-repair.9fniS2/screenshots
+show the gallery with controls hidden after Reset, and a pinned1-of-2 image
+where2-of-2 was expected. CI event timing shows AX lookups/event delivery can
+consume the real2.2-second controls interval. Working diagnosis: transient UI
+interaction/assertion races, not demonstrated provider or image-storage failure.
+Proposed correction is test-only: assert native persistent zoom, resolve target
+coordinates before renewing control visibility, and assert the selected image
+before pinning. No auto-hide extension, disabled animation, or action retries.
+Unmodified local baseline started at /tmp/ledger-gallery-repair.9fniS2/baseline.xcresult;
+post-change verification remains pending. Do not report the diagnosis as proven
+or the batch complete before reviewing native results.
+
+Local unmodified baseline passed2/2 on iPhone17Pro/iOS26.5, ending19:51:48Z;
+the CI failure was not reproduced in that run. Corrected test-only run performs
+two fixed iterations of the same tests, with corrected.xcresult in the same
+directory (session30159). No app code change. conversion:check passed with the
+three pre-existing source-removal warnings. Heartbeat ledger-gallery-verification
+returns every20min for this local verification, then should switch to hourly for
+the normal full CI run. No frequent model polling while waiting.
+Discovery/repair checkpoint19:51:26.512Z: cumulative input1,024,199,957;
+cached1,011,758,464; output2,434,105; total1,026,634,062. This boundary includes
+overlapping baseline-test execution, not all subsequent scheduling/closure costs.

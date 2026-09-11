@@ -23,12 +23,12 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  assert.equal(count, 47);
+  assert.equal(count, 48);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 25);
+  assert.equal(outputs.length, 26);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('service parser proves primary aliases change the downloaded table', () => {
@@ -40,4 +40,14 @@ streams:
 `, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(result.errors.map(error => error.message), []);
   assert.deepEqual(Object.keys(result.config.debugGetOutputTables()), ['item']);
+});
+
+test('Item-linked Purchase local schema contains only canonical read facts with exact text cents', () => {
+  const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
+  assert.match(nativeSchema, /static let transactions = "spike_transactions"/);
+  const columns = nativeSchema.match(/Table\(name: LedgerPowerSyncTable.transactions,\s*columns: \[([\s\S]*?)\]/)?.[1];
+  assert.ok(columns);
+  assert.deepEqual([...columns.matchAll(/\.text\("([a-z_]+)"\)/g)].map(match => match[1]),
+    ['account_id', 'project_id', 'client_id', 'type', 'role', 'amount_minor_units', 'currency', 'origin']);
+  assert.ok(!columns.includes('.integer'));
 });

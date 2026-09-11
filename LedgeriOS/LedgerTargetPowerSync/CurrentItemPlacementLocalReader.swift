@@ -28,23 +28,61 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 mapper: Self.historyRow)
             let physical = try Self.history(accountId: accountId, itemId: itemId, rows: rows)
             var accounting: ProjectItemAccountingResolution?
+            var purchases: [DownloadedItemClientPurchase] = []
             if let current = physical.intervals.first(where: { $0.endedAt == nil }),
                case .project(let projectId) = current.scope {
                 do {
-                    accounting = try ItemClientPaymentConnectionLocalReader.read(transaction: transaction,
+                    let row = try ItemClientPaymentConnectionLocalReader.read(transaction: transaction,
                         accountId: accountId, principalId: principalId, projectId: projectId,
-                        placementId: current.placementId)[current.placementId]?.resolution ?? .relationshipEvidenceIncomplete
+                        placementId: current.placementId)[current.placementId]
+                    accounting = row?.resolution ?? .relationshipEvidenceIncomplete
+                    if let row {
+                        purchases = try Self.purchases(transaction: transaction, row: row,
+                            placementId: current.placementId)
+                    }
                 } catch PropertyManagementReportLocalReadFailure.malformedEvidence {
                     accounting = .relationshipEvidenceIncomplete
                 } catch is ProjectItemAccountingSectionFailure {
+                    accounting = .relationshipEvidenceIncomplete
+                } catch is DomainPrimitiveFailure {
                     accounting = .relationshipEvidenceIncomplete
                 }
             }
             return try .init(accountId: accountId, itemId: itemId, description: physical.description,
                 intervals: physical.intervals, details: physical.details,
                 currentBudgetCategoryName: physical.currentBudgetCategoryName,
-                currentAccountingResolution: accounting)
+                currentAccountingResolution: accounting, currentClientPaidPurchases: purchases)
         }
+    }
+
+    private static func purchases(transaction: any Transaction, row: ProjectItemAccountingRow,
+                                  placementId: EntityID) throws -> [DownloadedItemClientPurchase] {
+        let evidence = row.evidence
+        let ids = Set(evidence.clientPaidPurchases.map(\.transactionId))
+        guard !ids.isEmpty else { return [] }
+        return try transaction.getAll(sql: """
+            SELECT DISTINCT payment.* FROM spike_transactions payment
+            JOIN item_client_payment_connections link ON link.transaction_id=payment.id
+            WHERE link.placement_id=? AND link.ended_at IS NULL
+            ORDER BY payment.id
+            """, parameters: [placementId.rawValue]) { cursor in
+                let id = try TransactionID(validating: cursor.getString(name: "id"))
+                let text = try cursor.getString(name: "amount_minor_units")
+                guard ids.contains(id),
+                      try cursor.getString(name: "account_id") == evidence.accountId.rawValue,
+                      try cursor.getString(name: "project_id") == evidence.projectId.rawValue,
+                      try cursor.getString(name: "client_id") == evidence.clientId.rawValue,
+                      try cursor.getString(name: "type") == "purchase",
+                      try cursor.getString(name: "role") == "standalone",
+                      try cursor.getString(name: "origin") == "firebase_client_payment",
+                      let minorUnits = Int64(text), minorUnits > 0, String(minorUnits) == text else {
+                    throw PropertyManagementReportLocalReadFailure.malformedEvidence
+                }
+                return try DownloadedItemClientPurchase(id: id, accountId: evidence.accountId,
+                    projectId: evidence.projectId, clientId: evidence.clientId, itemId: evidence.itemId,
+                    placementId: placementId, amount: Money(minorUnits: minorUnits,
+                        currency: CurrencyCode(validating: cursor.getString(name: "currency"))))
+            }
     }
 
     func watchHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID) throws -> AsyncThrowingStream<[HistoryRow], Error> {
@@ -217,7 +255,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
         EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=i.account_id) AS payment_changes,
         EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=i.account_id) AS charge_changes,
         EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=i.account_id) AS line_changes,
-        EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=i.account_id) AS invoice_changes
+        EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=i.account_id) AS invoice_changes,
+        EXISTS(SELECT 1 FROM spike_transactions WHERE account_id=i.account_id) AS purchase_changes
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
       LEFT JOIN placements p ON access.is_active
       LEFT JOIN spike_projects project ON project.id=p.project_id AND project.account_id=p.account_id

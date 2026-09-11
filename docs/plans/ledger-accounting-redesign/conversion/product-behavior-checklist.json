@@ -25425,6 +25425,139 @@
   "executionRecords": [
     {
       "schemaVersion": 1,
+      "workflowId": "item-linked-purchase-read",
+      "title": "Read canonical Purchase facts linked to a current Item",
+      "kind": "backend_control",
+      "status": "local_verification",
+      "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
+      "noCurrentBaselineReason": "Bounded backend read supporting existing Item accounting provenance; this batch does not claim an independently completed user-facing control.",
+      "targetStoryIds": [
+        "accounting-relationship-provenance"
+      ],
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "section": "Data and Integrity Requirements"
+        },
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/financial-access-controls.md",
+          "section": "Target Visibility and Management Contract"
+        }
+      ],
+      "affectedComponents": [
+        "LedgeriOS/LedgerTargetCore",
+        "LedgeriOS/LedgerTargetCoreTests",
+        "LedgeriOS/LedgerTargetPowerSync",
+        "LedgeriOS/LedgerTargetPowerSyncTests",
+        "supabase/migrations",
+        "supabase/tests",
+        "powersync",
+        "scripts/test-local-property-management-stream.mjs",
+        "scripts/tests/sync-output-tables.test.mjs",
+        "docs/architecture/redesign/architecture-decisions.md"
+      ],
+      "layers": [
+        "domain",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "powersync_sync",
+        "local_offline",
+        "accounting"
+      ],
+      "riskDomains": [
+        "database_integrity",
+        "handler_idempotency",
+        "tenant_authorization",
+        "sync_visibility",
+        "offline_durability",
+        "accounting"
+      ],
+      "baselineJourneyIds": [],
+      "baselineBehaviorRefs": [],
+      "uiJourneys": [],
+      "acceptanceChecks": [
+        {
+          "id": "PURCHASE-READ-BOUNDARY",
+          "risk": "general",
+          "expected": "Verify only canonical Item-linked Purchase backend reads. Preserve unrelated gallery changes without claiming UI, writes, migration or hosted completion.",
+          "command": "Scoped diff review and relevant native/SQL/stream verification",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-INTEGRITY",
+          "risk": "database_integrity",
+          "expected": "Canonical money, classification, foreign keys and imported immutability remain intact.",
+          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-NO-WRITES",
+          "risk": "handler_idempotency",
+          "expected": "Repeated reads create no payment mutations or new handler authority; API payment writes remain denied.",
+          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-FACTS",
+          "risk": "accounting",
+          "expected": "Preserve exact canonical positive Int64 cents, currency and connection scope; malformed or missing facts do not fabricate payment amounts or erase physical history.",
+          "command": "CurrentItemPlacementLocalReaderTests; item_linked_purchase_read.test.sql",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-AUTH",
+          "risk": "tenant_authorization",
+          "expected": "Only active full-financial members read current Item-linked Purchases; foreign, limited, removed, anonymous and API service access remain denied. No new writes or source-byte access.",
+          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-SYNC",
+          "risk": "sync_visibility",
+          "expected": "The actual stream SQL preserves exact text cents and scope; ended links/placements and financial downgrades remove eligibility. Hosted replication is not established by local SQL tests.",
+          "command": "scripts/test-local-property-management-stream.mjs; scripts/tests/sync-output-tables.test.mjs",
+          "status": "planned"
+        },
+        {
+          "id": "PURCHASE-READ-OFFLINE",
+          "risk": "offline_durability",
+          "expected": "Facts survive encrypted database reopen, notify local readers on changes, and disappear from reads after learned access loss or placement departure.",
+          "command": "CurrentItemPlacementLocalReaderTests",
+          "status": "planned"
+        }
+      ],
+      "deferredBehaviors": [
+        "All UI and Transaction destinations; payment writes; limited-financial visibility policy; hosted replication and cutover; unrelated gallery repair and broader reuse investigation."
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {
+          "status": "passed",
+          "commands": [
+            "swift test --package-path LedgeriOS --no-parallel --filter CurrentItemPlacementLocalReaderTests",
+            "swift test --package-path LedgeriOS --no-parallel --filter DownloadedItemPlacementsTests",
+            "npx --yes supabase@2.116.0 test db --local supabase/tests/item_linked_purchase_read.test.sql supabase/tests/imported_client_payment_storage.test.sql",
+            "npx --yes --package=node@24.14.0 node scripts/test-local-property-management-stream.mjs",
+            "npx --yes --package=node@24.14.0 node --test scripts/tests/sync-output-tables.test.mjs",
+            "npx --yes --package=node@24.14.0 node scripts/check-target-environment.mjs"
+          ],
+          "summary": "25native reader/7Core tests,47SQL assertions,117actual stream SQL captures,5parser tests passed. Local migration ledger predates already-applied schema; db push failed on existing name column, so only the new Purchase migration was applied transactionally to the verified isolated container. Clean migration replay requires CI. Current-state gate flags preserved unrelated gallery dirt; not a product-test pass."
+        },
+        "review": {
+          "required": true,
+          "status": "passed",
+          "summary": "Primary agent scoped review: RLS and stream require current links/placements/full membership; existing composite FKs bind Account/Project/Client/classification; no write grants. Exact cents and malformed currency/origin handling tested; no UI replacement. This is primary review, not an independent subagent sign-off."
+        },
+        "ci": {
+          "status": "not_run"
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
       "workflowId": "client-summary-physical-readback",
       "title": "Client Summary physical detail and sharing",
       "kind": "product_ui",
@@ -26955,15 +27088,15 @@
           "id": "ITEM-IMAGE-NATIVE-GESTURES",
           "risk": "ui_fidelity",
           "expected": "At fit on iPhone, horizontal swipe changes the selected image and resets zoom; vertical drag dismisses the full viewer only beyond90pt and otherwise snaps back. Native pinch and zoomed pan remain functional. Pinned images share paging but not vertical dismissal. No new media storage or authorization boundary.",
-          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: iPhone testDownloadedItemImageSwipeNavigationAndDismissal (97.467s). Root reviewed full-screen height, pinch, zoomed pan without paging/dismissal, fit paging, short-drag retention, full-view dismissal and pinned-route retention; source retains >90pt threshold. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial.",
-          "status": "passed"
+          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: iPhone testDownloadedItemImageSwipeNavigationAndDismissal (97.467s). Root reviewed full-screen height, pinch, zoomed pan without paging/dismissal, fit paging, short-drag retention, full-view dismissal and pinned-route retention; source retains >90pt threshold. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial. September11: CI34563203081 attempt2 failed; reopened for bounded repair. Native zoom reset is now asserted through the persistent image accessibility value; transient button interactions use a fresh visibility interval and pre-resolved coordinates, with explicit selected-image assertions before Pin. Native verification pending.",
+          "status": "planned"
         },
         {
           "id": "ITEM-IMAGE-VIEWER-CONTROLS",
           "risk": "ui_fidelity",
           "expected": "Full iPhone gallery occupies the screen; covering the parent route preserves its existing pin. At fit, navigation/zoom controls hide after2.2s and single tap toggles visibility; zoom/page changes reveal controls. Close and Pin remain usable. Hiding controls does not resize the image or reset zoom. Pinned viewer remains compact with visible navigation.",
-          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: testDownloadedItemImageGallery on Mac (131.280s) and iPhone (148.809s), plus iPhone gesture test for full-screen height. Root reviewed hide/reveal, stable geometry, persistent Close/Pin, zoom/page/reset, pin preservation and usable Mac close after unpin; source retains 2200ms timer. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial.",
-          "status": "passed"
+          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: testDownloadedItemImageGallery on Mac (131.280s) and iPhone (148.809s), plus iPhone gesture test for full-screen height. Root reviewed hide/reveal, stable geometry, persistent Close/Pin, zoom/page/reset, pin preservation and usable Mac close after unpin; source retains 2200ms timer. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial. September11: CI34563203081 attempt2 failed; reopened for bounded repair. Native zoom reset is now asserted through the persistent image accessibility value; transient button interactions use a fresh visibility interval and pre-resolved coordinates, with explicit selected-image assertions before Pin. Native verification pending.",
+          "status": "planned"
         },
         {
           "id": "ITEM-IMAGE-EXPORT",
@@ -26983,29 +27116,29 @@
           "id": "ITEM-ACCOUNTING-FILTER-VALUES",
           "risk": "accounting",
           "expected": "Project Items filter on canonical Accounted For, Unaccounted For or Accounting status unknown, never cash-payment or workflow status. Absent or incomplete accounting evidence is unknown, not unaccounted. Inventory does not expose or apply this Project-only facet.",
-          "command": "Focused DownloadedItemsModelTests plus native accounting-filter test; implementation pending.",
-          "status": "planned"
+          "command": "PASS CI34563203081@505dc2bb: DownloadedProjectItemsContractTests.accountingFacet/accountingFacetScope; canonical states, absent/foreign evidence and Inventory exclusion. Native testDownloadedItemAccountingFilter passed Mac68.952s/iPhone131.451s.",
+          "status": "passed"
         },
         {
           "id": "ITEM-ACCOUNTING-FILTER-COMPOSITION",
           "risk": "general",
           "expected": "Reuse All/None/Only/All-except; OR within accounting and AND across search, Space and other facets. Clear restores downloaded results without changing identities or backend state.",
-          "command": "Focused shared filter and model tests; implementation pending.",
-          "status": "planned"
+          "command": "PASS CI34563203081@505dc2bb: accountingFacet covers All/None/Only/All-except, search/Space/SKU composition and reset. Native accounting-filter test covers OR between real resolutions, AND with Bookmark, All and Clear on Mac/iPhone.",
+          "status": "passed"
         },
         {
           "id": "ITEM-ACCOUNTING-FILTER-LIFECYCLE",
           "risk": "tenant_authorization",
           "expected": "Filter changes and incoming atomic accounting evidence prune selection to exactly visible IDs; temporary loading does not erase selection. Missing/revoked/foreign evidence cannot retain usable financial labels or selection eligibility. No new reads, permissions or persistence.",
-          "command": "Focused DownloadedItemsModelTests, existing scoped-reader coverage and native selection interaction; implementation pending.",
-          "status": "planned"
+          "command": "PASS CI34563203081@505dc2bb: accountingFilterSelection covers changed atomic evidence, temporary absence, pruning and stream failure; accountingFacetScope rejects foreign/mismatched classification. Native test proves current visible-selection counts and pruning. No reader, grant or persistence change.",
+          "status": "passed"
         },
         {
           "id": "ITEM-ACCOUNTING-FILTER-NATIVE",
           "risk": "ui_fidelity",
           "expected": "Mac and iPhone Project filter menu exposes the three canonical choices and All/None; counts, visible rows, selection pruning and Clear agree with shared projection. Inventory menu omits the facet.",
-          "command": "WorkspaceChecklistUITests/testDownloadedItemAccountingFilter on both platforms; implementation pending.",
-          "status": "planned"
+          "command": "PASS CI34563203081@505dc2bb: WorkspaceChecklistUITests.testDownloadedItemAccountingFilter on Mac68.952s and iPhone131.451s; canonical choices, incomplete versus complete evidence, composition, visible counts, selection pruning, Clear, and Inventory omission. Entire25Mac/30iPhoneUI suites passed.",
+          "status": "passed"
         },
         {
           "id": "ITEM-READ-GENERAL",

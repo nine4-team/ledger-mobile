@@ -414,8 +414,31 @@ public struct DownloadedItemDescriptiveDetails: Equatable, Sendable {
     }
 }
 
-/// Newest intervals first. Never asserts complete history: older placements or
-/// labels may not be downloaded, and financial provenance is not included.
+/// Canonical payment facts for a current Item connection. This is not a full
+/// Transaction detail record: receipt, audit and descriptive evidence are owned
+/// by their respective read models and must not be inferred from these facts.
+public struct DownloadedItemClientPurchase: Equatable, Sendable, Identifiable {
+    public let id: TransactionID
+    public let accountId: AccountID
+    public let projectId: ProjectID
+    public let clientId: ClientID
+    public let itemId: ItemID
+    public let placementId: EntityID
+    public let amount: Money
+
+    public init(id: TransactionID, accountId: AccountID, projectId: ProjectID,
+                clientId: ClientID, itemId: ItemID, placementId: EntityID, amount: Money) throws {
+        guard amount.minorUnits > 0 else {
+            throw ProjectItemAccountingSectionFailure.invalidPurchaseClassification
+        }
+        self.id = id; self.accountId = accountId; self.projectId = projectId
+        self.clientId = clientId; self.itemId = itemId; self.placementId = placementId
+        self.amount = amount
+    }
+}
+
+/// Newest intervals first. Never asserts complete history: older placements,
+/// labels or payment facts may not be downloaded.
 public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let accountId: AccountID
     public let itemId: ItemID
@@ -426,12 +449,16 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let currentBudgetCategoryName: String?
     /// Current Project association only; nil does not establish Unaccounted.
     public let currentAccountingResolution: ProjectItemAccountingResolution?
+    /// Available full-payment facts, not per-Item allocations or a complete
+    /// payment ledger. Empty does not mean unpaid; missing bytes stay unknown.
+    public let currentClientPaidPurchases: [DownloadedItemClientPurchase]
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
                 intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil,
                 currentBudgetCategoryName: String? = nil,
-                currentAccountingResolution: ProjectItemAccountingResolution? = nil) throws {
+                currentAccountingResolution: ProjectItemAccountingResolution? = nil,
+                currentClientPaidPurchases: [DownloadedItemClientPurchase] = []) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
@@ -439,6 +466,15 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
         self.intervals = intervals; self.details = details
         self.currentBudgetCategoryName = currentBudgetCategoryName
         self.currentAccountingResolution = currentAccountingResolution
+        guard Set(currentClientPaidPurchases.map(\.id)).count == currentClientPaidPurchases.count,
+              currentClientPaidPurchases.allSatisfy({ purchase in
+                  purchase.accountId == accountId && purchase.itemId == itemId
+                      && intervals.contains(where: {
+                          $0.endedAt == nil && $0.placementId == purchase.placementId
+                              && $0.scope == .project(purchase.projectId)
+                      })
+              }) else { throw ProjectItemAccountingSectionFailure.scopeMismatch }
+        self.currentClientPaidPurchases = currentClientPaidPurchases
     }
 }
 
