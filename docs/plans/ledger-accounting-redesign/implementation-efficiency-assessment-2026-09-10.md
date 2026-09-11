@@ -6,6 +6,17 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ### September 11 Purchase-read process trial (in progress)
 
+CI34647677526 failed on one older physical-read test expecting every payment
+SELECT to throw, rather than checking employee row denial. Fresh migration replay
+and the new Purchase SQL test succeeded; native jobs did not run. Updated that
+test to preserve the employee no-leak requirement and added denial for future
+ungranted payment columns. The three affected SQL files pass66assertions locally
+(`/tmp/ledger-purchase-db-compatibility.log`). This is a relevant compatibility
+repair, not a retry-until-green or an unrelated UI fix. A new commit's normal CI
+must verify the correction. Automatic goal continuation woke the model before
+the scheduled return; this interval was not zero-AI waiting (status checks and one
+60-second wait occurred). Do not attribute all recorded overhead to test execution.
+
 Bounded work: finish the pre-existing canonical Item-linked Purchase backend read;
 no UI, payment writes, complete Transaction destination or migration delivery.
 New work tightened malformed currency/origin handling and exact-money edge cases,
@@ -40,6 +51,15 @@ Live goal counter checkpoints (reported tokens, not subscription consumption):
 | Initial inspection / baseline native test | 17,652 | 17,652 |
 | Implementation, local hardening and environment troubleshooting | 131,132 | 113,480 |
 | Local verification review, before CI preparation | 144,832 | 13,700 |
+| Commit, automatic CI launch and waiting setup | 159,106 | 14,274 |
+
+Committed/pushed `105d40817c23d793b0622b05b609415f85146c44`; automatic
+CI34647677526 attempt1. Conversion/traceability job passed in the clean checkout,
+confirming the local carryover-gallery error is not part of the committed batch.
+Provider/native jobs remain pending. Existing CLI watcher polls internally at60s;
+verified thread heartbeat provides a10min fallback return, not instant model
+notification. No duplicate CI or full local native/UI run. Prior process-document
+edits included in this checkpoint are carryover, not all newly authored trial work.
 
 These mixed activity intervals are not precise per-task attribution. Initial work
 before goal creation and future CI/reporting are not in the latest count; final

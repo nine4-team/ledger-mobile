@@ -54,5 +54,9 @@ reset role;
 select ok((select bool_and(not has_table_privilege(r,'public.spike_transactions','INSERT,UPDATE,DELETE,TRUNCATE'))
  from unnest(array['anon','authenticated','service_role']) r),'All API payment writes remain ungranted');
 select throws_ok($$update public.spike_transactions set amount_minor_units=1 where id='purchase-read-linked'$$,'55000',null,'Imported payment immutability survives read policy');
+alter table public.spike_transactions add column test_private_amount bigint;
+set local role authenticated;
+select throws_ok('select test_private_amount from public.spike_transactions','42501',null,'New payment columns do not inherit reviewed read grants');
+reset role;
 select * from finish();
 rollback;

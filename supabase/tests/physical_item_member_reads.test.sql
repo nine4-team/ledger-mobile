@@ -19,7 +19,7 @@ select is((select description from public.spike_items where id='read-chair'),'Vi
 select is((select item_id from public.spike_item_placements where id='read-placement'),'read-chair','Employee reads physical placement');
 select throws_ok($$update public.spike_items set description='changed',revision=2 where id='read-chair'$$,'42501',null,'Employee cannot edit Items');
 select throws_ok($$delete from public.spike_item_placements where id='read-placement'$$,'42501',null,'Employee cannot delete physical history');
-select throws_ok('select * from public.spike_transactions','42501',null,'Physical read grants do not expose payment facts');
+select is((select count(*) from public.spike_transactions),0::bigint,'Physical read access does not expose payment facts to an employee');
 select throws_ok('select * from ledger_private.current_item_placements','42501',null,'Private operator query is not exposed');
 reset role;
 update public.spike_account_memberships set state='removed'

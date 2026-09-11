@@ -25428,7 +25428,7 @@
       "workflowId": "item-linked-purchase-read",
       "title": "Read canonical Purchase facts linked to a current Item",
       "kind": "backend_control",
-      "status": "local_verification",
+      "status": "ci_verification",
       "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
       "noCurrentBaselineReason": "Bounded backend read supporting existing Item accounting provenance; this batch does not claim an independently completed user-facing control.",
       "targetStoryIds": [
