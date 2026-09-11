@@ -1,8 +1,14 @@
 # Transaction Taxonomy Master Tracker
 
 Created: 2026-06-29
-Last updated: 2026-06-29
-Status: active tracker
+Last updated: 2026-08-31
+Status: historical June migration tracker; superseded as the active redesign tracker
+
+> **Do not use this as the control center for the coming accounting redesign.**
+> Its locked `sale`/`paymentToBusiness` target and category-split Invoice
+> settlement are being replaced. Preserve this file as evidence of completed
+> June migration work. Current program authority is
+> [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
 
 This is the single checklist for the transaction taxonomy, invoice settlement,
 mixed-category cleanup, and returned-paid-item credit work from this session.

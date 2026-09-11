@@ -1,0 +1,19 @@
+{
+  "description": "Restore Ledger conversion state after Codex context compaction.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^compact$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env node \"$(git rev-parse --show-toplevel)/.codex/hooks/ledger-conversion-continuity.mjs\"",
+            "timeout": 30,
+            "additionalContextLimit": 5000,
+            "statusMessage": "Restoring Ledger conversion state"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -2,6 +2,10 @@
 
 Created: 2026-06-26
 
+> **Status: historical audit evidence.** Its production/code findings may inform
+> migration, but its target taxonomy is superseded. Current program authority:
+> [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
+
 This is the impact audit for migrating the app toward the system proposed in
 `docs/plans/transaction-taxonomy-system-design-recommendation.md`.
 

@@ -1,0 +1,335 @@
+{
+  "batchId": "M0-BACKEND-STORAGE-001",
+  "title": "Firebase Storage, media references, thumbnails, and pending uploads",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-SOURCE-BACKEND-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MAN-STORAGE-001",
+      "currentBehavior": "Firebase Storage holds entity-scoped originals and small/medium thumbnails referenced by embedded Firestore URLs. Current rules allow unauthenticated global read/write. iOS has a restart-durable local upload queue; MCP performs privileged copy/upload/delete operations. Object inventory and dangling-reference counts are not yet production-profiled.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-016",
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: A-016/O-023/Canonical production reference/object profile changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FILE-33E69F8B5152",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Production Storage rules allow every read and write on every object without authentication, account scoping, content-type checks, or size limits.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "This is a critical legacy security fact, not acceptable target behavior. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Attachments and Private Object Storage",
+        "surfaces": [
+          "Private Storage bucket policies",
+          "attachment object namespace/content limits",
+          "cross-account negative policy suite"
+        ],
+        "securityRequirements": [
+          "Private object access derives authenticated Account/parent authorization; writes enforce namespace, size, sniffed content/type and service capability with no global or permanent bearer access"
+        ],
+        "syncRequirements": [
+          "Structured Sync carries stable AttachmentID/reference/status metadata only; protected local bytes/upload queue and authorized resolver own transfer/retry/display"
+        ]
+      },
+      "migration": {
+        "rule": "Build stable target attachment/object/reference identities from source Firestore URLs/gs paths/object manifests, preserve source hashes/correlation and quarantine missing/dangling/shared variants.",
+        "reconciliation": [
+          "Every required source reference/object maps to verified target attachment/object, explicit shared/reference state, quarantine or approved omission with counts/byte hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Private Storage policy, cross-account/path forgery, content/size, signed access expiry, restart/resume/idempotency and migration object-graph tests"
+        ],
+        "acceptance": [
+          "Attachments remain private and locally durable without URL identity, global rules or silent object/reference loss"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-6EB56A9100C3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Uploads original bytes to accounts/{account}/{entityType}/{entity}/{filename}, stores content type, retries three times, obtains Firebase download URLs, creates best-effort JPEG thumbnails, and deletes by URL.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "The StorageUploading protocol is testability-oriented but is not the whole target media operation contract. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Attachments and Private Object Storage",
+        "surfaces": [
+          "AttachmentStoring",
+          "AttachmentReceipt",
+          "private object/derivative adapter"
+        ],
+        "securityRequirements": [
+          "Private object access derives authenticated Account/parent authorization; writes enforce namespace, size, sniffed content/type and service capability with no global or permanent bearer access"
+        ],
+        "syncRequirements": [
+          "Structured Sync carries stable AttachmentID/reference/status metadata only; protected local bytes/upload queue and authorized resolver own transfer/retry/display"
+        ]
+      },
+      "migration": {
+        "rule": "Build stable target attachment/object/reference identities from source Firestore URLs/gs paths/object manifests, preserve source hashes/correlation and quarantine missing/dangling/shared variants.",
+        "reconciliation": [
+          "Every required source reference/object maps to verified target attachment/object, explicit shared/reference state, quarantine or approved omission with counts/byte hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Private Storage policy, cross-account/path forgery, content/size, signed access expiry, restart/resume/idempotency and migration object-graph tests"
+        ],
+        "acceptance": [
+          "Attachments remain private and locally durable without URL identity, global rules or silent object/reference loss"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8A935E590458",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Persists pending media bytes and JSON metadata in Application Support/PendingUploads, retries processing up to ten attempts, verifies destination existence, writes URL/thumbnail fields back to dynamically selected Firestore documents, and supports retry or explicit discard.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Queue is app-container global with no observed per-user separation or signout cleanup. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Local Data and Session Lifecycle",
+        "surfaces": [
+          "LocalAttachmentCapture",
+          "AttachmentUploadSnapshot",
+          "pending-work/session lifecycle"
+        ],
+        "securityRequirements": [
+          "Pending bytes/database/key/cache are encrypted/protected and partitioned by environment, Principal and Account; upload never resumes under another session"
+        ],
+        "syncRequirements": [
+          "Durable receipt precedes acceptance, retry is idempotent, missing bytes reject visibly and logout/account switch follows explicit pending-work disposition"
+        ]
+      },
+      "migration": {
+        "rule": "Import no plaintext app-global queue as authority; recover explicitly approved pending records at cutover and migrate verified attachment metadata/bytes through the object manifest.",
+        "reconciliation": [
+          "Pending/verified/rejected/discarded attachment IDs, byte hashes and operation results balance per local namespace with no silent loss"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Atomic enqueue failure, restart/device reboot, account/environment switch, logout dispositions, missing bytes, retry/idempotency and cache/key cleanup tests"
+        ],
+        "acceptance": [
+          "Every accepted media capture survives offline restart or has an explicit user-approved destructive outcome"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A6162BC6046B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure image utility generates no-upscale JPEG thumbnails at 300px and 800px and derives _sm/_md object names.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Backend-independent behavior can remain while upload/storage implementation changes."
+    },
+    {
+      "id": "SWIFT-6AF81DAE53D0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Passes through HTTP(S) URLs and resolves legacy gs:// references through Firebase Storage, caching results only for the current process.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Migration must preserve access to both token HTTPS and gs:// historical variants until copied/rewritten. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Attachment Resolution",
+        "surfaces": [
+          "AttachmentResolving",
+          "AttachmentDisplaySource",
+          "legacy reference import mapper"
+        ],
+        "securityRequirements": [
+          "Resolver verifies current parent/Account authorization and returns protected local source or short-lived signed delivery; URLs/paths are never durable identity"
+        ],
+        "syncRequirements": [
+          "Local AttachmentID/status/reference metadata drives local-first resolution; legacy URLs are decode/import correlation only after cutover"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate legacy HTTP/gs references to stable AttachmentIDs/object locators and quarantine unresolved/dangling forms; target runtime performs no Firebase URL resolution.",
+        "reconciliation": [
+          "Every legacy reference resolves to target attachment/object, missing/quarantine or approved omission with source/reference/object hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local-first/offline, authorization/revocation, signed expiry, legacy reference import and no-Firebase-runtime resolver tests"
+        ],
+        "acceptance": [
+          "Authorized media displays offline/online by stable identity without long-lived bearer URLs or Firebase runtime dependencies"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-D4D2CD9DBB10",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Uses Admin Storage against hardcoded bucket ledger-nine4.firebasestorage.app; creates Firebase download tokens, uploads/verifies bytes, copies source objects, parses Firebase HTTPS URLs, and deletes by parsed path.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Parser does not treat gs:// or non-Firebase URLs as owned/deletable objects. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Attachments and Private Object Storage",
+        "surfaces": [
+          "MCP AttachmentStoring adapter",
+          "private signed delivery",
+          "server object verification/cleanup policy"
+        ],
+        "securityRequirements": [
+          "Private object access derives authenticated Account/parent authorization; writes enforce namespace, size, sniffed content/type and service capability with no global or permanent bearer access"
+        ],
+        "syncRequirements": [
+          "Structured Sync carries stable AttachmentID/reference/status metadata only; protected local bytes/upload queue and authorized resolver own transfer/retry/display"
+        ]
+      },
+      "migration": {
+        "rule": "Build stable target attachment/object/reference identities from source Firestore URLs/gs paths/object manifests, preserve source hashes/correlation and quarantine missing/dangling/shared variants.",
+        "reconciliation": [
+          "Every required source reference/object maps to verified target attachment/object, explicit shared/reference state, quarantine or approved omission with counts/byte hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Private Storage policy, cross-account/path forgery, content/size, signed access expiry, restart/resume/idempotency and migration object-graph tests"
+        ],
+        "acceptance": [
+          "Attachments remain private and locally durable without URL identity, global rules or silent object/reference loss"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-3330B6FD5A68",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Copies quick-draft attachments into an Item-owned namespace, verifies bytes, generates thumbnails, and best-effort cleans newly created objects if promotion fails while preserving source originals.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-018",
+        "O-019",
+        "O-020"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-018/O-019/O-020 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "MCPMOD-BB34B27B541A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure attachment ordering/primary-selection logic plus namespace ownership partitioning; destructive deletion is limited to URLs parsed inside the target Item namespace and external/shared URLs are detached only.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Storage URL parsing and deletion implementation will change, but the ownership safety invariant should remain."
+    },
+    {
+      "id": "MCPMOD-D7B37EA0483A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Generates best-effort JPEG thumbnails with sharp at 300px/800px without enlargement and derives _sm/_md names.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Keep parity with the iOS thumbnail contract or deliberately version derivative policy."
+    },
+    {
+      "id": "TEST-0F5D4C2D5F32",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Existing unit tests exercise MediaService upload paths, retry behavior, content types, and deletion through the StorageUploading test seam.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Port behavioral expectations to the target media adapter and add offline/auth/storage-policy integration tests. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Attachment Target Contract Tests",
+        "surfaces": [
+          "AttachmentTargetContractSuite",
+          "private object/local durability fixtures",
+          "migration object graph fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures cover authorized/cross-account/path-forged/content/size/revoked access against isolated private target storage"
+        ],
+        "syncRequirements": [
+          "Tests control protected local bytes, durable receipts, interruption/retry, structured metadata Sync and authorized resolution"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase path/delete seam tests with stable AttachmentID/private object/local-durability and source object-graph migration fixtures.",
+        "reconciliation": [
+          "Fixture originals/derivatives/references and byte hashes reconcile across local queue, target object store and source import manifest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Attachment port, retry/idempotency, content metadata, private access, derivative failure and migration reconciliation suites"
+        ],
+        "acceptance": [
+          "Tests prove private durable attachment behavior rather than Firebase token URL/path mechanics"
+        ]
+      }
+    },
+    {
+      "id": "TEST-1E75BA95C759",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Existing unit tests exercise thumbnail generation dimensions, no-upscale behavior, and derived path naming.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Retain as backend-neutral regression coverage."
+    }
+  ]
+}

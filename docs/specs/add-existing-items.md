@@ -1,5 +1,10 @@
 # Add Existing Items
 
+> **Target-state notice (2026-08-30):** Picker and correction intent remain
+> useful, but cross-scope financial behavior must migrate to
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md).
+> Transaction-membership mechanics below describe the current data model.
+
 ## Overview
 
 When users are inside a transaction or space, they can pull items from anywhere in the account — other transactions in the same project, other projects, or business inventory. The system determines the correct operation (reassign or sell) based on whether the source and destination are in the same scope, then applies the appropriate field updates and audit trail entries.

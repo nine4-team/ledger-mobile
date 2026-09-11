@@ -1,7 +1,11 @@
 # Transaction Taxonomy System Design Recommendation
 
-Status: proposed
+Status: historical recommendation for the superseded June taxonomy
 Created: 2026-06-26
+
+> Do not implement this document's `sale`/`paymentToBusiness` target as the
+> coming redesign. Preserve its analysis as historical evidence. Current
+> authority: [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
 
 Execution plan: `docs/plans/transaction-taxonomy-execution-plan.md`
 

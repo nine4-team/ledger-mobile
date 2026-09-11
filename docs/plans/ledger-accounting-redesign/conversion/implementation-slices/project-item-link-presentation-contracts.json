@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-item-link-presentation-contracts",
+  "title": "Present exact Project Item accounting labels and Unaccounted-only Link payer choices",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Item Link Presentation",
+  "surfaceIds": [
+    "SWIFT-A2FCAF3E6103",
+    "TEST-F63806A8047A"
+  ],
+  "requirements": [
+    {
+      "id": "ITEMLINKPRES-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Product Vocabulary",
+      "invariant": "Project Item accounting sections use exactly Unaccounted For Items and Accounted For Items, with Unaccounted For first. Target presentation does not expose proto/draft/promotion/assignment, linked/unlinked, occurrence/movement or inventory-sale terminology.",
+      "decisionIds": ["D-014", "D-019", "D-024"],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    },
+    {
+      "id": "ITEMLINKPRES-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Link Flow",
+      "invariant": "Only a Project Item already resolved by authoritative relationship evidence as Unaccounted For receives the Link presentation descriptor. Its action title is exactly Link, its question is exactly Who paid for this Item?, and its exhaustive semantic payer-choice set contains only Client paid and Business paid without imposing an unconfirmed display order.",
+      "decisionIds": ["D-019", "D-020"],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    },
+    {
+      "id": "ITEMLINKPRES-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Link Flow",
+      "invariant": "Dismissing the payer question has no side effect and yields no Link route, command, operation, mutation or persisted payer selection. There is no Not sure choice; the source Item remains Unaccounted For.",
+      "decisionIds": ["D-020"],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    },
+    {
+      "id": "ITEMLINKPRES-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/proto-item-capture.md",
+      "section": "Accounting-State Rule",
+      "invariant": "Accounted For rows and rows whose relationship evidence remains incomplete fail closed for Link presentation. The projector consumes the verified derived accounting resolution and never re-derives accounting state from Space, category, price, detail completeness, Invoice presentation or another copied flag.",
+      "decisionIds": ["D-019", "D-023"],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    },
+    {
+      "id": "ITEMLINKPRES-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Presentation is a deterministic stateless projection over the verified ProjectItemAccountingSectionsSnapshot/rows. After canonical snapshot restart it is re-derived identically; no transient modal or payer state is serialized, and no second accounting query port, persistence boundary or authorization claim is created.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    },
+    {
+      "id": "ITEMLINKPRES-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 leaf is executable only with deterministic provider-free synthetic evidence while the Firebase application remains unchanged. It implements no Link route/command, Purchase eligibility/selection, acquisition handling, correction/relink behavior, app/MCP UI wiring, schema/RLS/Sync/provider, migration, hosted resource, release or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMLINKPRES-TEST-001", "ITEMLINKPRES-TEST-002", "ITEMLINKPRES-TEST-003", "ITEMLINKPRES-TEST-004", "ITEMLINKPRES-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectItemAccountingSectionKind projects to exact canonical section labels without changing the already verified Unaccounted-before-Accounted section order.",
+        "ProjectItemLinkPayerChoice is presentation-only semantic vocabulary with exactly clientPaid and businessPaid values and exact labels; it is not a future command payload or ordered menu policy.",
+        "ProjectItemLinkPresentationDescriptor is available only from an authoritative unaccountedFor ProjectItemAccountingRow and exposes exact action/question/choice membership plus a side-effect-free dismissal outcome.",
+        "ProjectItemLinkPresentationFailure supplies stable bounded accounted/incomplete refusal codes and no provider, Purchase, command or source detail."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No Item, relationship, occurrence, Link, selection, presentation or operation table/view/check/index/migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No Client-paid or Business-paid Link route, command, validation, Purchase selection, acquisition resolution, mutation or audit handler exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Validated local accounting resolution is not authorization. No membership, financial-visibility, Item, Purchase or relationship RLS policy/test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local table, download predicate, upload connector, subscription or synchronized visibility proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Exact labels and Link availability are re-derived from canonical decoded Project Item accounting snapshots; the original row/snapshot is never mutated by projection or dismissal.",
+        "No modal-open, selected-payer or dismissal state is serialized. Accounted and relationshipEvidenceIncomplete rows fail closed rather than receiving a false offline Link affordance."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "The presentation contains no attachment identity, bytes, URL, cache, upload, retention or deletion behavior and cannot choose O-023."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "Canonical presentation values exist in LedgerTargetCore only. No SwiftUI view, navigation route, control/accessibility implementation, MCP schema/tool/resource/handler or transport wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase proto/linked/assignment state or current view copy is decoded. Later migration/app slices must consume verified target accounting resolution instead of inferring it from legacy vocabulary."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local refusal codes are contract values only; no telemetry event, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot Link, relink, correct, select a Purchase, persist a payer choice, mutate accounting state, activate a feature, deploy, release or cut over.",
+        "O-007/O-015/O-016/O-017/O-021/O-023/O-027/O-029/O-032/O-034 and all provider/hosted/migration gates remain outside the boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMLINKPRES-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
+      "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
+      "expected": "Verified Unaccounted-before-Accounted sections project exact canonical labels, and an authoritative Unaccounted row projects exact Link/action/question text with an exhaustive unordered semantic choice set containing only Client paid and Business paid.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
+    },
+    {
+      "id": "ITEMLINKPRES-TEST-002",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
+      "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
+      "expected": "Accounted and relationship-evidence-incomplete rows fail closed through stable bounded codes; public presentation contains none of Not sure yet, Sell from Business Inventory, Assign Item, Needs Assignment, Linked Items, Unlinked Items or occurrence/movement terminology.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
+    },
+    {
+      "id": "ITEMLINKPRES-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
+      "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
+      "expected": "Canonical encode/decode of the verified accounting snapshot re-projects identical labels and Link descriptor; projection and dismissal leave the source row/snapshot byte-identical and serialize no transient modal/payer state.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
+    },
+    {
+      "id": "ITEMLINKPRES-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
+      "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
+      "expected": "The existing provider-free ProjectItemAccountingQuerying boundary emits a validated local snapshot whose section and authoritative Unaccounted rows project identically without a second port; cancellation/failure semantics remain owned by the verified dependency and no Link command or provider is invoked.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
+    },
+    {
+      "id": "ITEMLINKPRES-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming Link commands/routes, persistence, app/MCP, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified decision-independent Phase 1 presentation leaf. Exact ready commit 47f8fe0d148de617154e40da22bf02d2b47aefc2 passed immutable Actions run 33690917866. The implementation consumes verified Project Item accounting resolution, exposes payer membership as an unordered Set, persists no transient state and adds no query port. Independent review found one P3 self-referential membership assertion, which was corrected with explicit exhaustive CaseIterable/literal-set evidence and independently confirmed; declaration order is expressly not UI order. Four focused/all 193 target tests in 45 suites, isolation, generated contracts, repeatable generation and both staging builds passed locally. Exact implementation commit d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4 passed immutable Actions run 33691932385 with conversion traceability, the same complete suite, generated contracts, both staging builds and clean artifacts. Broader Link-flow behavior remains NO-GO."
+}

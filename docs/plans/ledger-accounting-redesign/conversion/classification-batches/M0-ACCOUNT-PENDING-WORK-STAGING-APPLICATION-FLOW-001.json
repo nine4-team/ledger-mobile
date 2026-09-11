@@ -1,0 +1,85 @@
+{
+  "batchId": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+  "title": "Present exact Account pending-local-work status in target staging",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-SESSION-ENDING-POLICY-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-5165512013CB",
+      "acknowledgeSourceHash": "6b9eb06b60866c8f5daa3f3226c8069f64360135a207d02ca60309237f5ce689",
+      "currentBehavior": "Implements a Core-only expected-scope-bound manual-refresh Account pending-work staging AppModel with exact presentation and terminal task drainage.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": ["Core-only staging application model for exact pending-work summary refresh"],
+        "securityRequirements": ["Preserve exact environment, Principal and Account binding and expose bounded diagnostics only"],
+        "syncRequirements": ["Present local evidence without claiming remote synchronization, upload or durability"]
+      },
+      "migration": {"rule": "Use typed synthetic summaries and the isolated target runtime only.", "reconciliation": ["One accepted refresh maps to one exact presentation without count aggregation"]},
+      "verification": {"tests": ["AccountPendingWorkStagingExerciseTests"], "acceptance": ["Exact counts, identity, refresh, failure and lifecycle truth pass"]},
+      "notes": "No session-ending request, sync action, upload, destructive Account/session cleanup, database/key/media deletion or signout; ordinary stop/drain and runtime resource teardown remain required."
+    },
+    {
+      "id": "TEST-0B0E0C9D531B",
+      "acknowledgeSourceHash": "b3ec6988c6ccc801ed1393239f09738f79a0d4dff1833f1590e13112a07badc6",
+      "currentBehavior": "Provides executable exact-count, scope, evidence, copy, failure, UUID-generation and terminal-drainage verification.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": ["Provider-free application-model test suite"],
+        "securityRequirements": ["Foreign or malformed summary never appears clean"],
+        "syncRequirements": ["Cooperative and noncooperative late results cannot replace current evidence"]
+      },
+      "migration": {"rule": "Use deterministic in-memory runtime fakes only.", "reconciliation": []},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter AccountPendingWorkStagingExerciseTests"], "acceptance": ["All frozen application obligations pass"]},
+      "notes": "A passing unit suite cannot prove hosted authorization, synchronization or logout safety."
+    },
+    {
+      "id": "SWIFT-BBA33BDFCD93",
+      "acknowledgeSourceHash": "856ffdf87ad4f55ad2aff8f7492d32fa8fc29c2c0d6f2d8110153c3918ab61b6",
+      "currentBehavior": "Implements the exact thin runtime adapter that forwards one argument-free pendingWorkSummary read without rebinding.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": ["Thin isolated target runtime adapter"],
+        "securityRequirements": ["Expose no runtime, database, provider, SQL, key, credential or scope override"],
+        "syncRequirements": ["Forward exactly one close-aware local summary read"]
+      },
+      "migration": {"rule": "Wire only the target staging composition.", "reconciliation": []},
+      "verification": {"tests": ["Target environment checker and staging builds"], "acceptance": ["Adapter contains no independent policy"]},
+      "notes": "No provider, MCP or source-app change; ordinary adapter release during runtime resource teardown is permitted."
+    },
+    {
+      "id": "SWIFT-87B098BA9F12",
+      "acknowledgeSourceHash": "0586cec495251643ba8ed79924286139d7301a44ec7a687c53acc14137a28c33",
+      "currentBehavior": "Implements a neutral staging section showing four exact pending-work counts, bounded diagnostics and manual refresh.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"],
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": ["Isolated SwiftUI pending-local-work status section"],
+        "securityRequirements": ["Render typed model state without identity, fingerprint, provider or sensitive diagnostic disclosure"],
+        "syncRequirements": ["Never label local evidence synced, uploaded, remotely durable or safe to log out"]
+      },
+      "migration": {"rule": "Compile only into LedgerTargetStaging.", "reconciliation": []},
+      "verification": {"tests": ["Environment checker and macOS/iOS staging builds"], "acceptance": ["Four separate counts and bounded status compile without actions beyond refresh"]},
+      "notes": "Final logout UI/copy and session disposition remain explicitly outside the slice."
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "target-query-logical-authority-crosswalk-control",
+  "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Target Query Logical-Authority Control",
+  "surfaceIds": ["CONFIG-5422E6C6A047", "CONFIG-ED6818A70D4E"],
+  "requirements": [
+    {
+      "id": "TQUERYAUTH-REQ-001",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Authority and Precedence",
+      "invariant": "Every TQUERY is mapped only to behavior already supported by canonical product authority, confirmed decisions, reviewed capability evidence, or architecture; missing authority remains explicit instead of being inferred from source behavior or a port name.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-004", "TQUERYAUTH-TEST-008"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Unit of Delivery",
+      "invariant": "This technical-control slice freezes one complete logical-authority registry over all generated target query methods without implementing a product query, physical data plane, provider adapter, or source-query reconciliation.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-007", "TQUERYAUTH-TEST-008"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Required Slice Dossier",
+      "invariant": "The registry records only inventory digest, globally deferred physical planes, and 19 closed-schema rows containing TQUERY/signature binding, review class, authority references, logical axes, proposed architecture dependencies, and unresolved axes.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-002", "TQUERYAUTH-TEST-003"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "Logical query scope, result, ordering, pagination, readiness and authorization are reviewed independently of physical storage and backend mechanics; a target query is never reduced to a generic repository or Firestore-shaped operation.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-004"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Families",
+      "invariant": "Identity-bootstrap, Account-catalog, Project-workspace, Inventory and multi-domain labels are proposed architecture dependencies only; they are not implemented or authorized Sync Stream assignments.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-005", "TQUERYAUTH-TEST-008"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Dependency Rule",
+      "invariant": "Postgres physical access and index design is globally deferred under A-003 and receives no per-query physical identity, name, key, index class, SQL, plan, or implementation claim in this slice.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-005", "TQUERYAUTH-TEST-007"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Evolvability",
+      "invariant": "Local physical access and index design is globally deferred under A-004 and receives no per-query physical identity, name, key, index class, SQLite definition, or implementation claim in this slice.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-005", "TQUERYAUTH-TEST-007"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "Each logical row binds the exact generated TQUERY and signature, uses discriminated reviewed, not-defined, or decision-blocked axes, and cannot populate a value for a blocked or undefined axis.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-001", "TQUERYAUTH-TEST-002", "TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-004"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Target Mapping Rule",
+      "invariant": "The logical-authority crosswalk consumes target TQUERY evidence without translating Firestore syntax, copying Firestore indexes, or claiming parity with any source query occurrence.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-004", "TQUERYAUTH-TEST-006", "TQUERYAUTH-TEST-007"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Completeness and Limitations",
+      "invariant": "A separate downstream slice must reconcile all 386 generated QUERY source occurrences to retained target authority, a future target contract, source-only tooling, deliberate retirement, or an explicit hold; this slice does none of that reconciliation.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-006", "TQUERYAUTH-TEST-007", "TQUERYAUTH-TEST-008"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-011",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "The future JSON-only validator deterministically rejects only structural faults: stale binding, missing/duplicate/orphan rows, unknown keys, invalid types or exact enums, invalid discriminated-axis shapes, non-allowlisted IDs/references, and non-deterministic output. It performs no free-text keyword or semantic inference; correctness of each logical statement remains mandatory human review evidence.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-002", "TQUERYAUTH-TEST-003", "TQUERYAUTH-TEST-005", "TQUERYAUTH-TEST-008"]
+    },
+    {
+      "id": "TQUERYAUTH-REQ-012",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Pull Request and Checkpoint Evidence",
+      "invariant": "READY, implementation and promotion use exact allowlists, preserve the 16 prior query-owner surfaces plus FILE-063B0E6EC659 and MAN-INDEX-001, add the implemented Space-list query owner explicitly, path-exclude both logical-authority control leaves from generic Firebase audit/repair discovery, exact-path-exclude the logical-authority test fixture from current-source query candidate inspection, preserve the 386 QUERY inventory, and never confuse structural validation or logical mapped status with lifecycle verification.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYAUTH-TEST-007", "TQUERYAUTH-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "The reviewed registry contains exactly one row for each of the 19 generated TQUERY methods and no extra row.",
+        "The logical crosswalk accepts implemented-or-later inventory owners but omits lifecycle from its output so TACCESS, mapping hashes and bytes remain stable across status-only promotion; mapped is semantic review, not lifecycle verification.",
+        "Each row records exact signature binding, review class, authority references, six logical axes, proposed architecture dependencies and explicit unresolved axes without repeating generated owner/protocol/selector/category/path data.",
+        "Only a reviewed axis carries value. A not_defined_by_current_contract axis carries authorityRefs, and a decision_blocked axis carries blockerIds; the latter two forbid value.",
+        "Exact reviewClass values are mapped, mapped_with_unresolved_axes and decision_blocked; exact authority roles are canonical_target, architecture_authority, conversion_control and verification_evidence; exact logical-axis states are reviewed, not_defined_by_current_contract and decision_blocked; proposedDataDomains accepts only state proposed_architecture_dependency.",
+        "Exact decision/blocker allowlist is A-003, A-004, A-007, A-010, A-015, A-016, O-007, O-015, O-026 and O-040. The validator checks membership only, plus referenced path/exact-heading existence; it does not parse Markdown decision status or meaning.",
+        "Exact data-domain values are identity_bootstrap, account_catalog, project_workspace, project_workspace_or_inventory_by_immutable_scope, derived_from_project_directory_without_separate_canonical_authority, multi_domain_local_journal_and_authoritative_outcomes and multi_domain_identity_project_inventory_and_local_journal.",
+        "Exact unresolved-axis names are occurrence_and_provenance_persistence, deterministic_storage_order, exact_visibility_download_capability, canonical_directory_order, contribution_source_eligibility_and_taxonomy, authorization_merge_and_domain_routing, optimistic_projection_representation_if_required, issuer_subject_to_principal_resolution, offline_unlock_and_revocation_window, feature_retention_target_stream_authorization_and_migration and project_workspace_dependency_if_retained.",
+        "The exact physicalPlanes object is postgres {status: deferred, decision: A-003} and local {status: deferred, decision: A-004}; physical-plane fields are global and never present on a row.",
+        "The upstream inventory is itself closed and re-derived: exact generator/source root, protocol/method schemas and ordering, unique owners/protocols/methods, protocol-method joins/counts, selector-derived category, signature hash, TQUERY identity, digest and all totals must agree before registry validation.",
+        "Review classes are structural: mapped requires all six logical axes reviewed and no unresolved axes; mapped_with_unresolved_axes requires at least one non-reviewed logical axis or unresolved axis; decision_blocked requires at least one blocked logical or unresolved axis.",
+        "Future generated output derives TACCESS- plus the first 12 uppercase hexadecimal characters of SHA-256 over UTF-8 target-query-logical-authority-v1\\0<TQUERY-ID>, with collision rejection.",
+        "Future mappingHash is the lowercase full SHA-256 of UTF-8 target-query-logical-authority-mapping-v1\\0 followed by canonical minified JSON of the registry row, recursively sorting object keys lexicographically while preserving array order. Neither ID nor hash is hand-authored in the registry.",
+        "Closed schema rejects every unknown key. Explicit forbidden examples include ownerSurfaceId, ownerPath, protocol, selector, category, tindexId, indexId, indexName, primaryKeyCandidate, secondaryRequired, physicalAccess, sql, rls, syncStream and provider; rejection is by key/schema or exact enum only, never by scanning free-text values for those words.",
+        "Repository root, inventory, registry, authority references, artifact and artifact parent are realpath-contained. Inputs and existing artifacts must be regular non-symlink files and path components may not traverse symlinks. Generate uses an unpredictable same-directory temporary file created exclusively with wx and O_NOFOLLOW where available, then atomically renames and cleans only its own temporary file.",
+        "All row-derived nested objects are reconstructed in canonical key order while preserving array order; CLI execution accepts exactly one generate or check argument."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "A-003 remains proposed and this logical-authority slice defines no table, column, relationship, constraint, view, physical access path or index."},
+    "serverHandlers": {"items": [], "notApplicable": "No query handler, RPC, command, transaction, lock or server projection is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API schema, relation, function or grant is introduced."},
+    "rlsPolicies": {"items": [], "notApplicable": "Authorization axes describe reviewed logical requirements or explicit uncertainty only; no RLS predicate or policy is selected or implemented."},
+    "syncStreams": {"items": [], "notApplicable": "All domain labels are proposed_architecture_dependency values only. No PowerSync query, parameter, stream assignment, table visibility or authorization is approved or implemented."},
+    "localOffline": {
+      "items": [
+        "Readiness/completeness axes preserve each verified query contract's distinction between locally usable evidence and authoritative absence.",
+        "A-004 remains proposed, so no SQLite schema, query, collation, index, encryption or physical durability mechanism is claimed."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No media reference, bytes, Storage policy or attachment lifecycle is part of this logical registry."},
+    "appMcp": {"items": [], "notApplicable": "No app or MCP entry point is changed and no server endpoint is inferred from a Swift watch port."},
+    "migrationReconciliation": {"items": [], "notApplicable": "The 386 QUERY source-occurrence reconciliation is a separate downstream slice. No source query or Firebase index is mapped, transformed, retired or claimed equivalent here."},
+    "observabilityRunbooks": {
+      "items": [
+        "Implementation exposes dependency-free generate/check/test commands for one deterministic JSON audit; check byte-compares without writing and the CLI accepts exactly one mode argument.",
+        "Machine validation proves structural completeness and freshness only. Evidence separately records human review of logical meaning and every blocked/undefined axis."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "READY changes only the reviewed JSON registry, two comment-only scaffolds, dossier/evidence/control metadata, the bounded discoverTooling exclusion plus deliberate discoverer re-acknowledgment, and one exact-path current-query extractor exclusion plus deliberate FILE-49BE7A26CE03 re-acknowledgment. The implementation test retains contiguous firestoreQuery and firestoreIndex negative cases so normal discovery proves both exclusions instead of relying on content evasion; generated QUERY artifacts and their 386 occurrences remain unchanged.",
+        "Implementation may replace the two scaffolds, add only target-query-logical-authority-crosswalk.generated.json, exact package commands and the Ubuntu conversion-control hook, plus synchronized control metadata.",
+        "Promotion is documentation/control-only after immutable implementation CI and human review. Reverting this control changes no runtime, provider or production behavior."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TQUERYAUTH-TEST-001",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-001", "TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-004", "TQUERYAUTH-REQ-008"],
+      "expected": "Exact set equality proves one closed-schema registry row for each of 19 current TQUERY methods, with exact inventory digest and signature binding and no copied generated ownership or lifecycle fields.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-002",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-008", "TQUERYAUTH-REQ-011"],
+      "expected": "Closed JSON schema and discriminated unions reject unknown keys/types/enums, blocked-or-undefined axes with values, reviewed axes without values, missing authority/blocker references, duplicate/orphan rows, stale signatures and structurally inconsistent review classes including count-preserving swaps.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-003",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-004", "TQUERYAUTH-REQ-005", "TQUERYAUTH-REQ-006", "TQUERYAUTH-REQ-007", "TQUERYAUTH-REQ-008", "TQUERYAUTH-REQ-011"],
+      "expected": "The exact global physicalPlanes object and proposed_architecture_dependency state/value enums pass. Unknown per-row fields—including explicit physical/index/SQL/RLS/Sync/provider keys—reject through closed-schema key validation; free-text values are never keyword-scanned.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-004",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-001", "TQUERYAUTH-REQ-004", "TQUERYAUTH-REQ-008", "TQUERYAUTH-REQ-009"],
+      "expected": "Authority paths and exact literal headings exist; decision/blocker IDs belong to the frozen exact allowlist without parsing Markdown decision status; TACCESS follows its exact domain-separated hash formula; mappingHash follows the exact domain separator plus canonical-minified-registry-row formula; identity collisions reject.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-005",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-005", "TQUERYAUTH-REQ-006", "TQUERYAUTH-REQ-007", "TQUERYAUTH-REQ-011"],
+      "expected": "Exact review-class, authority-role, logical-axis-state, proposed-data-domain, unresolved-axis-name and decision/blocker-ID allowlists reject any other token. The validator does not infer or approve a token's semantic placement within a row; human review owns that judgment.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-006",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-009", "TQUERYAUTH-REQ-010"],
+      "expected": "Closed row schema rejects sourceQueryIds, firestoreQuery, firestoreIndex and other unknown source/physical mapping keys. It does not scan free-text for Firebase or index words; evidence and exact-diff review preserve the separate downstream 386-occurrence reconciliation boundary.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-007",
+      "kind": "operational",
+      "owner": "conversion control and exact diff review",
+      "covers": ["TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-006", "TQUERYAUTH-REQ-007", "TQUERYAUTH-REQ-009", "TQUERYAUTH-REQ-010", "TQUERYAUTH-REQ-012"],
+      "expected": "Exact READY, implementation and promotion allowlists pass; both logical-authority leaves remain CONFIG-only and the 386-occurrence source-query inventory remains current/unchanged with contiguous firestoreQuery/firestoreIndex implementation tests; FILE-49BE7A26CE03 is deliberately re-acknowledged without status/owner change; the 16 prior query owners preserve status and ownership while the implemented Space-list owner is added explicitly.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-008",
+      "kind": "operational",
+      "owner": "Ubuntu conversion-control CI and human registry/generated-diff review",
+      "covers": ["TQUERYAUTH-REQ-001", "TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-005", "TQUERYAUTH-REQ-010", "TQUERYAUTH-REQ-011", "TQUERYAUTH-REQ-012"],
+      "expected": "Immutable READY CI passes comment-only scaffolds and synchronized controls; later implementation CI structurally checks deterministic JSON before target Swift work while evidence separately records human semantic review.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-009",
+      "kind": "offline_restart",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-008", "TQUERYAUTH-REQ-011"],
+      "expected": "Registry validation and generated JSON bytes are deterministic across fresh processes, nested object-key permutations and repeated generate/check runs while array order remains meaningful; no runtime cache or provider state changes the result.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    },
+    {
+      "id": "TQUERYAUTH-TEST-010",
+      "kind": "offline_rejection",
+      "owner": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+      "covers": ["TQUERYAUTH-REQ-003", "TQUERYAUTH-REQ-005", "TQUERYAUTH-REQ-008", "TQUERYAUTH-REQ-011"],
+      "expected": "Missing/stale input, set/signature/derived-inventory mismatch, unknown keys, invalid types/enums, invalid discriminated unions, non-allowlisted references, symlink/root escape and unsafe artifact/temp paths fail deterministically without network fallback or artifact overwrite. Extra CLI arguments fail. Semantic contradictions in otherwise valid free text remain human-review failures, not machine claims.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "VERIFIED lifecycle-neutral amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213; original 18-row verification remains backed by 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. The 24-test suite binds the reviewed 19-row registry including SpaceListQuerying, validates implemented-or-later upstream lifecycle, proves logical crosswalk/TACCESS/mapping bytes remain stable across status-only promotion, and preserves the original structural, filesystem, deterministic and no-semantic-inference guarantees. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. The 386 source QUERY inventory is unchanged; A-003/A-004 remain deferred."
+}

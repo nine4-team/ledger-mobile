@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "pending-work-powersync-provider",
+  "title": "Derive an exact restart-safe local pending-work summary without manufacturing a clean state",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Session Ending and Pending-Work Provider",
+  "surfaceIds": ["SWIFT-4AB6FC526AA5", "TEST-2053D13BB3B5"],
+  "requirements": [
+    {
+      "id": "PENDINGPROV-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/session-ending-pending-work.md",
+      "section": "Session-Ending Safety Contract",
+      "invariant": "One fresh environment-, Principal-, and Account-scoped local summary reports exact queued, applying, unresolved-rejected, and captured-but-unverified attachment counts before session-ending policy is evaluated.",
+      "decisionIds": [],
+      "verificationIds": ["PENDINGPROV-TEST-001", "PENDINGPROV-TEST-002", "PENDINGPROV-TEST-003", "PENDINGPROV-TEST-007"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/session-ending-pending-work.md",
+      "section": "Acceptance Outcomes",
+      "invariant": "Malformed, rebound, stale, interrupted, cross-scope, orphaned, overflow or unavailable evidence fails closed; no storage or observation failure is represented as an authoritative all-zero summary.",
+      "decisionIds": [],
+      "verificationIds": ["PENDINGPROV-TEST-002", "PENDINGPROV-TEST-003", "PENDINGPROV-TEST-005", "PENDINGPROV-TEST-006"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Logout and Local Pending Work",
+      "invariant": "Queued and applying operations without authoritative results, unresolved rejected operations, and every still-present attachment whose upload is not verified block ordinary cleanup; applied, superseded, and resolved operations do not count.",
+      "decisionIds": [],
+      "verificationIds": ["PENDINGPROV-TEST-001", "PENDINGPROV-TEST-003", "PENDINGPROV-TEST-006"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Local Database Lifecycle",
+      "invariant": "An unchanged identity-bearing operation-plus-attachment evidence set preserves the same snapshot revision, observation time and summary fingerprint across encrypted restart, while any evidence change advances revision monotonically even when aggregate counts stay equal.",
+      "decisionIds": ["A-006"],
+      "verificationIds": ["PENDINGPROV-TEST-004", "PENDINGPROV-TEST-005", "PENDINGPROV-TEST-007"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Attachments",
+      "invariant": "Pending attachment authority comes from validated local queue and byte-vault evidence, including explicit pending, missing and corrupt states. Queue-free staging/final vault orphans refuse because their exact Attachment identity is unavailable; structured PowerSync CRUD transport count is neither attachment evidence nor summary authority.",
+      "decisionIds": ["O-023"],
+      "verificationIds": ["PENDINGPROV-TEST-001", "PENDINGPROV-TEST-003", "PENDINGPROV-TEST-006"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Identity",
+      "invariant": "The provider remains an internal, uncomposed pendingWorkSummary evidence service for a later AccountSessionEnding coordinator; it cannot synchronize, delete queue/media/database/key state, sign out an identity provider, switch workspaces, or claim session termination. That later composition must own exactly one provider instance.",
+      "decisionIds": ["A-007", "A-016", "O-023"],
+      "verificationIds": ["PENDINGPROV-TEST-006", "PENDINGPROV-TEST-007"]
+    },
+    {
+      "id": "PENDINGPROV-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Sync tests",
+      "invariant": "Local verification covers clean and every pending class, scope refusal, process restart, concurrent cross-store change, operation and attachment failures, and policy integration without treating local evidence as hosted synchronization or physical cleanup proof.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["PENDINGPROV-TEST-001", "PENDINGPROV-TEST-002", "PENDINGPROV-TEST-003", "PENDINGPROV-TEST-004", "PENDINGPROV-TEST-005", "PENDINGPROV-TEST-006", "PENDINGPROV-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse PendingLocalWorkSummary and its exact environment/Principal/Account/count/revision/time/fingerprint semantics unchanged.",
+        "Reuse the canonical operation lifecycle states queued, applying, applied, rejected, superseded and resolved; provider code does not invent a second lifecycle.",
+        "Provider failures are bounded infrastructure failures and cannot construct a valid summary or SessionEndRequest."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This slice observes only encrypted target-local state and changes no Postgres schema, migration, relation, view, constraint or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No server command, sync attempt, upload, result resolution, cleanup or signout handler is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Supabase Data API surface or database grant is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Validated local workspace scope is not server authorization and this slice makes no RLS claim."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No connector or Sync Stream is opened or changed; ps_crud transport work is explicitly not pending-work authority."
+    },
+    "localOffline": {
+      "items": [
+        "Read every local-operation row from the physically isolated Account workspace and validate exact Account/Principal scope, complete row identity and one recognized lifecycle state before counting.",
+        "Count queued, applying and rejected independently; exclude applied, superseded and resolved only after state validation, and refuse unknown/null/malformed or overflowing evidence.",
+        "Read every attachment durability row and vault-orphan inventory through a new path-free scope-bound observation API; count pending, missing and corrupt queue evidence alike and refuse any staging/final orphan because exact Attachment identity is unavailable.",
+        "The attachment observation API distinguishes actual missing/corrupt-byte states from unavailable/interrupted queue or vault enumeration and propagates the latter; it never swallows a state-write failure into apparently valid blocking evidence.",
+        "Derive a canonical identity-bearing evidence digest, not merely aggregate counts or update timestamps, across structured operations and attachments.",
+        "Use a local-only scope-bound observation journal to preserve identical revision/time/fingerprint across unchanged reads and encrypted restart and to advance revision monotonically on any evidence change, including same-count replacements or state transitions.",
+        "One provider instance uses an explicit non-reentrant permit to serialize complete observations despite Swift actor reentrancy. Each bounded attempt compares before/after evidence from both stores, transactionally compares/updates the journal, then revalidates both stores and rereads the journal; any change retries, and persistent churn refuses rather than returning a mixed, regressed or falsely clean summary.",
+        "Database, attachment provider, byte-vault, scope, decoding, arithmetic and observation-journal failures are propagated as bounded refusal."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [
+        "Extend the existing isolated durability provider with one path-free pending-work observation containing validated queue evidence and sorted opaque vault-orphan evidence; pending, missing and corrupt queue evidence all remain unverified and blocking.",
+        "A queue-free orphan is never silently omitted or guessed into an exact Attachment count; its presence produces a bounded fail-closed provider result across restart.",
+        "Do not read raw media into the structured operation database, manufacture uploaded status, detach, retain, purge, delete or choose O-023 policy."
+      ],
+      "notApplicable": ""
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This internal provider slice is intentionally not composed into LedgerOfflineClientRuntime and adds no screen, user choice, MCP tool, provider signout or physical AccountSessionEnding coordinator. A later composition slice must construct the attachment database/vault/key lifecycle and own exactly one provider instance."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase cache, pending write, media directory, token or session evidence is imported; local fixtures are disposable and production migration remains gated."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Expose stable bounded diagnostic codes for scope, malformed operation, invalid attachment, unstable observation, overflow, database and journal failures without raw IDs, payloads, media paths, secrets or credentials.",
+        "The summary fingerprint is integrity/equality evidence only and is never logged as proof of remote synchronization or authorization."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains target-local on the isolated Supabase branch and is reversible without changing the production Firebase app.",
+        "A-003/A-004 remain proposed and A-007/A-016/O-023 remain open; no hosted resource, migration, release, session teardown or cutover authority advances."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PENDINGPROV-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift",
+      "covers": ["PENDINGPROV-REQ-001", "PENDINGPROV-REQ-003", "PENDINGPROV-REQ-005", "PENDINGPROV-REQ-007"],
+      "expected": "Zero, each of four pending classes independently, mixtures and large valid counts are exact; applied/superseded/resolved operations are excluded only after validation and ps_crud divergence does not affect the result.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-002",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift",
+      "covers": ["PENDINGPROV-REQ-001", "PENDINGPROV-REQ-002", "PENDINGPROV-REQ-007"],
+      "expected": "Unknown, null or malformed operation state/identity, foreign Principal or Account, rebound environment evidence and counter or journal-revision arithmetic overflow refuse with bounded diagnostics before a summary is returned.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-003",
+      "kind": "media_fault",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift and AttachmentDurabilityProviderTests.swift",
+      "covers": ["PENDINGPROV-REQ-001", "PENDINGPROV-REQ-002", "PENDINGPROV-REQ-003", "PENDINGPROV-REQ-005", "PENDINGPROV-REQ-007"],
+      "expected": "Every present attachment row counts while pending, missing or corrupt; queue-free staging/final orphans refuse across restart; malformed/cross-scope rows, state-write failures and unavailable/interrupted queue or vault enumeration refuse and never undercount or become zero.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-004",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift",
+      "covers": ["PENDINGPROV-REQ-004", "PENDINGPROV-REQ-007"],
+      "expected": "An unchanged evidence set returns byte-identical summary evidence; queued-to-applying-to-applied, rejected-to-resolved and same-count identity replacement each advance revision monotonically, and exact revision/time/fingerprint survive encrypted close/reopen.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift",
+      "covers": ["PENDINGPROV-REQ-002", "PENDINGPROV-REQ-004", "PENDINGPROV-REQ-007"],
+      "expected": "Mutation after the apparently stable second read or during journal commit causes post-journal revalidation and bounded retry; persistent churn and journal failure refuse, while two callers on the one required provider instance cannot return a later revision for older evidence or a mixed/regressed snapshot. A final journal reread is defense-in-depth for accidental second instances, not a substitute for single-instance composition.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-006",
+      "kind": "app_mcp_contract",
+      "owner": "PendingWorkPowerSyncQueryTests.swift and SessionEndingPolicyTests.swift",
+      "covers": ["PENDINGPROV-REQ-002", "PENDINGPROV-REQ-003", "PENDINGPROV-REQ-005", "PENDINGPROV-REQ-006", "PENDINGPROV-REQ-007"],
+      "expected": "The provider summary drives existing clean/sync-first/exact-destructive policy evaluation, but the provider exposes no deletion, signout, synchronization, hosted-success, app/MCP or session-end action.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    },
+    {
+      "id": "PENDINGPROV-TEST-007",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PENDINGPROV-REQ-001", "PENDINGPROV-REQ-004", "PENDINGPROV-REQ-006", "PENDINGPROV-REQ-007"],
+      "expected": "The exact synchronized checkpoint passes conversion controls, focused and complete target tests, existing attachment/runtime regressions, generated contracts, local Supabase provider checks, both staging builds and clean artifacts without hosted or production access.",
+      "status": "passed",
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Exact corrected READY commit 2072af47 passed all three immutable jobs in run 33930443887 before executable work. The locally implemented slice changes the two primary leaves plus affected/shared SWIFT-19D4AA7B766B LedgerPowerSyncSchema for the local-only journal, SWIFT-F850F907B87F AttachmentCapturePowerSyncStore for strict path-free queue-plus-orphan observation, SWIFT-68F4E18977D4 AttachmentLocalByteVault for deterministic unavailable-inventory refusal, and TEST-CE5D3D0516D1 AttachmentDurabilityProviderTests for those guarantees; primary ownership stays unchanged. Executable review rejected a reentrant-actor ABA race, absent runtime composition, unsafe extreme-time conversion and verification gaps. The corrected provider uses an explicit whole-summary permit, post-evidence journal reread, exact time conversion, real store/restart/fault tests and honestly remains uncomposed. Final independent corrected-diff review returned GO with no P0-P3 finding. Exact implementation 3ac05bd0 passed all three immutable jobs in run 33932915626, including all 391 target tests, both builds and isolated Supabase checks. The later AccountSessionEnding composition must own exactly one instance and the attachment database/vault/key lifecycle. SessionEndingPolicy and OperationLifecycle remain unchanged dependencies. No physical synchronization, cleanup, provider signout, workspace switching, Auth/offline-lease policy, hosted access, migration, Firebase work or cutover exists."
+}

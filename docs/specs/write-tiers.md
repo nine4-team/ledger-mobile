@@ -1,5 +1,12 @@
 # Write Tiers
 
+> **Target-state notice (2026-08-31):** These tiers document the current
+> Firebase-shaped system. They are not the write architecture for the redesigned
+> app. Target writes use typed backend-neutral operations, local query ports,
+> durable operation envelopes, and authoritative command handlers as defined in
+> [Domain and Application Architecture](../architecture/redesign/02-domain-and-application-architecture.md)
+> and [Backend Ports and Adapters](../architecture/redesign/04-backend-ports-and-adapters.md).
+
 The system uses four distinct write patterns, ordered by complexity. Each tier exists for a specific reason.
 
 ## Tier 1: Fire-and-Forget (Direct Firestore Write)

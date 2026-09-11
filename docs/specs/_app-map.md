@@ -1,5 +1,16 @@
 # App Map: Ledger
-Last updated: 2026-06-23
+Last updated: 2026-08-30
+
+> **Redesign note:** The sections labeled current understanding describe the
+> shipped app. The approved destination is
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md):
+> project Transactions become real client-payment records, project-side
+> inventory sales become Item charges/credits in Invoicing, and collection is
+> whole-Invoice with one lump-sum Purchase. Target project types are Purchase,
+> Return, and same-Client Transfer. Projects gain authoritative Client identity;
+> a Transfer writes linked records in two same-Client projects without touching
+> Business Inventory. Do not treat the current per-category settlement or
+> project movement-Transaction descriptions below as the target architecture.
 
 ## Overview
 Ledger is an inventory and transaction management app for design teams. It exists as both a web app and a macOS desktop app. The app tracks items (inventory) and transactions across projects and spaces, with budgeting and reporting features.
@@ -18,7 +29,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 - **Navigates to/from**: [needs discovery]
 - **Status**: partially-mapped
 
-## Transaction & Billing Model (Current Understanding)
+## Transaction & Billing Model (Current Shipped Understanding)
 
 ### Transaction Structure
 - Projects have normal project transactions plus per-batch inventory movement transactions. Inventory movement transactions are not long-lived aggregators; their identity fields are frozen while `itemIds` tracks current active membership. Only an eligible project Purchase-from-Inventory amount/subtotal follows later sold-item price changes.
@@ -28,7 +39,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ### Item Entry (Current — Being Redesigned)
 - **Path A (being removed for itemized categories):** Items added directly to a project, marked as "business purchased, client owes"
 - **Path B (becoming the standard for itemized categories):** Items enter inventory via purchase transaction, then sold/moved to a project
-- **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then converted later into real items, existing receipt-created items, or inventory-to-project flows. See `proto-item-capture.md`.
+- **Unified Item creation:** Add Item uses one wizard and one real Item writer. The former proto capture fields appear first; optional details continue in the same flow. Project Items appear under Unaccounted For Items until Link connects them to either a client-paid project Purchase or the project's billable Items list. Current Firebase `protoItems` remain source data before hard cutover; the target import resolves them and the new version has no proto writer or Firebase runtime dual-read. See `proto-item-capture.md`.
 - Non-itemized project costs are `purchase` transactions under `categoryType = general` categories, without item rows.
 
 ### Invoicing

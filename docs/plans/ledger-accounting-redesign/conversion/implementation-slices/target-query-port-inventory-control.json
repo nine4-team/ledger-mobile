@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "target-query-port-inventory-control",
+  "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Target Query-Port Conversion Control",
+  "surfaceIds": ["CONFIG-9B16CFCB67A4", "CONFIG-C1C61B2D6569"],
+  "requirements": [
+    {
+      "id": "TQUERYCONTROL-REQ-001",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Authority and Precedence",
+      "invariant": "The inventory records target query-port declarations as technical evidence only. It cannot promote current source behavior, a protocol spelling, or generated output into product authority.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Unit of Delivery",
+      "invariant": "This shared technical-control slice inventories query-port requirements without claiming a product slice, logical access design, physical index, or adapter implementation. Every generated method becomes an explicit downstream input to the logical access/index crosswalk.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Required Slice Dossier",
+      "invariant": "Every claimed control surface, requirement, generated artifact, test owner, exclusion, downstream obligation and status transition is named before executable implementation begins.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-006", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Required Work Sequence",
+      "invariant": "The exact parser and negative-test contract is frozen at READY, executable implementation follows a green immutable READY checkpoint, and generated output is reviewed before any downstream query or index mapping advances.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-005", "TQUERYCONTROL-TEST-006", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Pull Request and Checkpoint Evidence",
+      "invariant": "READY, implementation and promotion checkpoints use exact allowlists, record deterministic commands and artifacts, preserve production isolation, and never describe machine freshness as human semantic review.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-006", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "Every direct method requirement in a public LedgerTargetCore protocol ending exactly Querying is inventoried as a read-port method without deriving command, repository, persistence or product semantics from it.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-005"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Dependency Rule",
+      "invariant": "The inventory generator and tests are dependency-free Node controls over repository Swift text and conversion metadata; they import no Firebase, Supabase, PowerSync, SQL-driver or Swift-runtime dependency and contact no hosted system.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-005", "TQUERYCONTROL-TEST-006", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Evolvability",
+      "invariant": "Stable method identities survive signature evolution while separate signature hashes expose contract drift, allowing later backends and indexes to map reviewed query capabilities without coupling views to a provider.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-002", "TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "The scanner includes every direct instance function of every public protocol whose name ends exactly Querying, including non-public requirements, classifies watch-prefixed selectors as observation and reserves request_response for future non-watch methods, and fails closed rather than silently losing unsupported syntax.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-005"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-010",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Families",
+      "invariant": "The reviewed baseline is exactly 17 implemented-or-later owning surfaces, 17 public Querying protocols and 19 direct methods, all presently watch-prefixed, including exactly two multi-method protocols. Owner resolution is exact through the conversion manifest; only implemented, verified, rehearsed and cutover_ready owners are admitted, while every earlier, blocked, retired or unknown lifecycle rejects.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-005", "TQUERYCONTROL-TEST-007"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-011",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "Ubuntu conversion control runs query-port inventory testing and checking, and the macOS target-environment job explicitly depends on that control job so Swift tests cannot start after a missing, stale, malformed, ambiguous or unparseable inventory result. Checking never rewrites tracked artifacts.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-005", "TQUERYCONTROL-TEST-006", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-012",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Definition of Done for a Vertical Slice",
+      "invariant": "Fresh target query-port inventory is prerequisite evidence only. It does not prove a product slice's predicates, ordering, pagination, readiness, local results, security, Sync, migration, reconciliation or end-to-end behavior.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-013",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Reproducible Inventory",
+      "invariant": "The target-port inventory follows the existing deterministic generated-inventory discipline while remaining a distinct target contract: stable rows, source digests and checked artifacts make repository changes visible without claiming runtime activity.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-002", "TQUERYCONTROL-TEST-003", "TQUERYCONTROL-TEST-006"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-014",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Target Mapping Rule",
+      "invariant": "Generated TQUERY rows identify backend-neutral target port methods, not Firestore query-builder syntax. A later logical access/index crosswalk must review every generated TQUERY before any physical database or local index design is claimed.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    },
+    {
+      "id": "TQUERYCONTROL-REQ-015",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Completeness and Limitations",
+      "invariant": "Mechanical completeness is limited to direct instance-method requirements in public LedgerTargetCore protocols ending exactly Querying. A separate downstream reconciliation must account for all 386 QUERY-* source occurrences; neither inventory proves source-query completeness, runtime use or index sufficiency.",
+      "decisionIds": [],
+      "verificationIds": ["TQUERYCONTROL-TEST-001", "TQUERYCONTROL-TEST-004", "TQUERYCONTROL-TEST-005", "TQUERYCONTROL-TEST-007", "TQUERYCONTROL-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Each generated row records one stable TQUERY ID derived only from owner surface ID, protocol name and selector, plus a separate normalized signature hash, owner path/status, protocol, selector, category and canonical signature.",
+        "The lexical scanner masks comments and strings, tracks nested Swift delimiters, supports multiline/attribute/generic/async/throws/return/where syntax and either emits every direct requirement or rejects the entire inventory.",
+        "Output order and JSON/Markdown bytes are deterministic, contain no timestamps and are invariant to CRLF, harmless whitespace and masked comment/string contents.",
+        "Today the exact accepted baseline is 17 implemented-or-later owners, 17 public Querying protocols and 19 methods; all 19 are observation methods and the two multi-method protocols are ClientProjectDirectoryQuerying and OperationQuerying.",
+        "Owner lifecycle is emitted for review but does not affect TQUERY identity, signature hash or inventory digest; a status-only transition does change generated JSON/Markdown bytes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This slice inventories application-port declarations and creates no Postgres relation, constraint, view, function, logical access path or physical index."},
+    "serverHandlers": {"items": [], "notApplicable": "No query handler, RPC, transaction, lock or command-side behavior is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API schema, relation, function or grant is introduced."},
+    "rlsPolicies": {"items": [], "notApplicable": "No row access is implemented or authorized; owner-manifest validation is repository metadata validation, not user authorization."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, visibility rule, local table or synchronized row is designed or implemented."},
+    "localOffline": {"items": [], "notApplicable": "No query readiness, local result, restart, rejection, queue or durability behavior is added; those remain owned by each query contract."},
+    "storageMedia": {"items": [], "notApplicable": "The inventory contains declarations and hashes only and reads or writes no media reference or bytes."},
+    "appMcp": {"items": [], "notApplicable": "No app or MCP query endpoint is added or changed, and no runtime Swift manifest is introduced."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase source data is read or transformed. Reconciliation of the 386 QUERY-* source occurrences is a named later control slice."},
+    "observabilityRunbooks": {
+      "items": [
+        "Package commands expose generate, check and test modes; check is read-only and reports exact missing/stale/ambiguous inventory failures without rewriting files.",
+        "Ubuntu CI runs inventory tests and checking in conversion control; the macOS target-environment job declares that control job as a prerequisite, so target Swift tests and builds do not start after inventory failure. The generated JSON/Markdown diff remains mandatory human-review evidence.",
+        "Machine success proves deterministic completeness and freshness only; evidence must explicitly record human review of generated additions, removals and signature changes."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "READY may change only the two comment scaffolds, dossier/evidence/control metadata and deliberately re-acknowledged conversion discoverer; it creates no generated inventory artifact or package/workflow hook.",
+        "Implementation may replace the two exact leaves, add only target-query-port-inventory.generated.json/.md, the frozen package commands, the Ubuntu conversion-control hook and the target-environment job dependency, while preserving all 16 query owners and existing support surfaces at their prior status.",
+        "Promotion is a separate documentation/control checkpoint after immutable implementation CI; reverting this additive control changes no target runtime and no Firebase production behavior."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TQUERYCONTROL-TEST-001",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-013", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
+      "expected": "Repository fixture proves exactly 17 implemented-or-later owner surfaces, 17 exact-suffix public Querying protocols, 19 direct methods, all watch observations, and the exact two multi-method protocol method sets with one row per requirement.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-002",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-013"],
+      "expected": "Repeated runs and CRLF, harmless whitespace and masked comment/string variants emit byte-identical sorted JSON/Markdown, stable TQUERY IDs and signature hashes without timestamps.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-003",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-013"],
+      "expected": "Added, removed or renamed protocols/methods and independent label, parameter/return type, generic, attribute, async, throws and where-clause changes make checked output stale while method identity and signature hash remain separate.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-004",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-015"],
+      "expected": "Multiline declarations, attributes, nested generics and where clauses parse; comments, strings, implementations, extensions, private/internal protocols and non-exact Querying names are excluded without hiding direct requirements.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-005",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-015"],
+      "expected": "Unsupported direct functions, malformed/ambiguous declarations, duplicate selectors/overloads, empty Querying protocols, missing/ambiguous manifest owner and every pre-implementation, blocked, retired or unknown owner status reject the full inventory with stable diagnostics.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-006",
+      "kind": "operational",
+      "owner": "scripts/generate-target-query-port-inventory.mjs check and scripts/tests/generate-target-query-port-inventory.test.mjs",
+      "covers": ["TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-013"],
+      "expected": "Missing JSON or Markdown and stale bytes fail; check never writes; generate then check is clean; package generate/check/test commands are exact and dependency-free.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-007",
+      "kind": "operational",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-012", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
+      "expected": "Exact READY/implementation/promotion allowlists pass. FILE-063B0E6EC659, MAN-INDEX-001, FILE-208B7E9D7F47 and the 16 previously verified query owners preserve lifecycle and ownership; the implemented Space-list owner is added explicitly, while generated TQUERY-to-logical-access and 386 QUERY-* reconciliation remain separate controls.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    },
+    {
+      "id": "TQUERYCONTROL-TEST-008",
+      "kind": "operational",
+      "owner": "Ubuntu conversion-control CI and human generated-diff review",
+      "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-012", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
+      "expected": "Immutable CI runs inventory test/check in the Ubuntu conversion-control job, makes the macOS target-environment job depend on its success, and rejects stale inventory before target Swift tests can start; evidence separately records human review of the generated diff and does not claim logical/physical query design, product behavior or production authority.",
+      "status": "passed",
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "VERIFIED lifecycle amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213; original scanner verification remains backed by a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. The 22-test suite emits and byte-checks 17 owners / 17 protocols / 19 methods, displays owner status, accepts only implemented-or-later active lifecycles, rejects every earlier/blocked/retired/unknown state, and proves status-only promotion preserves TQUERY/signature/digest while changing review bytes. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. The original parser guarantees remain unchanged. A-003/A-004 and product D/O decisions are not applicable."
+}

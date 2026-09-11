@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-creation-supabase-powersync-vertical-slice",
+  "title": "Create one Space offline and read it back in the exact local destination directory",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Space Creation Provider",
+  "surfaceIds": [
+    "CONFIG-47B4E611F656",
+    "CONFIG-D480EE9180E9",
+    "CONFIG-D810BACE7514",
+    "MCPMOD-6041493AFB54",
+    "MCPMOD-96D987A7F175",
+    "SWIFT-4A4871681A0C",
+    "SWIFT-81770E563598",
+    "SWIFT-A3C39A0A230C",
+    "SWIFT-D0265A748544",
+    "SWIFT-E759DC8D7078",
+    "TEST-0FCB8A65AEFB",
+    "TEST-987BC22BCDF4"
+  ],
+  "requirements": [
+    {
+      "id": "SPACECREATEPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One accepted direct creation owns a caller-preallocated stable SpaceID in one exact Account and immutable Project-or-Business-Inventory scope, with canonical name and optional notes. Duplicate names under distinct IDs remain valid; copied names, route strings, backend paths and nullable scope pairs are never relationship authority.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-001", "SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-003", "SPACECREATEPROVIDER-TEST-004", "SPACECREATEPROVIDER-TEST-007", "SPACECREATEPROVIDER-TEST-009", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Swift, MCP and PostgreSQL cannot yet promise one exact accepted Space name/notes value set. O-044 must approve separate language-neutral trim, control/NUL, Unicode-preservation and UTF-8-size rules before READY or executable writer work.",
+      "decisionIds": ["O-044"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-001", "SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-009", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Direct creation has no implicit template, checklist, attachment, Item placement, archive, review, completion, Transaction, Invoice, payer, price, budget or accounting side effect. O-023/O-026/O-037 remain outside this operation.",
+      "decisionIds": ["O-023", "O-026", "O-037"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-001", "SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-003", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "The trusted command-specific Space-create authorization rule is unresolved. O-045 must decide whether active membership is sufficient or a specific role/capability is required; current Firebase member-write behavior cannot decide the target rule.",
+      "decisionIds": ["O-045"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-004", "SPACECREATEPROVIDER-TEST-005", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "A Project-scoped command must validate an exact same-Account Project parent, but archived-parent eligibility is unresolved. O-046 must define one local/app/MCP/server lifecycle precondition while preserving existing archived-Project child Spaces.",
+      "decisionIds": ["O-046"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-001", "SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-004", "SPACECREATEPROVIDER-TEST-005", "SPACECREATEPROVIDER-TEST-007", "SPACECREATEPROVIDER-TEST-009", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "With no network, one accepted operation atomically stores immutable operation evidence, one insert-only command and one separate local-only pending Space in the encrypted Principal/Account database, returns the shared queued receipt, renders the row immediately as partial, and survives termination until durable rejection or qualifying authoritative readback.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-006", "SPACECREATEPROVIDER-TEST-007", "SPACECREATEPROVIDER-TEST-008", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-007",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "The caller-owned pending Space appears only in the exact active-membership Account and Project-or-Business-Inventory destination directory, at stable ID and projected revision 1, and always makes evidence partial. It cannot bypass membership loss, create authoritative completeness, leak cross-scope, or clear merely because an applied result arrived before the authoritative row.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-006", "SPACECREATEPROVIDER-TEST-007", "SPACECREATEPROVIDER-TEST-008", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Command Authorization",
+      "invariant": "The trusted handler authenticates and binds actor before OperationID, Space, Project or result disclosure, applies the future O-045 role rule, validates exact Account/parent/lifecycle under O-046, locks deterministically, inserts one server-owned active revision-1 Space plus immutable terminal result, and permits no direct Space/result write.",
+      "decisionIds": ["O-045", "O-046"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-001", "SPACECREATEPROVIDER-TEST-002", "SPACECREATEPROVIDER-TEST-003", "SPACECREATEPROVIDER-TEST-004", "SPACECREATEPROVIDER-TEST-005", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The isolated app and gated target MCP use identical create-space-v1 command bytes, fingerprint, scoped-user RPC and immutable result validation. Account/Principal come from authenticated context; neither accepts a service-role credential or logs Space text, canonical payload, token or key.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-003", "SPACECREATEPROVIDER-TEST-004", "SPACECREATEPROVIDER-TEST-005", "SPACECREATEPROVIDER-TEST-009", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECREATEPROVIDER-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "The entire slice remains spike-prefixed, synthetic and isolated from Firebase, hosted target, source migration and production. It grants no deployment, release or cutover authority; A-003/A-004 remain proposed and hosted authenticated PowerSync proof remains planned.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["SPACECREATEPROVIDER-TEST-005", "SPACECREATEPROVIDER-TEST-010", "SPACECREATEPROVIDER-TEST-011", "SPACECREATEPROVIDER-TEST-012"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse the verified SpaceCreationDraft, CreateSpaceCommand, SpaceCreating, SpaceCreationFormInput and DirectSpaceCreationUseCase. Provider types do not cross into LedgerTargetCore.",
+        "create-space-v1 binds exact Operation, Account, actor, caller SpaceID, immutable scope, approved O-044 canonical name/notes, finite capture milliseconds and zero preconditions."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Extend the existing spike_spaces authority with canonical optional notes and server-owned creation/update actor/time evidence while preserving exact composite Account/Project scope, immutable scope, lifecycle and positive revision constraints/indexes.",
+        "Extend immutable spike_operation_results to recognize create_space and exact Space subject/command fingerprint without a second Space identity or history authority."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [
+        "One private search-path-pinned transaction authenticates, authorizes under O-045, parses and revalidates the exact command/fingerprint, validates Project existence/lifecycle under O-046, locks OperationID and Space identity deterministically, and inserts the Space/result once.",
+        "Exact replay returns the immutable result; changed reuse cannot rebind; concurrent claims on one SpaceID produce one deterministic success and one bounded conflict without affecting duplicate names."
+      ],
+      "notApplicable": ""
+    },
+    "dataApiGrants": {
+      "items": [
+        "Expose one explicit security-invoker Space-create RPC to authenticated only; PUBLIC/anon cannot execute the private handler, and anon/authenticated receive no direct Space or result mutation privilege."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Reuse Account-scoped Space/result SELECT visibility and enforce O-045 at the trusted command boundary. Anonymous, revoked, forged-actor, wrong-role, foreign-Project and cross-Account requests are non-enumerating; no direct INSERT/UPDATE/DELETE policy is added."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Reuse the two exact on-demand active-Space Project/Inventory streams and scoped operation-result stream for authoritative readback. Pending operations/commands/Spaces never download as authority.",
+        "Authenticated hosted authorization, revocation and local-row absence remain required before A-004 can advance."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Add separate local-only pending Space and insert-only create command tables; accept operation/command/pending row atomically in the encrypted Account workspace, resolve exact replay before mutable local evidence, upload FIFO and retain transient failures.",
+        "Merge a valid caller-owned pending row into the existing exact destination directory only while its Principal/Account/scope membership sentinel is represented; mark the view partial. Durable rejection removes it; applied optimism persists until exact authoritative row readback; every result-before-row, row-before-result, membership loss/regain and restart ordering is explicit."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Direct Space creation owns no attachment identity, byte, upload, URL, retention or deletion behavior; O-023 remains outside."},
+    "appMcp": {
+      "items": [
+        "A Core-only AppModel binds form submission to exact local directory readback; a thin target runtime adapter and isolated staging view expose queued/partial/applied/rejected truth without provider types or production routes.",
+        "The gated target MCP derives scope from authenticated context and uses the same O-044 conversion, canonical bytes, scoped-user RPC and result validation as Swift."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase snapshot is read or imported. Space/checklist/media/source-shape transformation and O-044 legacy-text dispositions remain separate migration work."},
+    "observabilityRunbooks": {
+      "items": ["Use stable operation/result/error correlation and bounded queue timing without Space text, canonical JSON, identifiers, tokens or credentials. Connected retry/Sync latency remains a later rehearsal obligation."],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "All work stays in the dedicated target worktree/app and disposable local spike schema; Firebase remains unchanged and authoritative.",
+        "Rollback is disposal of synthetic local target data. No hosted resource, source import, migration, release, production write, feature-authority switch or cutover is authorized."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {"id": "SPACECREATEPROVIDER-TEST-001", "kind": "database_invariant", "owner": "supabase/tests/space_creation_vertical_slice.test.sql", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-002", "SPACECREATEPROVIDER-REQ-003", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-008"], "expected": "After O-044/O-046 approval, a clean reset proves exact schema, both scopes, canonical text, duplicate names, active revision-1 server audit, Project lifecycle, immutable scope and zero unrelated effects.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-002", "kind": "handler_idempotency", "owner": "supabase/tests/space_creation_vertical_slice.test.sql and scripts/test-local-space-creation-rpc.mjs", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-002", "SPACECREATEPROVIDER-REQ-003", "SPACECREATEPROVIDER-REQ-004", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-008"], "expected": "Exact replay/lost response returns one result and row; changed replay refuses; concurrent same-ID claims yield one winner; distinct IDs with equal names both succeed.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-003", "kind": "domain", "owner": "Existing Space creation operation/use-case suites plus cross-runtime fixtures", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-003", "SPACECREATEPROVIDER-REQ-008", "SPACECREATEPROVIDER-REQ-009"], "expected": "Verified stable identity/scope/zero-precondition semantics remain unchanged and approved O-044 submission vectors become exact across Swift, TypeScript and PostgreSQL.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-004", "kind": "rls_positive", "owner": "supabase/tests/space_creation_vertical_slice.test.sql and scripts/test-local-space-creation-rpc.mjs", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-004", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-008", "SPACECREATEPROVIDER-REQ-009"], "expected": "Every O-045-approved active member role creates in each approved scope and reads only the authorized Space/result.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-005", "kind": "rls_negative", "owner": "supabase/tests/space_creation_vertical_slice.test.sql and scripts/test-local-space-creation-rpc.mjs", "covers": ["SPACECREATEPROVIDER-REQ-004", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-008", "SPACECREATEPROVIDER-REQ-009", "SPACECREATEPROVIDER-REQ-010"], "expected": "Anonymous, revoked, wrong-role, forged actor, direct DML, missing/foreign/archived-as-decided Project and cross-Account requests cannot mutate or enumerate Space/result evidence.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-006", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCreationPowerSyncVerticalSliceTests.swift", "covers": ["SPACECREATEPROVIDER-REQ-006", "SPACECREATEPROVIDER-REQ-007"], "expected": "Both scopes atomically retain operation/command/pending Space across encrypted close/reopen; immediate exact-scope directory readback is partial and deterministic for duplicate names.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-007", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCreationPowerSyncVerticalSliceTests.swift", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-006", "SPACECREATEPROVIDER-REQ-007"], "expected": "Transient failure retains work; durable rejection removes only the exact pending row; malformed/foreign/stale result or authority fails closed; Project lifecycle evidence follows O-046.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-008", "kind": "sync_authorization", "owner": "Future isolated authenticated PowerSync Space-create rehearsal", "covers": ["SPACECREATEPROVIDER-REQ-006", "SPACECREATEPROVIDER-REQ-007"], "expected": "Authorized streams deliver only exact Space/result rows; revocation removes future entitlement and unauthorized local rows are absent while pending work follows the approved shared disposition policy.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-009", "kind": "app_mcp_contract", "owner": "LedgerTargetMCP/tests/spaceCreation.test.ts plus Swift provider/AppModel tests", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-002", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-009"], "expected": "Swift and MCP accept/reject identical O-044/O-046 cases and emit identical canonical command bytes/fingerprint/RPC/result validation with scoped-user credentials.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-010", "kind": "operational", "owner": "Target controls, pending-work/runtime tests, database lint and immutable CI", "covers": ["SPACECREATEPROVIDER-REQ-004", "SPACECREATEPROVIDER-REQ-006", "SPACECREATEPROVIDER-REQ-007", "SPACECREATEPROVIDER-REQ-008", "SPACECREATEPROVIDER-REQ-009", "SPACECREATEPROVIDER-REQ-010"], "expected": "FIFO/drain/close/bootstrap and privacy-safe correlation pass with zero database-lint errors, deterministic generation, clean artifacts and no provider/source boundary violation.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-011", "kind": "end_to_end", "owner": "Local Supabase, encrypted PowerSync, isolated app and gated MCP test matrix", "covers": ["SPACECREATEPROVIDER-REQ-001", "SPACECREATEPROVIDER-REQ-002", "SPACECREATEPROVIDER-REQ-003", "SPACECREATEPROVIDER-REQ-004", "SPACECREATEPROVIDER-REQ-005", "SPACECREATEPROVIDER-REQ-006", "SPACECREATEPROVIDER-REQ-007", "SPACECREATEPROVIDER-REQ-008", "SPACECREATEPROVIDER-REQ-009", "SPACECREATEPROVIDER-REQ-010"], "expected": "One valid offline command in either scope survives restart, uploads once, returns immutable result, appears immediately as partial, remains through result-before-row, and reconciles only on exact authoritative readback with no unrelated effect.", "status": "planned", "evidence": []},
+    {"id": "SPACECREATEPROVIDER-TEST-012", "kind": "operational", "owner": "Immutable conversion workflow on exact READY/implementation checkpoints", "covers": ["SPACECREATEPROVIDER-REQ-010"], "expected": "Exact commits pass conversion control, local Supabase verification, complete Swift/MCP tests and both target builds without hosted, Firebase, migration, production, release or cutover action.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": ["O-044", "O-045", "O-046"],
+  "notes": "Independent authority review returned NO-GO for READY because exact cross-runtime Space text, command-specific writer authorization and archived-Project parent eligibility are not canonical. The comment-only scaffolds reserve the complete physical boundary but execute nothing. Immediate picker readback is explicitly causal and partial: pending rows are exact Principal/Account/scope evidence, membership loss hides without discarding them, result arrival alone cannot clear them, and only durable rejection or exact authoritative readback reconciles. Broad source NewSpaceView/Space CRUD surfaces remain target_mapped and unclaimed because this slice converts only direct creation."
+}

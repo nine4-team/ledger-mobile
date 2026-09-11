@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "stateVersion": 440,
+  "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
+  "updatedAt": "2026-09-11",
+  "branch": "codex/supabase-powersync-implementation",
+  "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
+  "method": {
+    "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+    "version": 4
+  },
+  "verifiedCheckpoint": {
+    "name": "ITEM-ACCOUNTING-FILTER-BOTH-PLATFORMS-GREEN",
+    "commit": "505dc2bb658076b0536e705038dd29b020747baf",
+    "ciRun": 34563203081,
+    "attempt": 1,
+    "ciStatus": "passed",
+    "meaning": "Historical attempt1 passed all five jobs, including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 subsequently failed iOS UI; this is NOT a currently clean full-UI baseline. Four accounting-filter checks passed in attempt1. No broad Item, Purchase, hosted, migration or cutover completion. Pre-existing dirty Purchase changes are not part of this committed proof."
+  },
+  "activeWorkflow": {
+    "id": "item-linked-purchase-read",
+    "kind": "backend_control",
+    "status": "complete",
+    "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
+    "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
+    "nextActions": [
+      "Bounded Purchase-read trial FINISHED. Implementation6f9efa2ed58ef4d92410ef22354f8d38a39ad774 is unchanged by later process commits. Seven acceptance checks pass; local exact-money/scope/offline tests and clean CI backend/native/build checks pass. Checklist CI status is explicitly scoped to these required backend checks, NOT overall-run success.",
+      "Run34649367344 attempt1 was cancelled after required backend checks passed; only unrelated iOS UI remained (macOS job passed). Full-run conclusion remains cancelled. Do not resume its UI tests or present it as a green cumulative gate. Watch session3170 terminated; heartbeat ledger-purchase-read-verification PAUSED. No follow-up work remains for this trial.",
+      "User authorized publishing the prepared CI/process corrections (cba2652d,3e9a8a86 plus latest guidance) to activate them on GitHub.18local policy tests pass; selector uses the fixed batch base and app_ui layer and selects no UI for this backend batch. Allow the single normal automatic run from this publication; record its exact commit/run after dispatch. No manual duplicate CI or new implementation batch authorized.",
+      "Efficiency assessment reconciles the completed goal's460863reported tokens but marks task/activity attribution insufficient; no cached/uncached/output split or subscription savings established. Before the next requested measurement, follow diagnostic-plan sections2-3: fresh live source, counter at each activity switch, early two-interval check, explicit mixed gaps, final category distribution including reporting. AGENTS/method now require stopping surplus tests and distinguish the earlier quiet experiment from this noisy trial. This publication activates those corrections; it is not another feature trial.",
+      "Preserve all unrelated dirty work; broader reuse investigation remains incomplete and paused. Historical34563203081 attempt1 passed but attempt2 failed iOS UI, still unresolved. Neither this backend result nor cancelled CI establishes app/merge/release/cutover readiness. No Firebase, production/hosted access or payment writes."
+    ],
+    "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
+  },
+  "blockers": [],
+  "guardrails": [
+    "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
+    "Do not implement redesigned behavior in Firebase.",
+    "Do not access or mutate production systems or production data.",
+    "Do not create paid or hosted resources, migrate data, freeze Firebase, release, or cut over without explicit user approval."
+  ],
+  "resume": {
+    "requiredReads": [
+      "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
+      "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md"
+    ],
+    "requiredCommands": [
+      "git status --short --branch",
+      "npm run conversion:state:check"
+    ],
+    "instruction": "Continue the active workflow from nextActions. Load only its named authority sections and affected code until a concrete discrepancy requires broader history."
+  }
+}

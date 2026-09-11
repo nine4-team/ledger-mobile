@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "active-workspace-to-space-checklist",
+  "title": "Open an active Project Space and use its checklist",
+  "kind": "product_ui",
+  "status": "local_verification",
+  "outcome": "From Active Projects, open one represented Project by stable identity, select its Spaces tab, open one represented active Space in that exact Project, expand CHECKLISTS, and durably toggle an eligible checklist item without substituting stale or wrong-scope evidence.",
+  "targetStoryIds": ["space-list-to-detail", "space-checklist-toggle", "space-checklist-progress"],
+  "authority": [
+    {"role": "canonical_target", "path": "docs/specs/projects.md", "section": "Project List"},
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Space Browsing"},
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklists"},
+    {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklist Progress"},
+    {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Core Principle"},
+    {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Stream Authorization Rule"}
+  ],
+  "baselineJourneyIds": [
+    "UIBASE-PROJECT-DIRECTORY-001",
+    "UIBASE-PROJECT-DETAIL-SHELL-001",
+    "UIBASE-SPACE-BROWSING-001",
+    "UIBASE-SPACE-DETAIL-001",
+    "UIBASE-SHARED-COLLAPSIBLE-SECTION-001"
+  ],
+  "baselineBehaviorRefs": [
+    {
+      "journeyId": "UIBASE-PROJECT-DIRECTORY-001",
+      "controls": [{"label": "Project card", "includeControl": true, "options": []}],
+      "transitions": ["Projects directory | Tap Project card | Project detail for stable Project ID"],
+      "states": []
+    },
+    {
+      "journeyId": "UIBASE-PROJECT-DETAIL-SHELL-001",
+      "controls": [{"label": "Project tabs", "includeControl": false, "options": ["Spaces"]}],
+      "transitions": [
+        "Project route | Resolve focused listener, account cache, or initial snapshot | Project detail",
+        "Project route | No Project snapshot yet | Full-page progress state"
+      ],
+      "states": ["First paint loading", "Live Project"]
+    },
+    {
+      "journeyId": "UIBASE-SPACE-BROWSING-001",
+      "controls": [{"label": "Space card", "includeControl": true, "options": []}],
+      "transitions": ["Project Spaces | Open card | Project-scoped Space detail"],
+      "states": ["No Project Spaces", "Selected Space disappeared", "Source list order", "Incomplete browser evidence"]
+    },
+    {
+      "journeyId": "UIBASE-SPACE-DETAIL-001",
+      "controls": [{"label": "CHECKLISTS", "includeControl": true, "options": ["Expand / Collapse", "Checklist item"]}],
+      "transitions": [],
+      "states": ["Project vs Inventory scope", "Invisible persistence failure"]
+    },
+    {
+      "journeyId": "UIBASE-SHARED-COLLAPSIBLE-SECTION-001",
+      "controls": [{"label": "Section header", "includeControl": true, "options": ["Expand", "Collapse"]}],
+      "transitions": ["Collapsed section | Tap header | Expanded content"],
+      "states": ["Expanded / collapsed"]
+    }
+  ],
+  "affectedComponents": [
+    "LedgeriOS/LedgerTargetAppModel",
+    "LedgeriOS/LedgerTargetAppModelTests",
+    "LedgeriOS/LedgerTargetApp",
+    "LedgeriOS/LedgerTarget.xcodeproj",
+    "LedgeriOS/LedgerTargetPowerSync",
+    "LedgeriOS/LedgerTargetPowerSyncTests",
+    "scripts"
+  ],
+  "layers": ["app_ui", "powersync_sync", "local_offline"],
+  "riskDomains": ["ui_fidelity", "sync_visibility", "offline_durability"],
+  "uiJourneys": [
+    {
+      "journeyId": "TARGET-ACTIVE-WORKSPACE-SPACE-CHECKLIST-001",
+      "sourcePage": "Active Projects directory",
+      "targetPage": "Exact active Project Space checklist",
+      "authority": [
+        {"role": "canonical_target", "path": "docs/specs/projects.md", "section": "Project List"},
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Target Space Browsing"},
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklists"},
+        {"role": "architecture_authority", "path": "docs/specs/offline-first.md", "section": "Core Principle"}
+      ],
+      "sourceSurfaceIds": ["SWIFT-912A031F137B", "SWIFT-BC0B886FC610", "SWIFT-C3BE14BFCDE5", "SWIFT-B5661A312D65"],
+      "controls": [
+        {
+          "label": "Project card",
+          "options": [],
+          "action": "Tap one represented active Project identified by stable Project ID.",
+          "result": "Opens only that exact represented Project workspace; disappearance or authorization loss invalidates the workspace and all child observations.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Spaces tab",
+          "options": [],
+          "action": "Select Spaces inside the represented Project workspace.",
+          "result": "Starts an exact Account-and-Project Space observation only while its parent remains represented.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Space card",
+          "options": [],
+          "action": "Tap one represented active Space identified by stable Space ID.",
+          "result": "Opens only matching exact-Project Space detail and its checklist evidence.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "CHECKLISTS",
+          "options": [
+            {"label": "Expand", "result": "Shows the represented checklist hierarchy and lifecycle evidence.", "disposition": "preserve"},
+            {"label": "Collapse", "result": "Hides checklist content without changing data or stopping the exact detail authority.", "disposition": "preserve"},
+            {"label": "Checklist item", "result": "Durably accepts one eligible checked-state change through the existing offline operation workflow.", "disposition": "redesign"}
+          ],
+          "action": "Expand or collapse the section, or toggle one represented eligible item.",
+          "result": "The UI exposes pending, rejected, unavailable, and authoritative readback states without silently losing the accepted operation.",
+          "disposition": "redesign"
+        },
+        {
+          "label": "Back",
+          "options": [],
+          "action": "Return one level from Space detail, Spaces, or Project workspace.",
+          "result": "Cancels and drains child observations that no longer belong to the visible route.",
+          "disposition": "redesign"
+        }
+      ],
+      "transitions": [
+        {"from": "Active Projects", "event": "Tap represented Project card", "to": "Exact Project workspace", "disposition": "redesign"},
+        {"from": "Exact Project workspace", "event": "Select Spaces", "to": "Exact Project Space browser", "disposition": "redesign"},
+        {"from": "Exact Project Space browser", "event": "Tap represented Space card", "to": "Exact Project Space detail", "disposition": "redesign"},
+        {"from": "Collapsed CHECKLISTS", "event": "Tap section header", "to": "Expanded checklist content", "disposition": "preserve"},
+        {"from": "Eligible checklist item", "event": "Toggle", "to": "Durably accepted pending state, then authoritative or rejected settlement", "disposition": "redesign"},
+        {"from": "Any child route", "event": "Parent disappears, scope changes, authorization is revoked, or Back is selected", "to": "Unavailable parent or previous represented route with child observers drained", "disposition": "redesign"}
+      ],
+      "states": [
+        {"name": "Project evidence waiting or incomplete", "expected": "No Project is invented and child Space/checklist authority does not start.", "disposition": "redesign"},
+        {"name": "Project disappears or is revoked", "expected": "The route becomes unavailable and both Space directory and detail observations terminate.", "disposition": "redesign"},
+        {"name": "No Project Spaces", "expected": "Authoritative empty copy appears only after fresh complete exact-parent evidence.", "disposition": "preserve"},
+        {"name": "Space evidence waiting, stale, partial, or unavailable", "expected": "The UI labels evidence honestly and never treats it as authoritative empty or substitutes another Space.", "disposition": "redesign"},
+        {"name": "Checklist collapsed or expanded", "expected": "The visible hierarchy follows the disclosure state without mutating checklist data.", "disposition": "preserve"},
+        {"name": "Checklist admission unavailable", "expected": "The toggle is disabled and the exact reason is visible.", "disposition": "redesign"},
+        {"name": "Checklist operation pending or rejected", "expected": "Operation status and rejection evidence remain visible while the durable command lifecycle converges.", "disposition": "redesign"}
+      ]
+    }
+  ],
+  "acceptanceChecks": [
+    {
+      "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-E2E",
+      "risk": "general",
+      "expected": "One composed coordinator traverses exact Project card, Spaces tab, exact Space card, checklist disclosure and durable toggle, then invalidates and drains children automatically when the parent disappears.",
+      "command": "swift test --package-path LedgeriOS --filter ActiveWorkspaceToSpaceChecklistStagingExerciseTests",
+      "status": "passed",
+      "coversStoryIds": ["space-list-to-detail", "space-checklist-toggle", "space-checklist-progress"],
+      "coversBehaviorRefs": [
+        "UIBASE-PROJECT-DIRECTORY-001::control::Project card",
+        "UIBASE-PROJECT-DIRECTORY-001::transition::Projects directory | Tap Project card | Project detail for stable Project ID",
+        "UIBASE-PROJECT-DETAIL-SHELL-001::option::Project tabs::Spaces",
+        "UIBASE-PROJECT-DETAIL-SHELL-001::transition::Project route | Resolve focused listener, account cache, or initial snapshot | Project detail",
+        "UIBASE-PROJECT-DETAIL-SHELL-001::transition::Project route | No Project snapshot yet | Full-page progress state",
+        "UIBASE-PROJECT-DETAIL-SHELL-001::state::First paint loading",
+        "UIBASE-PROJECT-DETAIL-SHELL-001::state::Live Project",
+        "UIBASE-SPACE-BROWSING-001::control::Space card",
+        "UIBASE-SPACE-BROWSING-001::transition::Project Spaces | Open card | Project-scoped Space detail",
+        "UIBASE-SPACE-BROWSING-001::state::No Project Spaces",
+        "UIBASE-SPACE-BROWSING-001::state::Selected Space disappeared",
+        "UIBASE-SPACE-BROWSING-001::state::Source list order",
+        "UIBASE-SPACE-BROWSING-001::state::Incomplete browser evidence",
+        "UIBASE-SPACE-DETAIL-001::control::CHECKLISTS",
+        "UIBASE-SPACE-DETAIL-001::option::CHECKLISTS::Expand / Collapse",
+        "UIBASE-SPACE-DETAIL-001::option::CHECKLISTS::Checklist item",
+        "UIBASE-SPACE-DETAIL-001::state::Project vs Inventory scope",
+        "UIBASE-SPACE-DETAIL-001::state::Invisible persistence failure",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::control::Section header",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::option::Section header::Expand",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::option::Section header::Collapse",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::transition::Collapsed section | Tap header | Expanded content",
+        "UIBASE-SHARED-COLLAPSIBLE-SECTION-001::state::Expanded / collapsed"
+      ]
+    },
+    {
+      "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-UI",
+      "risk": "ui_fidelity",
+      "expected": "Compiled SwiftUI exposes the recorded controls and truthful loading, empty, partial, unavailable, pending and rejected states with stable accessibility identities.",
+      "command": "swift test --package-path LedgeriOS --filter ActiveWorkspaceToSpaceChecklistStagingExerciseTests && npm run target:staging:build:macos && npm run target:staging:build:ios",
+      "status": "passed"
+    },
+    {
+      "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-OFFLINE",
+      "risk": "offline_durability",
+      "expected": "The composed toggle uses the already verified durable local acceptance and settlement path while route invalidation cancels and drains exact-parent observers.",
+      "command": "swift test --package-path LedgeriOS --filter 'ActiveWorkspaceToSpaceChecklistStagingExerciseTests|SpaceChecklistItemToggleStagingExerciseTests|AccountWorkspacePendingWorkRuntimeTests'",
+      "status": "passed"
+    },
+    {
+      "id": "ACTIVE-WORKSPACE-SPACE-CHECKLIST-SYNC",
+      "risk": "sync_visibility",
+      "expected": "Only exact active Account, Project and Space evidence becomes representable; stale, foreign, malformed, disappeared and noncooperative late evidence fails closed and child observations drain.",
+      "command": "swift test --package-path LedgeriOS --filter 'ProjectBrowsingStagingExerciseTests|SpaceBrowserPowerSyncProviderTests|AccountWorkspacePendingWorkRuntimeTests'",
+      "status": "passed"
+    }
+  ],
+  "deferredBehaviors": [
+    "This workflow claims only the Project-to-Space-to-checklist path, not the Business Inventory entry path already covered by the scoped Space browser workflow.",
+    "Other Project tabs, Project setup/edit/archive, Space search/create/edit/archive, checklist collection editing, Items, media, notes, budgets, accounting, MCP, hosted Sync/Auth, migration, production and cutover remain separate workflows.",
+    "No broad Project directory or Project detail story is claimed from this narrow path."
+  ],
+  "blockers": [],
+  "verification": {
+    "local": {"status": "not_run", "commands": ["npm run conversion:check", "npm run target:environment:check", "npm run target:contracts:check", "npm run target:mcp:test", "swift test --package-path LedgeriOS --no-parallel", "npm run target:staging:build:macos", "npm run target:staging:build:ios", "git diff --check"]},
+    "review": {"required": true, "status": "passed", "summary": "Primary integration review found that the initial composition displaced existing staging workflows and failed to revoke or drain child Space/checklist authority when its Project disappeared. The composition was isolated, existing entry paths were restored, parent evidence gained an explicit lifecycle stream, exact-parent and exact-scope gates were added, and tests now exercise the composed toggle and automatic disappearance cleanup. Independent re-review returned GO with no P0-P2 findings; only non-blocking adversarial timing coverage remains."},
+    "ci": {"status": "not_run", "commit": null, "run": null}
+  }
+}

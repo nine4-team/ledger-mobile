@@ -1,6 +1,12 @@
 # Invoice Transaction Redesign Draft
 
-> Status: working draft from design discussion on 2026-07-13. This is not final implementation guidance. It records the candidate redesign and the first code/spec reality check.
+> **Status: superseded on 2026-08-30.** This working draft is preserved for
+> historical research only. Use
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> and
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md)
+> for the approved target. Do not implement the candidate definitions or
+> settlement model below when they conflict with those specs.
 
 Implementation and UX changes are tracked separately in [invoice-redesign-change-plan.md](invoice-redesign-change-plan.md).
 

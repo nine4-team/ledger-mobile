@@ -1,6 +1,18 @@
 # Inventory Movement Transactions
 
-> **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md). The Purchase-from-Inventory category-reclassification behavior below was approved on 2026-08-25 and is implementation-pending.
+> **Status:** Current implementation model; target replacement approved.
+> Replaces the legacy "canonical sale" model documented in
+> [canonical-sales.md](canonical-sales.md). The Purchase-from-Inventory
+> category-reclassification behavior below was approved on 2026-08-25 and is
+> implementation-pending.
+>
+> **Target-state notice (2026-08-30):**
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md)
+> preserves the origin-aware pricing and provenance rules but replaces
+> project-side movement Transactions with Item charges/credits in Invoicing.
+> Inventory acquisition and vendor-refund Transactions remain real money
+> movement in Business Inventory. This document describes shipped containers
+> until the staged migration is implemented.
 
 ## Overview
 

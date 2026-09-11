@@ -1,5 +1,14 @@
 # Transaction Completeness (`isComplete`)
 
+> **Source-only specification:** This documents the shipped Firebase system.
+> Canonical receipt-line/accounting specs and O-030/O-031/O-032 replace its
+> tax/subtotal/percentage-tolerance and blanket `isComplete` rules in the target.
+> Do not implement these triggers, backfills, stored-flag readers or fake
+> movement-Transaction exemptions in Supabase or a new Firebase version.
+> Preserve the underlying evidence for migration; target review reasons must
+> be explicit and O-063 defines them. Source `false` is not the target
+> Item accounting state, receipt verdict or posting authorization.
+
 ## Overview
 
 The transaction completeness system determines whether a transaction has been fully accounted for. A Cloud Function is the **single source of truth** — it computes `isComplete` and a stored `audit` object on every transaction write, item price change, or relevant budget category shape change. All clients (MCP server, Swift app) read stored data; no client recomputes completeness.

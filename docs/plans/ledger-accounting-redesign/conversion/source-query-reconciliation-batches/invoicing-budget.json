@@ -1,0 +1,1127 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-INVOICING-BUDGET-001",
+  "owner": "Invoicing, Collection, and Budget",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-03A40C1ED8F2",
+    "QUERY-18394B830E43",
+    "QUERY-1D7DFE227ACA",
+    "QUERY-281B8FC12571",
+    "QUERY-2ABA12A90FBA",
+    "QUERY-2B2113CFF4E0",
+    "QUERY-3381F4B11515",
+    "QUERY-352A88791058",
+    "QUERY-4078661D4781",
+    "QUERY-4E1E053887CD",
+    "QUERY-504548158C91",
+    "QUERY-507DB2962353",
+    "QUERY-5EF5EB0C7FB4",
+    "QUERY-695AA1DFF6BA",
+    "QUERY-6A6997E77D46",
+    "QUERY-7309CAD49728",
+    "QUERY-7482D766AAF9",
+    "QUERY-763CBF8E8A55",
+    "QUERY-7849BA521DF9",
+    "QUERY-82F657589C8D",
+    "QUERY-8754DB35ECBA",
+    "QUERY-90068EAE6D73",
+    "QUERY-9454B271B63C",
+    "QUERY-9A0D35A5BC63",
+    "QUERY-9AE4734748A4",
+    "QUERY-9C50CFB3EF91",
+    "QUERY-A0FF7E6D6480",
+    "QUERY-A57BEF79232D",
+    "QUERY-ACC4D8E60D30",
+    "QUERY-C2CFB6DF1048",
+    "QUERY-CE78B57F012C",
+    "QUERY-CE906E72C608",
+    "QUERY-D34208A603FC",
+    "QUERY-D639A6F8C8AA",
+    "QUERY-E0348604B462"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-002",
+    "O-003",
+    "O-004",
+    "O-005",
+    "O-006",
+    "O-007",
+    "O-008",
+    "O-009",
+    "O-010",
+    "O-014",
+    "O-015",
+    "O-026",
+    "O-028",
+    "O-030",
+    "O-031",
+    "O-032",
+    "O-033",
+    "O-034",
+    "O-035",
+    "O-036",
+    "O-040"
+  ],
+  "allowedEvidenceRequirementIds": [
+    "E-001"
+  ],
+  "rows": [
+    {
+      "queryId": "QUERY-03A40C1ED8F2",
+      "expectedOccurrenceHash": "dfde41241382d7b84eb776ec712001e932e0695a3f2015a9973e2f4e8c6f64f1",
+      "sourceOwnerSurfaceId": "FUNCTION-2F49CACBCFB6",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1033
+      },
+      "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "retirement",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        },
+        {
+          "category": "evidence_blocked",
+          "blockedScope": "source_runtime_use",
+          "evidenceRequirementIds": [
+            "E-001"
+          ],
+          "ownerBindings": [
+            {
+              "evidenceRequirementId": "E-001",
+              "surfaceId": "FUNCTION-2F49CACBCFB6",
+              "sourceRef": {
+                "path": "firebase/functions/src/index.ts",
+                "line": 1033
+              },
+              "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+              "blocker": "Production logs/profile should confirm whether externally used",
+              "expectedBindingHash": "cf9c76d2e842f3e0bf9bd27cc2dc183c638d5dc3a1116a02079b48c11d630b47"
+            }
+          ],
+          "evidenceRefs": [
+            {
+              "id": "E-001",
+              "kind": "production_read_profile",
+              "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+              "section": "Required Production-Read Confirmation",
+              "requiredArtifact": "Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-18394B830E43",
+      "expectedOccurrenceHash": "f7226986b79d2add79b2819d15a0fb02e39a6fb8ca40cfe767fc98e5279c30ec",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-295B190E7ADE",
+          "targetSurface": "SeedAccountReferenceDefaults",
+          "expectedTargetMappingHash": "cee03df3a4fbafd8539057a6366fe05d4ee75c10e13789c96342402ad5370c15"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1D7DFE227ACA",
+      "expectedOccurrenceHash": "e6391c1eeb82836b47257f1c5369c7f6a95508b5fa0475cf57c3b26b6f2b0518",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-295B190E7ADE",
+          "targetSurface": "SeedAccountReferenceDefaults",
+          "expectedTargetMappingHash": "cee03df3a4fbafd8539057a6366fe05d4ee75c10e13789c96342402ad5370c15"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-281B8FC12571",
+      "expectedOccurrenceHash": "bacdb4be3c41ce3ec17c2c69e32b94335b36b6b40ddd15f6fd802bf79eff7629",
+      "sourceOwnerSurfaceId": "FUNCTION-EE4FDF40EC7B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 408
+      },
+      "expectedSourceOwnerHash": "66b12afd2d44ddbacef9c082f9b1cbbc978365ab8af945b677d07341ba7602a0",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-007",
+            "O-015"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-007",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2ABA12A90FBA",
+      "expectedOccurrenceHash": "4318b99c079e32d12b008c42089bde00ab5d6eb00dfeb8a6bcdd90604a30ba85",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2B2113CFF4E0",
+      "expectedOccurrenceHash": "f30d8696cfc44ed3987e13ed8c13b70d094ad36f579b4e5e913da2e18470e41b",
+      "sourceOwnerSurfaceId": "FUNCTION-24C086150C5D",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1865
+      },
+      "expectedSourceOwnerHash": "4145eb956b43048348eb233495cf5e04cbf9cf360182db1d0b8c450a4bdb9204",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-032"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-032",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-3381F4B11515",
+      "expectedOccurrenceHash": "1447aa22393ae190b01edbe7a890df09ae37f5cb80bff018d2bfb4ff727f1219",
+      "sourceOwnerSurfaceId": "MCPMOD-7E2A27F3F12F",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts"
+      },
+      "expectedSourceOwnerHash": "cdbadcfa74c112155fbb0cd3f9a2e33875ab2fdd1fbd7398d47388aed36c5345",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-006",
+            "O-009",
+            "O-010",
+            "O-034"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-006",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-010",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-034",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-352A88791058",
+      "expectedOccurrenceHash": "f00d358e16270d7761ee96f20f811f59a9bd05fb5e7262602cabf87977cc8ce8",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-4078661D4781",
+      "expectedOccurrenceHash": "9d7281c6b65ded19117be45a4adfd3b7be80e87d1a3352bb448d6a10b7457753",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-4E1E053887CD",
+      "expectedOccurrenceHash": "353d8eaae2983c450e0adef928e4a60e27de9f71a0d28dfd58a8478e7b325cc4",
+      "sourceOwnerSurfaceId": "FUNCTION-EE4FDF40EC7B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 408
+      },
+      "expectedSourceOwnerHash": "66b12afd2d44ddbacef9c082f9b1cbbc978365ab8af945b677d07341ba7602a0",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-007",
+            "O-015"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-007",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-504548158C91",
+      "expectedOccurrenceHash": "a97bef94d9c93ebdbd34ad3f46841b17df821118f06b9b18783676a0ae169c91",
+      "sourceOwnerSurfaceId": "MCPTOOL-FCF917D2F4D8",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 360
+      },
+      "expectedSourceOwnerHash": "300d4805ea61e516ca5fefeabf4cad5a3c2d654fc9066155eb7dd4e927c15557",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-009"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-507DB2962353",
+      "expectedOccurrenceHash": "c7601281f49718141eb7dc91dd94ed82ecb02fce92a3cb14c0558e3d38b7d1bb",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-295B190E7ADE",
+          "targetSurface": "SeedAccountReferenceDefaults",
+          "expectedTargetMappingHash": "cee03df3a4fbafd8539057a6366fe05d4ee75c10e13789c96342402ad5370c15"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5EF5EB0C7FB4",
+      "expectedOccurrenceHash": "97202857a3d7a695325925251b93acc851ac6a01670e30245c8806b4daf53471",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-295B190E7ADE",
+          "targetSurface": "SeedAccountReferenceDefaults",
+          "expectedTargetMappingHash": "cee03df3a4fbafd8539057a6366fe05d4ee75c10e13789c96342402ad5370c15"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-695AA1DFF6BA",
+      "expectedOccurrenceHash": "201370463f6282c589b5d96023b1ed2bb30fda92faaae76c6cc7418a66041a9a",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-295B190E7ADE",
+          "targetSurface": "SeedAccountReferenceDefaults",
+          "expectedTargetMappingHash": "cee03df3a4fbafd8539057a6366fe05d4ee75c10e13789c96342402ad5370c15"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6A6997E77D46",
+      "expectedOccurrenceHash": "bbcb32e03e738556c67490463fcd3cb35e7c477423281a2f692b0bc74ba2e757",
+      "sourceOwnerSurfaceId": "FUNCTION-2F49CACBCFB6",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1033
+      },
+      "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "retirement",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        },
+        {
+          "category": "evidence_blocked",
+          "blockedScope": "source_runtime_use",
+          "evidenceRequirementIds": [
+            "E-001"
+          ],
+          "ownerBindings": [
+            {
+              "evidenceRequirementId": "E-001",
+              "surfaceId": "FUNCTION-2F49CACBCFB6",
+              "sourceRef": {
+                "path": "firebase/functions/src/index.ts",
+                "line": 1033
+              },
+              "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+              "blocker": "Production logs/profile should confirm whether externally used",
+              "expectedBindingHash": "cf9c76d2e842f3e0bf9bd27cc2dc183c638d5dc3a1116a02079b48c11d630b47"
+            }
+          ],
+          "evidenceRefs": [
+            {
+              "id": "E-001",
+              "kind": "production_read_profile",
+              "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+              "section": "Required Production-Read Confirmation",
+              "requiredArtifact": "Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7309CAD49728",
+      "expectedOccurrenceHash": "94ebcce3902f962905bce3f5c78425f26121aa627352ab8c6f90a3b5652fee9c",
+      "sourceOwnerSurfaceId": "FUNCTION-5612C1011897",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1947
+      },
+      "expectedSourceOwnerHash": "f45cbc49337c937d4a01fd1811d1217a1fcd9ae84065757cf14707eb3ebb0782",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FUNCTION-5612C1011897",
+          "sourceRef": {
+            "path": "firebase/functions/src/index.ts",
+            "line": 1947
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7482D766AAF9",
+      "expectedOccurrenceHash": "bb29f707bbf96347f07269f17ec3845f30a25dff59577ba093b19e774b3fcd16",
+      "sourceOwnerSurfaceId": "FUNCTION-24C086150C5D",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1865
+      },
+      "expectedSourceOwnerHash": "4145eb956b43048348eb233495cf5e04cbf9cf360182db1d0b8c450a4bdb9204",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-032"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-032",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-763CBF8E8A55",
+      "expectedOccurrenceHash": "2922c0fc8443a1492f2768441216db9ce8e8ef4e6a6f5acbedcefec7cc5fecee",
+      "sourceOwnerSurfaceId": "MCPTOOL-063A741737E0",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/budget.ts",
+        "line": 11
+      },
+      "expectedSourceOwnerHash": "eb186b92a2b5ad90ba9b68ccdd2f258c0cfd41ef41329850e875de1f09c6b088",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-EDEC33C918C3",
+          "taccessId": "TACCESS-E2B0A7946092",
+          "expectedMappingHash": "fa1f6b63480d9a0d3d22ae5cb5d03f964b37d82c3b90af68d5e89a93f1afe024",
+          "blockerIds": [
+            "O-026"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-026",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7849BA521DF9",
+      "expectedOccurrenceHash": "cd9e67b04afc469319839bf526df054926f8716c53197545da3d363191971106",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-015",
+            "O-032"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-032",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-82F657589C8D",
+      "expectedOccurrenceHash": "7bb28b9f7b8eb42c59349a1702d02034ddf14114dd670d6455fab3f5615477b8",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8754DB35ECBA",
+      "expectedOccurrenceHash": "f311a4d690f60143a5fec7250574f24f4b00a871e7b7b3839699c078d3ab0956",
+      "sourceOwnerSurfaceId": "FUNCTION-24C086150C5D",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1865
+      },
+      "expectedSourceOwnerHash": "4145eb956b43048348eb233495cf5e04cbf9cf360182db1d0b8c450a4bdb9204",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-90068EAE6D73",
+      "expectedOccurrenceHash": "deb98efc5dd914fa0c7628279381a6a3fb2ac7609f5e8008c7dd614f9ad7c9e4",
+      "sourceOwnerSurfaceId": "MCPTOOL-671048CA665A",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/budget.ts",
+        "line": 41
+      },
+      "expectedSourceOwnerHash": "903b078924433ed149fe4e78533693725f04d676ce9ad37c4ae47f13a0ade707",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-961BF10129CC",
+          "taccessId": "TACCESS-9916CEF2B90B",
+          "expectedMappingHash": "6bc0746af4fc0d37059b9a16f4ac9a512573569ea5e4bf3b617c7c58fc2b8c8c"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9454B271B63C",
+      "expectedOccurrenceHash": "c431952e3c7a660207f862d6e8127f385de1b32aabcdfb504e111fd8a9a77a60",
+      "sourceOwnerSurfaceId": "MCPTOOL-0FC981412C3D",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 542
+      },
+      "expectedSourceOwnerHash": "f41dafa65b24cf5316d29af307ddc7945380bcd3c600c639976bc235f69ff59b",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-009",
+            "O-010"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-010",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9A0D35A5BC63",
+      "expectedOccurrenceHash": "2d0b615b6a2af4df97b69e18bbc5cae50330bca54d02ba7e7efe88829a35fa75",
+      "sourceOwnerSurfaceId": "MCPTOOL-BDE0436E5E98",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 456
+      },
+      "expectedSourceOwnerHash": "3f9423485baefa37d733a89f4b84f301598cf718b9da7604ed6906c72bd32159",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-BDE0436E5E98",
+          "targetSurface": "ListInvoicesQuery",
+          "expectedTargetMappingHash": "9adc14672233c906a3a4b5157467a3ac1766dc686b7b81ee016905c27c1f42c4"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9AE4734748A4",
+      "expectedOccurrenceHash": "cdd615f2638b6e1badddb3115cb92b37559ed4c387c94fa6635daa87d9c4e664",
+      "sourceOwnerSurfaceId": "FUNCTION-5612C1011897",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1947
+      },
+      "expectedSourceOwnerHash": "f45cbc49337c937d4a01fd1811d1217a1fcd9ae84065757cf14707eb3ebb0782",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FUNCTION-5612C1011897",
+          "sourceRef": {
+            "path": "firebase/functions/src/index.ts",
+            "line": 1947
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9C50CFB3EF91",
+      "expectedOccurrenceHash": "979edd7e43501bf2ae617a3ce7f98eb2f65a080f3ea3a8cead61495fee801ceb",
+      "sourceOwnerSurfaceId": "MCPMOD-7E2A27F3F12F",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts"
+      },
+      "expectedSourceOwnerHash": "cdbadcfa74c112155fbb0cd3f9a2e33875ab2fdd1fbd7398d47388aed36c5345",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-003",
+            "O-004",
+            "O-005",
+            "O-033"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-003",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-004",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-005",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-033",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A0FF7E6D6480",
+      "expectedOccurrenceHash": "026e2ddad4a7610721b1e6e152f051d78481f46f333fcef8870c789b38827856",
+      "sourceOwnerSurfaceId": "FUNCTION-2F49CACBCFB6",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1033
+      },
+      "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "retirement",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        },
+        {
+          "category": "evidence_blocked",
+          "blockedScope": "source_runtime_use",
+          "evidenceRequirementIds": [
+            "E-001"
+          ],
+          "ownerBindings": [
+            {
+              "evidenceRequirementId": "E-001",
+              "surfaceId": "FUNCTION-2F49CACBCFB6",
+              "sourceRef": {
+                "path": "firebase/functions/src/index.ts",
+                "line": 1033
+              },
+              "expectedSourceOwnerHash": "69b0a52070d26c629b0d703424460c1bb133131975ce61274a731ae61d24e45f",
+              "blocker": "Production logs/profile should confirm whether externally used",
+              "expectedBindingHash": "cf9c76d2e842f3e0bf9bd27cc2dc183c638d5dc3a1116a02079b48c11d630b47"
+            }
+          ],
+          "evidenceRefs": [
+            {
+              "id": "E-001",
+              "kind": "production_read_profile",
+              "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+              "section": "Required Production-Read Confirmation",
+              "requiredArtifact": "Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A57BEF79232D",
+      "expectedOccurrenceHash": "e025080975984875480d8b525c92772c8e03e0a1b7dc05157731e58149da056c",
+      "sourceOwnerSurfaceId": "MCPTOOL-2B21D2622825",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 493
+      },
+      "expectedSourceOwnerHash": "858c123513400f7066c09f137c289aab80b98117579f2b1f39668d91b10b53c9",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-006",
+            "O-007",
+            "O-008",
+            "O-009",
+            "O-010",
+            "O-015"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-006",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-007",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-008",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-010",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-ACC4D8E60D30",
+      "expectedOccurrenceHash": "f606d6fd5f532fa4d172fe48b9b3d2521946b72e6d74f826f8a377af79272228",
+      "sourceOwnerSurfaceId": "MCPTOOL-BDE0436E5E98",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 456
+      },
+      "expectedSourceOwnerHash": "3f9423485baefa37d733a89f4b84f301598cf718b9da7604ed6906c72bd32159",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-BDE0436E5E98",
+          "targetSurface": "ListInvoicesQuery",
+          "expectedTargetMappingHash": "9adc14672233c906a3a4b5157467a3ac1766dc686b7b81ee016905c27c1f42c4"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C2CFB6DF1048",
+      "expectedOccurrenceHash": "c2f00d76cd4904627f2467d01fecfda956af72a5245b016b74b945bee27dcf1f",
+      "sourceOwnerSurfaceId": "FUNCTION-24C086150C5D",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1865
+      },
+      "expectedSourceOwnerHash": "4145eb956b43048348eb233495cf5e04cbf9cf360182db1d0b8c450a4bdb9204",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-AADED40AD19C",
+          "targetSurface": "ProjectBudgetSnapshot rebuild/reconciliation",
+          "expectedTargetMappingHash": "d347a290a9a5d6755f460cd33fb68a45074d766e0e73a3c4706d46f6aac4b12f"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CE78B57F012C",
+      "expectedOccurrenceHash": "f8317a3bff4a75275760431354e8e14b44cb45f01bfb92a76c6fa2a1a072eb8e",
+      "sourceOwnerSurfaceId": "MCPTOOL-BDE0436E5E98",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 456
+      },
+      "expectedSourceOwnerHash": "3f9423485baefa37d733a89f4b84f301598cf718b9da7604ed6906c72bd32159",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-BDE0436E5E98",
+          "targetSurface": "ListInvoicesQuery",
+          "expectedTargetMappingHash": "9adc14672233c906a3a4b5157467a3ac1766dc686b7b81ee016905c27c1f42c4"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CE906E72C608",
+      "expectedOccurrenceHash": "daf64b6faf18aaa8f4deda993d7eea59db055c18c1ebf6571a20e27f5b8e4824",
+      "sourceOwnerSurfaceId": "MCPTOOL-2B21D2622825",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 493
+      },
+      "expectedSourceOwnerHash": "858c123513400f7066c09f137c289aab80b98117579f2b1f39668d91b10b53c9",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-006",
+            "O-007",
+            "O-008",
+            "O-009",
+            "O-010",
+            "O-015"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-006",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-007",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-008",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-010",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D34208A603FC",
+      "expectedOccurrenceHash": "e9933b71d3a4ccc2ab54ce4774c0249ab1767c0384a04ef552cb4efdf557c167",
+      "sourceOwnerSurfaceId": "MCPTOOL-2B21D2622825",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 493
+      },
+      "expectedSourceOwnerHash": "858c123513400f7066c09f137c289aab80b98117579f2b1f39668d91b10b53c9",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-006",
+            "O-007",
+            "O-008",
+            "O-009",
+            "O-010",
+            "O-015"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-006",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-007",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-008",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-009",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-010",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-015",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D639A6F8C8AA",
+      "expectedOccurrenceHash": "c56cae75b70b61df502285df83cb3f27c70bb792fdca49dfa3431a2fa2c91aae",
+      "sourceOwnerSurfaceId": "MCPTOOL-43389521FF62",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/projects.ts",
+        "line": 65
+      },
+      "expectedSourceOwnerHash": "c6d03f1a69110fd9776ccebc864c6ab74f5104d4d8f367b80f9df1d426985a24",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-961BF10129CC",
+          "taccessId": "TACCESS-9916CEF2B90B",
+          "expectedMappingHash": "6bc0746af4fc0d37059b9a16f4ac9a512573569ea5e4bf3b617c7c58fc2b8c8c"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E0348604B462",
+      "expectedOccurrenceHash": "20144f21900761621beb20e146849cac580941865d44811496b238e7b33a7538",
+      "sourceOwnerSurfaceId": "MCPTOOL-BDE0436E5E98",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/invoices.ts",
+        "line": 456
+      },
+      "expectedSourceOwnerHash": "3f9423485baefa37d733a89f4b84f301598cf718b9da7604ed6906c72bd32159",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPTOOL-BDE0436E5E98",
+          "targetSurface": "ListInvoicesQuery",
+          "expectedTargetMappingHash": "9adc14672233c906a3a4b5157467a3ac1766dc686b7b81ee016905c27c1f42c4"
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves all 35 READY-classified occurrences. Independent review corrected the active-category filter to the exact O-026-blocked BudgetCategoryReferenceQuerying contract and the Project Transaction spend filter to verified ProjectBudgetSegmentQuerying. The three createProject reads retain independent same-owner O-040 retirement and E-001 runtime-evidence blocks; they do not claim retirement or production use. Immutable CI and VERIFIED promotion remain pending."
+}

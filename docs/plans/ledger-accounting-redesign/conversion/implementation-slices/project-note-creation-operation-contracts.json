@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-note-creation-operation-contracts",
+  "title": "Add one Project note through a stable shared operation contract",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Note Creation Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-9CDB2BCAC71B",
+    "TEST-DB2559406D3D"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTNOTECREATE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "A note-create intent is bound to one stable AccountID and ProjectID. Project names, copied Client text and creator display text never identify the parent Project, widen scope or authorize access.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "One AddProjectNote intent preallocates one stable ProjectNoteID before connectivity, carries nonblank text and a requested source, and reuses one OperationID so offline retry cannot create a duplicate note.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Security and Sync Requirements for Later Target Mapping",
+      "invariant": "Command validity is not authorization. A later trusted handler must derive and verify the authenticated actor, preflight the exact Account-owned Project without enumerating missing versus denied, and assign authoritative creation time and final source; the caller cannot submit creator display, server audit time, revision, edit audit or deletion evidence.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "AddProjectNote expresses one story-specific business intent through typed Ledger values and exposes no arbitrary field map, collection/path/SQL string, generic CRUD, edit/remove behavior or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The note-create payload is bound to exactly one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared operation fingerprint and receipt lifecycle. Client actor/time/requested-source fields are intent and UX evidence only, never authoritative server audit evidence.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Project-note creation operation accepts the validated typed command and returns the shared OperationReceipt or a stable failure. It can later be composed into ProjectNoteOperations without duplicating command meaning in app, MCP or a provider adapter.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no note row/projection, parent authorization, server handler, schema, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTNOTECREATE-TEST-001", "PROJECTNOTECREATE-TEST-002", "PROJECTNOTECREATE-TEST-003", "PROJECTNOTECREATE-TEST-004", "PROJECTNOTECREATE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectNoteCreationDraft owns exact Account, actor, operation-contract, Project, preallocated ProjectNoteID, validated text, requested source and finite capture-time intent. It contains no Project/Client name, creator display, authoritative creation time, revision, edit audit or deletion state.",
+        "AddProjectNotePayload contains only ProjectID, ProjectNoteID, ProjectNoteText and requested ProjectNoteSource. AddProjectNoteCommand binds that payload to the shared OperationEnvelope, derives the exact parent Project reference and fingerprint, permits no caller-authored preconditions and revalidates all duplicated evidence on decode.",
+        "ProjectNoteCreating is the narrow backend-neutral add operation returning the shared OperationReceipt; command receipt validation requires the exact OperationID and exposes no authoritative note-row, audit, authorization or projection claim.",
+        "ProjectNoteCreationFailure exposes stable bounded time, binding, precondition, parent, fingerprint, receipt, local-acceptance and malformed-encoding codes while reusing the verified ProjectNoteText, ProjectNoteSource and shared operation validators."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates no project_notes table, Project foreign key, audit/source/revision/tombstone column, uniqueness rule, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative AddProjectNote handler, authenticated actor derivation, Account membership/Project visibility preflight, final source/time assignment, idempotency storage, lock, rejection result or note creation exists. The command carries the exact parent/note intent that a later handler must verify."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor/Project binding is not authorization. No membership predicate, Project-visibility check, grant, WITH CHECK policy or cross-tenant database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local note/operation table, optimistic note projection, upload connector, bounded-history rule or synchronized visibility/readiness claim is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, exact parent Project reference and fingerprint; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Project, note, text, requested source, parent reference, preconditions, fingerprint or receipt OperationID fails atomically without rebinding identity or turning client audit intent into authority.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable storage, process/device restart, parent authorization, optimistic note-row evidence or server apply."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Project-note creation owns text only and contains no attachment reference, local bytes, image URL, upload, retention or media deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Notes tab, ProjectContext/service, MCP note tool/schema, transport handler, contract-catalog entry or app/MCP parity claim is wired. A later shared handler must derive trusted channel/source evidence rather than accepting an alternate MCP writer."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase embedded/nested note, missing actor/timestamp variant or source row is decoded, normalized, deduplicated, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot persist or display a note, authorize/preflight a Project, assign server creator/time/source evidence, edit/remove a note, choose mutation roles, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
+        "A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTNOTECREATE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
+      "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
+      "expected": "A valid synthetic draft produces one exact-scope AddProjectNote command with a stable preallocated note identity, nonblank text, requested source and Project parent reference, while its payload excludes caller-authored creator display, authoritative creation/edit/deletion time, revision and authorization claims.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
+      "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-007"],
+      "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/note/text/requested-source/client-time/parent/fingerprint evidence and no backend path, credential, server audit/result or provider claim.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
+      "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
+      "expected": "Blank text, malformed requested source, invalid time and changed Account/actor/contract/Project/note/text/source/parent/precondition/fingerprint/receipt evidence fail atomically through verified shared or Project-note-creation stable diagnostic codes.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
+      "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed note intent is refused by the shared lifecycle, and a failing port returns no success receipt.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
+    },
+    {
+      "id": "PROJECTNOTECREATE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming parent authorization, server audit, schema, Sync, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-NOTE-CREATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified decision-independent Phase 1 AddProjectNote command boundary at exact implementation commit 15566c8dd766762656cb180a65caf0b4600841d5 and immutable Actions run 33622056438. It preallocates stable note identity, binds exact parent/text/requested-source intent and reuses the shared operation lifecycle. Requested source and client actor/time remain non-authoritative; a later trusted handler owns authenticated actor derivation, non-enumerating Project preflight and final creator/time/source evidence. Edit/remove role and revision policy, physical persistence, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access and cutover remain excluded."
+}

@@ -7,6 +7,13 @@ Active shipped specification. Implementation and runtime QA were completed by
 inventory-intent, follow-up, pricing, correction, and MCP behavior discussed on
 2026-08-17.
 
+> **Target-state notice (2026-08-30):**
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> retires `project_reimbursement` for business-paid physical goods. In the
+> target design, those goods always enter Business Inventory and appear in a
+> project as Item charges in Invoicing. This document remains authoritative for
+> shipped behavior and migration discovery until cutover.
+
 Quick-draft transaction association is included below and uses one authoritative
 `transactionId`; transaction scope determines the conversion route.
 

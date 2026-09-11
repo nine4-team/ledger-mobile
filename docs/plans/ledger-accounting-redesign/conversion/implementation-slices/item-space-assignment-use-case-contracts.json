@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "item-space-assignment-use-case-contracts",
+  "title": "Validate one local Space destination and dispatch one exact Item assignment",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Item Space Assignment Use Case",
+  "surfaceIds": ["SWIFT-0540BE125F5A", "TEST-DA67EAC9C2EF"],
+  "requirements": [
+    {
+      "id": "ITEMSPACEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "One assignment uses stable Item and destination Space identity. The Item has at most one current Space; assigning a new destination replaces the old placement, while clearing remains a separate operation.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "The assignment destination comes from an operation-specific local directory in the exact Account and Project-or-Business-Inventory scope. It resolves by stable SpaceID and supplies the exact Space revision; names, route state, Account-wide arrays and backend paths cannot identify or authorize the destination.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "A represented active destination may be selected from ready, partial or stale cached evidence for offline conflict detection; local evidence never grants authorization, and an absent row in incomplete evidence cannot prove that the destination does not exist.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-007", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Bulk Assignment",
+      "invariant": "One nonempty single-or-bulk assignment carries exact Item revisions and validates every Item and destination Space in the same Project or Business Inventory scope; the authoritative handler later applies the complete selection atomically and idempotently. This application boundary cannot define physical persistence or trusted authorization.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Bulk Assignment",
+      "invariant": "Assignment changes organizational placement only. It submits no attachment or marker list and changes no Transaction, occurrence, Invoice, budget contribution, payer, price or other accounting/provenance state; archive, media and scope-changing movement remain separate.",
+      "decisionIds": ["D-019", "D-023", "O-023", "O-037"],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ItemSpaceAssignmentIntent is transient and non-Codable with exactly AccountID, ItemPlacementScope, destination SpaceID and typed Item/revision candidates. It adds no copied Space revision, Item-selection read model, display name, route, backend path, UI state, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "The use case validates exact Account/scope and represented destination evidence, derives ExpectedSpaceRevision from that row, constructs the verified ItemSpaceAssignmentDraft and AssignItemsToSpaceCommand before one ItemSpaceAssigning call, validates the receipt afterward, preserves exact LocalOperationState, pre-port application failures, operation failures and CancellationError, and maps every other port error to ItemSpaceAssignmentFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-007", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-ASSIGNMENT-001.md",
+      "section": "Implemented Contract",
+      "invariant": "The verified assignment operation remains sole owner of canonical nonempty Item/revision input, exact destination/scope/revision preconditions, deterministic ordering, operation envelope, subject, fingerprint, receipt validation and all 16 ItemSpaceAssignmentFailure values. This use case composes rather than reimplements or extends them.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-007", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md",
+      "section": "Enhanced Pilot Review and Implemented Contract",
+      "invariant": "The verified destination-read contract remains sole owner of validated Account/scope request, active stable Space ID/name/revision rows, deterministic order, local completeness/quality, and bounded malformed/rebound refusal. This use case resolves one exact represented row and adds no directory read, filter, sort or eligibility policy.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "Only the two new target leaves advance. The verified assignment-operation and destination-read leaves stay verified; SpacePickerList, InventoryItemsSubTab, TransactionDetailView, SpaceDetailView, AddExistingItemsPicker, NewItemView, SharedItemsList and ItemsService retain their prior status and content because each owns broader UI, read, service or source behavior.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    },
+    {
+      "id": "ITEMSPACEUSE-REQ-011",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only executable leaves may change after READY. Physical persistence, optimistic placement or marker projection, trusted authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, source migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["ITEMSPACEUSE-TEST-001", "ITEMSPACEUSE-TEST-002", "ITEMSPACEUSE-TEST-003", "ITEMSPACEUSE-TEST-004", "ITEMSPACEUSE-TEST-005", "ITEMSPACEUSE-TEST-006", "ITEMSPACEUSE-TEST-007", "ITEMSPACEUSE-TEST-008", "ITEMSPACEUSE-TEST-009", "ITEMSPACEUSE-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ItemSpaceAssignmentUseCaseFailure has exactly directoryAccountMismatch, directoryScopeMismatch and destinationNotRepresented with diagnostic codes item_space_assignment_directory_account_mismatch, item_space_assignment_directory_scope_mismatch and item_space_assignment_destination_not_represented; not represented describes only supplied evidence.",
+        "ItemSpaceAssignmentIntent is a public transient non-Codable four-field value over exact Account, placement scope, destination Space and typed Item/revision candidates.",
+        "The use case reuses the verified destination directory, ItemSpaceAssignmentDraft, AssignItemsToSpaceCommand and ItemSpaceAssigning port; it derives the Space revision from the exact row and invokes the port once only after every evidence/construction check.",
+        "Receipt validation follows the port boundary; pre-port application failures, port operation failures and Swift cancellation remain exact, while every other port error—including an impossible port-originated ItemSpaceAssignmentUseCaseFailure—is bounded to localAcceptanceFailed."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Item, Space, placement, operation, marker, accounting, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted membership/scope/revision validation, authorization, marker closure, idempotency store, audit assignment, physical placement or authoritative transaction exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation, function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local intent and represented directory evidence are not authorization; no Account/Project/Inventory/Item/Space policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Item/Space/operation table, upload connector, optimistic placement or synchronized visibility exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port and may consume represented ready/partial/stale evidence, but adds no physical intent/operation persistence, process/device restart write, optimistic row/marker, retry policy or rejection recovery."},
+    "storageMedia": {"items": [], "notApplicable": "Assignment submits no attachment, locator, URL, bytes or marker list and defines no marker closure, upload, cache, retention or deletion behavior; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No Item-selection read model, Set Space picker, loading/empty/error/control behavior, SwiftUI composition, app route, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No source Item.spaceId, Space DTO, AccountContext array, independent bulk write, route, marker, export row or source-to-target mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only bounded contract failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; all named dependencies and source UI/service/model/provider surfaces remain unchanged.",
+        "The deterministic in-memory assigner cannot physically persist, authorize, synchronize, move scope, close markers, mutate accounting/provenance, deploy, display, migrate, release or cut over an assignment.",
+        "O-007/O-015/O-023/O-037 and A-003/A-004/A-007/A-015/A-016 remain open or outside because accounting/provenance, media/archive, provider and production behavior are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMSPACEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-011"],
+      "expected": "A non-@testable consumer constructs the exact public four-field ItemSpaceAssignmentIntent. It is compile-time Equatable/Sendable, runtime non-Codable, preserves Project and Business Inventory scope plus boundary Item revisions, and exposes no Space revision, name, route, provider, media or accounting field.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-011"],
+      "expected": "An exact represented active Space dispatches once from ready, partial and stale validated directories for Project and Business Inventory. Only its row supplies ExpectedSpaceRevision; zero/UInt64.max Space and Item revisions remain exact, and differently ordered equivalent Item input reaches one canonical command.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
+      "expected": "Directory Account/scope mismatch, absent destination row in ready-complete or incomplete partial/stale evidence, empty/duplicate Item input and positive infinity/negative infinity/NaN capture time all fail before any call. Missing-row failure is exactly destinationNotRepresented and never an authoritative-nonexistence assertion.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-011"],
+      "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying the verified assignment payload and preconditions; a mismatched receipt fails after exactly one call without any placement/accounting claim.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-011"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project-versus-Inventory scope, destination SpaceID, directory-owned Space revision, each Item ID/revision, Operation, actor, contract and time against literal baseline and changed-leaf expectations. Test helpers must not reconstruct expectations through production draft/command validation.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
+      "expected": "All three ItemSpaceAssignmentUseCaseFailure values arise exactly before the port with zero calls. All 16 ItemSpaceAssignmentFailure values deliberately thrown after one port call remain exact, CancellationError remains structured cancellation, and arbitrary or impossible port-originated application failures map to localAcceptanceFailed.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-007",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-011"],
+      "expected": "All three use-case and 16 operation diagnostics remain exact stable enumerations and reveal no synthetic identity, display name, raw error, source path, credential, provider payload or production identifier.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
+      "expected": "Exact intent and nested command topology expose only the authorized assignment draft/envelope/subject/fingerprint plus destination/Item scope/revision preconditions—never a copied Space revision in intent, clear/archive/media/marker/scope-movement/accounting/provenance/UI/service/provider/credential/production field.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-009",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, and preserves exact status/content for ItemSpaceAssignmentOperation/tests, SpaceAssignmentDestinationData/tests, all named source UI/service/model surfaces, and every application/provider surface.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    },
+    {
+      "id": "ITEMSPACEUSE-TEST-010",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable Actions run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable Actions run 33828908233. Exactly two target leaves implement the application boundary joining verified Item assignment operation c5fdf5c73763b5a629ff0416bebba92696af6581 / run 33672006836 and verified Space destination read b0ffef836cc82f6011b802a5cb5f6a6ade05680a / run 33682239349. The use case validates Account/scope, resolves the exact stable destination ID, derives the Space revision from a represented ready/partial/stale row, constructs before one call and validates afterward. Seven focused tests prove ITEMSPACEUSE-TEST-001 through -008; exact READY CI plus primary and independent corrected-diff reviews prove ITEMSPACEUSE-TEST-009. All 309 tests in 64 suites pass with warnings as errors. Independent review found and corrected two issues: port-originated ItemSpaceAssignmentUseCaseFailure is now bounded to localAcceptanceFailed, with an adversarial test, and represented-row coverage now spans all six Project/Inventory × ready/partial/stale combinations. Root and independent reviewers returned GO. Immutable implementation CI passed ITEMSPACEUSE-TEST-010: traceability completed in 11 seconds and isolated target in 6 minutes 32 seconds with all steps green, including 309 tests and both builds. O-037/O-023/O-007/O-015 remain outside because archive, media, accounting/provenance and physical apply are excluded."
+}

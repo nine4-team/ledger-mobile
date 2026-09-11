@@ -1,0 +1,3 @@
+-- DRAFT placeholder: define the future SELECT-only Account-scoped vendor-suggestion
+-- relation, constraints, indexes, grants, and active-membership RLS. Excludes every O-026
+-- default-seeding, add, rename, merge, archive, reactivate, reorder, and write-authority path.

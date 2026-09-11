@@ -1,0 +1,580 @@
+import LedgerTargetAppModel
+import LedgerTargetCore
+import LedgerTargetPowerSync
+import SwiftUI
+
+enum ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter {
+    static func adapt(
+        _ runtime: LedgerOfflineClientRuntime
+    ) -> ActiveWorkspaceToSpaceChecklistStagingRuntime {
+        ActiveWorkspaceToSpaceChecklistStagingRuntime(
+            projectBrowsing: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime),
+            spaceBrowsing: SpaceBrowserStagingRuntimeAdapter.adapt(runtime),
+            checklistToggle: SpaceChecklistItemToggleStagingRuntimeAdapter.adapt(runtime),
+            itemReader: runtime,
+            reportWatcher: runtime,
+            reportReader: runtime,
+            categoryWatch: { runtime.watchBudgetCategories() }
+        )
+    }
+}
+
+struct ActiveWorkspaceToSpaceChecklistStagingView: View {
+    @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
+    let accountCurrency: CurrencyCode
+    @State private var showingPropertyReport = false
+    @State private var showingClientReport = false
+    @State private var showingSettings = false
+
+    private var itemSpaceNavigation: ItemSpaceNavigation? {
+        guard let detailRuntime = model.referencedSpaceRuntime,
+              let toggleRuntime = model.checklistRuntime else { return nil }
+        return ItemSpaceNavigation(detailRuntime: detailRuntime, toggleRuntime: toggleRuntime,
+            makeToggle: { model.checklistToggle.makeIndependentSession() })
+    }
+
+    var body: some View {
+        switch model.route {
+        case .projectDirectory:
+            projectDirectory
+        case .businessInventory:
+            inventoryWorkspace
+        case .inventorySpaceDetail(let spaceId):
+            spaceDetail(scope: .businessInventory, spaceId: spaceId)
+        case .projectWorkspace(let projectId):
+            projectWorkspace(projectId)
+        case .projectNotes(let projectId):
+            Section("Project Notes") {
+                backButton
+                if model.representedProjectIsAvailable,
+                   model.projectBrowser.noteHistory.selectedProjectId == projectId {
+                    ProjectNoteHistoryStagingExerciseView(model: model.projectBrowser.noteHistory,
+                        legacyNotes: model.projectBrowser.selectedLegacyNotes)
+                } else {
+                    Text("Project note history is unavailable.")
+                }
+            }
+        case .projectSpaces(let projectId):
+            projectSpaces(projectId)
+        case .spaceDetail(let projectId, let spaceId):
+            spaceDetail(scope: .project(projectId), spaceId: spaceId)
+        case .stopped:
+            Section("Active Project Workspace") {
+                Text("Project workspace data is stopped.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-workspace-stopped")
+            }
+        }
+    }
+
+    private var projectDirectory: some View {
+        Section("Projects") {
+            if let profileReader = model.itemReader as? any AccountBusinessProfileReading {
+                Button("Settings") { showingSettings = true }
+                    .accessibilityIdentifier("target-account-settings")
+                    .sheet(isPresented: $showingSettings) {
+                        NavigationStack {
+                            Form {
+                                Section("Business profile") {
+                                    AccountBusinessProfileView(accountId: model.accountId, reader: profileReader)
+                                }
+                            }
+                            .navigationTitle("Settings")
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { showingSettings = false }
+                                        .accessibilityIdentifier("target-account-settings-done")
+                                }
+                            }
+                        }
+                    }
+                    .onChange(of: Array(model.accountId.rawValue.utf8)) { _, _ in showingSettings = false }
+                    .onDisappear { showingSettings = false }
+            }
+            Picker("Projects", selection: Binding(
+                get: { model.directorySegment },
+                set: { model.setDirectorySegment($0) }
+            )) {
+                Text("Active").tag(ProjectDirectorySegment.active)
+                Text("Archived").tag(ProjectDirectorySegment.archived)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("target-project-directory-segment")
+            if model.directorySegment == .active {
+                Button("Business Inventory") {
+                    Task {
+                        await model.openBusinessInventory(
+                            savedSection: InventoryWorkspaceSection.remembered(accountId: model.accountId).rawValue
+                        )
+                    }
+                }
+                .accessibilityIdentifier("target-business-inventory-card")
+            }
+            LabeledContent("Project data", value: model.projectBrowser.directoryStatus)
+                .accessibilityIdentifier("target-active-project-directory-status")
+
+            if model.directoryProjects.isEmpty {
+                if (model.directorySegment == .active
+                    ? model.projectBrowser.directoryPresentation?.active.isAuthoritativeEmpty
+                    : model.projectBrowser.directoryPresentation?.archived.isAuthoritativeEmpty) == true {
+                    Text(model.directorySegment == .active ? "No active Projects." : "No archived Projects.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-project-directory-empty")
+                } else {
+                    Text("Project data is loading or unavailable.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-project-directory-unavailable")
+                }
+            } else {
+                ForEach(model.directoryProjects, id: \.projectId) { project in
+                    Button {
+                        Task { await model.selectProject(projectId: project.projectId) }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(project.projectDisplayName.rawValue)
+                            Text(project.clientDisplayName.rawValue)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .accessibilityIdentifier(
+                        "target-active-project-card-\(project.projectId.rawValue)"
+                    )
+                    .accessibilityLabel(project.projectDisplayName.rawValue)
+                    .accessibilityValue(project.clientDisplayName.rawValue)
+                    .accessibilityHint("Opens this Project workspace")
+                }
+            }
+
+            if let diagnostic = model.projectBrowser.directoryDiagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-active-project-directory-diagnostic")
+            }
+        }
+    }
+
+    private var inventoryWorkspace: some View {
+        Section("Business Inventory") {
+            backButton
+            Picker("Inventory section", selection: Binding(
+                get: { model.inventorySection },
+                set: {
+                    model.selectInventorySection($0)
+                    $0.remember(accountId: model.accountId)
+                }
+            )) {
+                Text("Items").tag(InventoryWorkspaceSection.items)
+                Text("Transactions").tag(InventoryWorkspaceSection.transactions)
+                Text("Spaces").tag(InventoryWorkspaceSection.spaces)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("target-inventory-section")
+
+            switch model.inventorySection {
+            case .items:
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId, scope: .businessInventory, reader: reader,
+                        spaceNavigation: itemSpaceNavigation)
+                } else {
+                    Text("Item data is unavailable.")
+                }
+            case .transactions:
+                Text("Inventory Transactions are unavailable. The authorized financial download is not implemented yet.")
+                    .accessibilityIdentifier("target-inventory-transactions-unavailable")
+            case .spaces:
+                LabeledContent("Space data", value: spaceDirectoryStatus)
+                SpaceBrowserSearchControls(model: model.spaceBrowser)
+                if !model.representedSpaceScopeIsAvailable {
+                    Text("Inventory Space data is unavailable.")
+                } else if model.spaceBrowser.spaces.isEmpty {
+                    if case .authoritativeEmpty = model.spaceBrowser.directoryPresentation {
+                        Text("No Spaces in Business Inventory.")
+                    } else {
+                        Text("Inventory Spaces are loading or incomplete.")
+                    }
+                } else if model.spaceBrowser.matchingSpaces.isEmpty {
+                    Text("No matching Spaces in downloaded data.")
+                        .accessibilityIdentifier("target-space-search-no-match")
+                } else {
+                    ForEach(model.spaceBrowser.matchingSpaces, id: \.id) { space in
+                        Button {
+                            Task { await model.selectSpace(spaceId: space.id) }
+                        } label: {
+                            SpaceDirectoryCardLabel(space: space)
+                        }
+                        .accessibilityIdentifier("target-inventory-space-\(space.id.rawValue)")
+                        .accessibilityLabel(space.displayName.rawValue)
+                        .accessibilityValue(SpaceDirectoryCardLabel(space: space).accessibilitySummary)
+                        .accessibilityHint("Opens this Space")
+                    }
+                }
+                if let diagnostic = model.spaceBrowser.directoryDiagnostic {
+                    Text(diagnostic).foregroundStyle(.red)
+                }
+            }
+        }
+    }
+
+    private func projectWorkspace(_ projectId: ProjectID) -> some View {
+        Section("Project Workspace") {
+            backButton
+            if model.representedProjectIsAvailable,
+               model.projectBrowser.selectedProjectId == projectId {
+                Text(model.projectBrowser.selectedProjectName ?? "Project name unavailable")
+                    .font(.headline)
+                    .accessibilityIdentifier("target-active-project-workspace-name")
+                if let clientName = model.projectBrowser.selectedClientName {
+                    Text(clientName)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-project-workspace-client")
+                }
+                LabeledContent("Project data", value: model.projectBrowser.detailStateLabel)
+                    .accessibilityIdentifier("target-active-project-workspace-status")
+                if model.representedProjectIsActive {
+                    Button("Spaces") {
+                        Task { await model.openSpacesTab() }
+                    }
+                    .accessibilityIdentifier("target-active-project-spaces-tab")
+                    .accessibilityHint("Opens Spaces for this Project")
+                }
+                Button("Notes") { model.openNotesTab() }
+                    .accessibilityIdentifier("target-active-project-notes-tab")
+                    .accessibilityHint("Opens note history for this Project")
+                Button("Review Vendor PDF") {
+                    model.openVendorDocumentReview()
+                }
+                    .accessibilityIdentifier("target-vendor-pdf-open")
+                    .sheet(isPresented: Binding(
+                        get: { model.vendorDocumentReview != nil },
+                        set: { if !$0 { model.closeVendorDocumentReview() } }
+                    )) {
+                        NavigationStack {
+                            if let vendorReview = model.vendorDocumentReview {
+                                LocalVendorDocumentReviewView(review: vendorReview, categoryWatch: model.categoryWatch)
+                                    .id(projectId)
+                            }
+                        }
+                        .frame(minWidth: 320, minHeight: 400)
+                    }
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader,
+                        spaceNavigation: itemSpaceNavigation)
+                }
+                if let watcher = model.reportWatcher as? any ClientSummaryPhysicalReportWatching,
+                   let reader = model.reportReader as? any ClientSummaryPhysicalReportReading,
+                   let profileReader = model.itemReader as? any AccountBusinessProfileReading {
+                    Button("Client Summary") { showingClientReport = true }
+                        .accessibilityIdentifier("target-client-report-open")
+                        .sheet(isPresented: $showingClientReport) {
+                            NavigationStack {
+                                ClientSummaryPhysicalReportPreview(accountId: model.accountId, projectId: projectId,
+                                    watcher: watcher, reader: reader, profileReader: profileReader)
+                                    .toolbar {
+                                        ToolbarItem(placement: .confirmationAction) {
+                                            Button("Done") { showingClientReport = false }
+                                        }
+                                    }
+                            }.frame(minWidth: 320, minHeight: 400)
+                        }
+                }
+                if let watcher = model.reportWatcher {
+                    Button("Property Management Report") { showingPropertyReport = true }
+                    .accessibilityIdentifier("target-property-report-open")
+                    .sheet(isPresented: $showingPropertyReport) {
+                        NavigationStack {
+                            PropertyManagementReportPreview(accountId: model.accountId, projectId: projectId,
+                                currency: accountCurrency, watcher: watcher, reader: model.reportReader,
+                                profileReader: model.itemReader as? any AccountBusinessProfileReading)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { showingPropertyReport = false }
+                                }
+                            }
+                        }
+                        .frame(minWidth: 320, minHeight: 400)
+                    }
+                }
+            } else {
+                Text("The represented Project is unavailable.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-project-workspace-unavailable")
+            }
+        }
+    }
+
+    private func projectSpaces(_ projectId: ProjectID) -> some View {
+        Section("Project Spaces") {
+            backButton
+            Text("Spaces")
+                .font(.headline)
+                .accessibilityIdentifier("target-active-project-spaces-selected-tab")
+            LabeledContent("Space data", value: spaceDirectoryStatus)
+                .accessibilityIdentifier("target-active-project-spaces-status")
+            SpaceBrowserSearchControls(model: model.spaceBrowser)
+
+            if !model.representedProjectIsActive {
+                Text("The represented Project is unavailable.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-project-spaces-project-unavailable")
+            } else if model.spaceBrowser.scope != .project(projectId) {
+                Text("Exact Project Space data is unavailable.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-project-spaces-scope-unavailable")
+            } else if model.spaceBrowser.spaces.isEmpty {
+                spaceDirectoryEmptyState
+            } else if model.spaceBrowser.matchingSpaces.isEmpty {
+                Text("No matching Spaces in downloaded data.")
+                    .accessibilityIdentifier("target-space-search-no-match")
+            } else {
+                ForEach(model.spaceBrowser.matchingSpaces, id: \.id) { space in
+                    Button {
+                        Task { await model.selectSpace(spaceId: space.id) }
+                    } label: {
+                        SpaceDirectoryCardLabel(space: space)
+                    }
+                    .accessibilityIdentifier("target-active-space-card-\(space.id.rawValue)")
+                    .accessibilityLabel(space.displayName.rawValue)
+                    .accessibilityValue(SpaceDirectoryCardLabel(space: space).accessibilitySummary)
+                    .accessibilityHint("Opens this Space")
+                }
+            }
+
+            if let diagnostic = model.spaceBrowser.directoryDiagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-active-project-spaces-diagnostic")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func spaceDetail(scope: SpaceCreationScope, spaceId: SpaceID) -> some View {
+        Section("Space") {
+            backButton
+            LabeledContent("Space data", value: model.spaceBrowser.detailModel.status)
+                .accessibilityIdentifier("target-active-space-detail-status")
+
+            if model.representedSpaceScopeIsAvailable,
+               model.spaceBrowser.scope == scope,
+               model.spaceBrowser.selectedSpaceId == spaceId,
+               let row = model.spaceBrowser.detailModel.row,
+               row.id == spaceId,
+               row.scope == scope,
+               row.lifecycle == .active {
+                Text(row.displayName.rawValue)
+                    .font(.headline)
+                    .accessibilityIdentifier("target-active-space-detail-name")
+                checklists
+                if let reader = model.itemReader {
+                    DownloadedItemsView(accountId: model.accountId,
+                        scope: placementScope(scope), reader: reader, spaceId: spaceId,
+                        spaceNavigation: itemSpaceNavigation)
+                }
+            } else if model.representedSpaceScopeIsAvailable,
+                      model.spaceBrowser.scope == scope,
+                      model.spaceBrowser.selectedSpaceId == spaceId,
+                      model.spaceBrowser.detailModel.isAuthoritativelyEmpty {
+                Text("No Space exists for this exact selection.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-space-detail-empty")
+            } else {
+                Text("Exact Space details are loading or unavailable.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("target-active-space-detail-unavailable")
+            }
+
+            if model.representedSpaceScopeIsAvailable,
+               model.spaceBrowser.scope == scope,
+               model.spaceBrowser.selectedSpaceId == spaceId {
+                checklistLifecycle
+            }
+
+            if let diagnostic = model.spaceBrowser.detailModel.diagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-active-space-detail-diagnostic")
+            }
+        }
+        .task(id: model.spaceBrowser.detailModel.evidenceSequence) {
+            await model.synchronizeChecklistEvidence()
+        }
+    }
+
+    private func placementScope(_ scope: SpaceCreationScope) -> ItemPlacementScope {
+        switch scope {
+        case .businessInventory: .businessInventory
+        case .project(let projectId): .project(projectId)
+        }
+    }
+
+    private var checklists: some View {
+        SpaceChecklistSection(toggle: model.checklistToggle, expanded: Binding(
+            get: { model.isChecklistsExpanded },
+            set: { if $0 != model.isChecklistsExpanded { model.toggleChecklistsExpanded() } }
+        ), showsLifecycle: false) { checklistId, itemId in
+            await model.toggleChecklistItem(checklistId: checklistId, itemId: itemId)
+        }
+    }
+
+    private var checklistLifecycle: some View {
+        SpaceChecklistLifecycle(toggle: model.checklistToggle)
+    }
+
+    private var backButton: some View {
+        Button("Back") {
+            Task { await model.back() }
+        }
+        .accessibilityIdentifier("target-active-workspace-back")
+    }
+
+    @ViewBuilder
+    private var spaceDirectoryEmptyState: some View {
+        switch model.spaceBrowser.directoryPresentation {
+        case .authoritativeEmpty:
+            Text("No Spaces in this Project.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-empty")
+        case .waiting:
+            Text("Exact Project Space data is loading.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-loading")
+        case .partial:
+            Text("Project Space data is incomplete.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-partial")
+        case .stale:
+            Text("Cached Project Space data is available.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-stale")
+        case .failure, .ready:
+            Text("Project Space data is unavailable.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-unavailable")
+        case .stopped:
+            Text("Project Space data is stopped.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-project-spaces-stopped")
+        }
+    }
+
+    private var spaceDirectoryStatus: String {
+        switch model.spaceBrowser.directoryPresentation {
+        case .waiting(let readiness): readiness.rawValue
+        case .partial: "Incomplete local data"
+        case .stale: "Cached local data"
+        case .ready: "Ready"
+        case .authoritativeEmpty: "Ready — empty"
+        case .failure: "Unavailable"
+        case .stopped: "Stopped"
+        }
+    }
+}
+
+/// Nested Item links reuse the same dependencies with independent route state.
+struct ItemSpaceNavigation {
+    let detailRuntime: any SpaceCoreDetailsStagingRuntime
+    let toggleRuntime: SpaceChecklistItemToggleStagingRuntime
+    let makeToggle: @MainActor () -> SpaceChecklistItemToggleStagingExercise
+}
+
+struct SpaceChecklistSection: View {
+    @Bindable var toggle: SpaceChecklistItemToggleStagingExercise
+    @Binding var expanded: Bool
+    var showsLifecycle = true
+    let onToggle: @MainActor (SpaceChecklistID, SpaceChecklistItemID) async -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { expanded.toggle() } label: {
+                Label("CHECKLISTS", systemImage: expanded ? "chevron.down" : "chevron.right")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    #if os(iOS)
+                    .frame(minHeight: 44)
+                    #endif
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("target-active-space-checklists-section")
+            .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+            if expanded {
+                if let collection = toggle.displayedCollection {
+                    if collection.checklists.isEmpty {
+                        Text("No checklists.")
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("target-active-space-checklists-empty")
+                    } else {
+                        ForEach(collection.checklists, id: \.id.rawValue) { checklist in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(checklist.name.rawValue)
+                                    .font(.headline)
+                                ForEach(checklist.items, id: \.id.rawValue) { item in
+                                    Button {
+                                        Task {
+                                            await onToggle(checklist.id, item.id)
+                                        }
+                                    } label: {
+                                        Label(
+                                            item.text.rawValue,
+                                            systemImage: item.isChecked
+                                                ? "checkmark.circle.fill"
+                                                : "circle"
+                                        )
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(!toggle.canToggle(
+                                        checklistId: checklist.id,
+                                        itemId: item.id
+                                    ))
+                                    .accessibilityIdentifier(
+                                        "target-active-space-checklist-item-\(checklist.id.rawValue)-\(item.id.rawValue)"
+                                    )
+                                    .accessibilityLabel(item.text.rawValue)
+                                    .accessibilityValue(item.isChecked ? "Checked" : "Not checked")
+                                    .accessibilityHint(
+                                        item.isChecked
+                                            ? "Marks this checklist item incomplete"
+                                            : "Marks this checklist item complete"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Text(toggle.admission.explanation)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-active-space-checklists-unavailable")
+                }
+            }
+            if showsLifecycle { SpaceChecklistLifecycle(toggle: toggle) }
+        }
+    }
+
+}
+
+private struct SpaceChecklistLifecycle: View {
+    @Bindable var toggle: SpaceChecklistItemToggleStagingExercise
+    @ViewBuilder var body: some View {
+        Text("Checklist synchronization: \(toggle.operationStatus)")
+        .accessibilityIdentifier("target-active-space-checklist-operation-status")
+
+        if !toggle.admission.permitsToggle {
+            Text(toggle.admission.explanation)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-space-checklist-admission")
+        }
+        if toggle.rejectedRecovery != nil {
+            Text("Rejected checklist changes are preserved for review.")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-active-space-checklist-rejected")
+        }
+        if let diagnostic = toggle.diagnostic {
+            Text(diagnostic)
+                .foregroundStyle(.red)
+                .accessibilityIdentifier("target-active-space-checklist-diagnostic")
+        }
+    }
+
+}

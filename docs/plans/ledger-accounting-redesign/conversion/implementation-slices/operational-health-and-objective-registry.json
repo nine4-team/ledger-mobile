@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "operational-health-and-objective-registry",
+  "title": "Make local health, service objectives, alert candidates, and runbooks explicit without activating operations",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Operational Health and Objective Registry",
+  "surfaceIds": [
+    "SWIFT-D9A560340CA9",
+    "TEST-D534C0EDD709"
+  ],
+  "requirements": [
+    {
+      "id": "OPHEALTH-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Sync Health Model",
+      "invariant": "One provider-free operational snapshot preserves the full validated SyncHealthSnapshot, derives nonnegative ages from one explicit observation time, reports local, authentication, subscription, queue, attachment, rejection and write-block components separately, and never treats online as synchronized.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-002", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    },
+    {
+      "id": "OPHEALTH-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Observability Model",
+      "invariant": "Every required client, server and replication measurement has one stable bounded registry identity, safe unit and scope, owner and collection status; absence of an adapter remains explicit and cannot be represented as a healthy measurement.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-002", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    },
+    {
+      "id": "OPHEALTH-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Initial Service Objectives",
+      "invariant": "The seven normative durability, idempotency, integrity, isolation, queue-health, offline-availability and recovery objectives exist exactly once, bind required measurements, alert candidates and runbooks, and remain unevaluated until typed evidence exists rather than becoming satisfied from registration or reachability.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-002", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    },
+    {
+      "id": "OPHEALTH-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Alerts",
+      "invariant": "Every high- and lower-urgency alert candidate has a stable severity, grouped and rate-limited policy, exact measurement/objective references and one runbook; this target-only registry cannot activate, deliver, acknowledge or resolve an alert.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-002", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    },
+    {
+      "id": "OPHEALTH-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Operational Runbooks",
+      "invariant": "All required runbook topics exist exactly once and each definition names detection, impact, first safe action, evidence preservation, rollback boundary, escalation owner and recovery verification through bounded stable references without embedding credentials or private payloads.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-002", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    },
+    {
+      "id": "OPHEALTH-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Provisional Performance Budgets",
+      "invariant": "Latency, volume, device and hosted-service thresholds remain explicitly pending vertical-spike evidence; the registry cannot invent a numeric production threshold, claim a simulator result meets one, or convert a candidate policy into release authority.",
+      "decisionIds": [],
+      "verificationIds": ["OPHEALTH-TEST-001", "OPHEALTH-TEST-003", "OPHEALTH-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "OperationalHealthSnapshot is constructed from a validated SyncHealthSnapshot and explicit observation time, retains online and synchronized as independent facts, derives bounded checkpoint/operation/attachment ages, and reports closed component states and stable action codes.",
+        "OperationalMeasurementID, ServiceObjectiveID, AlertCandidateID and OperationalRunbookID are closed stable values; the target registry contains every architecture-required definition exactly once in canonical sorted order with reciprocal references.",
+        "ServiceObjectiveDefinition distinguishes normative exact-zero guarantees from spike-pending numeric budgets and exposes only notEvaluated, satisfied or violated results produced from a complete typed evidence set; missing evidence cannot pass.",
+        "AlertCandidateDefinition records severity, grouping window, notification rate limit, measurement/objective references and one runbook under candidateOnly authority; no value represents an emitted, paged, acknowledged or resolved alert.",
+        "OperationalRunbookDefinition requires bounded stable references for detection, impact, first safe action, preserved evidence, rollback boundary, escalation owner and recovery verification and has no executable action or credential field.",
+        "OperationalControlRegistry validates completeness, uniqueness, reciprocal ownership, threshold provenance state and fixed canonical byte ceilings before exposing evidenceOnly registry bytes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free registry creates no Postgres table, metric store, incident record, view, function, constraint or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No metric collector, evaluator, alert dispatcher, incident handler or runbook executor runs."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, view or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or privileged function exists; future operational persistence and access require a separate security slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The snapshot describes Sync health but creates no PowerSync Stream, local application table, bucket policy, upload queue or visibility rule."
+    },
+    "localOffline": {
+      "items": [
+        "Health and registry values encode to bounded canonical bytes and reconstruct through the same validators without network, database, filesystem, provider SDK, process-global clock or mutable registry state.",
+        "Equivalent reordered definitions normalize identically; duplicate/missing definitions, unknown or nonreciprocal references, invalid time/count/age, incomplete runbooks, invented thresholds, activation claims, noncanonical bytes, digest tamper and oversized evidence fail atomically.",
+        "A disconnected snapshot can be locally ready while online is false; an online snapshot can remain unsynchronized, blocked or degraded, and neither state satisfies a service objective without complete typed evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Attachment health is represented only by validated count/age facts from SyncHealthSnapshot; no media byte, object, URL, upload adapter or deletion behavior is introduced."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This foundation defines target values and validation only. Current app/MCP diagnostics and future operator presentation remain unadvanced until owning integration slices use the registry."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No source log, metric, alert or incident is migrated. Migration/reconciliation drift is only a required measurement identity; the verified migration-run module remains separate."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "The registry enumerates the required measurement, objective, alert-candidate and runbook topology, with stable owners and complete reference closure but no sink, dashboard, hosted policy or operational activation.",
+        "Normative zero-loss/duplicate/drift/leakage guarantees remain evidence-gated and all numeric latency, volume, cost and device thresholds remain pending the approved vertical spike.",
+        "Stable failures distinguish malformed health, missing evidence, registry incompleteness, duplicate/unknown references, invalid thresholds, noncanonical/tampered evidence and prohibited activation without copying private payloads."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The scaffolds and implementation are additive target-only package files, import no provider SDK, alter neither application project, contact no hosted service, create no alert and activate no operational policy.",
+        "Every registry has evidenceOnly and candidateOnly authority; provider adapters, approved numeric thresholds, operator owners, hosted alert configuration, incident response, release gates and production activation remain separate reviewed slices.",
+        "The broader current performance/navigation/test surfaces MAN-OBS-001, SWIFT-7B159D426B1D, SWIFT-2703ADAB66C5 and TEST-ECE08B24ADCE remain target_mapped until actual target emitters, application lifecycle wiring and adapter/physical evidence replace them."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "OPHEALTH-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
+      "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005", "OPHEALTH-REQ-006"],
+      "expected": "The exact measurement/objective/alert/runbook topology validates in canonical order; health preserves separate component truth, objective evaluation requires complete typed evidence, runbooks are structurally complete and every policy remains evidence-only/candidate-only.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
+    },
+    {
+      "id": "OPHEALTH-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
+      "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005"],
+      "expected": "Canonical health and registry evidence round-trips offline; reordered inputs normalize identically; disconnected-ready and online-unsynchronized fixtures restore the same component states without claiming objective satisfaction.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
+    },
+    {
+      "id": "OPHEALTH-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
+      "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005", "OPHEALTH-REQ-006"],
+      "expected": "Negative counts/ages, time regression, missing/duplicate definitions, unknown/nonreciprocal references, incomplete evidence or runbooks, invented spike thresholds, activation claims, noncanonical bytes, digest tamper and oversized values fail with stable codes and no partial accepted state.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
+    },
+    {
+      "id": "OPHEALTH-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005", "OPHEALTH-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, target boundary/generated-contract checks, the complete target package suite, both target builds and clean artifacts without a sink, SDK, hosted alert, production threshold or operational action.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-OPERATIONAL-HEALTH-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the reviewed platform capability dossier and verified readiness/telemetry contracts. It stops before any metric emitter/sink, database/file persistence, provider SDK, hosted dashboard/alert, operator action, numeric spike outcome, app/MCP lifecycle wiring, incident response, deployment, production monitoring, release or cutover authority."
+}

@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "transfer-destination-selection-contracts",
+  "title": "Select exact same-Client Transfer destinations from local directory evidence",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Transfer Destination Selection",
+  "surfaceIds": [
+    "SWIFT-1A05F36246B4",
+    "TEST-C01243D7B782"
+  ],
+  "requirements": [
+    {
+      "id": "DESTINATION-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Destination picker",
+      "invariant": "A Transfer destination selection contains only other active Projects in the same Account whose exact non-null ClientID equals the source Project ClientID; Business Inventory, the source Project, archived Projects, missing/different Clients, and equal-name/different-ID Projects are excluded.",
+      "decisionIds": ["D-003", "D-005", "D-006"],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-002", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    },
+    {
+      "id": "DESTINATION-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Entry point",
+      "invariant": "The destination action can distinguish at least one locally eligible route from no eligible destination, while unresolved or incomplete local directory evidence never masquerades as an authoritative empty result.",
+      "decisionIds": ["D-003", "D-006"],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-002", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    },
+    {
+      "id": "DESTINATION-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Confirmed Product Direction",
+      "invariant": "Every offered destination produces the already-validated direct ProjectTransferRoute for the same Account and Client, never introduces a Business Inventory hop, and does not itself create a Transfer, Transaction, Item move, Invoice effect, payment, refund, or credit.",
+      "decisionIds": ["D-003", "D-005", "D-006"],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    },
+    {
+      "id": "DESTINATION-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The immutable source-bound selection snapshot preserves a query fingerprint, source directory fingerprint, completeness, ready/partial/stale quality, LocalDataVersion, as-of time and deterministic candidate order; authoritative empty and incomplete local scope remain different states.",
+      "decisionIds": [],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-002", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    },
+    {
+      "id": "DESTINATION-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "One small backend-neutral TransferDestinationSelectionQuerying read port returns only typed Ledger/standard Swift values through Swift concurrency; it exposes no generic picker, collection/path/SQL string, SDK listener or write capability.",
+      "decisionIds": [],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-002", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    },
+    {
+      "id": "DESTINATION-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 selection boundary is executable with synthetic deterministic evidence while the released Firebase app remains unchanged and no Transfer command, schema, provider, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["DESTINATION-TEST-001", "DESTINATION-TEST-002", "DESTINATION-TEST-003", "DESTINATION-TEST-004", "DESTINATION-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "TransferDestinationCandidate binds one destination ProjectSummary to the exact validated ProjectTransferRoute from the selected source and revalidates AccountID, ClientID, ProjectID and active destination on construction and decoding.",
+        "TransferDestinationSelectionSnapshot filters one validated Account-scoped ProjectListSnapshot without name matching, preserves source directory order, refuses duplicate or mismatched candidate identity, and binds its fingerprint to the source AccountID/ProjectID/ClientID plus directory fingerprint.",
+        "TransferDestinationAvailability is available when at least one exact candidate exists, noEligibleDestination only for a complete ready empty result, and directoryIncomplete for partial/stale empty evidence.",
+        "TransferDestinationSelectionQuerying exposes only watchTransferDestinations(source:) local read updates; TransferDestinationSelectionFailure exposes stable bounded scope/candidate/fingerprint/encoding codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free projection creates no Client/Project/Transfer table, relationship, check, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No TransferItems command, authorization, lock, operation envelope, idempotent result, Transaction pair or authoritative revalidation handler is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Exact local Account/Client equality is not authorization. No server row, membership/financial predicate, grant or RLS policy exists in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The read port consumes validated local directory evidence but defines no PowerSync Stream, parameter, local table, download predicate or provider readiness claim."
+    },
+    "localOffline": {
+      "items": [
+        "Candidate and selection values are immutable Codable evidence; decoding reconstructs through exact route, candidate, completeness and source-bound fingerprint validation.",
+        "Ready complete empty evidence yields noEligibleDestination, whereas partial or stale empty evidence yields directoryIncomplete; valid candidates remain visibly available with their underlying quality/readiness evidence.",
+        "Canonical sorted-key evidence round-trips byte-identically without disk, database, network or provider state; source/directory mismatch, invalid candidate route, duplicate destination and fingerprint tamper fail atomically."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No Item, receipt, Client or Project attachment ID, byte, path, URL, cache, upload, retention or deletion behavior exists."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared selection port/read-model semantics are defined, but no current Swift picker, accessibility behavior, MCP query projection, transport handler or entry point is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Project/clientName is decoded or correlated. Later migration must resolve every Project to one reviewed Client or quarantine it; text equality never makes a candidate eligible."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside the provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "The slice cannot authorize or queue a Transfer, choose Items or accounting effects, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-002/O-011–O-015 and D-017 remain outside the destination-selection boundary and cannot be inferred from a locally valid route."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "DESTINATION-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransferDestinationSelectionTests.swift",
+      "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-003", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
+      "expected": "A mixed synthetic Account directory yields only other active Projects with the exact same AccountID and ClientID, preserving directory order and exact validated routes while equal display names have no effect.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
+    },
+    {
+      "id": "DESTINATION-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransferDestinationSelectionTests.swift",
+      "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
+      "expected": "Available, authoritative-no-destination and incomplete-directory states are distinct and preserve exact directory completeness, quality, LocalDataVersion, as-of time and source-bound query evidence.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
+    },
+    {
+      "id": "DESTINATION-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransferDestinationSelectionTests.swift",
+      "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-003", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
+      "expected": "Representative available/empty/incomplete source-bound selection evidence round-trips byte-identically through canonical restart and an in-memory query port without opening local or remote state.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
+    },
+    {
+      "id": "DESTINATION-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransferDestinationSelectionTests.swift",
+      "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-003", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
+      "expected": "Source/directory Account mismatch, route/destination mismatch, duplicate candidate IDs, invalid completeness and tampered source/directory/selection fingerprints fail atomically with stable non-enumerating codes.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
+    },
+    {
+      "id": "DESTINATION-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-003", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming command, authorization, schema, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TRANSFER-DESTINATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 selection/read foundation only. It implements exact D-003/D-005/D-006 destination eligibility and local readiness over the already-verified directory and route values, but no Item selection, Transfer command/pair write, D-017 amount, Invoice/Space/tag/correction/credit effect, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior."
+}

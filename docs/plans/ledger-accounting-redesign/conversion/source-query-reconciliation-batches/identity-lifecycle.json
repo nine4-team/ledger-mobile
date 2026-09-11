@@ -1,0 +1,931 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-IDENTITY-LIFECYCLE-001",
+  "owner": "Identity and Account Lifecycle",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-022A3E82CE10",
+    "QUERY-03410F14C4E6",
+    "QUERY-06B04829578C",
+    "QUERY-06F70AD6E548",
+    "QUERY-0A7151EF9008",
+    "QUERY-0ACF4AA34C9C",
+    "QUERY-1562F6D98F4A",
+    "QUERY-1760A76A95CA",
+    "QUERY-1830A250A592",
+    "QUERY-183A432DB5BF",
+    "QUERY-1AFE0C88E126",
+    "QUERY-1FCF69962B3D",
+    "QUERY-25FDE22A5FE3",
+    "QUERY-3276F8D25CA0",
+    "QUERY-4033B7B87046",
+    "QUERY-451572A30FC6",
+    "QUERY-45CE1C782CD4",
+    "QUERY-4E9B3C0D1E40",
+    "QUERY-9560C6FF7EB0",
+    "QUERY-AB3B08D85C6C",
+    "QUERY-B23AC9BA013A",
+    "QUERY-B703DA6098F3",
+    "QUERY-BB94C4C98491",
+    "QUERY-C399E49A1A85",
+    "QUERY-C64F73EBEA1C",
+    "QUERY-D437E9A79D19",
+    "QUERY-D96A9415861F",
+    "QUERY-DEC653E5C896",
+    "QUERY-E1E3315C4CF3"
+  ],
+  "allowedBlockerIds": [
+    "A-007",
+    "A-010",
+    "A-016"
+  ],
+  "allowedEvidenceRequirementIds": [
+    "E-001"
+  ],
+  "rows": [
+    {
+      "queryId": "QUERY-022A3E82CE10",
+      "expectedOccurrenceHash": "acffe063a52b2adec689e1a1b01b78987bb4952e4a317c1167cf737335222c28",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-001",
+          "expectedRetirementAuthorityHash": "c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-03410F14C4E6",
+      "expectedOccurrenceHash": "67b95e2d39a6b6333cfe20ca525edf70e4a3700be13dfc413dd0d082d8d39e25",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-06B04829578C",
+      "expectedOccurrenceHash": "c694959874c54bd27ecde1fbf96e6e78339dca5bf7246df2ed12ccbeb46224e5",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-06F70AD6E548",
+      "expectedOccurrenceHash": "6c9dc220a615d37421a2702a7e7743d659ab0a5506f27931dc678c9529961e23",
+      "sourceOwnerSurfaceId": "SWIFT-8E9B2DFCD775",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift"
+      },
+      "expectedSourceOwnerHash": "efa729d4b62cf8a2ac3c2b39c62c688b35dcd8b093926d2b4ceda29ae22c91b6",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-0A7151EF9008",
+      "expectedOccurrenceHash": "fbb9e403e0d4f117b8f8f98793dbb03d40c971620c70430aa14af2cf28049cef",
+      "sourceOwnerSurfaceId": "MCPMOD-4938EA5E6169",
+      "sourceRef": {
+        "path": "mcp-server/src/oauth.ts"
+      },
+      "expectedSourceOwnerHash": "95d39275503cf82783e668ea402dbc06ae4b3d003b4e253bace9a69a00068ab4",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "A-007"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-0ACF4AA34C9C",
+      "expectedOccurrenceHash": "d62a293f24817875aa7a44cedee8692124906c6c3781a8e007826a59a617985b",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1562F6D98F4A",
+      "expectedOccurrenceHash": "e2881ddabcc25d5ff311f04d3d52916e00dbb37ec78e6676bf260de72edef8d0",
+      "sourceOwnerSurfaceId": "FUNCTION-605DE567BE56",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1267
+      },
+      "expectedSourceOwnerHash": "f231a1bcd0fd17b3999b1b3d558d5a1f039c7ad5b7d5e931c77b1358cbe3a279",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1760A76A95CA",
+      "expectedOccurrenceHash": "4a787fbfce2a3c5d740bef5954058c7c138d41ca97b2686cac2456f2bae1a08c",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1830A250A592",
+      "expectedOccurrenceHash": "99582c890aeb3bf4239afe04f44d9b359dcdd2cde995afbbc92c13a5ebfc6d5c",
+      "sourceOwnerSurfaceId": "SWIFT-8E9B2DFCD775",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift"
+      },
+      "expectedSourceOwnerHash": "efa729d4b62cf8a2ac3c2b39c62c688b35dcd8b093926d2b4ceda29ae22c91b6",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-183A432DB5BF",
+      "expectedOccurrenceHash": "2791bbdff3fcc8fdbec0eb13013b902d5c6572d6c6856000e5097c40124c89e5",
+      "sourceOwnerSurfaceId": "SWIFT-8E9B2DFCD775",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift"
+      },
+      "expectedSourceOwnerHash": "efa729d4b62cf8a2ac3c2b39c62c688b35dcd8b093926d2b4ceda29ae22c91b6",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1AFE0C88E126",
+      "expectedOccurrenceHash": "db79ab964a146ca81aaa0f7deb61908dbe9f312ad1b558b8522d4ddfe6b0a08e",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1FCF69962B3D",
+      "expectedOccurrenceHash": "a924f98d8a210f20c3a6558495d20dcb769343f2b5d8d3828a635b028d042a11",
+      "sourceOwnerSurfaceId": "SWIFT-8E9B2DFCD775",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/AccountMembersService.swift"
+      },
+      "expectedSourceOwnerHash": "efa729d4b62cf8a2ac3c2b39c62c688b35dcd8b093926d2b4ceda29ae22c91b6",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-25FDE22A5FE3",
+      "expectedOccurrenceHash": "1cf551f8a4f6f2d95356285f44b56cc61949dfd9f4a0f799c76f63347b55dd80",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-3276F8D25CA0",
+      "expectedOccurrenceHash": "2415d5f48f7dcd19e532700b27cc0c412b9f034ba39d0fa1d6a61d18578ab71b",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-4033B7B87046",
+      "expectedOccurrenceHash": "d75bd22cf7fc5ca4c2dd161645bc6204f2f29d8cb7eb4bb209090503c86916b2",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-451572A30FC6",
+      "expectedOccurrenceHash": "b161289ab68701c59d9eb5f1c3530143a3714a991338e5dcfc2a3161ba38ae52",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-001",
+          "expectedRetirementAuthorityHash": "c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-45CE1C782CD4",
+      "expectedOccurrenceHash": "5821bbf889bb2df0e2178db79e5ac0fdfe1ca67c785f7a788b8f8cc8c16e2812",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-4C3A96B8C83F",
+          "taccessId": "TACCESS-E002B6EBF172",
+          "expectedMappingHash": "d9b619767199c91cb9112b78b18f5d3abe1a7742d539ca55c9e3c4b5b19664d8",
+          "blockerIds": [
+            "A-007",
+            "A-010",
+            "A-016"
+          ],
+          "authorityRefs": [
+            {
+              "id": "A-007",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-007 — Target Authentication Choice"
+            },
+            {
+              "id": "A-010",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-010 — Provider-Independent Principals"
+            },
+            {
+              "id": "A-016",
+              "kind": "architecture_decision",
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "section": "A-016 — Offline-Access Lease"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-4E9B3C0D1E40",
+      "expectedOccurrenceHash": "80a1c0e448a8192a3169f58e8a002febd283ba5b4250afafbb19f4c7272237b5",
+      "sourceOwnerSurfaceId": "FUNCTION-FAF99C7D3C5B",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 81
+      },
+      "expectedSourceOwnerHash": "fa4d1f4beab0e206acb94727947ad619bdb3bbe9b8d8e86c3067d3828a028510",
+      "outcomes": [
+        {
+          "category": "evidence_blocked",
+          "blockedScope": "source_runtime_use",
+          "evidenceRequirementIds": [
+            "E-001"
+          ],
+          "ownerBindings": [
+            {
+              "evidenceRequirementId": "E-001",
+              "surfaceId": "FUNCTION-FAF99C7D3C5B",
+              "sourceRef": {
+                "path": "firebase/functions/src/index.ts",
+                "line": 81
+              },
+              "expectedSourceOwnerHash": "fa4d1f4beab0e206acb94727947ad619bdb3bbe9b8d8e86c3067d3828a028510",
+              "blocker": "Production profile must confirm whether quota/object records exist",
+              "expectedBindingHash": "e50433663c5c57ce26264aa1c47ab52260760da65ee3242a8283812289fa0212"
+            }
+          ],
+          "evidenceRefs": [
+            {
+              "id": "E-001",
+              "kind": "production_read_profile",
+              "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+              "section": "Required Production-Read Confirmation",
+              "requiredArtifact": "Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-9560C6FF7EB0",
+      "expectedOccurrenceHash": "7cf1897e1bb615b0ee8d0217ed3ebbb415da9d70a56fd4a2043e08cb9288fbb4",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-AB3B08D85C6C",
+      "expectedOccurrenceHash": "2b0cd0d28e330635a7bfb9db7c0fb6a7d16b01b2486fb8e562c74c204bb8cd3d",
+      "sourceOwnerSurfaceId": "SWIFT-FE44BBB4D35B",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/InvitesService.swift"
+      },
+      "expectedSourceOwnerHash": "907ab8bcef6ccf36dcbdb7b5a2326e1d210f99b702614f69a5c82f2f5063ad89",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-FE44BBB4D35B",
+          "targetSurface": "InviteQuerying",
+          "expectedTargetMappingHash": "80ec0d032d19da3ba9a98972db21c26cffa29f816290c95528e8eb0e6cdac922"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B23AC9BA013A",
+      "expectedOccurrenceHash": "c0dd6619267743e91d27108049368a94d09c02bf0ba4a0fa288d1a627ce58e3e",
+      "sourceOwnerSurfaceId": "FUNCTION-605DE567BE56",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1267
+      },
+      "expectedSourceOwnerHash": "f231a1bcd0fd17b3999b1b3d558d5a1f039c7ad5b7d5e931c77b1358cbe3a279",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B703DA6098F3",
+      "expectedOccurrenceHash": "d266849d11ba69521c689976c3c69e3ec3599d2055f33d77f601ee489ed43b9b",
+      "sourceOwnerSurfaceId": "FUNCTION-605DE567BE56",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1267
+      },
+      "expectedSourceOwnerHash": "f231a1bcd0fd17b3999b1b3d558d5a1f039c7ad5b7d5e931c77b1358cbe3a279",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BB94C4C98491",
+      "expectedOccurrenceHash": "28f0d30c83001360b29f8438a24189fa1e528e7d673523668d8891ac0c659a23",
+      "sourceOwnerSurfaceId": "FUNCMOD-B42AA317B971",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts"
+      },
+      "expectedSourceOwnerHash": "4b1fad3a65eb1f850b20a30b4c4ce23c07136b30369ffd11cfaf9d7d97a5cada",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "FUNCTION-64DF5B5FA8E6",
+          "targetSurface": "PreviewInviteQuery",
+          "expectedTargetMappingHash": "17e9d81030119c18f8d434833acd35b0ceaaa0295c8f8070aa97fc14a444b091"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C399E49A1A85",
+      "expectedOccurrenceHash": "4ea0ef14697725b821425d7028a455adadcde89c968c07eb1ea02fb6a8b6a369",
+      "sourceOwnerSurfaceId": "SWIFT-F81A30E4CBC8",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/Settings/UsersView.swift"
+      },
+      "expectedSourceOwnerHash": "588f39dbc6ee60d8a3ba6ec043c8ab35a721e61301b7cbbf8b914ca5aaf88b4f",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-8E9B2DFCD775",
+          "targetSurface": "MembershipQuerying",
+          "expectedTargetMappingHash": "f19dee2d3697461ddf7eefbd26ef78037c5c5c23f3ebe9bd4832326cef4124d8"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C64F73EBEA1C",
+      "expectedOccurrenceHash": "bb56e8991357e1dc27ce1ce0d9cb06e766b67aae7e6570863687eb0eac7987f2",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-001",
+          "expectedRetirementAuthorityHash": "c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D437E9A79D19",
+      "expectedOccurrenceHash": "74f6969c8215621624299f1f16fb75ac618596162d2848c6f77975f941868ec4",
+      "sourceOwnerSurfaceId": "MCPMOD-38F4B8D34053",
+      "sourceRef": {
+        "path": "mcp-server/src/auth.ts"
+      },
+      "expectedSourceOwnerHash": "325f41e8f40c41fed63324cee5531a2e06c2603b4f9dd3c8ed29cf3d371cdf35",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-001",
+          "expectedRetirementAuthorityHash": "c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D96A9415861F",
+      "expectedOccurrenceHash": "40a1c04fdea6df7cb1c80e0b310bee750277631c53607079040eeb3e8961ec74",
+      "sourceOwnerSurfaceId": "MCPMOD-3E4E627EC002",
+      "sourceRef": {
+        "path": "mcp-server/src/userState.ts"
+      },
+      "expectedSourceOwnerHash": "0296174b7b2d46f4b2ae9b9ef1b236113785a5bcce09b3c2cc1f2f89def2e5dc",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-001",
+          "expectedRetirementAuthorityHash": "c207c0854ce84996b16fad414969b37796e9ef846094e3c38e2b83ff8125846d"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-DEC653E5C896",
+      "expectedOccurrenceHash": "3dff9e223cd64611edea4fa0c222c7732b8462920def3e802294976addef61e7",
+      "sourceOwnerSurfaceId": "SWIFT-FE44BBB4D35B",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/InvitesService.swift"
+      },
+      "expectedSourceOwnerHash": "907ab8bcef6ccf36dcbdb7b5a2326e1d210f99b702614f69a5c82f2f5063ad89",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-FE44BBB4D35B",
+          "targetSurface": "InviteQuerying",
+          "expectedTargetMappingHash": "80ec0d032d19da3ba9a98972db21c26cffa29f816290c95528e8eb0e6cdac922"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E1E3315C4CF3",
+      "expectedOccurrenceHash": "990ddaa4f0ec85b67909f5fbec2d33b79f37f496c87215f6d17d46ac57625edb",
+      "sourceOwnerSurfaceId": "FUNCTION-605DE567BE56",
+      "sourceRef": {
+        "path": "firebase/functions/src/index.ts",
+        "line": 1267
+      },
+      "expectedSourceOwnerHash": "f231a1bcd0fd17b3999b1b3d558d5a1f039c7ad5b7d5e931c77b1358cbe3a279",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "FUNCTION-605DE567BE56",
+          "targetSurface": "membership admission handler",
+          "expectedTargetMappingHash": "e9c55cbbc2dd1869256d204227ea134c80bbb9cf47998cd6f707cfc4f32700c6"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves all 29 READY-classified identity/lifecycle rows: mapped invite/member replacements, exact AccountQuerying and OAuth authority blocks, explicit retirement of first-account and root MCP user-state behavior, and a same-owner E-001 evidence block for createWithQuota runtime use. The blocker allowlist remains limited to the exact row-bound A-007/A-010/A-016 set; evidence requirements remain separate from product/architecture authority. Immutable CI/promotion is pending, and no physical target-access or production-read authority is granted."
+}

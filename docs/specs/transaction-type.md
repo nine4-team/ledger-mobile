@@ -1,6 +1,18 @@
 # Transaction Type Taxonomy
 
-## Target State
+> **Target-state notice (2026-08-30):**
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md)
+> and
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> replace the target taxonomy below. New target project writes use exactly
+> `purchase`, `return`, or `transfer`; the same three-value taxonomy is global.
+> Purchase/Return are scope-relative, Transfer is project-only, and Invoice
+> collection creates `purchase`.
+> Inventory sale/return occurrences are hidden provenance rather than project
+> Transactions. The body below remains the current shipped write taxonomy until
+> migration, not the approved destination.
+
+## Current Shipped State
 
 `Transaction.type` describes the event that happened. It does not describe
 whether a row is itemized.

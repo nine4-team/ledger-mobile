@@ -1,8 +1,52 @@
 # Projects
 
+> **Target-state notice (2026-08-31):** The shipped Firebase app stores a
+> free-text `clientName`, creates Project setup through several independent
+> writes, and can delete only the Project document while orphaning children.
+> Those mechanics below remain current-system and migration evidence. The
+> redesigned app requires the account-scoped Client identity and mandatory
+> `project.clientId` in
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md),
+> a durable Project-setup result, and archive-first lifecycle. O-024 controls
+> whether any persisted Project may be physically deleted; O-025 controls Client
+> reassignment/merge.
+
 ## Overview
 
 Projects are the primary organizational unit in Ledger. Each project represents a client engagement (e.g., a home renovation, an interior design project) and contains transactions, items, spaces, and budget allocations. Projects exist alongside business inventory as the two scopes in the system — every item and transaction belongs to either a project or business inventory.
+
+## Target Redesign Requirements
+
+- O-052 owns the unresolved role/capability matrix for Project creation,
+  description, note creation/editing/deletion, hero-image upload/replacement,
+  archive/restore and Project category-allocation mutation.
+  Financial read access and existing isolated capability flags do not approve
+  those writes. Project rename remains under O-050 and shared category creation
+  under O-026; do not substitute one command's grant for another.
+- Every Project belongs to one authoritative account-scoped Client by stable ID.
+  Client display names remain searchable but never authorize relationships or
+  same-Client Transfers.
+- Project creation selects or creates a Client and durably records the Project,
+  Client relationship, selected categories, and exact nullable allocations as
+  one observable operation. Attachment upload reconciles through the separate
+  durable media lifecycle.
+- Project rename, Client rename, Project archive, and any future Client
+  reassignment are distinct operations.
+- Project description remains optional. Updating or clearing it is a distinct
+  `UpdateProjectDetails` intent: leading/trailing whitespace is not stored and
+  whitespace-only input clears the description. It cannot rename the Project,
+  change its Client, categories, media, lifecycle, children, or accounting
+  history.
+- Project archive preserves all history. No normal delete may orphan Items,
+  Transactions, Spaces, notes, Invoices, preferences, or accounting evidence.
+- Archiving requires an explicit confirmation bound to the currently selected
+  active Project and its observed revision. Confirming while offline accepts one
+  durable archive operation immediately, moves the Project from Active to
+  Archived as pending local evidence, and never doubles as restore/unarchive.
+  If the selected Project or revision changes before confirmation, the stale
+  confirmation is discarded rather than applied to different evidence.
+- Current lists/details remain usable from synchronized local data and expose
+  readiness when a Project's required history is not fully available offline.
 
 ## Project Entity
 
@@ -17,6 +61,7 @@ Projects are the primary organizational unit in Ledger. Each project represents 
 | `name` | string | yes | Project name (non-empty) |
 | `clientName` | string | yes | Client's name (non-empty) |
 | `description` | string | no | Free text description |
+| `notes` | string | no | Initial/legacy Project notes, distinct from description and individual Project-note records |
 | `mainImageUrl` | string | no | Hero image URL (uploaded to Firebase Storage) |
 | `isArchived` | boolean | no | Soft delete flag (default: false/nil) |
 | `budgetSummary` | object | no | Denormalized budget progress (maintained by Cloud Function triggers — see budget-management.md) |
@@ -34,6 +79,8 @@ A project owns (via `projectId` foreign key):
 - **Transactions** — all transactions where `projectId` matches
 - **Items** — all items where `projectId` matches
 - **Spaces** — all spaces where `projectId` matches
+- **Project notes** — individual note records in the Project, in addition to
+  the source Project's optional legacy `notes` text
 - **ProjectBudgetCategories** — budget allocations at `accounts/{accountId}/projects/{projectId}/budgetCategories/{categoryId}`
 
 When a project detail view activates, the system subscribes to all of these collections filtered by `projectId`, plus account-level budget categories and user project preferences (pinned categories).
@@ -47,6 +94,8 @@ Project creation uses a 3-step sheet form:
 - Project name (required)
 - Client name (required)
 - Description (optional)
+- Initial notes (optional; the current source saves trimmed text in
+  `Project.notes`, displayed separately from individual notes)
 - Hero image (optional — selected via PhotosPicker)
 
 ### Step 2: Category Selection
@@ -93,9 +142,13 @@ Projects can be archived by setting `isArchived` to `true`. Archiving is preferr
 - Archived projects appear in the Archived tab
 - All data is preserved (transactions, items, spaces, budget allocations)
 - Projects can be unarchived by setting `isArchived` back to `false`
-- Unarchiving navigates back (dismissed from detail since the project was opened from the archived tab)
+- In the current source, successful archive dismisses detail; successful
+  unarchive keeps detail open. These are current-navigation facts, not a new
+  decision about the redesigned target's navigation.
 
 ## Deletion
+
+### Current Firebase behavior
 
 Project deletion removes the project document. This is destructive and prompts for confirmation.
 
@@ -104,14 +157,28 @@ Project deletion removes the project document. This is destructive and prompts f
 - Associated transactions, items, and spaces are NOT automatically deleted — they become orphaned with a `projectId` that no longer resolves
 - On deletion, the user is dismissed back to the project list
 
+This behavior must not be copied into the target. Target physical deletion is
+blocked on O-024; archive is the safe supported lifecycle meanwhile.
+
 ## Project List
 
 ### Layout
 
 - Active/Archived segmented picker at top
+- Business Inventory navigation card in Active only
 - Scrollable list of project cards, sorted alphabetically by name
 - "+" button in toolbar opens the creation sheet
 - Empty state when no projects exist in the selected tab
+
+The Business Inventory card must open the current Account's Inventory workspace,
+not merely appear in the list. Preserve its Items, Transactions and Spaces
+segments and remembered section (invalid saved values fall back to Items).
+Each child uses the shared Item/Transaction/Space workflow with independent
+loading, empty, partial/offline, failure and unavailable states. Never manufacture
+a Project ID for Inventory or reuse another Account's remembered workspace data.
+The source Info button has no behavior and is explicitly retired in the UI
+baseline; preserving Inventory does not require inventing its future tooltip.
+Planned-for-Projects follow-up remains separately gated by O-038.
 
 ### Project Card
 
@@ -137,11 +204,27 @@ User pin preferences are stored at `accounts/{accountId}/users/{userId}/projectP
 
 ## Project Detail
 
+The layout below describes the current source UI, verified against
+`LedgeriOS/LedgeriOS/Views/Projects/ProjectDetailView.swift` on 2026-09-07. It
+corrects the older four-tab/Finances description. Preserve the available
+capabilities in the target; this source description does not independently
+settle target navigation organization or the redesigned Invoicing model.
+
+Project and Inventory Transaction browsing share the full list/card/detail
+contract under [Canonical Entry Routing](invoice-centered-project-accounting.md#canonical-entry-routing):
+search/sort/filter, selection/copy, detail sections and exact child routes
+are required, not satisfied by merely showing a Transactions tab. Create/edit/
+cancel/delete/correction and media actions compose their owning workflows and
+retain their authorization, accounting and durability gates.
+Project-only Add, select-all and Export are not implicitly added to Inventory.
+The host navigation story composes the separately verified financial browser;
+opening a tab does not prove its totals, filters or financial visibility.
+
 ### Layout
 
 - Toolbar: project name and client name centered, kebab menu on the right
 - Pinned budgets section at top (always visible across tabs)
-- Segmented picker with 4 tabs: Items, Transactions, Spaces, Finances
+- Scrollable tab bar: Items, Transactions, Spaces, Notes, Budget, Billing, Reports
 - Tab content area below
 
 ### Tabs
@@ -151,9 +234,44 @@ User pin preferences are stored at `accounts/{accountId}/users/{userId}/projectP
 | Items | Item list for this project (see items spec) |
 | Transactions | Transaction list for this project (see transactions spec) |
 | Spaces | Space list for this project (see spaces spec) |
-| Finances | Sub-tabs: Budget and Reports |
+| Notes | Project notes in NotesTabView |
+| Budget | Per-category budget progress |
+| Billing | Current BillingTabView workspace |
+| Reports | Report generation options in AccountingTabView |
 
-The Finances tab contains its own segmented picker with Budget and Reports sub-tabs. Budget shows per-category budget progress (see budget-management.md). Reports shows report generation options (see reports.md).
+Items is the default; an unknown tab ID falls back to Items. The toolbar also
+offers Quick Note for the current Project. Notes are separate records, not the
+Project description. Budget and Reports have their own tabs; see
+budget-management.md and reports.md for their behavior. Target Invoicing
+semantics remain governed by invoice-centered-project-accounting.md.
+
+### Notes and Quick Note
+
+Current source verification (`NewProjectView`, `ProjectService`, `NotesTabView`)
+shows two forms of notes: initial `Project.notes` text displayed in a read-only
+Legacy Notes card, and individual notes displayed newest first. Preserve both
+kinds of content and their provenance in target migration; do not silently
+merge them into the description or invent author/time metadata.
+
+Individual notes support multiline entry, send, edit, and confirmed deletion;
+dismissal cancels deletion. Their cards show available source, author and date
+metadata, with no edit/delete menu for a record lacking stable identity. Empty
+state retains the input, failed send restores attempted text, and failures stay
+visible without leaving the Project. The toolbar Quick Note opens capture for
+the current Project. Target app/MCP text validation remains gated by O-039;
+this source-behavior inventory does not approve a new text or storage policy.
+
+Quick Note also permits explicit Project selection. It prefills the current
+Project only when the current ID and represented Project ID agree. Save requires
+a Project and valid text; Save and Cancel are disabled while saving. Failure
+keeps the form editable after error acknowledgement, and ordinary Cancel leaves
+the Project unchanged. These controls are recorded in the current Product
+Behavior Catalog; they are not reasons to create a second note-writing model.
+
+MCP also preserves Project-scoped, case-insensitive substring search of note
+text with bounded results. Reuse the same authorized note records, not a second
+search copy or Project-description query; hidden Projects and partial data must
+not be reported as authoritative empty results.
 
 ### Kebab Menu Actions
 

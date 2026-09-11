@@ -1,6 +1,10 @@
 # Inventory as a Store
 
-> **Status:** Active. Documents the conceptual model shift introduced by the per-batch inventory movement redesign.
+> **Status:** Current implementation semantics with an approved target-container
+> change. Origin-aware source/destination and price-basis rules remain active.
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md)
+> replaces project-side movement Transactions with Item charges/credits in
+> Invoicing while preserving Business Inventory ownership and provenance.
 
 ## The Idea
 

@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "transaction-taxonomy-and-transfer-identity",
+  "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Transaction Taxonomy and Transfer Identity",
+  "surfaceIds": [
+    "SWIFT-C7C58265EA19",
+    "TEST-28D11BDABC0A"
+  ],
+  "requirements": [
+    {
+      "id": "TAXONOMY-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Target Global Transaction Taxonomy",
+      "invariant": "Canonical target Transaction classification contains exactly Purchase, Return and Transfer: Purchase means the scope owner paid, Return means the scope owner received money back, and no legacy Sale/paymentToBusiness/Fee/Expense/To Inventory value is representable.",
+      "decisionIds": ["D-001", "D-002", "D-007"],
+      "verificationIds": ["TAXONOMY-TEST-001", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    },
+    {
+      "id": "TAXONOMY-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Confirmed Product Direction",
+      "invariant": "Project scope identifies the Account, Project and authoritative Client owner; Business Inventory identifies the Account/1584 owner. Transfer is project-only and non-cash, and its direct route never includes Business Inventory.",
+      "decisionIds": ["D-002", "D-003", "D-005", "D-006", "D-007"],
+      "verificationIds": ["TAXONOMY-TEST-001", "TAXONOMY-TEST-002", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    },
+    {
+      "id": "TAXONOMY-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Destination picker",
+      "invariant": "A Transfer route has distinct source and destination Projects in the same Account with the exact same non-null ClientID; the destination is active, Business Inventory and archived/different-Client destinations are invalid, and display-name equality is never evidence.",
+      "decisionIds": ["D-003", "D-005", "D-006"],
+      "verificationIds": ["TAXONOMY-TEST-002", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    },
+    {
+      "id": "TAXONOMY-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Paired Transfer Records",
+      "invariant": "One logical Transfer identity binds exactly one distinct source Transaction ID and one distinct destination Transaction ID under one operation/correlation identity and one exact route; neither pair identity can be represented as a standalone or same-record Transfer.",
+      "decisionIds": ["D-004"],
+      "verificationIds": ["TAXONOMY-TEST-002", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    },
+    {
+      "id": "TAXONOMY-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Value objects",
+      "invariant": "Taxonomy, scope, role, economic meaning, route and pair identity are immutable provider-free value objects over typed IDs; impossible cross-field states fail construction and decoding with stable bounded errors rather than raw strings or backend DTOs.",
+      "decisionIds": [],
+      "verificationIds": ["TAXONOMY-TEST-001", "TAXONOMY-TEST-002", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    },
+    {
+      "id": "TAXONOMY-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 value boundary is executable with synthetic deterministic evidence while the released Firebase application remains unchanged and no Transaction writer, schema, provider, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["TAXONOMY-TEST-001", "TAXONOMY-TEST-002", "TAXONOMY-TEST-003", "TAXONOMY-TEST-004", "TAXONOMY-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "LedgerTransactionType is the closed purchase/return/transfer set; TransactionEconomicMeaning is derived as scope-owner-paid, scope-owner-received-money-back or non-cash-same-Client-reallocation and is never caller supplied.",
+        "TransactionScope is either Business Inventory under one AccountID or Project under exact AccountID/ProjectID/ClientID; TransactionClassification permits standalone Purchase/Return in either scope and source/destination Transfer roles only in Project scope.",
+        "ProjectTransferRoute derives exclusively from validated ProjectSummary identity, requires distinct Projects in one Account with exact equal ClientID and an active destination, and retains no display-name authorization evidence.",
+        "TransferPairIdentity binds one OperationID, one validated ProjectTransferRoute and distinct source/destination TransactionID values; construction and decoding cannot admit a one-sided, same-record or route-free pair.",
+        "TransactionTaxonomyFailure provides stable safe invalid-type/scope/role/route/pair codes without raw IDs, names, paths, source enum text or vendor payloads."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free boundary creates no Transaction enum/check, scope columns, pair table, foreign key, uniqueness rule, index, view or migration; the complete Transaction vertical slice must define and verify those separately."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No RecordPurchase/RecordReturn/TransferItems/correction command, amount, Item line, Invoice effect, lock, transaction, idempotent result or authoritative pair writer is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Same-Account/same-Client value validation is not authorization. No server rows, membership/financial predicate, grants or RLS policies exist in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Transaction table, Transfer-pair download, upload queue or readiness/visibility proof is introduced."
+    },
+    "localOffline": {
+      "items": [
+        "Every taxonomy, scope, classification, route and pair value is immutable and Codable; decoding reconstructs through the same cross-field validators.",
+        "Canonical sorted-key evidence for representative Project/Inventory Purchase/Return and both Transfer roles plus pair identity round-trips byte-identically without disk, database, network or provider state.",
+        "Inventory Transfer, incompatible standalone/Transfer role, cross-Account/cross-Client/same-Project/archived-destination route and duplicate pair-record identity fail atomically without a partial value."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No receipt/Item/Transfer attachment ID, bytes, path, URL, cache, upload, retention or deletion behavior exists."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "Reusable target values are defined, but no current app enum/filter/card, target query/command DTO, MCP schema/tool, transport or contract-catalog entry is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No legacy Firebase type/scope/movement field is decoded or mapped. Later migration must classify every source row from full evidence, correlate both Transfer halves and quarantine disagreement rather than parse enum text alone."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside the provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "The slice cannot create a Transaction, write a Transfer pair, choose amount/line/category/Invoice/Space/correction behavior, define schema/provider/migration, activate a feature, deploy, release or cut over.",
+        "O-002/O-011–O-015 and O-028–O-032 remain fully open for excluded Transfer effects, provenance, corrections, lifecycle, receipt and posting surfaces."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TAXONOMY-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
+      "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
+      "expected": "Exactly three canonical types derive the correct scope-owner/non-cash meanings; standalone Purchase/Return validate in Project and Inventory scope while legacy types and caller-authored meaning remain unrepresentable.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
+    },
+    {
+      "id": "TAXONOMY-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
+      "covers": ["TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
+      "expected": "A direct same-Account/same-Client/distinct-Project active-destination route and one Operation-bound distinct source/destination Transaction pair preserve exact typed identity and roles without Business Inventory or name authority.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
+    },
+    {
+      "id": "TAXONOMY-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
+      "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
+      "expected": "Representative classifications, route and pair identity round-trip byte-identically through canonical restart and re-run all structural validation without opening local or remote state.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
+    },
+    {
+      "id": "TAXONOMY-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
+      "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
+      "expected": "Inventory Transfer, incompatible roles, cross-Account/cross-Client/same-Project/archived-destination routes, duplicate pair record IDs and malformed decoded combinations fail atomically with stable non-enumerating codes.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
+    },
+    {
+      "id": "TAXONOMY-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming writer, schema, authorization, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-TRANSACTION-TAXONOMY-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 value foundation only. It implements the confirmed D-001–D-007 classification/scope and structural D-004 pair identity, but no money amount/sign, Item membership, allocation, Invoice/live-charge, Space, correction, lifecycle, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. D-017 amount conservation and all O-002/O-011–O-015/O-028–O-032 effects remain outside this slice."
+}

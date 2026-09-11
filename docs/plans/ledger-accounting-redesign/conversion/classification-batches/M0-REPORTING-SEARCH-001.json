@@ -1,0 +1,1163 @@
+{
+  "batchId": "M0-REPORTING-SEARCH-001",
+  "title": "Reporting, search, and cross-domain projections",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-REPORTING-SEARCH-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MAN-REPORT-001",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Requires parity/reconciliation across reports, PDFs, CSV exports, search projections, MCP outputs, and client-visible totals.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-035",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-035/O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPMOD-14F6F6559251",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers raw/cached Project, budget-category, Project-budget, and Inventory summary resources from Firebase.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Target resources query versioned visibility-safe projections, not raw documents or cached budget authority. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "NamedProjectionRegistry",
+          "ProjectCatalogSnapshot",
+          "ProjectBudgetSnapshot",
+          "InventorySummarySnapshot"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-4A73B044281F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Combines Transaction reconciliation/creation and a legacy incomplete-Transaction triage query in one Firebase module.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-030/O-031/O-032 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPMOD-69B08099B8DF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides backend-shaped summaries, raw/full and arbitrary-field projections, formatted values, byte caps, and offset continuation.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve response budgeting/truncation while using named profiles and opaque stable cursors. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "NamedProjectionProfile",
+          "StableCursor",
+          "bounded response envelope",
+          "contract/readiness versions"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-6B3872A8E6FB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements MCP-only text, SKU, amount, and Quick Draft matching over source DTOs.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Share documented search semantics; target has no Quick Draft result kind. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Universal Search",
+        "surfaces": [
+          "UniversalSearchQuerying",
+          "UniversalSearchPage",
+          "shared normalized index/ranking contract"
+        ],
+        "securityRequirements": [
+          "Search indexes/results contain only fields the Principal may receive for the Account/scope; restricted counts and snippets are absent before query"
+        ],
+        "syncRequirements": [
+          "Local search uses versioned authorized Item/Transaction/Project/Space index rows with stable rank/cursor and explicit index/readiness state; MCP uses the same predicates/projection semantics"
+        ]
+      },
+      "migration": {
+        "rule": "Index stable target entity IDs and authorized normalized search documents, correlate source Items/Transactions/Projects/Spaces, and map legacy proto matches only through their imported Item or quarantine outcome.",
+        "reconciliation": [
+          "Semantic query fixtures reconcile result IDs, entity kind, rank/tie-break, snippets, visibility and source-import correlation across app and MCP"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline text/SKU/amount search, stable rank/cursor, partial-index readiness, restricted/cross-account absence, proto-import and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Authorized users can search offline with stable results, and search never leaks restricted entities or depends on scanning Firebase-shaped arrays"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-917C20FEDA6A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-031",
+        "O-032",
+        "O-035",
+        "O-041"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-031/O-032/O-035/O-041 change report/analytics meaning, receipt delivery, posting readiness, vendor-spend aggregation or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPMOD-B4D4B0CAEF8C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Batch-fetches raw Firebase Transactions, Items, and Projects with found/missing, arbitrary projection, and byte caps.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve bounded batch lookup without raw/full schema exposure or hidden-ID leakage. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Entity Lookup",
+        "surfaces": [
+          "EntityLookupQuerying",
+          "NamedEntityProfile",
+          "EntityLookupPage",
+          "bounded response contract"
+        ],
+        "securityRequirements": [
+          "Lookup re-authorizes every requested ID and named projection profile; missing and inaccessible IDs follow one non-enumerating result contract"
+        ],
+        "syncRequirements": [
+          "MCP lookup is online; app consumers use corresponding local query snapshots. Responses are bounded by stable ID count/byte limits and contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source stable IDs to target entities and replace raw/full/arbitrary field lookup with named summary/detail profiles; return reviewed missing/quarantine results for unmapped legacy IDs.",
+        "reconciliation": [
+          "Requested/found/missing/inaccessible IDs and named-profile field hashes balance exactly with source-to-target correlation and no visibility leak"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed found/missing/inaccessible, duplicate IDs, response bounds, named profile schema, cross-account and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Bulk lookup is bounded and useful without exposing arbitrary columns, raw DTOs or resource existence across authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-12DDDD1FF641",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists active Projects with free-text Client names and cached budget/spent summaries.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Use authoritative Client identity and canonical budget snapshot version/readiness. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "ProjectCatalogQuery",
+          "ProjectCatalogSnapshot",
+          "stable Client relation/budget version"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-46F41439CD48",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Summarizes Inventory Item counts, status, and raw purchase-price value.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Use current placement and authorized value projection with explicit readiness. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "InventorySummaryQuery",
+          "InventorySummarySnapshot",
+          "provenance/readiness version"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-DF8684F8F268",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns one full raw Firebase Project document through a resource template.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "No target raw canonical document resource. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "ProjectDetailQuery",
+          "ProjectWorkspaceSnapshot",
+          "named visibility profile"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-094CE7FB35B1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk-fetches Items by known IDs with summary/full/arbitrary fields and response capping.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Found/missing is tenant/financial safe and returns stable typed summaries. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Entity Lookup",
+        "surfaces": [
+          "LookupItemsRequest",
+          "ItemSummary/Detail named profiles",
+          "EntityLookupPage"
+        ],
+        "securityRequirements": [
+          "Lookup re-authorizes every requested ID and named projection profile; missing and inaccessible IDs follow one non-enumerating result contract"
+        ],
+        "syncRequirements": [
+          "MCP lookup is online; app consumers use corresponding local query snapshots. Responses are bounded by stable ID count/byte limits and contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source stable IDs to target entities and replace raw/full/arbitrary field lookup with named summary/detail profiles; return reviewed missing/quarantine results for unmapped legacy IDs.",
+        "reconciliation": [
+          "Requested/found/missing/inaccessible IDs and named-profile field hashes balance exactly with source-to-target correlation and no visibility leak"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed found/missing/inaccessible, duplicate IDs, response bounds, named profile schema, cross-account and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Bulk lookup is bounded and useful without exposing arbitrary columns, raw DTOs or resource existence across authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-2B4277A2F374",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk-fetches Transactions by known IDs with summary/full/arbitrary fields and response capping.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Expose only authorized three-type summaries and explicit legacy audit profiles. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Entity Lookup",
+        "surfaces": [
+          "LookupTransactionsRequest",
+          "TransactionSummary/Detail named profiles",
+          "EntityLookupPage"
+        ],
+        "securityRequirements": [
+          "Lookup re-authorizes every requested ID and named projection profile; missing and inaccessible IDs follow one non-enumerating result contract"
+        ],
+        "syncRequirements": [
+          "MCP lookup is online; app consumers use corresponding local query snapshots. Responses are bounded by stable ID count/byte limits and contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source stable IDs to target entities and replace raw/full/arbitrary field lookup with named summary/detail profiles; return reviewed missing/quarantine results for unmapped legacy IDs.",
+        "reconciliation": [
+          "Requested/found/missing/inaccessible IDs and named-profile field hashes balance exactly with source-to-target correlation and no visibility leak"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed found/missing/inaccessible, duplicate IDs, response bounds, named profile schema, cross-account and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Bulk lookup is bounded and useful without exposing arbitrary columns, raw DTOs or resource existence across authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-4ED77CBCA500",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Aggregates current Inventory count/value/status/vendor from raw Items.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-031"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-031 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-556E4BBD4A8C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds raw noncanceled Transaction amounts by source/vendor without scope-relative accounting signs.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-041"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-041 must define vendor-spend scope, sign, event basis, credit/Return treatment and currency partitioning. O-035 owns Client Summary and cannot authorize this report. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-5C0CCE378BDA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk-fetches Projects by known IDs with summary/full/arbitrary fields and response capping.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Use named Project/Client/budget profiles with no hidden-field widening. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Entity Lookup",
+        "surfaces": [
+          "LookupProjectsRequest",
+          "ProjectSummary/Detail named profiles",
+          "EntityLookupPage"
+        ],
+        "securityRequirements": [
+          "Lookup re-authorizes every requested ID and named projection profile; missing and inaccessible IDs follow one non-enumerating result contract"
+        ],
+        "syncRequirements": [
+          "MCP lookup is online; app consumers use corresponding local query snapshots. Responses are bounded by stable ID count/byte limits and contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source stable IDs to target entities and replace raw/full/arbitrary field lookup with named summary/detail profiles; return reviewed missing/quarantine results for unmapped legacy IDs.",
+        "reconciliation": [
+          "Requested/found/missing/inaccessible IDs and named-profile field hashes balance exactly with source-to-target correlation and no visibility leak"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Mixed found/missing/inaccessible, duplicate IDs, response bounds, named profile schema, cross-account and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Bulk lookup is bounded and useful without exposing arbitrary columns, raw DTOs or resource existence across authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-93A953185655",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Flags Items missing name, SKU, prices, tax, or carrying legacy workflow statuses.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-027",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-027/O-031/O-032 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-BC13265D05FD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Ranks legacy incomplete Transactions and suggests reconciliation from missing project/category/items/tax fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-030/O-031/O-032 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-EDD825A4C317",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes per-category budget variance from allocations and Transaction-only signs.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005",
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-005/O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-F15CC6C9A7AC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds Project health from raw Items/Transactions, cached assumptions, and legacy completeness.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032",
+        "O-035"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-032/O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-1772D7B7CE10",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Client Summary active-Item totals, categories, receipt links, logo, and PDF sharing.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-035",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-035/O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-1AFC0C0D73D7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable search-text input presentation.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "Retain UI behavior while query execution moves to UniversalSearchQuerying."
+    },
+    {
+      "id": "SWIFT-42D1850CD848",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Scans Item/ProtoItem/Transaction/Space arrays with text, normalized SKU, and formatted amount matching.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve approved matcher semantics in an indexed, authorized, deterministic result contract. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Universal Search",
+        "surfaces": [
+          "LocalUniversalSearchIndex",
+          "UniversalSearchRequest",
+          "UniversalSearchPage",
+          "SearchReadinessState"
+        ],
+        "securityRequirements": [
+          "Search indexes/results contain only fields the Principal may receive for the Account/scope; restricted counts and snippets are absent before query"
+        ],
+        "syncRequirements": [
+          "Local search uses versioned authorized Item/Transaction/Project/Space index rows with stable rank/cursor and explicit index/readiness state; MCP uses the same predicates/projection semantics"
+        ]
+      },
+      "migration": {
+        "rule": "Index stable target entity IDs and authorized normalized search documents, correlate source Items/Transactions/Projects/Spaces, and map legacy proto matches only through their imported Item or quarantine outcome.",
+        "reconciliation": [
+          "Semantic query fixtures reconcile result IDs, entity kind, rank/tie-break, snippets, visibility and source-import correlation across app and MCP"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline text/SKU/amount search, stable rank/cursor, partial-index readiness, restricted/cross-account absence, proto-import and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Authorized users can search offline with stable results, and search never leaks restricted entities or depends on scanning Firebase-shaped arrays"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-602AA12C6003",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds payable cards and Invoice/Client/Property reports from independent mutable context arrays.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-035",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-035/O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-6109B0A97167",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015",
+        "O-028",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032",
+        "O-033",
+        "O-034",
+        "O-035",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-011/O-012/O-013/O-014/O-015/O-028/O-029/O-030/O-031/O-032/O-033/O-034/O-035/O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-63EA86A59559",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines selectable CSV columns over raw Transaction, Item, category, URL, and legacy movement fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-6A89422B64D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Resolves a Space and Item count from account arrays for search navigation.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Use one Project/Space workspace snapshot and distinguish missing from loading/unauthorized. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Cross-Domain Projections",
+        "surfaces": [
+          "SpaceSearchResultSnapshot",
+          "SpaceWorkspace route intent",
+          "placement/readiness summary"
+        ],
+        "securityRequirements": [
+          "Every resource/profile declares Account, scope and financial visibility; raw/full/arbitrary-field modes are absent and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Profiles expose source/authority/schema versions and readiness; offline-capable app consumers read authorized local projections while MCP uses equivalent server projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source IDs/display fields to named target snapshots, replace cached/raw Firebase documents with canonical projection versions and report stale/ambiguous cached values instead of importing them as authority.",
+        "reconciliation": [
+          "For each named profile, app/MCP IDs, fields, order, counts, visibility, authority versions and semantic source hashes match with no unexplained raw/cached fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named profile schema/version, app/MCP parity, field allowlist, restricted/cross-account visibility, readiness and migration fixture tests"
+        ],
+        "acceptance": [
+          "Clients can request only reviewed product snapshots and receive the same authorized meaning without a raw database escape hatch"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-7BC5A6440292",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays reusable bulk selection counts, totals, and action entry points.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "Retain presentation with visibility-safe totals and typed capability actions."
+    },
+    {
+      "id": "SWIFT-7C0540EDB528",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Escapes and renders Invoice/Client/Property HTML but recalculates some Item and Space values and embeds resolved receipt URLs.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-AC99E4923E17",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders PDF through one retained WKWebView, fixed delay, predictable temp paths, and console-only failure handling.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Support concurrent typed receipts, protected unique files, visible errors, cancellation, and cleanup. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Protected Report Artifact Lifecycle",
+        "surfaces": [
+          "ReportArtifactRenderer",
+          "ProtectedArtifactExporting",
+          "ProtectedArtifactExportReceipt"
+        ],
+        "securityRequirements": [
+          "Rendering consumes an already-authorized immutable snapshot; temporary HTML/PDF paths are protected, randomized, time-bounded and cleaned after handoff"
+        ],
+        "syncRequirements": [
+          "Report snapshot declares readiness and authority versions before rendering; generated bytes are not synchronized as domain authority unless explicitly attached"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no generated source temporary artifacts; regenerate from authorized target snapshots and preserve only signed/required historical outputs under the approved evidence policy.",
+        "reconciliation": [
+          "Artifact receipt records snapshot hash, renderer/profile version, output hash, destination and cleanup result; golden semantic fixtures match approved output"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Concurrent/cancel/failure rendering, protected temp cleanup, deterministic snapshot-to-output, restricted visibility and artifact handoff tests"
+        ],
+        "acceptance": [
+          "Reports render reliably without predictable leftover files, fixed delays, hidden recalculation or widened visibility"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-AE46427AE831",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays the Search empty/navigation placeholder.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "Retain simple shell messaging with actual target result kinds."
+    },
+    {
+      "id": "SWIFT-CB4AC317DF5E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Formats and escapes CSV from caller-supplied Transactions and mutable Item transaction links.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Pure CSV rendering consumes deterministic rows and neutralizes formula injection. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Named Data Exports",
+        "surfaces": [
+          "CSVRenderer",
+          "ExportSnapshot",
+          "named export profile/version"
+        ],
+        "securityRequirements": [
+          "Export profile fixes authorized fields/visibility and excludes raw paths, bearer URLs and restricted data before rendering"
+        ],
+        "syncRequirements": [
+          "`ExportSnapshot` is immutable, version/readiness aware and may be prepared from authorized local data; output bytes are protected artifacts, not synchronized authority"
+        ]
+      },
+      "migration": {
+        "rule": "Map source exportable semantics to named target profiles, preserve source values for migration comparison and remove raw Firebase/legacy movement/URL columns from public contracts.",
+        "reconciliation": [
+          "Profile columns, row stable IDs/order, escaped values, exact cents, visibility and snapshot/output hashes reconcile against approved semantic fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Profile schema/defaults, CSV escaping/locale-independent cents, stable order, restricted fields, protected temp cleanup and migration parity tests"
+        ],
+        "acceptance": [
+          "Users receive a deterministic authorized export whose columns have reviewed meaning and no raw backend or private URL leakage"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-CC7424F01DD0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays current Item-by-Space Property Management values and starts PDF sharing.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve report UX over authoritative current placement and prepared totals. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Property and Placement Reporting",
+        "surfaces": [
+          "PropertyReportSnapshot",
+          "SpacePlacementSection",
+          "protected PDF share intent"
+        ],
+        "securityRequirements": [
+          "Property/Space/Item snapshot requires Project visibility and applies financial/media field capabilities before local storage and rendering"
+        ],
+        "syncRequirements": [
+          "Project stream provides stable Space placement and Item summary rows plus explicit readiness sufficient to build `PropertyReportSnapshot` offline"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source Spaces/Items by stable IDs and derive placement rows from authoritative target placement; report orphan/duplicate/partial source relationships.",
+        "reconciliation": [
+          "Per Project/Space Item IDs, order, placement and authorized displayed values reconcile with source relationships or explicit anomaly results"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline PropertyReportSnapshot, Space placement/orphan, stable order, restricted field, renderer handoff and migration tests"
+        ],
+        "acceptance": [
+          "Property reporting shows the same complete authorized Item-by-Space placement without recalculating from mutable view arrays"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-DA1BA46ED84B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reusable HTML/CSS styling for generated reports.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "Retain verified layout/theme independently of report accounting."
+    },
+    {
+      "id": "SWIFT-DFC984E30F2F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Selects Transaction CSV fields, writes a predictable temporary file, and dismisses after callback.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Use ExportQuerying plus a typed render/share result, protected file and cleanup policy. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Protected Report Artifact Lifecycle",
+        "surfaces": [
+          "ProtectedArtifactExporting",
+          "TransactionCSVExportRequest",
+          "ProtectedArtifactExportReceipt"
+        ],
+        "securityRequirements": [
+          "Rendering consumes an already-authorized immutable snapshot; temporary HTML/PDF paths are protected, randomized, time-bounded and cleaned after handoff"
+        ],
+        "syncRequirements": [
+          "Report snapshot declares readiness and authority versions before rendering; generated bytes are not synchronized as domain authority unless explicitly attached"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no generated source temporary artifacts; regenerate from authorized target snapshots and preserve only signed/required historical outputs under the approved evidence policy.",
+        "reconciliation": [
+          "Artifact receipt records snapshot hash, renderer/profile version, output hash, destination and cleanup result; golden semantic fixtures match approved output"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Concurrent/cancel/failure rendering, protected temp cleanup, deterministic snapshot-to-output, restricted visibility and artifact handoff tests"
+        ],
+        "acceptance": [
+          "Reports render reliably without predictable leftover files, fixed delays, hidden recalculation or widened visibility"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-E09C688A850B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Invoice charge/credit lines/totals/meta and downloads a PDF.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-034 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-E16F2BBFB7DB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides reusable search control presentation and focus behavior.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "Keep UI interaction while query state/readiness comes from the search port."
+    },
+    {
+      "id": "SWIFT-F3BDD0968C6D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Scans account arrays, shows tab counts/results, resolves context, and performs broad generic bulk mutations from search.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "A-015",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: A-015/O-029 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "TEST-10C486B0508C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current raw Transaction export field catalog and default selection.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Retain field-selection tests against approved target and legacy-audit profiles. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Search and Export Contract Tests",
+        "surfaces": [
+          "NamedTransactionExportProfileTests",
+          "column/default/version fixtures",
+          "raw-field exclusion assertions"
+        ],
+        "securityRequirements": [
+          "Fixtures cover authorized/restricted/cross-account visibility and assert protected fields, snippets, counts and export columns are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local search/export snapshots, readiness, stable ordering/cursors and protected artifact handoff"
+        ]
+      },
+      "migration": {
+        "rule": "Replace raw Firebase field/legacy proto/type expectations with named semantic profile/index fixtures while preserving source variants for migration decode/reconciliation.",
+        "reconciliation": [
+          "Fixture catalog covers each named profile/search predicate/export column and source variant with expected IDs, order, values and hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named export profile, CSV exact formatting/escaping, universal search rank/cursor, visibility and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests fail on raw-schema leakage or unstable search/export behavior while preserving the approved user outcome"
+        ]
+      }
+    },
+    {
+      "id": "TEST-7F63900EA573",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests CSV amount formatting/escaping and the legacy raw Transaction/item-category schema.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve formatting/escaping fixtures and add deterministic order, manifest, formula, security, and lifecycle tests. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Search and Export Contract Tests",
+        "surfaces": [
+          "CSVRendererContractTests",
+          "exact-cents/escaping/order fixtures",
+          "legacy decode mappings"
+        ],
+        "securityRequirements": [
+          "Fixtures cover authorized/restricted/cross-account visibility and assert protected fields, snippets, counts and export columns are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local search/export snapshots, readiness, stable ordering/cursors and protected artifact handoff"
+        ]
+      },
+      "migration": {
+        "rule": "Replace raw Firebase field/legacy proto/type expectations with named semantic profile/index fixtures while preserving source variants for migration decode/reconciliation.",
+        "reconciliation": [
+          "Fixture catalog covers each named profile/search predicate/export column and source variant with expected IDs, order, values and hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named export profile, CSV exact formatting/escaping, universal search rank/cursor, visibility and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests fail on raw-schema leakage or unstable search/export behavior while preserving the approved user outcome"
+        ]
+      }
+    },
+    {
+      "id": "TEST-880C5785FD49",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015",
+        "O-028",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032",
+        "O-033",
+        "O-034",
+        "O-035",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-011/O-012/O-013/O-014/O-015/O-028/O-029/O-030/O-031/O-032/O-033/O-034/O-035/O-036 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "TEST-BA9C46AF6F3D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests live/frozen Invoice report lines using status and current source fallbacks.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-033",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001"
+      ],
+      "notes": "M2 withheld: O-033/O-034 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+    },
+    {
+      "id": "TEST-E7854675A914",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests app text/SKU/amount search, legacy ProtoItems/types, and array-filter results.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-REPORTING-SEARCH-001",
+        "EVID-M2-REPORTING-SEARCH-001"
+      ],
+      "notes": "Preserve matcher value while adding authorization, readiness, rank/cursor, result-context, offline, and no-proto target tests. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
+      "target": {
+        "owner": "Search and Export Contract Tests",
+        "surfaces": [
+          "UniversalSearchContractTests",
+          "text/SKU/amount/rank/cursor fixtures",
+          "proto-import variants"
+        ],
+        "securityRequirements": [
+          "Fixtures cover authorized/restricted/cross-account visibility and assert protected fields, snippets, counts and export columns are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local search/export snapshots, readiness, stable ordering/cursors and protected artifact handoff"
+        ]
+      },
+      "migration": {
+        "rule": "Replace raw Firebase field/legacy proto/type expectations with named semantic profile/index fixtures while preserving source variants for migration decode/reconciliation.",
+        "reconciliation": [
+          "Fixture catalog covers each named profile/search predicate/export column and source variant with expected IDs, order, values and hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Named export profile, CSV exact formatting/escaping, universal search rank/cursor, visibility and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests fail on raw-schema leakage or unstable search/export behavior while preserving the approved user outcome"
+        ]
+      }
+    }
+  ]
+}

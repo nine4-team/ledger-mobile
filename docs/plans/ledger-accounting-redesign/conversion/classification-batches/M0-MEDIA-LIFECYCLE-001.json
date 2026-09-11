@@ -1,0 +1,1163 @@
+{
+  "batchId": "M0-MEDIA-LIFECYCLE-001",
+  "title": "Media, attachments, and offline byte durability dossier surfaces",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-MEDIA-001",
+    "EVID-M2-MEDIA-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MAN-LOCAL-001",
+      "currentBehavior": "Pending media bytes and JSON metadata are stored in one app-global Application Support directory; decoded and URL caches are not partitioned by principal/account, and logout/account switch do not coordinate pending-media disposition or cache/key cleanup.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [
+        "A-016",
+        "O-022",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Target partitions encrypted/protected local state by principal and environment and never deletes accepted bytes during routine logout without the approved disposition flow. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Local Data and Session Lifecycle",
+        "surfaces": [
+          "LocalDataNamespace",
+          "PendingLocalWorkSummary",
+          "AccountSessionEnding",
+          "encrypted database/key/media-cache lifecycle"
+        ],
+        "securityRequirements": [
+          "Local database/key/cache/media paths are partitioned by environment, Principal and Account",
+          "Keychain/data-protection and approved offline lease gate access",
+          "Cleanup follows exact pending-work disposition and clears signed delivery"
+        ],
+        "syncRequirements": [
+          "Counts queued/applying/rejected operations and unverified attachment bytes before switch/logout",
+          "Closes Sync and removes database/key only after safe resolution or explicit destructive confirmation"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no plaintext app-global cache as authority; include device-only pending media in the final O-022 disposition and import only explicitly recovered durable records.",
+        "reconciliation": [
+          "Per-namespace pending operation/media counts before cleanup",
+          "Database/key/cache removal verification without cross-Account impact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Process-death, account-switch, clean/sync-first/destructive logout, key mismatch, disk-pressure and cache-partition tests"
+        ],
+        "acceptance": [
+          "No locally accepted operation or media byte is silently lost or exposed across Accounts during lifecycle changes"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-9F58549FBE25",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines URL-identified embedded AttachmentRef values with derivative URLs, kind, filename/type, primary/upload flags and normalized image checkmarks, plus Firestore dictionary serialization and exact-one-primary normalization helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve attachment semantics and annotations while replacing URL identity and Firestore serialization with stable IDs and target-neutral metadata. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments",
+        "surfaces": [
+          "AttachmentID",
+          "AttachmentSnapshot",
+          "attachments schema family",
+          "attachment_references schema family",
+          "AttachmentDisplaySource"
+        ],
+        "securityRequirements": [
+          "Stable metadata is Account/parent scoped and RLS/Sync filtered",
+          "Canonical object locator is private metadata; bearer URLs are transient delivery only",
+          "Reference order/primary/pin cannot grant object access"
+        ],
+        "syncRequirements": [
+          "Structured metadata/reference/order/status synchronizes through authorized streams",
+          "Local display resolves encrypted bytes before remote delivery and exposes readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Build source reference-to-unique-object graph, assign stable Attachment IDs, preserve ordered parent references and primary/pin evidence, and store source URL/path only in protected migration correlation.",
+        "reconciliation": [
+          "Reference count/order/primary/pin/parent coverage",
+          "Unique original hash/size/type/object and shared-reference coverage",
+          "Missing/external/orphan/duplicate-primary quarantine report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Attachment mapper/stable-ID/RLS/Sync/order/primary/local-display and unknown-source tests"
+        ],
+        "acceptance": [
+          "Attachment identity survives URL/path rotation and every required source reference is mapped or explicitly quarantined"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F971A5B270E6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Carries in-memory attachment bytes, original/display filename, MIME type, extension and a generated UUID storage filename for image and arbitrary-file intake.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-022",
+        "O-023",
+        "Allowed content/size and derivative policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Target capture also needs stable attachment/account/parent scope, protected local persistence and a durable receipt before success. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments",
+        "surfaces": [
+          "LocalAttachmentCapture",
+          "AttachmentReceipt",
+          "AttachmentStoring.enqueue",
+          "AttachmentUploadSnapshot"
+        ],
+        "securityRequirements": [
+          "Validate sniffed type, declared type, size, filename and Account scope before durable acceptance",
+          "Local bytes use protected per-namespace storage and deterministic server object paths"
+        ],
+        "syncRequirements": [
+          "Persist bytes plus metadata before success; resumable upload is idempotent and survives process death",
+          "Remote verification records size/checksum and derivative state before local cleanup"
+        ]
+      },
+      "migration": {
+        "rule": "Treat source offline/pending IDs as source evidence; import server objects through the migration journal and handle device-only pending bytes only through O-022 disposition.",
+        "reconciliation": [
+          "Durable receipt-to-byte/metadata coverage",
+          "Upload/object checksum/size and retry-idempotency coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Capture persistence-failure, restart, retry, checksum/type/size/path, duplicate operation and disk-pressure tests"
+        ],
+        "acceptance": [
+          "A returned attachment receipt always refers to protected locally durable bytes and retry never duplicates the object/record"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-06586B87FCA4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Decodes images off the main actor and caches decoded PlatformImage values in a 50 MB NSCache using decoded memory cost rather than compressed byte size.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Per-principal cache lifecycle and offline authorization policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve bounded background decode/cache behavior; target cache keys and clearing must follow attachment identity, principal and environment."
+    },
+    {
+      "id": "SWIFT-6E1F36B8E002",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Loads thumbnail then original through Firebase/HTTP URL resolution, a 15-second watchdog, URLSession, background decode and shared memory cache; it has no local pending-upload display source despite queue comments claiming one.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Rename/remove Firebase coupling and resolve local, authorized cached or private remote display by stable AttachmentID. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments Presentation",
+        "surfaces": [
+          "AttachmentResolving",
+          "AttachmentDisplaySource",
+          "LocalFirstAttachmentImage"
+        ],
+        "securityRequirements": [
+          "Resolver rechecks Account/parent visibility and never treats URL possession as access",
+          "No raw Storage path or bearer URL enters the domain/read model"
+        ],
+        "syncRequirements": [
+          "Prefer encrypted local original/derivative; remote delivery is cancellable and short lived",
+          "Render local/upload/verified/failed/not-synced/unauthorized states explicitly"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/HTTP URL view input with stable AttachmentID; preserve source paths only in protected migration evidence.",
+        "reconciliation": [
+          "All image-render callers accept AttachmentID/display state",
+          "Offline and expired-delivery fixture coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local-first thumbnail/original, upload-in-progress, expiry, cancellation, authorization, cache partition and failure UI tests"
+        ],
+        "acceptance": [
+          "Authorized images display immediately offline when bytes exist and delivery URL changes do not change identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-98FF74C056E9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides mixed-media gallery intake from camera, Photos, document picker, file import/drop and source-image reuse, with caller-supplied async upload/remove/primary/pin/save callbacks and an in-view upload spinner/error.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "Allowed content/size and derivative policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve the intake/gallery UX while replacing caller-specific direct-upload callbacks with durable attachment receipts and lifecycle state. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments Presentation and Operations",
+        "surfaces": [
+          "AttachmentCollectionSnapshot",
+          "AttachmentStoring",
+          "AttachmentOperations",
+          "AttachmentCapabilitySnapshot",
+          "OperationPresentationState"
+        ],
+        "securityRequirements": [
+          "Gallery receives only authorized parent references and capability-safe actions",
+          "Every attach/reorder/primary operation is server revalidated; removal capability stays absent until O-023"
+        ],
+        "syncRequirements": [
+          "Local capture displays after durable receipt; ordered references and operation states update from local projections",
+          "Mixed media errors/retries survive restart"
+        ]
+      },
+      "migration": {
+        "rule": "Map source arrays into ordered stable attachment references; retire callback-specific upload/remove/storage mechanics.",
+        "reconciliation": [
+          "Parent reference order/primary/type/pin coverage",
+          "Every advertised gallery action has target policy/handler/test owner"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Camera/photo/document/drop local durability, reorder/primary, mixed-media, retry/rejection and capability-gating UI tests"
+        ],
+        "acceptance": [
+          "One gallery behaves consistently offline across parent types without claiming remote success or exposing an unapproved delete"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5CEBE17B0605",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays a full-screen image gallery with navigation, zoom, pin and save behavior over AttachmentRef values.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve user-visible behavior behind target-neutral attachment display sources."
+    },
+    {
+      "id": "SWIFT-AA164CD97713",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders one image card from an attachment URL/thumbnail with optional actions and upload/failure presentation.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Retain the presentation outcome while replacing URL-shaped input."
+    },
+    {
+      "id": "SWIFT-4AC6C92BBF6D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders attachment thumbnail grids, mixed media states, primary markers, add affordances and context actions.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Port to stable attachment IDs and explicit local/upload/derivative state."
+    },
+    {
+      "id": "SWIFT-19A7638941BB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents a PDF attachment tile in mixed-media galleries.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve PDF recognition/presentation while private access changes."
+    },
+    {
+      "id": "SWIFT-3CEB22DD4642",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lays out a pinned media reference beside or above detail content and permits switching among the supplied attachments.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "View-local pinning remains presentation behavior."
+    },
+    {
+      "id": "SWIFT-4E1AF7AD4958",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays pinned image/PDF media with zoom/navigation/close controls and upload-aware eligibility.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Target resolves bytes through AttachmentID rather than Firebase URLs."
+    },
+    {
+      "id": "SWIFT-8D965719CF18",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays a selectable image grid used to group or choose source attachments.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Selection keys must become stable attachment IDs."
+    },
+    {
+      "id": "SWIFT-893FA8676E2C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Resolves and downloads a PDF by URL for in-app viewing and reports load/failure state.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve PDF viewing using local or authorized remote attachment sources, not durable bearer URLs. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments Presentation",
+        "surfaces": [
+          "AttachmentResolving",
+          "AttachmentDisplaySource",
+          "ProtectedPDFViewer"
+        ],
+        "securityRequirements": [
+          "Only authorized stable Attachment IDs resolve; temporary files use protected storage and explicit cleanup",
+          "No direct arbitrary URL download"
+        ],
+        "syncRequirements": [
+          "Prefer verified local PDF bytes; remote fetch is cancellable/short-lived and explicit unavailable states remain"
+        ]
+      },
+      "migration": {
+        "rule": "Replace URL input with AttachmentID and map source PDF objects by hash/type/size through the migration journal.",
+        "reconciliation": [
+          "PDF reference/object/hash/type/size coverage",
+          "Temporary-file cleanup evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline PDF view, expired delivery, wrong MIME, cancellation, revoke and protected-temp cleanup tests"
+        ],
+        "acceptance": [
+          "Authorized PDFs remain viewable offline without bearer URL identity or leaked temporary files"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4E4F3BC46421",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Saves, downloads, prints and shares attachment media using URL-shaped references and excludes empty or uploading attachments from print paths.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "O-036"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve explicit user export/print outcomes through authorized local-or-remote sources. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments Platform",
+        "surfaces": [
+          "AttachmentExporting",
+          "ProtectedExportLease",
+          "SharePrintPresentationState"
+        ],
+        "securityRequirements": [
+          "Export resolves authorized bytes, redacts disallowed metadata and creates protected time-bounded temporary files",
+          "Share/print cannot widen financial or parent visibility"
+        ],
+        "syncRequirements": [
+          "Uses verified local bytes when available; remote retrieval is explicit/cancellable and cleanup state is durable enough to retry"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no source URL-based share state; map Attachment IDs/objects and apply target export/retention policy.",
+        "reconciliation": [
+          "Temporary artifact creation/cleanup and visibility-scope evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline share/save/print, protected-temp cleanup, revoke, cancellation, limited visibility and failure tests"
+        ],
+        "acceptance": [
+          "Users can share or print authorized media without exposing permanent URLs or leaving unprotected files"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-54042738FD68",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure gallery calculations cover limits, allowed kinds, primary fallback, columns/counts, actions, zoom/navigation/dismiss and simple uploading/failed overlays.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Extend lifecycle states beyond uploading/failed"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Keep pure UI behavior and extend it for durable queued, verifying, derivative and rejected states."
+    },
+    {
+      "id": "SWIFT-1BE4CD10F963",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure calculations manage Item-linked image checkmarks, multi-item marks, Space review progress, pin eligibility and zoom/pan coordinate transforms.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve normalized annotation semantics and link them to stable AttachmentID/ItemID values."
+    },
+    {
+      "id": "SWIFT-EE7D53A3C3EA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Extracts local PDF image regions for invoice-import Item thumbnails without a backend dependency.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Invoice-import and derivative policy review"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Retain local extraction if the invoice-import dossier confirms the product flow."
+    },
+    {
+      "id": "MCPMOD-E72071DBC337",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure helper selects the first marked or first attachment as the sole primary and clears duplicate primary flags.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Target shares the exact-one-primary invariant with app/domain tests using stable IDs."
+    },
+    {
+      "id": "MCPTOOL-648BE9A38A56",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Attaches base64 or remotely fetched media to an Item, uploads original/derivatives, inserts at a requested position, optionally makes it primary and attempts cleanup on Firestore failure.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "Allowed content/size and derivative policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve attach/position/primary outcomes; correct remote fetch, validation, authorization and object reconciliation. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Project Items",
+        "surfaces": [
+          "AttachMediaToItemCommand",
+          "AttachmentOperations.attachToItem",
+          "AttachmentReceipt",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "MCP request binds Principal/Account and validates Item visibility/capability",
+          "Remote ingress is allowlisted, size/type/time bounded and blocks private-network/credential access",
+          "Server chooses object path"
+        ],
+        "syncRequirements": [
+          "MCP is online; authoritative attachment/reference result synchronizes to authorized app streams",
+          "Idempotency key prevents duplicate object/reference on retry"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Item image arrays to stable attachments/references; do not reuse caller filenames or Firebase URL namespaces as identity.",
+        "reconciliation": [
+          "Item reference/order/primary/object hash coverage",
+          "Retry duplicate and partial failure cleanup report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP attach ingress security, RLS, idempotency, derivatives, partial failure and app projection tests"
+        ],
+        "acceptance": [
+          "App and MCP produce the same authorized stable Item attachment outcome without duplicate bytes or raw URLs"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-25AAB317BFEE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reorders the exact current Item URL set and optionally selects a primary, rejecting duplicates, missing or foreign URLs.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve exact-set/precondition safety but replace URL identity and Firestore transaction implementation. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Project Items",
+        "surfaces": [
+          "ReorderItemMediaCommand",
+          "AttachmentOperations.reorderItemMedia",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Server verifies exact current authorized Item reference set, stable Attachment IDs and expected revision"
+        ],
+        "syncRequirements": [
+          "One durable/idempotent order operation updates local ordered references and exposes conflict/rejection"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source array order by stable reference correlation; never reorder by URL string.",
+        "reconciliation": [
+          "Per-Item ordered AttachmentID sequence and revision coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Exact-set, duplicate/missing/foreign ID, concurrent reorder, offline retry and cross-account tests"
+        ],
+        "acceptance": [
+          "Reordering changes reference order once without losing, importing or granting access to attachments"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-CF7AEAE1966B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Makes one current Item image primary and moves it to index zero using URL identity.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve the outcome with conflict-aware stable-ID semantics. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Project Items",
+        "surfaces": [
+          "SetPrimaryItemMediaCommand",
+          "AttachmentOperations.setPrimaryItemMedia",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Server validates selected AttachmentID is an authorized current Item reference and expected revision"
+        ],
+        "syncRequirements": [
+          "Primary selection is an idempotent durable operation and exact-one-primary state synchronizes"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize legacy duplicate/missing primary flags deterministically while preserving order and migration exceptions.",
+        "reconciliation": [
+          "Exactly-one-primary or approved empty-set invariant for every Item"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Primary exact-set, duplicate legacy flags, concurrent change, retry and cross-account tests"
+        ],
+        "acceptance": [
+          "One valid current attachment becomes primary without URL identity or duplicate primary state"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-35D04B60563F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Non-destructively removes an Item attachment reference, reselects a primary, preserves all Storage objects and reports namespace warnings.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve detach as distinct from physical deletion and use authoritative reference ownership. M2 status is deliberately withheld: O-023 can change whether this detach/destructive surface exists, its retention behavior, and its target command."
+    },
+    {
+      "id": "MCPTOOL-608B84DDBEA5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes an Item attachment reference, then attempts permanent deletion only for original/derivative Firebase URLs parsed inside that Item namespace; external/shared URLs are detached with warnings.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Namespace checks are useful but insufficient; target deletion requires authoritative references, retention and quarantine. M2 status is deliberately withheld: O-023 can change whether this detach/destructive surface exists, its retention behavior, and its target command."
+    },
+    {
+      "id": "MCPTOOL-16839AD4EE69",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Attaches a base64 or remotely fetched image/file to a Space, uses caller filename in the object path, creates best-effort derivatives and atomically normalizes the embedded array.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "Allowed content/size and derivative policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve Space attachment capability while correcting remote ingestion, path validation, privacy and reconciliation. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Spaces",
+        "surfaces": [
+          "AttachMediaToSpaceCommand",
+          "AttachmentOperations.attachToSpace",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Server validates Principal/Account/Space capability and chooses safe object path",
+          "Ingress validates source/type/size and blocks private-network fetch"
+        ],
+        "syncRequirements": [
+          "Authoritative reference/order/primary status enters the authorized Space stream; idempotent retry never duplicates"
+        ]
+      },
+      "migration": {
+        "rule": "Map Space/review media references to stable attachments and parent-reference roles; do not preserve caller path construction.",
+        "reconciliation": [
+          "Space/reference/role/order/primary/object hash coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP Space attach security/idempotency/partial failure and offline app projection tests"
+        ],
+        "acceptance": [
+          "Space media attached through MCP appears as the same stable authorized attachment in the offline app"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-EAA4B71CE0F5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes a Space attachment reference, repairs primary flags and immediately best-effort deletes original and derivative objects without a shared-reference or retention check.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Target separates detach from physical deletion and applies retention/reference checks. M2 status is deliberately withheld: O-023 can change whether this detach/destructive surface exists, its retention behavior, and its target command."
+    },
+    {
+      "id": "MCPTOOL-19127C4032BD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Attaches a base64 or remotely fetched image/PDF/file to a Transaction receipt/other array, uses caller filename in the object path, creates best-effort derivatives and normalizes the embedded array.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023",
+        "Allowed content/size and derivative policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve receipt/other attachment outcomes; correct public access, remote ingestion, path validation and parent authorization. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Transactions",
+        "surfaces": [
+          "AttachMediaToTransactionCommand",
+          "AttachmentOperations.attachToTransaction",
+          "TransactionAttachmentRole",
+          "OperationSnapshot"
+        ],
+        "securityRequirements": [
+          "Server validates financial visibility, Transaction scope and attachment role",
+          "Ingress and object path are constrained; receipt evidence follows retention rules"
+        ],
+        "syncRequirements": [
+          "Authorized structured metadata/reference synchronizes with Transaction workspace; bytes upload/verify idempotently"
+        ]
+      },
+      "migration": {
+        "rule": "Map receipt/other/general arrays to typed stable Transaction attachment references, preserving financial evidence and source correlation.",
+        "reconciliation": [
+          "Transaction attachment role/order/object hash/reference and retained-evidence coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP Transaction attach, role, financial visibility, idempotency, partial failure and app Sync tests"
+        ],
+        "acceptance": [
+          "Receipt/other evidence is durably attached once and remains authorized/offline-capable without raw URL authority"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-9C8591F5294C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes a Transaction receipt/other reference without primary normalization, then immediately best-effort deletes original and derivative objects without shared-reference or financial-retention checks.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "Canonical production reference/object profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Target must repair primary state and separate reference removal from retained object cleanup. M2 status is deliberately withheld: O-023 can change whether this detach/destructive surface exists, its retention behavior, and its target command."
+    },
+    {
+      "id": "TEST-AE45E8FB9289",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests attachment primary normalization, metadata preservation, gallery limits/kinds/primary fallback/grid/navigation and simple upload overlay calculations.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Extend for stable IDs and full lifecycle states"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Retain pure behavior coverage and add target contract cases."
+    },
+    {
+      "id": "TEST-43FF2E5D6451",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Item-linked/multi-item image marks, cleanup/progress, coordinate calibration, zoom/pan and pin eligibility.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Preserve backend-neutral annotation and pin behavior."
+    },
+    {
+      "id": "FILE-6EAB6B97119B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "MCP unit tests verify that empty, duplicate and selected primary flags normalize to exactly one primary.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Fold into shared target attachment contract tests."
+    },
+    {
+      "id": "FILE-83E2157BE293",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "MCP tests verify Item image ordering, primary changes, exact-set reorder validation, reference removal and Firebase namespace-based owned/shared deletion partitioning.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Keep ordering and shared-object safety expectations while replacing URL/path identity with authoritative attachment references. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments Verification",
+        "surfaces": [
+          "AttachmentOperations contract tests",
+          "Item attachment reference/order/primary tests",
+          "O-023 capability advertisement tests"
+        ],
+        "securityRequirements": [
+          "Tests cover cross-account/foreign reference and unapproved destructive capability denial"
+        ],
+        "syncRequirements": [
+          "Tests cover operation idempotency/conflict and synchronized ordered references"
+        ]
+      },
+      "migration": {
+        "rule": "Retain Firebase URL/namespace cases as source fixtures; replace with stable AttachmentID/object-reference/retention contracts.",
+        "reconciliation": [
+          "Each source assertion maps to target test or explicit O-023-gated retirement"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Attach/reorder/primary/reference lifecycle/RLS/retry and capability registry tests"
+        ],
+        "acceptance": [
+          "Replacement suite validates stable target behavior and fails if source URL ownership or immediate delete semantics reappear"
+        ]
+      }
+    },
+    {
+      "id": "FILE-C96A9F2ACE53",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "MCP schema tests require Item attach/primary/reorder/non-destructive detach/explicit destructive delete and quick-draft primary-selection surfaces.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Port intended command distinctions and remove Firebase/URL-shaped schemas. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Target MCP Verification",
+        "surfaces": [
+          "Versioned Attachment tool schema tests",
+          "Attachment capability registry",
+          "O-023 deprecation/absence contract"
+        ],
+        "securityRequirements": [
+          "Every tool schema has Principal/Account policy, bounded ingress and no raw path/delete authority"
+        ],
+        "syncRequirements": [
+          "Mutating schemas map to typed idempotent operations whose results synchronize to app queries"
+        ]
+      },
+      "migration": {
+        "rule": "Retain source schema as compatibility evidence; publish only approved stable-ID target tools and explicitly gate/deprecate detach/delete.",
+        "reconciliation": [
+          "Advertised tool-to-command/policy/version/test owner coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Generated schema/capability parity, unknown/deprecated tool and O-023 absence tests"
+        ],
+        "acceptance": [
+          "MCP cannot advertise a destructive or URL-shaped media contract that target handlers/policies do not support"
+        ]
+      }
+    },
+    {
+      "id": "FILE-4E88B161ED56",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "MCP tests verify quick-draft originals are copied with derivatives into Item namespace, source originals survive, partial copy failure cleans destination copies and merge chooses the promoted primary.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "O-018",
+        "O-019",
+        "O-020",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001"
+      ],
+      "notes": "Preserve no-loss/idempotent evidence outcomes; target need not copy objects solely to mimic Firebase namespaces. M2 map reviewed under target-mapping-method.md; named blockers gate policy/schema detail or implementation without changing this stable-ID/local-first owner and boundary.",
+      "target": {
+        "owner": "Attachments and Item Migration Verification",
+        "surfaces": [
+          "Legacy proto attachment migration tests",
+          "Create/Link Item attachment evidence tests",
+          "migration source correlation"
+        ],
+        "securityRequirements": [
+          "Migration/test fixtures preserve Account/parent scope and never expose tokens or cross-tenant objects"
+        ],
+        "syncRequirements": [
+          "Target Item references stable Attachment IDs; no runtime proto promotion or Firebase copy path exists"
+        ]
+      },
+      "migration": {
+        "rule": "Replace runtime URL-copy promotion with deterministic cutover correlation from legacy proto media to the one real Item/Attachment identity.",
+        "reconciliation": [
+          "Proto reference/object hash/derivative/primary to target Item attachment coverage",
+          "Partial/missing/shared object quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Idempotent proto attachment import, duplicate reconciliation, missing bytes, primary/order and retry tests"
+        ],
+        "acceptance": [
+          "Legacy capture evidence reaches exactly one target Item without a target proto writer or duplicate object copy"
+        ]
+      }
+    },
+    {
+      "id": "FILE-1DC030E7DE05",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firebase source-system media fixture metadata used by emulator/test seeding.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Retain as source compatibility evidence; create separate private target fixtures."
+    },
+    {
+      "id": "FILE-673F68E2BE08",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Seeds Firebase Storage emulator objects for focused source-system integration tests.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Do not turn it into a Firebase target adapter; target tests need isolated Supabase Storage fixtures."
+    },
+    {
+      "id": "FILE-2CEE01D160F2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Legacy migration helper downloads Supabase media, uploads originals/derivatives to Firebase, maps offline media IDs to gs:// URLs and patches transformed document objects.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Reverse direction and URL mechanics are historical evidence, not the target importer."
+    },
+    {
+      "id": "FILE-953CF1791F7A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Legacy media-only Supabase-to-Firebase command uploads with optional dry run, scans selected Firebase collections for offline:// references, patches them and writes a local report.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Do not reuse as Firebase-to-target migration authority."
+    },
+    {
+      "id": "FILE-DE824BF0DB8F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "One-off hardcoded script fetches historical Supabase images, uploads Firebase originals/derivatives and appends references to mapped Transactions/Items.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Retain only as legacy provenance; it is mutating, account-specific and unsuitable for target migration."
+    },
+    {
+      "id": "FILE-58B5ED36AB1D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Scans selected Firebase attachment arrays for offline:// derivative references, generates missing thumbnails from gs:// originals and patches documents with dry-run support.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Useful source-repair evidence; target derivatives use a versioned target policy."
+    },
+    {
+      "id": "FILE-CCEE1B274901",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Regenerates Firebase JPEG thumbnails from gs:// originals, overwrites existing derivative objects and patches selected attachment arrays, with dry-run support.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Do not execute against production as part of target design; derivatives are rebuildable during isolated migration."
+    },
+    {
+      "id": "FILE-5EA6862C568C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Legacy migration diagnostic checks transformed media URL resolution and source/target URL state.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Target reconciliation requires a new immutable source-object/reference journal and hashes."
+    },
+    {
+      "id": "FILE-A5E1BE214B16",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "One-off hardcoded repair script migrates selected missing Supabase records/media into Firebase using duplicated token URL and thumbnail logic.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Historical repair evidence only; never use its hardcoded mutation path for target migration."
+    },
+    {
+      "id": "FILE-93CD4D9994C1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Read-only support exporter downloads receipt attachments for explicitly selected Firebase Transactions and writes local files plus a manifest without printing download tokens.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001"
+      ],
+      "notes": "Useful narrow source evidence, but it does not inventory or reconcile whole-account media."
+    },
+    {
+      "id": "SWIFT-D8174F26DDD5",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "012166fe94aae403c2b0dd9a8fda740209155b2fc4811f7e7fc22a01ffb326ed",
+      "currentBehavior": "Implements provider-free non-Codable local capture input, exact environment/Principal/Account/parent scope, stable Attachment/local-object identity, SHA-256/byte evidence matching, canonical path-free local-durability receipts, a narrow capture-store port and stable bounded refusal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001",
+        "EVID-ATTACHMENT-CAPTURE-001"
+      ],
+      "notes": "Target-only Phase 1 receipt boundary verified at exact implementation commit 1792a862 by immutable Actions run 33593116980. Four focused/all 92 target tests, graph/contracts, both staging builds and clean artifacts pass. The deterministic adapter test proves only result-shape semantics, not physical persistence. The slice cannot claim filesystem persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
+      "target": {
+        "owner": "Attachment Local Capture Contracts",
+        "surfaces": [
+          "LocalAttachmentCapture",
+          "AttachmentContentSHA256",
+          "AttachmentLocalObjectID",
+          "AttachmentPersistedLocalObjectEvidence",
+          "AttachmentLocalDurabilityReceipt",
+          "AttachmentCaptureStoring",
+          "AttachmentCaptureReceiptFailure"
+        ],
+        "securityRequirements": [
+          "Capture and persisted evidence bind the exact environment, Principal, Account, Attachment and parent identity before a success-shaped receipt exists",
+          "Raw bytes are never Codable structured state and receipts contain no filesystem path, object path, bucket, URL, bearer token or credential"
+        ],
+        "syncRequirements": [
+          "Structured restart evidence carries stable identity, scope, byte count and digest only; attachment bytes remain outside structured synchronization",
+          "A later physical adapter must return no receipt when protected local persistence fails and must pass the separately gated restart/fault suite"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only receipt semantics and decode no Firebase URL/path, queue record, AttachmentRef or source bytes.",
+        "reconciliation": [
+          "Later provider and migration slices prove every locally accepted or imported attachment has exact scoped byte/object evidence or an explicit failure/quarantine result"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AttachmentCaptureReceiptTests"
+        ],
+        "acceptance": [
+          "Synthetic matching capture/persistence evidence yields one canonical path-free receipt while scope/identity/size/digest/timestamp/fingerprint mismatch yields no accepted receipt"
+        ]
+      }
+    },
+    {
+      "id": "TEST-BA04EFCE369C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7e74a6fad5769a72b8c3653a2ac8f19b7006599f7bd945c689d73bf9e0c07baa",
+      "currentBehavior": "Executes four deterministic target-only tests for exact scoped receipt construction, Attachment identity independent of opaque local-object identity, raw-byte/path/URL exclusion, canonical restart, cross-scope/identity/byte/tamper refusal, every stable diagnostic and no false-success receipt from a failing test adapter.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001",
+        "EVID-ATTACHMENT-CAPTURE-001"
+      ],
+      "notes": "Four focused/all 92 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 1792a862 in immutable Actions run 33593116980. The tests prove value/port semantics, canonical structured restart and fail-closed evidence validation only; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
+      "target": {
+        "owner": "Attachment Local Capture Contracts",
+        "surfaces": [
+          "AttachmentCaptureReceiptTests",
+          "matching and mismatched scope fixtures",
+          "canonical restart/tamper fixtures",
+          "deterministic capture-store failure fixture"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic target-only identities and bytes and expose no path, URL, token, credential or production-derived value",
+          "Every rejection is asserted by stable bounded diagnostic code rather than raw infrastructure detail"
+        ],
+        "syncRequirements": [
+          "Tests prove structured receipt bytes are canonical and exclude raw attachment bytes while a failed store returns no success receipt",
+          "Physical encrypted persistence and restart remain SPIKE-MED-001 obligations and are never inferred from deterministic value tests"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only capture and persistence evidence; load no Firebase export, AttachmentRef, Storage object or production identity.",
+        "reconciliation": [
+          "Equivalent scoped evidence round-trips identically while cross-scope, changed-byte, malformed and tampered evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AttachmentCaptureReceiptTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free receipt boundary and retain an explicit no-physical-durability limitation"
+        ]
+      }
+    }
+  ]
+}

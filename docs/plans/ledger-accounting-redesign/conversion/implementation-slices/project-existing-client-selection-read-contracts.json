@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-existing-client-selection-read-contracts",
+  "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Existing-Client Selection Projection",
+  "surfaceIds": ["SWIFT-0C8433A6C6F4", "TEST-8B902DC97729"],
+  "requirements": [
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "Existing-Client choices use stable Account-scoped ClientID and current ClientSummary display evidence; equal or normalized display names never select, merge, order or authorize a Client relationship.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "A Client archived in validated local directory evidence is excluded from new-Project existing-Client choices without deleting or rewriting identity/history; the projection cannot rename, archive, restore, merge, delete or otherwise correct a Client.",
+      "decisionIds": ["D-006", "O-025"],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project creation selects an existing Client or creates one and records stable clientId; this boundary exposes only explicit selection of a locally projected existing active Client and never manufactures the separate new-Client branch.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "The projection consumes the already-validated ClientListSnapshot in its existing upstream order and preserves its exact source query fingerprint, source-directory row count, visible count, completeness, quality/readiness, LocalDataVersion and as-of evidence; no second Client query port, adapter or provider request is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "The projection carries no selected/default Client value. Only an explicit caller-supplied ClientID present among its active candidates can produce the already-verified ProjectClientSelectionInput.existing(ClientID); zero, one or many candidates do not themselves assert final UI preselection behavior.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The immutable pure projection distinguishes active choices, authoritative ready-complete exhaustive no-active evidence and incomplete local scope. No-active is authoritative only when sourceDirectoryRowCount equals visibleRowCountBeforeFiltering. A canonical evidence fingerprint binds contract version, AccountID, ordered active ClientSummary rows, source query fingerprint, both counts, completeness, quality, LocalDataVersion and as-of so omission/removal/reorder/rebinding cannot restart as unchanged evidence.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "This is a deterministic application projection over the verified directory port, not a new repository/query interface. Locally valid active Client evidence may form offline selection intent, but it never proves current membership, Client lifecycle or server authorization and must be revalidated by the later authoritative Project handler.",
+      "decisionIds": ["O-025"],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 projection is executable only with synthetic provider-free evidence while the released Firebase app remains unchanged and no Client/Project mutation, persistence, Auth/provider choice, schema/RLS/Sync, app/MCP wiring, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectExistingClientSelectionSnapshot is a pure validated projection from one ClientListSnapshot. It retains only active ClientSummary rows in exact source order and permits duplicate display names while refusing duplicate identity, cross-Account and rebound evidence.",
+        "ProjectExistingClientSelectionAvailability is available when at least one active Client is locally present, noActiveClient only for complete ready exhaustive empty/archived-only evidence whose sourceDirectoryRowCount equals visibleRowCountBeforeFiltering, and directoryIncomplete for no-active incomplete/partial/stale or non-exhaustive evidence.",
+        "The snapshot preserves source-directory fingerprint, sourceDirectoryRowCount, visibleRowCountBeforeFiltering, completeness, quality/readiness, LocalDataVersion and as-of and derives distinct query identity plus a content-bound canonical evidence fingerprint over the ordered active rows and every one of those provenance/readiness fields.",
+        "The snapshot contains no selected/default Client. An explicit selection(clientId:) accepts only a currently projected active ID and returns exactly ProjectClientSelectionInput.existing(ClientID), never a copied display name or new-Client payload.",
+        "ProjectExistingClientSelectionFailure exposes stable bounded Account/source/query/evidence/identity/completeness/time/encoding and explicit-not-selectable codes without adding a protocol, repository, adapter or provider type."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This pure Phase 1 projection creates no clients/projects table, column, relationship, check, index, view or migration."},
+    "serverHandlers": {"items": [], "notApplicable": "No CreateProject handler, Client lookup, lifecycle recheck, authorization, operation acceptance, lock, idempotent result or row mutation exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API."},
+    "rlsPolicies": {"items": [], "notApplicable": "Same-Account local value validation is not authorization. No membership predicate, grant, RLS policy or WITH CHECK test exists."},
+    "syncStreams": {"items": [], "notApplicable": "The projection consumes an existing validated directory value but defines no PowerSync Stream, local table, download predicate, upload connector or provider readiness claim."},
+    "localOffline": {
+      "items": [
+        "Canonical Codable projection evidence round-trips only through the same Account, active-row, source/query/evidence fingerprint, source-row/visible counts, completeness, quality and finite as-of validation.",
+        "Ready-complete empty and archived-only evidence may prove no active local choice only when the source rows are exhaustive. A larger visible count means omitted rows may still be active and remains directoryIncomplete. Visible active rows remain usable as local intent under non-exhaustive, stale or partial evidence without an authorization claim.",
+        "Removing, inserting or reordering active rows without a newly derived evidence fingerprint, rebinding Account/source/query identity, duplicating IDs, corrupting either count/completeness/time or selecting an archived/unknown/cross-snapshot ID fails atomically. A separately constructed later valid Client snapshot receives new derived evidence and remains valid."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No Client/Project image, AttachmentID, byte, local object, path, URL, cache, upload, retention or deletion behavior exists."},
+    "appMcp": {"items": [], "notApplicable": "No Project form, Client picker UI, default/preselection behavior, accessibility choice, MCP projection, transport handler, command submission or entry point is wired."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/clientName or proposed Client import is decoded, clustered or transformed. Later migration must correlate source names to reviewed stable Client IDs or quarantine ambiguity."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot query a backend independently, select by name, create a Client/Project, authorize a Principal, define final UI auto-selection, mutate lifecycle/history, persist local rows, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-025 and A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this projection boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "A mixed active/archived synthetic ClientListSnapshot projects only active Clients in exact relative source order; equal display names remain distinct by ID, padded valid display text remains byte-exact, exact source-directory and visible counts are preserved, and query/evidence fingerprints remain bound to exact Account/source/projection evidence.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "Ready-complete true-empty and archived-only evidence yield noActiveClient only when sourceDirectoryRowCount equals visibleRowCountBeforeFiltering. Empty or archived-only ready-complete evidence with a larger visible count yields directoryIncomplete; ready-incomplete, partial and stale empty evidence also yields directoryIncomplete. Non-exhaustive, partial or stale active evidence remains available and explicitly selectable as non-authorizing local intent. Zero/one/many snapshots encode no selected/default value and make no final UI-preselection claim.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "Explicit active ClientID selection produces exactly ProjectClientSelectionInput.existing(ClientID) with no display-name or new-Client payload; archived, unknown and another snapshot's ID refuse, and no candidate count creates an implicit selection.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "Account/source/query/evidence fingerprint rebinding; identical and conflicting duplicate Client IDs; cross-Account rows; inserted/removed/reordered active rows; changed but structurally valid sourceDirectoryRowCount or visibleRowCountBeforeFiltering under the old evidence fingerprint; negative, below-active or source-above-visible counts; invalid completeness or finite as-of evidence; and malformed encoding fail atomically through literal unique bounded provider-neutral diagnostics. Separately valid later display/lifecycle/audit evidence constructs a new valid projection rather than being mislabeled immutable tampering.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-005",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "Representative available, exhaustive ready-complete no-active, non-exhaustive ready-complete no-active, ready-incomplete, partial and stale projections round-trip byte-identically with exact Account, ordered active rows, source/query/evidence fingerprints, source-row/visible counts, completeness, quality, LocalDataVersion and as-of evidence; restart creates no selected/default value or stronger local authority.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-006",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "A test-only consumer uses the existing ClientProjectDirectoryQuerying port and the pure projection to deliver exact snapshots; upstream Account mismatch, failure and cancellation produce no false projection or selection. Exact encoded-key allowlists include sourceDirectoryRowCount and visibleRowCountBeforeFiltering but exclude selected/default, revision, Project/history/Transfer/CRM/category/media/mutation/Auth/provider/schema/RLS/Sync/persistence/app/MCP/migration/hosted/production fields, and no new production protocol, repository, adapter or query interface exists.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
+    },
+    {
+      "id": "PROJECTCLIENTSELECT-TEST-007",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming final UI, mutation, authorization, persistence, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified at exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad by immutable Actions run 33707305340. Independent implementation review rejected candidate 41a2033c for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. Corrected candidate d206f542 adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Primary every-line review added four test corrections across the candidate sequence; final primary and independent re-review report no remaining P0-P3 issue. The complete local and CI gates pass with seven focused/all 218 tests, conversion/M0 and target isolation/generated-contract controls, repeatable project generation and both staging builds. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
+}

@@ -2,6 +2,11 @@
 
 Created: 2026-06-26
 
+> **Status: historical June execution plan.** Completed work remains evidence,
+> but this is not the implementation plan for the global
+> Purchase/Return/Transfer redesign. Use
+> [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
+
 This is the implementation plan for aligning code, specs, and production data
 with the transaction taxonomy in
 `docs/plans/transaction-taxonomy-system-design-recommendation.md`.

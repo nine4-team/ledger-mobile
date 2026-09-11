@@ -1,0 +1,695 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		02FBD688AE114E544993B5E0 /* DownloadedItemThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */; };
+		080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */; };
+		0A53F59B5B919D495BA465BC /* AmazonInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */; };
+		0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */; };
+		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
+		1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */; };
+		1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */; };
+		24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */; };
+		30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */; };
+		31CED7215B80D142B786C8EE /* VendorSuggestionPickerRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */; };
+		356BCEB9D62083D2DE910432 /* PdfTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */; };
+		38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */; };
+		49DC392E33A075F038F9A911 /* ClientArchiveBrowserStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */; };
+		4B2E67F1224159C2E6B6F853 /* TransferDestinationSelectionStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */; };
+		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
+		4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */; };
+		520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */; };
+		5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */; };
+		5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */; };
+		68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */; };
+		723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */; };
+		7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */; };
+		7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */; };
+		7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */; };
+		843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */; };
+		87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */; };
+		9111FCD4DDBEEB39A4A43F03 /* InvoiceDateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8B995ABA5476ED190A84C5 /* InvoiceDateParsing.swift */; };
+		917EAB8FA16A0E0FD5809648 /* LocalVendorPDFParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76110BA471691343CFD6FF /* LocalVendorPDFParser.swift */; };
+		91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */; };
+		95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */; };
+		9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F92563B3412AB38B9B6C6F5 /* ClientSummaryPhysicalReportPreview.swift */; };
+		A4C85C18A40D64B173077BC4 /* AccountBusinessProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */; };
+		A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */; };
+		AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */; };
+		C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */; };
+		C98732F21678E2DD58FCEB2B /* LocalVendorDocumentReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */; };
+		CC0347DF1AD9CF0DD5753F92 /* InvoiceMoneyParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5B410A9086B10A8697F82C /* InvoiceMoneyParsing.swift */; };
+		CFAA005D5025A6350AD9080C /* LocalVendorPDFThumbnailExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749B1842A9C943B1C4F0D82D /* LocalVendorPDFThumbnailExtractor.swift */; };
+		D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */; };
+		D5549BCFFADB798944BA0844 /* VendorSuggestionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */; };
+		D93205BA1256BA6E7CDE6110 /* AccountPendingWorkStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */; };
+		DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */; };
+		DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */; };
+		E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */; };
+		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */ = {isa = PBXBuildFile; productRef = 9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */; };
+		EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */; };
+		EAB7FF4D64697365F0B5EB14 /* LedgerTargetPowerSync in Frameworks */ = {isa = PBXBuildFile; productRef = 60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */; };
+		EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */; };
+		F2CB21E76A8E0FA10B5177A8 /* WorkspaceChecklistUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62700BF64DE8954F3A5FF993 /* WorkspaceChecklistUITests.swift */; };
+		F6A138DF43D73431C691AE26 /* WayfairInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */; };
+		FB847FDB51FE1765BFB4CAEC /* DownloadedImageZoomSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */; };
+		FB9EB47CFF1DBC601104089A /* SpaceCoreDetailsStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7BCC7C5366A75B1914DED491 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FB2149A7C7CC4B1359CF0BB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 46C27E7A039E4A3591B45E17;
+			remoteInfo = LedgerTargetStaging;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVendorDocumentReviewView.swift; sourceTree = "<group>"; };
+		0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonInvoiceParser.swift; sourceTree = "<group>"; };
+		0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		0F92563B3412AB38B9B6C6F5 /* ClientSummaryPhysicalReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientSummaryPhysicalReportPreview.swift; sourceTree = "<group>"; };
+		130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingExerciseView.swift; sourceTree = "<group>"; };
+		189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
+		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemImagesView.swift; sourceTree = "<group>"; };
+		23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportPreview.swift; sourceTree = "<group>"; };
+		33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectNoteHistoryStagingExerciseView.swift; sourceTree = "<group>"; };
+		3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		48CD1686A94781F3CBB84419 /* LedgerTargetStagingUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LedgerTargetStagingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
+		52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAccessGate.swift; sourceTree = "<group>"; };
+		5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCreationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBrowsingStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		616A04EF062ADB7070A7F345 /* LedgerTargetStaging.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LedgerTargetStaging.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62700BF64DE8954F3A5FF993 /* WorkspaceChecklistUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceChecklistUITests.swift; sourceTree = "<group>"; };
+		6C5B410A9086B10A8697F82C /* InvoiceMoneyParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceMoneyParsing.swift; sourceTree = "<group>"; };
+		6E76110BA471691343CFD6FF /* LocalVendorPDFParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVendorPDFParser.swift; sourceTree = "<group>"; };
+		6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCreationStagingExerciseView.swift; sourceTree = "<group>"; };
+		749B1842A9C943B1C4F0D82D /* LocalVendorPDFThumbnailExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVendorPDFThumbnailExtractor.swift; sourceTree = "<group>"; };
+		76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientRenameStagingExercise.swift; sourceTree = "<group>"; };
+		7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerView.swift; sourceTree = "<group>"; };
+		86109C0CC4785A451308867C /* LedgeriOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LedgeriOS; path = .; sourceTree = SOURCE_ROOT; };
+		86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountBusinessProfileView.swift; sourceTree = "<group>"; };
+		8D8B995ABA5476ED190A84C5 /* InvoiceDateParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceDateParsing.swift; sourceTree = "<group>"; };
+		9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingExerciseView.swift; sourceTree = "<group>"; };
+		9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
+		9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPendingWorkStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportSystemDelivery.swift; sourceTree = "<group>"; };
+		A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfTextExtractor.swift; sourceTree = "<group>"; };
+		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
+		B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedImageZoomSurface.swift; sourceTree = "<group>"; };
+		BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerTargetStagingApp.swift; sourceTree = "<group>"; };
+		BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBrowserStagingComposition.swift; sourceTree = "<group>"; };
+		BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryStagingExercise.swift; sourceTree = "<group>"; };
+		BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemsView.swift; sourceTree = "<group>"; };
+		C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WayfairInvoiceParser.swift; sourceTree = "<group>"; };
+		CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemThumbnailView.swift; sourceTree = "<group>"; };
+		DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerRuntimeAdapter.swift; sourceTree = "<group>"; };
+		E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferDestinationSelectionStagingExerciseView.swift; sourceTree = "<group>"; };
+		E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientBrowsingStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceChecklistUITestFixture.swift; sourceTree = "<group>"; };
+		E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingExerciseView.swift; sourceTree = "<group>"; };
+		F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingExerciseView.swift; sourceTree = "<group>"; };
+		F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceChecklistEditorStagingExerciseView.swift; sourceTree = "<group>"; };
+		FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferencedSpaceDetailView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FC89549BF970D9D87408B253 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */,
+				E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */,
+				EAB7FF4D64697365F0B5EB14 /* LedgerTargetPowerSync in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1D1870C3BB4EF03DD3BBFE4C /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				86109C0CC4785A451308867C /* LedgeriOS */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		309154BA717CE8384C3E73D8 /* LedgerTargetApp */ = {
+			isa = PBXGroup;
+			children = (
+				86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */,
+				BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */,
+				130972DEB0A2147A74F696E8 /* AccountPendingWorkStagingExerciseView.swift */,
+				9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */,
+				E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */,
+				189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */,
+				F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */,
+				9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */,
+				E33E4E5BDE5FE8D8EF877FA2 /* ClientBrowsingStagingRuntimeAdapter.swift */,
+				76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */,
+				0F92563B3412AB38B9B6C6F5 /* ClientSummaryPhysicalReportPreview.swift */,
+				B81FE8CA34689EF7AB0E4D6B /* DownloadedImageZoomSurface.swift */,
+				20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */,
+				BF3A2146B1100BCA43117A66 /* DownloadedItemsView.swift */,
+				CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */,
+				BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */,
+				059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */,
+				6E76110BA471691343CFD6FF /* LocalVendorPDFParser.swift */,
+				749B1842A9C943B1C4F0D82D /* LocalVendorPDFThumbnailExtractor.swift */,
+				3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */,
+				4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */,
+				5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */,
+				9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */,
+				1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */,
+				33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */,
+				E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */,
+				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
+				23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */,
+				A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */,
+				FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */,
+				F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */,
+				0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */,
+				BBBCFABE3FECCB023D4F2C8F /* SpaceBrowserStagingComposition.swift */,
+				F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */,
+				A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */,
+				3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */,
+				6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */,
+				5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */,
+				E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */,
+				A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */,
+				DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */,
+				7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */,
+				52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */,
+			);
+			path = LedgerTargetApp;
+			sourceTree = "<group>";
+		};
+		6841812E3D745B72DFBEF385 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				616A04EF062ADB7070A7F345 /* LedgerTargetStaging.app */,
+				48CD1686A94781F3CBB84419 /* LedgerTargetStagingUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		84ECED5A19C605950FB76D7D = {
+			isa = PBXGroup;
+			children = (
+				C42B0743C2D78A14860BC395 /* LedgeriOS */,
+				309154BA717CE8384C3E73D8 /* LedgerTargetApp */,
+				CD6ED5502D9D14C6587AC45B /* LedgerTargetStagingUITests */,
+				1D1870C3BB4EF03DD3BBFE4C /* Packages */,
+				6841812E3D745B72DFBEF385 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C42B0743C2D78A14860BC395 /* LedgeriOS */ = {
+			isa = PBXGroup;
+			children = (
+				CCDD36A03B7F0F35788BFA90 /* Logic */,
+			);
+			path = LedgeriOS;
+			sourceTree = "<group>";
+		};
+		CCDD36A03B7F0F35788BFA90 /* Logic */ = {
+			isa = PBXGroup;
+			children = (
+				0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */,
+				8D8B995ABA5476ED190A84C5 /* InvoiceDateParsing.swift */,
+				6C5B410A9086B10A8697F82C /* InvoiceMoneyParsing.swift */,
+				A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */,
+				C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */,
+			);
+			path = Logic;
+			sourceTree = "<group>";
+		};
+		CD6ED5502D9D14C6587AC45B /* LedgerTargetStagingUITests */ = {
+			isa = PBXGroup;
+			children = (
+				62700BF64DE8954F3A5FF993 /* WorkspaceChecklistUITests.swift */,
+			);
+			path = LedgerTargetStagingUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		46C27E7A039E4A3591B45E17 /* LedgerTargetStaging */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E2355DFCF1E2E4D3352F39A /* Build configuration list for PBXNativeTarget "LedgerTargetStaging" */;
+			buildPhases = (
+				6F80BE6708318E7CCB41268C /* Sources */,
+				FC89549BF970D9D87408B253 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LedgerTargetStaging;
+			packageProductDependencies = (
+				EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */,
+				9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */,
+				60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */,
+			);
+			productName = LedgerTargetStaging;
+			productReference = 616A04EF062ADB7070A7F345 /* LedgerTargetStaging.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9F8508EDD0E0D476B462B342 /* LedgerTargetStagingUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3137B211F08FCC1DA123A250 /* Build configuration list for PBXNativeTarget "LedgerTargetStagingUITests" */;
+			buildPhases = (
+				683F7F2196018B96B52E1106 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F4E7C3C80C4FF461580AA94 /* PBXTargetDependency */,
+			);
+			name = LedgerTargetStagingUITests;
+			packageProductDependencies = (
+			);
+			productName = LedgerTargetStagingUITests;
+			productReference = 48CD1686A94781F3CBB84419 /* LedgerTargetStagingUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1FB2149A7C7CC4B1359CF0BB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					9F8508EDD0E0D476B462B342 = {
+						TestTargetID = 46C27E7A039E4A3591B45E17;
+					};
+				};
+			};
+			buildConfigurationList = D79EC4D0781ED8C7B0B21E76 /* Build configuration list for PBXProject "LedgerTarget" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 84ECED5A19C605950FB76D7D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F3BD86C3354B4DC47ED27EE0 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				46C27E7A039E4A3591B45E17 /* LedgerTargetStaging */,
+				9F8508EDD0E0D476B462B342 /* LedgerTargetStagingUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		683F7F2196018B96B52E1106 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2CB21E76A8E0FA10B5177A8 /* WorkspaceChecklistUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F80BE6708318E7CCB41268C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4C85C18A40D64B173077BC4 /* AccountBusinessProfileView.swift in Sources */,
+				DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */,
+				D93205BA1256BA6E7CDE6110 /* AccountPendingWorkStagingExerciseView.swift in Sources */,
+				D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */,
+				7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */,
+				1DF06041FC758BD5ED390566 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift in Sources */,
+				0A53F59B5B919D495BA465BC /* AmazonInvoiceParser.swift in Sources */,
+				49DC392E33A075F038F9A911 /* ClientArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
+				EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */,
+				AA436BB7BDB162DFDD3D68DD /* ClientBrowsingStagingRuntimeAdapter.swift in Sources */,
+				A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */,
+				9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */,
+				FB847FDB51FE1765BFB4CAEC /* DownloadedImageZoomSurface.swift in Sources */,
+				0B06B4F0B02882F3A373983C /* DownloadedItemImagesView.swift in Sources */,
+				02FBD688AE114E544993B5E0 /* DownloadedItemThumbnailView.swift in Sources */,
+				C0E3388C9A5F90110A3B8B04 /* DownloadedItemsView.swift in Sources */,
+				9111FCD4DDBEEB39A4A43F03 /* InvoiceDateParsing.swift in Sources */,
+				CC0347DF1AD9CF0DD5753F92 /* InvoiceMoneyParsing.swift in Sources */,
+				95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */,
+				C98732F21678E2DD58FCEB2B /* LocalVendorDocumentReviewView.swift in Sources */,
+				917EAB8FA16A0E0FD5809648 /* LocalVendorPDFParser.swift in Sources */,
+				CFAA005D5025A6350AD9080C /* LocalVendorPDFThumbnailExtractor.swift in Sources */,
+				356BCEB9D62083D2DE910432 /* PdfTextExtractor.swift in Sources */,
+				68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
+				87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */,
+				520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */,
+				14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */,
+				DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */,
+				843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */,
+				4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */,
+				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,
+				7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */,
+				5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */,
+				30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */,
+				24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */,
+				723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */,
+				5F4E3DCE6E089079A8AA1508 /* SpaceBrowserStagingComposition.swift in Sources */,
+				7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */,
+				FB9EB47CFF1DBC601104089A /* SpaceCoreDetailsStagingExerciseView.swift in Sources */,
+				E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */,
+				1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */,
+				38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */,
+				4B2E67F1224159C2E6B6F853 /* TransferDestinationSelectionStagingExerciseView.swift in Sources */,
+				EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */,
+				31CED7215B80D142B786C8EE /* VendorSuggestionPickerRuntimeAdapter.swift in Sources */,
+				D5549BCFFADB798944BA0844 /* VendorSuggestionPickerView.swift in Sources */,
+				F6A138DF43D73431C691AE26 /* WayfairInvoiceParser.swift in Sources */,
+				080B83E7581C4A253C6C1DF6 /* WorkspaceAccessGate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8F4E7C3C80C4FF461580AA94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 46C27E7A039E4A3591B45E17 /* LedgerTargetStaging */;
+			targetProxy = 7BCC7C5366A75B1914DED491 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1089AE7CC14048EAACF524D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging.uitests;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LedgerTargetStaging;
+			};
+			name = Debug;
+		};
+		3D586C90C647E4A41D5D69EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		83E618769B1B6D94DBB5A5AB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ledger STAGING";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save selected Ledger images to your photo library.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging;
+				PRODUCT_MODULE_NAME = LedgerTargetStaging;
+				PRODUCT_NAME = "Ledger STAGING";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DD5A5903F03E994CE3DEEA02 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E226A623AE17AD380DF58D7B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ledger STAGING";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save selected Ledger images to your photo library.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging;
+				PRODUCT_MODULE_NAME = LedgerTargetStaging;
+				PRODUCT_NAME = "Ledger STAGING";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FF29D90FA3F29CB486586AED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = apps.nine4.ledger.staging.uitests;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LedgerTargetStaging;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3137B211F08FCC1DA123A250 /* Build configuration list for PBXNativeTarget "LedgerTargetStagingUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1089AE7CC14048EAACF524D2 /* Debug */,
+				FF29D90FA3F29CB486586AED /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7E2355DFCF1E2E4D3352F39A /* Build configuration list for PBXNativeTarget "LedgerTargetStaging" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				83E618769B1B6D94DBB5A5AB /* Debug */,
+				E226A623AE17AD380DF58D7B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D79EC4D0781ED8C7B0B21E76 /* Build configuration list for PBXProject "LedgerTarget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD5A5903F03E994CE3DEEA02 /* Debug */,
+				3D586C90C647E4A41D5D69EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F3BD86C3354B4DC47ED27EE0 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LedgerTargetPowerSync;
+		};
+		9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LedgerTargetAppModel;
+		};
+		EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LedgerTargetCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 1FB2149A7C7CC4B1359CF0BB /* Project object */;
+}

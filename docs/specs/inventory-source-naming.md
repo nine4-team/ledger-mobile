@@ -1,6 +1,12 @@
 # Inventory Source & Naming Conventions
 Status: shipped (all pending items resolved as of 2026-04-11)
-Last updated: 2026-04-11
+Last updated: 2026-08-30
+
+> **Target-state notice:** Inventory-label and original-vendor preservation remain
+> required. Project-side Purchase-from-inventory Transactions are replaced by
+> Item charges and hidden provenance in
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md).
+> The Transaction-label mechanics below remain relevant for existing data.
 
 > **Shipped**:
 > - **Phase 1 — static source label** (2026-04-07). Inventory movement transactions created by `InventoryOperationsService` carry a populated `source` field instead of leaving it blank. Hop 1 (`project_to_business`, legacy) was intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.

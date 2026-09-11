@@ -1,0 +1,188 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { execFileSync, spawn } from "node:child_process";
+import { realpathSync, readFileSync } from "node:fs";
+import { setTimeout as delay } from "node:timers/promises";
+
+// Fixed isolated local container only. No supplied URL, credentials or hosted
+// fallback. Like other local RPC tests, retain uniquely named synthetic records
+// for committed cross-session readback; do not bypass immutable evidence cleanup.
+const container = "supabase_db_ledger_target_supabase_local";
+const labels = JSON.parse(execFileSync("docker", ["inspect", "--format", "{{json .Config.Labels}}", container], { encoding: "utf8" }));
+assert.equal(labels["com.supabase.cli.project"], "ledger_target_supabase_local");
+assert.equal(realpathSync(labels["com.supabase.cli.workdir"]), realpathSync(process.cwd()));
+const args = ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=verbose"];
+const live = new Set();
+const quote = (value) => `'${value.replaceAll("'", "''")}'`;
+function query(sql) {
+  return execFileSync("docker", args, { input: "set standard_conforming_strings=on;\n" + sql, encoding: "utf8", timeout: 10_000 }).trim();
+}
+function session(sql, keepOpen = false) {
+  const child = spawn("docker", args, { stdio: ["pipe", "pipe", "pipe"] });
+  live.add(child);
+  let out = "", error = "";
+  child.stdout.on("data", (data) => { out += data; });
+  child.stderr.on("data", (data) => { error += data; });
+  child.on("error", (failure) => { error += String(failure); });
+  const done = new Promise((resolve) => child.on("close", (code) => {
+    live.delete(child);
+    resolve({ code, out, error });
+  }));
+  if (keepOpen) child.stdin.write(sql); else child.stdin.end(sql);
+  return { child, done, output: () => out };
+}
+async function until(check, description) {
+  const deadline = Date.now() + 8_000;
+  while (!(await check())) {
+    assert.ok(Date.now() < deadline, `Timed out: ${description}`);
+    await delay(25);
+  }
+}
+const suffix = randomUUID();
+const project = `payment-race-project-${suffix}`;
+query(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+ values (${quote(project)},'account-primary','client-existing','Synthetic payment concurrency',now(),now(),1,1,'principal-owner');`);
+
+try {
+  for (const mode of ["identical", "changed-amount", "changed-target"]) {
+    const id = `payment-race-${mode}-${suffix}`;
+    const otherID = mode === "changed-target" ? `payment-race-other-${suffix}` : id;
+    const sourceID = `source-${mode}-${suffix}`;
+    const application = `payment-waiter-${mode}-${suffix}`.slice(0, 63);
+    const call = (target, amount) => `select ledger_private.import_client_payment(
+      ${quote(target)},'account-primary',${quote(project)},'client-existing',${amount},'USD',
+      'synthetic-concurrency',${quote(sourceID)},decode('007b7dff','hex'));`;
+    const first = session(`begin; set local statement_timeout='15s'; ${call(id, "9007199254740993")} select 'HOLDING_PAYMENT';\n`, true);
+    await until(() => first.output().includes("HOLDING_PAYMENT"), "first import acquired constraints");
+    const second = session(`set application_name=${quote(application)}; set statement_timeout='15s';
+      ${call(otherID, mode === "changed-amount" ? "9007199254740994" : "9007199254740993")}`);
+    // Observe an actual database lock wait; timing alone is not concurrency proof.
+    await until(() => query(`select count(*) from pg_stat_activity where application_name=${quote(application)} and wait_event_type='Lock';`) === "1", "second import blocked on first");
+    first.child.stdin.end("commit;\n");
+    assert.equal((await first.done).code, 0, "first payment commits");
+    const result = await second.done;
+    if (mode === "identical") assert.equal(result.code, 0, result.error);
+    else {
+      assert.notEqual(result.code, 0, "conflicting concurrent import must fail");
+      assert.match(result.error, /22000/, result.error);
+    }
+    // Independent new connection reads committed facts, not a worker's own view.
+    assert.equal(query(`select count(*) || ':' || min(amount_minor_units)::text from public.spike_transactions where project_id=${quote(project)} and id=${quote(id)};`), "1:9007199254740993");
+    assert.equal(query(`select count(*) || ':' || min(encode(source_bytes,'hex')) from ledger_private.imported_transaction_sources where source_account_id='synthetic-concurrency' and source_document_id=${quote(sourceID)};`), "1:007b7dff");
+    if (mode === "changed-target") assert.equal(query(`select count(*) from public.spike_transactions where id=${quote(otherID)};`), "0", "source conflict rolled back provisional target");
+  }
+  for (const committed of [false, true]) {
+    const id = `payment-interrupted-${committed}-${suffix}`;
+    const sourceID = `source-interrupted-${committed}-${suffix}`;
+    const call = `select ledger_private.import_client_payment(
+      ${quote(id)},'account-primary',${quote(project)},'client-existing',23,'USD',
+      'synthetic-interruption',${quote(sourceID)},decode('00ff','hex'));`;
+    const first = session(`begin; set local statement_timeout='15s'; ${call}
+      ${committed ? "commit;" : ""} select 'READY_TO_INTERRUPT';\n`, true);
+    await until(() => first.output().includes("READY_TO_INTERRUPT"), "import reached interruption boundary");
+    // Terminate only this test session's own backend, never an arbitrary PID or
+    // the database container. A client restart cannot trust whether COMMIT won.
+    first.child.stdin.end("select pg_terminate_backend(pg_backend_pid());\n");
+    const interrupted = await first.done;
+    assert.notEqual(interrupted.code, 0, "test backend really disconnected");
+    assert.match(interrupted.error, /57P01/, "expected deliberate session termination");
+    assert.equal(query(`select count(*) from public.spike_transactions where id=${quote(id)};`), committed ? "1" : "0");
+    assert.equal(query(`select count(*) from ledger_private.imported_transaction_sources where transaction_id=${quote(id)};`), committed ? "1" : "0");
+    // Start a fresh client and replay the same command regardless of where the
+    // old connection died. Both paths must converge to exactly one complete pair.
+    assert.equal(query(call), id);
+    assert.equal(query(call), id);
+    assert.equal(query(`select count(*) || ':' || min(amount_minor_units)::text from public.spike_transactions where id=${quote(id)};`), "1:23");
+    assert.equal(query(`select count(*) || ':' || min(encode(source_bytes,'hex')) from ledger_private.imported_transaction_sources where transaction_id=${quote(id)};`), "1:00ff");
+  }
+  const legacyText = "  Original notes\n第二行\r\n  ";
+  const createLegacyProject = (id) => query(`insert into public.spike_projects(id,account_id,client_id,display_name,description,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values (${quote(id)},'account-primary','client-existing','Synthetic legacy-note concurrency','Separate description',now(),now(),1,1,'principal-owner');`);
+  const legacyCall = (id, source, text = legacyText) => `select ledger_private.import_project_legacy_notes(
+    'account-primary',${quote(id)},${quote(text)},'synthetic-note-concurrency',${quote(source)},decode('007b7dff','hex'));`;
+  function assertLegacyReadback(id, source) {
+    const actual = JSON.parse(query(`select json_build_array(p.id,p.account_id,p.legacy_notes,s.imported_notes,
+      s.source_account_id,s.source_document_id,encode(s.source_bytes,'hex'),s.source_sha256)
+      from public.spike_projects p join ledger_private.imported_project_legacy_note_sources s
+        on s.account_id=p.account_id and s.project_id=p.id where p.id=${quote(id)};`));
+    assert.deepEqual(actual.slice(0, 7), [id, "account-primary", legacyText, legacyText,
+      "synthetic-note-concurrency", source, "007b7dff"]);
+    assert.equal(actual[7], query("select encode(extensions.digest(decode('007b7dff','hex'),'sha256'),'hex');"));
+    assert.equal(query(`select count(*) from ledger_private.imported_project_legacy_note_sources
+      where source_account_id='synthetic-note-concurrency' and source_document_id=${quote(source)};`), "1");
+  }
+  for (const mode of ["identical", "changed-text", "changed-target"]) {
+    const id = `note-race-${mode}-${suffix}`;
+    const otherID = mode === "changed-target" ? `note-race-other-${suffix}` : id;
+    const source = `note-source-${mode}-${suffix}`;
+    const application = `note-waiter-${mode}-${suffix}`.slice(0, 63);
+    createLegacyProject(id);
+    if (otherID !== id) createLegacyProject(otherID);
+    const before = query(`select (to_jsonb(p)-'legacy_notes')::text from public.spike_projects p where id=${quote(id)};`);
+    const loserBefore = query(`select ctid::text from public.spike_projects where id=${quote(otherID)};`);
+    const first = session(`begin; set local statement_timeout='15s'; ${legacyCall(id, source)} select 'HOLDING_NOTES';\n`, true);
+    await until(() => first.output().includes("HOLDING_NOTES"), "first legacy-note import holds target/source locks");
+    const second = session(`set application_name=${quote(application)}; set statement_timeout='15s';
+      ${legacyCall(otherID, source, mode === "changed-text" ? "Conflicting notes" : legacyText)}`);
+    await until(() => query(`select count(*) from pg_stat_activity where application_name=${quote(application)} and wait_event_type='Lock';`) === "1",
+      "second legacy-note import actually waits on target or source uniqueness");
+    first.child.stdin.end("commit;\n");
+    assert.equal((await first.done).code, 0);
+    const result = await second.done;
+    if (mode === "identical") assert.equal(result.code, 0, result.error);
+    else { assert.notEqual(result.code, 0); assert.match(result.error, /22000/, result.error); }
+    assertLegacyReadback(id, source);
+    assert.equal(query(`select (to_jsonb(p)-'legacy_notes')::text from public.spike_projects p where id=${quote(id)};`), before);
+    if (otherID !== id) {
+      assert.equal(query(`select legacy_notes is null from public.spike_projects where id=${quote(otherID)};`), "t");
+      assert.equal(query(`select ctid::text from public.spike_projects where id=${quote(otherID)};`), loserBefore, "Losing target was not updated");
+      assert.equal(query(`select count(*) from ledger_private.imported_project_legacy_note_sources where project_id=${quote(otherID)};`), "0");
+    }
+  }
+  for (const committed of [false, true]) {
+    const id = `note-interrupted-${committed}-${suffix}`;
+    const source = `note-interrupted-source-${committed}-${suffix}`;
+    createLegacyProject(id);
+    const call = legacyCall(id, source);
+    const first = session(`begin; set local statement_timeout='15s'; ${call}
+      ${committed ? "commit;" : ""} select 'NOTES_READY_TO_INTERRUPT';\n`, true);
+    await until(() => first.output().includes("NOTES_READY_TO_INTERRUPT"), "legacy import reached interruption boundary");
+    first.child.stdin.end("select pg_terminate_backend(pg_backend_pid());\n");
+    const interrupted = await first.done;
+    assert.notEqual(interrupted.code, 0);
+    assert.match(interrupted.error, /57P01/);
+    assert.equal(query(`select count(*) from ledger_private.imported_project_legacy_note_sources where project_id=${quote(id)};`), committed ? "1" : "0");
+    assert.equal(query(`select legacy_notes is null from public.spike_projects where id=${quote(id)};`), committed ? "f" : "t");
+    assert.equal(query(call), id);
+    const version = query(`select ctid::text from public.spike_projects where id=${quote(id)};`);
+    assert.equal(query(call), id);
+    assert.equal(query(`select ctid::text from public.spike_projects where id=${quote(id)};`), version, "Replay does not update target");
+    assertLegacyReadback(id, source);
+  }
+  // Swift tests prove the real mapped batch emits these exact parameter values.
+  // Consume that shared fixture here, crossing the JSON/text/bytea boundary.
+  const p = JSON.parse(readFileSync("LedgeriOS/LedgerTargetMigrationCoreTests/Fixtures/ClientPayment/import-parameters.json", "utf8"));
+  const keys = ["p_id", "p_account_id", "p_project_id", "p_client_id", "p_amount", "p_currency", "p_source_account", "p_source_document", "p_source_bytes"];
+  assert.deepEqual(Object.keys(p).sort(), [...keys].sort());
+  assert.ok(keys.every((key) => typeof p[key] === "string"));
+  assert.equal(p.p_account_id, "account-primary");
+  assert.equal(p.p_client_id, "client-existing");
+  assert.equal(p.p_project_id, "project-payment-export-fixture");
+  assert.equal(p.p_id, "payment-export-fixture");
+  assert.equal(p.p_amount, "9007199254740993");
+  assert.equal(p.p_source_account, "synthetic-export-fixture");
+  assert.match(p.p_source_bytes, /^\\x[0-9a-f]+$/);
+  query(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values (${quote(p.p_project_id)},'account-primary','client-existing','Synthetic Swift export fixture',now(),now(),1,1,'principal-owner') on conflict (id) do nothing;`);
+  const exportedCall = `select ledger_private.import_client_payment(${keys.map((key) => quote(p[key])).join(",")});`;
+  assert.equal(query(exportedCall), p.p_id);
+  assert.equal(query(exportedCall), p.p_id);
+  assert.equal(query(`select amount_minor_units::text from public.spike_transactions where id=${quote(p.p_id)};`), p.p_amount);
+  assert.equal(query(`select encode(source_bytes,'hex') from ledger_private.imported_transaction_sources where transaction_id=${quote(p.p_id)};`), p.p_source_bytes.slice(2));
+  console.log("local-imported-payment-concurrency: payment and legacy-note imports each passed 3 observed lock races and 2 terminated-session recovery boundaries, conflict rollback, committed readback; exact Swift-exported payment/source bytes passed");
+} finally {
+  for (const child of live) {
+    child.stdin.destroy();
+    child.kill("SIGTERM");
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "batchId": "M0-QUERY-PROFILE-001",
+  "title": "Firestore query contract and fail-closed source profiling tools",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-QUERY-001",
+    "EVID-PROFILER-001",
+    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+    "EVID-SOURCE-QUERY-RECONCILIATION-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-9489B0032700",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic Firestore document get, collection list, equality list, unfiltered/equality collection listeners, and document listeners. Snapshot listeners accept cached data and pending local writes and incrementally decode changes; writes elsewhere in the same repository are intentionally fire-and-forget for current Firebase offline behavior.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-QUERY-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "The target is a Supabase/PowerSync implementation. This is not authorization to build a Firebase adapter for redesigned behavior. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Capability-Specific Query Adapters",
+        "surfaces": [
+          "Capability-specific local query ports",
+          "PowerSync watch adapters",
+          "readiness/cancellation contracts"
+        ],
+        "securityRequirements": [
+          "Each query is named, typed and authorized by its capability; arbitrary collection/path/filter/full-document access is absent from app and MCP"
+        ],
+        "syncRequirements": [
+          "Offline app queries read versioned local PowerSync views/indexes with readiness; MCP uses bounded authorized server projections and stable cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Map every recognized source caller to its owning target query/profile or source-only retirement; migrate no generic repository/Admin path helper into target runtime.",
+        "reconciliation": [
+          "Query crosswalk has one target owner/profile/index/readiness/security/test mapping for every retained semantic source query and explicit retirement for the rest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "No-generic-query API, cancellation/readiness, stable cursor/bounds, app/MCP projection parity, RLS and query-index tests"
+        ],
+        "acceptance": [
+          "Clients can perform all approved reads without arbitrary backend paths, unbounded scans or Firebase listener types"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-11444B9842C5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds account-scoped Firestore collection/subcollection paths and provides online Admin SDK helpers for unbounded query reads, one document read, and getAll document batches while attaching Firestore document IDs to returned data.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-QUERY-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Admin SDK behavior is source-specific and bypasses Firestore rules; target MCP access must not bypass the target authorization model. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Capability-Specific Query Adapters",
+        "surfaces": [
+          "Authorized named server projections",
+          "EntityLookupQuerying",
+          "stable bounded query/cursor helpers"
+        ],
+        "securityRequirements": [
+          "Each query is named, typed and authorized by its capability; arbitrary collection/path/filter/full-document access is absent from app and MCP"
+        ],
+        "syncRequirements": [
+          "Offline app queries read versioned local PowerSync views/indexes with readiness; MCP uses bounded authorized server projections and stable cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Map every recognized source caller to its owning target query/profile or source-only retirement; migrate no generic repository/Admin path helper into target runtime.",
+        "reconciliation": [
+          "Query crosswalk has one target owner/profile/index/readiness/security/test mapping for every retained semantic source query and explicit retirement for the rest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "No-generic-query API, cancellation/readiness, stable cursor/bounds, app/MCP projection parity, RLS and query-index tests"
+        ],
+        "acceptance": [
+          "Clients can perform all approved reads without arbitrary backend paths, unbounded scans or Firebase listener types"
+        ]
+      }
+    },
+    {
+      "id": "FILE-49BE7A26CE03",
+      "acknowledgeSourceHash": "2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd",
+      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only query controls including the draft source-query reconciliation generator/test paths, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
+      "disposition": "source_only",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-QUERY-001",
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+      ],
+      "verification": {
+        "tests": [
+          "node --check scripts/extract-firestore-query-contract.mjs",
+          "npm run conversion:queries:generate",
+          "npm run conversion:queries:check"
+        ],
+        "acceptance": [
+          "Generated JSON and Markdown reproduce from the current source digest",
+          "A source change makes check mode fail until regeneration"
+        ]
+      },
+      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. Exact target-control exclusions prevent draft or future synthetic fixtures from changing the reviewed 386-occurrence source inventory. This draft deliberately re-acknowledges only the extractor hash; status and ownership remain unchanged."
+    },
+    {
+      "id": "FILE-7F72D64AB542",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Statically checks the two Firebase production profilers and their shared runtime for recognized Firestore, Auth, and Storage mutation APIs and for explicit execution/confirmation gates.",
+      "disposition": "source_only",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROFILER-001"
+      ],
+      "verification": {
+        "tests": [
+          "node --check scripts/check-firebase-readonly-profilers.mjs",
+          "npm run conversion:profiles:check-readonly"
+        ],
+        "acceptance": [
+          "Recognized Firebase mutation APIs fail the check",
+          "Both entry points retain explicit read-only execution and exact-target confirmation gates"
+        ]
+      },
+      "notes": "This guard supplements review; it is not a formal proof about arbitrary dependency internals."
+    },
+    {
+      "id": "FILE-D1D4EEF7DF08",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Enforces the exact Ledger production project, 1584 Design account, optional exact bucket, emulator refusal, external chmod-600 service-account credential validation, fixed gitignored output directory, and exact confirmation token. It initializes Firebase Admin only after those checks and writes redacted versioned artifacts with payload and file hashes.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "No acceptable project-matching service-account credential is currently configured on this host"
+      ],
+      "evidence": [
+        "EVID-PROFILER-001"
+      ],
+      "notes": "The available authorized-user ADC is intentionally rejected; no remote call was made."
+    },
+    {
+      "id": "FILE-B4119B3F03F3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a read-only Firestore/Auth profile for the exact 1584 Design account: account/root/child collection discovery, paginated aggregate field/type/allowlisted-enum shapes, source fingerprints, explicit-reference orphan counts, Auth provider/disabled/custom-claim aggregates, and membership-to-Auth orphan counts. It emits no document IDs, UIDs, emails, or arbitrary values.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Provide an external chmod-600 service-account JSON for ledger-nine4 and execute the reviewed command"
+      ],
+      "evidence": [
+        "EVID-PROFILER-001"
+      ],
+      "notes": "Syntax, help, mutation guard, and fail-closed missing-credential behavior pass; production behavior is not verified because no remote call was made."
+    },
+    {
+      "id": "FILE-AE9A316AEDEF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a separate read-only Storage/reference profile for the exact 1584 Design account prefix and exact production bucket. It lists metadata without downloading bytes, aggregates namespaces/content types/bytes/token presence/thumbnails/content duplication, scans Firestore URL/path references, and reports dangling, multiply referenced, and unreferenced counts without emitting names, URLs, or content hashes.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Provide an external chmod-600 service-account JSON for ledger-nine4 and execute the reviewed command"
+      ],
+      "evidence": [
+        "EVID-PROFILER-001"
+      ],
+      "notes": "Syntax, help, mutation guard, and fail-closed missing-credential behavior pass; production behavior is not verified because no remote call was made."
+    },
+    {
+      "id": "CONFIG-7AE45AD102EA",
+      "acknowledgeSourceHash": "2c1d84a900c5c2df9340f006a776f8b736a796b7ba7588e8f4cfd251dc28b098",
+      "currentBehavior": "Defines root repository commands for conversion controls, target tests/builds, and isolated local Supabase Client/Project/Space database and Data API verification. Vitest remains the root development test dependency.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-QUERY-001",
+        "EVID-PROFILER-001",
+        "EVID-CAPABILITY-001",
+        "EVID-M2-DECISION-PACKETS-001",
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+    "EVID-SOURCE-QUERY-RECONCILIATION-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+      ],
+      "notes": "These are operator commands, not product runtime dependencies. Source-query reconciliation adds three exact dependency-free generator/check/test commands and re-acknowledges the package hash while preserving characterized status and existing ownership."
+    }
+  ]
+}

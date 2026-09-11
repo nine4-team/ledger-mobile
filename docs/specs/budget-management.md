@@ -1,10 +1,35 @@
 # Budget Management
 
+> **Target-state notice (2026-08-30):** Project budget progress is no longer
+> Transaction-only in the approved redesign. See
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md).
+> Each category combines client-paid and invoicing/unpaid source allocations;
+> collection transfers an amount between those segments without changing the
+> total, and the settlement Transaction cannot be counted a second time.
+>
+> Firestore paths, Cloud Function summaries, legacy sign tables, per-batch
+> movement Transactions and source Item-category rules below are migration
+> evidence, not instructions for the Supabase implementation. D-001/D-007–D-013
+> and D-017 govern target accounting. Shared category mutations remain gated by
+> O-026, Project allocation permissions by O-052, and personal pin behavior by
+> O-040. No new Firebase implementation is required.
+
 ## Overview
 
-Budget management lets users define account-wide budget categories, allocate per-project budgets, and track spending progress in real-time. Every transaction must have a budget category — there are no uncategorized transactions.
+Budget management lets users define Account-wide categories, allocate Project
+budgets and track progress. Every target budget contribution must resolve its
+category and provenance; this does not require one category on every Transaction
+header. A collected Invoice payment uses frozen content allocations, and
+Business Inventory records do not acquire a Project category merely to satisfy
+the old Transaction-header convention.
 
 ## Budget Categories
+
+Preserve the settings controls: separate active/archived lists, Add/Edit,
+name/type/exclusion fields, behavior explanation, Save/Cancel, archive
+confirmation, restore and drag reorder. Target mutations have visible durable
+outcomes and shared authorization; silent independent source writes are not
+successful target behavior. Protected rows and dependency rules remain O-026.
 
 ### Definition
 
@@ -24,6 +49,14 @@ A category cannot be both `itemized` and `fee`. These are mutually exclusive.
 
 ### Category Fields
 
+The field list describes source validation and UI semantics. Final shared
+mutation rules remain under O-026; do not assume that a warning permits changing
+the meaning of used history. O-056 governs the conflicting category-name
+validation/uniqueness rules. Dependencies include open charges/credits,
+Expenses, Fees, Invoice lines, frozen allocations and Transfers, not only
+Transactions. Source name validators disagree on accepted characters; reconcile
+that contract before claiming target create/rename completeness.
+
 - `id` — unique identifier
 - `accountId` — owning account
 - `name` — display name (unique per account, case-insensitive, max 100 chars, allowed: letters, numbers, spaces, hyphens, ampersands)
@@ -42,6 +75,10 @@ A category cannot be both `itemized` and `fee`. These are mutually exclusive.
 Furnishings is set as the account-wide default category for new transactions. Seeding is idempotent — check if categories already exist before creating to prevent duplicates.
 
 ### Account Presets
+
+Defaults apply only where the owning target story permits category selection.
+They cannot override Furnishings for Item charges/credits or the frozen category
+allocations of a collected Invoice payment.
 
 Lives at `accounts/{accountId}/presets/default`.
 
@@ -76,6 +113,13 @@ The document ID matches the budget category ID (1:1 relationship).
 
 ## Project Creation Flow
 
+This section records the source form and source write sequence. Target setup
+preserves the user controls but follows `projects.md`: one durable observable
+Project/category/allocation result, with enabled-with-null distinct from
+explicit zero. An empty budget input does not become zero. Media upload has its
+separate durable lifecycle; the independent Firebase writes under On Create
+are not a target implementation plan.
+
 Project creation uses a 3-step form:
 
 ### Step 1: Basic Info
@@ -107,6 +151,15 @@ Project creation uses a 3-step form:
 3. Hero image uploaded in background if provided
 
 ## Budget Progress Calculation
+
+**Target authority:** Each category's progress is client-paid plus
+invoicing/unpaid, including open Item charges/credits, Expenses and Fees even
+when not yet on an Invoice. Collection moves the frozen amounts between those
+segments without changing the total; never also add the lump-sum payment.
+Item charges/credits use Furnishings, with Additional Requests as a non-additive
+overlay. Same-Client Transfer reallocates value between Projects and is
+client-wide net zero. The Transaction-only formula below is source comparison
+evidence; it is not the target calculation.
 
 ### Per-Category Spent
 
@@ -157,7 +210,13 @@ overallPercentage = (overallSpentCents / overallBudgetCents) * 100
 
 ## Sign Conventions
 
-The system handles current per-batch inventory movement transactions plus legacy canonical sales. The dual-read path lives in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
+The source Firebase system handles per-batch inventory movement transactions
+plus legacy canonical sales. Its dual-read path lives in
+[mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts)
+`normalizeSpendAmount`. Use it to understand and reconcile source evidence,
+not as target runtime authority. Target Purchase/Return record real owner cash
+movement, Transfer is the sole non-cash Transaction exception, and Item
+charge/credit provenance is separate.
 
 ### Sign convention for inventory movement transactions
 
@@ -183,6 +242,11 @@ The system handles current per-batch inventory movement transactions plus legacy
 
 ## Payment / Revenue Category Differences
 
+The `paymentToBusiness` table below is source presentation, not target Fee
+accounting. Target Fees are planned demand in Invoicing: unpaid before
+collection and paid afterwards, with no increase in total from collection.
+Do not label all Fee demand as money already received.
+
 Categories used for `paymentToBusiness` rows represent money received rather
 than project spend. They use inverted semantics where displayed as revenue:
 
@@ -198,7 +262,11 @@ than project spend. They use inverted semantics where displayed as revenue:
 
 ## Color Thresholds
 
-**Current implementation:** Uses brand primary color for all progress bars, with red for overage/overflow. The graduated color system below is preserved for potential future use.
+**Verified source behavior:** `BudgetTabView` calls
+`BudgetTrackerCalculations.progressColor` for category and Overall rows, so the
+graduated thresholds below already appear in the source. The “future” heading
+names are historical. They do not choose the target's separate paid/unpaid
+segment colors or negative-credit presentation under O-005.
 
 ### Standard/Itemized Categories (future)
 
@@ -215,6 +283,10 @@ than project spend. They use inverted semantics where displayed as revenue:
 
 ## Project Card Budget Preview
 
+This source-spec fallback differs from current UI behavior (pinned → Furnishings
+→ Overall). O-040 owns the target choice; neither fallback is implicitly
+approved for the redesign.
+
 Project list cards show a budget preview with this fallback chain:
 
 1. Pinned categories (if any exist)
@@ -224,6 +296,10 @@ Project list cards show a budget preview with this fallback chain:
 Amounts only — no percentage displayed on the card.
 
 ## Denormalized Budget Summary
+
+This section describes the source Firebase summary and recalculation triggers.
+Retain it for migration comparison; do not build these Functions for the target
+or treat the source summary as proof of target paid/unpaid completeness.
 
 Each project document has a denormalized `budgetSummary` field maintained by Cloud Function triggers (Tier 4 — see write-tiers.md). This enables project list views to show budget progress without additional queries.
 
@@ -252,6 +328,11 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 **Display order:**
 
+This source-spec order conflicts with the actual Overall pin control and
+personal preview behavior. O-040 decides target Overall eligibility, missing
+versus empty preferences, automatic Furnishings and stale-reference handling.
+Retain both evidence sets rather than treating this list as approved policy.
+
 1. Pinned categories (in user-defined order)
 2. Non-pinned standard/itemized categories (custom order or alphabetical)
 3. Overall Budget (cannot be pinned — always shown here)
@@ -265,6 +346,12 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 ## Transaction Budget Attribution
 
+The movement-Transaction rules below are source-era behavior. Target Item
+charges/credits use Furnishings and frozen collected category allocations;
+direct client-paid records, Expenses and Fees follow their canonical accounting
+stories. Moving an Item must not manufacture a cash Transaction or duplicate
+budget contribution.
+
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
 - **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. The picker contains only active, non-system, itemized categories already enabled in the destination project. One category per Purchase transaction; no per-item category. Amounts use normalized `projectPriceCents`, which is automatically raised to at least `purchasePriceCents`; the UI collects a price only when neither is positive. See [sale-transactions.md](sale-transactions.md).
 - **Uncollected Purchase-from-Inventory correction:** The entire Purchase may be reclassified to another project-enabled itemized category through the dedicated trusted operation. The transaction and its currently attached items change atomically; departed item placement and downstream movement transactions do not. The normal operation is blocked after an affected invoice source is collected.
@@ -272,6 +359,13 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution
+
+The following field-level rules document source behavior, not target accounting
+authority. One target Item identity may have multiple charge/credit cycles with
+their own category snapshots; current placement must not rewrite paid history.
+An Unaccounted For Item can already have a Project/category without contributing
+spend. Preserve or quarantine source category evidence during migration; the
+source's “no backfill” policy does not waive target reconciliation.
 
 Items have a `budgetCategoryId` that follows this invariant:
 
@@ -296,17 +390,47 @@ Items in business inventory have no category. Items in a project have a category
 
 ## Enabled Categories Determination
 
+Target pickers are operation-specific: enforce exact scope, visibility and
+allowed category types/enabled state; show No Category only when that command
+permits it. The generic source picker filters active/non-system rows but does
+not enforce all writer rules. Selection cannot silently enable a category.
+
 A category appears in a project's budget display when it has a `ProjectBudgetCategory` document (i.e., it was explicitly enabled for this project). Budget amount and spend are irrelevant — a category with `budgetCents: 0` and no spend still appears if it has been enabled. Categories without a `ProjectBudgetCategory` document are hidden regardless of spend.
 
 This ensures the budget tab only shows categories the user intentionally selected during project creation or later enabled via the category selection sheet.
 
 ## Offline and Conflict Behavior
 
-- **Conflict resolution:** Last-write-wins (database default) for all budget data. Acceptable because most edits are single-user, single-device.
-- **Category name uniqueness:** Cannot be enforced offline (requires server query). Allow potential duplicates offline; surface error on sync.
-- **Transaction count aggregation:** Requires server query. Offline views use cached counts which may be stale.
+### Current Firebase behavior
+
+- Most budget and reference writes effectively use database last-write-wins.
+- Category reordering and Project setup fan out multiple independent writes.
+- Category-name uniqueness is not enforced at the current backend boundary.
+- Offline views depend on whatever Firestore documents and derived summaries are
+  cached and do not expose one complete-history/readiness state.
+
+### Target requirement
+
+- Accepted local edits have durable operation receipts and survive restart.
+- Project category enablement/allocation is one conflict-aware operation and
+  preserves absent versus enabled-without-budget versus explicit zero.
+- Category definition/type/archive and ordering mutations use revisions or
+  equivalent preconditions; interruption cannot report success with a partial
+  order.
+- Duplicate-name conflicts are surfaced without merging category identities.
+- Authorization for shared category changes is blocked on O-026 and enforced at
+  the server/RLS boundary, not by hiding Settings UI.
+- Budget/read projections expose freshness and incomplete-history state; cached
+  denormalized Firebase summaries are migration comparison evidence, not target
+  accounting authority.
 
 ## Edge Cases
+
+The archived/invalid category display rules below document source behavior.
+Target historical allocations must remain explainable through resolvable
+category identity/snapshots. An unknown category is an explicit unresolved or
+quarantined contribution, not permission to drop real value and publish a
+complete total. Missing/partial local evidence must likewise remain visible.
 
 1. **No categories enabled**: Show empty state prompting user to set up budget
 2. **Category archived with existing transactions**: Category hidden from forms/displays, but transactions retain their `budgetCategoryId` and budget calculations still include them

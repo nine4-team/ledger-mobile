@@ -1,0 +1,1319 @@
+{
+  "batchId": "M0-ITEM-CREATION-LINK-001",
+  "title": "Unified Item creation, accounting Link, and legacy capture",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-ITEM-CREATION-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-C593225376EB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides Firestore Item CRUD/listeners, price/category normalization, generic transaction association, bulk metadata writes, annotation cleanup and hard delete. Linked create may return generated Items before its asynchronous batch commit completes.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-47AEDE21C63C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firebase listener registrations, Firestore-shaped Item CRUD and untyped dictionary bulk updates as the current Item service seam.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Replace with local read ports and typed Item commands; do not wrap this protocol in a Firebase adapter. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Creation",
+        "surfaces": [
+          "ItemQuerying",
+          "ItemDetailReadModelQuerying",
+          "ProjectItemAccountingQuerying",
+          "ItemOperations",
+          "BulkItemOperations"
+        ],
+        "securityRequirements": [
+          "Typed Item queries and commands derive Account/Project access from trusted membership; normal detail commands cannot write accounting, movement, paid-history or source-correlation fields"
+        ],
+        "syncRequirements": [
+          "Query ports return versioned local Item/readiness snapshots and operation ports return durable receipts; no Firebase listener handle, path or untyped update dictionary crosses the boundary"
+        ]
+      },
+      "migration": {
+        "rule": "Retire the Firebase CRUD/listener seam and map supported outcomes to Item query/detail/accounting-section ports and typed Item/Link/bulk commands; generic association and hard delete do not survive as application operations.",
+        "reconciliation": [
+          "Contract registry assigns every Item source responsibility to one query/command/import owner or named decision hold, with no app/MCP duplicate writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "No-vendor-type/port-boundary, command registration, normal-detail field allowlist, durable receipt and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Feature code can express approved Item stories without arbitrary database fields, generic Transaction association or a Firebase adapter"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-2B5DD377E0BB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Represents a Firestore-shaped physical Item with placement, one overloaded transactionId, category, prices, quantity, media, source/currentSource and inventory-entry snapshot fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-07FE72314E4C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs on-device image normalization, OCR/barcode recognition and candidate extraction for captured Item media.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Local extraction remains advisory and cannot create accounting relationships or authoritative identity matches."
+    },
+    {
+      "id": "SWIFT-265DE17B71EF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines extracted Item tag payloads and deterministic SKU population/preservation policy.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Keep pure suggestion policy; direct user values remain authoritative."
+    },
+    {
+      "id": "SWIFT-8BA5197CA887",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Validates full Item creation as name-or-image and rejects negative optional prices; it does not accept a note as minimum identity evidence.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-08066A63BD11",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Represents a separate Firebase proto capture with open/in-review/converted status, provisional route hints, candidate IDs, photos, extraction and converted Item correlation.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import",
+        "O-019 evidence reconciliation",
+        "O-022 source freeze"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target creates one real Item. This model remains source schema evidence for the hard-cutover importer only."
+    },
+    {
+      "id": "SWIFT-8B52C90F1043",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides Firebase proto CRUD/listeners, conversion markers and proto-media queue metadata for current clients.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import",
+        "O-022 source freeze"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Leave unchanged before cutover; do not implement it in the target or wrap it as an adapter."
+    },
+    {
+      "id": "SWIFT-BB61FBAE2B1D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firebase-listener and CRUD/conversion operations for the separate proto lifecycle.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import",
+        "O-022 source freeze"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "No target proto port exists; migration uses a separate source decoder/importer."
+    },
+    {
+      "id": "SWIFT-D2EEB690D6AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Combines the full Item form with Firebase listeners, Item writes, direct accounting/lineage batches, inventory routing, legacy conversion and media enqueue. Quantity branches can create N Items while retaining quantity N on each.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-016",
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-016/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-068E43CFFCC5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements a separate Quick Add form that accepts photo or note, extracts candidates, writes a ProtoItem and queues proto media.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-017",
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-017/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-0B434663295C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Shows real Items and a separate Needs Assignment proto section, then composes convert/merge/delete, generic transaction association and bulk Item actions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015/A-015 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-1B50ECDA7CA1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits and observes one live ProtoItem, its media, Space and route hint, then offers Assign, Match Existing or destructive removal.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-018",
+        "O-019"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-018/O-019 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-A24C5FE4E6AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents proto photos, name/notes/SKU/quantity and provisional routing with Assign, Match and Remove actions.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target list cards present real Items and accounting state; proto-specific product language is retired."
+    },
+    {
+      "id": "SWIFT-7F24BFB8649C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides shared local Item search, grouping, filtering, selection, list controls and embedded/navigation modes across Project and Inventory contexts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve list capability while adding readiness and relationship-derived accounting sections. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "ItemQuerying",
+          "ItemListRequest",
+          "ItemListSnapshot",
+          "selection/group/filter presentation state"
+        ],
+        "securityRequirements": [
+          "Account membership and Project/Inventory scope authorize Item rows; financial/accounting badges and eligible relationships follow the approved financial visibility grant"
+        ],
+        "syncRequirements": [
+          "Project and Inventory streams carry stable Item identity, placement, media references and enough authorized relationship/occurrence evidence for readiness-aware local list/detail/accounting sections"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve each real source Item ID and physical/display fields, classify overloaded Transaction relationships by referenced semantics, and quarantine contradictions; proto records enter the separate import mapping and never become a runtime read namespace.",
+        "reconciliation": [
+          "Every source real Item maps once with stable ID, quantity, placement, detail/media and classified accounting relationship or explicit quarantine; cached/derived badges reconcile from canonical target evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local Item list/detail/search/card/accounting-section readiness, cross-account/financial visibility, stable ordering/cursor and source relationship migration tests"
+        ],
+        "acceptance": [
+          "Users can find and inspect one physical Item offline, and accounting badges/sections never arise from Space, Invoice membership or an unready/missing row"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F377448F2608",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders Item card identity, primary media, price and metadata from denormalized Item plus caller-provided lookup data.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Card behavior remains, but accounting labels come from authoritative target projections. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "ItemCardSnapshot",
+          "AttachmentDisplaySource",
+          "visibility-safe lookup summaries"
+        ],
+        "securityRequirements": [
+          "Account membership and Project/Inventory scope authorize Item rows; financial/accounting badges and eligible relationships follow the approved financial visibility grant"
+        ],
+        "syncRequirements": [
+          "Project and Inventory streams carry stable Item identity, placement, media references and enough authorized relationship/occurrence evidence for readiness-aware local list/detail/accounting sections"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve each real source Item ID and physical/display fields, classify overloaded Transaction relationships by referenced semantics, and quarantine contradictions; proto records enter the separate import mapping and never become a runtime read namespace.",
+        "reconciliation": [
+          "Every source real Item maps once with stable ID, quantity, placement, detail/media and classified accounting relationship or explicit quarantine; cached/derived badges reconcile from canonical target evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local Item list/detail/search/card/accounting-section readiness, cross-account/financial visibility, stable ordering/cursor and source relationship migration tests"
+        ],
+        "acceptance": [
+          "Users can find and inspect one physical Item offline, and accounting badges/sections never arise from Space, Invoice membership or an unready/missing row"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4F4F708AA0DD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Groups similarly named Items for compact list presentation and aggregate selection/display.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Grouping is presentation only and never merges identity or accounting relationships."
+    },
+    {
+      "id": "SWIFT-618D86C999C1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes Item card badges, metadata lines, primary image and grouped price display including current Invoice badges.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve pure display helpers; source labels do not define Accounted For state. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "ProjectItemAccountingSnapshot",
+          "ItemCardSnapshot",
+          "InvoiceStatusSummary",
+          "price display projection"
+        ],
+        "securityRequirements": [
+          "Account membership and Project/Inventory scope authorize Item rows; financial/accounting badges and eligible relationships follow the approved financial visibility grant"
+        ],
+        "syncRequirements": [
+          "Project and Inventory streams carry stable Item identity, placement, media references and enough authorized relationship/occurrence evidence for readiness-aware local list/detail/accounting sections"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve each real source Item ID and physical/display fields, classify overloaded Transaction relationships by referenced semantics, and quarantine contradictions; proto records enter the separate import mapping and never become a runtime read namespace.",
+        "reconciliation": [
+          "Every source real Item maps once with stable ID, quantity, placement, detail/media and classified accounting relationship or explicit quarantine; cached/derived badges reconcile from canonical target evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local Item list/detail/search/card/accounting-section readiness, cross-account/financial visibility, stable ordering/cursor and source relationship migration tests"
+        ],
+        "acceptance": [
+          "Users can find and inspect one physical Item offline, and accounting badges/sections never arise from Space, Invoice membership or an unready/missing row"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-AB578AEF4330",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds live Item detail from Firebase Item/Transaction/Space/category data and exposes detail, media, movement, generic association, correction and delete actions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-236679C7D427",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Item detail display-state helpers and an action list that always includes delete and generic set/clear Transaction.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "SWIFT-63EEC4FFD5ED",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements transaction-first inventory Item entry followed by optional sale of all/selected Items to a Project.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPMOD-82DC4C25B1B8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers Admin-SDK Item list/search/get/create/update/bulk/delete and media tools with Firestore-specific invariants. Project create requires transactionId, unlike Swift.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-023",
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-023/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPTOOL-C559C9328A76",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Items using exact Firestore filters, pagination and optional transaction/image client filters.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve structured querying through authorized target read models with accounting-state and readiness semantics. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "ListItemsQuery",
+          "ItemListPage",
+          "stable cursor and indexed filter contract"
+        ],
+        "securityRequirements": [
+          "MCP queries bind verified Principal and active Account membership; projection profiles omit unauthorized financial fields and return non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP is online and uses the same canonical versioned Item projections as the app; app consumers receive equivalent results through local synchronized read models"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Item IDs and fields to target Item projections while replacing Firestore filters/full scans/client-side Transaction/image filtering with indexed bounded queries and stable cursors.",
+        "reconciliation": [
+          "App and MCP Item lists/details/search match by stable IDs, visibility, predicates, order, cursor and readiness/contract version on semantic fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app Item query parity, filter/search/cursor bounds, cross-account/restricted visibility, non-enumeration and source migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect authorized Items without raw schema modes, Admin-SDK scans or a second interpretation of Item/accounting state"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-296490D2ADA4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns one Firestore Item projection by ID.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Target detail includes explicit accounting/provenance state under the caller's authorization. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "GetItemQuery",
+          "ItemDetailSnapshot",
+          "projection/readiness version"
+        ],
+        "securityRequirements": [
+          "MCP queries bind verified Principal and active Account membership; projection profiles omit unauthorized financial fields and return non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP is online and uses the same canonical versioned Item projections as the app; app consumers receive equivalent results through local synchronized read models"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Item IDs and fields to target Item projections while replacing Firestore filters/full scans/client-side Transaction/image filtering with indexed bounded queries and stable cursors.",
+        "reconciliation": [
+          "App and MCP Item lists/details/search match by stable IDs, visibility, predicates, order, cursor and readiness/contract version on semantic fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app Item query parity, filter/search/cursor bounds, cross-account/restricted visibility, non-enumeration and source migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect authorized Items without raw schema modes, Admin-SDK scans or a second interpretation of Item/accounting state"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-3FD3943A21F3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Loads and substring-filters Items across name, description, SKU, source, notes and amount.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve search outcome with bounded authorized projections rather than Firestore scans. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Identity and Read Models",
+        "surfaces": [
+          "SearchItemsQuery",
+          "ItemSearchPage",
+          "bounded indexed text/search document"
+        ],
+        "securityRequirements": [
+          "MCP queries bind verified Principal and active Account membership; projection profiles omit unauthorized financial fields and return non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP is online and uses the same canonical versioned Item projections as the app; app consumers receive equivalent results through local synchronized read models"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Item IDs and fields to target Item projections while replacing Firestore filters/full scans/client-side Transaction/image filtering with indexed bounded queries and stable cursors.",
+        "reconciliation": [
+          "App and MCP Item lists/details/search match by stable IDs, visibility, predicates, order, cursor and readiness/contract version on semantic fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app Item query parity, filter/search/cursor bounds, cross-account/restricted visibility, non-enumeration and source migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect authorized Items without raw schema modes, Admin-SDK scans or a second interpretation of Item/accounting state"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-90873708F7CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates one Firestore Item and optional Transaction back-reference but rejects project Items without transactionId.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPTOOL-A0EFDDABC6F3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates multiple Firestore Item documents in one batch with shared/overridden scope and Transaction defaults.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPTOOL-69F70F0D82F2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Updates Item fields and can also change scope/category/Transaction membership while maintaining Firestore arrays and correction lineage.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPTOOL-149B6F08EC7B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk-updates Firestore Items selected by filters in sequential 500-write batches after partial invariant/Space preflight.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Target defines explicit atomicity/resume/per-Item results and limits bulk fields to non-story metadata. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Detail Operations",
+        "surfaces": [
+          "BulkUpdateItemDetailsCommand by query snapshot",
+          "BulkOperationReceipt",
+          "per-Item result journal"
+        ],
+        "securityRequirements": [
+          "Bulk selection is re-authorized per Item and only an explicit non-accounting detail-field allowlist is mutable; scope, payer, movement, paid and provenance fields are excluded"
+        ],
+        "syncRequirements": [
+          "One durable bulk operation records target IDs, expected revisions and a resumable per-Item result; successful local projections and authoritative conflicts remain observable"
+        ]
+      },
+      "migration": {
+        "rule": "Replace sequential Firestore batch mechanics with a versioned `BulkUpdateItemDetails` operation; preserve requested safe metadata changes and report every per-Item migrated/omitted/conflicted result.",
+        "reconciliation": [
+          "Requested, applied, rejected and untouched Item ID/field hashes balance exactly across retries and interruption, with no silent partial chunk"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Filter/explicit-ID selection, field allowlist, revision conflict, interruption/resume, more-than-500 Items, partial-result and cross-account tests"
+        ],
+        "acceptance": [
+          "A large safe metadata action either reports each Item's durable outcome or fails before mutation; it never silently stops between backend chunks"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-FF9A322A83CD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk-updates per-ID Firestore Item field sets with invariant/Space checks and sequential batch commits.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Keep correction utility only for approved nonfinancial fields; relationship stories require dedicated commands. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Detail Operations",
+        "surfaces": [
+          "BulkUpdateItemDetailsCommand by stable IDs",
+          "ExpectedItemRevisions",
+          "BulkOperationReceipt"
+        ],
+        "securityRequirements": [
+          "Bulk selection is re-authorized per Item and only an explicit non-accounting detail-field allowlist is mutable; scope, payer, movement, paid and provenance fields are excluded"
+        ],
+        "syncRequirements": [
+          "One durable bulk operation records target IDs, expected revisions and a resumable per-Item result; successful local projections and authoritative conflicts remain observable"
+        ]
+      },
+      "migration": {
+        "rule": "Replace sequential Firestore batch mechanics with a versioned `BulkUpdateItemDetails` operation; preserve requested safe metadata changes and report every per-Item migrated/omitted/conflicted result.",
+        "reconciliation": [
+          "Requested, applied, rejected and untouched Item ID/field hashes balance exactly across retries and interruption, with no silent partial chunk"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Filter/explicit-ID selection, field allowlist, revision conflict, interruption/resume, more-than-500 Items, partial-result and cross-account tests"
+        ],
+        "acceptance": [
+          "A large safe metadata action either reports each Item's durable outcome or fails before mutation; it never silently stops between backend chunks"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-D2757741F638",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Hard-deletes an Item, removes its current Transaction array reference and best-effort deletes Item-owned Storage objects without target history/paid-dependency policy.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "MCPMOD-B1238289755F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers Firebase quick-draft read/write/review/promotion/merge flows and independently composes Item, Purchase, lineage, media and proto conversion behavior.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import",
+        "O-019 reconciliation",
+        "O-022 source freeze"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Current deployed module remains unchanged before cutover; target MCP has real Item commands and no proto module."
+    },
+    {
+      "id": "MCPTOOL-1159AA7AC389",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists legacy Firebase proto records with exact filters and active-status semantics.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Importer uses source exports, not a target runtime MCP proto reader."
+    },
+    {
+      "id": "MCPTOOL-06C083E3F645",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Gets one legacy Firebase proto record and projects provisional/correlation fields.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "No target runtime proto object exists."
+    },
+    {
+      "id": "MCPTOOL-3FD87C59256C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Searches legacy proto captures by direct and extracted text fields.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "After import, equivalent evidence is searchable through real Item/read models and migration quarantine tooling."
+    },
+    {
+      "id": "MCPTOOL-9ACF50C26A5A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Read-only audits deprecated candidateTransactionId values and conflicts without treating them as confirmed.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Production source profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Its non-authoritative interpretation is preserved in migration audit tooling, not the target app API."
+    },
+    {
+      "id": "MCPTOOL-145C17DE8501",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates a separate Firebase proto record with status, route hints, extraction, candidate and optional media references.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-022 source freeze"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target MCP calls CreateItem and never creates proto data."
+    },
+    {
+      "id": "MCPTOOL-A5ACF0F717E8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Updates metadata, status, hints and candidates on a separate Firebase proto record.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target updates real Item details or explicit migration quarantine state."
+    },
+    {
+      "id": "MCPTOOL-133576E8F2FF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Deletes a Firebase proto document without deleting its Storage media.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import",
+        "O-023 media retention"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target import evidence is retained; no proto delete command exists."
+    },
+    {
+      "id": "MCPTOOL-00ABE6895DBA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Marks a Firebase proto record in_review.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-018 proto import"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target Item completeness/accounting state is derived; migration quarantine has separate operator state."
+    },
+    {
+      "id": "MCPTOOL-28AB94AA6869",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Promotes or merges a proto into a Firestore Item and may also create a Project Purchase, mutate acquisition membership, copy media, create lineage and mark conversion.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "O-016 acquisition evidence",
+        "O-018 proto import",
+        "O-019 reconciliation"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Target separates idempotent source import, explicit reconciliation and story-specific Link; Business-paid Link creates no Project Transaction."
+    },
+    {
+      "id": "TEST-322BEAB07F90",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Proves the current name-or-image Item validation and nonnegative price checks.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "TEST-FCBA68605B98",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests extraction routing, payload normalization and SKU mutation decisions.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Retain as deterministic advisory-extraction evidence."
+    },
+    {
+      "id": "TEST-87CD4AFC58FD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current Firebase Codable shapes including Item and legacy ProtoItem fields/enums.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "O-018 source import mapping"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Keep as source decoder fixture evidence; target domain serialization gets separate tests."
+    },
+    {
+      "id": "TEST-934F8ECFA62C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current Item CRUD against Firebase emulator integration infrastructure.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Target integration tests run against isolated Postgres/PowerSync, not a Firebase Item adapter. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Target Contract Tests",
+        "surfaces": [
+          "ItemTargetAdapterContractSuite",
+          "isolated local/cloud-staging fixtures",
+          "source import fixtures"
+        ],
+        "securityRequirements": [
+          "Integration fixtures use isolated synthetic Accounts/Principals and target RLS/Sync policies; production and Firebase-emulator endpoints are refused"
+        ],
+        "syncRequirements": [
+          "Harness controls encrypted local DB, stream readiness, network loss, operation replay and authoritative Item results across restart"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase-emulator CRUD fixtures with semantic target Item/query/operation and immutable source-import fixtures; no emulator behavior is target parity authority.",
+        "reconciliation": [
+          "Fixture inventory covers stable Item IDs, quantity, placement, accounting-section evidence, operations and source variants with expected invariant hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/staging adapter contract, RLS/Sync, restart/offline/replay, migration and environment-refusal self-tests"
+        ],
+        "acceptance": [
+          "The test suite proves target Item behavior and isolation without starting or modifying the production Firebase application"
+        ]
+      }
+    },
+    {
+      "id": "TEST-6297E07C65AA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Firestore-safe bulk metadata updates, annotation cleanup, chunking and error propagation in ItemsService.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Retain intended cleanup/error cases while replacing Firestore batch mechanics and adding relationship-aware deletion tests. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Target Contract Tests",
+        "surfaces": [
+          "BulkItemOperationContractTests",
+          "safe metadata cleanup fixtures",
+          "interruption/per-Item outcome tests"
+        ],
+        "securityRequirements": [
+          "Semantic fixtures exercise authorized, restricted and cross-account actors and never infer Item authority from copied Project/Transaction fields"
+        ],
+        "syncRequirements": [
+          "Tests assert local readiness, stable one-Item identity, durable operation state and authoritative Link/accounting projections across restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/unlinked-rejection/denormalized calculation expectations with stable-ID semantic fixtures; preserve intended query/card/error outcomes and classify source variants explicitly.",
+        "reconciliation": [
+          "Test catalog covers valid Unaccounted For Items, both Link stories, one physical Item identity, quantity-on-one-record, query predicates and all held decision variants without silently choosing them"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "CreateItem/Link behavioral parity, unaccounted validity, no-write dismissal, card/accounting projection, query and source migration suites"
+        ],
+        "acceptance": [
+          "Tests reject copied Firebase mechanics while proving one Item can be created, found, displayed and linked through the approved product stories"
+        ]
+      }
+    },
+    {
+      "id": "TEST-8B555E151D8D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Item detail route/display/price/action calculations including generic association and always-visible delete.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker."
+    },
+    {
+      "id": "TEST-DA0DC6CF7163",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Item card badges, metadata, primary image and grouped pricing helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve presentation cases and add authoritative Accounted For projection cases. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Target Contract Tests",
+        "surfaces": [
+          "ItemCardProjectionTests",
+          "ProjectItemAccountingSnapshot fixtures",
+          "authorized price/media metadata tests"
+        ],
+        "securityRequirements": [
+          "Semantic fixtures exercise authorized, restricted and cross-account actors and never infer Item authority from copied Project/Transaction fields"
+        ],
+        "syncRequirements": [
+          "Tests assert local readiness, stable one-Item identity, durable operation state and authoritative Link/accounting projections across restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/unlinked-rejection/denormalized calculation expectations with stable-ID semantic fixtures; preserve intended query/card/error outcomes and classify source variants explicitly.",
+        "reconciliation": [
+          "Test catalog covers valid Unaccounted For Items, both Link stories, one physical Item identity, quantity-on-one-record, query predicates and all held decision variants without silently choosing them"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "CreateItem/Link behavioral parity, unaccounted validity, no-write dismissal, card/accounting projection, query and source migration suites"
+        ],
+        "acceptance": [
+          "Tests reject copied Firebase mechanics while proving one Item can be created, found, displayed and linked through the approved product stories"
+        ]
+      }
+    },
+    {
+      "id": "FILE-A756C114568E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests MCP project/category/Transaction creation and update invariants, including the current rejection of an unlinked project Item.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Target suite must agree with app that an Unaccounted For project Item is valid and financially inert. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Target Contract Tests",
+        "surfaces": [
+          "CreateItemAndLinkBehaviorSuite",
+          "UnaccountedForItem fixtures",
+          "app/MCP operation parity"
+        ],
+        "securityRequirements": [
+          "Semantic fixtures exercise authorized, restricted and cross-account actors and never infer Item authority from copied Project/Transaction fields"
+        ],
+        "syncRequirements": [
+          "Tests assert local readiness, stable one-Item identity, durable operation state and authoritative Link/accounting projections across restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/unlinked-rejection/denormalized calculation expectations with stable-ID semantic fixtures; preserve intended query/card/error outcomes and classify source variants explicitly.",
+        "reconciliation": [
+          "Test catalog covers valid Unaccounted For Items, both Link stories, one physical Item identity, quantity-on-one-record, query predicates and all held decision variants without silently choosing them"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "CreateItem/Link behavioral parity, unaccounted validity, no-write dismissal, card/accounting projection, query and source migration suites"
+        ],
+        "acceptance": [
+          "Tests reject copied Firebase mechanics while proving one Item can be created, found, displayed and linked through the approved product stories"
+        ]
+      }
+    },
+    {
+      "id": "FILE-9B6F2E8F7C67",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current MCP Item price-floor normalization across create and update paths.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Carry the domain invariant into shared command and database-constraint tests."
+    },
+    {
+      "id": "FILE-FA56265839AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Item structured filtering and transaction/image client-side filters.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001"
+      ],
+      "notes": "Preserve observable filters while adding accounting-state/readiness/security coverage. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
+      "target": {
+        "owner": "Item Target Contract Tests",
+        "surfaces": [
+          "ItemQueryContractTests",
+          "indexed filter/search/cursor fixtures",
+          "app/MCP query parity"
+        ],
+        "securityRequirements": [
+          "Semantic fixtures exercise authorized, restricted and cross-account actors and never infer Item authority from copied Project/Transaction fields"
+        ],
+        "syncRequirements": [
+          "Tests assert local readiness, stable one-Item identity, durable operation state and authoritative Link/accounting projections across restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/unlinked-rejection/denormalized calculation expectations with stable-ID semantic fixtures; preserve intended query/card/error outcomes and classify source variants explicitly.",
+        "reconciliation": [
+          "Test catalog covers valid Unaccounted For Items, both Link stories, one physical Item identity, quantity-on-one-record, query predicates and all held decision variants without silently choosing them"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "CreateItem/Link behavioral parity, unaccounted validity, no-write dismissal, card/accounting projection, query and source migration suites"
+        ],
+        "acceptance": [
+          "Tests reject copied Firebase mechanics while proving one Item can be created, found, displayed and linked through the approved product stories"
+        ]
+      }
+    },
+    {
+      "id": "FILE-7EB13D79EF3E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests that multiple physical Item copies preserve the source name without generated suffixes.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001"
+      ],
+      "notes": "Retain for the explicit copy/materialization command; normal quantity remains one Item record."
+    },
+    {
+      "id": "SWIFT-008B49A474D1",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "24a613a720b06d4d7022ba7a1f16d15fec281aa9b86195298b9e7929acb33003",
+      "currentBehavior": "Implements provider-free stable Purchase-relationship and billable-occurrence evidence, exact Account/Project/Client/Item validation, relationship-derived accounting resolution, ordered Unaccounted For / Accounted For sections, explicit unresolved incomplete-local rows, canonical fingerprinted restart evidence and bounded refusal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-ACCOUNTING-001"
+      ],
+      "notes": "Target-only Phase 1 Project Item read foundation verified at exact implementation commit 92e0b565 by immutable Actions run 33591275648. Four focused/all 88 target tests, graph/contracts, both staging builds and clean artifacts pass. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
+      "target": {
+        "owner": "Project Item Accounting Sections",
+        "surfaces": [
+          "ItemAccountingConnectionID",
+          "BillableItemOccurrenceID",
+          "ClientPaidPurchaseAccountingConnection",
+          "BillableItemAccountingOccurrence",
+          "ProjectItemAccountingEvidence",
+          "ProjectItemAccountingRow",
+          "ProjectItemAccountingSection",
+          "ProjectItemAccountingSectionsSnapshot",
+          "ProjectItemAccountingQuerying",
+          "ProjectItemAccountingSectionFailure"
+        ],
+        "securityRequirements": [
+          "Every relationship and row binds exact AccountID, ProjectID and ItemID values; names, Space, category, status, detail completeness and cached section state never establish scope or authorization",
+          "Locally valid relationship evidence is not authorization: future handlers and download boundaries independently prove membership, financial visibility and current relationship access"
+        ],
+        "syncRequirements": [
+          "The local snapshot distinguishes authoritative empty from incomplete/partial/stale evidence, keeps relationship-free incomplete rows outside both product sections, and preserves exact relationship identity across restart",
+          "No PowerSync Stream, local table, provider subscription, writer or optimistic Link operation is created by this provider-free read slice"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only accounting-section values; do not decode Firebase Item.transactionId, proto status, Invoice badges or lineage and do not infer an authoritative Link from category, Space, price, display state or source text.",
+        "reconciliation": [
+          "Later migration/provider slices correlate each qualifying Purchase or billable occurrence relationship to one Item and retain unresolved/ambiguous source evidence without falsely marking the Item Accounted For"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests"
+        ],
+        "acceptance": [
+          "Synthetic complete local evidence places only relationship-backed project Items in Accounted For and relationship-free Items in Unaccounted For; incomplete absence remains unresolved, and Space/occurrence presentation state stays non-authoritative without choosing schema, settlement or Link behavior"
+        ]
+      }
+    },
+    {
+      "id": "TEST-0E4B478B0C55",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "e6e3e3987e1461c1abc2aa4e9868ebae3c7f3806ea2e820dea498bc8c1424c77",
+      "currentBehavior": "Executes four deterministic target-only tests for Purchase/occurrence-derived ordered sections, Space/polarity/available-live-frozen independence, authoritative-empty versus explicit incomplete-local resolution, byte-identical restart through the scoped query port, and atomic invalid/cross-scope/duplicate/derived/fingerprint refusal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-ACCOUNTING-001"
+      ],
+      "notes": "Four focused accounting-section tests and all 88 target tests pass locally and at exact implementation commit 92e0b565 in immutable Actions run 33591275648 with graph/contracts, both staging builds and clean artifacts. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
+      "target": {
+        "owner": "Project Item Accounting Sections",
+        "surfaces": [
+          "ProjectItemAccountingSectionsTests",
+          "client-paid Purchase and billable occurrence fixtures",
+          "Unaccounted For first / Accounted For second section fixtures",
+          "readiness, restart, cross-scope, duplicate and tamper fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic Account/Project/Item/Transaction/Invoice/occurrence identities and non-sensitive values only",
+          "Negative tests assert stable bounded failures without names, paths, queries, credentials, provider payloads or authorization claims"
+        ],
+        "syncRequirements": [
+          "All fixtures run without database, PowerSync, network or hosted services and preserve exact local relationship/readiness evidence across canonical restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item, proto, Transaction, Invoice, lineage, export or production-derived identity.",
+        "reconciliation": [
+          "Equivalent accounting-section evidence round-trips identically while incomplete, cross-Account/cross-Project/cross-Item, duplicate, invalid relationship and tampered derived evidence fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free accounting-state/read-section boundary without claiming Item creation/Link, occurrence persistence, RLS, Sync, app/MCP, migration or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A2FCAF3E6103",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "87c045cde2aefd81c78e456a9474c272283f14bd8e8c53bfd9f78436b081665f",
+      "currentBehavior": "Implements the provider-free stateless Project Item accounting-section labels, exact Link payer-choice presentation, authoritative Unaccounted-only availability, bounded refusal and no-action dismissal.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
+      ],
+      "notes": "Verified provider-free presentation leaf. Primary every-line review and an independent adversarial review found no P0-P2 defect; one P3 test-exhaustiveness finding was corrected and independently confirmed. Four focused/all 193 target tests in 45 suites, isolation, contracts and both staging builds passed locally and at exact implementation commit d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4 in immutable Actions run 33691932385. It cannot add Link commands/routes, Purchase selection, acquisition handling, transient-state persistence, Accounted-item actions, app/MCP wiring, provider behavior, migration or production authority.",
+      "target": {
+        "owner": "Project Item Link Presentation",
+        "surfaces": [
+          "ProjectItemAccountingSectionKind display label",
+          "ProjectItemLinkPayerChoice presentation meaning",
+          "ProjectItemLinkPresentationDescriptor",
+          "ProjectItemLinkPresentationFailure",
+          "side-effect-free dismissal projection"
+        ],
+        "securityRequirements": [
+          "Link presentation is derived only for an already validated authoritative Unaccounted For row; Accounted For and incomplete relationship evidence fail closed",
+          "The value carries no authorization, provider payload, Purchase identity, command, route or mutation capability"
+        ],
+        "syncRequirements": [
+          "Presentation is re-derived from the verified canonical Project Item accounting snapshot after structured restart; no transient payer/modal state is persisted",
+          "No new query port, PowerSync Stream, local table or upload behavior is introduced"
+        ]
+      },
+      "migration": {
+        "rule": "Project target-only vocabulary from verified target accounting rows and decode no Firebase proto, linked/unlinked, assignment or inventory-sale UI state.",
+        "reconciliation": [
+          "Later app wiring must preserve exact target labels and refuse unresolved accounting rows without treating presentation values as Link command authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemLinkPresentationTests"
+        ],
+        "acceptance": [
+          "Synthetic verified accounting rows produce only the exact approved target labels and Unaccounted-only Link payer presentation, with dismissal producing no route or mutation"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F63806A8047A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b93321983708579c99bbdfe31c58dcaf35bdbb4cfa1d73ba39303e1e4e566048",
+      "currentBehavior": "Implements four deterministic provider-free tests for exact section/action/question/payer vocabulary, unordered exhaustive choice membership, fail-closed Accounted/incomplete rows, stateless dismissal/restart and reuse of the verified accounting query boundary.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
+      ],
+      "notes": "Verified synthetic tests. An independent reviewer found one P3 self-referential choice-membership assertion; CaseIterable plus a literal unordered two-case assertion corrected it and the reviewer confirmed resolution. Four focused/all 193 target tests in 45 suites passed locally and at exact implementation commit d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4 in immutable Actions run 33691932385 without asserting payer display order or any actual Link behavior.",
+      "target": {
+        "owner": "Project Item Link Presentation",
+        "surfaces": [
+          "ProjectItemLinkPresentationTests",
+          "exact target-vocabulary fixtures",
+          "Unaccounted/accounted/incomplete availability fixtures",
+          "dismissal and restart re-projection fixtures",
+          "provider/command/legacy-vocabulary exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic already-validated target rows and prove unresolved/accounted rows cannot acquire a Link affordance",
+          "Failures and public values expose no source/provider path, credential, Purchase identity or command authority"
+        ],
+        "syncRequirements": [
+          "Tests re-derive identical presentation after canonical accounting-snapshot encoding/decoding and persist no transient choice state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no current Firebase UI/model/export fixture.",
+        "reconciliation": [
+          "Forbidden legacy/internal wording remains absent and dismissal leaves the original accounting evidence unchanged"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemLinkPresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the stateless presentation boundary and explicitly cannot prove Link routing, commands, persistence, app/MCP, provider, migration or production behavior"
+        ]
+      }
+    }
+  ]
+}

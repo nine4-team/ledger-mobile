@@ -2,20 +2,93 @@
 Status: modify
 Last updated: 2026-05-18
 
-## Summary
-The Needs Review tab surfaces items, proto items, and transactions that need attention, but currently displays them as a flat, context-free list. When the user taps into an item, they can't tell which client it's for, what project it lives in, or what they're supposed to do with it. This is the same problem the previous search bar had — results stripped of their surrounding context. The fix is to group the list by project and add breadcrumb navigation to item details.
+> **Target boundary:** O-063 owns the target review reasons, grouping and
+> contextual navigation. The real-Item/Link model supersedes all recurring
+> ProtoItem/Quick Draft conversion language below. Existing source behavior is
+> the bucketed Transaction queue, not the flat mixed list described by the old
+> proposal. Legacy capture conversion is migration-only; source `isComplete`
+> and Cloud Functions are not target review authority.
 
-Proto item capture makes this tab a cross-workflow cleanup work queue: captured photo groups appear here until a reviewer converts them into items, merges the capture with an existing item, converts from inventory, or deletes the capture. Item Quick Drafts must also appear in their owning project, inventory, or transaction Items context; Needs Review is not their canonical home. See [proto-item-capture.md](proto-item-capture.md).
+## Target Review Contract
+
+Preserve the Review section, visible context/counts, local query and eight
+existing sort choices: purchase date newest/oldest, amount highest/lowest,
+creation date newest/oldest and source A–Z/Z–A. Keep exact stable-ID detail
+routing and app-wide find scrolling. Distinguish globally caught up, selected
+group empty, query-no-match, incomplete/stale evidence and unavailable detail.
+O-063 decides how those controls apply to the target's typed review reasons and
+Project/Client/Inventory grouping, including archived and unassigned evidence.
+
+Each target row must explain why attention is needed using canonical evidence,
+not a generic stored completeness bit, missing-array heuristic or automatic
+"unassigned means sell" inference. Resolving a row invokes its owning Item
+Link, physical-placement, receipt/accounting correction or other approved
+workflow. Context includes current Client/Project/Inventory, category/Space and
+visible accounting links; tappable breadcrumb destinations remain O-063.
+
+A new target Item is already a real Item: no convert/promote/merge-from-proto
+writer is added to Review. O-018/O-019 own legacy capture reconciliation;
+O-032 owns Transaction posting/readiness. Permanently rejected offline work
+retains its separate O-051 recovery policy; this screen cannot silently
+acknowledge or discard it. Financial visibility applies before local counts,
+rows or resolution context are exposed. Search/review share approved readers
+and owning commands, not duplicated review-specific business logic.
+
+Resolution acceptance must exercise the exact selected identity and approved
+destination, including unavailable/denied/canceled paths, and cite the owning
+workflow's verification. It does not require Review-specific backend writers.
+Financial resolution context remains subject to O-060.
+
+## Summary
+### Caller-Supplied MCP Ingestion Evidence
+
+Account for existing MCP Transaction metadata readback, exact ingestion-status
+filtering, metadata supplied at creation, and status updates during triage.
+Source fields include origin/status, email ID/subject/inbox, confidence/reason,
+order number and related Transaction IDs. The inspected source has no email
+intake, matching or deduplication service; none is implied by these fields.
+
+Preserve raw imported values as correlated source evidence. O-069 decides
+preserve/redesign/retire for the supplied-metadata capability. O-063 decides which
+typed reasons and transitions belong in target review; O-065 governs ordinary
+Transaction mutations and O-060 financial visibility. Untrusted caller claims
+such as `auto_matched` or confidence cannot establish canonical relationships,
+authorization or accounting completeness. Related IDs must not disclose hidden
+Transactions. Target read/filter/write parity remains blocked on those decisions;
+it must not disappear under the separate vendor-PDF import workflow.
+
+The manually set `receiptEmailed` fact is separate from ingestion provenance.
+Preserve it through the ordinary Transaction workflow, with one canonical field;
+the source `hasEmailReceipt` alias is compatibility evidence, not a second value.
+
+### Historical Summary
+The Review tab surfaces work needing attention. The older proposal below asks
+for richer context and grouping, but its flat-list diagnosis is obsolete and
+its ProtoItem model is superseded. The Target Review Contract takes precedence.
+
+The earlier proposal treated ProtoItem capture as recurring review work. That
+model is superseded by real Items and Link; only legacy import reconciliation
+retains source capture evidence. See [proto-item-capture.md](proto-item-capture.md).
 
 ## Current Behavior (What Exists Today)
 
-- The Needs Review tab shows a flat list of items/transactions that need attention (flagged for review, incomplete data, pending decisions, etc.)
-- Tapping into an item opens its detail view, but the detail view does not show which client it belongs to, which project it's part of, or what budget category it falls under
-- There is no grouping or visual organization on the list — items from different projects and inventory are interleaved with no separation
-- The user has to mentally track or navigate away to figure out where an item belongs and what action to take
-- This mirrors the context problem that existed with the previous search bar: results appeared in isolation with no way to understand their place in the larger picture
+- `ReviewCalculations.pendingTransactions` selects non-canceled Transactions
+  whose source `isComplete` is not true.
+- Horizontal Unassigned, Inventory and active-Project buckets show counts.
+  Source Inventory versus Unassigned uses empty `itemIds`, not approved target
+  ownership evidence; archived Projects are not bucket tabs.
+- The selected bucket supports local Transaction search and the eight sort
+  choices above. Cards open Transaction detail, not a generic proto resolver.
+- The source conflates empty-bucket and query-no-match copy; the target must
+  distinguish them and must not claim globally caught up from incomplete data.
 
 ## What's Changing
+
+**Superseded/source-era proposal:** This section and all remaining proposal,
+How It Works, Open Questions and Implementation Notes sections are historical
+design evidence, not target instructions. In particular, their proto conversion,
+generic assignment/`sell_items`, grouping and tappable-breadcrumb prescriptions
+are not approved. The Target Review Contract and O-063 govern the redesign.
 
 ### Staying the Same
 - The Needs Review tab still surfaces items that need attention — the core concept of a review queue is correct

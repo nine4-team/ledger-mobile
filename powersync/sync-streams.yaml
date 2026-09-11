@@ -1,0 +1,871 @@
+config:
+  edition: 3
+
+streams:
+  item_images:
+    queries:
+      - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND item_image_sets.item_id=subscription.parameter('item_id')
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_references.id,item_image_references.account_id,item_image_references.item_id,
+          item_image_references.attachment_id,item_image_references.set_revision::text AS set_revision,
+          item_image_references.position,item_image_references.is_primary
+        FROM item_image_references
+        JOIN item_image_sets AS image_set ON image_set.account_id=item_image_references.account_id
+          AND image_set.item_id=item_image_references.item_id AND image_set.revision=item_image_references.set_revision
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_references.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_references.account_id=subscription.parameter('account_id')
+        AND item_image_references.item_id=subscription.parameter('item_id')
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_objects.id,item_image_objects.account_id,item_image_objects.content_sha256,
+          item_image_objects.byte_count::text AS byte_count,item_image_objects.media_type,item_image_objects.storage_path
+        FROM item_image_objects
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_objects.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_objects.account_id=subscription.parameter('account_id')
+        AND item_image_objects.id IN (
+          SELECT reference.attachment_id FROM item_image_references AS reference
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_card_thumbnails.id,item_card_thumbnails.account_id,item_card_thumbnails.original_attachment_id,
+          item_card_thumbnails.thumbnail_attachment_id,item_card_thumbnails.recipe,
+          item_card_thumbnails.pixel_width,item_card_thumbnails.pixel_height
+        FROM item_card_thumbnails
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_card_thumbnails.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_card_thumbnails.account_id=subscription.parameter('account_id')
+        AND item_card_thumbnails.original_attachment_id IN (
+          SELECT reference.attachment_id FROM item_image_references AS reference
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_objects.id,item_image_objects.account_id,item_image_objects.content_sha256,
+          item_image_objects.byte_count::text AS byte_count,item_image_objects.media_type,item_image_objects.storage_path
+        FROM item_image_objects
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_objects.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_objects.account_id=subscription.parameter('account_id')
+        AND item_image_objects.id IN (
+          SELECT thumbnail.thumbnail_attachment_id FROM item_card_thumbnails AS thumbnail
+          JOIN item_image_references AS reference ON reference.account_id=thumbnail.account_id
+            AND reference.attachment_id=thumbnail.original_attachment_id
+          JOIN item_image_sets AS image_set ON image_set.account_id=reference.account_id
+            AND image_set.item_id=reference.item_id AND image_set.revision=reference.set_revision
+          WHERE reference.account_id=subscription.parameter('account_id')
+          AND reference.item_id=subscription.parameter('item_id')
+        )
+        AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+  account_business_profile:
+    queries:
+      - |
+        SELECT spike_accounts.id, spike_accounts.display_name, spike_accounts.created_at
+        FROM spike_accounts
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_accounts.id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_accounts.id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_account_business_profiles.id, spike_account_business_profiles.account_id, spike_account_business_profiles.logo_attachment_id,
+          spike_account_business_profiles.logo_content_sha256, spike_account_business_profiles.logo_byte_count::text AS logo_byte_count,
+          spike_account_business_profiles.logo_media_type, spike_account_business_profiles.logo_storage_path, spike_account_business_profiles.revision::text AS revision
+        FROM spike_account_business_profiles
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_account_business_profiles.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_account_business_profiles.account_id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+  property_management_report:
+    queries:
+      - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND item_image_sets.item_id IN (
+          SELECT placement.item_id FROM spike_item_placements AS placement
+          WHERE placement.account_id=subscription.parameter('account_id')
+          AND placement.scope_kind='project' AND placement.project_id=subscription.parameter('project_id')
+          AND placement.ended_at IS NULL
+        )
+        AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+      - |
+        SELECT spike_projects.id, spike_projects.account_id, spike_projects.client_id, spike_projects.display_name,
+          spike_projects.description, spike_projects.legacy_notes, spike_projects.property_address, spike_projects.lifecycle, spike_projects.revision,
+          spike_projects.category_configuration_revision::text AS category_configuration_revision,
+          spike_projects.created_at_ms, spike_projects.updated_at_ms, spike_projects.created_by_principal_id
+        FROM spike_projects
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_projects.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_projects.account_id = subscription.parameter('account_id')
+        AND spike_projects.id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_spaces.id, spike_spaces.account_id, spike_spaces.scope_kind, spike_spaces.project_id,
+          spike_spaces.display_name, spike_spaces.lifecycle, spike_spaces.revision
+        FROM spike_spaces
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_spaces.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_spaces.account_id = subscription.parameter('account_id')
+        AND spike_spaces.project_id = subscription.parameter('project_id')
+        AND (spike_spaces.lifecycle = 'active' OR spike_spaces.id IN (
+          SELECT placement.space_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.project_id = subscription.parameter('project_id')
+          AND placement.scope_kind = 'project' AND placement.ended_at IS NULL
+        ))
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_item_placements.id, spike_item_placements.account_id, spike_item_placements.item_id, spike_item_placements.scope_kind,
+          spike_item_placements.project_id, spike_item_placements.space_id, spike_item_placements.started_at,
+          spike_item_placements.started_by_principal_id, spike_item_placements.ended_at, spike_item_placements.ended_by_principal_id
+        FROM spike_item_placements
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_item_placements.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_item_placements.account_id = subscription.parameter('account_id')
+        AND spike_item_placements.project_id = subscription.parameter('project_id')
+        AND spike_item_placements.ended_at IS NULL
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_items.id, spike_items.account_id, spike_items.name, spike_items.description, spike_items.sku,
+          spike_items.workflow_status, spike_items.bookmark,
+          spike_items.source, spike_items.current_source, spike_items.notes,
+          spike_items.market_value_minor_units::text AS market_value_minor_units, spike_items.market_value_currency, spike_items.revision,
+          spike_items.created_at, spike_items.created_by_principal_id
+        FROM spike_items
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_items.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_items.account_id = subscription.parameter('account_id')
+        AND spike_items.id IN (
+          SELECT placement.item_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.project_id = subscription.parameter('project_id')
+          AND placement.ended_at IS NULL
+        )
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+      - |
+        SELECT spike_clients.id, spike_clients.account_id, spike_clients.display_name, spike_clients.lifecycle, spike_clients.revision,
+          spike_clients.created_at_ms, spike_clients.updated_at_ms,
+          spike_clients.created_by_principal_id
+        FROM spike_clients
+        JOIN spike_projects AS project ON project.account_id = spike_clients.account_id AND project.client_id = spike_clients.id
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_clients.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_clients.account_id = subscription.parameter('account_id')
+        AND project.id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+      - |
+        SELECT spike_transactions.id, spike_transactions.account_id, spike_transactions.project_id,
+               spike_transactions.client_id, spike_transactions.type, spike_transactions.role,
+               spike_transactions.amount_minor_units::text AS amount_minor_units,
+               spike_transactions.currency, spike_transactions.origin
+        FROM spike_transactions
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_transactions.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_transactions.account_id = subscription.parameter('account_id')
+          AND spike_transactions.project_id = subscription.parameter('project_id')
+          AND principal.auth_user_id = auth.user_id()
+          AND membership.state = 'active' AND membership.financial_access = 'full'
+          AND spike_transactions.id IN (
+            SELECT link.transaction_id FROM ledger_private.item_client_payment_connections AS link
+            JOIN spike_item_placements AS placement ON placement.id = link.placement_id
+              AND placement.account_id = link.account_id AND placement.project_id = link.project_id
+              AND placement.item_id = link.item_id
+            WHERE link.account_id = subscription.parameter('account_id')
+              AND link.project_id = subscription.parameter('project_id')
+              AND link.ended_at IS NULL AND placement.ended_at IS NULL
+              AND placement.scope_kind = 'project'
+          )
+      - |
+        SELECT item_client_payment_connections.id, item_client_payment_connections.account_id,
+          item_client_payment_connections.project_id, item_client_payment_connections.client_id,
+          item_client_payment_connections.item_id, item_client_payment_connections.placement_id,
+          item_client_payment_connections.transaction_id, item_client_payment_connections.transaction_type,
+          item_client_payment_connections.transaction_role, item_client_payment_connections.ended_at
+        FROM ledger_private.item_client_payment_connections
+        JOIN spike_item_placements AS placement
+          ON placement.id = item_client_payment_connections.placement_id
+          AND placement.account_id = item_client_payment_connections.account_id
+          AND placement.project_id = item_client_payment_connections.project_id
+          AND placement.item_id = item_client_payment_connections.item_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = item_client_payment_connections.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE item_client_payment_connections.account_id = subscription.parameter('account_id')
+        AND item_client_payment_connections.project_id = subscription.parameter('project_id')
+        AND item_client_payment_connections.ended_at IS NULL AND placement.ended_at IS NULL
+        AND placement.scope_kind = 'project'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active' AND membership.financial_access = 'full'
+
+      - |
+        SELECT spike_item_project_categories.id, spike_item_project_categories.account_id,
+          spike_item_project_categories.project_id, spike_item_project_categories.item_id,
+          spike_item_project_categories.category_id, spike_item_project_categories.revision
+        FROM spike_item_project_categories
+        JOIN spike_item_placements AS placement ON placement.account_id = spike_item_project_categories.account_id
+          AND placement.id = spike_item_project_categories.id AND placement.ended_at IS NULL
+        JOIN spike_budget_categories AS category ON category.account_id = spike_item_project_categories.account_id
+          AND category.id = spike_item_project_categories.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_item_project_categories.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_item_project_categories.account_id = subscription.parameter('account_id')
+        AND spike_item_project_categories.project_id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'
+        AND (category.visibility_class = 'ordinary' OR membership.financial_access = 'full')
+
+      - |
+        SELECT spike_budget_categories.id, spike_budget_categories.account_id, spike_budget_categories.display_name,
+          spike_budget_categories.kind, spike_budget_categories.lifecycle, spike_budget_categories.is_system,
+          spike_budget_categories.excludes_from_overall_budget, spike_budget_categories.visibility_class,
+          spike_budget_categories.presentation_order, spike_budget_categories.revision,
+          spike_budget_categories.created_at_ms, spike_budget_categories.updated_at_ms
+        FROM spike_budget_categories
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_budget_categories.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_budget_categories.account_id = subscription.parameter('account_id')
+        AND spike_budget_categories.id IN (
+          SELECT assignment.category_id FROM spike_item_project_categories AS assignment
+          JOIN spike_item_placements AS placement ON placement.account_id = assignment.account_id
+            AND placement.id = assignment.id AND placement.ended_at IS NULL
+          WHERE assignment.account_id = subscription.parameter('account_id')
+          AND assignment.project_id = subscription.parameter('project_id')
+        )
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'
+        AND (spike_budget_categories.visibility_class = 'ordinary' OR membership.financial_access = 'full')
+
+      - |
+        SELECT item_charge_occurrences.id, item_charge_occurrences.account_id, item_charge_occurrences.project_id,
+          item_charge_occurrences.item_id, item_charge_occurrences.placement_id, item_charge_occurrences.category_id,
+          item_charge_occurrences.amount_minor_units::text AS amount_minor_units, item_charge_occurrences.currency,
+          item_charge_occurrences.revision, item_charge_occurrences.withdrawn_at
+        FROM ledger_private.item_charge_occurrences
+        JOIN spike_item_placements AS placement ON placement.id = item_charge_occurrences.placement_id
+          AND placement.account_id = item_charge_occurrences.account_id AND placement.item_id = item_charge_occurrences.item_id
+          AND placement.project_id = item_charge_occurrences.project_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = item_charge_occurrences.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE item_charge_occurrences.account_id = subscription.parameter('account_id')
+        AND item_charge_occurrences.project_id = subscription.parameter('project_id')
+        AND item_charge_occurrences.withdrawn_at IS NULL AND placement.ended_at IS NULL
+        AND placement.scope_kind = 'project' AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active' AND membership.financial_access = 'full'
+
+      - |
+        SELECT collected_invoice_lines.id, collected_invoice_lines.account_id, collected_invoice_lines.invoice_id,
+          collected_invoice_lines.source_kind, collected_invoice_lines.source_id, collected_invoice_lines.item_id,
+          collected_invoice_lines.source_revision, collected_invoice_lines.category_id,
+          collected_invoice_lines.signed_amount_minor_units::text AS signed_amount_minor_units, collected_invoice_lines.currency
+        FROM ledger_private.collected_invoice_lines
+        JOIN ledger_private.item_charge_occurrences AS charge ON charge.account_id = collected_invoice_lines.account_id
+          AND charge.id = collected_invoice_lines.source_id
+        JOIN spike_item_placements AS placement ON placement.account_id = charge.account_id AND placement.id = charge.placement_id
+          AND placement.item_id = charge.item_id AND placement.project_id = charge.project_id
+        JOIN spike_account_memberships AS membership ON membership.account_id = collected_invoice_lines.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE collected_invoice_lines.account_id = subscription.parameter('account_id')
+        AND collected_invoice_lines.source_kind = 'item' AND charge.project_id = subscription.parameter('project_id')
+        AND charge.withdrawn_at IS NULL AND placement.ended_at IS NULL AND placement.scope_kind = 'project'
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+
+      - |
+        SELECT collected_invoices.id, collected_invoices.account_id, collected_invoices.project_id,
+          collected_invoices.client_id, collected_invoices.sealed
+        FROM ledger_private.collected_invoices
+        JOIN spike_account_memberships AS membership ON membership.account_id = collected_invoices.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE collected_invoices.account_id = subscription.parameter('account_id')
+        AND collected_invoices.project_id = subscription.parameter('project_id') AND collected_invoices.sealed = true
+        AND collected_invoices.id IN (
+          SELECT line.invoice_id FROM ledger_private.collected_invoice_lines AS line
+          JOIN ledger_private.item_charge_occurrences AS charge ON charge.account_id = line.account_id AND charge.id = line.source_id
+          JOIN spike_item_placements AS placement ON placement.account_id = charge.account_id AND placement.id = charge.placement_id
+            AND placement.item_id = charge.item_id AND placement.project_id = charge.project_id
+          WHERE line.source_kind = 'item' AND charge.account_id = subscription.parameter('account_id')
+          AND charge.project_id = subscription.parameter('project_id') AND charge.withdrawn_at IS NULL
+          AND placement.ended_at IS NULL AND placement.scope_kind = 'project'
+        )
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+
+  physical_account_items:
+    queries:
+      - |
+        SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
+          item_image_sets.revision::text AS revision,item_image_sets.expected_count
+        FROM item_image_sets
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_sets.account_id=subscription.parameter('account_id')
+        AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+      - |
+        SELECT spike_items.id, spike_items.account_id, spike_items.name, spike_items.description, spike_items.sku,
+          spike_items.workflow_status, spike_items.bookmark,
+          spike_items.source, spike_items.current_source, spike_items.notes,
+          spike_items.market_value_minor_units::text AS market_value_minor_units, spike_items.market_value_currency, spike_items.revision,
+          spike_items.created_at, spike_items.created_by_principal_id
+        FROM spike_items
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_items.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_items.account_id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_item_placements.id, spike_item_placements.account_id, spike_item_placements.item_id, spike_item_placements.scope_kind,
+          spike_item_placements.project_id, spike_item_placements.space_id, spike_item_placements.started_at,
+          spike_item_placements.started_by_principal_id, spike_item_placements.ended_at, spike_item_placements.ended_by_principal_id
+        FROM spike_item_placements
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_item_placements.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_item_placements.account_id = subscription.parameter('account_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT spike_spaces.id, spike_spaces.account_id, spike_spaces.scope_kind, spike_spaces.project_id,
+          spike_spaces.display_name, spike_spaces.lifecycle, spike_spaces.revision
+        FROM spike_spaces
+        JOIN spike_account_memberships AS membership ON membership.account_id = spike_spaces.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE spike_spaces.account_id = subscription.parameter('account_id')
+        AND (spike_spaces.lifecycle = 'active' OR spike_spaces.id IN (
+          SELECT placement.space_id FROM spike_item_placements AS placement
+          WHERE placement.account_id = subscription.parameter('account_id')
+          AND placement.ended_at IS NULL
+        ))
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+  spike_account_bootstrap:
+    auto_subscribe: true
+    priority: 1
+    queries:
+      - |
+        SELECT spike_principals.*
+        FROM spike_principals
+        WHERE spike_principals.auth_user_id = auth.user_id()
+      - |
+        SELECT spike_account_memberships.*
+        FROM spike_account_memberships
+        WHERE spike_account_memberships.principal_id IN (
+          SELECT principal.id
+          FROM spike_principals AS principal
+          WHERE principal.auth_user_id = auth.user_id()
+        )
+        AND spike_account_memberships.state = 'active'
+      - |
+        SELECT spike_accounts.*
+        FROM spike_accounts
+        WHERE spike_accounts.id IN (
+          SELECT membership.account_id
+          FROM spike_account_memberships AS membership
+          JOIN spike_principals AS principal
+            ON principal.id = membership.principal_id
+          WHERE principal.auth_user_id = auth.user_id()
+          AND membership.state = 'active'
+        )
+
+  spike_clients:
+    auto_subscribe: true
+    priority: 1
+    query: |
+      SELECT spike_clients.*
+      FROM spike_clients
+      WHERE spike_clients.account_id IN (
+        SELECT membership.account_id
+        FROM spike_account_memberships AS membership
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      )
+
+  spike_projects:
+    auto_subscribe: true
+    priority: 1
+    queries:
+      - |
+        SELECT
+          spike_projects.id,
+          spike_projects.account_id,
+          spike_projects.client_id,
+          spike_projects.display_name,
+          spike_projects.description,
+          spike_projects.legacy_notes,
+          spike_projects.property_address,
+          spike_projects.lifecycle,
+          spike_projects.revision,
+          spike_projects.category_configuration_revision::text
+            AS category_configuration_revision,
+          spike_projects.created_at_ms,
+          spike_projects.updated_at_ms,
+          spike_projects.created_by_principal_id
+        FROM spike_projects
+        WHERE spike_projects.account_id IN (
+          SELECT membership.account_id
+          FROM spike_account_memberships AS membership
+          JOIN spike_principals AS principal
+            ON principal.id = membership.principal_id
+          WHERE principal.auth_user_id = auth.user_id()
+          AND membership.state = 'active'
+        )
+      - |
+        SELECT spike_budget_categories.*
+        FROM spike_budget_categories
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_budget_categories.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+        AND (
+          spike_budget_categories.visibility_class = 'ordinary'
+          OR membership.financial_access = 'full'
+        )
+      - |
+        SELECT spike_project_category_allocations.*
+        FROM spike_project_category_allocations
+        JOIN spike_budget_categories AS category
+          ON category.account_id = spike_project_category_allocations.account_id
+         AND category.id = spike_project_category_allocations.category_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_project_category_allocations.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+        AND (
+          category.visibility_class = 'ordinary'
+          OR membership.financial_access = 'full'
+        )
+
+  spike_operation_results:
+    auto_subscribe: true
+    priority: 1
+    query: |
+      SELECT spike_operation_results.*
+      FROM spike_operation_results
+      WHERE spike_operation_results.account_id IN (
+        SELECT membership.account_id
+        FROM spike_account_memberships AS membership
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      )
+
+  space_assignment_project_destinations:
+    query: |
+      SELECT
+        spike_spaces.id,
+        spike_spaces.account_id,
+        spike_spaces.scope_kind,
+        spike_spaces.project_id,
+        spike_spaces.display_name,
+        spike_spaces.lifecycle,
+        spike_spaces.revision
+      FROM spike_spaces
+      JOIN spike_account_memberships AS membership
+        ON membership.account_id = spike_spaces.account_id
+      JOIN spike_principals AS principal
+        ON principal.id = membership.principal_id
+      WHERE spike_spaces.scope_kind = 'project'
+      AND spike_spaces.project_id = subscription.parameter('project_id')
+      AND spike_spaces.lifecycle = 'active'
+      AND principal.auth_user_id = auth.user_id()
+      AND membership.state = 'active'
+
+  space_assignment_business_inventory_destinations:
+    query: |
+      SELECT
+        spike_spaces.id,
+        spike_spaces.account_id,
+        spike_spaces.scope_kind,
+        spike_spaces.project_id,
+        spike_spaces.display_name,
+        spike_spaces.lifecycle,
+        spike_spaces.revision
+      FROM spike_spaces
+      JOIN spike_account_memberships AS membership
+        ON membership.account_id = spike_spaces.account_id
+      JOIN spike_principals AS principal
+        ON principal.id = membership.principal_id
+      WHERE spike_spaces.scope_kind = 'business_inventory'
+      AND spike_spaces.account_id = subscription.parameter('account_id')
+      AND spike_spaces.project_id IS NULL
+      AND spike_spaces.lifecycle = 'active'
+      AND principal.auth_user_id = auth.user_id()
+      AND membership.state = 'active'
+
+  space_browser:
+    queries:
+      - |
+        SELECT
+          spike_spaces.id,
+          spike_spaces.account_id,
+          spike_spaces.scope_kind,
+          spike_spaces.project_id,
+          spike_spaces.display_name,
+          spike_spaces.lifecycle,
+          spike_spaces.revision
+        FROM spike_spaces
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_spaces.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'project'
+        AND spike_spaces.account_id = subscription.parameter('account_id')
+        AND spike_spaces.scope_kind = 'project'
+        AND spike_spaces.project_id = subscription.parameter('project_id')
+        AND spike_spaces.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_spaces.id,
+          spike_spaces.account_id,
+          spike_spaces.scope_kind,
+          spike_spaces.project_id,
+          spike_spaces.display_name,
+          spike_spaces.lifecycle,
+          spike_spaces.revision
+        FROM spike_spaces
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_spaces.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'business_inventory'
+        AND spike_spaces.account_id = subscription.parameter('account_id')
+        AND spike_spaces.scope_kind = 'business_inventory'
+        AND spike_spaces.project_id IS NULL
+        AND spike_spaces.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_core_details.id,
+          spike_space_core_details.account_id,
+          spike_space_core_details.notes,
+          spike_space_core_details.created_at_ms,
+          spike_space_core_details.updated_at_ms
+        FROM spike_space_core_details
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_core_details.account_id
+         AND space.id = spike_space_core_details.id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_core_details.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'project'
+        AND spike_space_core_details.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'project'
+        AND space.project_id = subscription.parameter('project_id')
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_core_details.id,
+          spike_space_core_details.account_id,
+          spike_space_core_details.notes,
+          spike_space_core_details.created_at_ms,
+          spike_space_core_details.updated_at_ms
+        FROM spike_space_core_details
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_core_details.account_id
+         AND space.id = spike_space_core_details.id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_core_details.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'business_inventory'
+        AND spike_space_core_details.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'business_inventory'
+        AND space.project_id IS NULL
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklists.id,
+          spike_space_checklists.account_id,
+          spike_space_checklists.space_id,
+          spike_space_checklists.checklist_id,
+          spike_space_checklists.name,
+          spike_space_checklists.presentation_order
+        FROM spike_space_checklists
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklists.account_id
+         AND space.id = spike_space_checklists.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklists.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'project'
+        AND spike_space_checklists.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'project'
+        AND space.project_id = subscription.parameter('project_id')
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklists.id,
+          spike_space_checklists.account_id,
+          spike_space_checklists.space_id,
+          spike_space_checklists.checklist_id,
+          spike_space_checklists.name,
+          spike_space_checklists.presentation_order
+        FROM spike_space_checklists
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklists.account_id
+         AND space.id = spike_space_checklists.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklists.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'business_inventory'
+        AND spike_space_checklists.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'business_inventory'
+        AND space.project_id IS NULL
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklist_items.id,
+          spike_space_checklist_items.account_id,
+          spike_space_checklist_items.space_id,
+          spike_space_checklist_items.checklist_id,
+          spike_space_checklist_items.item_id,
+          spike_space_checklist_items.item_text,
+          spike_space_checklist_items.is_checked,
+          spike_space_checklist_items.presentation_order
+        FROM spike_space_checklist_items
+        JOIN spike_space_checklists AS checklist
+          ON checklist.account_id = spike_space_checklist_items.account_id
+         AND checklist.space_id = spike_space_checklist_items.space_id
+         AND checklist.checklist_id = spike_space_checklist_items.checklist_id
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklist_items.account_id
+         AND space.id = spike_space_checklist_items.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklist_items.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'project'
+        AND spike_space_checklist_items.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'project'
+        AND space.project_id = subscription.parameter('project_id')
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklist_items.id,
+          spike_space_checklist_items.account_id,
+          spike_space_checklist_items.space_id,
+          spike_space_checklist_items.checklist_id,
+          spike_space_checklist_items.item_id,
+          spike_space_checklist_items.item_text,
+          spike_space_checklist_items.is_checked,
+          spike_space_checklist_items.presentation_order
+        FROM spike_space_checklist_items
+        JOIN spike_space_checklists AS checklist
+          ON checklist.account_id = spike_space_checklist_items.account_id
+         AND checklist.space_id = spike_space_checklist_items.space_id
+         AND checklist.checklist_id = spike_space_checklist_items.checklist_id
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklist_items.account_id
+         AND space.id = spike_space_checklist_items.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklist_items.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE subscription.parameter('scope_kind') = 'business_inventory'
+        AND spike_space_checklist_items.account_id = subscription.parameter('account_id')
+        AND space.scope_kind = 'business_inventory'
+        AND space.project_id IS NULL
+        AND space.lifecycle = 'active'
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+  project_note_history:
+    queries:
+      - |
+        SELECT
+          spike_projects.id,
+          spike_projects.account_id,
+          spike_projects.client_id,
+          spike_projects.display_name,
+          spike_projects.description,
+          spike_projects.legacy_notes,
+          spike_projects.property_address,
+          spike_projects.lifecycle,
+          spike_projects.revision,
+          spike_projects.category_configuration_revision::text
+            AS category_configuration_revision,
+          spike_projects.created_at_ms,
+          spike_projects.updated_at_ms,
+          spike_projects.created_by_principal_id
+        FROM spike_projects
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_projects.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_projects.account_id = subscription.parameter('account_id')
+        AND spike_projects.id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_project_notes.id,
+          spike_project_notes.account_id,
+          spike_project_notes.project_id,
+          spike_project_notes.id AS keyset_id,
+          spike_project_notes.content_kind,
+          spike_project_notes.note_text,
+          spike_project_notes.source,
+          spike_project_notes.created_by_principal_id,
+          spike_project_notes.original_creator_id,
+          spike_project_notes.creator_display_name,
+          spike_project_notes.created_at_ms,
+          spike_project_notes.created_at_submillis,
+          spike_project_notes.revision::text AS revision,
+          spike_project_notes.last_edited_by_principal_id,
+          spike_project_notes.last_edited_at_ms,
+          spike_project_notes.last_edited_at_submillis,
+          spike_project_notes.deleted_by_principal_id,
+          spike_project_notes.deleted_at_ms,
+          spike_project_notes.deleted_at_submillis
+        FROM spike_project_notes
+        JOIN spike_projects AS project
+          ON project.account_id = spike_project_notes.account_id
+         AND project.id = spike_project_notes.project_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_project_notes.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_project_notes.account_id = subscription.parameter('account_id')
+        AND spike_project_notes.project_id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+
+  space_core_details:
+    queries:
+      - |
+        SELECT
+          spike_spaces.id,
+          spike_spaces.account_id,
+          spike_spaces.scope_kind,
+          spike_spaces.project_id,
+          spike_spaces.display_name,
+          spike_spaces.lifecycle,
+          spike_spaces.revision
+        FROM spike_spaces
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_spaces.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_spaces.account_id = subscription.parameter('account_id')
+        AND spike_spaces.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_core_details.id,
+          spike_space_core_details.account_id,
+          spike_space_core_details.notes,
+          spike_space_core_details.created_at_ms,
+          spike_space_core_details.updated_at_ms
+        FROM spike_space_core_details
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_core_details.account_id
+         AND space.id = spike_space_core_details.id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_core_details.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_space_core_details.account_id = subscription.parameter('account_id')
+        AND spike_space_core_details.id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklists.id,
+          spike_space_checklists.account_id,
+          spike_space_checklists.space_id,
+          spike_space_checklists.checklist_id,
+          spike_space_checklists.name,
+          spike_space_checklists.presentation_order
+        FROM spike_space_checklists
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklists.account_id
+         AND space.id = spike_space_checklists.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklists.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_space_checklists.account_id = subscription.parameter('account_id')
+        AND spike_space_checklists.space_id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'
+      - |
+        SELECT
+          spike_space_checklist_items.id,
+          spike_space_checklist_items.account_id,
+          spike_space_checklist_items.space_id,
+          spike_space_checklist_items.checklist_id,
+          spike_space_checklist_items.item_id,
+          spike_space_checklist_items.item_text,
+          spike_space_checklist_items.is_checked,
+          spike_space_checklist_items.presentation_order
+        FROM spike_space_checklist_items
+        JOIN spike_space_checklists AS checklist
+          ON checklist.account_id = spike_space_checklist_items.account_id
+         AND checklist.space_id = spike_space_checklist_items.space_id
+         AND checklist.checklist_id = spike_space_checklist_items.checklist_id
+        JOIN spike_spaces AS space
+          ON space.account_id = spike_space_checklist_items.account_id
+         AND space.id = spike_space_checklist_items.space_id
+        JOIN spike_account_memberships AS membership
+          ON membership.account_id = spike_space_checklist_items.account_id
+        JOIN spike_principals AS principal
+          ON principal.id = membership.principal_id
+        WHERE spike_space_checklist_items.account_id = subscription.parameter('account_id')
+        AND spike_space_checklist_items.space_id = subscription.parameter('space_id')
+        AND checklist.account_id = subscription.parameter('account_id')
+        AND checklist.space_id = subscription.parameter('space_id')
+        AND space.account_id = subscription.parameter('account_id')
+        AND space.id = subscription.parameter('space_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active'

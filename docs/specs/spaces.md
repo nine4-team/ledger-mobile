@@ -1,8 +1,97 @@
 # Spaces
 
+> **Target-state notice (2026-08-31):** Spaces remain organizational placement,
+> never accounting authority. The target uses typed, scope-validating Space and
+> Item-assignment operations over local read models. Current Firestore hard
+> delete, independent bulk writes, URL-keyed review-note references, and
+> last-write-wins embedded checklist updates are source behavior rather than
+> target parity. O-037 controls assigned Items when a Space is archived.
+
 ## Overview
 
 Spaces are organizational containers for items. They represent physical locations (rooms, storage units, warehouses) or logical groupings where items are placed. Spaces can belong to a project or to business inventory.
+
+## Target Redesign Requirements
+
+- Every Space has one stable account-scoped identity and exactly one immutable
+  creation scope: one stable Project ID or Business Inventory. A copied Project
+  name, route string, nullable scope pair, or generic backend path cannot define
+  that relationship.
+- Direct `CreateSpace` requires a nonblank name after removing leading/trailing
+  whitespace. Optional notes use the same outer-whitespace normalization, with
+  nil or whitespace-only input meaning no notes. Accepted interior text is
+  preserved, and duplicate Space names remain valid because identity is by ID.
+- `UpdateSpaceDetails` replaces the complete mutable name-and-optional-notes
+  pair using those same normalization rules for one stable Space ID and one
+  expected Space revision. It cannot change the immutable Project-or-Business-
+  Inventory scope or act as a partial/generic field update; a stale edit must
+  surface a conflict rather than silently overwriting newer details.
+- `ReviseSpaceChecklists` replaces one Space's complete ordered checklist
+  collection using stable checklist and checklist-item IDs and one expected
+  Space revision. Checklist names and item text are nonblank after outer-
+  whitespace normalization, accepted interior text is preserved, duplicate
+  names/text remain valid, and no unapproved length cap is invented. Explicit
+  presentation order and each item's checked state are part of the replacement;
+  an empty collection clears all checklists and a checklist with zero items is
+  valid. A stale revision conflicts atomically rather than merging or
+  overwriting concurrent check/edit/reorder work.
+- Checklist-item checked state is checklist progress, not the legacy
+  `Space.isComplete` reconciliation flag. Checklist revision cannot create from
+  or save to a template, change Space scope/details/lifecycle, attach media,
+  assign Items, create review evidence, or mutate accounting.
+- Direct creation owns only Space identity, scope, name, and optional notes.
+  Attachments, checklist revisions, template application/saving, Item
+  assignment, archive, review notes, and completion/reconciliation state are
+  separate typed operations with their own authority and conflict evidence.
+- Accepted offline creation intent uses the shared durable operation lifecycle.
+  The authoritative handler later validates current membership and the exact
+  Project parent where applicable; local value validation is not authorization.
+- No Space operation creates or changes a Transaction, occurrence, Invoice,
+  budget contribution, payer, price, or other accounting state.
+- App and MCP invoke the same typed operations and validate the same identity,
+  scope, text, revision and authorization rules; UI-only tests do not establish
+  MCP parity. O-053 leaves the Space mutation permission matrix unresolved.
+- O-037 remains the authority for assigned Items when an existing Space is
+  archived. It does not change direct creation semantics.
+
+## Target Space Browsing
+
+The redesigned Project and Business Inventory Space browsers preserve the
+shipped user-visible browsing capability while replacing listener-owned truth
+with explicit local-read evidence:
+
+- one browser is bound to one Account and exactly one Project or Business
+  Inventory scope;
+- the normal browser lists active Spaces only. This is not a decision about
+  archive/restore effects or assigned Items under O-037, and an authorized
+  archived Space may still be reached through a separate exact-ID historical or
+  detail flow;
+- rows have one deterministic case-insensitive name order with exact display
+  name and stable Space ID tie-breakers. Duplicate names remain distinct;
+- the production browser retains case-insensitive name search. Target matching
+  trims leading/trailing whitespace and newlines from the query, then uses
+  locale-independent Unicode lowercase substring matching on name and query.
+  Empty/whitespace-only queries show all authorized rows; accents remain
+  significant and wildcard characters are literal. Filtering preserves source
+  order and readiness: no local matches never proves the Account has no Spaces.
+  Project and Inventory use the same `SpaceNameSearch` implementation; changing
+  scope clears the query, while returning from detail preserves it;
+- a complete production card retains the Space display name, authorized Item
+  count, aggregate checklist progress, and authorized primary-image behavior.
+  Numeric zero Items is valid only when a complete, visibility-safe Item
+  projection proves zero. Missing, partial, stale, or not-yet-implemented Item
+  or media evidence is unavailable—not zero and not an authoritative empty
+  collection; and
+- selection and detail navigation use stable Space ID plus current exact-scope
+  evidence, never display name, row position, route strings, or local presence
+  as authorization.
+
+An isolated target staging foundation may implement exact-scope active rows,
+checklist progress, honest readiness, and stable-ID detail selection before the
+Item-count, media, and search dependencies are available. Such a foundation
+must mark those dimensions unavailable or absent, remain outside production
+routing, leave the source browser responsibilities `target_mapped`, and must not
+claim feature-complete browser, app, MCP, migration, release, or cutover parity.
 
 ## Scope
 
@@ -61,6 +150,13 @@ overallProgress = (totalCompleted / totalItems) * 100
 
 Reusable templates allow users to create new spaces with pre-configured checklists.
 
+> **Current implementation gap:** Template management persistence exists, but
+> the shipped New Space picker is a stub and Save as Template currently reports
+> success without writing. The current `createFromSpace` service also copies
+> checked state. These are source defects, not target parity: the target must
+> support actual select/apply/save flows and reset every template checklist item
+> to unchecked.
+
 **Storage:** `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
 
 ### Template Fields
@@ -93,17 +189,68 @@ Items are assigned to spaces via `item.spaceId`:
 
 ### Bulk Assignment
 
-Multiple items can be assigned to a space at once. This is a batch of individual fire-and-forget writes (Tier 1) -- each item's `spaceId` is updated independently.
+Multiple Items may be assigned or cleared through one durable typed operation.
+Assignment validates that every Item and the destination Space still belong to
+the same Project or Business Inventory scope. Clear validates each Item's exact
+revision, current Space, and common scope; one clear operation may include Items
+from different current Spaces in that scope. The authoritative handler applies
+the complete selection atomically/idempotently. Scope-changing Item commands
+separately validate or clear incompatible Space assignments.
+
+The assignment destination picker reads an operation-specific local directory,
+not an Account-wide Space array supplied by a screen. It contains only active
+Spaces in the exact Account and Project-or-Business-Inventory scope and carries
+stable Space ID, normalized display name, and exact revision. Duplicate names
+remain valid and rows use deterministic case-insensitive name order with stable
+Space ID as the final tiebreaker. Authoritative empty, incomplete/partial, stale,
+and failed local reads remain distinct; a missing row in incomplete local data
+cannot prove that no destination exists. Cached scope/revision evidence supports
+offline selection and conflict detection but never grants authorization.
+
+Clearing or replacing placement closes affected green Item-linked checkmark
+relationships on the old Space photos without deleting the photos or their
+bytes. The handler derives those relationships from authoritative state; the
+client does not submit copied attachment data or marker lists. Space review-note
+red markers remain separate evidence, and no placement operation changes
+accounting.
 
 ## Space in Budget Context
 
 Spaces do not directly participate in budget calculations. However, items in spaces carry their `budgetCategoryId`, and items in spaces contribute to transaction audit completeness through their `purchasePriceCents`.
 
+## Detail, Media and Review Coverage
+
+The existing Space detail also exposes uncapped photo attachments, primary
+selection, pinned image/PDF viewing, printing, green Item-linked photo markers,
+and separate text review notes with optional red photo markers. Preserve their
+controls and meaningful states as recorded in `UIBASE-SPACE-DETAIL-001` in the
+current Product Behavior Catalog. The target uses stable media identity, durable
+bytes and visible operation outcomes; source URL-keyed references, immediate
+byte deletion and console-only persistence errors are not target requirements.
+O-023 governs reference removal/byte retention and O-053 mutation permissions.
+
+General Space notes, review notes, checklist progress, photo matching and the
+manual `isComplete` reconciliation flag are distinct. O-054 must settle the
+manual flag's target meaning; it is not implicitly retired or derived from the
+other progress values. Item intake preserves Create New preassigned to this
+Space and Add Existing Items, using the shared Item/placement commands.
+
+Template read/apply and management rules in the O-026 packet remain proposed,
+including snapshot application, retained archive references and atomic reorder.
+O-055 governs exact portable template/checklist text validation and browser
+search matching; the existing typed Swift models alone do not
+approve cross-runtime behavior or new text limits.
+
 ## Edge Cases
 
 1. **Space with no items**: Valid state -- spaces can exist as empty containers awaiting items.
-2. **Deleting a space**: Soft delete (archive). Items in the space retain their `spaceId` reference but the space no longer appears in lists. Items should be reassigned or the reference cleared.
-3. **Moving items between spaces**: Update `item.spaceId` -- fire-and-forget write.
+2. **Deleting a space**: Ordinary removal means archive, not hard delete. O-037
+   controls whether assigned Items retain a resolvable archived reference or
+   must be explicitly moved/cleared; target code must not leave an unexplained
+   hidden ID or silently erase placement.
+3. **Moving items between spaces**: Use a typed, scope-validating assignment
+   operation with stable Item IDs and a durable result.
 4. **Space images**: No cap on image count (unlike transactions which may have separate receipt/other image categories).
-5. **Empty checklists**: Valid -- a checklist can have zero items.
+5. **Empty checklists**: Valid -- a Space can have zero checklists and a
+   checklist can have zero items.
 6. **Duplicate space names**: Allowed (spaces are identified by ID, not name).

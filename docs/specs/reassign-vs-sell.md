@@ -1,5 +1,55 @@
 # Correct/Move vs Sell vs Return
 
+> **Target-state notice (2026-08-30):** The user intent and origin-aware price
+> rules in this document remain required. The target accounting containers are
+> defined in
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md):
+> real cross-scope sales/returns create project Item charges or credits plus
+> hidden provenance, not new project movement Transactions. The mechanics below
+> describe current shipped behavior until migration.
+
+## Target Action Routing Contract
+
+Preserve the distinct user intentions and existing single/bulk selection,
+destination/category/price review, confirmation, cancel and error affordances.
+Use canonical placement, ownership and occurrence evidence to determine eligible
+actions. A source Transaction label, source-name fallback or nonempty Item array
+does not establish origin, payment or permission. Missing or ambiguous evidence
+must yield an explained unavailable action rather than an invented destination.
+
+When establishing an Unaccounted Item's accounting, use the existing Link
+workflow. Unaccounted state does not replace physical correction, Space assignment
+or eligible ownership-move routing. Genuine correction repairs
+only the allowed relationships: paid history requires explicit accounting
+correction, and a source claim of "no financial impact" does not authorize
+silently changing a paid basis. Correction is never an invented sale/refund.
+
+Same-Client Project moves use the canonical Transfer picker and paired records
+without an Inventory hop; different-Client sales use the Inventory-mediated
+workflow. Return to the source Project requires proven immutable inventory-entry
+basis and one eligible source destination for the selected Items. Return to
+Inventory and vendor return remain separate intents, as do physical movement,
+vendor cash, pending client credit and client cash refund.
+
+Preserve review of the chosen destination and applicable price/category before
+acceptance. Use canonical Furnishings/Additional Requests and origin-aware pricing,
+not source movement-Transaction category inheritance or current-price fallback.
+Cancel leaves source prices and accounting unchanged. A completed operation
+updates the selected identities through one owning command, with durable pending,
+applied or rejected feedback; the menu never introduces its own backend writer.
+
+Acceptance must exercise single and mixed bulk eligibility, stale/unauthorized
+destinations, missing origin, cancel and exact destination routing. Compose the
+owning Link, correction, sale, return and Transfer workflow evidence rather than
+reimplementing those business rules in each menu or picker.
+
+## Shipped Source Evidence
+
+All remaining UI labels, menu predicates and mechanics are source evidence.
+They do not override the target contract, canonical Item lifecycle or confirmed
+Client Transfer decisions. In particular, the universal two-hop Project move,
+synthetic movement Purchase/Return and double client/server edge are superseded.
+
 ## Overview
 
 When items need to move between transactions, projects, or business inventory, there are three distinct operations with different semantics: **Correct/Move**, **Sell**, and **Return**. Users must understand which they're performing because the financial implications differ.

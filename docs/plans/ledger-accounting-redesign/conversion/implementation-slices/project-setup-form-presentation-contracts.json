@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-setup-form-presentation-contracts",
+  "title": "Prepare one evidence-bound Project setup command offline",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Setup Presentation",
+  "surfaceIds": ["SWIFT-EC2117B393FB", "TEST-38F09C637761"],
+  "requirements": [
+    {
+      "id": "PSETUPFORM-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project setup prepares one observable operation containing stable Project identity, one stable existing-or-new Client relationship, selected categories and exact nullable allocations. Project name is required; raw optional creation description reuses the verified ProjectDescriptionReplacement rule so outer whitespace is removed and empty/whitespace-only input becomes nil. Attachment handling remains separate.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "An existing Client choice uses exact active ClientID evidence; a new Client choice uses a separately preallocated ClientID and validated display name. A new-Client ID that already identifies a represented existing Client is refused locally, while any unrepresented collision remains an authoritative-apply concern. Free-text Client name is never relationship identity, and Project setup cannot rename, archive, merge or reassign Clients.",
+      "decisionIds": ["D-006", "O-025", "O-043"],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Edge Cases",
+      "invariant": "A Project with no enabled budget categories is valid. The target preparation contract invents no default or automatic category selection, treats allocation input order as non-semantic, and preserves exact absent, selected-null, selected-zero and selected-positive allocation intent.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Only represented active non-system category definitions are selectable for Project configuration. Category order follows the verified reference snapshot; supplied allocations are exact non-negative typed Money and inherit no source 32-bit maximum.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "Preparation is a deterministic projection over the verified active-Client selection and budget-category reference snapshots. It preserves source readiness/completeness/version/time, exposes incomplete local evidence, and never interprets local visibility as current authorization.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The only command-producing call revalidates the current Client/category evidence against the preparation and exact selection fingerprint before constructing the already-verified ProjectSetupDraft and CreateProjectCommand with caller-supplied stable Project/Operation IDs, actor, contract version and finite capture time.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "The presentation adds no Project-specific operation lifecycle, queue, port or receipt model. It derives the existing backend-neutral command only; trusted Account, Client and category authorization remains mandatory at authoritative apply.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    },
+    {
+      "id": "PSETUPFORM-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only Swift leaf paths implement and test this provider-free preparation boundary while Firebase and both app projects remain unchanged. UI layout/copy/step count, defaults, category creation, media, persistence, providers, schema/RLS/Sync, MCP, migration and production behavior do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PSETUPFORM-TEST-001", "PSETUPFORM-TEST-002", "PSETUPFORM-TEST-003", "PSETUPFORM-TEST-004", "PSETUPFORM-TEST-005", "PSETUPFORM-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectSetupFormPreparation composes one exact Account-scoped ProjectExistingClientSelectionSnapshot and BudgetCategoryReferenceSnapshot, exposes existing active Clients in their verified order, exposes Project-configurable categories in canonical presentation order, and preserves each source's readiness/evidence without creating authorization.",
+        "ProjectSetupFormSelection distinguishes exact existing-Client evidence from a preallocated new-Client payload, rejects a new Client ID already represented by an existing Client, carries an explicit duplicate-free selected-category allocation set whose input order is non-semantic, and binds the form fields, selected identities plus both source snapshots to one canonical fingerprint.",
+        "ProjectSetupFormPresentation validates Project display name and canonicalizes raw optional description through ProjectDescriptionReplacement, accepts zero selected categories, preserves null/zero/positive Money, rejects negative/unknown/inactive/system/cross-Account evidence, and never performs automatic selection.",
+        "Its only command-producing function validates the selection against current matching preparation evidence before deriving ProjectSetupDraft and CreateProjectCommand; evidence changes or sibling substitution fail before any command exists."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Client, Project, category, allocation, operation, table, function, index or migration changes."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative CreateProject handler, lock, idempotency store, audit or authorization behavior is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Local represented evidence does not authorize creation. No RLS or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, local physical table, upload connector or optimistic Project row exists."},
+    "localOffline": {
+      "items": [
+        "Preparation and selection encode canonically with Account, ordered Client/category rows, every named source evidence field, exact selections and a SHA-256 evidence fingerprint; strict decode reconstructs through the same validators.",
+        "Partial and stale represented evidence remains explicitly usable for offline preparation, but old selection cannot produce a command after any current Client/category evidence change. Empty selection is valid; nonrepresented identities never become selectable or authoritatively absent by inference."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No AttachmentID, bytes, picker, hero image, upload, URL, retention or deletion behavior exists; media remains a separate durable receipt lifecycle."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI layout/copy/steps, app state, actual operation invocation, MCP schema/tool or transport wiring is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/clientName/category document, legacy form state or source export is read or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable bounded failures are values only; no telemetry, metric, alert or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation stays inside provider-free LedgerTargetCore and tests and cannot link or modify either application project.",
+        "The slice cannot create visible or authoritative rows, invoke a port, persist locally, authorize, create reference categories, choose UI defaults or navigation, handle media, deploy, release or cut over.",
+        "O-023/O-024/O-025/O-026 and A-003/A-004/A-007/A-015/A-016 remain outside; current source free-text Client identity, at-least-one/preselect-all, missing-as-zero, on-the-fly category creation and silent fan-out writes are not copied."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PSETUPFORM-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-003", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-005", "PSETUPFORM-REQ-008"],
+      "expected": "Preparation preserves exact active-Client upstream order and configurable category presentation order, Account scope, independent source readiness/completeness/version/time and no default selection. Same-name Clients remain distinct; archived Clients and inactive/system categories are not selectable without leaking hidden counts.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    },
+    {
+      "id": "PSETUPFORM-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-003", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-005", "PSETUPFORM-REQ-006", "PSETUPFORM-REQ-007", "PSETUPFORM-REQ-008"],
+      "expected": "Existing Client selection requires the exact represented active ClientID; new Client selection preserves its preallocated identity and validated display name. Unknown, archived, cross-Account and sibling-rebound existing selections fail before command derivation; a new Client ID already represented by an existing Client fails locally, while no claim is made about unrepresented authoritative collisions.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    },
+    {
+      "id": "PSETUPFORM-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-003", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-006", "PSETUPFORM-REQ-007", "PSETUPFORM-REQ-008"],
+      "expected": "Zero selected categories and exact null/zero/positive allocations derive the verified ProjectSetupDraft and CreateProjectCommand with stable caller-supplied IDs, actor, contract and time. Equivalent allocation input order produces the same selection/command. Nil, empty and whitespace-only description become nil; outer whitespace is trimmed from nonempty description and noncanonical encoded description is refused. Duplicate, negative, unknown, inactive or system category inputs fail; no source 32-bit maximum, one-Project-currency or missing-as-zero rule appears.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    },
+    {
+      "id": "PSETUPFORM-TEST-004",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-003", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-005", "PSETUPFORM-REQ-006", "PSETUPFORM-REQ-008"],
+      "expected": "Preparation and selection restart byte-identically with canonical Project name/description, every Client/category row and source query/count/completeness/quality/version/time field bound. Changed/reordered/inserted/removed source evidence, selection substitution, noncanonical description, malformed keys, nonfinite time and fingerprint tamper fail closed; allocation input reordering alone is canonical and does not change selection identity.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    },
+    {
+      "id": "PSETUPFORM-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-005", "PSETUPFORM-REQ-006", "PSETUPFORM-REQ-007", "PSETUPFORM-REQ-008"],
+      "expected": "Ready/partial/stale and exhaustive/nonexhaustive evidence remain distinct; represented choices may be prepared offline, but unavailable identities, false absence and changed current evidence cannot produce a command. Tests assert the output contains no Principal authorization, route, port call, provider or authoritative result claim.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    },
+    {
+      "id": "PSETUPFORM-TEST-006",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PSETUPFORM-REQ-001", "PSETUPFORM-REQ-002", "PSETUPFORM-REQ-003", "PSETUPFORM-REQ-004", "PSETUPFORM-REQ-005", "PSETUPFORM-REQ-006", "PSETUPFORM-REQ-007", "PSETUPFORM-REQ-008"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts while the worker candidate changes only the two allowlisted leaf paths.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-FORM-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified for Project preparation and command derivation. The new-Client branch consumes a provisional ClientDisplayName and is gated from provider promotion by O-043; this evidence does not prove raw cross-runtime Client-name validation, while existing-Client selection is unaffected. Ready review removed invented Project-wide currency behavior, reused ProjectDescriptionReplacement, added allocation-order/new-ID-collision hardening and corrected a partial-evidence wording overclaim. Exact ready commit a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62 and assignment-control commit 10913c5761561ad9fdd0713627ae82396e9f3ff8 passed immutable CI. The worker's first green candidate 7a881af2ff2ef86d1ef4ca4f08c7e604f0aacbe2 was rejected by primary review because its tests overclaimed every-field binding; corrected tip 37145ae3548e577469599ff2381c02258b01f130 adds a reciprocal field-mutation matrix. Final primary and independent review report no remaining P0-P3. The complete local integration gate passes with all 237 tests, warnings-as-errors, repeatable generation and both staging builds. Exact integration checkpoint 147d22de801b15794d8ebb4786eaea86e4346940 passed immutable Actions run 33729967356; promotion commit 5322adfca32ce5fd90f790f70ed584090ab5eee1 passed immutable Actions run 33730394704, after which the clean temporary worktree was removed and its branch retained."
+}

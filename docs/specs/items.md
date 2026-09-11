@@ -2,15 +2,122 @@
 
 ## Overview
 
+**Target authority:** The contracts below and canonical intake/accounting specs
+govern the redesigned app. Source field tables, Firestore subscriptions,
+placeholder-first uploads, mutable Transaction associations and recurring proto
+rows are implementation evidence, not requirements to rebuild those mechanisms.
+Preserve the exact UI baseline through shared Item workflows in Project,
+Inventory, Space, Transaction and picker contexts.
+
+## Target Everyday Workspace
+
+Keep Unaccounted/Accounted section counts and expansion, local search,
+created-date/alphabetical ordering, contextual filters and duplicate-name groups.
+Preserve OR-within/AND-across facets, All-except/Only, clear/reset, and conditional
+Space/category choices. Preserve bookmark, image, SKU, name, source, payer,
+accounting-association and meaningful-price facets using canonical evidence;
+O-067 owns the unresolved Sold-status facet, not a new editable fifth status.
+
+Groups show count, representative thumbnail/source/SKU and authorized totals,
+expand into individual physical identities and support group selection without
+merging objects. Cards show image/placeholder, name, normalized current price,
+source/SKU/context, warnings and applicable workflow/category/Invoice badges.
+Paid-history prices remain frozen evidence, not current-price normalization.
+
+Preserve select-all-visible, selected count/eligible positive-price total, Clear
+and deterministic open-versus-select behavior. Prune selection when query,
+filters, rows, scope or authorization remove eligibility. Detail opens exact IDs
+or explicit unavailable states; loading/partial/stale, authoritative empty,
+no-match and error remain distinct. Hidden financial rows/amounts/counts never
+enter the projection (O-060).
+Picker contexts remain selection-only and return the chosen stable identities;
+they do not acquire the normal list's navigation or mutation actions.
+
+Detail retains Media, Notes, Details and History, current placement and resolved/
+missing/loading relationship states. Workflow Status is not accounting state.
+Show History when canonical authorized evidence is meaningful; use occurrence/
+Invoice evidence rather than a mutable Transaction pointer, and never treat the
+source's two-node threshold as proof of completeness. Preserve
+the shipped initially expanded sections; the older collapsed Notes/Details prose
+below is stale. Preserve the wired detail bookmark toggle and list facet; the
+unwired source card callback does not authorize a new card toggle.
+
+## Target Everyday Editing
+
+One shared Item-edit workflow covers rename, name/vendor/SKU, purchase/project/
+market amounts, notes, the four current editable status labels, clear-status
+where supported, detail bookmark and bulk status. Keep current-selection
+indication, Save/Cancel and explicit validation. Invalid nonblank amounts must
+not be silently ignored; unchanged Save must not materialize a legacy fallback
+name into a new value. Bind accepted edits to the exact Item/revision, durably
+retain pending/applied/rejected state and support safe retry. Cancel creates no
+operation. O-065 governs command roles for app and MCP, not read visibility.
+Transport retries reuse the accepted operation. Retrying or acknowledging a
+terminal rejection follows O-051; it is not automatic resubmission as new work.
+
+Apply the canonical current-price floor without rewriting acquisition/paid
+history. Locks and eligibility derive from exact collected occurrence evidence,
+not stale screen flags. Distinguish amount unset from zero and retain unknown
+legacy evidence. Source `to-purchase` and `to purchase` aliases must resolve to
+one shared typed meaning while imports preserve their raw source values. A
+workflow-status clear cannot reverse an applied return, refund or credit.
+
+Copy ID(s), Space/Link/clear-association, sale/return/Transfer/correction and
+delete controls route to existing owning workflows with fresh eligibility and
+their confirmations; they are not generic field patches. O-053 governs Space
+mutation, O-064 Item deletion, and O-047 vendor selection. Media add/view/primary/
+pin/remove composes the existing durable attachment/reference-retention contract
+(O-023), with visible failures instead of source fire-and-forget cleanup.
+
+## Target Item Removal
+
+Preserve single/bulk Item removal entry points in app and MCP, but not the
+source unconditional hard delete. O-064 owns eligible Item/accounting states,
+actors, confirmation, tombstone/restore and retained-history behavior. O-023
+owns shared/pending media retention. The owning command revalidates exact Items
+and relationships atomically; selection/search merely invokes it. Paid history
+and shared images cannot be silently erased. Keep cancel/denied/conflict/error
+outcomes visible.
+
+## Target Physical Copies
+
+Preserve Make Copies in its existing detail/Transaction contexts, the 1–20
+additional-copy control, exact unsuffixed resolved name, count-aware Create,
+Cancel and visible pending/error/retry. Every new physical object gets a distinct
+stable ID; duplicate submission/restart must not produce extra objects.
+
+O-066 must settle which descriptive/media/placement/acquisition/accounting
+relationships are inherited. Copying the source mutable Item wholesale is not
+approved: it may accidentally inherit a Transaction or paid history. This is
+separate from moving the existing Item, reconciling duplicate evidence, and
+receipt quantity expansion. Preserve the source Item and never duplicate frozen
+payment or Invoice facts merely because Make Copies was selected.
+
+## Source and Shared Model Reference
+
+The remaining sections mix source UI evidence with shared domain rules. The
+explicit target contracts above and canonical intake/lifecycle specs prevail
+where source mechanics or stale presentation descriptions conflict.
+
 Items are the individual physical products tracked in Ledger. Each item represents a real-world object (a piece of furniture, a decor piece, a rug, etc.) that belongs to either a project or business inventory. Items are linked to transactions, assigned to spaces, and carry pricing, status, and media data.
 
 Items are a shared domain module — the same `Item` entity and UI components are used across both project and business inventory scopes.
 
-## Proto Items Are Separate
+## Unaccounted For and Accounted For Items
 
-Photo-first captures that are not ready to become real items are stored as `ProtoItem` records, not incomplete `Item` records. See [proto-item-capture.md](proto-item-capture.md).
+Item creation uses one wizard and one real Item identity. Completing only its
+lightweight first portion is the Quick capture method; it is not a separate
+object or writer. Project Items appear under **Unaccounted For Items** until
+connected to either a client-paid project Purchase or the project's billable
+Items list, then appear under **Accounted For Items**. See
+[Item Creation and Accounting Link](proto-item-capture.md).
 
-This keeps the `Item` entity reserved for physical products that are ready to participate in item lists, inventory operations, transaction membership, reporting, billing, and project budget behavior. A proto item can later create a new item or merge photos into an existing item, but unresolved proto items do not appear in normal item lists and do not affect item counts.
+The new version stops creating `ProtoItem` records. The current Firebase app
+keeps its existing proto behavior unchanged before hard cutover. Rehearsed
+Firebase exports transform every legacy proto into one real target Item or an
+explicit quarantine result before target authority opens; the target app does
+not dual-read Firebase. The target Link operation connects the existing
+physical Item identity to its accounting destination atomically.
 
 ## Item Entity
 
@@ -64,7 +171,13 @@ The iOS and MCP item write boundaries must apply the same shared normalization b
 
 For a partial update, normalization is computed from the merged post-update state. A write that changes only `purchasePriceCents` must compare it with the stored project price; a write that changes only `projectPriceCents` must compare it with the stored purchase price. Callers may omit an unchanged field, but they may not bypass the invariant by doing so.
 
-Readers should defensively use the same `max` rule while legacy documents are being repaired, so a stale zero or lower project price can never hide a positive purchase price. This rule governs current item state. For a sold item that remains attached to an unpaid project-side Purchase-from-Inventory, changing the effective project price automatically adjusts that transaction's subtotal and amount. Original vendor purchases, departed movement history, and paid invoice snapshots do not change.
+Readers should defensively use the same `max` rule while legacy documents are
+being repaired, so a stale zero or lower project price can never hide a positive
+purchase price. This rule governs current Item state. In the shipped movement-
+Transaction model, an unpaid project-side Purchase-from-Inventory is
+recalculated. After the invoice-centered cutover, changing the effective project
+price recalculates the open Item charge and any live Invoice instead. Original
+vendor Purchases, departed provenance, and paid Invoice snapshots do not change.
 
 ### Display Name
 
@@ -108,33 +221,65 @@ Default status for new items: `purchased`.
 
 ## Validation
 
-An item requires **either** a non-empty name **or** at least one image to be created. Both can be empty in combination — this is the only hard validation rule.
+The target wizard's exact minimum identifying rule is still open because shipped
+paths disagree: full Item creation requires a non-empty name or image, while
+proto capture requires an image or note. The unified writer must adopt one rule
+and test it across app and MCP. An Unaccounted For Item does not require a
+Transaction, billable charge, or positive price merely to exist. A project Item
+does receive the project's enabled Furnishings category automatically so the
+existing project/category invariant remains intact; category by itself does not
+make the Item Accounted For or create budget spend.
 
 Price fields must be zero or greater (negative values are invalid), and `projectPriceCents` must never be less than `purchasePriceCents` after normalization.
 
 ## Creation Flow
 
-Item creation uses a 2-step sheet form.
+Item creation uses one wizard and one final Item writer. The UI may use one
+expandable screen or two sequential steps. The former proto capture fields
+appear first as the minimum savable portion; optional details continue below or
+in a second step. Saving the minimum creates one real Unaccounted For Item.
+Adding details or Linking later preserves its ID.
 
-This flow remains the full-detail item creation path. For field capture where the designer only has photos and lightweight context, use proto item capture first and resolve later.
-
-### Step 1: Essentials
+### First: familiar minimum fields
 
 - Images (optional — camera or photo library via image source menu)
-- Name (optional if images provided)
-- SKU (optional)
-- Source/Vendor (via vendor picker)
+- Name
 - Notes (optional)
+- Quantity (default 1)
+- Project context and optional Space when supplied by the entry point
 
-### Step 2: Details
+### Then: optional details and Link
 
-- Transaction picker (project scope only — links item to an existing transaction)
-- Space picker (project scope only)
+- SKU
+- Source/Vendor
 - Purchase price (currency input)
 - Project price (currency input)
 - Market value (currency input)
-- Quantity (stepper, 1–9999, default 1)
-- Status (picker, default "purchased")
+- Status
+- Payer guidance and accounting Link
+
+### Unaccounted For Item Accounting Route
+
+Items remain under **Unaccounted For Items** until Link connects them to one of
+two destinations:
+
+- **Client paid** — select the eligible Purchase in the current project that
+  records the client's actual payment.
+- **Business paid** — optionally select an eligible Business Inventory Purchase,
+  then create one open Item charge under Invoicing → Items.
+
+The Link question has no **Not sure yet** option. Closing it simply leaves the
+Item Unaccounted For. Transactions from other projects are never offered. The
+Business-paid branch does not create a project Transaction; Invoice collection
+later creates the one lump-sum project Purchase.
+
+Project Items and Invoicing reference one physical Item. The billable charge is
+a separate accounting occurrence referencing the Item, not another Item record.
+Link must be atomic across identity resolution, selected Purchase association,
+open charge/provenance, category, media, Space preservation, and internal
+capture completion. If no inventory Purchase is selected, Ledger must not invent
+one; the target schema for unresolved acquisition evidence remains an explicit
+program decision.
 
 ### Creation Context
 
@@ -306,6 +451,12 @@ Item cards display the normalized project price. During the legacy-data transiti
 Images selected during creation are uploaded in background after the item document is created. First image is set as primary.
 
 ## Bulk Creation from Receipt Text
+
+**Unverified historical proposal, not shipped parity:** the named modal and
+HomeGoods parser are absent from the inspected app/MCP source and exact UI
+baseline. Do not invent this flow during ordinary Item work. If desired for
+this release, treat it as expanded import scope under O-061, using the shared
+review/confirmation pipeline rather than another Item writer.
 
 `CreateItemsFromListModal` provides a 2-step flow for creating multiple items from pasted receipt text:
 

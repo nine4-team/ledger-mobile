@@ -1,0 +1,810 @@
+{
+  "schemaVersion": 1,
+  "policy": "docs/plans/ledger-accounting-redesign/conversion/parallel-subagent-workflow.md",
+  "integrationBranch": "codex/supabase-powersync-implementation",
+  "integrationOwner": "primary-agent",
+  "maximumConcurrentWriters": 2,
+  "enhancedPilotReviewsRequired": 2,
+  "enhancedPilotReviewsCompleted": 2,
+  "assignments": [
+    {
+      "assignmentId": "SUBAGENT-PILOT-001",
+      "pilotOrdinal": 1,
+      "sliceId": "space-assignment-destination-read-contracts",
+      "status": "completed",
+      "baseCommit": "5f4867af1cba9b860efe9de2a914782bb8010278",
+      "readyCiRun": 33679542831,
+      "branch": "codex/supabase-slice-space-assignment-destination",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_assignment_destination",
+      "workerAgent": "/root/space_destination_pilot",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests",
+      "handoff": {
+        "candidateCommit": "dd48f23557ed204244a68c4cf6896a58133276f4",
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
+        ],
+        "focusedTests": "passed: 4 tests in 1 suite",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, PowerSync visibility, authorization, app integration, or migration behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed",
+        "independentReviewer": "/root/space_destination_review",
+        "independentAdversarialReview": "passed_with_nonblocking_documentation_clarification",
+        "findings": [
+          "P3: clarified that legitimate later snapshots may change revision/readiness while malformed, rebound, or internally inconsistent evidence fails closed; no content-integrity proof is claimed."
+        ],
+        "focusedRetest": "passed: 4 tests in 1 suite",
+        "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/contracts, 184 tests in 43 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
+        "exactIntegrationCommitCi": "passed: b0ffef836cc82f6011b802a5cb5f6a6ade05680a in immutable Actions run 33682239349"
+      },
+      "integrationDisposition": "accepted and verified at b0ffef836cc82f6011b802a5cb5f6a6ade05680a after the full enhanced review and immutable Actions run 33682239349; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-PILOT-002",
+      "pilotOrdinal": 2,
+      "sliceId": "project-budget-segment-read-contracts",
+      "status": "completed",
+      "baseCommit": "43189f1abe6e023f4d29b00f190b40464ce7a3e5",
+      "readyCiRun": 33687191592,
+      "branch": "codex/supabase-slice-project-budget-segment",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_budget_segment",
+      "workerAgent": "/root/project_budget_segment_pilot",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectBudgetSegmentDataTests",
+      "handoff": {
+        "candidateCommit": "dc9f2601b2610746c68f4efbd1be4f09540d0943",
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift"
+        ],
+        "focusedTests": "passed: 5 tests in 1 suite",
+        "fullTests": "passed: 189 tests in 44 suites",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart and synthetic watch ports do not prove physical persistence, authenticated PowerSync visibility, current financial authorization, canonical contribution resolution, app integration or migration behavior.",
+          "Snapshot fingerprints prove deterministic scope consistency, not adversarial cryptographic authenticity; trusted adapters and server authorization remain required."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_with_no_findings",
+        "findings": [
+          "Precommit maintainability review required a simplification pass from approximately 1,076 to 768 added lines without weakening frozen coverage.",
+          "Independent review found no P0-P3 defect after exact ancestry/path, authority, source, test, arithmetic, restart, port, cancellation and isolation review.",
+          "The isolated reviewer worktree lacked tsc for the MCP TypeScript subcheck; ready CI passed it and the complete integration gate must repeat it."
+        ],
+        "focusedRetest": "passed: integration agent and independent reviewer each passed 5 tests in 1 suite",
+        "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, five focused and all 189 tests in 44 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
+        "exactIntegrationCommitCi": "passed: 8fce53b75029133b39fe182031df25ef011fc35e in immutable Actions run 33689446640"
+      },
+      "integrationDisposition": "accepted and verified at 8fce53b75029133b39fe182031df25ef011fc35e after every-line integration review, independent adversarial review, complete local gates and immutable Actions run 33689446640; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-003",
+      "sliceId": "space-core-details-read-contracts",
+      "status": "completed",
+      "baseCommit": "8849344dc66d71d9dd9b9ba589a76deb007f3172",
+      "readyCiRun": 33693232878,
+      "branch": "codex/supabase-slice-space-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_core_details",
+      "workerAgent": "/root/space_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user requested early quality-control sampling, and this slice composes several shared Space, checklist, offline-readiness and failure semantics."
+      },
+      "handoff": {
+        "candidateCommit": "1920389d28a71fff3b3233bef2971fe9525bc6e3",
+        "candidateCommits": [
+          "290bc64b6062328e1b3564bed3662b7c9cbcd0b1",
+          "19794b4107ef8f0a0ac8a773bc6d767a508a935b",
+          "1920389d28a71fff3b3233bef2971fe9525bc6e3"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 199 tests in 46 suites by worker and primary agent; independently confirmed",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Exact createdAt/updatedAt values do not claim audit provenance, actor identity, immutability, event semantics or ordering."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_three_corrected_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_one_corrected_p3",
+        "findings": [
+          "Primary review required direct decode-refusal tests for noncanonical notes, checklist names and checklist-item text.",
+          "Primary review required independent proof that both AccountID and SpaceID alter the request fingerprint.",
+          "Primary review required the fixture port itself to validate request binding before yielding, with a raw consumer proving the behavior.",
+          "Independent P3 review required exact literal and uniqueness assertions for all 18 public diagnostic codes."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after final correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 199 tests in 46 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
+        "exactIntegrationCommitCi": "passed: d5afa699ce09c105a82b187f9953e06a09ac2b10 in immutable Actions run 33695588031"
+      },
+      "integrationDisposition": "accepted and verified at d5afa699ce09c105a82b187f9953e06a09ac2b10 after every-line primary review, independent adversarial review, four corrected quality findings, complete local gates and immutable Actions run 33695588031; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-004",
+      "sliceId": "project-core-details-read-contracts",
+      "status": "completed",
+      "baseCommit": "4fd81f477f87de9528c25559d0950dbdd0136717",
+      "readyCiRun": 33697079580,
+      "branch": "codex/supabase-slice-project-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_core_details",
+      "workerAgent": "/root/project_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user requested early quality-control sampling, and this slice composes shared Project/Client identity, canonical description, revision and offline-readiness semantics."
+      },
+      "handoff": {
+        "candidateCommit": "62d59f1d45a90cfbfb3fecc86486a9c95173d0d4",
+        "candidateCommits": [
+          "c7719ce51a83989f399f0ed8c2fd9c1c0142da67",
+          "62d59f1d45a90cfbfb3fecc86486a9c95173d0d4"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 205 tests in 47 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Locally observed revision is conflict-precondition evidence only and is not current authoritative server revision under incomplete, partial or stale evidence."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_four_corrected_test_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_with_no_remaining_p0_p3_after_correction",
+        "findings": [
+          "Primary review required a direct two-distinct-row cardinality rejection in addition to duplicate-row coverage.",
+          "Primary review required direct negative visible-count rejection.",
+          "Primary review required stale-plus-complete rejection in addition to partial-plus-complete coverage.",
+          "Primary review required an exhaustive literal partition of valid and invalid waiting states."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 205 tests in 47 suites, repeatable project generation, macOS and iOS staging builds, clean formatting and untouched source project",
+        "exactIntegrationCommitCi": "passed: d460b02105cbb8446d69a09b4b246e0600d50fef in immutable Actions run 33698741756"
+      },
+      "integrationDisposition": "accepted and verified at d460b02105cbb8446d69a09b4b246e0600d50fef after corrected every-line primary review, independent adversarial re-review, complete local gates and immutable Actions run 33698741756; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-005",
+      "sliceId": "client-core-details-read-contracts",
+      "status": "completed",
+      "baseCommit": "e925a7a07a0eccf5e1563c4b4a4abee58238e7db",
+      "readyCiRun": 33700564469,
+      "branch": "codex/supabase-slice-client-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_client_core_details",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ClientCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early subagent quality-control sampling. Pre-freeze review already corrected Client-port authority, stale Project wording, legitimate later-value handling and exact negative-test obligations, so both reviews remain mandatory."
+      },
+      "handoff": {
+        "candidateCommit": "cd433de292a917eaef3ee9db81ef89b52bc88c1e",
+        "candidateCommits": [
+          "549ecfa6896533fa34b9d8f81efb8e57559e6312",
+          "cd433de292a917eaef3ee9db81ef89b52bc88c1e"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 211 tests in 48 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Locally observed revision is conflict-precondition evidence only and is not current authoritative server revision under incomplete, partial or stale evidence."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_with_no_implementation_finding",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_one_corrected_p3",
+        "findings": [
+          "Independent review rejected the first candidate because a catch-all-to-nil test helper could falsely count unrelated errors as successful valid waiting states.",
+          "Correction cd433de292a917eaef3ee9db81ef89b52bc88c1e directly constructs and asserts notRequested/loading/blocked while requiring exact invalidWaitingState for ready/partial/stale."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 211 tests in 48 suites, repeatable project generation, macOS and iOS staging builds, clean formatting and untouched Firebase source checkout",
+        "exactIntegrationCommitCi": "passed: 6cea8459d0e50f174300c1aef44b72f3004cdf11 in immutable Actions run 33702499992"
+      },
+      "integrationDisposition": "accepted and verified at 6cea8459d0e50f174300c1aef44b72f3004cdf11 after corrected every-line primary review, independent adversarial re-review, complete local gates and immutable Actions run 33702499992; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-006",
+      "sliceId": "project-existing-client-selection-read-contracts",
+      "status": "completed",
+      "baseCommit": "e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee",
+      "readyCiRun": 33704608811,
+      "branch": "codex/supabase-slice-project-existing-client-selection",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_existing_client_selection",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectExistingClientSelectionDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early subagent quality-control sampling. Independent preflight already rejected a duplicate production port, unsupported UI policy and incomplete fingerprint basis, so the worker cannot promote status and both post-handoff reviews remain mandatory."
+      },
+      "currentReview": {
+        "candidateCommits": [
+          "de476aed15f7e1d07c47a33fb466eadc78a29d36",
+          "41a2033c51c650e8d678d4bd1b0d2e246c419273",
+          "c2492452e1f8df806d5b6332fd9b9cc8017054ea",
+          "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3"
+        ],
+        "integrationAgentLineReview": "passed_after_four_corrected_test_exhaustiveness_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_p1_rejected_false_authoritative_empty",
+        "finding": "visibleRowCountBeforeFiltering may exceed represented source rows, so empty active rows plus ready/complete evidence cannot prove no omitted active Client",
+        "requiredCorrection": "completed in d206f542: preserve and fingerprint-bind sourceDirectoryRowCount; noActiveClient requires ready, complete and sourceDirectoryRowCount equal to visibleRowCountBeforeFiltering; directly test exhaustive and non-exhaustive empty/archived/active shapes and both count tamper/structural failures"
+      },
+      "handoff": {
+        "candidateCommit": "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3",
+        "candidateCommits": [
+          "de476aed15f7e1d07c47a33fb466eadc78a29d36",
+          "41a2033c51c650e8d678d4bd1b0d2e246c419273",
+          "c2492452e1f8df806d5b6332fd9b9cc8017054ea",
+          "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
+        ],
+        "focusedTests": "passed: 7 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 218 tests in 49 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Visible active Clients may form local intent under incomplete evidence, but the future authoritative handler must recheck Account, lifecycle and membership before apply."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_four_test_exhaustiveness_corrections",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_p1_authoritative_empty_correction",
+        "findings": [
+          "Primary review required direct partial/stale selection, distinct insertion, both invalid completeness combinations and non-exhaustive restart coverage.",
+          "Independent review rejected false noActiveClient authority when visible rows exceeded represented source rows.",
+          "Correction binds exact sourceDirectoryRowCount and requires source exhaustiveness for noActiveClient."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 7 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target environment/generated contracts, 7 focused/all 218 tests, repeatable project generation, macOS and generic iOS Simulator staging builds, clean diff formatting and untouched Firebase checkout",
+        "exactIntegrationCommitCi": "passed: 9ff6540760548377fd5c4f528974045777619aad in immutable Actions run 33707305340; traceability 12 seconds, isolated target 2 minutes 44 seconds"
+      },
+      "integrationDisposition": "accepted and verified at 9ff6540760548377fd5c4f528974045777619aad after four corrected primary-review test gaps, independent P1 rejection and corrected adversarial re-review, complete local gates and immutable Actions run 33707305340; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-007",
+      "sliceId": "transaction-type-choice-presentation-contracts",
+      "status": "verified",
+      "baseCommit": "8cf4bec690345eacfe77b954d8deddabda0ec128",
+      "readyCiRun": 33707620621,
+      "originalReadyCommit": "5e79d83d672b44f320ebe686222e55f8158a8fdf",
+      "originalReadyCiRun": 33706147469,
+      "assignmentControlCommit": "49289922cbfcc345c223d7589064df3519268349",
+      "assignmentControlCiRun": 33707949029,
+      "branch": "codex/supabase-slice-transaction-type-choice",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_transaction_type_choice",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter TransactionTypeChoicePresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control sampling for at least the first couple subagent attempts. Preflight and actual-ready-diff review already corrected aggregate, owner-vocabulary, order, restart-shape and display-title precision risks, so the worker cannot change the frozen boundary or promote status."
+      },
+      "handoff": {
+        "candidateCommit": "c22fac22565f1d48d9240698dbac0ab4a8016607",
+        "candidateCommits": [
+          "0170ac0aff23313fd42c9d45b58784681af69499",
+          "f38258a59b01b7c304c4051028844f9cef4cb615",
+          "c22fac22565f1d48d9240698dbac0ab4a8016607"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewers",
+        "fullTests": "passed: 224 tests in 50 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Presentation is derived from locally validated classification only and grants no current authorization, command eligibility, order, persistence or provider behavior.",
+          "Raw syntactically malformed JSON is DecodingError at the generic codec; invalidEncodedClassification normalization exists only in the test-only consumer boundary."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_malformed_json_truth_correction",
+        "independentReviewers": [
+          "/root/project_budget_segment_review",
+          "/root/transaction_choice_final_review"
+        ],
+        "independentAdversarialReview": "passed_after_one_p3_test_gap_and_one_p3_evidence_overclaim_correction",
+        "findings": [
+          "The first candidate omitted syntactically malformed JSON despite a frozen TEST-005 obligation.",
+          "The first correction could imply the generic codec emitted a taxonomy failure; final c22fac22 directly proves raw DecodingError and separate test-consumer normalization.",
+          "The dossier and evidence now distinguish raw parser behavior from bounded test-consumer rejection."
+        ],
+        "focusedRetest": "passed: worker, primary agent and final independent reviewer passed 6 tests in 1 suite",
+        "completeLocalGate": "passed: 6 focused/all 224 tests in 50 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "fcff5b854b16d289dfcf159b31fcd45a973c7402",
+        "exactIntegrationCommitCi": "passed: Actions run 33717396519; conversion traceability 14s; isolated target 3m8s"
+      },
+      "cleanup": {
+        "promotionCommit": "5960bd9d9d3a25050b027e727a0021bb8477b878",
+        "promotionCi": "passed: Actions run 33717813102; conversion traceability 10s; isolated target 3m30s",
+        "worktreeRemoved": true,
+        "branchRetained": true
+      }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-008",
+      "sliceId": "project-browsing-presentation-contracts",
+      "status": "verified",
+      "baseCommit": "459a58123ac7241984ddee6d559e33f4bca931d4",
+      "readyCiRun": 33720134399,
+      "assignmentControlCommit": "2cd61b28f829fe63d655b1f6f812ffd76b3e5d48",
+      "assignmentControlCiRun": 33720523680,
+      "branch": "codex/supabase-slice-project-browsing",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing",
+      "workerAgent": "/root/project_browsing_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectDirectoryPresentation.swift",
+        "LedgeriOS/LedgerTargetCore/ProjectDetailHeaderPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectDirectoryPresentationTests && swift test --package-path LedgeriOS --filter ProjectDetailHeaderPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control review for early delegated work. Scope and actual-ready-diff review already rejected unsupported sorting/tabs/routes, an unrelated D-023 citation, missing Client-lifecycle authority and stale-selection request derivation; the worker cannot change that frozen boundary or any canonical control file."
+      },
+      "handoff": {
+        "candidateCommit": "73f94525e3fef8c46a6243ff12c0fd6d02f89e6c",
+        "candidateCommits": [
+          "964dbabcfc5efe3946744c41020a652f03cf0165",
+          "73f94525e3fef8c46a6243ff12c0fd6d02f89e6c"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectDirectoryPresentation.swift",
+          "LedgeriOS/LedgerTargetCore/ProjectDetailHeaderPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 4 directory and 3 detail-header tests by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 231 tests in 52 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity.",
+          "Structured restart does not prove physical persistence, provider sync, schema/RLS, app/MCP wiring, migration or production behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_selection_identity_and_manifest_name_correction",
+        "independentReviewer": "/root/project_browsing_preflight",
+        "independentAdversarialReview": "passed_after_one_p1_and_one_p2_correction",
+        "findings": [
+          "P1: initial candidate allowed encoded selection B to be rebound to complete valid sibling row A in the same current snapshot because the chosen row lacked a selection-specific fingerprint.",
+          "P2: initial candidate exposed ProjectDirectoryPresentation instead of the frozen ProjectDirectoryPresentationSnapshot manifest surface.",
+          "Corrected candidate binds exact selection identity, directly rejects sibling-row substitution and aligns the manifest name; final review found no remaining P0-P3."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer passed 7 tests across 2 suites",
+        "completeLocalGate": "passed: all 231 tests in 52 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "717a0eb89099676bd4c09d6b0665dd83ab9739d8",
+        "exactIntegrationCommitCi": "passed: Actions run 33723154735; both Conversion state and traceability and Isolated target environment jobs succeeded"
+      },
+      "cleanup": {
+        "promotionCommit": "51e0544eed0388f274e7bf8963fa49fe84271826",
+        "promotionCi": "passed: Actions run 33723771668; conversion traceability 47s; isolated target 2m1s",
+        "worktreeRemoved": true,
+        "branchRetained": true
+      }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-009",
+      "sliceId": "project-setup-form-presentation-contracts",
+      "status": "verified",
+      "baseCommit": "a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62",
+      "readyCiRun": 33726485780,
+      "assignmentControlCommit": "10913c5761561ad9fdd0713627ae82396e9f3ff8",
+      "assignmentControlCiRun": 33726899284,
+      "branch": "codex/supabase-slice-project-setup-form",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form",
+      "workerAgent": "/root/project_setup_form_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectSetupFormPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early delegated-work quality control. Ready-diff review already rejected invented Project-wide currency behavior, ambiguous description normalization and an evidence-completeness overclaim; the worker cannot change the frozen semantic boundary or any canonical control file."
+      },
+      "handoff": {
+        "candidateCommit": "37145ae3548e577469599ff2381c02258b01f130",
+        "candidateCommits": [
+          "7a881af2ff2ef86d1ef4ca4f08c7e604f0aacbe2",
+          "37145ae3548e577469599ff2381c02258b01f130"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 237 tests in 53 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Represented new-Client-ID collision detection covers only active Client IDs retained in the selection snapshot; unrepresented and archived identity collisions remain authoritative-apply concerns.",
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity; structured restart does not prove physical persistence or provider behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_rejecting_one_p2_test_coverage_gap",
+        "independentReviewer": "/root/project_browsing_preflight",
+        "independentAdversarialReview": "passed_after_exhaustive_field_matrix_correction",
+        "findings": [
+          "P2: first green candidate overclaimed every-field evidence binding while mutating only representative fields in its restart test.",
+          "Corrected candidate independently mutates every named preparation, Client snapshot/row, category snapshot/row and selection field with layer-appropriate expected failures.",
+          "Final primary and independent review found no remaining P0-P3; the larger test file is justified by the explicit reciprocal matrix rather than duplicated production behavior."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite",
+        "completeLocalGate": "passed: all 237 tests in 53 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "147d22de801b15794d8ebb4786eaea86e4346940",
+        "exactIntegrationCommitCi": "passed: Actions run 33729967356; conversion traceability 10s; isolated target 3m9s"
+      },
+      "cleanup": {
+        "promotionCommit": "5322adfca32ce5fd90f790f70ed584090ab5eee1",
+        "promotionCi": "passed: Actions run 33730394704; conversion traceability 9s; isolated target 2m21s",
+        "worktreeRemoved": true,
+        "branchRetained": true
+      }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-010",
+      "sliceId": "space-checklist-editing-presentation-contracts",
+      "status": "verified",
+      "baseCommit": "5c2a185be15189bc8aa1606f838eee5a362780fc",
+      "readyCiRun": 33732917130,
+      "assignmentControlCommit": "cc6faddf707694e0c4a7af00a770d8a2672b8151",
+      "assignmentControlCiRun": 33733387021,
+      "branch": "codex/supabase-slice-space-checklist-edit",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit",
+      "workerAgent": "/root/space_checklist_edit_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control review for delegated work. Three ready-diff passes already rejected unsafe cached evidence, harmless-refresh overbinding, unsupported checklist reorder/cross-list movement, invalid canonical-only intermediate text, incomplete transition tests and continuity inconsistencies; the worker cannot change the frozen semantic boundary or canonical control files."
+      },
+      "handoff": {
+        "candidateCommit": "272b705e246cf505007f38a3d3d386dd8fbc127a",
+        "candidateCommits": [
+          "37714106e3fcc4271bcdc5ee93bb7a66c41eca23",
+          "d50cc9e383f42ffe8519fd27980dfa96ea59ada4",
+          "272b705e246cf505007f38a3d3d386dd8fbc127a"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 243 tests in 54 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "The complete replacement rejects changed semantic hierarchy but does not merge concurrent edits; users require an explicit higher-layer conflict experience.",
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity; structured restart does not prove physical persistence or provider behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_rejecting_incomplete_test_evidence_and_one_restart_defect",
+        "independentReviewer": "/root/space_checklist_edit_review_prep",
+        "independentAdversarialReview": "passed_after_explicit_null_and_exhaustive_matrix_corrections",
+        "findings": [
+          "P2: first green candidate asserted only generic decode failure and omitted parts of the admission, cached/current field, fingerprint, command-forwarding and order-token matrices.",
+          "Expanded tests exposed that canonical nil-cache failed updates could not restart because the strict decoder required an omitted optional key.",
+          "Primary and independent review then found and corrected acceptance of noncanonical explicit cached null; final review found no remaining P0-P3."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite",
+        "completeLocalGate": "passed: all 243 tests in 54 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "5a5c67b1319e3fcc41290469f7f39db9d515b284",
+        "exactIntegrationCommitCi": "passed: Actions run 33739849778; conversion traceability 12s; isolated target 2m11s"
+      },
+      "cleanup": {
+        "promotionCommit": "fd54f8c5db700af6ab8833e195da04256836ea58",
+        "promotionCi": "passed: Actions run 33740343879; conversion traceability 8s; isolated target 2m51s",
+        "worktreeRemoved": true,
+        "branchRetained": true
+      }
+    }
+  ],
+  "preflightFindings": [
+    {
+      "findingId": "SUBAGENT-PILOT-002-CANDIDATE-REJECTION-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "inventory-purchase-planning-operation-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/purchase_intent_authority_review"
+      ],
+      "findings": [
+        "The shipped purchase-intent specification is current behavior and migration evidence, not canonical target authority.",
+        "Legacy intended budget category conflicts with D-013 Furnishings authority for target Project Item charges and credits.",
+        "Target retention, Purchase-versus-Item granularity, multi-destination behavior, and set/change/clear/resolve/reopen lifecycle are unresolved.",
+        "Broad batch-level canonical-spec association allowed three planning surfaces to appear target-mapped without feature-specific canonical authority."
+      ],
+      "disposition": "Speculative scaffolds were removed; three surfaces were demoted, O-038 was added to all five affected surfaces, premature architecture ports were removed, and a proposed decision packet was created. No worker was launched and no behavioral implementation was accepted."
+    },
+    {
+      "findingId": "SUBAGENT-PILOT-002-PREFLIGHT-002",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "project-budget-segment-read-contracts",
+      "status": "go_with_narrowed_boundary_before_ready",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_slice_scout",
+        "/root/budget_segment_preflight"
+      ],
+      "findings": [
+        "Pre-existing Budget Progress authority and D-012 support signed client-paid and invoicing/unpaid category values, internally derived recognized arithmetic, and equal positive collection exchange with no recognized change.",
+        "The boundary must remain ProjectBudgetSegmentSnapshot rather than the complete ProjectBudgetSnapshot and cannot resolve contributions, settlement, budgets/remaining/over, source counts, reports or presentation.",
+        "The request fingerprint must bind Account, Project and currency; snapshots require explicit completeness plus distinct LocalDataVersion and accounting-authority/projection revision.",
+        "The concurrent architecture clarification is technical documentation only and cannot bootstrap product authority because it did not exist at the independently reviewed base."
+      ],
+      "disposition": "Prepared a two-path comment-only ready scaffold and dossier with the narrowed product boundary, negative/restart/port obligations and all provider, migration and production behavior excluded. No writer may start until the exact ready commit passes immutable CI."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-009-CANDIDATE-REJECTION-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "pinned-project-budget-presentation-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "O-005 still controls negative-credit/refund rendering, direction, labels, clamping and percentage presentation.",
+        "Canonical authority does not settle archived/deleted/stale/hidden pin resolution or whether missing budget/config evidence means zero, absent, hidden or incomplete.",
+        "The source overall pseudo-pin conflicts with target pin authority, and card fallback is undefined for nullable/zero allocation and signed recognized values.",
+        "A safe raw evidence join would be plumbing rather than a coherent user outcome and would not justify replacing the mapped source presentation/test surfaces."
+      ],
+      "disposition": "No scaffold or implementation was created. Preserve the verified raw Project budget segment and preference contracts; revisit only after category-visibility composition and O-005/card presentation authority are frozen."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-009-PREFLIGHT-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "project-setup-form-presentation-contracts",
+      "status": "ready_after_independent_correction_review",
+      "reviewers": [
+        "primary-agent",
+        "/root/project_browsing_preflight",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "Verified Project setup, existing-Client selection and budget-category reference contracts provide the complete semantic inputs for an evidence-bound preparation flow.",
+        "The target permits zero categories and exact null/zero/positive allocations; current source preselect-all, at-least-one, missing-as-zero and on-the-fly category mutation are excluded.",
+        "Existing Client selection must remain bound to exact current active-Client evidence, while new Client input uses preallocated stable identity and validated display name without display-text ownership.",
+        "The only command-producing function must revalidate all current Client/category evidence before deriving the existing ProjectSetupDraft and CreateProjectCommand, with no local authorization claim.",
+        "Independent actual-diff review rejected an unsupported mixed-currency rule because no Project-currency authority exists and required explicit reuse of ProjectDescriptionReplacement for creation-time trim/empty-to-nil behavior.",
+        "The correction also makes allocation input order non-semantic and refuses a preallocated new Client ID that already identifies a represented existing Client, without claiming authority over unrepresented collisions.",
+        "Correction re-review found one P2 phrase that could have treated partial represented evidence as complete; after it was narrowed to exact represented evidence plus independent readiness/completeness state, final independent review returned GO with no remaining P0-P3 issue."
+      ],
+      "disposition": "Prepared exactly two comment-only target scaffolds plus a complete ready dossier/evidence plan. Primary and independent actual-diff review, the complete local ready gate and exact ready-commit Actions run 33726485780 pass. SUBAGENT-WORK-009 may not start until its assignment-control commit passes immutable CI."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-010-PREFLIGHT-001",
+      "recordedAt": "2026-09-03",
+      "candidateSlice": "space-checklist-editing-presentation-contracts",
+      "status": "ready_after_independent_correction_review",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "Canonical Space authority and verified Space-core/read plus checklist-revision dependencies support a provider-free editor without resolving a new product decision.",
+        "The first draft was rejected because partial/stale rows cannot safely seed replace-all editing, command eligibility must not bind harmless refresh metadata, source behavior does not authorize checklist reorder or cross-list movement, and raw blank intermediate form state must survive restart.",
+        "The corrected update-state contract admits ready-complete current evidence or a retryable cache only when quality is ready, isCompleteForQuery is true and exactly one row exists; unsafe cache, waiting, absence, unavailable and required-update remain noneditable.",
+        "A separate semantic-base fingerprint binds Account/Space/scope/lifecycle/revision/starting hierarchy while presentation integrity still binds full update metadata; current-to-stale and stale-to-current transitions with an unchanged base remain eligible.",
+        "Typed scope is limited to checklist add/remove/rename/clear and item add/remove/edit/check/reorder within its owning checklist. Raw intermediate text, exact stable IDs, represented-scope collisions, order-token preservation and unchanged exact submission are frozen.",
+        "Final corrected-diff review found no remaining P0-P3 after one stale verification-state sentence was removed."
+      ],
+      "disposition": "Prepared exactly two comment-only target scaffolds plus complete ready dossier/evidence/continuity controls. Full local gate and exact ready commit 5c2a185be15189bc8aa1606f838eee5a362780fc Actions run 33732917130 pass. SUBAGENT-WORK-010 assignment-control commit cc6faddf707694e0c4a7af00a770d8a2672b8151 passed immutable Actions run 33733387021; the bounded worker may start."
+    },
+    {
+      "findingId": "PROJECT-NOTE-CREATION-USE-CASE-PREFLIGHT-REJECTION-001",
+      "recordedAt": "2026-09-03",
+      "candidateSlice": "project-note-creation-use-case-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/archive_promotion_traceability_review",
+        "/root/archive_promotion_continuity_review"
+      ],
+      "findings": [
+        "Canonical target specs and confirmed decisions do not choose Project-note submission normalization or minimum length.",
+        "Current app entry points trim outer whitespace and accept any nonempty remainder, while the MCP validation helper requires at least three trimmed characters and forwards the original text.",
+        "The proposed use case silently chose target ProjectNoteText's lossless accepted-byte behavior as user-visible submission policy even though conversion evidence cannot resolve the source conflict.",
+        "The first actual-diff review also caught omitted partial-source accounting for MCPMOD-DAB760104CEE, the helper that owns the source three-character minimum.",
+        "QuickNoteModal's prior target map named superseded ProjectNoteDraft/CreateProjectNoteCommand/ProjectNotesSnapshot/OperationSnapshot types instead of the verified target contracts."
+      ],
+      "disposition": "Removed speculative scaffolds, dossier, evidence and target-surface records before any commit or executable implementation. Opened O-039 with a proposed shared app/MCP validation packet, attached it to eight affected source/integration surfaces, corrected the MCP source behavior and QuickNote target names, and selected Client archive dispatch for a fresh strict-authority preflight."
+    }
+  ]
+}

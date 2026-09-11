@@ -1,7 +1,13 @@
 # Invoice Redesign Change Plan
 
-> Status: working implementation and UX companion to `invoice-transaction-redesign-draft.md`.
-> This document records app changes, research tasks, and UI decisions needed to implement the target model. It is not the domain spec.
+> **Status: superseded on 2026-08-30.** This was the implementation companion
+> to the now-superseded `invoice-transaction-redesign-draft.md`. Preserve it as
+> research evidence, but do not execute it. A new implementation plan must be
+> derived from
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> and
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md)
+> after their remaining product decisions are resolved.
 
 ## Purpose
 

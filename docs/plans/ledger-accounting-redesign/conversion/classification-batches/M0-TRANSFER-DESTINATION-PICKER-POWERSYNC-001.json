@@ -1,0 +1,156 @@
+{
+  "batchId": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001",
+  "title": "Target-local Transfer destination picker derived from Project directory evidence",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-TRANSFER-DESTINATION-PICKER-READY-001",
+    "EVID-TRANSFER-DESTINATION-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-A266AA431CC2",
+      "acknowledgeSourceHash": "0af1c456738af25b5d99055aca4379edbb6e66f4e9921c8e5fa36324a82c8dce",
+      "currentBehavior": "Core-only staging AppModel presents waiting, partial/stale/ready, incomplete-empty, authoritative-empty and bounded-failure states and keeps only transient represented ProjectID selection.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Implemented current-directory source resolution, exact observation states, generation-safe replacement, and represented destination selection with removed or relationship-stale choices cleared.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["provider-free Transfer destination staging model"],
+        "securityRequirements": ["Consume typed local evidence without interpreting authorization"],
+        "syncRequirements": ["Preserve waiting, partial, stale, ready, authoritative-empty and bounded-failure truth"]
+      },
+      "migration": {
+        "rule": "No source view model or Firebase listener is read or copied.",
+        "reconciliation": ["Late evidence from a replaced source cannot mutate current presentation"]
+      },
+      "verification": {
+        "tests": ["TransferDestinationSelectionStagingExerciseTests"],
+        "acceptance": ["Only currently represented stable destination identity is selectable"]
+      }
+    },
+    {
+      "id": "SWIFT-A89D47BD8E9E",
+      "acknowledgeSourceHash": "1f21cc6b3c478675e32c57ce76bf3178512e192697103464b31e4010ed981967",
+      "currentBehavior": "Thin target-app adapter forwards the typed source Project to the Account-bound offline runtime and exposes no write or provider detail.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Implemented thin forwarding through the existing Account-bound runtime.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["target staging Transfer destination runtime adapter"],
+        "securityRequirements": ["Expose only typed source and snapshot values"],
+        "syncRequirements": ["Own no second cache, subscription, eligibility rule or write path"]
+      },
+      "migration": {
+        "rule": "No source adapter or production route is modified.",
+        "reconciliation": ["Cancellation and replacement drain the forwarded observation"]
+      },
+      "verification": {
+        "tests": ["Target environment and staging build checks"],
+        "acceptance": ["Adapter remains thin and target-only"]
+      }
+    },
+    {
+      "id": "SWIFT-B51F1CEFB750",
+      "acknowledgeSourceHash": "ea0a5ff2dd1afa0858b20c7915db14c0459c4e5d044f2f2694426e3f4c0e6909",
+      "currentBehavior": "Isolated read-only SwiftUI view renders the AppModel status, candidates, stable selected ProjectID and bounded diagnostic without a Transfer action.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Implemented as a synthetic read-only picker, not a production Transfer route; interactive UI smoke remains unclaimed.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["isolated Transfer destination staging view"],
+        "securityRequirements": ["Render only AppModel-projected rows and stable identity"],
+        "syncRequirements": ["Do not present incomplete evidence as authoritative empty"]
+      },
+      "migration": {
+        "rule": "No source picker behavior or production screen is modified.",
+        "reconciliation": ["Selection is cleared when its stable ID is no longer represented"]
+      },
+      "verification": {
+        "tests": ["Target staging macOS and iOS builds"],
+        "acceptance": ["No Item, amount, confirmation, command or accounting action exists"]
+      }
+    },
+    {
+      "id": "SWIFT-B75E621E13BB",
+      "acknowledgeSourceHash": "f411284e1db44e705b1b77ea4225148c550838bb119d17836913e021380ac8bf",
+      "currentBehavior": "Account-bound derived query reuses the existing encrypted Project-directory watch, re-resolves current source evidence, projects same-Client destinations and drains observations.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Implements stable-source re-resolution for every Project-directory update before deriving the verified destination snapshot, without SQL, schema, Sync Stream or second cache.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["Account-bound TransferDestinationSelectionQuerying adapter"],
+        "securityRequirements": ["Exact Account/source binding and fail-closed relationship validation"],
+        "syncRequirements": ["Reuse upstream Project-directory order, readiness, local version and lifecycle", "Absent incomplete source evidence emits no candidates; complete-ready absence fails boundedly", "Same-ID relationship changes use the current row and never caller-stale Client identity"]
+      },
+      "migration": {
+        "rule": "Read only the existing synthetic target-local Project directory; decode no Firebase data.",
+        "reconciliation": ["No separate Transfer-destination table or authority is created"]
+      },
+      "verification": {
+        "tests": ["TransferDestinationSelectionPowerSyncQueryTests"],
+        "acceptance": ["Only other active same-Client Projects are emitted with honest readiness"]
+      }
+    },
+    {
+      "id": "TEST-AE71DAB919F1",
+      "acknowledgeSourceHash": "54a6946148e28fb000e3e481c0152372b385fa57edd931ed38074a7bd5169a52",
+      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and explicit upstream directory cancellation drainage before database close.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Executable encrypted-local tests cover current-source re-resolution, absence/reappearance, readiness, restart, refusal and lifecycle behavior; frozen lower-level tests remain composite evidence for malformed/duplicate/fingerprint guards.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["Transfer destination local-provider test suite"],
+        "securityRequirements": ["Prove cross-Account and malformed source evidence cannot enumerate candidates"],
+        "syncRequirements": ["Prove restart, upstream updates, cancellation and close preserve exact truth"]
+      },
+      "migration": {
+        "rule": "Use disposable encrypted local databases and synthetic identities only.",
+        "reconciliation": ["Tests create no production, migration or hosted evidence"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter TransferDestinationSelectionPowerSyncQueryTests"],
+        "acceptance": ["Every frozen provider obligation passes before implementation promotion"]
+      }
+    },
+    {
+      "id": "TEST-DE003BB60B7F",
+      "acknowledgeSourceHash": "1b96cf53afa2cf7f2cc966ab5c4e33f6886203caabdbd9ed335a06a9b02d0250",
+      "currentBehavior": "Executable AppModel tests cover every presentation state, represented identity, destination disappearance/reappearance, relationship changes, replacement, late evidence, failures and cancellation.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-TRANSFER-DESTINATION-PICKER-READY-001"],
+      "notes": "Implements source-switch, no-resurrection selection, failure and observation-lifecycle proof with deterministic in-memory ports.",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": ["Transfer destination staging-model test suite"],
+        "securityRequirements": ["Do not infer hidden candidates, authorization or write permission"],
+        "syncRequirements": ["Reject late prior-source evidence and distinguish partial/stale/ready candidates plus partial/stale/authoritative empty"]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory ports only.",
+        "reconciliation": ["No persistent selection or source-data transformation is introduced"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter TransferDestinationSelectionStagingExerciseTests"],
+        "acceptance": ["Read-only presentation is deterministic and cancellation-safe"]
+      }
+    }
+  ]
+}

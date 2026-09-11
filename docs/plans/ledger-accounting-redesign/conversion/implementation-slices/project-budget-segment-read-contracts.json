@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-budget-segment-read-contracts",
+  "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Project Budget Segment Read Contracts",
+  "surfaceIds": [
+    "SWIFT-42C7BDDCD714",
+    "TEST-A0B2D5B97695"
+  ],
+  "requirements": [
+    {
+      "id": "BUDGETSEG-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "Each category exposes two exact signed semantic amounts: client paid and invoicing/unpaid. Recognized Project progress is derived only as client paid plus invoicing/unpaid and is never independently caller-authored.",
+      "decisionIds": ["D-012"],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-004", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "An equal category amount moving from invoicing/unpaid to client paid during collection leaves recognized progress unchanged. Neither an Invoice link nor the collection Purchase face amount can add a second contribution in this read contract.",
+      "decisionIds": ["D-012"],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "The segment contract is currency-safe and accepts signed values, including zero and negative amounts, without choosing visual colors, bar direction, labels, clamping, percentages, credit settlement, or any other behavior controlled by O-003 through O-005 or O-010.",
+      "decisionIds": ["D-012", "O-003", "O-004", "O-005", "O-010"],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/invoicing-collection-and-budget-authority.md",
+      "section": "Budget Authority",
+      "invariant": "The target segment boundary replaces Transaction-only arithmetic and cached Firebase budgetSummary authority with one exact Account/Project/currency request and category snapshots using stable category identity and definition order. It does not decide contribution-source eligibility or construct the complete ProjectBudgetSnapshot.",
+      "decisionIds": ["O-007", "O-015", "O-026"],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-004", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "One narrow ProjectBudgetSegmentQuerying port watches a typed request bound to exact AccountID, ProjectID and CurrencyCode and returns only matching segment snapshots; it exposes no generic financial query, provider DTO, mutation, contribution resolver or authorization decision.",
+      "decisionIds": [],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-004", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Ready, authoritative-empty, incomplete partial, stale and failed local reads remain distinct and carry both LocalDataVersion and accounting-authority/projection revision. Cross-Account, currency-mismatched, duplicate, hidden-count, overflowed, malformed or rebound evidence fails atomically through stable bounded diagnostics; local values never grant current financial authorization.",
+      "decisionIds": [],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-004", "BUDGETSEG-TEST-005"]
+    },
+    {
+      "id": "BUDGETSEG-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 boundary is executable only with deterministic provider-free synthetic evidence while the shipped Firebase app remains unchanged. It creates no contribution, Invoice, Transaction, budget row, schema/RLS/Sync policy, Auth/provider adapter, app/MCP wiring, source transform, hosted resource, migration or production authority.",
+      "decisionIds": [],
+      "verificationIds": ["BUDGETSEG-TEST-001", "BUDGETSEG-TEST-002", "BUDGETSEG-TEST-003", "BUDGETSEG-TEST-004", "BUDGETSEG-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectBudgetSegmentRequest binds one exact AccountID, ProjectID and CurrencyCode to a deterministic versioned query fingerprint.",
+        "ProjectBudgetCategorySegment carries one BudgetCategoryDefinitionSnapshot, signed clientPaid and invoicingUnpaid Money in the request currency, and encoded recognized evidence that is derived and verified as their overflow-safe sum rather than accepted from a caller.",
+        "ProjectBudgetSegmentSnapshot validates finite local time, exact request fingerprint, nonzero accounting-authority/projection revision, category Account/currency scope, visible count, unique category identity and presentation order, then canonicalizes rows by category definition order and stable ID.",
+        "ProjectBudgetSegmentQuerying exposes only watchProjectBudgetSegments(_:). ProjectBudgetSegmentFailure supplies stable bounded scope/currency/duplicate/count/time/arithmetic/read/encoding diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No contribution table, projection table/view, Account/Project/category foreign key, currency constraint, index, function, trigger or migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No contribution resolver, collection handler, membership/capability derivation, Account/Project/category validation, audit event or projection rebuild exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed scope and local validation are not authorization. No membership, financial-visibility, category or cross-account database policy/test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local financial table, authenticated download predicate, subscription, upload connector or synchronized visibility proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The request, rows and snapshot are canonical Codable evidence over stable scope/category identity, signed Money, LocalDataVersion, accounting-authority/projection revision and ListLocalSnapshot readiness; decoding reconstructs through the same validators and byte-identical structured restart is required.",
+        "Equivalent input canonicalizes by category presentation order and stable ID. Malformed, rebound or internally inconsistent scope/currency/identity/order/count/readiness/recognized evidence fails atomically; partial absence never becomes authoritative empty.",
+        "A deterministic reference adapter may stream exact request-matching snapshots and bounded local failure; this is not physical durable-store, process/device restart, authenticated Sync, current authorization or contribution-source evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Budget segment evidence carries no attachment identity, object locator, URL, byte, marker, upload, cache, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No budget screen, Project card, Invoicing view, report/export, MCP resource/tool/schema, transport handler, capability registration or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase budgetSummary, Transaction sign, Invoice state/link, category allocation, MCP result, source export row or migration disposition is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize, resolve, persist, present or synchronize contributions; calculate budget limits/remaining/over/source counts; mutate an Invoice/Transaction; define schema/RLS/Sync/provider/migration behavior; activate a feature; deploy, release or cut over.",
+        "O-003 through O-010, O-015, O-026, O-033 through O-036 and A-003/A-004/A-007/A-016 remain outside this boundary. Physical offline verification, canonical production profiling and all hosted-resource authority remain gated."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "BUDGETSEG-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
+      "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
+      "expected": "Synthetic categories preserve exact signed client-paid and invoicing/unpaid Money, derive recognized once with overflow safety, and prove an equal collection segment exchange leaves recognized unchanged without an Invoice/Transaction/source/provider field.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
+    },
+    {
+      "id": "BUDGETSEG-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
+      "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
+      "expected": "Ready, authoritative-empty, partial and stale exact-scope snapshots plus equivalent reordered input round-trip byte-identically with category order, signed values, derived recognized, completeness, LocalDataVersion, accounting-authority/projection revision and finite as-of evidence; empty incomplete snapshots never mean authoritative zero.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
+    },
+    {
+      "id": "BUDGETSEG-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
+      "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
+      "expected": "Cross-Account, currency-mismatched, duplicate category identity/order, hidden-count, nonfinite-time, incomplete-as-authoritative, arithmetic-overflow, malformed-derived and rebound request/snapshot evidence fails atomically through stable bounded diagnostics.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
+    },
+    {
+      "id": "BUDGETSEG-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
+      "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
+      "expected": "A deterministic reference port streams only the exact Account/Project/currency request, refuses rebound or mismatched snapshots, stops delivery on cancellation and surfaces upstream failure without a false snapshot, cross-scope fallback, authorization, contribution resolution or false completeness.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
+    },
+    {
+      "id": "BUDGETSEG-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming contribution, authorization, physical local/Sync, schema/RLS, app/MCP, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-BUDGET-SEGMENT-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified decision-independent Phase 1 query boundary. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths from exact green ready commit 43189f1abe6e023f4d29b00f190b40464ce7a3e5. The integration agent reviewed every changed line and reran five focused tests; an independent adversarial reviewer verified exact ancestry/scope and found no P0-P3 defect after five focused/all 189 target tests, target isolation and source review. The candidate was integrated at ddbe7d7b. The complete local integration gate passed conversion/capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, five focused/all 189 tests, repeatable project generation, both staging builds and clean formatting. Exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640: conversion traceability and the isolated target environment, including all 189 tests and both staging builds, succeeded with clean artifacts. Canonical Budget Progress and D-012 settle the exact signed paid/unpaid meanings, derived sum and no-change-on-collection invariant while visual treatment remains open. The slice carries no source-kind/contribution eligibility, budget/remaining/over/source count, Invoice/Transaction command, negative-credit presentation, Postgres/RLS/PowerSync/Auth/provider, app/MCP, migration, hosted-resource, production or cutover behavior. O-005 remains open."
+}

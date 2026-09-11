@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-creation-supabase-powersync-vertical-spike",
+  "title": "Create and read one Client offline through Supabase, PowerSync, the target app, and target MCP",
+  "kind": "product",
+  "status": "in_progress",
+  "owner": "Client Identity",
+  "surfaceIds": [
+    "CONFIG-0C8B77A5FB08",
+    "CONFIG-428FDE11BBE4",
+    "CONFIG-5C0C92D825F3",
+    "CONFIG-63468A3CE4F2",
+    "CONFIG-7AB0A2FE74E7",
+    "CONFIG-CC390AE55FE6",
+    "CONFIG-E8340EBE4EBA",
+    "MCPMOD-68F7991697DD",
+    "MCPMOD-EDF53EB768EB",
+    "SWIFT-19D4AA7B766B",
+    "SWIFT-2ADDF7B64EA0",
+    "SWIFT-2FAE0364C908",
+    "SWIFT-548A8A928FAE",
+    "SWIFT-A9434A1623BC",
+    "SWIFT-A9F7D22095F8",
+    "SWIFT-D9F0F491C95C",
+    "SWIFT-EBCBC4925D9D",
+    "TEST-E0636D89C442"
+  ],
+  "requirements": [
+    {
+      "id": "CLIENTPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "An authorized create allocates one stable Account-scoped Client identity and required display name; equal names remain distinct when Client IDs differ, and name text never becomes identity or authorization. The exact cross-runtime new-submission boundary remains governed by O-043 and is not settled by the working ordinary-name fixture.",
+      "decisionIds": ["D-006", "O-043"],
+      "verificationIds": ["CLIENTPROVIDER-TEST-001", "CLIENTPROVIDER-TEST-002", "CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-008", "CLIENTPROVIDER-TEST-010", "CLIENTPROVIDER-TEST-013"]
+    },
+    {
+      "id": "CLIENTPROVIDER-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "The target app accepts Client creation with no network, stores the operation and optimistic row atomically in an encrypted per-Principal/Account database, renders it immediately as non-authoritative, and preserves it across close/reopen until synchronized or explicitly discarded by the separate logout policy.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTPROVIDER-TEST-002", "CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-006"]
+    },
+    {
+      "id": "CLIENTPROVIDER-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Command Authorization",
+      "invariant": "The trusted Postgres handler re-derives the authenticated Principal and active Client-management membership, permits no direct Client/result writes, exposes only Account-authorized reads, and does not reveal another Account's Client or operation existence.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTPROVIDER-TEST-001", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-005", "CLIENTPROVIDER-TEST-009", "CLIENTPROVIDER-TEST-011"]
+    },
+    {
+      "id": "CLIENTPROVIDER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Domain commands",
+      "invariant": "One canonical client-create-v1 envelope binds Operation, Account, actor, Client, display name, capture time and empty preconditions; exact replay returns one immutable terminal result, changed replay fails, and durable validation rejection drains rather than poisons the upload queue.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTPROVIDER-TEST-001", "CLIENTPROVIDER-TEST-002", "CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-008", "CLIENTPROVIDER-TEST-010"]
+    },
+    {
+      "id": "CLIENTPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The target app and gated target MCP tool use the same Client command bytes, fingerprint, RPC and terminal-result validation; MCP scope comes from authenticated context and neither path uses a service-role credential.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-005", "CLIENTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "CLIENTPROVIDER-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All provider work remains spike_-prefixed, synthetic and isolated from hosted and production systems; it changes no Firebase implementation, grants no migration/cutover authority, and leaves A-003/A-004 proposed until the full spike exit gate passes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["CLIENTPROVIDER-TEST-005", "CLIENTPROVIDER-TEST-006", "CLIENTPROVIDER-TEST-007", "CLIENTPROVIDER-TEST-011", "CLIENTPROVIDER-TEST-012"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse ClientCreationDraft, CreateClientCommand, ClientCreationOperating and ClientCoreDetailsQuerying without provider types crossing into LedgerTargetCore; their current ClientDisplayName dependency is provisional until O-043 separates new-submission validation from stored/read evidence.",
+        "Use one canonical sorted JSON envelope with milliseconds-since-epoch dates and one SHA-256 fingerprint shared by Swift, MCP and the trusted handler."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "spike_principals maps auth.users to stable Principals; spike_accounts and spike_account_memberships own active Client-management capability.",
+        "spike_clients stores stable identity, Account FK, name, lifecycle, revision and server-authored audit evidence with lookup/FK indexes.",
+        "spike_operation_results stores one immutable applied/rejected result per OperationID with exact fingerprint, subject, times and terminal code."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [
+        "ledger_private.spike_create_client authenticates and authorizes before taking a transaction-scoped OperationID advisory lock.",
+        "Exact replay returns the stored result; payload rebinding raises conflict; permanent payload validation persists a rejected result; accepted input inserts Client and result atomically. O-043 must add an equivalent server-side Client-name validator before promotion so invalid local input cannot fail before a terminal result.",
+        "public.spike_create_client is the sole security-invoker Data API entry and delegates to the private trusted handler."
+      ],
+      "notApplicable": ""
+    },
+    "dataApiGrants": {
+      "items": [
+        "anon and authenticated receive no table write privilege; authenticated receives only SELECT on the five spike tables and EXECUTE on the public RPC plus required private helpers.",
+        "public, anon and authenticated receive no broad ledger_private schema or function privilege beyond explicit helper/RPC execution."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "RLS is enabled on every public spike relation; Principal is self-only, membership is self/current-active, and Account/Client/result visibility requires active Account membership.",
+        "Client mutation requires the trusted handler's active can_manage_clients check; restricted and cross-account identities fail without direct-write fallback."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Edition-3 streams derive the Principal from auth.user_id(), synchronize active memberships and Accounts, and scope Clients/results through those memberships.",
+        "A live PowerSync Sync Stream validation and readback remains required before A-004 can advance."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "PowerSync opens only through an absolute .sqlite path and 256-bit SQLCipher key loaded from a this-device-only per-Principal/Account Keychain namespace.",
+        "Offline acceptance writes local operation evidence, optimistic Client and insert-only command in one transaction and survives close/reopen with encrypted bytes.",
+        "Pending optimism forces partial readiness even after an earlier sync; terminal applied/rejected upload updates local operation state only after a matching server result."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Client creation owns no attachment. S6 media durability remains a separate full-spike obligation and A-003/A-004 cannot advance from this Client slice alone."
+    },
+    "appMcp": {
+      "items": [
+        "The isolated target staging shell opens the encrypted local runtime and can create/watch a synthetic Account-scoped Client while permanently showing LOCAL SPIKE / NO HOSTED SERVICES.",
+        "The gated target create_client MCP tool derives Account/Principal from request context, validates input and exact terminal result, and calls the same Supabase RPC with user token plus publishable key.",
+        "Swift and TypeScript pin one identical ordinary-name canonical envelope and SHA-256 fingerprint fixture; this does not prove the cross-runtime input boundary required by O-043."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase snapshot is read or imported. Final Client synthesis/correlation remains a separate migration slice and this spike is not migration authorization."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Local tests expose only bounded pass/fail and stable error codes; token, key, Client name and command payload logging is prohibited.",
+        "A later connected rehearsal must record operation correlation, sync latency, retry count and terminal state without private payloads."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The slice exists only in the separate target worktree/app and spike_-prefixed local schema; Firebase remains unchanged and authoritative.",
+        "The client_management capability and create_client contract remain gated; no hosted resource, deployment, release, migration or production switch is performed.",
+        "Rollback during the spike is disposal of the isolated local target database/configuration; source data is never touched."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CLIENTPROVIDER-TEST-001", "kind": "database_invariant",
+      "owner": "supabase/tests/client_creation_vertical_slice.test.sql",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-003", "CLIENTPROVIDER-REQ-004"],
+      "expected": "A clean local reset passes all 19 schema, handler, replay, immutability, authorization, timestamp-binding/overflow-rejection and tenant-isolation assertions.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-002", "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-004"],
+      "expected": "Offline create is atomic, encrypted, immediately queryable as partial, durable across close/reopen, idempotent, and produces exactly one validated insert-only command transaction while the optimistic Client remains local-only.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-003", "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-004", "CLIENTPROVIDER-REQ-005"],
+      "expected": "Changed replay and malformed transaction/result fail closed, while a durable server rejection drains once, records rejected locally, and cannot poison later queued operations.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-004", "kind": "app_mcp_contract",
+      "owner": "LedgerTargetMCP/tests/clientCreation.test.ts and LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-003", "CLIENTPROVIDER-REQ-004", "CLIENTPROVIDER-REQ-005"],
+      "expected": "Swift and MCP share exact command bytes/hash; both adapters send scoped user credentials and reject mismatched result identity before completion.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-005", "kind": "rls_negative",
+      "owner": "scripts/test-local-client-creation-rpc.mjs",
+      "covers": ["CLIENTPROVIDER-REQ-003", "CLIENTPROVIDER-REQ-005", "CLIENTPROVIDER-REQ-006"],
+      "expected": "The local Data API applies and replays once for an owner, hides the row from another Account, rejects a restricted member, and denies direct table insertion.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-006", "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-006"],
+      "expected": "Immutable CI passes local Supabase DB/API tests, target/MCP tests, environment checks and both staging builds with a clean worktree.",
+      "status": "planned", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-007", "kind": "sync_authorization",
+      "owner": "Future isolated hosted PowerSync vertical-spike rehearsal",
+      "covers": ["CLIENTPROVIDER-REQ-006"],
+      "expected": "A real authenticated device uploads offline Client creation, receives authoritative Client/result rows, preserves tenant isolation, survives fault repetition, and records cost/latency evidence without production access.",
+      "status": "planned", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-008", "kind": "handler_idempotency",
+      "owner": "supabase/tests/client_creation_vertical_slice.test.sql and scripts/test-local-client-creation-rpc.mjs",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-004"],
+      "expected": "Exact OperationID replay returns the immutable terminal result with one Client/result row, while changed payload reuse cannot rebind the OperationID.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-009", "kind": "rls_positive",
+      "owner": "supabase/tests/client_creation_vertical_slice.test.sql and scripts/test-local-client-creation-rpc.mjs",
+      "covers": ["CLIENTPROVIDER-REQ-003"],
+      "expected": "An authenticated active Client manager can call the RPC and read the resulting Client and terminal operation result in the same Account.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-010", "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift and LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-004"],
+      "expected": "Provider-free Client commands and read snapshots retain exact Account/actor/Client/name/time/revision/readiness contracts and reject malformed or rebound evidence.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-011", "kind": "advisor",
+      "owner": "Supabase Postgres security, indexing and locking best-practices review",
+      "covers": ["CLIENTPROVIDER-REQ-003", "CLIENTPROVIDER-REQ-006"],
+      "expected": "Schema review confirms indexed foreign keys and RLS predicates, least-privilege grants, private security-definer helpers, explicit auth checks and transaction-scoped locking with no unresolved high-risk finding.",
+      "status": "passed", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-012", "kind": "end_to_end",
+      "owner": "Future isolated authenticated target app and MCP rehearsal",
+      "covers": ["CLIENTPROVIDER-REQ-005", "CLIENTPROVIDER-REQ-006"],
+      "expected": "The app accepts offline, reconnects through real PowerSync, reaches the trusted Supabase handler, receives authoritative readback, and the MCP path produces the same result without production access.",
+      "status": "planned", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-013", "kind": "app_mcp_contract",
+      "owner": "Future shared O-043 Swift/MCP/Postgres/migration fixture suite",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-004", "CLIENTPROVIDER-REQ-005"],
+      "expected": "After O-043 approval, Swift, MCP and PostgreSQL accept and preserve the same exact Client-name scalar/UTF-8 vectors, reject invalid values before any local operation or overlay, return a durable server result for defensive rejection, and keep stored/imported read evidence distinct from the new-submission converter.",
+      "status": "planned", "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-CLIENT-CREATION-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "The local identity, ordinary-name command, offline, authorization, replay and readback mechanics are working and test-backed, but this dossier deliberately remains in_progress. O-043 is a promotion gate: current Swift, MCP and PostgreSQL Client-name validators are not cross-runtime equivalent, stored/read evidence is not separated from new submission, and the ordinary-name fingerprint fixture proves transport parity only. No final Client-name validity, bounded indexability or durable invalid-name terminal behavior is claimed. A-003/A-004 remain proposed until the full isolated vertical spike, including real Sync Streams/Auth/device/media/evolution/performance/failure phases, passes. No isolated hosted Supabase/PowerSync environment or target authentication strategy has been authorized or provisioned. This grants no hosted, migration, cutover or production authority."
+}

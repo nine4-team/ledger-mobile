@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-MEDIA-LIFECYCLE-001",
+  "owner": "Media and Attachment Lifecycle",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-334B5E35D8A6",
+    "QUERY-5819775B1FFE",
+    "QUERY-FF1E88477925"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-019",
+    "O-023",
+    "O-027",
+    "O-036"
+  ],
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-334B5E35D8A6",
+      "expectedOccurrenceHash": "7b74cebb674355efc16a125aff70084546b28e6fa02f990352ca4a676512d037",
+      "sourceOwnerSurfaceId": "SWIFT-8A935E590458",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift"
+      },
+      "expectedSourceOwnerHash": "b9ea7f630b6ad59c626b3a8e1c0fd00c507dda7324fb42ac4e859fb1983d7cf9",
+      "outcomes": [
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "MCPTOOL-19127C4032BD",
+          "targetSurface": "AttachMediaToTransactionCommand",
+          "expectedTargetMappingHash": "868c1a597b34de90ed0b59ceffaa7d47b15817d8c67bc4073fad44d5a6d98fc5"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "MCPTOOL-648BE9A38A56",
+          "targetSurface": "AttachMediaToItemCommand",
+          "expectedTargetMappingHash": "dec25a2041c97ce16320ae69bf729f7119897b3b19c5e3a9b6758d68f9ab9486"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5819775B1FFE",
+      "expectedOccurrenceHash": "42946d5937997a0bad50ba5cb013a779d655a50942566c69b5ee794c50c56b20",
+      "sourceOwnerSurfaceId": "FILE-673F68E2BE08",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/seed-storage-emulator.mjs"
+      },
+      "expectedSourceOwnerHash": "833cd83bda34b4c5b101f726b33aec045cefaac60ba458931caad8c320ae5332",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-673F68E2BE08",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/seed-storage-emulator.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FF1E88477925",
+      "expectedOccurrenceHash": "eeeffe742264e2ea84c1cab8b090bae61eeef3c3065445dabeaac01b39a5a0c6",
+      "sourceOwnerSurfaceId": "SWIFT-8A935E590458",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/MediaUploadQueue.swift"
+      },
+      "expectedSourceOwnerHash": "b9ea7f630b6ad59c626b3a8e1c0fd00c507dda7324fb42ac4e859fb1983d7cf9",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_nonquery_contract",
+          "targetSurfaceId": "MAN-LOCAL-001",
+          "targetSurface": "encrypted database/key/media-cache lifecycle",
+          "expectedTargetMappingHash": "6f4c28a9feb0edf205348f1c8787a5694c6e729cab58aaf1b463a1cc9d97f0b8",
+          "blockerIds": [
+            "O-023"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-023",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves all three independently reviewed rows. The atomic parent append maps to the typed Item and Transaction attachment operations; the destination-existence branch remains explicitly blocked on O-023 because it can discard local/object state; and the emulator seed remains source-only migration evidence. Immutable CI/promotion remains pending, with no physical target-access or target-domain implementation claim."
+}

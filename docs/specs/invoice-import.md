@@ -1,5 +1,58 @@
 # Invoice Import
 
+> **Target/source boundary:** Preserve the shipped local PDF import capability,
+> not the Firebase writer. The source UI locally extracts Amazon/Wayfair PDFs,
+> reviews included rows and quantities/prices, shows vendor summaries/debug
+> information, and captures receipt/thumbnail evidence. It does not call a
+> Cloud Function to parse those supported text PDFs. The broader camera/OCR/
+> editor features described below were not all implemented; O-061 owns their
+> target scope and quantity/duplicate-import rules. Canonical Item/Invoice and
+> receipt-line specs replace the old unconditional Purchase writer and amount
+> model. No target Firebase implementation is authorized.
+
+## Target Import Contract
+
+- Preserve local PDF selection/cancel, Amazon/Wayfair detection and local
+  parsing without requiring a new network dependency. Distinguish extracting,
+  unsupported vendor, corrupt/image-only PDF, no rows and successful review.
+  Remote OCR or unsupported formats may require connectivity under the approved
+  import scope; they cannot disable the already-supported offline parser.
+- Preserve vendor-specific summary, warnings, included count, description/
+  quantity/unit-price editing, inclusion toggles, category selection, changing
+  PDF and cancel. Preserve SKU/attributes/thumbnail display and safe debug
+  statistics/raw-text/Copy JSON controls. Scope all drafts and diagnostics to
+  their source document and Account; don't lose review edits on a failed save.
+  Diagnostic disclosure is an explicit local user action on authorized source
+  evidence only; omit credentials, tokens, private storage URLs and hidden
+  financial metadata. Never upload raw text or clipboard diagnostics as telemetry.
+- Source rows retain stable provenance through review and accepted import.
+  Keep receipt adjustments under the shared non-Item receipt-line contract;
+  tax/shipping/credits cannot become fake physical Items. Bind thumbnails to
+  the exact included source row, never by zipping a filtered Item list against
+  unfiltered images. Missing thumbnail bytes are not import success evidence.
+- Confirmation uses the canonical payer/ownership routing and shared Item,
+  Expense, receipt and payment commands with their approved validations. A
+  vendor document alone is not proof of a Client payment. Never unconditionally
+  create a project Purchase or infer a tax basis from subtotal/total. O-016,
+  O-027, O-029, O-031 and O-032 still govern their respective accounting inputs.
+- Persist accepted intent, source bytes and relationships before success-shaped
+  dismissal; show pending, applied or rejected outcomes and preserve evidence
+  through restart/retry. Repeating one accepted request must not duplicate
+  Items, accounting records or media. O-061 separately decides recognizing a
+  newly submitted copy of the same document and physical quantity semantics.
+- Vendor recognition is an Account-scoped suggestion, not permission to rewrite
+  source evidence or mutate shared presets. O-047 governs reading/selection;
+  O-026 governs adding/changing shared defaults. Unknown sources remain honest.
+  Adding a vendor suggestion does not install a parser for that vendor or make
+  an unsupported document importable. Local parse/review of already-supported
+  PDFs does not wait for O-061's expanded scope or final quantity/commit policy.
+
+## Historical and Proposed Import Description
+
+The remaining sections combine the old generic proposal with source-era data
+shapes. They identify capabilities to reconcile, not a second target algorithm;
+the Target Import Contract and canonical accounting specs take precedence.
+
 ## Overview
 
 Invoice import allows users to extract transaction and item data from vendor invoices (PDFs or images). The system sends the document to a server-side parser that returns structured line items, which the user can review and import as a draft transaction with linked items.
@@ -86,12 +139,11 @@ The parser is best-effort:
 
 ## Offline Behavior
 
-Invoice import does NOT work offline because:
-
-1. Document upload requires connectivity (actual bytes)
-2. Server-side parsing requires the Cloud Function
-3. The review step can happen offline (data is local after parsing)
-4. The final import (creating transaction + items) works offline (fire-and-forget Firestore writes)
+Supported local PDF extraction and review work offline. Capture and accepted
+import must be durable locally; authorized byte upload, remote OCR if selected,
+and authoritative command application wait for connectivity. The target never
+uses fire-and-forget Firestore writes or requires remote parsing for a supported
+local document merely because this old proposal described a server parser.
 
 ## Edge Cases
 

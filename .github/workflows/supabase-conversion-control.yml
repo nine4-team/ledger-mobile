@@ -1,0 +1,293 @@
+name: Supabase conversion control
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conversion-control:
+    name: Conversion state and traceability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ui-required: ${{ steps.ui-scope.outputs.required }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate conversion control plane
+        run: |
+          node scripts/check-conversion-current-state.mjs --self-test
+          node scripts/ledger-product-checklist.mjs --self-test
+          node scripts/supabase-conversion-ledger.mjs source-self-test
+          npm run conversion:ci:test
+          npm run conversion:check
+          npm run conversion:capabilities:check
+          npm run conversion:queries:check
+
+      - name: Confirm checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+      - name: Select UI verification
+        id: ui-scope
+        run: node scripts/select-ci-ui-tests.mjs
+
+  target-environment:
+    name: Isolated target environment
+    needs: [conversion-control, local-supabase-provider-slices, native-macos, native-ios]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Require every target verification job
+        run: |
+          test '${{ needs.conversion-control.result }}' = 'success'
+          test '${{ needs.local-supabase-provider-slices.result }}' = 'success'
+          test '${{ needs.native-macos.result }}' = 'success'
+          test '${{ needs.native-ios.result }}' = 'success'
+
+  native-macos:
+    name: Native macOS verification
+    needs: [conversion-control, local-supabase-provider-slices]
+    # PowerSync 1.16.1 uses swift-collections BasicContainers APIs that require
+    # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
+    # CI exercises the same supported compiler floor as the target app.
+    runs-on: macos-26
+    # Independent workers overlap platform UI runs without sharing UI/build state.
+    # Preserve the existing job budget and individual test/stall limits.
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24 for the pinned PowerSync service parser
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+
+      - name: Install pinned local validation dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate target dependency and environment boundaries
+        run: |
+          node --check scripts/check-target-environment.mjs
+          npm run target:environment:check
+
+      - name: Validate generated app and MCP contracts
+        run: |
+          npm --prefix LedgerTargetMCP ci --ignore-scripts
+          npm run target:contracts:check
+          npm run target:mcp:test
+
+      - name: Load same-commit report parity fixture
+        uses: actions/download-artifact@v4
+        with:
+          name: report-parity-${{ github.sha }}
+          path: ${{ runner.temp }}
+
+      - name: Test isolated target contracts
+        # A-022 fixes the captured SDK cancellation deadlock. Run every suite
+        # together again rather than hiding native shutdown faults by splitting.
+        # Swift Testing's `.serialized` trait is suite-local, so independent
+        # PowerSync/SQLCipher integration suites can otherwise open and close
+        # native database runtimes concurrently on the shared CI process.
+        # Runtime-level concurrency remains exercised inside the focused tests.
+        run: >-
+          bash scripts/run-target-native-tests-with-diagnostics.sh
+          swift test --package-path LedgeriOS --no-parallel
+
+      - name: Preserve native test stall diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-test-stall-diagnostics
+          path: ${{ runner.temp }}/ledger-native-diagnostics
+          if-no-files-found: ignore
+
+      - name: Exercise actual local vendor PDF parsing and thumbnails
+        run: |
+          node --test scripts/tests/local-vendor-parser-boundary.test.mjs
+          bash scripts/test-local-vendor-pdf-parser.sh
+
+      - name: Build target staging for macOS
+        run: npm run target:staging:build:macos
+
+      - name: Exercise target workspace checklist UI
+        if: needs.conversion-control.outputs.ui-required == 'true'
+        env:
+          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"
+        run: npm run target:staging:ui:test:macos
+
+      - name: Preserve failed native UI test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-failure-macos-${{ github.sha }}
+          path: /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Export native UI failure screenshots
+        if: failure()
+        run: |
+          for result in /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult; do
+            [ -d "$result" ] || continue
+            xcrun xcresulttool export attachments --only-failures --path "$result" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/$(basename "$result")"
+          done
+
+      - name: Preserve native UI failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-screenshots-macos-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.png
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.jpg
+            ${{ runner.temp }}/ledger-ui-failure-images/**/manifest.json
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+  native-ios:
+    name: Native iOS verification
+    needs: [conversion-control, local-supabase-provider-slices]
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24 for the pinned PowerSync service parser
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+
+      - name: Install pinned local validation dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build target staging for iOS Simulator
+        run: npm run target:staging:build:ios
+
+      - name: Exercise iOS workspace and report UI
+        if: needs.conversion-control.outputs.ui-required == 'true'
+        run: |
+          report_device_id="$(xcrun simctl list devices available -j | node --input-type=module -e '
+            let input=""; for await (const chunk of process.stdin) input+=chunk;
+            const device=Object.entries(JSON.parse(input).devices)
+              .filter(([runtime]) => /iOS-(\d+)/.test(runtime) && Number(runtime.match(/iOS-(\d+)/)[1]) >= 18)
+              .sort(([a],[b]) => b.localeCompare(a,undefined,{numeric:true}))
+              .flatMap(([,devices]) => devices).find(device => device.name.startsWith("iPhone"));
+            if (!device) throw new Error("No available supported iPhone simulator");
+            process.stdout.write(device.udid);
+          ')"
+          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
+            -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
+            -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test
+
+      - name: Preserve failed native UI test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-failure-ios-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-report-ios.xcresult
+            /Users/runner/Library/Developer/Xcode/DerivedData/LedgerTarget-*/Logs/Test/*.xcresult
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Export native UI failure screenshots
+        if: failure()
+        run: |
+          if [ -d "$RUNNER_TEMP/ledger-report-ios.xcresult" ]; then
+            xcrun xcresulttool export attachments --only-failures --path "$RUNNER_TEMP/ledger-report-ios.xcresult" --output-path "$RUNNER_TEMP/ledger-ui-failure-images/ios"
+          fi
+
+      - name: Preserve native UI failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-screenshots-ios-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.png
+            ${{ runner.temp }}/ledger-ui-failure-images/**/*.jpg
+            ${{ runner.temp }}/ledger-ui-failure-images/**/manifest.json
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code
+
+  local-supabase-provider-slices:
+    name: Local Supabase provider slices
+    needs: conversion-control
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Select available CI database port
+        run: node scripts/select-ci-supabase-db-port.mjs
+
+      - name: Start isolated local Supabase
+        run: >-
+          npx --yes supabase@2.116.0 start
+          -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Verify Client and Project schema, RLS, RPC, and replay behavior
+        run: |
+          npm --prefix LedgerTargetMCP ci --ignore-scripts
+          npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning
+          npm run target:supabase:test:db
+          npm run target:supabase:test:space-assignment-destination-read
+          npm run target:supabase:test:project-note-read
+          npm run target:supabase:test:rpc
+          npm run target:supabase:test:payment-import
+          node scripts/test-local-item-placement-concurrency.mjs
+          node scripts/test-local-item-charge-concurrency.mjs
+          node scripts/test-local-physical-item-stream.mjs
+          node scripts/test-local-item-image-stream.mjs
+          node scripts/test-local-property-management-stream.mjs
+          node scripts/test-local-property-report-mcp.mjs
+
+      - name: Preserve same-commit report parity fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-parity-${{ github.sha }}
+          path: ${{ runner.temp }}/ledger-property-report-parity.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Stop isolated local Supabase
+        if: always()
+        run: npx --yes supabase@2.116.0 stop --no-backup
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code

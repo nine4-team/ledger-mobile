@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-details-update-operation-contracts",
+  "title": "Replace one Space's complete mutable details without changing scope or child state",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Space Details Update Operation Contracts",
+  "surfaceIds": ["SWIFT-EDFA6A1EF8C3", "TEST-E8832A105D5C"],
+  "requirements": [
+    {
+      "id": "SPACEDETAILS-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "UpdateSpaceDetails owns one stable SpaceID and replaces the complete mutable name-and-optional-notes pair. Name is outer-trimmed and nonblank; notes are outer-trimmed with nil/whitespace-only meaning absent; accepted interior text is preserved, no unapproved length cap is invented and duplicate names remain valid.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Details update cannot change the immutable Project-or-Business-Inventory scope and cannot become a partial/generic field update. One exact expected Space revision makes stale intent an explicit conflict rather than last-write-wins.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space in Budget Context",
+      "invariant": "Updating Space details cannot create or change a checklist, template, attachment, Item assignment, review note, completion/lifecycle state, Transaction, occurrence, Invoice, budget contribution, payer, price or other accounting state.",
+      "decisionIds": ["O-023", "O-026", "O-037"],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "UpdateSpaceDetails is distinct from CreateSpace, ReviseSpaceChecklists, assignment, archive, review-note and template operations. It replaces current generic field dictionaries and client-authored updatedAt behavior with one typed intent.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "UpdateSpaceDetails is one typed business intent and exposes no arbitrary field map, collection/path/SQL string, CRUD action, server timestamp, scope override, lifecycle toggle or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The complete details replacement is bound to one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared fingerprint/receipt lifecycle and defines no competing queue, retry, result or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Context-specific operations",
+      "invariant": "One narrow backend-neutral Space-details operation accepts the validated command and returns the shared OperationReceipt or stable failure. It carries exactly one same-Space expected-revision precondition; local validation never substitutes for trusted membership, Space existence/revision or update authorization.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    },
+    {
+      "id": "SPACEDETAILS-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Space table/handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDETAILS-TEST-001", "SPACEDETAILS-TEST-002", "SPACEDETAILS-TEST-003", "SPACEDETAILS-TEST-004", "SPACEDETAILS-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ExpectedSpaceRevision is one UInt64 authoritative revision value and adds no client-authored row, timestamp or conflict outcome.",
+        "SpaceDetailsUpdateDraft owns exact Account, actor, operation contract, stable Space, complete canonical SpaceDisplayName/SpaceCreationNotes replacement, expected Space revision and finite capture time; it contains no scope/checklist/template/attachment/Item/review/lifecycle/completion/accounting input.",
+        "UpdateSpaceDetailsPayload contains only SpaceID and the complete canonical name/notes pair. UpdateSpaceDetailsCommand binds it to the shared OperationEnvelope, derives the Space subject/fingerprint and exactly one same-subject expected-revision precondition, and revalidates duplicated evidence on decode.",
+        "SpaceDetailsUpdating is the narrow backend-neutral operation port returning the shared OperationReceipt. Receipt validation requires exact OperationID and exposes no authoritative updated-row/result claim; stable failures cover bindings, revision preconditions, subject, fingerprint, receipt, local acceptance and malformed evidence."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This Phase 1 contract creates no spaces table, details/revision/audit column, foreign key, check, index, view or migration."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative UpdateSpaceDetails handler, membership/Space lookup, revision lock, idempotency storage, audit timestamp, conflict result or server update exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/actor/Space binding is not authorization. No membership predicate, grant, WITH CHECK policy or cross-tenant database test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Space row/details projection, optimistic overlay, upload connector or synchronized visibility/readiness claim is defined."},
+    "localOffline": {
+      "items": [
+        "The command is canonical Codable evidence over draft, shared envelope, exact same-Space expected-revision precondition, Space subject and fingerprint; decode reconstructs through the same name/notes/binding validators and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Space/name/notes payload, revision subject/value/count, command subject, fingerprint or receipt OperationID fails atomically without rebinding identity or converting details into a generic Space update.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic row, authoritative apply or offline-authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "UpdateSpaceDetails owns no AttachmentID/reference/bytes/retention behavior and cannot add, replace, detach, reorder or delete Space media; O-023 remains open."},
+    "appMcp": {"items": [], "notApplicable": "No Space edit UI, current app service, target MCP tool/schema, transport, contract-catalog entry or app/MCP parity is wired."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space document/generic field update, source export or details migration is decoded or transformed. Later migration must preserve/canonicalize Space name/notes with explicit identity/scope/revision evidence."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot visibly or authoritatively update a Space, change its scope, create/revise child state, assign Items, attach media, set completion, archive/delete, alter accounting, authorize membership, choose Auth, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-023/O-026/O-037, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACEDETAILS-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
+      "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
+      "expected": "Valid synthetic set and clear inputs produce one typed exact-scope UpdateSpaceDetails command with complete canonical name/notes and one same-Space revision, containing no scope/checklist/template/attachment/Item/review/lifecycle/completion/accounting/generic-write input.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
+    },
+    {
+      "id": "SPACEDETAILS-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
+      "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-008"],
+      "expected": "Set and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Space/name/notes/revision/time/subject/fingerprint evidence and no scope override, backend path, provider, credential or authoritative result claim.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
+    },
+    {
+      "id": "SPACEDETAILS-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
+      "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
+      "expected": "Blank/noncanonical name, noncanonical notes, invalid time and changed Account/actor/contract/Space/name/notes/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
+    },
+    {
+      "id": "SPACEDETAILS-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
+      "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Space/name/notes/revision is refused, and a failing port returns no success receipt.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
+    },
+    {
+      "id": "SPACEDETAILS-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 Space-details command only. The canonical Space spec and reviewed capability dossier preserve edit outcomes while replacing generic partial dictionaries with one complete revisioned name/notes intent. O-023/O-026/O-037 remain fully open because this command carries no media, templates, assignment or lifecycle concern. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

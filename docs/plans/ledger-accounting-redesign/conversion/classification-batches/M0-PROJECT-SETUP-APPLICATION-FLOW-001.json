@@ -1,0 +1,110 @@
+{
+  "batchId": "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
+  "title": "Existing-Client Project Setup target application flow",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-PROJECT-SETUP-APPLICATION-FLOW-001",
+    "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
+    "EVID-PROJECT-SETUP-USE-CASE-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-64E1171C47C5",
+      "acknowledgeSourceHash": "454bcdb36d60be3c2b8873d8ea3519c8d1d8d47221274d76153071e31e524592",
+      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, owns the guarded three-step workflow and exact allocation input semantics, freezes an immutable admitted draft, manages fail-closed selection and retry identities, and follows local acceptance through the typed Project-creation operation watch.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
+      "notes": "The previously verified application flow now also owns and drains every admitted observer/submission across concurrent lifecycle calls. Independent correction review is GO; exact correction CI remains pending.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["two-stream form preparation, stable selection state, and one ProjectSetupUseCase submission"],
+        "securityRequirements": ["Accept only already-materialized Account-bound typed snapshots and expose no provider, SQL, credential, or caller-authored scope"],
+        "syncRequirements": ["Preserve partial, stale, ready, incomplete, and authoritative-empty distinctions without inventing completeness"]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": ["Use stable typed Client/category identities rather than copied display text"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"],
+        "acceptance": ["The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"]
+      }
+    },
+    {
+      "id": "TEST-E92B32DB7642",
+      "acknowledgeSourceHash": "2ddb6f57fa686a2022dd868dd36052858855615caa6563921fdd4ea8aae92842",
+      "currentBehavior": "Twenty-three deterministic Project Setup tests cover independently arriving evidence, false-empty meaning, guarded navigation, compiled SwiftUI control/action wiring, one-time category defaults, exact allocation semantics, immutable in-flight submission, queued-to-applied and queued-to-rejected observation, honest post-acceptance reference failures, malformed evidence, retry identity, observer generation isolation, lifecycle drainage and shutdown.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001", "EVID-TARGET-LIFECYCLE-DRAINAGE-001"],
+      "notes": "Controlled streams, lifecycle barriers, bounded probes, an advancing clock and a fake backend-neutral setup operator provide deterministic proof. Exact correction CI remains pending.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["deterministic application-model test matrix"],
+        "securityRequirements": ["Use synthetic Account, Principal, Client, Project, category, and Operation identities only"],
+        "syncRequirements": ["Exercise both stream arrival orders, readiness changes, cancellation, and post-cancel silence"]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": ["Assert exact form preparation and operation receipts"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests"],
+        "acceptance": ["All frozen Project Setup application-model cases pass deterministically"]
+      }
+    },
+    {
+      "id": "SWIFT-99B1B3CFBB7A",
+      "acknowledgeSourceHash": "d52b1dd3a5371d9b13f5e2cc1b4126a6085a9eadb3d9aa5ea4431d4758e834d7",
+      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams, Project setup operation, and typed Project-creation operation watch into the backend-neutral application-model runtime value.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "The adapter may forward only Account-bound Client/category watches and Project setup; policy remains in verified Core contracts.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["thin PowerSync runtime adapter"],
+        "securityRequirements": ["Expose no raw Account rebinding, database, query, SQL, visibility policy, or credential"],
+        "syncRequirements": ["Forward runtime snapshots and cancellation without rewriting their readiness evidence"]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": ["Do not access source Firebase code or data"]
+      },
+      "verification": {
+        "tests": ["target environment source/build-boundary checks and complete staging builds"],
+        "acceptance": ["The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"]
+      }
+    },
+    {
+      "id": "SWIFT-1F2F5FE68160",
+      "acknowledgeSourceHash": "68da37913620b25836c0f1ecf253813587e8d02d33676f4d1a57e45deb34e1a5",
+      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders the guarded three-step name/Client, category and budget-allocation workflow with exact readiness, stable-identity controls, immutable submitted summary, bounded diagnostics and live retryable operation state.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "The view renders typed model state, exposes stable accessibility identities and constructs no Project command.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["existing-Client Project Setup staging form and local receipt presentation"],
+        "securityRequirements": ["Display bounded diagnostics and readiness only; never expose private payloads or provider details"],
+        "syncRequirements": ["Show honest Client/category partial, stale, ready, incomplete, and empty local evidence"]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": ["Do not imply hosted synchronization or production readiness"]
+      },
+      "verification": {
+        "tests": ["application-model tests, exact source checks, and iOS/macOS staging builds"],
+        "acceptance": ["No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"]
+      }
+    }
+  ]
+}

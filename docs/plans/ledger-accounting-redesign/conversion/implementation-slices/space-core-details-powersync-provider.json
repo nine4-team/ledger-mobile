@@ -1,0 +1,435 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-core-details-powersync-provider",
+  "title": "Review one complete active or archived Space offline with ordered checklist progress",
+  "kind": "product",
+  "status": "implemented",
+  "owner": "Space Core Details",
+  "surfaceIds": [
+    "CONFIG-C07E3326B896",
+    "CONFIG-55809460A27C",
+    "SWIFT-B762FCFD8525",
+    "TEST-33D5654E41CA",
+    "SWIFT-2335BBE3E8FD",
+    "TEST-FDF70607A5B4",
+    "SWIFT-C99453DE8B49",
+    "SWIFT-058F3155F97F"
+  ],
+  "deliveryContract": {
+    "baseCommit": "42d484cfaba3dfdcce974cc4815ed21f4e3a02da",
+    "dependencies": [
+      "space-core-details-read-contracts",
+      "space-assignment-destination-powersync-picker",
+      "account-workspace-runtime-isolation"
+    ],
+    "riskDomains": [
+      "RLS and Sync authorization",
+      "relational checklist completeness and order",
+      "offline observer concurrency",
+      "archived child visibility without archive effects"
+    ],
+    "rollbackBoundary": "Revert this isolated target batch and discard synthetic local target databases; Firebase, hosted resources and production remain untouched.",
+    "reviewers": [
+      "independent conversion-readiness scout",
+      "independent canonical-authority and security scout",
+      "independent executable Postgres/RLS/PowerSync reviewer",
+      "independent executable offline/app reviewer",
+      "root integrator"
+    ]
+  },
+  "implementationTouchpoints": [
+    {
+      "path": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "readySourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
+      "permittedChange": "None; reuse the verified exact-Space request, snapshot, update, readiness and query-port contracts byte-for-byte."
+    },
+    {
+      "path": "supabase/migrations/20260905234410_space_core_details_read.sql",
+      "readySourceHash": "444eb27207a3cc17f5de9d5bf812002101aba71f187a5272de9b58d7f5a65a04",
+      "permittedChange": "Replace only the comment scaffold with one additive spike_spaces (account_id,id) unique key required for same-Account child foreign keys, plus a separate one-to-one Space core-detail relation and relational checklist/checklist-item tables, exact constraints/indexes, forced RLS defense in depth and least privileges. Preserve the seven existing spike_spaces columns, rows, active-only destination grant/policy and streams; add no handler, writer, opaque checklist JSON, source row or hosted operation."
+    },
+    {
+      "path": "supabase/tests/space_core_details_read.test.sql",
+      "readySourceHash": "d47a2ed002afa5152d0f1e8a32211bcedaf8c65da7b005c3c5d4b4890578a583",
+      "permittedChange": "Replace the one-placeholder/no-Space-assertion scaffold with runnable pgTAP proof of additive schema, timestamp/revision consistency, nested identity/order, indexes, forced RLS, positive/negative membership, no mutation grants or objects, and unchanged active-only destination behavior."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/SpaceCoreDetailsPowerSyncQuery.swift",
+      "readySourceHash": "de0545a43c917f877778e61ced88e6108b98191fd7ac9e27623a37b772ec8538",
+      "permittedChange": "Replace only the comment scaffold with one module-internal Account-bound SpaceCoreDetailsQuerying adapter. Reconstruct the verified relational hierarchy, combine row and exact current-process stream evidence causally, refuse malformed/foreign/duplicate evidence, include active and archived Spaces and drain all observers/subscriptions."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCoreDetailsPowerSyncQueryTests.swift",
+      "readySourceHash": "51a7ff83817ec110143795270ad1707654bcbe9ca899c93a0a31ccc496c9c441",
+      "permittedChange": "Replace only the comment scaffold with encrypted local and controlled-source tests for Project/Inventory scope, active/archived rows, exact hierarchy/order/counts, zero children, both startup orders, causal completeness, authoritative absence, restart, membership loss/reactivation, malformed evidence and drainage."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetAppModel/SpaceCoreDetailsStagingExercise.swift",
+      "readySourceHash": "b8e2dbb6d46b80bd702ae4299410105f4fa6aea029a20d27b8fe1e341995d8af",
+      "permittedChange": "Replace only the comment scaffold with a Core-only exact-selection AppModel/presenter that renders waiting, partial, stale, ready, authoritative-empty and bounded-failure truth; reject late prior-selection evidence and expose no edit/archive/item/media/template/accounting policy."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceCoreDetailsStagingExerciseTests.swift",
+      "readySourceHash": "e041e822e822fc8b09523d4f40c7aa23d3497501ca72531e21d2e11f6e10b467",
+      "permittedChange": "Replace only the comment scaffold with exhaustive presenter/AppModel tests for every readiness and lifecycle state, ordered checklist progress, selection replacement, cancellation clearing and noncooperative late-update refusal."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingRuntimeAdapter.swift",
+      "readySourceHash": "d101e260a57861735cfeae4d80b23efd2e46b41e72dec6fae6717be1fa10e2d6",
+      "permittedChange": "Replace only the comment scaffold with one thin typed runtime forwarder; expose no PowerSync/database/SQL/subscription/credential/authorization or mutation detail."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetApp/SpaceCoreDetailsStagingExerciseView.swift",
+      "readySourceHash": "1de8cd55ea1950ee9d96face5c33a4ef4ff79069e370ce0b96491e7e0b75391a",
+      "permittedChange": "Replace only the comment scaffold with a thin isolated staging renderer for tested detail states and checklist progress. Add no broad source SpaceDetailView replacement or edit/archive/Item/media/review/template/accounting/MCP action."
+    },
+    {
+      "path": "powersync/sync-streams.yaml",
+      "readySourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
+      "permittedChange": "Add one exact AccountID/SpaceID on-demand stream with base Space, one-to-one core-detail, checklist and checklist-item queries. Every query must derive signed Principal active membership and exact parent scope, include active and archived Spaces including a Space whose Project is archived, and add no list, mutation, upload or unrelated row. Preserve both active-only assignment-destination streams."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift",
+      "readySourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
+      "permittedChange": "Preserve the existing local Space table byte-for-byte; add separate one-to-one core-detail, checklist and checklist-item tables plus exact lookup/order indexes. Preserve every existing destination query column and mutation path."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "readySourceHash": "5773af880b1aa80031b561e369dd41e4ac37aea50cc2e2a392b9655f66a62c3e",
+      "permittedChange": "Own one module-internal Space core-details query, expose an Account-bound typed SpaceID watch through the existing close-aware stream lease and cancel/unsubscribe/join the provider before structured database close. Preserve every existing operation/read owner."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+      "readySourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
+      "permittedChange": "Add one public Account-bound typed SpaceID watch forwarding through the tracked-stream lifecycle. Expose no implementation object or authorization claim."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "readySourceHash": "72bba5ab048a90f03558d66db92f9814c3f050d479f97042eec5fb96a2821e13",
+      "permittedChange": "Add only exact-Space facade, concurrent/post-close refusal, exact stream identity, cancellation/unsubscribe/drain and encrypted-restart proof; preserve unrelated fixtures and assertions."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+      "readySourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
+      "permittedChange": "Compose only one synthetic exact-Space core-details exercise from the existing validated local Account workspace. Add no production route or mutation action."
+    },
+    {
+      "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+      "readySourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
+      "permittedChange": "Regenerate deterministically from the unchanged LedgerTargetProject.yml only to compile the two claimed target-app leaves; preserve the staging identity, package graph and Firebase source project."
+    },
+    {
+      "path": "scripts/check-target-environment.mjs",
+      "readySourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "permittedChange": "Add only exact source/build-boundary checks for the six claimed Swift leaves, typed runtime facade, private provider, Core-only presentation, no broad SpaceDetailView advancement and absence of mutation/MCP/hosted/Firebase wiring."
+    },
+    {
+      "path": "scripts/supabase-conversion-ledger.mjs",
+      "readySourceHash": "5e410734bd40e64106a1fd022ba7437aee75d3ccee94911e8e1cb81cde1923aa",
+      "permittedChange": "None after READY; it already adds deterministic discovery of only this CLI-created migration and pgTAP scaffold without changing validation semantics."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SPACECOREPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "An authorized user reads one stable Account-scoped Space identity with exactly one immutable Project-or-Business-Inventory scope. Space placement is organizational only and this read cannot create or change accounting, Item placement or lifecycle state.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-002", "SPACECOREPROVIDER-TEST-003", "SPACECOREPROVIDER-TEST-006", "SPACECOREPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space Fields",
+      "invariant": "The exact Space record preserves accepted stored name and optional notes, active-or-archived lifecycle, a positive signed-bigint revision lifted losslessly into the Core UInt64 value, and finite millisecond-consistent record timestamps without claiming server-authored audit provenance or introducing writer-side normalization or byte-limit policy.",
+      "decisionIds": ["O-044"],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-002", "SPACECOREPROVIDER-TEST-003", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-006"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklists",
+      "invariant": "Checklist persistence is relational and preserves stable checklist identity/order plus stable item identity/order, exact text and checked state. Item identity is unique only within its owning checklist; zero checklists and zero-item checklists remain valid.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-002", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-007", "SPACECOREPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklist Progress",
+      "invariant": "Completed and total counts are derived from the complete represented hierarchy. This slice stores no percentage, aggregate count or legacy isComplete authority and never presents incomplete child evidence as authoritative progress.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-007", "SPACECOREPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md",
+      "section": "Frozen Contract and Exclusions",
+      "invariant": "Reuse SWIFT-02BF0EA3C433 and TEST-377B0FDAF4D4 unchanged as the sole exact-Space request/snapshot/update/readiness/query authority. TQUERY-CD97754157F6 and TACCESS-281F2B9A29AB remain mapped with all six logical axes reviewed and no unresolved axis.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-009", "SPACECOREPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Project workspace",
+      "invariant": "One exact-Space on-demand stream carries parent plus complete ordered checklist hierarchy for active or archived Space detail. The provider uses encrypted local rows offline and establishes completeness only from a fresh completion for that exact current-process stream.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-004", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-006", "SPACECOREPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Stream Authorization Rule",
+      "invariant": "AccountID and SpaceID subscription parameters only narrow signed identity plus active Account-membership authority. Revocation removes parent and child entitlement and local presentation; reactivation requires a new exact-stream completion.",
+      "decisionIds": ["A-004", "A-016"],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-003", "SPACECOREPROVIDER-TEST-004", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-006"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "One module-internal PowerSync adapter implements SpaceCoreDetailsQuerying. The public Account-workspace runtime binds Account implicitly and accepts one typed SpaceID; app model and view import Core contracts rather than provider, SQL, database or authorization types.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-005", "SPACECOREPROVIDER-TEST-007", "SPACECOREPROVIDER-TEST-008", "SPACECOREPROVIDER-TEST-009"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "RLS Policy Standards",
+      "invariant": "Every new exposed relation is forced-RLS and least-privilege; authenticated role alone is never authorization. The existing active-only Space destination policy is not broadened or combined with a permissive policy, and no SECURITY DEFINER or client mutation surface is added.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-002", "SPACECOREPROVIDER-TEST-003", "SPACECOREPROVIDER-TEST-004", "SPACECOREPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All work remains spike-prefixed, synthetic and isolated. O-023/O-026/O-037/O-044-O-046 and A-003/A-004/A-016 remain unadvanced; broad Space UI, writes, Items, media, templates, accounting, MCP, hosted resources, Firebase, migration, production and cutover are excluded.",
+      "decisionIds": ["O-023", "O-026", "O-037", "O-044", "O-045", "O-046", "A-003", "A-004", "A-016"],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-003", "SPACECOREPROVIDER-TEST-008", "SPACECOREPROVIDER-TEST-009", "SPACECOREPROVIDER-TEST-010", "SPACECOREPROVIDER-TEST-011"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-REQ-011",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project archive preserves every child Space and keeps synchronized local details usable. Existing Spaces beneath an archived Project remain readable; owning-Project lifecycle is not an exact-Space detail filter, while Space lifecycle remains represented independently.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECOREPROVIDER-TEST-001", "SPACECOREPROVIDER-TEST-002", "SPACECOREPROVIDER-TEST-004", "SPACECOREPROVIDER-TEST-008", "SPACECOREPROVIDER-TEST-012"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse SpaceCoreDetailsRequest, SpaceCoreDetailsSnapshot, SpaceCoreDetailsLocalSnapshot, SpaceCoreDetailsUpdate and SpaceCoreDetailsQuerying unchanged; add no second identity, scope, lifecycle, hierarchy, count, readiness or error model.",
+        "Canonical reconstruction is atomic across base-Space/core-detail/checklist/item rows. A missing detail or child in incomplete evidence cannot become a complete snapshot; malformed, duplicate, foreign or rebound rows emit no mixed-trust partial aggregate."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Preserve the seven existing spike_spaces columns, row bytes, Data API shape, grant, policy and streams; add only a redundant unique (account_id,id) parent key so every tenant child can enforce an exact same-Account composite foreign key. Add a separate no-client-grant spike_space_core_details one-to-one relation keyed to that exact Account/Space for nullable lossless notes plus timestamptz and exactly matching millisecond columns; the base positive signed-bigint revision maps losslessly into Core UInt64 without widening this slice into a revision-storage migration.",
+        "Add spike_space_checklists and spike_space_checklist_items as relational children with provider-row identity separated from the scoped domain checklist/item identity, exact same-Account/Space foreign keys, checklist identity unique within Space, item identity unique within checklist, explicit positions constrained to 0...4294967295 and per-parent order uniqueness. Same item ID in two different checklists remains valid; zero children remain valid.",
+        "Index every foreign-key/filter/order path used by exact-Space hierarchy and RLS checks. Do not use opaque JSON, stored derived counts, percentages or isComplete."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No RPC, Edge Function, mutation handler, archive operation, checklist writer or trusted transaction is added; PowerSync reads the relational source directly."
+    },
+    "dataApiGrants": {
+      "items": [
+        "Revoke all new core-detail and checklist-relation privileges from PUBLIC, anon and authenticated. Existing spike_spaces grants and seven-column Data API behavior remain byte-for-byte unchanged; no new core-detail, archived-detail or client mutation Data API surface is introduced."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Enable and force RLS on each new core-detail and checklist relation as defense in depth. Any policy is scoped by exact Account plus active membership and parent relationship; no role-only policy, user_metadata claim or permissive policy broadens the existing active-only spike_spaces SELECT behavior.",
+        "Anonymous, revoked, nonmember and cross-Account callers receive no relation privilege or row evidence. PowerSync stream authorization repeats signed active-membership checks for parent and every child rather than relying on client parameters or cached membership."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Add one on-demand space_core_details stream parameterized by exact AccountID and SpaceID, with separate relational queries for one base Space, its one-to-one core-detail row, all checklists and all checklist items. Every query joins signed auth identity to active Account membership and exact parent Account/Space; active and archived Spaces are included without filtering on owning-Project lifecycle.",
+        "The stream has no ordering, limit, list, Item, media, template, accounting, mutation or upload path. Local SQLite owns hierarchy ordering and Core validation. Existing active-only Space assignment streams remain unchanged.",
+        "One stream completion covers all four relation queries. The provider accepts completeness only after a fresh post-completion reread for the exact current process; revocation/selection loss clears rows and completeness immediately, and reactivation requires another exact completion."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Preserve the encrypted local Space table and add separate core-detail, checklist and checklist-item tables plus Account/Space/order indexes. One sentinel-preserving joined read returns membership plus zero-or-one base/detail pair and all child rows for atomic canonical reconstruction; a represented base without its detail row is malformed rather than authoritative absence.",
+        "Retained restart rows are partial or stale. Row and completeness sources each provide initial evidence in either order; every invalidation rereads the complete joined set, and only a reread causally after accepted exact-stream completion becomes complete.",
+        "The runtime owns one provider; selection replacement, consumer cancellation, membership loss and workspace close cancel/unsubscribe/join row and status observers before database close. Cross-Account, duplicate, malformed, overflow, invalid-order or orphan evidence fails atomically with bounded diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Space core details in this slice contain no attachment identity, marker, object locator, byte, upload, display, retention or deletion behavior; O-023 remains outside."
+    },
+    "appMcp": {
+      "items": [
+        "A Core-only AppModel owns exact Space selection generation, observer lifetime and honest waiting/partial/stale/ready/authoritative-empty/failure presentation. A thin target-app adapter forwards one runtime watch and a thin isolated SwiftUI view renders canonical fields and checklist progress.",
+        "No broad source SpaceDetailView, list/card/search/route, edit/archive/assignment/media/review/template/accounting control or MCP schema/tool/transport/registration is advanced."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space DTO, embedded checklist array, source query, export row, transformation, import, quarantine or production reconciliation is read or changed. Synthetic regression proves the prior active destination schema/query behavior remains intact."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Diagnostics expose only stable bounded outcome/readiness/lifecycle/count/error/contract-version fields; never Space/checklist text, identity, raw row, SQL, path, credential, token or key.",
+        "Staging labels evidence as local and cannot present cached rows or active local membership as current hosted authorization."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation is restricted to the eight claimed READY leaves and frozen shared touchpoints on the isolated Supabase branch. Rollback is source reversion and disposal of synthetic local databases.",
+        "A-003/A-004/A-016, hosted resources, Firebase, source import, production access, release and cutover remain unadvanced."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACECOREPROVIDER-TEST-001",
+      "kind": "domain",
+      "owner": "SpaceCoreDetailsPowerSyncQueryTests plus frozen SpaceCoreDetailsDataTests",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-011"],
+      "expected": "Project- and Business-Inventory-scoped active/archived relational rows, including a Space under an archived Project, reconstruct through the unchanged verified Core validators with exact text, a lossless positive signed-bigint-to-UInt64 revision lift, timestamps, hierarchy, order and derived counts; zero and values above Int64.max fail closed at this provider boundary.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-002",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/space_core_details_read.test.sql",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-011"],
+      "expected": "A clean reset proves unchanged seven-column base Space rows/access plus the sole additive (account_id,id) unique parent key, separate one-to-one core detail, millisecond consistency, relational nested identity/order, UInt32 order bounds, same-Account foreign keys, exact indexes, zero-child validity and no opaque/stored-derived authority.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-003",
+      "kind": "rls_negative",
+      "owner": "space_core_details_read.test.sql plus Sync configuration tests",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-010"],
+      "expected": "PUBLIC, anon, authenticated direct relation access, revoked/nonmember/cross-Account and guessed-ID paths expose no child or archived-detail row; no write grant, handler, SECURITY DEFINER or second permissive parent policy exists.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-013",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/space_core_details_read.test.sql",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-009"],
+      "expected": "Forced-RLS tests prove active members can exercise only the intended exact-Account parent/child read policy under test-owner setup while the client roles retain no new direct relation grant and the existing active destination SELECT remains unchanged.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-004",
+      "kind": "sync_authorization",
+      "owner": "Future isolated authenticated PowerSync Space core-details rehearsal",
+      "covers": ["SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-011"],
+      "expected": "A real scoped session receives only exact authorized base-Space/core-detail/checklist/item rows for active and archived Space, including one under an archived Project, and membership revocation evicts entitlement/local evidence before A-004 advances.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-005",
+      "kind": "offline_restart",
+      "owner": "SpaceCoreDetailsPowerSyncQueryTests",
+      "covers": ["SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-008"],
+      "expected": "Both row/completion startup orders, independent invalidations, exact fresh reread, encrypted retained rows, authoritative absence and reopen reset pass without incomplete children becoming complete.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-006",
+      "kind": "offline_rejection",
+      "owner": "SpaceCoreDetailsPowerSyncQueryTests plus AccountWorkspacePendingWorkRuntimeTests",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-007", "SPACECOREPROVIDER-REQ-008"],
+      "expected": "Selection/account/runtime loss and membership revocation clear prior evidence; malformed/orphan/duplicate/rebound/overflow rows fail atomically; all row/status/subscription observers unsubscribe and drain before database close.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-007",
+      "kind": "app_mcp_contract",
+      "owner": "SpaceCoreDetailsStagingExerciseTests and target source-boundary checker",
+      "covers": ["SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-008"],
+      "expected": "Core-only tests cover every presentation state, ordered checklist progress, active/archived detail and late-event refusal; adapter/view remain thin and no MCP or mutation boundary exists.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-008",
+      "kind": "end_to_end",
+      "owner": "SpaceCoreDetails provider, AppModel and isolated staging suites",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-003", "SPACECOREPROVIDER-REQ-004", "SPACECOREPROVIDER-REQ-006", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-010", "SPACECOREPROVIDER-REQ-011"],
+      "expected": "An isolated user selects one active or archived Space, including one under an archived Project, sees honest offline core fields and ordered checklist progress, survives restart and selection change, and has no write, Item, media, template, accounting or MCP action.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-009",
+      "kind": "operational",
+      "owner": "Conversion controls, target checker, complete Swift suite and both staging builds",
+      "covers": ["SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-008", "SPACECOREPROVIDER-REQ-010"],
+      "expected": "The synchronized implementation checkpoint passes all conversion/target controls, complete tests, deterministic generation and macOS/iOS builds with unchanged Firebase and production boundaries.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-010",
+      "kind": "operational",
+      "owner": "Immutable exact-commit CI",
+      "covers": ["SPACECOREPROVIDER-REQ-010"],
+      "expected": "Conversion state, isolated target environment and disposable local Supabase jobs pass on the exact implementation commit.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-011",
+      "kind": "advisor",
+      "owner": "Independent Supabase Postgres/RLS/PowerSync and offline-concurrency reviews",
+      "covers": ["SPACECOREPROVIDER-REQ-005", "SPACECOREPROVIDER-REQ-009", "SPACECOREPROVIDER-REQ-010"],
+      "expected": "Review confirms least privilege, indexed relational modeling, no permissive-policy broadening, exact signed stream authorization, causal completeness, lifecycle parity, drainage and exclusion boundaries.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    },
+    {
+      "id": "SPACECOREPROVIDER-TEST-012",
+      "kind": "database_invariant",
+      "owner": "Existing Space assignment destination pgTAP/Data API/provider regression suites",
+      "covers": ["SPACECOREPROVIDER-REQ-001", "SPACECOREPROVIDER-REQ-002", "SPACECOREPROVIDER-REQ-010", "SPACECOREPROVIDER-REQ-011"],
+      "expected": "The prior active-only Space destination schema, RLS, streams, local query and staging picker remain unchanged in behavior and every existing regression passes.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Implemented and locally verified from frozen READY 9b62bec1403261a7d966c570af981da461d80f12. Eight claimed leaves now provide the additive relational forced-RLS schema, exact signed active/archived stream, encrypted causal local reconstruction, close-aware runtime, Core-only presentation and isolated staging detail. Independent review found and root closed an unapproved timestamp-order constraint, incomplete privilege assertions, missing encrypted restart/startup/invalidation proof and incomplete-progress rendering. The existing seven-column active-only Space destination Data API/RLS/streams remain unchanged. Exact implementation a1be2ffdcfb752d396f8526f5fde785284d5027a passed all three immutable CI jobs in run 34003366795, satisfying TEST-010. TEST-004 remains planned for real authenticated PowerSync. A-003/A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced. Broad Space UI, writers, archive effects, Items, media, review, templates, accounting, MCP, hosted resources, Firebase, migration, production, release and cutover remain excluded."
+}

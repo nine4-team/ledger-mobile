@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-list-read-and-presentation-contracts",
+  "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Space List Read and Presentation Contracts",
+  "surfaceIds": ["SWIFT-0DCDAFBB4350", "TEST-54B6515645F8"],
+  "deliveryContract": {
+    "baseCommit": "2297e8dbe7f7f0febb7e33b4da0be591d4c82ade",
+    "dependencies": [
+      "space-core-details-read-contracts",
+      "space-assignment-destination-read-contracts"
+    ],
+    "riskDomains": [
+      "false authoritative-empty presentation",
+      "Account or Project-versus-Inventory scope rebinding",
+      "fabricated Item counts",
+      "non-total ordering and duplicate Space names",
+      "stale selection to exact-detail continuity"
+    ],
+    "rollbackBoundary": "Remove the two isolated target-only Swift leaves. Existing target providers, Firebase, hosted resources and production remain unchanged.",
+    "reviewers": [
+      "independent source-parity and authority reviewer",
+      "independent executable contract reviewer",
+      "root integrator"
+    ]
+  },
+  "implementationTouchpoints": [
+    {
+      "path": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "readySourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
+      "permittedChange": "Replace only the comment scaffold with provider-free exact Account/scope Space-list request, row, checklist-progress, readiness, selection and query-port contracts. Add no provider, persistence, Item/media projection, mutation, search, archived-list segment, UI or MCP behavior."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "readySourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
+      "permittedChange": "Replace only the comment scaffold with exhaustive provider-free contract tests for exact scope, active-only rows, canonical ordering, checklist progress, honest unavailable Item count, readiness, false-empty refusal and evidence-bound list-to-existing-detail selection."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SPACELIST-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One Space-list request binds an exact AccountID and exactly one immutable Project-or-Business-Inventory SpaceCreationScope. A Project display name, route string, nullable projectId convention, caller-supplied Account-wide array or backend path cannot define, widen or rebind scope. Every represented row carries the same Account and exact scope plus one stable SpaceID.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-004", "SPACELIST-TEST-005", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Behavior Decisions",
+      "invariant": "The provider-free read canonicalizes rows by SpaceDisplayName.rawValue.lowercased(), then exact SpaceDisplayName.rawValue, then raw stable SpaceID. Duplicate display names remain valid and distinct. This replaces locale-dependent or non-total source ordering with the already verified Space-destination ordering contract and does not add user-selectable sorts, search or pagination.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-003", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Space Browsing",
+      "invariant": "The browsing presentation has one active segment because the shipped Project and Business Inventory Space tabs present active Spaces only. Source rows retain explicit active-or-archived lifecycle so active filtering is testable; archived rows are never relabeled active and there is no general archived browsing segment. An authorized archived Space may still be read through the separate verified exact AccountID-plus-SpaceID SpaceCoreDetailsRequest. This slice does not decide archive, restore, assigned-Item resolution or archived-catalog synchronization under O-037.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-004", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklist Progress",
+      "invariant": "A list row may expose checklist completed and total counts only by deriving them from a validated complete SpaceChecklistCollection carried by that row; caller-authored totals and legacy Space.isComplete do not exist. Zero checklists and zero checklist items derive 0/0. A percentage, completion badge, checklist mutation and checklist-detail presentation are not defined here.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-003", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Space Browsing",
+      "invariant": "No authoritative target Item-list projection currently supports the shipped numeric Space-card Item count. This slice therefore carries an explicit itemCountUnavailable presentation state and no numeric Item count. Waiting, partial, stale or incomplete Space evidence must never render a fabricated zero-item count; exact numeric parity is deferred to a separately authorized Item projection with its own completeness and visibility proof.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The exact-scope local list preserves canonical ordered source rows, visible row count, completeness, ListSnapshotQuality, LocalDataVersion and finite as-of time. SpaceListRequest queryFingerprint is lowercase SHA-256 of OperationContractCodec canonical sorted-key JSON for exactly {contractVersion:\"space-list-request-v1\",accountId,scope}. ActiveSpaceDirectoryPresentationSnapshot evidenceFingerprint uses the same codec/digest over exactly {contractVersion:\"space-list-presentation-evidence-v1\",accountId,scope,sourceRows,rows,sourceQueryFingerprint,sourceRowCount,visibleRowCountBeforeFiltering,isCompleteForQuery,quality,localDataVersion,asOf}. SpaceBrowsingSelection selectionFingerprint uses it over exactly {contractVersion:\"space-browsing-selection-v1\",accountId,scope,row,directoryEvidenceFingerprint}. All three fingerprints are exactly 64 lowercase hexadecimal bytes and decode through reconstruction/validation. Active-list absence is authoritative only when evidence is ready, complete and source-exhaustive; incomplete, partial, stale and failed empty states remain nonempty-unknown rather than false empty.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-004", "SPACELIST-TEST-005", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "SpaceListQuerying is one narrow backend-neutral local-read port for an exact SpaceListRequest. Waiting, unavailable, retryable and required-update remain explicit; unavailable is non-enumerating, cached failure evidence cannot rebind Account/scope or upgrade completeness, and provider failure or cancellation cannot yield a false row, false empty state or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-005", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md",
+      "section": "Frozen Contract and Exclusions",
+      "invariant": "Selection is created only from one exact active row in the current presentation and binds Account, scope, Space identity, lifecycle, revision and complete current presentation evidence. Its only request-producing operation validates the current presentation snapshot before deriving the existing SpaceCoreDetailsRequest for the same AccountID and SpaceID. Selection returns no route or authorization, and a found detail row must retain the selected immutable scope while allowing separately valid later mutable detail and revision evidence.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-003", "SPACELIST-TEST-004", "SPACELIST-TEST-005", "SPACELIST-TEST-006"]
+    },
+    {
+      "id": "SPACELIST-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Only the two new target-only Swift leaves may implement and test this provider-free Phase 1 contract while the Firebase application remains unchanged. Space mutation, media, templates, Items, review, accounting, search, full archived browsing, SwiftUI/MCP/runtime wiring, persistence, Postgres, handlers, grants, RLS, PowerSync, Auth, source migration, hosted resources, release, production behavior and cutover do not advance.",
+      "decisionIds": [],
+      "verificationIds": ["SPACELIST-TEST-001", "SPACELIST-TEST-002", "SPACELIST-TEST-003", "SPACELIST-TEST-004", "SPACELIST-TEST-005", "SPACELIST-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceListRequest binds exact AccountID and SpaceCreationScope to one deterministic ListQueryFingerprint: lowercase SHA-256 of OperationContractCodec canonical sorted-key JSON for exactly contractVersion space-list-request-v1, accountId and scope. It has no lifecycle, search, sort, page, route or provider parameter.",
+        "SpaceListSourceRow contains stable SpaceID, exact AccountID/scope, SpaceDisplayName, explicit DirectoryLifecycleState, exact UInt64 revision and a validated SpaceChecklistCollection. Checklist counts are derived; no Item count, media, notes, legacy completion or action capability is present.",
+        "SpaceListLocalSnapshot validates finite as-of, exact request binding, exact Account/scope for every row, unique Space identity, no hidden pre-filter count and canonical name/exact-name/ID order while preserving ready/partial/stale and completeness evidence.",
+        "ActiveSpaceDirectoryPresentationSnapshot filters only active source rows, preserves their canonical relative order, records source and projected counts, and computes a 64-lowercase-hex evidence fingerprint from OperationContractCodec canonical JSON for exactly contractVersion space-list-presentation-evidence-v1, Account, scope, ordered source rows, ordered projected rows, source query fingerprint, source/projected-visible counts, completeness, quality, local version and as-of. itemCountState is exactly unavailable for every row.",
+        "SpaceBrowsingSelection binds one represented active row and current presentation fingerprint, with its own 64-lowercase-hex digest over OperationContractCodec canonical JSON for exactly contractVersion space-browsing-selection-v1, Account, scope, row and directory evidence fingerprint. detailRequest(validating:) rejects any changed/rebound presentation before returning only SpaceCoreDetailsRequest; validateDetail(_:) additionally requires the immutable Account/Space/scope identities to match.",
+        "SpaceListUpdate, stable bounded SpaceListFailure and SpaceListQuerying form the sole read boundary. Diagnostics contain no Account, Project, Space or display-name values."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No Space/checklist/Item table, column, constraint, index, view, function, trigger or migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative list/detail handler, membership or capability derivation, archive effect, command, audit event or reconciliation exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/scope/lifecycle evidence is not authorization. No membership, Project/Inventory/Space predicate, hidden-count rule, grant or cross-account database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, archived-catalog policy, local table, authenticated download predicate, subscription, upload connector or synchronized visibility proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Request, source row, source snapshot, active presentation and selection are canonical Codable evidence reconstructed through the same validators; canonical structured restart is byte-identical and fingerprint tamper fails closed.",
+        "Only ready, complete and source-exhaustive evidence can prove the active segment empty. Partial/stale represented active rows remain usable with exact labels; partial/stale/incomplete/failed empty evidence never becomes absence.",
+        "A deterministic reference port may prove exact request/update/failure/cancellation behavior. This is not encrypted physical persistence, process/device restart, current authorization or authenticated synchronization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Rows contain no AttachmentID, object locator, URL, image/PDF byte, primary-image state, marker, upload, cache, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No SwiftUI card/tab/search/navigation wiring, route, add/menu action, archived browser, MCP schema/tool/resource, transport or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space DTO, nullable projectId, random checklist ID, legacy isComplete, listener order, source document, export row or migration disposition is decoded or transformed."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside two new provider-free LedgerTargetCore leaves and cannot link or modify either application project.",
+        "The isolated foundation cannot present a numeric Item count, media-backed card, search result or archived Space catalog and cannot mutate, authorize, persist, synchronize, migrate, deploy, release or cut over. Canonical Target Space Browsing still requires search, authoritative Item count and authorized primary-image behavior before production/source-surface parity can be claimed.",
+        "O-023/O-026/O-037/O-044/O-045/O-046 and A-003/A-004/A-007/A-015/A-016 remain unadvanced."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACELIST-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-002", "SPACELIST-REQ-003", "SPACELIST-REQ-004", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-009"],
+      "expected": "Project and Business Inventory fixtures remain strictly separated by exact Account/scope. Active presentation excludes explicit archived rows, canonicalizes by folded name/exact name/stable ID, preserves duplicate names, derives exact 0/0 and nonzero checklist progress from validated collections and exposes itemCountUnavailable rather than numeric zero.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
+    },
+    {
+      "id": "SPACELIST-TEST-002",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-003", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-009"],
+      "expected": "Ready-complete-source-exhaustive empty alone is authoritative. Ready incomplete/nonexhaustive, partial, stale and failed empty evidence never becomes empty truth; partial/stale represented active rows remain visibly usable, and cached Item-count state remains unavailable.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
+    },
+    {
+      "id": "SPACELIST-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-002", "SPACELIST-REQ-003", "SPACELIST-REQ-004", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
+      "expected": "Canonical restart binds Account, exact scope, ordered source and active rows, Space identity/name/lifecycle/revision/checklist state, unavailable Item count, source fingerprint/counts/completeness/quality/version/as-of and selection evidence byte-identically. Missing, extra, malformed, reordered or independently tampered fields fail closed.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
+    },
+    {
+      "id": "SPACELIST-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-003", "SPACELIST-REQ-006", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
+      "expected": "Selection rejects an absent, archived, wrong-Account, wrong-scope or same-name sibling Space and any changed current presentation evidence before returning only the exact existing SpaceCoreDetailsRequest. Detail validation accepts separately valid later mutable fields/revision but rejects Account, Space or immutable-scope rebinding.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
+    },
+    {
+      "id": "SPACELIST-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
+      "expected": "A deterministic reference port validates every update against the exact request before yield, preserves bounded waiting/unavailable/retryable/required-update states, rejects rebound cache, propagates failure and stops after cancellation without false row, empty, selection, detail or authorization evidence.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"]
+    },
+    {
+      "id": "SPACELIST-TEST-006",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACELIST-REQ-001", "SPACELIST-REQ-002", "SPACELIST-REQ-003", "SPACELIST-REQ-004", "SPACELIST-REQ-005", "SPACELIST-REQ-006", "SPACELIST-REQ-007", "SPACELIST-REQ-008", "SPACELIST-REQ-009"],
+      "expected": "The future exact implementation commit changes only the two frozen leaves, passes traceability, source/provider isolation, generated contracts, focused and complete tests, repeatable project generation, both staging builds and clean artifacts without claiming any excluded behavior.",
+      "status": "passed",
+      "evidence": [
+        "EVID-SPACE-LIST-READ-PRESENTATION-001"
+      ]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-LIST-READ-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "VERIFIED after exact READY commit c9d4d8bbce6319f81aacb5851b16035d3c7ab809 / immutable run 34062468352, exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213, and exact 37-path promotion commit ac26010ab720992c2d22d378f78b08e1d1c3760d / immutable run 34067592484. The first independently reviewed implementation candidate passed its focused tests but was rejected for a real failed-cache false-empty defect plus recursive Codable and proof gaps. Corrected code adds an explicit failed presentation that downgrades cached evidence to stale/incomplete, strict nested reconstruction, independent request/presentation/selection fingerprint-basis assertions, exact wrong-Account/wrong-scope selection and rebound-cache refusal, and observable unexpected port errors. Final independent re-review returned GO with no P0-P3; six focused tests, all 661 Swift tests in 98 suites, the complete conversion-control job, both staging builds and the disposable local Supabase provider job pass locally and at the exact implementation SHA. The dossier still claims only its two target leaves; final search, authoritative Item count and primary-image parity remain required later work, source browser surfaces remain target_mapped, and O-037 remains unadvanced."
+}

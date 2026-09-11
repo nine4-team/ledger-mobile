@@ -1,0 +1,98 @@
+{
+  "batchId": "M0-ACTIVE-SPACE-CHECKLIST-EDITOR-001",
+  "title": "Edit one active Space checklist collection",
+  "reviewedAt": "2026-09-07",
+  "evidence": ["WORKFLOW-active-space-checklist-editor"],
+  "surfaces": [
+    {
+      "id": "SWIFT-22ED13ABCFFB",
+      "acknowledgeSourceHash": "f1b38086094f4af873d0f6078650e83d866964587275320739df9dddf551e009",
+      "currentBehavior": "Owns one isolated active-Space checklist editor draft, every catalogued structure/text/check/reorder action, stable identity and presentation-order preservation, exact validation, pre-acceptance Cancel, complete-replacement Save, uncertain-acceptance replay, accepted optimism adoption, exact read-only rejected-command recovery, and lifecycle drainage. Rejected-operation retry, dismissal and resolution are absent.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["O-051"],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "The editor contains no backend-specific logic and delegates one typed draft to the shared verified revision coordinator. O-051 blocks rejected-operation retry linkage, acknowledgment and resolution, but not exact read-only recovery.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["isolated active-Space checklist editor application state"],
+        "securityRequirements": ["Admit only complete represented active-Space evidence and stable typed identities"],
+        "syncRequirements": ["Preserve accepted optimism and actionable rejected draft state without duplicating operation lifecycle logic"]
+      },
+      "migration": {"rule": "Compose target-only Core and AppModel contracts.", "reconciliation": ["Cancel dispatches nothing; Save delegates exactly one complete revision-bound replacement"]},
+      "verification": {"tests": ["SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All claimed controls, validation, order, retry, recreation, conflict, and drainage cases pass"]}
+    },
+    {
+      "id": "TEST-8BB9E9DC7C1A",
+      "acknowledgeSourceHash": "74179699f9df5cc467866d0f3312387739e4a2f50993ef4d98e0e41ec37a2a42",
+      "currentBehavior": "Runs fourteen deterministic editor application/UI cases covering every claimed catalog control, valid unchanged and text edits, noncontiguous order preservation, blank refusal, pre-acceptance Cancel, empty/zero-item states, offline cached admission, active-only admission, exact uncertain-acceptance replay, recreated-editor conflict preservation, both rejection/detail event orders, fresh read-only recovery without detail, disappearing-evidence refusal, selection cancellation, accessibility, and scope exclusions.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["O-051"],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "Uses synthetic typed target evidence and no hosted, production, migration, or source backend.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["deterministic checklist-editor AppModel and compiled-source UI behavior matrix"],
+        "securityRequirements": ["Archived, incomplete, absent and invalid detail evidence cannot open or dispatch"],
+        "syncRequirements": ["Exact accepted command identity and edited hierarchy survive retry and recreation"]
+      },
+      "migration": {"rule": "Use only synthetic target fixtures.", "reconciliation": ["Every specifically claimed catalog control and state has executable evidence"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests"], "acceptance": ["All fourteen focused cases pass"]}
+    },
+    {
+      "id": "SWIFT-5486352D7A0C",
+      "acknowledgeSourceHash": "ae79ee0a4e03242712875f4f0f60baf65d78ef65eb7e88129bf11438f887c795",
+      "currentBehavior": "Renders the isolated active-Space checklist draft editor with every catalogued text, check, add, delete, reorder, Save, pre-acceptance Cancel, uncertain-acceptance replay, validation, progress and accessibility control, plus an exact read-only rejected-draft review whose Close action retains unresolved evidence. Recovery mode exposes no mutation, Save, retry, discard or resolution control.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["O-051"],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "The editor view is separated from the read-only Space-details renderer so each file retains one clear UI responsibility and the target scope guard remains precise.",
+      "target": {
+        "owner": "Active Space Checklist Editor",
+        "surfaces": ["Isolated active-Space checklist editor SwiftUI view"],
+        "securityRequirements": ["Render and mutate only the typed AppModel draft; expose no backend or credential state"],
+        "syncRequirements": ["Disable draft mutation while local acceptance is uncertain and route retries through the frozen AppModel command"]
+      },
+      "migration": {"rule": "Compile only in LedgerTargetStaging and delegate semantics to the provider-free AppModel.", "reconciliation": ["Every claimed editor control has a stable accessibility identifier and source-contract coverage"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter SpaceChecklistEditorStagingExerciseTests", "npm run target:staging:build:macos", "npm run target:staging:build:ios"], "acceptance": ["The editor compiles for both target destinations and exposes only claimed controls"]}
+    },
+    {
+      "id": "SWIFT-D19D3DA98BD3",
+      "acknowledgeSourceHash": "589c306a4053249969228611b559e82855362e4b208098679e420d9b88a2d3a0",
+      "currentBehavior": "Defines the provider-free, Account/Principal/family/contract/subject-bound query contract for reconstructing exact terminally rejected commands from durable local evidence. Recovery candidates retain the typed original command, acceptance/update clocks and rejection evidence, order deterministically, and expose no retry, discard, acknowledgment or resolution mutation.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["O-051"],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "Read-only recovery only. O-051 blocks retry linkage, resolution and optional evidence-retaining acknowledgment.",
+      "target": {
+        "owner": "Rejected Operation Recovery Contracts",
+        "surfaces": ["exact rejected-operation recovery request", "typed immutable recovery candidate", "deterministic recovery snapshot", "one-shot and observed recovery query port"],
+        "securityRequirements": ["Caller binds Account, Principal, command family, contract version and exact subject before any rejected command is returned", "Malformed, duplicate, foreign or mismatched recovery evidence fails closed"],
+        "syncRequirements": ["Recovery represents encrypted local terminal evidence and does not imply remote settlement or authoritative resolution"]
+      },
+      "migration": {"rule": "Preserve the exact locally accepted command and rejection evidence across target-app restart; perform no Firebase write or source behavior change.", "reconciliation": ["Any future retry or acknowledgment must preserve immutable rejection provenance under the approved O-051 policy"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests", "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionPowerSyncVerticalSliceTests"], "acceptance": ["Only exactly scoped, typed and deterministically ordered rejected-operation evidence is constructible"]}
+    },
+    {
+      "id": "TEST-24D7DA26A307",
+      "acknowledgeSourceHash": "6cbea16d4f5b1befc626a7032a4e895d1320b1b893e7ac0d459c6e5a46e253cb",
+      "currentBehavior": "Proves rejected-operation recovery request scope, deterministic newest-first ordering, exact typed command preservation, and refusal of duplicate, foreign, mismatched or malformed evidence at the provider-free contract boundary.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["O-051"],
+      "evidence": ["WORKFLOW-active-space-checklist-editor"],
+      "notes": "Does not authorize retry, discard, acknowledgment or resolution behavior.",
+      "target": {
+        "owner": "Rejected Operation Recovery Contracts",
+        "surfaces": ["recovery contract validation tests", "scope and ordering tests", "malformed-evidence refusal tests"],
+        "securityRequirements": ["Tests cover exact Account, Principal, family, contract and subject scope plus duplicate refusal"],
+        "syncRequirements": ["Tests claim local evidence reconstruction only, not retry or remote resolution"]
+      },
+      "migration": {"rule": "Use as target-only verification; no source Firebase adapter or mutation is introduced.", "reconciliation": ["Cross-layer encrypted-restart proof remains in the Space checklist PowerSync vertical-slice suite"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter RejectedOperationRecoveryTests"], "acceptance": ["All invalid recovery snapshots fail construction and valid snapshots preserve exact immutable evidence"]}
+    }
+  ]
+}

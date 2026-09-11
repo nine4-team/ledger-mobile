@@ -1,0 +1,349 @@
+@testable import PowerSync
+import XCTest
+
+final class CrudTests: XCTestCase {
+    private var database: (any PowerSyncDatabaseProtocol)!
+    private var schema: Schema!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        schema = Schema(tables: [
+            Table(
+                name: "users",
+                columns: [
+                    .text("name"),
+                    .text("email"),
+                    .integer("favorite_number"),
+                    .text("photo_id"),
+                ]
+            ),
+        ])
+
+        database = PowerSyncDatabase(
+            schema: schema,
+            dbFilename: ":memory:",
+            logger: DefaultLogger()
+        )
+        try await database.disconnectAndClear()
+    }
+
+    override func tearDown() async throws {
+        try await database.disconnectAndClear()
+        try await database.close()
+        database = nil
+        try await super.tearDown()
+    }
+
+    func testTrackMetadata() async throws {
+        try await database.updateSchema(schema: Schema(tables: [
+            Table(name: "lists", columns: [.text("name")], trackMetadata: true)
+        ]))
+
+        try await database.execute("INSERT INTO lists (id, name, _metadata) VALUES (uuid(), 'test', 'so meta')")
+        guard let batch = try await database.getNextCrudTransaction() else {
+            return XCTFail("Should have batch after insert")
+        }
+
+        XCTAssertEqual(batch.crud[0].metadata, "so meta")
+    }
+
+    func testTrackPreviousValues() async throws {
+        try await database.updateSchema(schema: Schema(tables: [
+            Table(
+                name: "lists",
+                columns: [.text("name"), .text("content")],
+                trackPreviousValues: TrackPreviousValuesOptions()
+            )
+        ]))
+
+        try await database.execute("INSERT INTO lists (id, name, content) VALUES (uuid(), 'entry', 'content')")
+        try await database.execute("DELETE FROM ps_crud")
+        try await database.execute("UPDATE lists SET name = 'new name'")
+
+        guard let batch = try await database.getNextCrudTransaction() else {
+            return XCTFail("Should have batch after update")
+        }
+
+        XCTAssertEqual(batch.crud[0].previousValues, ["name": "entry", "content": "content"])
+    }
+
+    func testTrackPreviousValuesWithFilter() async throws {
+        try await database.updateSchema(schema: Schema(tables: [
+            Table(
+                name: "lists",
+                columns: [.text("name"), .text("content")],
+                trackPreviousValues: TrackPreviousValuesOptions(
+                    columnFilter: ["name"]
+                )
+            )
+        ]))
+
+        try await database.execute("INSERT INTO lists (id, name, content) VALUES (uuid(), 'entry', 'content')")
+        try await database.execute("DELETE FROM ps_crud")
+        try await database.execute("UPDATE lists SET name = 'new name'")
+
+        guard let batch = try await database.getNextCrudTransaction() else {
+            return XCTFail("Should have batch after update")
+        }
+
+        XCTAssertEqual(batch.crud[0].previousValues, ["name": "entry"])
+    }
+
+    func testTrackPreviousValuesOnlyWhenChanged() async throws {
+        try await database.updateSchema(schema: Schema(tables: [
+            Table(
+                name: "lists",
+                columns: [.text("name"), .text("content")],
+                trackPreviousValues: TrackPreviousValuesOptions(
+                    onlyWhenChanged: true
+                )
+            )
+        ]))
+
+        try await database.execute("INSERT INTO lists (id, name, content) VALUES (uuid(), 'entry', 'content')")
+        try await database.execute("DELETE FROM ps_crud")
+        try await database.execute("UPDATE lists SET name = 'new name'")
+
+        guard let batch = try await database.getNextCrudTransaction() else {
+            return XCTFail("Should have batch after update")
+        }
+
+        XCTAssertEqual(batch.crud[0].previousValues, ["name": "entry"])
+    }
+
+    func testIgnoreEmptyUpdate() async throws {
+        try await database.updateSchema(schema: Schema(tables: [
+            Table(name: "lists", columns: [.text("name")], ignoreEmptyUpdates: true)
+        ]))
+        try await database.execute("INSERT INTO lists (id, name) VALUES (uuid(), 'test')")
+        try await database.execute("DELETE FROM ps_crud")
+        try await database.execute("UPDATE lists SET name = 'test'") // Same value!
+
+        let batch = try await database.getNextCrudTransaction()
+        XCTAssertNil(batch)
+    }
+
+    func testCrudBatch() async throws {
+        // Create some items
+        try await database.writeTransaction { tx in
+            for i in 0 ..< 100 {
+                try tx.execute(
+                    sql: "INSERT INTO users (id, name, email, favorite_number) VALUES (uuid(), 'a', 'a@example.com', ?)",
+                    parameters: [i]
+                )
+            }
+        }
+
+        // Get a limited set of batched operations
+        guard let limitedBatch = try await database.getCrudBatch(limit: 50) else {
+            return XCTFail("Failed to get crud batch")
+        }
+
+        guard let crudItem = limitedBatch.crud.first else {
+            return XCTFail("Crud batch should contain crud entries")
+        }
+
+        // This should show as a string even though it's a number
+        // This is what the typing conveys
+        let opData = crudItem.opData?["favorite_number"]
+        XCTAssert(opData == "0")
+
+        XCTAssert(limitedBatch.hasMore == true)
+        XCTAssert(limitedBatch.crud.count == 50)
+
+        guard let fullBatch = try await database.getCrudBatch() else {
+            return XCTFail("Failed to get crud batch")
+        }
+
+        XCTAssert(fullBatch.hasMore == false)
+        XCTAssert(fullBatch.crud.count == 100)
+
+        guard let nextTx = try await database.getNextCrudTransaction() else {
+            return XCTFail("Failed to get transaction crud batch")
+        }
+
+        XCTAssert(nextTx.crud.count == 100)
+
+        for r in nextTx.crud {
+            print(r)
+        }
+
+        // Completing the transaction should clear the items
+        try await nextTx.complete()
+
+        let afterCompleteBatch = try await database.getNextCrudTransaction()
+
+        for r in afterCompleteBatch?.crud ?? [] {
+            print(r)
+        }
+
+        XCTAssertNil(afterCompleteBatch)
+
+        try await database.writeTransaction { tx in
+            for i in 0 ..< 100 {
+                try tx.execute(
+                    sql: "INSERT INTO users (id, name, email, favorite_number) VALUES (uuid(), 'a', 'a@example.com', ?)",
+                    parameters: [i]
+                )
+            }
+        }
+
+        guard let finalBatch = try await database.getCrudBatch(limit: 100) else {
+            return XCTFail("Failed to get crud batch")
+        }
+        XCTAssert(finalBatch.crud.count == 100)
+        XCTAssert(finalBatch.hasMore == false)
+        // Calling complete without a writeCheckpoint param should be possible
+        try await finalBatch.complete()
+
+        let finalValidationBatch = try await database.getCrudBatch(limit: 100)
+        XCTAssertNil(finalValidationBatch)
+    }
+
+    func testCrudTransactions() async throws {
+        func insertInTransaction(size: Int) async throws {
+            try await database.writeTransaction { tx in
+                for _ in 0 ..< size {
+                    try tx.execute(
+                        sql: "INSERT INTO users (id, name, email) VALUES (uuid(), null, null)",
+                        parameters: []
+                    )
+                }
+            }
+        }
+
+        // Before inserting any data, the iterator should be empty.
+        for try await _ in database.getCrudTransactions() {
+            XCTFail("Unexpected transaction")
+        }
+
+        try await insertInTransaction(size: 5)
+        try await insertInTransaction(size: 10)
+        try await insertInTransaction(size: 15)
+
+        var batch = [CrudEntry]()
+        var lastTx: CrudTransaction? = nil
+        for try await tx in database.getCrudTransactions() {
+            batch.append(contentsOf: tx.crud)
+            lastTx = tx
+
+            if batch.count >= 10 {
+                break
+            }
+        }
+
+        XCTAssertEqual(batch.count, 15)
+        try await lastTx!.complete()
+
+        let finalTx = try await database.getNextCrudTransaction()
+        XCTAssertEqual(finalTx!.crud.count, 15)
+    }
+    
+    func testSoftClear() async throws {
+        try await database.execute(sql: "INSERT INTO users (id, name) VALUES (uuid(), ?)", parameters: ["test"]);
+        try await database.execute(sql: "INSERT INTO ps_buckets (name, last_applied_op) VALUES (?, ?)", parameters: ["bkt", 10])
+        
+        // Doing a soft-clear should delete data but keep the bucket around.
+        try await database.disconnectAndClear(soft: true)
+        let entries = try await database.getAll("SELECT name FROM ps_buckets", mapper: { cursor in try cursor.getString(index: 0) })
+        XCTAssertEqual(entries.count, 1)
+        
+        // Doing a default clear also deletes buckets.
+        try await database.disconnectAndClear();
+        let newEntries = try await database.getAll("SELECT name FROM ps_buckets", mapper: { cursor in try cursor.getString(index: 0) })
+        XCTAssertEqual(newEntries.count, 0)
+    }
+    
+    func testRawTableInferredCrudTrigger() async throws {
+        let table = RawTable(name: "users", schema: RawTableSchema())
+        try await database.updateSchema(schema: Schema(table))
+        
+        try await database.execute("CREATE TABLE users (id TEXT, name TEXT);")
+        try await database.execute(sql: "SELECT powersync_create_raw_table_crud_trigger(?, ?, ?)", parameters: [
+            table.jsonDescription(),
+            "users_insert",
+            "INSERT"
+        ])
+        try await database.execute(sql: "INSERT INTO users (id, name) VALUES (?, ?)", parameters: [
+            "id",
+            "user"
+        ])
+        
+        let tx = try await database.getNextCrudTransaction()
+        XCTAssertEqual(tx?.crud.count, 1)
+        let write = tx!.crud[0]
+        XCTAssertEqual(write.op, .put)
+        XCTAssertEqual(write.table, "users")
+        XCTAssertEqual(write.id, "id")
+        let opData = write.opData?["name"]
+        XCTAssertEqual(opData, "user")
+    }
+    
+    func testRawTableInferredCrudTriggerWithOptions() async throws {
+        try await database.updateSchema(schema: Schema())
+        let table = RawTable(
+            name: "sync_name",
+            schema: RawTableSchema(
+                tableName: "users",
+                syncedColumns: ["name"],
+                options: TableOptions(
+                    trackPreviousValues: TrackPreviousValuesOptions(),
+                    ignoreEmptyUpdates: true,
+                ),
+            )
+        )
+
+        try await database.execute("CREATE TABLE users (id TEXT, name TEXT, local TEXT);")
+        try await database.execute(sql: "INSERT INTO users (id, name, local) VALUES (?, ?, ?)", parameters: [
+            "id",
+            "user",
+            "local"
+        ])
+        try await database.execute(sql: "SELECT powersync_create_raw_table_crud_trigger(?, ?, ?)", parameters: [
+            table.jsonDescription(),
+            "users_update",
+            "UPDATE"
+        ])
+        
+        try await database.execute(sql: "UPDATE users SET name = ?, local = ?", parameters: ["updated_name", "updated_local"])
+        
+        // This should not generate a CRUD entry because the only synced column is not affected.
+        try await database.execute(sql: "UPDATE users SET name = ?, local = ?", parameters: ["updated_name", "updated_local_2"])
+
+        let tx = try await database.getNextCrudTransaction()
+        XCTAssertEqual(tx?.crud.count, 1)
+        let write = tx!.crud[0]
+        XCTAssertEqual(write.op, .patch)
+        XCTAssertEqual(write.id, "id")
+        XCTAssertEqual(write.opData?["name"], "updated_name")
+        XCTAssertEqual(write.previousValues?["name"], "user")
+    }
+
+    func testCustomWriteCheckpoints() async throws {
+        let database = self.database!
+
+        try await database.execute(
+            sql: "INSERT INTO users (id, name) VALUES (uuid(), 'a')",
+            parameters: []
+        )
+
+        let tx = try await database.getNextCrudTransaction()!
+        try await tx.complete(writeCheckpoint: "123")
+
+        let targetCheckpointRequestId = try await database.writeTransaction { tx in
+            try tx.powersyncTargetCheckpointRequestId()
+        }
+        XCTAssertEqual(targetCheckpointRequestId, 123)
+
+        try await database.execute(
+            sql: "INSERT INTO users (id, name) VALUES (uuid(), 'a')",
+            parameters: []
+        )
+        let batch = try await database.getCrudBatch()!
+        try await batch.complete(writeCheckpoint: "124")
+        let newTargetCheckpointRequestId = try await database.writeTransaction { tx in
+            try tx.powersyncTargetCheckpointRequestId()
+        }
+        XCTAssertEqual(newTargetCheckpointRequestId, 124)
+    }
+}

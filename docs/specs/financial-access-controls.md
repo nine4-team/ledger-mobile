@@ -1,4 +1,22 @@
 # Financial Access Controls
+
+> **Target-state notice (2026-08-30):** Transaction visibility rules must migrate
+> to the Purchase/Return/Transfer taxonomy in
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
+> Fee and Expense visibility must follow their Invoicing source records rather
+> than legacy Transaction types. The existing rules below describe the current
+> schema until that migration.
+>
+> The visibility intent and no-leak requirements remain target obligations.
+> Firestore listeners, rules, Admin SDK filtering and backfill below are source
+> implementation evidence, not instructions to build new Firebase behavior.
+> Target enforcement must cover Postgres reads/commands, PowerSync downloads,
+> protected local data, private media, reports and MCP; hiding UI is insufficient.
+> The `paymentToBusiness` classifier must not be recreated in the target.
+> How mixed collected Purchases and their frozen allocations inherit Invoice
+> confidentiality is unresolved: do not expose hidden Fees through payment
+> totals or invent partial-redaction policy. Offline access/revocation follows
+> the separately gated authorization policy.
 Status: partially implemented
 Last updated: 2026-06-08
 Implementation plan: [../plans/financial-access-controls.md](../plans/financial-access-controls.md)
@@ -14,6 +32,9 @@ This spec is the canonical product/data behavior. Keep it updated whenever the
 implementation plan, Firestore rules, UI, or data model decisions change.
 
 ## Implementation Status
+
+The following implementation status is the shipped Firebase baseline only.
+It is not a target authorization or rollout plan.
 
 Implemented in the iOS app:
 
@@ -50,6 +71,60 @@ Still required for full confidentiality:
 - V1 does not support partial/redacted invoice documents. If an invoice contains
   hidden company revenue, a limited user cannot open that invoice.
 - Settings should read like business access controls, not database mechanics.
+
+## Target Visibility and Management Contract
+
+Preserve full/limited/none financial access and the existing missing-field role
+defaults as migration evidence. Restricted Fee/manual-revenue data requires
+explicit authorization; unknown or incomplete source classification cannot be
+treated as non-revenue. Target classification follows canonical Invoicing
+sources and frozen accounting evidence, not `paymentToBusiness`. Ordinary
+business-paid Expenses are not automatically company revenue.
+
+Invoices remain whole documents: one hidden protected Fee prevents the
+restricted user from opening the Invoice; no partial Invoice redaction is
+approved. The complete target visibility matrix—including mixed collected
+Purchases, downstream evidence and the existing no-revenue-Invoice question—is
+O-060. O-009 separately owns whether/how manual adjustments exist.
+
+The same policy applies before server reads, sync downloads, local projections,
+private-media access, search/review, summaries, reports/exports and MCP. No hidden
+count, total, Invoice number, category name or financial provenance may leak
+through a less-protected path. A partial local working set is not proof that
+there is no hidden revenue. Access reductions stop newly unauthorized server
+reads/downloads; existing offline caches and retained pending work follow
+O-058/A-016, not a promise of immediate disconnected revocation or automatic
+destructive cleanup.
+
+Preserve the member directory's name/email and role/access badges; Access sheet
+Role and Financial Access controls; Limited-only Fee-category checklist;
+derived Invoice explanation; and Save, progress, failure, Cancel and empty
+states. A save binds the exact member and observed revision and applies the
+approved role/access settings together, not independent partial updates.
+Unapproved or stale changes fail visibly without closing the editor as success.
+
+Preserve Invite's email validation, Employee/Admin choices, financial-access
+options and Limited checklist; pending invitations with Copy Link and confirmed
+Revoke; and send/revoke progress and failures. Do not reproduce the source's
+immediate dismiss/silent failed writes. Invitation acceptance inherits only the
+intended approved grant and follows the target authentication contract.
+
+O-059 owns who may view/manage members/invites, grant ownership, edit another
+Owner/Admin, change their own access, and alter the last Owner; allowed role/
+access combinations and online-only versus queued permission changes are not
+implied by the old UI or Firestore rules. Keep failures explicit rather than
+silently coercing access on role change. Archived Fee IDs must remain
+resolvable for history; merely opening or saving a picker must not silently
+remove a previously allowed ID. Whether/how those archived grants continue to
+authorize historical amounts is part of O-060.
+
+Migration preserves exact member/invite grants and original source evidence,
+derives complete visibility classification for imported Fees/Invoices and
+frozen accounting references, and reports unresolved classifications for
+authorized review. Missing revenue metadata stays full-access-only until
+resolved, never inferred public from a missing linked source. Idempotent import
+must not broaden a grant or duplicate invitations. No production backfill is
+authorized by this spec.
 
 ## Roles
 
@@ -247,3 +322,10 @@ Backfill requirements:
   remain a UI-only label?
 - Is account-level fee category access enough for v1, or do some clients need
   per-project overrides?
+- How does a collected Purchase containing both visible costs and hidden Fees
+  inherit its Invoice's whole-document visibility, including frozen allocations,
+  linked Item provenance, refunds and Transfer/report summaries? The old
+  single-category payment classifier does not answer this target question.
+- How are existing device caches and retained pending work handled after a
+  financial-access reduction? Enforce current server/download permissions, but
+  do not invent an offline lease or destructive local-data policy.

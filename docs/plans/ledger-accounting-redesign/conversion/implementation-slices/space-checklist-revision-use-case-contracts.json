@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-checklist-revision-use-case-contracts",
+  "title": "Derive and dispatch one complete Space checklist replacement",
+  "kind": "product",
+  "status": "verified",
+  "owner": "Space Checklist Revision Use Case",
+  "surfaceIds": ["SWIFT-1FDB27E18B95", "TEST-674E6F23E5BE"],
+  "requirements": [
+    {
+      "id": "SPCHECKUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One submission binds exact AccountID and stable SpaceID, revalidates the current semantic base and uses one exact expected Space revision. Display text, route, provider path, copied scope or stale cached identity cannot replace stable identity or concurrency evidence.",
+      "decisionIds": [],
+      "verificationIds": ["SPCHECKUSE-TEST-001", "SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-003", "SPCHECKUSE-TEST-004", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "ReviseSpaceChecklists replaces the complete ordered hierarchy using stable checklist/item IDs, explicit order and checked state. Names/text use canonical outer-whitespace normalization while preserving accepted interior text; duplicate text is valid, no unapproved length cap exists, an empty collection clears all checklists and a checklist with zero items is valid.",
+      "decisionIds": [],
+      "verificationIds": ["SPCHECKUSE-TEST-001", "SPCHECKUSE-TEST-003", "SPCHECKUSE-TEST-004", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Changed or incomplete semantic evidence and stale revision conflict atomically rather than merging or overwriting concurrent checklist work. Checklist revision cannot change Space details/scope/lifecycle, templates, media, Item placement, review evidence, completion reconciliation or accounting.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-003", "SPCHECKUSE-TEST-005", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "The application boundary consumes the existing restart-safe SpaceChecklistEditingDraft and current SpaceCoreDetailsUpdate. It adds no alternate draft, raw mutation API, read-admission rule, UI state, route field, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["SPCHECKUSE-TEST-001", "SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-004", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "SpaceChecklistRevisionUseCase receives existing draft/current evidence plus caller OperationID, PrincipalID, contract version and finite capture time; derives the verified command before invoking SpaceChecklistRevising exactly once; validates the receipt; preserves exact local state, CancellationError, SpaceChecklistEditingFailure and SpaceChecklistRevisionFailure; and maps every other port error to SpaceChecklistRevisionFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-003", "SPCHECKUSE-TEST-004", "SPCHECKUSE-TEST-005", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only slice advances only its two claimed leaves. EditChecklistModal remains target_mapped because initial loading, draft mutation controls, immediate validation/error presentation, cancel/success dismissal, layout/copy and app composition do not advance.",
+      "decisionIds": [],
+      "verificationIds": ["SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-005", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    },
+    {
+      "id": "SPCHECKUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. Physical local persistence, optimistic projection, authorization/audit, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, Firebase migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["SPCHECKUSE-TEST-001", "SPCHECKUSE-TEST-002", "SPCHECKUSE-TEST-003", "SPCHECKUSE-TEST-004", "SPCHECKUSE-TEST-005", "SPCHECKUSE-TEST-006", "SPCHECKUSE-TEST-007", "SPCHECKUSE-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceChecklistRevisionUseCase reuses SpaceChecklistEditingDraft and SpaceCoreDetailsUpdate rather than inventing a second edit model.",
+        "Draft command derivation revalidates exact semantic evidence and produces the verified complete-replacement operation before any port call.",
+        "The use case invokes SpaceChecklistRevising once, validates the receipt, preserves typed failures and Swift cancellation, and bounds unknown port failures.",
+        "No application-layer policy is added for UI admission, templates, Space lifecycle/details/scope, Items, review, reconciliation completion or accounting."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Space, checklist, operation, table, view, function, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative handler, membership/revision lock, idempotency store, audit or server update is implemented; the injected port remains an application boundary."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local draft/current evidence is not authorization; no RLS/role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, local Space/operation table, upload connector or optimistic projection exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port and reuses restart-safe values, but adds no physical persistence, restart write, rejection recovery or synchronized visibility."},
+    "storageMedia": {"items": [], "notApplicable": "Checklist revision owns no attachment identity, bytes, reference, upload, retention or deletion behavior."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI loading/edit controls, copy, errors, dismissal, navigation, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase embedded checklist array, modal callback, source export row or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; EditChecklistModal, current Firebase app, MCP and app projects remain unchanged.",
+        "The deterministic in-memory port cannot physically persist, authorize, synchronize, deploy, display, migrate, release or cut over a checklist revision.",
+        "O-023/O-026/O-032/O-037 and A-003/A-004/A-007/A-015/A-016 remain open or outside because media, templates, completion/accounting, archive effects, providers and production behavior are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPCHECKUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-007"],
+      "expected": "The same existing draft successfully derives and dispatches one canonical complete replacement from both ready-complete current evidence and retryable ready-complete cached evidence. Both paths remain admissible after a nonsemantic refresh of version, as-of, name, notes and audit timestamps when the exact Account/Space/scope/lifecycle/revision/hierarchy semantic base is unchanged. Each path makes exactly one call preserving stable nested IDs, explicit order, checked state, normalized outer whitespace and accepted interior text. Duplicate text, an empty collection, a zero-item checklist and revision zero/UInt64.max remain valid without defaults or length caps.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
+      "expected": "Waiting/incomplete/noneditable current evidence, changed Account/Space/scope/lifecycle/revision/hierarchy semantic base, malformed draft content and nonfinite capture time fail during derivation with zero port calls. The use case adds no alternative readiness or archive policy.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-007"],
+      "expected": "Every matching LocalOperationState returns unchanged after exactly one port call carrying one complete hierarchy payload, exactly one same-Space expected-revision precondition and no accounting operation; receipt mismatch fails after one call.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-007"],
+      "expected": "A reciprocal matrix independently varies Account, Space, current revision, checklist/item identity, order, name/text, checked state, Operation, actor, contract and time; every value reaches only its owning existing command/derived evidence field exactly, with one call and no new policy.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
+      "expected": "SpaceChecklistEditingFailure, SpaceChecklistRevisionFailure, unknown port failure and CancellationError remain distinct after the correct zero/one call boundary; raw provider details never cross the application boundary.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
+      "covers": ["SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
+      "expected": "Stable diagnostics and exact encoded command shape expose only the authorized checklist replacement/operation fields and no raw error, Space detail/scope/lifecycle mutation, template/media/Item/review/completion/accounting operation, UI state, credential, provider payload or production identity.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-007",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves EditChecklistModal plus all Firebase/app/MCP/provider surfaces at prior status and content.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    },
+    {
+      "id": "SPCHECKUSE-TEST-008",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Verified at exact implementation commit 99574328837ff1dfd8924f2eda2e88a635ad5ba7 after immutable Actions run 33788214259 passed traceability in 10 seconds and the isolated target job in 3 minutes 4 seconds. Exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 previously passed run 33785649411. Exactly two frozen target leaves implement existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate revalidation, one derived command before one SpaceChecklistRevising call, receipt validation, exact local-state preservation, typed failure/cancellation preservation and bounded raw errors. Six focused and all 273 target tests in 59 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean artifacts pass. Independent reviews caught test-proof gaps for both readiness paths, long UTF-8 values, scope/lifecycle transparency, revision boundaries and exact reciprocal deltas; corrected tests closed them and both final reviews returned GO. O-023/O-026/O-032/O-037 and every provider/production exclusion remain binding."
+}

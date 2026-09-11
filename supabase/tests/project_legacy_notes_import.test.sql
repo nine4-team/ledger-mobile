@@ -1,0 +1,50 @@
+begin;
+set local search_path=public,extensions;
+select no_plan();
+insert into public.spike_projects(id,account_id,client_id,display_name,description,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+select id,'account-primary','client-existing','Legacy import','Separate description',now(),now(),1,1,'principal-owner'
+from unnest(array['legacy-import-a','legacy-import-b','legacy-import-null','legacy-import-bad','legacy-import-existing']) id;
+update public.spike_projects set legacy_notes='Existing content' where id='legacy-import-existing';
+create temporary table before_legacy_import as select id,to_jsonb(p)-'legacy_notes' as unchanged from public.spike_projects p where id like 'legacy-import-%';
+create function pg_temp.import_legacy(p_project text default 'legacy-import-a', p_notes text default E'  Original\n第二行\r\n  ',
+  p_source text default 'source-project',p_bytes bytea default decode('007b7dff','hex'),p_account text default 'account-primary') returns text
+language sql as $$ select ledger_private.import_project_legacy_notes(p_account,p_project,p_notes,'source-account',p_source,p_bytes) $$;
+select is(pg_temp.import_legacy(),'legacy-import-a','Import returns stable target Project identity');
+select is((select legacy_notes from public.spike_projects where id='legacy-import-a'),E'  Original\n第二行\r\n  ','Exact text preserved');
+select is((select imported_notes from ledger_private.imported_project_legacy_note_sources where project_id='legacy-import-a'),E'  Original\n第二行\r\n  ','Immutable evidence retains exact imported text');
+select is((select source_bytes from ledger_private.imported_project_legacy_note_sources where project_id='legacy-import-a'),decode('007b7dff','hex'),'Binary source bytes are not coerced to JSON/text');
+select is((select source_sha256 from ledger_private.imported_project_legacy_note_sources where project_id='legacy-import-a'),encode(digest(decode('007b7dff','hex'),'sha256'),'hex'),'Digest derives from source bytes');
+create temporary table after_first_import as select ctid::text as version from public.spike_projects where id='legacy-import-a';
+select is(pg_temp.import_legacy(),'legacy-import-a','Exact retry returns same identity');
+select is((select ctid::text from public.spike_projects where id='legacy-import-a'),(select version from after_first_import),'Exact retry performs no Project update');
+select is((select count(*) from ledger_private.imported_project_legacy_note_sources),1::bigint,'Replay creates no duplicate evidence');
+select throws_ok($$select pg_temp.import_legacy(p_notes=>'Changed')$$,'22000',null,'Changed text conflicts');
+select throws_ok($$select pg_temp.import_legacy(p_bytes=>decode('00','hex'))$$,'22000',null,'Changed bytes conflict');
+select throws_ok($$select pg_temp.import_legacy(p_source=>'different-source')$$,'22000',null,'Changed source conflicts');
+select throws_ok($$select pg_temp.import_legacy(p_account=>'account-other')$$,'23503',null,'Cross-Account target rejected');
+select throws_ok($$select pg_temp.import_legacy(p_project=>'missing-project')$$,'23503',null,'Missing target is not manufactured');
+select throws_ok($$select pg_temp.import_legacy(p_project=>'legacy-import-b')$$,'22000',null,'One source cannot map to a second Project');
+select is((select legacy_notes from public.spike_projects where id='legacy-import-b'),null::text,'Source conflict leaves target untouched');
+select throws_ok($$select pg_temp.import_legacy(p_project=>'legacy-import-existing',p_source=>'existing-source')$$,'22000',null,'Preexisting conflicting text is not overwritten');
+select is(pg_temp.import_legacy('legacy-import-null',null,'source-null'),'legacy-import-null','Absent/null note is a valid imported fact');
+select throws_ok($$select pg_temp.import_legacy('legacy-import-null','','source-null')$$,'22000',null,'Empty text differs from imported null');
+select throws_ok($$select pg_temp.import_legacy('legacy-import-bad','Notes','bad/source')$$,'23514',null,'Malformed source segment rejected');
+select throws_ok($$select pg_temp.import_legacy('legacy-import-bad','Notes','source-bad','\x'::bytea)$$,'23514',null,'Empty bytes rejected');
+select throws_ok($$select pg_temp.import_legacy('legacy-import-bad','Notes','source-bad',decode(repeat('00',4194305),'hex'))$$,'23514',null,'Oversize bytes rejected');
+select is((select legacy_notes from public.spike_projects where id='legacy-import-bad'),null::text,'Malformed imports roll back text');
+select is((select count(*) from ledger_private.imported_project_legacy_note_sources where project_id='legacy-import-bad'),0::bigint,'Malformed imports leave no evidence');
+select ok((select bool_and(to_jsonb(p)-'legacy_notes'=b.unchanged) from public.spike_projects p join before_legacy_import b using(id)),'Description, identity, revision, timestamps and other Project fields unchanged');
+select throws_ok($$update ledger_private.imported_project_legacy_note_sources set imported_notes='Changed'$$,'55000',null,'Evidence update denied');
+select throws_ok('delete from ledger_private.imported_project_legacy_note_sources','55000',null,'Evidence deletion denied');
+select throws_ok('truncate ledger_private.imported_project_legacy_note_sources','55000',null,'Evidence truncation denied');
+select ok((select bool_and(not has_table_privilege(r,'ledger_private.imported_project_legacy_note_sources','SELECT,INSERT,UPDATE,DELETE,TRUNCATE') and not has_function_privilege(r,'ledger_private.import_project_legacy_notes(text,text,text,text,text,bytea)','EXECUTE')) from unnest(array['anon','authenticated','service_role']) r),'No API role has table or importer grants');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='ledger_private.imported_project_legacy_note_sources'::regclass),'Evidence has forced RLS');
+select ok((select not prosecdef and proconfig @> array['search_path=""'] from pg_proc where oid='ledger_private.import_project_legacy_notes(text,text,text,text,text,bytea)'::regprocedure),'Invoker rights and empty search path');
+set local role authenticated;
+select throws_ok($$select ledger_private.import_project_legacy_notes('account-primary','legacy-import-a',null,'s','d','\x00'::bytea)$$,'42501',null,'Authenticated API cannot invoke import');
+reset role;
+set local role service_role;
+select throws_ok($$select ledger_private.import_project_legacy_notes('account-primary','legacy-import-a',null,'s','d','\x00'::bytea)$$,'42501',null,'Service API cannot invoke import');
+reset role;
+select * from finish();
+rollback;

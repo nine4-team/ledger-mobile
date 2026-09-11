@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-project-directory-powersync-provider",
+  "title": "Browse local Clients and Projects through the PowerSync directory port",
+  "kind": "product",
+  "status": "implemented",
+  "owner": "Client and Project Directory",
+  "surfaceIds": ["SWIFT-B23F91245E50", "TEST-5AAEE26660C8"],
+  "requirements": [
+    {
+      "id": "DIRPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "Client and Project directories preserve stable Account-scoped identities, lifecycle and audit evidence; Project-to-Client relationships resolve only by exact same-Account ClientID and never by display text.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-003", "DIRPROVIDER-TEST-004", "DIRPROVIDER-TEST-009", "DIRPROVIDER-TEST-010", "DIRPROVIDER-TEST-011", "DIRPROVIDER-TEST-012", "DIRPROVIDER-TEST-013"]
+    },
+    {
+      "id": "DIRPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Current Project lists and details remain usable from synchronized local data while exposing incomplete readiness honestly; active and archived Project browsing cannot turn missing relationship evidence into authoritative empty.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-002", "DIRPROVIDER-TEST-005", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-009", "DIRPROVIDER-TEST-012", "DIRPROVIDER-TEST-013", "DIRPROVIDER-TEST-014"]
+    },
+    {
+      "id": "DIRPROVIDER-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Locally accepted Client and Project creation appears immediately as non-authoritative directory evidence, survives encrypted close/reopen, and remains usable for selection and exact detail navigation without a network.",
+      "decisionIds": [],
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-002", "DIRPROVIDER-TEST-005", "DIRPROVIDER-TEST-013"]
+    },
+    {
+      "id": "DIRPROVIDER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One backend-neutral ClientProjectDirectoryQuerying port supplies exact Account snapshots; the PowerSync adapter, runtime and staging app consume those contracts without leaking provider types into LedgerTargetCore.",
+      "decisionIds": [],
+      "verificationIds": ["DIRPROVIDER-TEST-001", "DIRPROVIDER-TEST-006", "DIRPROVIDER-TEST-007", "DIRPROVIDER-TEST-013", "DIRPROVIDER-TEST-014"]
+    },
+    {
+      "id": "DIRPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Tenant Isolation",
+      "invariant": "The runtime binds one Principal and Account namespace; authoritative rows require locally visible active membership, caller-owned pending rows remain available as partial evidence before membership readback, and other Accounts cannot be queried or queued through that runtime.",
+      "decisionIds": [],
+      "verificationIds": ["DIRPROVIDER-TEST-003", "DIRPROVIDER-TEST-004", "DIRPROVIDER-TEST-008", "DIRPROVIDER-TEST-009", "DIRPROVIDER-TEST-010", "DIRPROVIDER-TEST-011", "DIRPROVIDER-TEST-012", "DIRPROVIDER-TEST-013"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse the verified ClientProjectDirectoryQuerying, ClientListSnapshot, ProjectListSnapshot, existing-Client selection, Project segment/selection and detail-header contracts unchanged.",
+        "Directory LocalDataVersion is content-bound; stable technical ID order is not a final product sorting decision."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Reuse spike_account_memberships, spike_clients and spike_projects plus their Account and relationship indexes; add no schema object in this slice."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "The slice is read-only and invokes no new server handler."
+    },
+    "dataApiGrants": {
+      "items": [
+        "Reuse existing explicit authenticated SELECT grants; direct writes remain denied and no new grant is added."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Reuse active-membership Account-scoped Client and Project SELECT policies; restricted same-Account members retain approved reads while revoked, anonymous and cross-Account callers cannot enumerate rows."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Reuse separate Client and Project stream rows derived from authenticated active membership.",
+        "Client and Project completeness observations are independent and reactive; no global hasSynced flag may certify either exact directory."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Merge synchronized and exact caller-owned pending-create rows in encrypted PowerSync SQLite, with pending evidence always partial and durable across restart.",
+        "Count Project rows before optional Client joining; a missing relationship is incomplete and cannot become authoritative empty.",
+        "Authoritative readback may remove exact Client or Project-core optimism only after active-membership visibility and complete owned evidence; Project allocation optimism survives until a later aggregate-aware query proves authoritative allocation readback.",
+        "Cancellation terminates database and completeness observations without later delivery.",
+        "Provider shutdown atomically refuses later watches, cancels every admitted Client and Project watch, and joins each outer observation plus its nested database and completeness tasks before SQLite closes."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Directories contain no attachment bytes or Storage path."
+    },
+    "appMcp": {
+      "items": [
+        "The isolated staging app uses the runtime directory port to show local completeness, select any currently represented active Client, segment active/archived Projects and derive an exact Project detail request.",
+        "MCP list/get shape, pagination and search remain outside because the local unbounded watch contract does not authorize an MCP API."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "The slice reads no Firebase snapshot and performs no target import; migration reconciliation remains a later program gate."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "The staging surface shows bounded partial/stale/ready and complete/incomplete state without raw payload logging; provider failures remain stable non-secret diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation stays in the isolated target app and disposable local databases; Firebase remains unchanged and authoritative.",
+        "Local verification grants no hosted Sync, migration, production, release or cutover authority; A-003/A-004 remain proposed."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "DIRPROVIDER-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-003", "DIRPROVIDER-REQ-004"],
+      "expected": "Pending and authoritative Clients/Projects preserve stable identity, exact relationships, active/archived projection, current Client selection and exact Project detail navigation.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-003"],
+      "expected": "Encrypted close/reopen reproduces pending rows, readiness and content-bound LocalDataVersion without network access.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-003",
+      "kind": "rls_negative",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift and existing local Supabase Client/Project RLS suites",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-005"],
+      "expected": "Wrong Account/Principal calls persist nothing; inactive membership hides authoritative rows from directories and exact-detail reads while retaining only the same Principal's pending rows as partial; local SQL tests do not overclaim hosted Sync isolation.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-009",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/client_creation_vertical_slice.test.sql and supabase/tests/project_setup_vertical_slice.test.sql",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-005"],
+      "expected": "Existing Client, Project and membership constraints, same-Account relationships and supporting indexes remain valid without a schema change.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-010",
+      "kind": "advisor",
+      "owner": "npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-005"],
+      "expected": "The reused local Supabase schema passes the repository database lint/advisor gate with no new security or performance finding attributable to the directory slice.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-011",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/client_creation_vertical_slice.test.sql, supabase/tests/project_setup_vertical_slice.test.sql, scripts/test-local-client-creation-rpc.mjs and scripts/test-local-project-creation-rpc.mjs",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-005"],
+      "expected": "An authenticated active same-Account member can read exactly the permitted Client and Project rows through the existing grants and RLS policies.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-004",
+      "kind": "sync_authorization",
+      "owner": "Future isolated authenticated PowerSync rehearsal",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-005"],
+      "expected": "Independent Client and Project streams download only an active member's Account rows, remove revoked visibility, and expose query-specific completion transitions to the adapter.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "DIRPROVIDER-TEST-005",
+      "kind": "reconciliation",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift and ProjectPowerSyncVerticalSliceTests.swift",
+      "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-003"],
+      "expected": "Missing Client rows remain incomplete; hidden authority cannot clear optimism; complete authorized readback clears only matching core overlays and never discards Project allocation optimism prematurely.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-012",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-005"],
+      "expected": "Malformed, cross-scope, duplicate and hidden-authority rows refuse atomically or remain unavailable without producing false authoritative directory evidence.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-006",
+      "kind": "app_mcp_contract",
+      "owner": "LedgerTarget staging app build and ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-004"],
+      "expected": "Fresh local runtime create-to-select-to-browse-to-detail flow uses the backend-neutral read/projection contracts; no MCP list API is invented.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-007",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-004"],
+      "expected": "Immutable CI passes synchronized conversion controls, all target tests and both isolated staging builds with no tracked rewrite.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-008",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-005"],
+      "expected": "Runtime namespace guards reject every cross-Account mutation/detail read and cross-Principal mutation before any operation, overlay or upload-queue row exists; cancellation stops delivery.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-013",
+      "kind": "end_to_end",
+      "owner": "LedgerTarget staging app plus ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-001", "DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-003", "DIRPROVIDER-REQ-004", "DIRPROVIDER-REQ-005"],
+      "expected": "A fresh isolated local runtime creates/selects/browses Clients and Projects offline, navigates by exact identity without bypassing membership-gated authority precedence, preserves partial truth through restart and exposes no cross-Account or cross-Principal state.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    },
+    {
+      "id": "DIRPROVIDER-TEST-014",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift plus ClientArchivePowerSyncVerticalSliceTests.swift, ProjectArchivePowerSyncVerticalSliceTests.swift and TransferDestinationSelectionPowerSyncQueryTests.swift",
+      "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-004"],
+      "expected": "Simultaneous Client and Project watches are cancelled and fully joined before database close; dependent tests retain and drain their directory provider on every close path; watches requested after shutdown begins terminate without touching SQLite.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "The local Client/Project directory and browse provider is implemented and its original local obligations plus exact implementation CI pass, including Principal/Account- and membership-bound exact details. A later CI-only timeout exposed a missing provider-owned directory-watch shutdown join. The correction adds explicit outer/nested task ownership, close-time cancellation/drainage and post-close admission refusal; independent review caught and drove correction of two remaining anonymous malformed-row test watches, then returned GO with no P0-P3. Corrected exact-commit CI is pending. Hosted authenticated Sync authorization remains planned, so the slice is not verified or rehearsed. Existing schema, grants, RLS and Sync definitions remain owned by their current provider slices. O-024/O-025 archive behavior, O-040 Project card/budget presentation, O-042/O-043 text-mutation rules, MCP pagination/search, migration and cutover are excluded. A-003/A-004 remain proposed."
+}

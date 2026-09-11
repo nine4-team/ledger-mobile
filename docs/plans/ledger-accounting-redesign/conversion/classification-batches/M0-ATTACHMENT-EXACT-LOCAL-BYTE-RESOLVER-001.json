@@ -1,0 +1,61 @@
+{
+  "batchId": "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+  "title": "Exact-receipt protected local attachment-byte resolution",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-ATTACHMENT-CAPTURE-001",
+    "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-82312CAAB02F",
+      "acknowledgeSourceHash": "a5e224b715bab8859c2e374430f32888e65121eef494769403b738b8b38b6758",
+      "currentBehavior": "Implements the backend-neutral exact-receipt local attachment-byte resolver contract and bounded non-sensitive failures without an Attachment-ID-only shortcut.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": ["A-004", "A-016"],
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"],
+      "notes": "The contract operates only inside an already-open Account runtime. It grants no workspace admission, remote read, rendering, upload, deletion, retention, hosted or production authority.",
+      "target": {
+        "owner": "Attachment Exact Local Byte Resolver",
+        "surfaces": ["Backend-neutral full-receipt local byte resolution port and bounded failures"],
+        "securityRequirements": ["Require the complete immutable receipt and return bytes only after exact queue and ciphertext reverification"],
+        "syncRequirements": ["Local resolution creates no ps_crud work, Sync Stream, remote fallback or success transition"]
+      },
+      "migration": {
+        "rule": "Use synthetic bytes and disposable target-local fixtures only.",
+        "reconciliation": ["A requested accepted receipt resolves to its exact bytes or one bounded fail-closed outcome without consuming evidence"]
+      },
+      "verification": {
+        "tests": ["AttachmentLocalByteResolutionTests", "AttachmentDurabilityProviderTests", "AccountWorkspacePendingWorkRuntimeTests"],
+        "acceptance": ["Exact identity, restart, corruption, cancellation and runtime-close tests pass without byte/path/key leakage"]
+      }
+    },
+    {
+      "id": "TEST-CF9AB8ADB530",
+      "acknowledgeSourceHash": "aa7f4077e94e5ae0ab2d227518d14773902277685a7d7f3d4ace25383854e784",
+      "currentBehavior": "Implements provider-free exact-receipt attachment-byte resolution contract and stable non-sensitive diagnostic-code tests.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": ["A-004", "A-016"],
+      "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"],
+      "notes": "Tests define the narrow local contract only and cannot prove Account authorization lease, physical-device durability, hosted Storage, upload, rendering or production behavior.",
+      "target": {
+        "owner": "Attachment Exact Local Byte Resolver",
+        "surfaces": ["Provider-free exact-receipt local byte-resolution contract tests"],
+        "securityRequirements": ["Prove scope-first refusal and stable non-sensitive diagnostics"],
+        "syncRequirements": ["Prove resolution is non-consuming and has no remote or synchronization effect"]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities, receipts and bytes.",
+        "reconciliation": ["Each success and failure maps to one exact contract result without inferring production authority"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter AttachmentLocalByteResolution"],
+        "acceptance": ["The complete backend-neutral contract test matrix passes before provider integration is promoted"]
+      }
+    }
+  ]
+}

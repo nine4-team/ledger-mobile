@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-browser-powersync-provider",
+  "title": "Browse active Project or Inventory Spaces offline and open existing Space details",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Space Browser PowerSync Provider",
+  "surfaceIds": [
+    "SWIFT-08DC933EC0F4",
+    "SWIFT-8B0A5006A2CA",
+    "SWIFT-F78CAEEBEDC4",
+    "TEST-55014C110C73",
+    "TEST-A76066CC8EAA"
+  ],
+  "deliveryContract": {
+    "baseCommit": "2297e8dbe7f7f0febb7e33b4da0be591d4c82ade",
+    "dependencies": [
+      "space-list-read-and-presentation-contracts",
+      "space-core-details-powersync-provider",
+      "space-assignment-destination-powersync-picker",
+      "account-workspace-runtime-isolation"
+    ],
+    "riskDomains": [
+      "exact-scope list completeness and false-empty prevention",
+      "Account and Project-or-Business-Inventory isolation",
+      "relational checklist-progress completeness",
+      "offline observer cancellation and structured close",
+      "list-selection to exact-detail continuity",
+      "source-browser parity without Item-count fabrication"
+    ],
+    "rollbackBoundary": "Remove the isolated Space-browser target leaves and synthetic local rehearsal data. Existing Space detail, assignment picker, source Firebase application, hosted resources and production remain unchanged.",
+    "reviewers": [
+      "independent Core-contract and source-parity reviewer",
+      "independent PowerSync readiness and lifecycle reviewer",
+      "independent app-boundary and navigation reviewer",
+      "root integrator"
+    ]
+  },
+  "implementationTouchpoints": [
+    {
+      "path": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
+      "readySourceHash": "d09c8b2102c03a6ef40d852da05b5b6135ba9fe89d3d24fc08b7f68f48021a75",
+      "permittedChange": "None after READY; consume the separately frozen exact Account/scope request, active browser row, checklist-progress, list snapshot/update/readiness/failure and query-port contracts without reinterpretation."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDirectoryPresentationTests.swift",
+      "readySourceHash": "f7ad103ccd155429886bb6fb256008164d88632b3e61a30418745003f85d3ffd",
+      "permittedChange": "None after READY; preserve the first constituent's contract vectors, active-only presentation semantics, ordering, progress, readiness and rejection proof byte-for-byte."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/SpaceBrowserPowerSyncProvider.swift",
+      "readySourceHash": "1e2b5f13d7233112a1a5afcaadee7a0b9c9d3b832208d9d4988a2dcc1de3bd36",
+      "permittedChange": "Replace only the comment scaffold with one module-internal exact Account/scope local query plus owned space_browser completeness subscription. Reconstruct active browser rows and checklist progress from existing Space/core-details/checklist tables, preserve the frozen order, reject mixed-scope or incomplete relational evidence, and drain every observer/subscription before close."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift",
+      "readySourceHash": "d7d59c891d971793a2ea124ee4aed0d61541808a0fa27cc3bf7d8e61c8a60230",
+      "permittedChange": "Replace only the comment scaffold with encrypted-local and controlled-completeness-source tests for both scopes, checklist progress, readiness/false-empty, deterministic order, isolation, cancellation, close and restart."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetAppModel/SpaceBrowserStagingExercise.swift",
+      "readySourceHash": "3e5abbaa123804c440e03f2221c7c475a67106b779fa6a849d3b39325839b895",
+      "permittedChange": "Replace only the comment scaffold with a Core-only list presenter/AppModel that renders active Spaces, checklist progress and honest readiness and derives an existing exact-Space detail request only from a represented stable SpaceID. Search remains outside until separately authorized."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift",
+      "readySourceHash": "c9e42e41498dda8012d17a5f727894be1574ebe1f49d37bf75538bca55eed6e6",
+      "permittedChange": "Replace only the comment scaffold with exhaustive presentation, selection, list-to-detail, cancellation, request-replacement and late-event refusal tests."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetApp/SpaceBrowserStagingComposition.swift",
+      "readySourceHash": "1521a21ca4ff8363541032eac7453e861dabb21d1eb4f35ec5ff067930a23527",
+      "permittedChange": "Replace only the comment scaffold with thin isolated Project/Inventory list-to-existing-detail staging composition. It may render only tested Core/AppModel state and stable-ID actions and may not add mutation or production routing."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/SpaceAssignmentDestinationPowerSyncQuery.swift",
+      "readySourceHash": "efb63c076e2a41322eaa42f1fc2e6239a10b0106a8e608e8917a85deef911425",
+      "permittedChange": "None; reuse its exact Account/scope row mapping and canonical active name/name/ID ordering behavior where the frozen browser contract agrees. Do not treat its active-only assignment subscription as browser completeness."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/SpaceCoreDetailsPowerSyncQuery.swift",
+      "readySourceHash": "9ade9ac397d3ed2df9411189d26fee933f14c05ae31097ab14ca773949461773",
+      "permittedChange": "None; reuse the existing exact Account/Space detail watch and complete relational checklist semantics for represented browser selection."
+    },
+    {
+      "path": "powersync/sync-streams.yaml",
+      "readySourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
+      "permittedChange": "At implementation READY, add only one exact Account plus Project-or-Business-Inventory scope space_browser stream over active Spaces and the relational rows required to prove complete checklist progress. Its own current-process completion is the only browser-completeness signal. Preserve assignment and exact-detail streams; add no upload, mutation, auto-subscription, broad Account stream, hosted action or production claim."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift",
+      "readySourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
+      "permittedChange": "At implementation READY, add only query-aligned local indexes or a browser-specific completion/scope sentinel needed by the frozen provider. Reuse existing Space/core-details/checklist tables and add no duplicate domain table or writer."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "readySourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
+      "permittedChange": "At implementation READY, own one module-internal Space browser provider and expose an Account-bound exact-scope watch through the existing close-aware stream lease. Cancel, unsubscribe and join it before structured database close while preserving all current owners."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+      "readySourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
+      "permittedChange": "At implementation READY, add one public typed exact-scope browser watch and existing exact-Space detail forwarding only; expose no provider, database, SQL, subscription, completeness, credential or authorization object."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "readySourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
+      "permittedChange": "At implementation READY, add only browser facade, concurrent/post-close refusal, exact subscription identity, cancellation/drain and encrypted-restart proof."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+      "readySourceHash": "7560f25080299feeb28f5e5d85aa479d3989a4b90251d127a921b2c1beed537f",
+      "permittedChange": "Compose one synthetic exact-scope Space browser from the already validated local Account workspace and hand represented stable-ID selection to the existing exact-Space detail exercise. Add no production route, mutation, search, Item/media count, archived-list segment or provider detail."
+    },
+    {
+      "path": "LedgeriOS/LedgerTargetProject.yml",
+      "readySourceHash": "e74a2659e366d98f41181318a8e5ea1d259888b0e1f8555af797b0cdf02196c9",
+      "permittedChange": "None; its existing LedgerTargetApp source-directory membership already owns the new thin staging composition."
+    },
+    {
+      "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+      "readySourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
+      "permittedChange": "Regenerate deterministically from the unchanged LedgerTargetProject.yml only so the newly claimed target-app leaf compiles in both isolated staging builds."
+    },
+    {
+      "path": "LedgeriOS/Package.swift",
+      "readySourceHash": "418a9f6a70448b8b37442fc573b816e5f8650fcf493801ac0cc99d3005d896be",
+      "permittedChange": "None; existing directory-based Core, AppModel, PowerSync and test targets must compile the new leaves without dependency-graph expansion."
+    },
+    {
+      "path": "scripts/check-target-environment.mjs",
+      "readySourceHash": "022e671c495989c93b75c21453df4042c60359d5057dfb65c465f3a126389da2",
+      "permittedChange": "Add only exact comment-stripped checks for the five claimed leaves, browser-specific exact-scope stream/completeness, private provider, typed runtime facade, Core-only presentation, list-to-existing-detail staging, close drainage and every forbidden Item-count/search/media/archive/mutation/MCP/hosted/Firebase/production boundary."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One browser request binds a stable Account and exactly one immutable Project-or-Business-Inventory scope. Route strings, copied project names, screen arrays, local row presence and provider identifiers cannot define or broaden scope.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-001", "SPACEBROWSERPROVIDER-TEST-003", "SPACEBROWSERPROVIDER-TEST-006"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Behavior Decisions",
+      "invariant": "The target browser converges the InventorySpacesSubTab and SpacesTabView active-list and stable-ID navigation responsibilities into one provider-neutral exact-scope path. Those source IDs remain source tracking evidence and are not claimed as new target implementation surfaces. CreateSpace remains separate; search and Item-count parity are deferred, and an unknown count must never render as zero.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-004", "SPACEBROWSERPROVIDER-TEST-005", "SPACEBROWSERPROVIDER-TEST-009"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Space Browsing",
+      "invariant": "The application list presents active Spaces only, with stable Space identity, canonical display name, exact scope and revision plus complete derived checklist completed/total counts. Archived lifecycle remains represented by underlying Space authority and exact detail but no archived list section is invented by this slice.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-001", "SPACEBROWSERPROVIDER-TEST-002", "SPACEBROWSERPROVIDER-TEST-004"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Waiting, cached or incomplete partial, stale, ready nonempty, authoritative empty and bounded failure remain distinct. Active exact membership plus fresh completion from this exact current-process space_browser subscription is required before zero rows can mean authoritative empty; generic database/connection status and assignment-stream completion are insufficient.",
+      "decisionIds": ["A-003", "A-004", "A-016"],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-001", "SPACEBROWSERPROVIDER-TEST-002", "SPACEBROWSERPROVIDER-TEST-003", "SPACEBROWSERPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Stream Authorization Rule",
+      "invariant": "Every local row and completion sentinel is exact-Account and exact-scope evidence narrowed from signed Principal plus active membership. Missing, inactive, foreign-Principal, cross-Account, cross-scope, malformed, duplicate or incomplete evidence reveals no hidden rows/counts and cannot produce a mixed-trust snapshot.",
+      "decisionIds": ["A-004", "A-016"],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-001", "SPACEBROWSERPROVIDER-TEST-003", "SPACEBROWSERPROVIDER-TEST-006", "SPACEBROWSERPROVIDER-TEST-008"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-006",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Space Browsing",
+      "invariant": "Rows use one frozen deterministic case-insensitive name order with exact display name and stable SpaceID tie-breakers; duplicate names remain valid and identity is never display text or row position. This isolated staging foundation supplies the unsearched canonical row set and does not discharge the canonical production search-parity requirement; it defines no provider-side search authority.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-001", "SPACEBROWSERPROVIDER-TEST-004", "SPACEBROWSERPROVIDER-TEST-005"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "The provider conforms only to the frozen Space browser query port. AppModel consumes Core snapshots only. Selecting a currently represented stable SpaceID derives the existing exact Account/Space SpaceCoreDetailsRequest; list refresh, deselection, scope replacement and cancellation cannot silently rebound an old selection or accept late detail evidence.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-004", "SPACEBROWSERPROVIDER-TEST-005", "SPACEBROWSERPROVIDER-TEST-007"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Data Authority",
+      "invariant": "Encrypted restart may preserve valid cached rows and checklist evidence but resets current-process list completeness. Consumer cancellation, request replacement, membership loss and workspace close cancel and join list/detail observers and unsubscribe the browser stream before database close; no post-close watch or late emission succeeds.",
+      "decisionIds": ["A-003", "A-004", "A-016"],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-002", "SPACEBROWSERPROVIDER-TEST-003", "SPACEBROWSERPROVIDER-TEST-007"]
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "This is a read-only isolated target slice. It adds no create/edit/archive/assign/checklist/media/Item/accounting command, MCP surface, hosted Sync/Auth action, Firebase behavior, source migration, production route, release or cutover authority; A-003/A-004/A-016 remain proposed until their separate gates pass.",
+      "decisionIds": ["A-003", "A-004", "A-016", "O-023", "O-037"],
+      "verificationIds": ["SPACEBROWSERPROVIDER-TEST-005", "SPACEBROWSERPROVIDER-TEST-009", "SPACEBROWSERPROVIDER-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Consume the first constituent's SpaceListRequest, SpaceListSourceRow, SpaceListLocalSnapshot, ActiveSpaceDirectoryPresentationSnapshot, SpaceDirectoryRowPresentation, SpaceBrowsingSelection, SpaceListUpdate, SpaceListFailure and SpaceListQuerying contracts without creating parallel scope, lifecycle, ordering, progress, readiness or selection authority.",
+        "Each active list row contains stable SpaceID, exact Account, immutable Project-or-Business-Inventory scope, canonical display name, exact revision and complete derived checklist completed/total counts. Item count is deliberately unavailable until an authorized Item-summary projection exists and cannot default to zero.",
+        "Selection is a transient represented stable SpaceID bound to the current exact list request and snapshot evidence. It derives the already-implemented SpaceCoreDetailsRequest and grants neither authorization nor mutation capability."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This implementation reuses the existing Space/core-details/checklist relations. No new Postgres table, writer, handler, trigger, policy or source-data migration is authorized; any needed query index must be separately frozen as an additive physical touchpoint."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No server read handler or Space/Item mutation is required for an encrypted-local PowerSync browser."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API grant or client-direct table access changes are part of this read-only local provider slice."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Existing forced-RLS Space/detail/checklist policies remain unchanged. The new Sync Stream requires separate authenticated authorization proof and cannot be inferred from local filtering."
+    },
+    "syncStreams": {
+      "items": [
+        "Add one on-demand space_browser stream parameterized by exact Account and typed ProjectID-or-Business-Inventory scope. Every query derives signed auth identity and active Account membership, returns active exact-scope Space rows plus only the relational core/checklist/checklist-item evidence needed for complete list progress, and downloads no unrelated Account, Project, Item, media, accounting or mutation data.",
+        "The browser owns this subscription. Only its exact current-process first-sync completion can establish list completeness; assignment-destination and exact-detail completion do not transfer. Cancellation, scope replacement, membership loss and close unsubscribe and drain it.",
+        "A controlled local completeness source may prove provider mechanics. Real authenticated hosted Sync authorization, revocation eviction and completion remain planned; no DRAFT or READY promotion may claim A-004 or production readiness from controlled evidence."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Query existing encrypted local Space, core-detail, checklist and checklist-item tables with an exact Principal/Account membership sentinel and exact Project-or-Business-Inventory scope. Reconstruct each row atomically and derive progress only from complete hierarchy evidence; incomplete or malformed children never yield authoritative counts.",
+        "Initial absence is waiting, not empty. Represented cached rows before fresh exact-list completion are partial or stale according to the frozen Core contract. Active scope plus fresh exact-list completion may yield ready rows or authoritative empty. Both row-first and completion-first startup orders converge deterministically.",
+        "Restart preserves valid encrypted cached rows but not current-process completion. Scope changes and membership loss clear presentation and invalidate completeness. Close cancels and joins all provider/list/detail tasks before database teardown; reopen constructs a fresh owner.",
+        "Canonical active row order is applied after strict decoding, independently of SQLite collation. No search parameter, local search policy or pagination behavior is introduced."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No Space image, AttachmentRef, object locator, byte, thumbnail, upload, retention or deletion behavior is added; O-023 remains outside."
+    },
+    "appMcp": {
+      "items": [
+        "A Core-only AppModel owns one exact-scope active Space list and at most one selected existing Space detail observation. It exposes tested waiting/partial/stale/ready/authoritative-empty/failure presentation, deterministic rows, checklist progress and represented-ID selection.",
+        "The isolated staging renderer preserves the bounded active-list-to-detail outcome. It does not invent search or an archived section, display unknown Item count as zero, or expose Create/Edit/Archive/Assign/Checklist/Item/Media/Accounting actions.",
+        "The runtime boundary accepts typed Account-bound scope and SpaceID inputs and reveals no PowerSync, SQL, database, subscription, completion, credential or authorization implementation detail. No MCP or production-app route is added."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "The two source surface IDs are traceability evidence only. No Firebase DTO/listener/context array, source export, transformation, fixture, quarantine, reconciliation or production data is read or changed."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Failures expose only stable bounded readiness, scope, lifecycle, duplicate, relational completeness, local-read and lifecycle diagnostic codes. They disclose no row contents, hidden counts, SQL, paths, identities, credentials, provider state or authorization details.",
+        "Staging labels cached/incomplete evidence as local and cannot imply current hosted authorization. Unknown Item count is omitted or explicitly unavailable, never logged or displayed as zero."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "DRAFT work is limited to this dossier and five uniquely named comment-only target scaffolds. No manifest, package, project, generated, tracker, existing code or Git-ref change occurs in this preparation constituent.",
+        "Future implementation remains isolated to the Supabase target. The conversion manifest, crosswalk, evidence, tracker and generated audits may advance only as synchronized control records; rollback removes the browser leaves and synthetic local data while Firebase support, hosted resources, migration, production and cutover remain untouched."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-001", "SPACEBROWSERPROVIDER-REQ-003", "SPACEBROWSERPROVIDER-REQ-004", "SPACEBROWSERPROVIDER-REQ-005", "SPACEBROWSERPROVIDER-REQ-006"],
+      "expected": "A real encrypted local database emits only active exact-Account/exact-scope Project or Inventory rows with stable identity, exact revision, complete checklist counts and frozen duplicate-name-safe order through the verified Core browser contract.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-003", "SPACEBROWSERPROVIDER-REQ-004", "SPACEBROWSERPROVIDER-REQ-008"],
+      "expected": "Row-first and completion-first startup converge; cached rows survive encrypted reopen byte-identically while completeness resets; fresh exact-list completion restores ready or authoritative-empty state without fabricated progress.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift and LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-001", "SPACEBROWSERPROVIDER-REQ-004", "SPACEBROWSERPROVIDER-REQ-005", "SPACEBROWSERPROVIDER-REQ-008"],
+      "expected": "Missing/inactive/foreign membership, cross-Account/scope, archived, malformed, duplicate, incomplete-child, overflow and failed evidence emits no mixed snapshot or false empty; cancellation, replacement and close drain all work and refuse late/post-close events.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-004",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-002", "SPACEBROWSERPROVIDER-REQ-003", "SPACEBROWSERPROVIDER-REQ-006", "SPACEBROWSERPROVIDER-REQ-007"],
+      "expected": "The Core-only presenter exhaustively renders readiness, active rows and checklist progress; accepts only represented stable-ID selection; derives the exact existing detail request; generation-fences replacement, deselection and late list/detail events; and exposes no search surface.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift, LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift and isolated staging build",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-002", "SPACEBROWSERPROVIDER-REQ-006", "SPACEBROWSERPROVIDER-REQ-007", "SPACEBROWSERPROVIDER-REQ-009"],
+      "expected": "An isolated user opens one Project or Inventory browser, sees honestly qualified active Space rows and checklist progress in stable order, selects by stable ID and opens the already-implemented exact detail flow with no mutation, search surface or provider leakage.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-006",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-001", "SPACEBROWSERPROVIDER-REQ-005"],
+      "expected": "Project and Business-Inventory requests cannot cross Account or scope boundaries, local route/screen input cannot broaden visibility, and failures reveal neither hidden row counts nor provider details.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-007",
+      "kind": "operational",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift and LedgeriOS/LedgerTargetAppModelTests/SpaceBrowserStagingExerciseTests.swift",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-007", "SPACEBROWSERPROVIDER-REQ-008"],
+      "expected": "Concurrent browser/detail observations are leased by one Account workspace; request replacement, consumer cancellation and close cancel/unsubscribe/join deterministically; post-close watches refuse and reopen starts a fresh owner without late emissions.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-008",
+      "kind": "sync_authorization",
+      "owner": "powersync/sync-streams.yaml, LedgeriOS/LedgerTargetPowerSyncTests/SpaceBrowserPowerSyncProviderTests.swift and scripts/check-target-environment.mjs",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-004", "SPACEBROWSERPROVIDER-REQ-005"],
+      "expected": "Static stream-query inspection plus a controlled exact-subscription source prove that every query derives signed identity and active membership, narrows exact scope, returns only active Space/checklist progress evidence, establishes completeness only from its own current-process first sync and invalidates rows on membership/scope loss. This local proof cannot advance A-004; a real authenticated authorization/revocation/eviction rehearsal remains separately required before hosted or cutover readiness.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-009",
+      "kind": "domain",
+      "owner": "Dossier and target-boundary review",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-002", "SPACEBROWSERPROVIDER-REQ-009"],
+      "expected": "SWIFT-912A031F137B and SWIFT-BC0B886FC610 remain source traceability surfaces while one new target browser owns bounded active-list/stable-ID navigation. Create stays separate; search and Item-count parity remain named deferred rather than silently claimed or fabricated.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEBROWSERPROVIDER-TEST-010",
+      "kind": "operational",
+      "owner": "Future conversion-control, package-test and isolated-build checkpoint",
+      "covers": ["SPACEBROWSERPROVIDER-REQ-009"],
+      "expected": "The future exact implementation checkpoint passes focused and complete serial target tests, conversion controls and isolated staging builds with clean artifacts and no mutation, MCP, hosted, Firebase, production, migration or cutover change.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [
+    "Dependent slice space-core-details-powersync-provider is implemented but not verified; this browser cannot rely on its physical behavior at READY.",
+    "Dependent slice space-assignment-destination-powersync-picker is implemented but not verified; this browser cannot reuse its physical ordering/scope implementation at READY.",
+    "Dependent slice account-workspace-runtime-isolation is implemented but not verified; this browser cannot extend its lifecycle owner at READY."
+  ],
+  "notes": "DRAFT preparation only at exact base 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade. Canonical Target Space Browsing preserves the final active browser, search, authoritative Item count, checklist progress, primary-image behavior and stable-ID navigation. This bounded staging outcome would implement only exact-scope active rows, checklist progress, honest readiness and navigation into existing detail; it does not discharge search, Item-count or media parity, and source browser surfaces remain target_mapped. Five new Swift leaves are comments only. The physical provider cannot become READY until all three named physical dependencies are verified; synchronized classification, crosswalk, evidence, tracker and generated conversion records describe the DRAFT boundary, but no executable provider/app behavior, hosted resource, Firebase, production, migration or cutover state is changed."
+}

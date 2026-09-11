@@ -1,0 +1,352 @@
+import XCTest
+@testable import PowerSync
+
+final class TableTests: XCTestCase {
+    
+    private func makeValidColumns() -> [Column] {
+        return [
+            Column.text("name"),
+            Column.integer("age"),
+            Column.real("score")
+        ]
+    }
+    
+    private func makeValidIndex() -> Index {
+        return Index(name: "test_index", columns: [
+            IndexedColumn(column: "name")
+        ])
+    }
+    
+    func testBasicInitialization() {
+        let name = "users"
+        let columns = makeValidColumns()
+        let indexes = [makeValidIndex()]
+        
+        let table = Table(
+            name: name,
+            columns: columns,
+            indexes: indexes,
+            localOnly: true,
+            insertOnly: true,
+            viewNameOverride: "user_view"
+        )
+        
+        XCTAssertEqual(table.name, name)
+        XCTAssertEqual(table.columns, columns)
+        XCTAssertEqual(table.indexes.count, indexes.count)
+        XCTAssertTrue(table.localOnly)
+        XCTAssertTrue(table.insertOnly)
+        XCTAssertEqual(table.viewNameOverride, "user_view")
+    }
+    
+    func testViewName() {
+        let table1 = Table(name: "users", columns: makeValidColumns())
+        XCTAssertEqual(table1.viewName, "users")
+        
+        let table2 = Table(name: "users", columns: makeValidColumns(), viewNameOverride: "custom_view")
+        XCTAssertEqual(table2.viewName, "custom_view")
+    }
+    
+    func testInternalName() {
+        let localTable = Table(name: "users", columns: makeValidColumns(), localOnly: true)
+        XCTAssertEqual(localTable.internalName, "ps_data_local__users")
+        
+        let globalTable = Table(name: "users", columns: makeValidColumns(), localOnly: false)
+        XCTAssertEqual(globalTable.internalName, "ps_data__users")
+    }
+    
+    func testTooManyColumnsValidation() throws {
+        var manyColumns: [Column] = []
+        for i in 0..<64 {
+            manyColumns.append(Column.text("column\(i)"))
+        }
+        
+        let table = Table(name: "test", columns: manyColumns)
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.tooManyColumns(let tableName, let count) = error else {
+                XCTFail("Expected tooManyColumns error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(count, 64)
+        }
+    }
+    
+    func testInvalidViewNameValidation() {
+        let table = Table(
+            name: "test",
+            columns: makeValidColumns(),
+            viewNameOverride: "invalid name"
+        )
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.invalidViewName(let viewName) = error else {
+                XCTFail("Expected invalidViewName error")
+                return
+            }
+            XCTAssertEqual(viewName, "invalid name")
+        }
+    }
+    
+    func testCustomIdColumnValidation() {
+        let columns = [Column.text("id")]
+        let table = Table(name: "test", columns: columns)
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.customIdColumn(let tableName) = error else {
+                XCTFail("Expected customIdColumn error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+        }
+    }
+    
+    func testDuplicateColumnValidation() {
+        let columns = [
+            Column.text("name"),
+            Column.text("name")
+        ]
+        let table = Table(name: "test", columns: columns)
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.duplicateColumn(let tableName, let columnName) = error else {
+                XCTFail("Expected duplicateColumn error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(columnName, "name")
+        }
+    }
+    
+    func testInvalidColumnNameValidation() {
+        let columns = [Column.text("invalid name")]
+        let table = Table(name: "test", columns: columns)
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.invalidColumnName(let tableName, let columnName) = error else {
+                XCTFail("Expected invalidColumnName error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(columnName, "invalid name")
+        }
+    }
+    
+    // MARK: - Index Validation Tests
+    
+    func testDuplicateIndexValidation() {
+        let index = Index(name: "test_index", columns: [IndexedColumn(column: "name")])
+        let table = Table(
+            name: "test",
+            columns: [Column.text("name")],
+            indexes: [index, index]
+        )
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.duplicateIndex(let tableName, let indexName) = error else {
+                XCTFail("Expected duplicateIndex error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(indexName, "test_index")
+        }
+    }
+    
+    func testInvalidIndexNameValidation() {
+        let index = Index(name: "invalid index", columns: [IndexedColumn(column: "name")])
+        let table = Table(
+            name: "test",
+            columns: [Column.text("name")],
+            indexes: [index]
+        )
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.invalidIndexName(let tableName, let indexName) = error else {
+                XCTFail("Expected invalidIndexName error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(indexName, "invalid index")
+        }
+    }
+    
+    func testColumnNotFoundInIndexValidation() {
+        let index = Index(name: "test_index", columns: [IndexedColumn(column: "nonexistent")])
+        let table = Table(
+            name: "test",
+            columns: [Column.text("name")],
+            indexes: [index]
+        )
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.columnNotFound(let tableName, let columnName, let indexName) = error else {
+                XCTFail("Expected columnNotFound error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+            XCTAssertEqual(columnName, "nonexistent")
+            XCTAssertEqual(indexName, "test_index")
+        }
+    }
+    
+    func testInvalidLocalOnlyTrackMetadata() {
+        let table = Table(name: "test", columns: [Column.text("name")], localOnly: true, trackMetadata: true)
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.metadataForLocalTable(let tableName) = error else {
+                XCTFail("Expected metadataForLocalTable error")
+                return
+            }
+            XCTAssertEqual(tableName, "test")
+        }
+    }
+    
+    func testInvalidLocalOnlyTrackPrevious() {
+        let table = Table(
+            name: "test_prev",
+            columns: [Column.text("name")],
+            localOnly: true,
+            trackPreviousValues: TrackPreviousValuesOptions()
+        )
+        
+        XCTAssertThrowsError(try table.validate()) { error in
+            guard case TableError.trackPreviousForLocalTable(let tableName) = error else {
+                XCTFail("Expected trackPreviousForLocalTable error")
+                return
+            }
+            XCTAssertEqual(tableName, "test_prev")
+        }
+    }
+    
+    func testValidTableValidation() throws {
+        let table = Table(
+            name: "users",
+            columns: makeValidColumns(),
+            indexes: [makeValidIndex()],
+            localOnly: false,
+            insertOnly: false
+        )
+        
+        XCTAssertNoThrow(try table.validate())
+    }
+    
+    func testSerialize() throws {
+        let table = Table(
+            name: "users",
+            columns: makeValidColumns(),
+            indexes: [makeValidIndex()],
+            localOnly: false,
+            insertOnly: false,
+            trackPreviousValues: TrackPreviousValuesOptions(columnFilter: ["name"], onlyWhenChanged: true)
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting.insert(.prettyPrinted)
+        encoder.outputFormatting.insert(.sortedKeys)
+        let serialized = String(data: try encoder.encode(table), encoding: .utf8)
+
+        XCTAssertEqual(serialized, """
+{
+  "columns" : [
+    {
+      "name" : "name",
+      "type" : "text"
+    },
+    {
+      "name" : "age",
+      "type" : "integer"
+    },
+    {
+      "name" : "score",
+      "type" : "real"
+    }
+  ],
+  "ignore_empty_update" : false,
+  "include_metadata" : false,
+  "include_old" : [
+    "name"
+  ],
+  "include_old_only_when_changed" : true,
+  "indexes" : [
+    {
+      "columns" : [
+        {
+          "ascending" : true,
+          "name" : "name",
+          "type" : "text"
+        }
+      ],
+      "name" : "test_index"
+    }
+  ],
+  "insert_only" : false,
+  "local_only" : false,
+  "name" : "users"
+}
+""")
+    }
+
+    func testRawTableSerializeSimple() throws {
+        let table = RawTable(
+            name: "users",
+            put: PendingStatement(sql: "SELECT 1", parameters: [.id]),
+            delete: PendingStatement(sql: "SELECT 2", parameters: [.column("a"), .rest]),
+            clear: "SELECT 3"
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting.insert(.prettyPrinted)
+        encoder.outputFormatting.insert(.sortedKeys)
+        let serialized = String(data: try encoder.encode(table), encoding: .utf8)
+
+        XCTAssertEqual(serialized, """
+{
+  "clear" : "SELECT 3",
+  "delete" : {
+    "params" : [
+      {
+        "Column" : "a"
+      },
+      "Rest"
+    ],
+    "sql" : "SELECT 2"
+  },
+  "name" : "users",
+  "put" : {
+    "params" : [
+      "Id"
+    ],
+    "sql" : "SELECT 1"
+  }
+}
+""")
+    }
+
+    func testRawTableSerializeWithOptions() throws {
+        let table = RawTable(
+            name: "users",
+            schema: RawTableSchema(
+                syncedColumns: ["foo"],
+                options: TableOptions(insertOnly: true)
+            )
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting.insert(.prettyPrinted)
+        encoder.outputFormatting.insert(.sortedKeys)
+        let serialized = String(data: try encoder.encode(table), encoding: .utf8)
+
+        XCTAssertEqual(serialized, """
+{
+  "ignore_empty_update" : false,
+  "include_metadata" : false,
+  "insert_only" : true,
+  "local_only" : false,
+  "name" : "users",
+  "synced_columns" : [
+    "foo"
+  ],
+  "table_name" : "users"
+}
+""")
+    }
+
+}

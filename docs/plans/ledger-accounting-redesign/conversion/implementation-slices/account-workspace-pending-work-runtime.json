@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "account-workspace-pending-work-runtime",
+  "title": "Compose one Account-workspace pending-work and attachment durability runtime",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Account Workspace Pending-Work Runtime",
+  "surfaceIds": ["SWIFT-75CFE285AF37", "TEST-8D6A15063B2D"],
+  "requirements": [
+    {
+      "id": "WORKRUNTIME-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/session-ending-pending-work.md",
+      "section": "Session-Ending Safety Contract",
+      "invariant": "A fresh pending-work summary is bound to one exact environment, Principal and Account and reports exact structured-operation and attachment counts; missing, mismatched or unavailable evidence cannot be accepted as that canonical summary.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-004", "WORKRUNTIME-TEST-005"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/session-ending-pending-work.md",
+      "section": "Acceptance Outcomes",
+      "invariant": "Malformed, rebound, stale, interrupted, cross-scope, orphaned, corrupt or unavailable evidence fails closed; none may manufacture an authoritative all-zero pending-work summary or treat accepted local operations or attachment bytes as absent.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-006", "WORKRUNTIME-TEST-007"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Local Database Lifecycle",
+      "invariant": "The structured database, separate attachment queue database and protected media vault are contained in one validated environment-, Principal- and Account-bound physical namespace; ordinary close preserves both encrypted databases, protected bytes and their keys, and identical reopen recovers the same evidence.",
+      "decisionIds": ["A-006"],
+      "verificationIds": ["WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-004", "WORKRUNTIME-TEST-006"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-006 — Attachment Bytes Outside Structured Sync",
+      "invariant": "Attachment bytes remain outside structured PowerSync transport in a separate durable media queue and protected byte store; this local composition adds no upload, remote-success, deletion, retention or eviction behavior.",
+      "decisionIds": ["A-006", "O-023"],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-004", "WORKRUNTIME-TEST-008"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Logout and Local Pending Work",
+      "invariant": "This runtime exposes fresh pendingWorkSummary evidence but is not AccountSessionEnding and cannot synchronize, resolve, delete, sign out, switch workspaces or choose clean, sync-first or destructive session-ending disposition.",
+      "decisionIds": ["A-007", "A-016", "O-023"],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-007", "WORKRUNTIME-TEST-008"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Composition Root",
+      "invariant": "This technical-control slice makes normal and injected target bootstrap asynchronous, constructs each lifecycle owner/database/query/store/vault dependency exactly once, and closes every already-open database after a later construction failure without exposing backend, path, key or lifecycle-policy selection to product callers.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-008"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-011 — Encrypted Local Database",
+      "invariant": "Constrained by the Keychain-held encrypted-local-database decision, this technical-control design passes the same workspace SQLCipher key to both scoped SQLite factories and a different-identity, different-value 32-byte key to media encryption; equal values refuse before storage opens, and routine close preserves both keys and all queued work.",
+      "decisionIds": ["A-011"],
+      "verificationIds": ["WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-006"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Sync tests",
+      "invariant": "Real encrypted local stores prove capture, all pending classes, equal-count evidence replacement, restart, wrong-scope and wrong-key refusal, partial-open failure, observation failure and capture-summary-close interleavings without claiming hosted synchronization or cleanup.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-004", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-006", "WORKRUNTIME-TEST-007", "WORKRUNTIME-TEST-009"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.md",
+      "section": "Stable Observation Design",
+      "invariant": "Normal composition constructs exactly one PendingWorkPowerSyncQuery for the runtime because its whole-observation permit is instance-local; the raw query and its attachment observer cannot escape or be replaced after bootstrap.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-008"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ATTACHMENT-DURABILITY-PROVIDER-001.md",
+      "section": "Outcome",
+      "invariant": "Normal composition constructs exactly one verified AttachmentLocalByteVault and one AttachmentCapturePowerSyncStore for the scoped attachment database, and only lifecycle-gated capture, exact full-receipt byte resolution and pending observation may reach callers.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-008"]
+    },
+    {
+      "id": "WORKRUNTIME-REQ-011",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Offline Local-Data Security",
+      "invariant": "Scope validation and opaque contained location and Keychain derivation complete before storage opens, and every bootstrap, lifecycle and close failure is bounded without raw identifiers, paths, payloads, bytes, keys or credentials.",
+      "decisionIds": [],
+      "verificationIds": ["WORKRUNTIME-TEST-002", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-006", "WORKRUNTIME-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse LocalAttachmentCapture, AttachmentLocalDurabilityReceipt, PendingLocalWorkSummary and their exact environment/Principal/Account identity semantics unchanged.",
+        "Reuse the verified attachment-capture and pending-work-query behavior; this lifecycle owner adds composition and serialization only, not a second pending-work calculation or attachment state machine.",
+        "One open/closing/closed lifecycle state machine gates every finite runtime call and every Client/Project watch, not only attachment capture and summary.",
+        "After close begins no new lease is admitted. A terminal closed state stores either success or one bounded combined close failure; repeated close returns that same outcome and every other operation refuses."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This target-local composition changes no Postgres table, constraint, index, migration or authoritative server state."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No RPC, command handler, synchronization attempt, upload, result resolution or remote-success transition is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Supabase Data API surface or grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Physical local-store isolation is not RLS and this slice makes no server-authorization claim."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync connector or Sync Stream opens or changes; local operation evidence is not proof of remote synchronization."
+    },
+    "localOffline": {
+      "items": [
+        "Extend Account-workspace location derivation with distinct opaque contained structured-database, attachment-database and media-vault locations plus distinct SQLCipher- and media-key Keychain identities, all bound to the exact validated environment, Principal and Account.",
+        "Resolve scope and locations, load both keys, validate their exact 32-byte values differ, and create contained directories before storage opens. Both SQLite factories receive the exact same workspace SQLCipher key; the vault alone receives the different media key.",
+        "Make normal and injected bootstrap async. Open the structured database, then attachment database, then vault; construct exactly one store and query only after all resources succeed. If any later stage fails, release any vault and attempt attachment-then-structured database close, preserving files/bytes/keys and returning the primary stage plus both bounded cleanup outcomes.",
+        "Construct exactly one AttachmentLocalByteVault, one AttachmentCapturePowerSyncStore and one PendingWorkPowerSyncQuery over those real resources. Factory-count tests prove one construction each and raw query/store/vault/database references cannot escape the lifecycle owner.",
+        "Every createClient, createProject, pendingUploadCount, encryptionCipher, attachment capture, exact full-receipt byte resolution and pendingWorkSummary call acquires one finite-operation lease before touching a dependency and releases it on every outcome.",
+        "Every Client/Project list or detail watch acquires a tracked stream lease before its underlying database watch starts and releases only after that task terminates. Close atomically changes open to closing, rejects new leases, cancels all tracked streams, and awaits stream plus finite-operation drainage.",
+        "After drainage, close attempts the attachment database first and structured database second even if the first fails, then releases query/store/vault/database ownership. Close stores one terminal success or bounded two-database failure; repeated close returns exactly that outcome and never retries resource access.",
+        "Ordinary close never deletes a database, vault byte or key. A new runtime opened for the identical scope is the only recovery path and recovers byte-identical pending summary evidence until the evidence changes."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [
+        "Compose the verified app-managed encrypted byte vault and local attachment queue beneath the same workspace namespace; both databases share the exact SQLCipher key while media encryption has a different Keychain identity and key value.",
+        "Do not add deletion, discard, eviction, retention selection, upload, download, URL, thumbnail or remote verification behavior."
+      ],
+      "notApplicable": ""
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This internal runtime slice adds no screen, prompt, MCP tool/resource, provider signout, workspace switch or AccountSessionEnding conformance."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase cache, pending write, attachment directory, identity state or production data is read or transformed; all fixtures are disposable target-local state."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Expose stable bounded codes for closed runtime, scope, path/key, partial-open, database-close, vault and pending-work failures without raw IDs, paths, content or secrets.",
+        "A local summary is evidence for later policy evaluation only and cannot be logged or presented as hosted synchronization, authorization or remote durability proof."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains isolated on the Supabase branch and is reversible without changing the Firebase application.",
+        "A-003/A-004/A-007/A-016 and O-023 remain unadvanced; no hosted resource, Auth bridge, production data access, migration, release, cleanup or cutover authority changes."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "WORKRUNTIME-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010"],
+      "expected": "Injected factory counters prove exactly one lifecycle owner, structured-database factory, attachment-database factory, query, store and vault construction and no raw database/query/store/vault/key/path escape; the normally bootstrapped runtime accepts an attachment and returns exact clean, queued, applying, unresolved-rejected and unverified-attachment summary counts.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-002",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
+      "expected": "Invalid/rebound environment, Principal or Account evidence refuses before storage side effects; cross-scope capture and malformed evidence refuse without a false clean summary or unbounded diagnostic.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-010", "WORKRUNTIME-REQ-011"],
+      "expected": "Structured database, attachment database, vault and Keychain identities are opaque, contained and isolated for each binding dimension; each database factory is called exactly once and captures identical SQLCipher bytes, media receives different bytes, equal injected values refuse before open, and main-database-wrong, attachment-database-wrong and media-key-wrong cases fail independently without leakage.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-004",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-008"],
+      "expected": "Ordinary close/reopen preserves structured rows, attachment queue, byte-identical protected media and identical summary revision/time/fingerprint; equal-count evidence replacement advances the summary revision.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010", "WORKRUNTIME-REQ-011"],
+      "expected": "Each async bootstrap stage is faulted in turn. Every already-open database receives one attachment-then-structured close attempt, any vault is released, no state/key is deleted, and the bounded failure preserves the primary stage plus both cleanup outcomes; later valid reopen recovers accepted evidence or explicitly refuses corrupt/unavailable evidence.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-006",
+      "kind": "media_fault",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
+      "expected": "Missing, corrupt and orphaned media plus database, vault and observation failures remain explicit across restart and never become a clean summary; ordinary close deletes no database, byte or key.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-007",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "covers": ["WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
+      "expected": "Concurrent Client/Project mutations, list/detail watches, diagnostic reads, capture, summary and close use one lease gate. Close rejects new work, cancels and drains watches, drains finite calls, attempts attachment then structured close even under dual failure, releases ownership and stores one terminal outcome returned by every repeated close; every non-close call after closing begins refuses.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-008",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift compile-time surface assertions, Swift compiler public symbol graph, plus scripts/check-target-environment.mjs forbidden-symbol inspection",
+      "covers": ["WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010"],
+      "expected": "Compile-time consumers can reach only lifecycle-gated existing feature APIs, attachment capture, exact full-receipt local-byte resolution, pendingWorkSummary and ordinary close; deterministic source inspection rejects Attachment-ID-only lookup, AccountSessionEnding conformance, raw database/query/store/vault/key/path exposure and synchronization, remote-result resolution, provider-signout, workspace-switch, deletion, cleanup, retention or backend-selection symbols.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    },
+    {
+      "id": "WORKRUNTIME-TEST-009",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["WORKRUNTIME-REQ-008"],
+      "expected": "The exact synchronized checkpoint passes conversion controls, focused and complete target tests, attachment/pending-work/workspace-isolation regressions, deterministic generation, local Supabase checks, both staging builds and clean artifacts without hosted or production access.",
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Exact corrected READY commit 15218cbbc44b7e7c28ef718c1770c7b6294a03c4 passed all three immutable jobs in run 33935937733 before executable work. The target-local implementation composes the structured and attachment databases, authenticated media-key vault, existing Client/Project stores and four read streams behind one async lifecycle owner and narrow facade. The first executable review returned NO-GO over wrong-media-key acceptance, publicly constructible lifecycle resources, reentrant staging startup/leaked post-open failures, and insufficient real-watch/deallocation/recovery proof. The corrected implementation authenticates a scope-bound media-key sentinel during vault construction, makes lifecycle-owned concrete providers compiler-internal, serializes staging startup and cleans local opened runtimes, and directly proves real PowerSync watch drainage, weak-vault release, and valid reopen after every injected bootstrap fault. Final independent corrected-diff review returned GO with no P0-P3 finding. All twelve focused runtime tests, thirteen attachment tests, four workspace-isolation tests, and all 403 Swift tests in 73 suites pass locally; both staging builds, compiler public-symbol proof, environment, contracts, MCP and diff checks also pass. Implementation and CI-harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three immutable jobs in Actions run 33941609019, including the process-wide nonparallel 403-test gate and disposable local Supabase verification, so WORKRUNTIME-TEST-009 is passed. Failed run 33939963766 remains recorded as the evidence that required the fail-closed CI correction. Shared provider surfaces retain their existing primary owners. This slice implements no physical Account session ending and advances none of A-003/A-004/A-007/A-016/O-023; no hosted access, Firebase work, migration, cleanup, signout or cutover exists."
+}

@@ -1,0 +1,355 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-read-target-mcp",
+  "title": "List and inspect authorized Spaces through bounded target MCP reads",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Spaces and Placement Read Models",
+  "surfaceIds": ["MCPMOD-E3EF7C97DA9C", "MCPMOD-1B9E357E244B"],
+  "requirements": [
+    {
+      "id": "SPACEREADMCP-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "A target MCP Space read uses stable Account and Space identity plus one explicit Project-or-Business-Inventory scope. Display name, copied Project name, route text, list position and provider path never substitute for identity or authorize a read; Space reads cannot create or change accounting state.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-001",
+        "SPACEREADMCP-TEST-002",
+        "SPACEREADMCP-TEST-005",
+        "SPACEREADMCP-TEST-009"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "Project and Business Inventory Space lists and one-Space detail consume the same bounded backend-neutral query/read models as the target app. Results preserve stable identity, authoritative scope, active or archived lifecycle, revision, deterministic checklist identity/order and explicit readiness/integrity; request context cannot create a second backend authority.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-001",
+        "SPACEREADMCP-TEST-003",
+        "SPACEREADMCP-TEST-004",
+        "SPACEREADMCP-TEST-006",
+        "SPACEREADMCP-TEST-007"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "The MCP constituent mirrors the approved SpaceQuerying list/detail authority and delegates to one injected reader. It does not query a database, select a provider, inspect arbitrary fields, derive Item/media/review visibility, or independently calculate Space semantics.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-001",
+        "SPACEREADMCP-TEST-003",
+        "SPACEREADMCP-TEST-004",
+        "SPACEREADMCP-TEST-008",
+        "SPACEREADMCP-TEST-009"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Stream Authorization Rule",
+      "invariant": "A requested Account, Project, inventory scope or Space narrows already authorized evidence and never grants it. Incomplete local synchronization is represented as not-synchronized/incomplete truth and cannot be converted into an authoritative empty list or a not-found result.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-002",
+        "SPACEREADMCP-TEST-004",
+        "SPACEREADMCP-TEST-005",
+        "SPACEREADMCP-TEST-006"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Tenant Isolation",
+      "invariant": "Every represented Space row must already be authorized for the authenticated Principal's exact active Account membership and exact requested scope. Missing, foreign, revoked, unauthorized and otherwise not-visible detail evidence shares one non-enumerating outcome and exposes no row, hidden count or existence distinction.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-002",
+        "SPACEREADMCP-TEST-005",
+        "SPACEREADMCP-TEST-008",
+        "SPACEREADMCP-TEST-009"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Financial Access",
+      "invariant": "The bounded Space summary/core-detail result contains no financially restricted Item detail, hidden Item or work-queue count, attachment URL/path, review evidence or inferred total. A caller cannot request arbitrary fields or a full/raw provider row.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-003",
+        "SPACEREADMCP-TEST-005",
+        "SPACEREADMCP-TEST-008",
+        "SPACEREADMCP-TEST-009"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The target MCP list_spaces and get_space contracts authenticate a request context and apply the same versioned read semantics and visibility rules as the app. This constituent accepts no service-role, database, Storage, Firebase Admin or provider credential and does not become an administrative or repair tool.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-002",
+        "SPACEREADMCP-TEST-007",
+        "SPACEREADMCP-TEST-008",
+        "SPACEREADMCP-TEST-009"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "New target-only MCP leaves implement only their own bounded interface/tool/test responsibility. Source responsibilities MCPTOOL-24DFA89A8F44 list_spaces and MCPTOOL-2B45E68B60F7 get_space remain target_mapped until their complete observable responsibilities are replaced; they are context, not surface claims by this dossier.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-007",
+        "SPACEREADMCP-TEST-009",
+        "SPACEREADMCP-TEST-010"
+      ]
+    },
+    {
+      "id": "SPACEREADMCP-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The DRAFT and any later bounded implementation remain inside the isolated target package and introduce no provider construction, Data API or database access, live MCP registration, hosted resource, Firebase change, production access, source migration, release, authority activation or cutover claim.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SPACEREADMCP-TEST-008",
+        "SPACEREADMCP-TEST-009",
+        "SPACEREADMCP-TEST-010"
+      ]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Plan one TypeScript wire mirror of the sibling batch's frozen Space list request/page/summary and existing bounded Space core-details request/update/snapshot semantics. Every decoded value reconstructs through equivalent validation; TypeScript does not invent a second Space model, order, cursor, readiness state or fingerprint.",
+        "Plan explicit list and detail result unions. Represented results carry exact Account/scope/request binding and canonical rows. Incomplete/not-synchronized is structurally distinct from authoritative empty. Detail not-visible-or-absent is one non-enumerating outcome distinct from not-synchronized and contains no echoed identity or hidden reason.",
+        "Until authoritative Item-summary/count and media-reference/display dependencies exist, every result is explicitly projectionProfile space_core_only_v1 with itemProjection and mediaProjection marked deferred/not_available. These dimensions are never omitted ambiguously and never represented as zero counts, empty Item arrays or empty image arrays.",
+        "Plan stable bounded failures for invalid input, authentication, scope mismatch, not synchronized, not visible or absent, and malformed/mismatched reader evidence. Failures expose no raw exception, provider response, token, endpoint, hidden count or existence detail.",
+        "The exact list page bound, lifecycle filter, stable ordering, continuation shape and query fingerprint must be imported from the sibling space-list-read-and-presentation-contracts authority before READY; this dossier must not choose them independently."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This constituent creates no table, view, function, relation, constraint, index or migration. The sibling provider slice owns any additive local-only read schema and database proof."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "This constituent defines no Supabase RPC, Edge Function, server query implementation, privileged handler, transport adapter or provider constructor. One injected backend-neutral reader remains a required composition dependency."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API relation/function is introduced or exposed and no PUBLIC, anon, authenticated or service-role grant changes."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No RLS policy is created or changed. Tool tests must prove that caller input and locally valid result shapes cannot substitute for the authorization enforced by the injected reader/provider boundary."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync stream, subscription, local schema or authorization rule changes. This constituent preserves the sibling provider's supplied readiness/completeness truth without interpreting connection state or a missing row as complete."
+    },
+    "localOffline": {
+      "items": [
+        "The planned tool boundary accepts only immutable supplied request-context and reader-result values; it performs no network, filesystem or database access itself.",
+        "List and detail output preserve explicit current/partial/stale/incomplete/not-synchronized/authoritative-empty or not-visible-or-absent truth supplied by the frozen sibling contracts. Empty rows cannot become authoritative without exact completeness evidence, and lack of current synchronization cannot become not found.",
+        "Canonical request/result validation refuses changed Principal/Account/scope/Space/query fingerprint, duplicate/out-of-order rows, malformed stable identity, invalid lifecycle/revision/checklist hierarchy, over-bound pages and invalid continuation atomically before returning any partial content."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "The bounded result contains no attachment identity, URL, object path, bytes, marker, review image, upload, retention or deletion behavior. O-023 and all Space media remain outside."
+    },
+    "appMcp": {
+      "items": [
+        "Plan uniquely named internal listSpaceCore/getSpaceCore definitions/functions over one injected SpaceReadQuerying-style boundary while Item/media dependencies remain unavailable. Account and Principal are derived only from TargetMCPRequestContext; caller input supplies explicit bounded scope/list controls or one stable Space ID, never Account or Principal authority.",
+        "list_spaces returns only the sibling contract's stable bounded summary page/order/continuation plus explicit readiness/completeness. It exposes no account-wide wildcard, magic inventory string, hidden pre-filter count, Item count, financial value or provider field.",
+        "The internal getSpaceCore result returns only the currently implemented Space core-details boundary: stable identity/scope, canonical display name/optional notes, lifecycle, precision-safe decimal revision, timestamps, ordered checklist identity/text/checked progress and explicit readiness/completeness. It does not copy the Firebase tool's raw Item rows, image URLs, legacy isComplete or unrestricted provider document, and it explicitly marks Item/media projection unavailable rather than fabricating empty values.",
+        "App/MCP parity is proven through shared fixture vectors for exact request fingerprints, scope encoding, lifecycle, order, precision-safe revision, checklist progress and every readiness/absence state. MCP formatting cannot recalculate a conflicting order, progress rule, empty state or visibility decision.",
+        "The source tool registry, shared MCP registration, package manifests and contract catalog remain unchanged. The planned core-only diagnostic is unregistered and non-live. The public list_spaces/get_space replacement cannot become READY or register until authoritative Item/media dependencies exist, or canonical product/mapping authority explicitly approves the narrower space_core_only_v1 tools as new partial diagnostic tools rather than replacement parity."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space, Item, image, checklist, source export or migration fixture is decoded, transformed, imported, quarantined or reconciled. Source tools are inspected only as conversion responsibilities."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Planned diagnostics contain only stable bounded tool/readiness/outcome codes and non-sensitive contract version. They never contain Account, Principal, Project, Space or checklist identity/text, raw input/result JSON, URL/path, token, credential, provider response or exception text."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The DRAFT consists only of this dossier and two comment-only, uniquely named target MCP scaffold leaves. A later implementation may advance only newly discovered target-only leaves after the complete three-slice batch freezes their exact shared contracts and surface IDs.",
+        "Rollback before live composition is deletion/reversion of the isolated target-only leaves. Firebase, the current MCP registry, hosted services, production data and production authority remain untouched.",
+        "O-023/O-026/O-037/O-044/O-045/O-046 and A-003/A-004/A-015/A-016 remain unadvanced because media, templates, Space mutation/archive effects, hosted authority, complex optimism and physical offline lease are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACEREADMCP-TEST-001",
+      "kind": "domain",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts plus sibling Swift fixture vectors",
+      "covers": [
+        "SPACEREADMCP-REQ-001",
+        "SPACEREADMCP-REQ-002",
+        "SPACEREADMCP-REQ-003"
+      ],
+      "expected": "TypeScript reconstructs the exact frozen sibling list/core-detail request and result shapes, fingerprints, explicit scope/lifecycle, full UInt64 decimal revision, timestamps, checklist hierarchy/progress and diagnostics without adding or dropping semantic fields.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-002",
+      "kind": "rls_negative",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts with a recording/failing injected reader",
+      "covers": [
+        "SPACEREADMCP-REQ-001",
+        "SPACEREADMCP-REQ-004",
+        "SPACEREADMCP-REQ-005",
+        "SPACEREADMCP-REQ-007"
+      ],
+      "expected": "Missing/invalid bearer context, changed Account or Principal, malformed/ambiguous scope, cross-scope cursor, and caller-authored authorization evidence fail before the reader or produce one bounded non-enumerating outcome with zero row/count disclosure.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-003",
+      "kind": "app_mcp_contract",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts plus sibling Space list/core-detail suites",
+      "covers": [
+        "SPACEREADMCP-REQ-002",
+        "SPACEREADMCP-REQ-003",
+        "SPACEREADMCP-REQ-006"
+      ],
+      "expected": "App and MCP fixture matrices return the same authorized bounded Space summaries/core details, stable order/cursor, lifecycle, checklist progress and revision while target MCP exports no Item/media/review/financial/raw-provider field; itemProjection/mediaProjection remain explicit unavailable/deferred values and never fabricated zero/empty collections.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-004",
+      "kind": "offline_restart",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts plus sibling provider readiness fixtures",
+      "covers": [
+        "SPACEREADMCP-REQ-002",
+        "SPACEREADMCP-REQ-003",
+        "SPACEREADMCP-REQ-004"
+      ],
+      "expected": "Current, partial, stale, retained-restart, incomplete, authoritative-empty and required-update inputs round-trip through the MCP wire contract without converting connection state, an empty local query or retained rows into stronger authority.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts",
+      "covers": [
+        "SPACEREADMCP-REQ-001",
+        "SPACEREADMCP-REQ-004",
+        "SPACEREADMCP-REQ-005",
+        "SPACEREADMCP-REQ-006"
+      ],
+      "expected": "Not-synchronized/incomplete remains distinguishable from authoritative empty and from the single not-visible-or-absent detail outcome; none exposes echoed foreign identity, hidden count, filtered fields or an existence distinction.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-006",
+      "kind": "end_to_end",
+      "owner": "Three-slice Space browsing batch contract tests with LedgerTargetMCP/tests/spaceReadTools.test.ts",
+      "covers": [
+        "SPACEREADMCP-REQ-002",
+        "SPACEREADMCP-REQ-004"
+      ],
+      "expected": "The same synthetic Project and Business Inventory scopes produce bounded list-to-detail results in app and MCP; active/archived selection, readiness, authoritative empty, missing/not-visible and synchronization loss retain identical semantic truth.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-007",
+      "kind": "app_mcp_contract",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts and conversion surface review",
+      "covers": [
+        "SPACEREADMCP-REQ-002",
+        "SPACEREADMCP-REQ-007",
+        "SPACEREADMCP-REQ-008"
+      ],
+      "expected": "Only newly discovered target-only MCP leaves are claimed. The source list_spaces/get_space responsibilities remain target_mapped, and the unregistered space_core_only_v1 diagnostic uses the sibling query authority rather than copying Firebase arrays, item joins or raw document behavior. No test claims full current-tool parity or registration eligibility.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-008",
+      "kind": "app_mcp_contract",
+      "owner": "LedgerTargetMCP/tests/spaceReadTools.test.ts and complete target MCP source inspection",
+      "covers": [
+        "SPACEREADMCP-REQ-003",
+        "SPACEREADMCP-REQ-005",
+        "SPACEREADMCP-REQ-006",
+        "SPACEREADMCP-REQ-007",
+        "SPACEREADMCP-REQ-009"
+      ],
+      "expected": "Public result/error shape and diagnostics contain no service role, database/Storage/Firebase credential, token, endpoint, provider row, hidden count, Item/media/review/financial field, raw exception or production identifier.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-009",
+      "kind": "operational",
+      "owner": "Target environment/import/registration checks and LedgerTargetMCP complete tests",
+      "covers": [
+        "SPACEREADMCP-REQ-001",
+        "SPACEREADMCP-REQ-003",
+        "SPACEREADMCP-REQ-005",
+        "SPACEREADMCP-REQ-006",
+        "SPACEREADMCP-REQ-007",
+        "SPACEREADMCP-REQ-008",
+        "SPACEREADMCP-REQ-009"
+      ],
+      "expected": "The two bounded tools compile and pass only through injected contract readers; no provider/SDK/Firebase import, service-role path, live registration, package/catalog mutation, hosted call, production fallback, migration, release or cutover behavior exists.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEREADMCP-TEST-010",
+      "kind": "operational",
+      "owner": "Exact three-slice batch diff review and immutable CI after later synchronized implementation",
+      "covers": [
+        "SPACEREADMCP-REQ-008",
+        "SPACEREADMCP-REQ-009"
+      ],
+      "expected": "The reviewed batch advances only its newly discovered target leaves and synchronized control records from exact base 2297e8dbe7f7f0febb7e33b4da0be591d4c82ade; complete target/MCP checks and both staging builds pass without Firebase, hosted, production, migration, release or cutover access.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [
+    "O-007",
+    "O-015",
+    "O-023"
+  ],
+  "notes": "DRAFT constituent of the planned three-slice read-only Space browsing batch. The exact source responsibilities are MCPTOOL-24DFA89A8F44 list_spaces and MCPTOOL-2B45E68B60F7 get_space, but this dossier intentionally does not claim them or advance their target_mapped status. Before any bounded core-only implementation review, root must integrate the sibling space-list-read-and-presentation-contracts and space-browser-powersync-provider dossiers, allocate/discover the two new MCP leaf IDs, replace surfaceIds with only those IDs, and freeze exact shared list bounds/order/cursor/fingerprint plus result/readiness shapes. The current source list tool's omitted Account-wide filter and magic inventory string are not target authority. More importantly, current list_spaces returns Item counts and current get_space returns Item rows and images; the target currently has neither an authoritative Item summary/count projection nor a media resolver in this read path. O-007/O-015 own still-open Item/provenance shape and O-023 owns attachment lifecycle/visibility dependencies. The target must never substitute zero counts or empty Item/image arrays. Until those dependencies close, only an explicitly partial, unregistered space_core_only_v1 diagnostic shape may be considered, and public list_spaces/get_space replacement/provider/registration READY remains blocked unless canonical product/mapping authority separately approves that narrower tool as a new diagnostic outcome. The architecture allows privileged MCP credentials only under additional controls, but this constituent deliberately accepts none and defines no provider or live registration. A-003/A-004/A-015/A-016 and O-026/O-037/O-044/O-045/O-046 remain unadvanced. Supabase changelog markdown fetch was attempted during preparation but the endpoint returned an unsupported-content-type error; no Supabase API, schema, RLS, provider or dependency implementation is included, so no platform behavior was inferred."
+}

@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-PLATFORM-CONTROL-001",
+  "owner": "Platform, Backend, and Conversion Control",
+  "status": "verified",
+  "assignedQueryIds": [
+    "QUERY-0DCB1F5BDFA1",
+    "QUERY-10D959B980AD",
+    "QUERY-1B08651B1030",
+    "QUERY-241AE9EE0E3F",
+    "QUERY-25EBAD3AA007",
+    "QUERY-342EBD223405",
+    "QUERY-36E15C520F32",
+    "QUERY-57FA49B52A1C",
+    "QUERY-5FE3B789764B",
+    "QUERY-C1FD5E69A992",
+    "QUERY-C2E9073C0422",
+    "QUERY-CED857902958",
+    "QUERY-D1168C3EEC3F",
+    "QUERY-E53E8AAEA8A9",
+    "QUERY-EA29EFC55CE5",
+    "QUERY-ED6D30C49E76",
+    "QUERY-EFE5D6B459E2",
+    "QUERY-F0DA5BB2272E"
+  ],
+  "allowedBlockerIds": [
+    "A-007",
+    "A-010",
+    "A-015",
+    "A-016",
+    "O-018",
+    "O-020",
+    "O-022",
+    "O-026",
+    "O-032"
+  ],
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-0DCB1F5BDFA1",
+      "expectedOccurrenceHash": "2ac9063cfb52028230deac50640d502da133e48f0806a1e66e7fd76134bbab7d",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "PowerSync watch adapters",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "readiness/cancellation contracts",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-10D959B980AD",
+      "expectedOccurrenceHash": "6ecc325d0229a4ded2ca849ce066afe8dcf86203f3da4f0bf5fc2fe46b7d600e",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "Capability-specific local query ports",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1B08651B1030",
+      "expectedOccurrenceHash": "b432766265cff0e7ed06232d59026b9b9cd3b6f057e33707c3bc9dccef7389f2",
+      "sourceOwnerSurfaceId": "SWIFT-AD26BFE430B2",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift"
+      },
+      "expectedSourceOwnerHash": "1eb0d0f498b674cccacbcc5f2389b74357aa87ad92008f17a651c6eccac3ee42",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-241AE9EE0E3F",
+      "expectedOccurrenceHash": "0daeea6c8c821d7626e2b0c8fdd1e86d7d8ad26e4368863df867b7f850316c03",
+      "sourceOwnerSurfaceId": "SWIFT-6E5F6EAFF883",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"
+      },
+      "expectedSourceOwnerHash": "5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "SWIFT-6E5F6EAFF883",
+          "sourceRef": {
+            "path": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"
+          },
+          "purpose": "current_source_compatibility",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-25EBAD3AA007",
+      "expectedOccurrenceHash": "667dd728d2ff6c7e6e672b8df796b201107e0c0332960ab1da752b120e472bc3",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "Capability-specific local query ports",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-342EBD223405",
+      "expectedOccurrenceHash": "06c7554ae2180a42ef68afcd5a5543f259db04e722abd679cca912491c7bbea0",
+      "sourceOwnerSurfaceId": "SWIFT-AD26BFE430B2",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift"
+      },
+      "expectedSourceOwnerHash": "1eb0d0f498b674cccacbcc5f2389b74357aa87ad92008f17a651c6eccac3ee42",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-36E15C520F32",
+      "expectedOccurrenceHash": "e010d208501b193a00a827dd800f868460553f5b00ad89457e37296210dd96fb",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "Capability-specific local query ports",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-57FA49B52A1C",
+      "expectedOccurrenceHash": "14d9bd059ca406352cdc2590dfb05ae66738ca7c3edd09ae073bf8405c1462cf",
+      "sourceOwnerSurfaceId": "SWIFT-6E5F6EAFF883",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"
+      },
+      "expectedSourceOwnerHash": "5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "SWIFT-6E5F6EAFF883",
+          "sourceRef": {
+            "path": "LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"
+          },
+          "purpose": "current_source_compatibility",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5FE3B789764B",
+      "expectedOccurrenceHash": "0c0ad81e3cf08a964b50529edd0106df7ac00ea5137c0241c4f23cac14d3786d",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "Capability-specific local query ports",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C1FD5E69A992",
+      "expectedOccurrenceHash": "0bdbd903ffacec737777923bb2f5c5a4086f3e96d24743a2ce5c39e22dd0c9e1",
+      "sourceOwnerSurfaceId": "MCPMOD-11444B9842C5",
+      "sourceRef": {
+        "path": "mcp-server/src/util/query.ts"
+      },
+      "expectedSourceOwnerHash": "faa7caaf7b0b30fbf3619f242ca10a59a476974629d5f87c400920dcf73fad42",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "Authorized named server projections",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "stable bounded query/cursor helpers",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C2E9073C0422",
+      "expectedOccurrenceHash": "a2b81cd7c846d1a3518ac39e701ff51957b6473d41074f35f2ab2384e67f6ae5",
+      "sourceOwnerSurfaceId": "SWIFT-AD26BFE430B2",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift"
+      },
+      "expectedSourceOwnerHash": "1eb0d0f498b674cccacbcc5f2389b74357aa87ad92008f17a651c6eccac3ee42",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CED857902958",
+      "expectedOccurrenceHash": "a104775e38ca10906c4a23e04df0560f23dc28091130d696f19610a1ae65e671",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "PowerSync watch adapters",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "readiness/cancellation contracts",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D1168C3EEC3F",
+      "expectedOccurrenceHash": "c604d6412337cbc4fde098ef3de38428ead0e61fbdf2147f3b3f2ec67ab0817e",
+      "sourceOwnerSurfaceId": "FILE-5D8816D7BB7F",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/setup-health-check.mjs"
+      },
+      "expectedSourceOwnerHash": "250ff6efc052bd6d27ce7ce8ae25e93e4700efc99b19d96726505beef41a3e84",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5D8816D7BB7F",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/setup-health-check.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E53E8AAEA8A9",
+      "expectedOccurrenceHash": "a39c250aeb4569df592e6db4505c6231a89e5e638631065341956a6802157474",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "Capability-specific local query ports",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-EA29EFC55CE5",
+      "expectedOccurrenceHash": "bb1e70c4c34f736226b86306441d52590fa30d16bddba57000b518c47570aa29",
+      "sourceOwnerSurfaceId": "SWIFT-AD26BFE430B2",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/FirestoreTestView.swift"
+      },
+      "expectedSourceOwnerHash": "1eb0d0f498b674cccacbcc5f2389b74357aa87ad92008f17a651c6eccac3ee42",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-ED6D30C49E76",
+      "expectedOccurrenceHash": "cc8a9496a4ee2a56a44abcd1a07a115a6272990405c5691ec59baef3c47cfd1e",
+      "sourceOwnerSurfaceId": "MCPMOD-11444B9842C5",
+      "sourceRef": {
+        "path": "mcp-server/src/util/query.ts"
+      },
+      "expectedSourceOwnerHash": "faa7caaf7b0b30fbf3619f242ca10a59a476974629d5f87c400920dcf73fad42",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "Authorized named server projections",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "EntityLookupQuerying",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-EFE5D6B459E2",
+      "expectedOccurrenceHash": "e2d3dc5c42aed04a7a5dadf834513393723ad699d171576aaa0886b6ac3be6db",
+      "sourceOwnerSurfaceId": "MCPMOD-11444B9842C5",
+      "sourceRef": {
+        "path": "mcp-server/src/util/query.ts"
+      },
+      "expectedSourceOwnerHash": "faa7caaf7b0b30fbf3619f242ca10a59a476974629d5f87c400920dcf73fad42",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "Authorized named server projections",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "EntityLookupQuerying",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "MCPMOD-11444B9842C5",
+          "targetSurface": "stable bounded query/cursor helpers",
+          "expectedTargetMappingHash": "d6ad51625eef5ec31f88f5c4db8a02fbeab6dcdab9725d830fbd6a4519477efd"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-F0DA5BB2272E",
+      "expectedOccurrenceHash": "aa4db7578f04b9c2e15fdd7e6b7cfa4daa0da7a6f70b898cc259c1bfbea96509",
+      "sourceOwnerSurfaceId": "SWIFT-9489B0032700",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/FirestoreRepository.swift"
+      },
+      "expectedSourceOwnerHash": "7086b49d94596ebbe76752a3381b0f2d39dc369d902f686d0801567ace4839ac",
+      "outcomes": [
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "PowerSync watch adapters",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "SWIFT-9489B0032700",
+          "targetSurface": "readiness/cancellation contracts",
+          "expectedTargetMappingHash": "d21cd25e63dc8c7e023329ed5f8392e2f6280d55588c786af9db5821b7ed9e52"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    }
+  ],
+  "notes": "IMPLEMENTED aggregate validation preserves all 18 READY-classified occurrences. The two BatchWriting document precondition reads remain source-only for compiled current-source compatibility through verified cutover reconciliation and their Firebase query mechanism retires afterward under A-017; no production runtime-use claim is made. Immutable CI/promotion is pending, and the remaining rows confer only their exact reviewed target/control, source-retention or retirement classifications."
+}
