@@ -26712,29 +26712,386 @@
     },
     {
       "schemaVersion": 1,
+      "workflowId": "downloaded-item-browsing-and-detail",
+      "title": "Browse downloaded Items and inspect details and images",
+      "kind": "product_ui",
+      "status": "implementation",
+      "outcome": "Browse downloaded Project/Inventory Items, filter and select them, inspect read-only details and images, and follow the current Space link. Finish the existing read batch through native verification; editing, full Purchase/Invoice destinations and migration are separate work. Preserve incomplete financial/history evidence explicitly.",
+      "targetStoryIds": [
+        "item-accounting-sections"
+      ],
+      "authority": [
+        {
+          "role": "canonical_target",
+          "path": "docs/specs/items.md",
+          "section": "Target Everyday Workspace"
+        },
+        {
+          "role": "architecture_authority",
+          "path": "docs/specs/offline-first.md",
+          "section": "Core Principle"
+        },
+        {
+          "role": "architecture_authority",
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "section": "Stream Authorization Rule"
+        }
+      ],
+      "baselineJourneyIds": [
+        "UIBASE-ITEM-DETAIL-001",
+        "UIBASE-ITEM-LIST-CARDS-FILTERS-AND-PICKER-001",
+        "UIBASE-MEDIA-IMAGE-GALLERY-001"
+      ],
+      "baselineBehaviorRefs": [
+        {
+          "journeyId": "UIBASE-ITEM-DETAIL-001",
+          "controls": [
+            {
+              "label": "MEDIA / NOTES / DETAILS / HISTORY",
+              "includeControl": true,
+              "options": [
+                "Expand / Collapse"
+              ]
+            },
+            {
+              "label": "Space link",
+              "includeControl": true,
+              "options": []
+            }
+          ],
+          "transitions": [],
+          "states": []
+        },
+        {
+          "journeyId": "UIBASE-ITEM-LIST-CARDS-FILTERS-AND-PICKER-001",
+          "controls": [
+            {
+              "label": "Item sort",
+              "includeControl": true,
+              "options": []
+            }
+          ],
+          "transitions": [],
+          "states": []
+        },
+        {
+          "journeyId": "UIBASE-MEDIA-IMAGE-GALLERY-001",
+          "controls": [
+            {
+              "label": "Navigate and inspect",
+              "includeControl": true,
+              "options": []
+            }
+          ],
+          "transitions": [],
+          "states": []
+        }
+      ],
+      "affectedComponents": [
+        "LedgeriOS/LedgerTargetCore",
+        "LedgeriOS/LedgerTargetCoreTests",
+        "LedgeriOS/LedgerTargetAppModel",
+        "LedgeriOS/LedgerTargetAppModelTests",
+        "LedgeriOS/LedgerTargetApp",
+        "LedgeriOS/LedgerTarget.xcodeproj",
+        "LedgeriOS/LedgerTargetPowerSync",
+        "LedgeriOS/LedgerTargetPowerSyncTests",
+        "scripts",
+        "LedgeriOS/LedgerTargetProject.yml",
+        "LedgeriOS/LedgerTargetStagingUITests",
+        "supabase/migrations",
+        "supabase/tests",
+        "powersync",
+        "LedgeriOS/LedgerItemThumbnail",
+        "LedgeriOS/Package.swift"
+      ],
+      "layers": [
+        "domain",
+        "app_ui",
+        "powersync_sync",
+        "local_offline",
+        "postgres_schema",
+        "postgres_handler",
+        "rls",
+        "accounting",
+        "media"
+      ],
+      "riskDomains": [
+        "ui_fidelity",
+        "sync_visibility",
+        "offline_durability",
+        "tenant_authorization",
+        "database_integrity",
+        "handler_idempotency",
+        "accounting",
+        "media_durability"
+      ],
+      "uiJourneys": [
+        {
+          "journeyId": "TARGET-DOWNLOADED-ITEM-READ-001",
+          "sourceSurfaceIds": ["SWIFT-AB578AEF4330"],
+          "sourcePage": "Project, Inventory or Space Item list",
+          "targetPage": "Downloaded Item details and images",
+          "authority": [
+            {
+              "role": "canonical_target",
+              "path": "docs/specs/items.md",
+              "section": "Target Everyday Workspace"
+            }
+          ],
+          "controls": [
+            {
+              "label": "Accounting filter",
+              "options": [
+                { "label": "All / None", "result": "Reset to all canonical resolutions or select none, retaining existing Only/All-except semantics.", "disposition": "redesign" },
+                { "label": "Accounted For / Unaccounted For / Accounting status unknown", "result": "Toggle canonical accounting resolution; OR within this facet and AND with search, Space and other facets. Missing evidence is unknown.", "disposition": "redesign" },
+                { "label": "Clear filters", "result": "Restore all downloaded results without restoring excluded selection or writing backend data.", "disposition": "preserve" }
+              ],
+              "action": "Open Filter Items → Accounting in a Project or Project Space; Inventory omits it.",
+              "result": "Visible rows, counts and eligible selection use one shared scoped projection. This does not filter cash-payment, Invoice or editable workflow status.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Downloaded Item",
+              "options": [
+                {
+                  "label": "Refresh history",
+                  "result": "Re-read the same Account and Item from authorized downloaded placement evidence.",
+                  "disposition": "redesign"
+                },
+                {
+                  "label": "Done",
+                  "result": "Close location history and return to the Item list without changing data.",
+                  "disposition": "preserve"
+                }
+              ],
+              "action": "Tap a downloaded physical Item to open its location-history sheet.",
+              "result": "Show current and ended placement intervals, exact retained times, available location labels and explicit missing-label/partial copy. No payment, sale, refund or complete Item-detail claim.",
+              "disposition": "redesign"
+            },
+            {
+              "label": "Items within Space",
+              "options": [],
+              "action": "Open a represented active Project or Inventory Space, then tap an assigned downloaded Item.",
+              "result": "Show only exact-Space downloaded rows and an explicitly downloaded count; open existing physical location history, then Done returns to the same Space/checklist state. Unassigned and other-Space rows are excluded. Create/Add and full detail behavior remain pending.",
+              "disposition": "preserve"
+            }
+          ],
+          "transitions": [
+            {
+              "from": "Downloaded Item list",
+              "event": "Open represented Item",
+              "to": "Same Account Item details",
+              "disposition": "redesign"
+            }
+          ],
+          "states": [
+            {
+              "name": "Downloaded location history partial, missing, invalid or revoked",
+              "expected": "Always label physical-only partial coverage; missing labels are explicit. Invalid/foreign data or watch failure removes previously shown history. Closing or scope replacement suppresses late results.",
+              "disposition": "redesign"
+            }
+          ]
+        }
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "ITEM-CARD-THUMBNAILS",
+          "risk": "media_durability",
+          "expected": "Visible Item cards use verified small derivatives with explicit original links, faithful primary/order selection and the existing protected offline cache. No full-list original downloads. Revocation or reference changes clear access; missing derivatives remain distinguishable from no image. Trusted publication is retry-safe and preserves original bytes/history.",
+          "command": "Uncommitted ItemCardThumbnailGenerator.swift:7focused tests/12cases pass for actual encoded identity, orientation, no-upscale, corruption and limits; root reviewed. Migration20260909114122 adds immutable same-Account original/recipe/derivative links with live-reference RLS;45actual SQL checks pass across item_card_thumbnails.test.sql and existing catalog tests. Independent RLS review found JPEG metadata gap, now rejected/tested by invoker trigger. Follow-on root-reviewed private invoker publication metadata function and replay/conflict/no-orphan tests:77SQL checks pass.30actualSQL stream captures,4service-parser tests (47queries/25tables),5local reader tests and8runtime original/thumbnail authorization cases pass. Explicit original-bound thumbnail contract prevents foreign/same-Account original substitution; optional derivative failures preserve original completeness. Native108px Item/group cards now use measured root List viewport, scoped original-bound selection and cancellable detached decode; independent review prompted scope guard/cancellation/empty-group placeholder fixes. Actual generated-JPEG UI fixture and native gallery card assertion added; final Macapp and iOSXCTest typechecks pass. Full1067native156suites passed78.134s. Actual byte-upload integration, concurrency-session proof and native viewport/card interaction still missing. Environment runtime allowlist corrected and passed. Follow-on offline LedgerItemThumbnail executable reuses native generator through bounded JSON stdin/stdout; no network/files/credentials. Actual local Storage harness passed generation,hash/length/MIME readback,duplicate nonoverwrite retry,corrupt-existing-byte rejection before metadata,SQL exact replay,member GET/cross-Account and reference-removal denial. Four concurrent publisher races passed with observed own-holder DB locks and no loser metadata orphans; root reviewed script. Synthetic immutable local evidence retained, no production access. CI4a0bfc17/34349279182 terminal failed report test imposing one-query-per-table on gallery; marker-only overlap correction passes106SQLcaptures. Mobile upload queue, durable interrupted-import runner and native viewport/card proof remain incomplete; these tests do not claim them.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-ONLY-DESCRIPTIVE-DETAILS",
+          "risk": "ui_fidelity",
+          "expected": "items.md Target Everyday Editing: inspect Media, Notes, Details and History with Notes/Details initially expanded; preserve exact notes, source fallback, workflow/bookmark and physical location evidence. Missing downloaded metadata is unavailable, not fabricated. This increment grants no editing or financial visibility and does not claim complete Item history.",
+          "command": "Uncommitted DownloadedItemsView detail sections and existing gallery host, DownloadedItemDescriptiveDetails, atomic CurrentItemPlacementLocalReader projection, schema notes and migration20260909130847. Agent output independently reviewed:18reader tests,10SQL authorization checks,36physical stream captures and4parser tests passed. Root fixed overlapping report expected notes column:106actual SQL captures passed. Normal watch end now clears Item details;5focused model tests passed including live subscription, end, failure, wrong scope and clear. UI tests use exact detail field IDs and reveal Images in its own detail scroll, including pinned layout. Mac app and both platform XCTest typechecks passed; full1073native156suites passed72.957s (/tmp/ledger-item-details-full-native.log). Local security advisors report no issues; full930SQL checks passed after scoping thumbnail pgTAP fixture IDs to tap-thumb-* so existing local HTTP evidence is untouched (/tmp/ledger-item-details-db.log). New native detail interaction remains pending. No edit-role policy inferred; native CI not yet verified for this batch. CI34370470714/426baa0c actual details PASS Mac33.369s and iPhone73.457s. Detail Copy ID follow-on retains canonical UIBASE-ITEM-DETAIL-001 action; pending runtime test. CI34375623690/07712b11 detail UI and detail Copy ID passed both platforms.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-CURRENT-ACCOUNTING-ASSOCIATION",
+          "risk": "ui_fidelity",
+          "expected": "Project Item detail shows its current placement's canonical accounting association, not payment or Invoice status. Missing, restricted or malformed relationship evidence displays Accounting information unavailable, never an inferred Unaccounted For. Live changes replace old labels; Inventory shows no former Project accounting association. No editing or new permissions.",
+          "command": "Authority docs/specs/items.md:35-39,106-113,263-273; UIBASE-ITEM-DETAIL-001. Reuse ItemClientPaymentConnectionLocalReader with optional placement filter inside atomic history read; watch accounting dependencies and reread current placement plus authorization together. DownloadedItemPlacementHistory carries optional currentAccountingResolution. Existing detail/Space UI tests add known/unavailable/Inventory assertions; AppModel accountingUpdates covers replacement and access failure. Reader currentAccountingAssociation/currentAccountingWatch cover encrypted reopen, scope, access, Inventory and same-count relationship changes. Both strict native XCTest typechecks and conversion check PASS. Root reviewed reader/runtime/tests; independent UI/model review PASS. Extracted SQL compilation and EXPLAIN dependency checks PASS. Corrected macOS14 Core/AppModel module emissions, focused reader/model test typechecks, full Mac app typecheck PASS. Native runtime verification remains pending automatic CI for this checkpoint.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-CURRENT-BUDGET-CATEGORY-LABEL",
+          "risk": "ui_fidelity",
+          "expected": "Item hero shows its current Project placement's authorized budget-category label, updates when downloaded evidence changes, and shows Category unavailable for missing/restricted evidence. Inventory never displays a prior Project category. Malformed association Account/Project/Item fails closed. No editing or new permissions.",
+          "command": "Authority UIBASE-ITEM-DETAIL-001 and docs/specs/items.md:322. DownloadedItemPlacementHistory carries optional currentBudgetCategoryName; CurrentItemPlacementLocalReader extends existing atomic SQL/watch using established report assignment/visibility rules, not a report per Item. DownloadedItemsView and existing native detail/Space tests cover known/unavailable/Inventory states; AppModel category replacement/failure test and reader restart/watch/restricted/malformed-scope tests added. Root reviewed delegated data changes; independent UI review found no defect. Exact extracted SQL passed12 SQLite assertions; Core emit and iPhone XCTest compile passed. Full reader/app typechecks, model/reader test typechecks, AppModel emit and both strict XCTest compiles also PASS. Committed6a4951a4, automatic CI34391233972 pending native runtime proof; no complete claim. CI34391233972/6a4951a4 completed1080native tests/156suites PASS145.424s, including all4 new category tests: encrypted restart/current→Inventory0.376s, watch visibility/revocation1.005s, malformed association0.688s, model update0.001s. Log /tmp/ledger-6a49-macos-ci.log. Superseded run cancellation requested after latest998329bd includes entire batch; completed test evidence retained, incomplete UI/aggregate not promoted. Latest CI34393195728 must prove full UI integration.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-SPACE-REFERENCE-NAVIGATION",
+          "risk": "ui_fidelity",
+          "expected": "Resolved current Item Space opens the same authorized stable-ID Project/Inventory Space; Back restores originating Item. Archived references remain readable outside active browser and cannot enable mutations. Missing metadata is noninteractive. Scope mismatch, observer failure and route cancellation must not retain usable stale evidence or leak pending operation state between routes.",
+          "command": "Item detail Space link and ReferencedSpaceDetailView reuse exact-ID SpaceCoreDetailsStagingExercise with expectedScope, same query provider, independent existing checklist sessions and extracted SpaceChecklistSection; active browser unchanged. Authority UIBASE-ITEM-DETAIL-001, specs/items.md:322, specs/spaces.md:65-68. Native tests added for active Project checklist interaction+Back and archived Inventory read-only+Back; presenter tests cover archived read and wrong Project/Inventory evidence including cached failure; adapter test verifies no active-list dependency. Root reviewed delegated UI and corrected notes field plus startup/cleanup synchronization races. AppModel module, app, new model tests and iOS XCTest typechecks passed; final app typecheck also passed with synchronization-ready guard. Independent final review found no further concrete defect. Native tests also exercise repeated refresh then Back; no runtime success claimed. Full local native run unavailable under disk pressure. Regenerated existing Xcode project includes new view. Existing source-token regression from9123b68 corrected;29source assertions pass. Next integrated automatic CI must prove runtime behavior. CI34384262085/2e2c4120 Mac:1076native tests/156suites passed159.349s;24UI/6failures. Five failures (including both new navigation tests) compared empty Mac Button AXValue to expected label before navigation; sixth gallery duplicate-selector issue already fixed6db74ff2. Follow-on displayedText now uses AXLabel for Buttons only, retaining exact StaticText AXValue including empty strings. Mac XCTest compile passed. Log /tmp/ledger-2e2-macos-ci.log; actual Space navigation still unverified. CI34384262085/2e2 iPhone27of29 PASS: both new Item→Space flows passed (active Project23.156s, archived Inventory19.501s), including return and checklist assertions. Whole run failed unrelated group-copy and gallery counter tests; Mac route proof pending Button helper run. Exact log /tmp/ledger-2e2-ios-ci.log. CI34388379167/01ca Mac1076native PASS, UI23of24: BOTH new Space flows PASS13.601s archived/16.216s Project. Sole failure gallery container1240, addressed in later commits. Log /tmp/ledger-01ca-macos-ci.log.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-COPY-SELECTED-IDS",
+          "risk": "ui_fidelity",
+          "expected": "Copy IDs preserves the shipped sorted newline-separated stable IDs, limited to current scoped query eligibility. Copy neither clears selection nor mutates the backend; loading/removed/filter-excluded IDs cannot be copied. Governing authority: items.md Target Everyday Editing and existing Item bulk-action Copy IDs disposition.",
+          "command": "DownloadedItemSelection.copyPayload and DownloadedItemsView Copy IDs re-read matching selectionEvidence at click and use native pasteboards.17focused browsing tests pass, including empty, duplicate visible IDs, stale/excluded IDs, selection retention and byte-distinct Unicode eligibility. Mac app and both platform XCTest typechecks pass. Existing native group interaction test now asserts exact clipboard group-a/newline/group-b and selection retention; native runtime pending. No command roles, financial fields, mutations or provider changes. Full1070native156suites passed75.702s (/tmp/ledger-item-copy-full-native.log); conversion checks passed. Actual clipboard tests remain unverified until exact-commit native CI. Single-Item companion uncommitted: row context menu uses same live-eligibility copy contract and clipboard writer without touching selection. Whole-view copy-failure alert also works without bulk selection. Native group test adds actual Copy ID clipboard and zero-selection checks. Mac app/both XCTest typechecks pass; runtime pending. Other Item menu mutations remain unimplemented. ebf11e65/34353728741 iPhone group test TIMED OUT at300s immediately after Copy IDs, before any next AX action: direct UIPasteboard.general.string read in background runner is the suspect blocking call. Uncommitted correction reuses existing native PasteButton fixture to verify exact copied text in foreground; no stubbed payload. Both Copy cases retain exact IDs/count assertions; disposable-CI clipboard guard added. Group/refresh counts now revealed after layout expansion. Both XCTest typechecks pass; actual runtime pending. CI34370470714 confirms row context menu copied group-a when group-c was clicked on both platforms. Follow-on replaces outer native List with ScrollView/VStack in real staging and fixture, preserving Item task/sheet lifetime and separate checklist editor List. Keeps exact two-row payload checks; adds detail Item actions Copy ID under exact loaded Account/Item guard and isolated exact-text paste receiver. Root app/both XCTest compiles and independent review PASS; new runtime proof pending. CI34375623690/07712b11: group and detail Copy ID passed both platforms with actual clipboard assertions; outer ScrollView fixes shared-cell menu ownership. CI34380834552/9123b68: group Copy passed; detail test failed while receiver remained Reading copied report (log:11867). No proven app Copy failure. Follow-on exact-text fixture uses native PasteButton(payloadType:String.self), still asserting actual exact clipboard text; PDF/CSV provider path unchanged. Independent review, iOS API compile and app compile passed; precise old callback delay cause unproven; runtime confirmation pending. CI34385657700/6db iPhone group Copy PASS138.131s and detail Copy PASS40.877s using actual typed native paste. Full iPhone28of29; only gallery reveal failed. Log /tmp/ledger-6db-ios-ci.log.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-SELECTION-TOUCH-TARGETS",
+          "risk": "ui_fidelity",
+          "expected": "iPhone Select All has at least44pt touch height; physical Item and grouped Item selectors have44x44pt hit areas. Existing select/deselect/filter-pruning semantics remain unchanged and must pass actual interaction tests.",
+          "command": "DownloadedItemsView.swift enlarges label hit areas only on iOS; existing group and refresh/removal UI tests retain selection-count assertions and add size checks. Mac app/iOS XCTest typechecks passed. CI5721c40f had clipped SelectAll with0 selected; this usability correction is not proof of that failure's resolution. Native verification pending next batch. CI34375623690/07712b11 iPhone refresh/removal failed exact44pt comparison at43.99999999999997. Test now permits1e-6 coordinate rounding; app44pt target unchanged. Runtime confirmation pending. CI34380834552/9123b68 iPhone refresh/removal interaction passed150.374s with coordinate-rounding tolerance.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-IMAGE-COUNT-LIST-FIDELITY",
+          "risk": "sync_visibility",
+          "expected": "Image filtering distinguishes authorized marker count zero, positive count, and unavailable metadata; unknown is never No Image. Existing physical/report subscriptions deliver marker changes to atomic readers without photo downloads. Filter choices combine with other facets and clear normally.",
+          "command": "Image facets/count labels and atomic marker projections:16Core browsing,37focused provider,36physical SQL captures,4parser checks pass. Original full1050native passed1049; new mutable-loop watch test failed despite trace-proven timely delivery/consumption. Immutable per-event helper preserves immediate INSERT/UPDATE/DELETE/revocation;6clean strict passes plus focused suite. Precise old loop cause unproven; no production workaround. Commit129a1c70 CI34343168430 failed stale report-test indices; corrected test-local-property-management-stream.mjs uses named tables and preserves allguards, adds marker positive/empty/scope/denial evidence.106actualSQLcaptures and real MCP/HTTP report checks passed (/tmp/ledger-property-stream-named{,-mcp}.log); agent diff independently reviewed. Native filter UI still pending CI; thumbnails not implemented.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-IMAGE-NATIVE-GESTURES",
+          "risk": "ui_fidelity",
+          "expected": "At fit on iPhone, horizontal swipe changes the selected image and resets zoom; vertical drag dismisses the full viewer only beyond90pt and otherwise snaps back. Native pinch and zoomed pan remain functional. Pinned images share paging but not vertical dismissal. No new media storage or authorization boundary.",
+          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: iPhone testDownloadedItemImageSwipeNavigationAndDismissal (97.467s). Root reviewed full-screen height, pinch, zoomed pan without paging/dismissal, fit paging, short-drag retention, full-view dismissal and pinned-route retention; source retains >90pt threshold. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial.",
+          "status": "passed"
+        },
+        {
+          "id": "ITEM-IMAGE-VIEWER-CONTROLS",
+          "risk": "ui_fidelity",
+          "expected": "Full iPhone gallery occupies the screen; covering the parent route preserves its existing pin. At fit, navigation/zoom controls hide after2.2s and single tap toggles visibility; zoom/page changes reveal controls. Close and Pin remain usable. Hiding controls does not resize the image or reset zoom. Pinned viewer remains compact with visible navigation.",
+          "command": "PASS at f66e2927f7ea816a15d50e81f2f7ae08e9960631, automatic CI34396683481: testDownloadedItemImageGallery on Mac (131.280s) and iPhone (148.809s), plus iPhone gesture test for full-screen height. Root reviewed hide/reveal, stable geometry, persistent Close/Pin, zoom/page/reset, pin preservation and usable Mac close after unpin; source retains 2200ms timer. Selected app/test files match that commit. Prior detailed history: active-workspace-to-space-checklist at f66e2927. No new implementation or native rerun in September10 diagnostic trial.",
+          "status": "passed"
+        },
+        {
+          "id": "ITEM-IMAGE-EXPORT",
+          "risk": "media_durability",
+          "expected": "Save/share exports the selected authorized image only after destination preparation and revalidation. Clear/reload/reference removal, unavailable bytes and pre-handoff cancellation reject delivery. Duplicate requests stay blocked until OS completion. iOS add-only Photos saving reports success only after actual save; sharing cancellation is not an error. External destination copies cannot be recalled.",
+          "command": "DownloadedItemImagesModel.exportImage and tests:12focused tests/28cases plus full1058native155suites passed; root reviewed delegated code. Native share reuses existing presentation lock/Mac session with in-memory platform image; Photos uses original bytes and generated add-only purpose string. iOS native delivery,bothXCTest,Macapp/environment checks passed; final UI error-copy check pending. Added native iOS Share cancellation/re-enable assertion; Photos success/denial and image share completion still unverified. ADR records authorization and destination lifetime. CI5721c40f terminal20Mac/3fail,22iPhone/2fail; exact logs identified Mac image AXrole,ambiguous Workflow option,Sort reveal corrected in this batch. iPhonePin/SelectAll remain unproved against newer code. Uncommitted focused iPhone Photos tests now exercise real add-only permission denial/retry and success alert after native save, retaining the image and re-enabling controls. Existing disposable-CI guard prevents developer library writes or permission resets; synthetic image only. XCTest resetAuthorizationStatus(.photos) verified in installed SDK headers. iOS test compilation passed; OS prompt labels/reset behavior and saved outcome remain runtime-unverified. No assertion of original-byte readback from Photos or share completion. 3d/34363941225 actual iPhone PhotosDenied PASS26.784s, PhotosSaved crashed. Retained crash report proves PHPhotoLibrary.changes queue triggers Swift actor assertion in DownloadedImagePhotoSaving.save closure. Explicit @Sendable callback correction preserves original Data, add-only permission and real save completion; independent review and exact iOS helper strict-concurrency compile PASS. New save runtime remains required; no successful Photos byte-readback claim. CI34370470714 at426baa0c: actual iPhone PhotosSaved PASS19.869s and PhotosDenied PASS25.016s after actor fix; original-byte readback from Photos remains unclaimed. Whole run failed other UI assertions (Mac19/22, iPhone24/27). CI34375623690/07712b11 iPhone Photos save and denial tests passed again; original-byte readback from Photos remains unclaimed.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-IMAGE-PROTECTED-READ",
+          "risk": "media_durability",
+          "expected": "Only the same live authorized Item reference may return verified protected bytes; reference replacement, Account removal and close reject in-flight results. Cached bytes remain reusable offline without being mistaken for Item authority. Missing catalog metadata is not No Image.",
+          "command": "DownloadedItemImagesTests, DownloadedImageObjectReferenceTests, ItemImageCatalogLocalReaderTests, LedgerPowerSyncAttachmentDurabilityProviderTests and itemImageDownloadAuthorization passed; native gallery interaction pending exact-commit CI.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-ACCOUNTING-FILTER-VALUES",
+          "risk": "accounting",
+          "expected": "Project Items filter on canonical Accounted For, Unaccounted For or Accounting status unknown, never cash-payment or workflow status. Absent or incomplete accounting evidence is unknown, not unaccounted. Inventory does not expose or apply this Project-only facet.",
+          "command": "Focused DownloadedItemsModelTests plus native accounting-filter test; implementation pending.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-ACCOUNTING-FILTER-COMPOSITION",
+          "risk": "general",
+          "expected": "Reuse All/None/Only/All-except; OR within accounting and AND across search, Space and other facets. Clear restores downloaded results without changing identities or backend state.",
+          "command": "Focused shared filter and model tests; implementation pending.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-ACCOUNTING-FILTER-LIFECYCLE",
+          "risk": "tenant_authorization",
+          "expected": "Filter changes and incoming atomic accounting evidence prune selection to exactly visible IDs; temporary loading does not erase selection. Missing/revoked/foreign evidence cannot retain usable financial labels or selection eligibility. No new reads, permissions or persistence.",
+          "command": "Focused DownloadedItemsModelTests, existing scoped-reader coverage and native selection interaction; implementation pending.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-ACCOUNTING-FILTER-NATIVE",
+          "risk": "ui_fidelity",
+          "expected": "Mac and iPhone Project filter menu exposes the three canonical choices and All/None; counts, visible rows, selection pruning and Clear agree with shared projection. Inventory menu omits the facet.",
+          "command": "WorkspaceChecklistUITests/testDownloadedItemAccountingFilter on both platforms; implementation pending.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-GENERAL",
+          "risk": "general",
+          "expected": "The read-only Item journey works from its supported entry points without claiming unfinished mutations or financial destinations.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-OFFLINE-DURABILITY",
+          "risk": "offline_durability",
+          "expected": "Downloaded read evidence survives encrypted reopen; reference changes and closure suppress stale results.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-TENANT-AUTHORIZATION",
+          "risk": "tenant_authorization",
+          "expected": "RLS and local/Sync readers deny foreign or revoked access without leaking previous data.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-DATABASE-INTEGRITY",
+          "risk": "database_integrity",
+          "expected": "Read projections preserve exact physical/accounting identities and enforce valid associations.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-HANDLER-IDEMPOTENCY",
+          "risk": "handler_idempotency",
+          "expected": "This read batch introduces no writer grants or changed command behavior.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        },
+        {
+          "id": "ITEM-READ-ACCOUNTING",
+          "risk": "accounting",
+          "expected": "Incomplete financial evidence never becomes an inferred payment or duplicate budget contribution.",
+          "command": "Use existing Item reader/model/provider tests and automatic integrated CI; do not add a duplicate suite.",
+          "status": "planned"
+        }
+      ],
+      "deferredBehaviors": [
+        "Item creation/editing/bulk mutations and media writes remain separate, with product decisions unchanged.",
+        "Complete Purchase/Invoice destinations, financial totals/facets and full accounting history remain unfinished; partial reads do not claim them. Existing uncommitted Purchase projection is preserved for a subsequent bounded destination batch.",
+        "Source migration, hosted authenticated validation and production cutover are outside this read batch."
+      ],
+      "blockers": [],
+      "verification": {
+        "local": {
+          "status": "not_run",
+          "commands": []
+        },
+        "review": {
+          "required": true,
+          "status": "not_run",
+          "summary": "Transferred Item checks retain their IDs and statuses. Historical implementation and CI evidence remains in active-workspace-to-space-checklist at f66e2927; new record creation grants no passed/completion status. Review the complete read batch before broad verification."
+        },
+        "ci": {
+          "status": "not_run",
+          "commit": null,
+          "run": null
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
       "workflowId": "active-workspace-to-space-checklist",
       "title": "Browse Projects, Inventory, note history and Space checklists",
       "kind": "product_ui",
       "status": "implementation",
-      "outcome": "Choose Active or Archived Projects and open a represented Project by stable identity. Browse existing scoped note history with Back preserving the list segment; Spaces/checklist actions remain active-only. Do not substitute stale or wrong-scope evidence. Note mutation and legacy-note migration remain separate; these paths do not prove the complete Project workspace or list. Inventory now opens from Active only, remembers section per Account and composes shared physical Item and Space readers without a synthetic Project. Financial Transactions remain explicitly unavailable pending their authorized reader.",
+      "outcome": "Browse Active/Archived Projects and Account Inventory, open scoped Project note history or Spaces, and traverse an eligible Space checklist with correct Back, selection and observer lifetime. Item list/detail/media behavior belongs to downloaded-item-browsing-and-detail; note transformation/import belongs to item-history-source-reconciliation.",
       "targetStoryIds": [
         "project-list",
         "project-detail",
         "space-list-to-detail",
         "space-checklist-toggle",
-        "space-checklist-progress",
-        "item-accounting-sections"
+        "space-checklist-progress"
       ],
       "authority": [
         {
           "role": "canonical_target",
           "path": "docs/specs/projects.md",
           "section": "Project List"
-        },
-        {
-          "role": "canonical_target",
-          "path": "docs/specs/items.md",
-          "section": "Target Everyday Workspace"
         },
         {
           "role": "canonical_target",
@@ -26878,41 +27235,19 @@
         "scripts",
         "LedgeriOS/LedgerTargetProject.yml",
         "LedgeriOS/LedgerTargetStagingUITests",
-        "LedgeriOS/LedgerTargetMigrationCore",
-        "LedgeriOS/LedgerTargetMigrationCoreTests",
-        "supabase/migrations",
-        "supabase/tests",
         "powersync",
-        "LedgeriOS/LedgerLocalPaymentImport",
-        "LedgeriOS/LedgerItemThumbnail",
-        "LedgeriOS/Package.swift",
-        "LedgerTargetMCP/src/projectArchivalReview.ts",
-        "LedgerTargetMCP/tests/projectArchivalReview.test.ts"
+        "LedgeriOS/Package.swift"
       ],
       "layers": [
         "domain",
         "app_ui",
         "powersync_sync",
-        "local_offline",
-        "migration",
-        "postgres_schema",
-        "postgres_handler",
-        "rls",
-        "accounting",
-        "app_mcp",
-          "media"
+        "local_offline"
       ],
       "riskDomains": [
         "ui_fidelity",
         "sync_visibility",
-        "offline_durability",
-        "migration_fidelity",
-        "database_integrity",
-        "handler_idempotency",
-        "tenant_authorization",
-        "accounting",
-        "app_mcp_parity",
-          "media_durability"
+        "offline_durability"
       ],
       "uiJourneys": [
         {
@@ -27005,31 +27340,6 @@
               "action": "Return one level from Space detail, Spaces, or Project workspace.",
               "result": "Cancels and drains child observations that no longer belong to the visible route.",
               "disposition": "redesign"
-            },
-            {
-              "label": "Downloaded Item",
-              "options": [
-                {
-                  "label": "Refresh history",
-                  "result": "Re-read the same Account and Item from authorized downloaded placement evidence.",
-                  "disposition": "redesign"
-                },
-                {
-                  "label": "Done",
-                  "result": "Close location history and return to the Item list without changing data.",
-                  "disposition": "preserve"
-                }
-              ],
-              "action": "Tap a downloaded physical Item to open its location-history sheet.",
-              "result": "Show current and ended placement intervals, exact retained times, available location labels and explicit missing-label/partial copy. No payment, sale, refund or complete Item-detail claim.",
-              "disposition": "redesign"
-            },
-            {
-              "label": "Items within Space",
-              "options": [],
-              "action": "Open a represented active Project or Inventory Space, then tap an assigned downloaded Item.",
-              "result": "Show only exact-Space downloaded rows and an explicitly downloaded count; open existing physical location history, then Done returns to the same Space/checklist state. Unassigned and other-Space rows are excluded. Create/Add and full detail behavior remain pending.",
-              "disposition": "preserve"
             }
           ],
           "transitions": [
@@ -27104,11 +27414,6 @@
             {
               "name": "Checklist operation pending or rejected",
               "expected": "Operation status and rejection evidence remain visible while the durable command lifecycle converges.",
-              "disposition": "redesign"
-            },
-            {
-              "name": "Downloaded location history partial, missing, invalid or revoked",
-              "expected": "Always label physical-only partial coverage; missing labels are explicit. Invalid/foreign data or watch failure removes previously shown history. Closing or scope replacement suppresses late results.",
               "disposition": "redesign"
             }
           ]
@@ -27235,139 +27540,13 @@
           "expected": "The same real-view route passes on iOS Simulator, including card progress and unavailable Item/media evidence, scrolling the actual List to offscreen controls, preserving individual checked-state accessibility and queued acceptance. Modern launch-screen metadata is generated. In-memory fixture does not prove provider durability.",
           "command": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=iOS Simulator,id=75D871BB-35DB-4559-92EF-6B0116B4E8D1' CODE_SIGNING_ALLOWED=NO -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test",
           "status": "passed"
-        },
-        {
-          "id": "LEGACY-NOTES-MIGRATION-FIDELITY",
-          "risk": "migration_fidelity",
-          "expected": "Retain exact legacy text and source document with reconciled source-to-target scope; import must not duplicate individual notes.",
-          "command": "Conversion/parameter tests and existing payment source fixtures pass. Private SQL importer and existing synthetic runner now load text/source atomically; expanded before/after-commit recovery harness awaits an available local database. No production migration claim.",
-          "status": "planned"
-        },
-        {
-          "id": "LEGACY-NOTES-DATABASE-INTEGRITY",
-          "risk": "database_integrity",
-          "expected": "Nullable legacy_notes preserves exact text without modifying description or individual notes.",
-          "command": "CI34257496449/8c6ddb04 applied legacy read migration and passed all548SQL tests/18files including project_legacy_notes_read.test.sql. Follow-on report stream field-list assertion then failed on newly added legacy_notes; expected exact field list updated. New import SQL migration/tests and concurrent replay execution pending next CI.",
-          "status": "planned"
-        },
-        {
-          "id": "LEGACY-NOTES-HANDLER-IDEMPOTENCY",
-          "risk": "handler_idempotency",
-          "expected": "No new mutation grants or changed command semantics; actual import must be idempotent.",
-          "command": "Private invoker-rights import_project_legacy_notes locks exact Project, retains immutable source/text, rejects conflicts and performs no UPDATE on exact replay. SQL idempotency/rollback/role-denial tests added, execution pending. No API write grant.",
-          "status": "planned"
-        },
-        {
-          "id": "LEGACY-NOTES-TENANT-AUTHORIZATION",
-          "risk": "tenant_authorization",
-          "expected": "Same-Account active membership scopes legacy-note reads; removal denies access.",
-          "command": "Provider archive/reopen/removal passed. SQL member/cross-Account/removal/no-write-grant checks await CI.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-CARD-THUMBNAILS",
-          "risk": "media_durability",
-          "expected": "Visible Item cards use verified small derivatives with explicit original links, faithful primary/order selection and the existing protected offline cache. No full-list original downloads. Revocation or reference changes clear access; missing derivatives remain distinguishable from no image. Trusted publication is retry-safe and preserves original bytes/history.",
-          "command": "Uncommitted ItemCardThumbnailGenerator.swift:7focused tests/12cases pass for actual encoded identity, orientation, no-upscale, corruption and limits; root reviewed. Migration20260909114122 adds immutable same-Account original/recipe/derivative links with live-reference RLS;45actual SQL checks pass across item_card_thumbnails.test.sql and existing catalog tests. Independent RLS review found JPEG metadata gap, now rejected/tested by invoker trigger. Follow-on root-reviewed private invoker publication metadata function and replay/conflict/no-orphan tests:77SQL checks pass.30actualSQL stream captures,4service-parser tests (47queries/25tables),5local reader tests and8runtime original/thumbnail authorization cases pass. Explicit original-bound thumbnail contract prevents foreign/same-Account original substitution; optional derivative failures preserve original completeness. Native108px Item/group cards now use measured root List viewport, scoped original-bound selection and cancellable detached decode; independent review prompted scope guard/cancellation/empty-group placeholder fixes. Actual generated-JPEG UI fixture and native gallery card assertion added; final Macapp and iOSXCTest typechecks pass. Full1067native156suites passed78.134s. Actual byte-upload integration, concurrency-session proof and native viewport/card interaction still missing. Environment runtime allowlist corrected and passed. Follow-on offline LedgerItemThumbnail executable reuses native generator through bounded JSON stdin/stdout; no network/files/credentials. Actual local Storage harness passed generation,hash/length/MIME readback,duplicate nonoverwrite retry,corrupt-existing-byte rejection before metadata,SQL exact replay,member GET/cross-Account and reference-removal denial. Four concurrent publisher races passed with observed own-holder DB locks and no loser metadata orphans; root reviewed script. Synthetic immutable local evidence retained, no production access. CI4a0bfc17/34349279182 terminal failed report test imposing one-query-per-table on gallery; marker-only overlap correction passes106SQLcaptures. Mobile upload queue, durable interrupted-import runner and native viewport/card proof remain incomplete; these tests do not claim them.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-READ-ONLY-DESCRIPTIVE-DETAILS",
-          "risk": "ui_fidelity",
-          "expected": "items.md Target Everyday Editing: inspect Media, Notes, Details and History with Notes/Details initially expanded; preserve exact notes, source fallback, workflow/bookmark and physical location evidence. Missing downloaded metadata is unavailable, not fabricated. This increment grants no editing or financial visibility and does not claim complete Item history.",
-          "command": "Uncommitted DownloadedItemsView detail sections and existing gallery host, DownloadedItemDescriptiveDetails, atomic CurrentItemPlacementLocalReader projection, schema notes and migration20260909130847. Agent output independently reviewed:18reader tests,10SQL authorization checks,36physical stream captures and4parser tests passed. Root fixed overlapping report expected notes column:106actual SQL captures passed. Normal watch end now clears Item details;5focused model tests passed including live subscription, end, failure, wrong scope and clear. UI tests use exact detail field IDs and reveal Images in its own detail scroll, including pinned layout. Mac app and both platform XCTest typechecks passed; full1073native156suites passed72.957s (/tmp/ledger-item-details-full-native.log). Local security advisors report no issues; full930SQL checks passed after scoping thumbnail pgTAP fixture IDs to tap-thumb-* so existing local HTTP evidence is untouched (/tmp/ledger-item-details-db.log). New native detail interaction remains pending. No edit-role policy inferred; native CI not yet verified for this batch. CI34370470714/426baa0c actual details PASS Mac33.369s and iPhone73.457s. Detail Copy ID follow-on retains canonical UIBASE-ITEM-DETAIL-001 action; pending runtime test. CI34375623690/07712b11 detail UI and detail Copy ID passed both platforms.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-CURRENT-ACCOUNTING-ASSOCIATION",
-          "risk": "ui_fidelity",
-          "expected": "Project Item detail shows its current placement's canonical accounting association, not payment or Invoice status. Missing, restricted or malformed relationship evidence displays Accounting information unavailable, never an inferred Unaccounted For. Live changes replace old labels; Inventory shows no former Project accounting association. No editing or new permissions.",
-          "command": "Authority docs/specs/items.md:35-39,106-113,263-273; UIBASE-ITEM-DETAIL-001. Reuse ItemClientPaymentConnectionLocalReader with optional placement filter inside atomic history read; watch accounting dependencies and reread current placement plus authorization together. DownloadedItemPlacementHistory carries optional currentAccountingResolution. Existing detail/Space UI tests add known/unavailable/Inventory assertions; AppModel accountingUpdates covers replacement and access failure. Reader currentAccountingAssociation/currentAccountingWatch cover encrypted reopen, scope, access, Inventory and same-count relationship changes. Both strict native XCTest typechecks and conversion check PASS. Root reviewed reader/runtime/tests; independent UI/model review PASS. Extracted SQL compilation and EXPLAIN dependency checks PASS. Corrected macOS14 Core/AppModel module emissions, focused reader/model test typechecks, full Mac app typecheck PASS. Native runtime verification remains pending automatic CI for this checkpoint.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-CURRENT-BUDGET-CATEGORY-LABEL",
-          "risk": "ui_fidelity",
-          "expected": "Item hero shows its current Project placement's authorized budget-category label, updates when downloaded evidence changes, and shows Category unavailable for missing/restricted evidence. Inventory never displays a prior Project category. Malformed association Account/Project/Item fails closed. No editing or new permissions.",
-          "command": "Authority UIBASE-ITEM-DETAIL-001 and docs/specs/items.md:322. DownloadedItemPlacementHistory carries optional currentBudgetCategoryName; CurrentItemPlacementLocalReader extends existing atomic SQL/watch using established report assignment/visibility rules, not a report per Item. DownloadedItemsView and existing native detail/Space tests cover known/unavailable/Inventory states; AppModel category replacement/failure test and reader restart/watch/restricted/malformed-scope tests added. Root reviewed delegated data changes; independent UI review found no defect. Exact extracted SQL passed12 SQLite assertions; Core emit and iPhone XCTest compile passed. Full reader/app typechecks, model/reader test typechecks, AppModel emit and both strict XCTest compiles also PASS. Committed6a4951a4, automatic CI34391233972 pending native runtime proof; no complete claim. CI34391233972/6a4951a4 completed1080native tests/156suites PASS145.424s, including all4 new category tests: encrypted restart/current→Inventory0.376s, watch visibility/revocation1.005s, malformed association0.688s, model update0.001s. Log /tmp/ledger-6a49-macos-ci.log. Superseded run cancellation requested after latest998329bd includes entire batch; completed test evidence retained, incomplete UI/aggregate not promoted. Latest CI34393195728 must prove full UI integration.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-SPACE-REFERENCE-NAVIGATION",
-          "risk": "ui_fidelity",
-          "expected": "Resolved current Item Space opens the same authorized stable-ID Project/Inventory Space; Back restores originating Item. Archived references remain readable outside active browser and cannot enable mutations. Missing metadata is noninteractive. Scope mismatch, observer failure and route cancellation must not retain usable stale evidence or leak pending operation state between routes.",
-          "command": "Item detail Space link and ReferencedSpaceDetailView reuse exact-ID SpaceCoreDetailsStagingExercise with expectedScope, same query provider, independent existing checklist sessions and extracted SpaceChecklistSection; active browser unchanged. Authority UIBASE-ITEM-DETAIL-001, specs/items.md:322, specs/spaces.md:65-68. Native tests added for active Project checklist interaction+Back and archived Inventory read-only+Back; presenter tests cover archived read and wrong Project/Inventory evidence including cached failure; adapter test verifies no active-list dependency. Root reviewed delegated UI and corrected notes field plus startup/cleanup synchronization races. AppModel module, app, new model tests and iOS XCTest typechecks passed; final app typecheck also passed with synchronization-ready guard. Independent final review found no further concrete defect. Native tests also exercise repeated refresh then Back; no runtime success claimed. Full local native run unavailable under disk pressure. Regenerated existing Xcode project includes new view. Existing source-token regression from9123b68 corrected;29source assertions pass. Next integrated automatic CI must prove runtime behavior. CI34384262085/2e2c4120 Mac:1076native tests/156suites passed159.349s;24UI/6failures. Five failures (including both new navigation tests) compared empty Mac Button AXValue to expected label before navigation; sixth gallery duplicate-selector issue already fixed6db74ff2. Follow-on displayedText now uses AXLabel for Buttons only, retaining exact StaticText AXValue including empty strings. Mac XCTest compile passed. Log /tmp/ledger-2e2-macos-ci.log; actual Space navigation still unverified. CI34384262085/2e2 iPhone27of29 PASS: both new Item→Space flows passed (active Project23.156s, archived Inventory19.501s), including return and checklist assertions. Whole run failed unrelated group-copy and gallery counter tests; Mac route proof pending Button helper run. Exact log /tmp/ledger-2e2-ios-ci.log. CI34388379167/01ca Mac1076native PASS, UI23of24: BOTH new Space flows PASS13.601s archived/16.216s Project. Sole failure gallery container1240, addressed in later commits. Log /tmp/ledger-01ca-macos-ci.log.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-COPY-SELECTED-IDS",
-          "risk": "ui_fidelity",
-          "expected": "Copy IDs preserves the shipped sorted newline-separated stable IDs, limited to current scoped query eligibility. Copy neither clears selection nor mutates the backend; loading/removed/filter-excluded IDs cannot be copied. Governing authority: items.md Target Everyday Editing and existing Item bulk-action Copy IDs disposition.",
-          "command": "DownloadedItemSelection.copyPayload and DownloadedItemsView Copy IDs re-read matching selectionEvidence at click and use native pasteboards.17focused browsing tests pass, including empty, duplicate visible IDs, stale/excluded IDs, selection retention and byte-distinct Unicode eligibility. Mac app and both platform XCTest typechecks pass. Existing native group interaction test now asserts exact clipboard group-a/newline/group-b and selection retention; native runtime pending. No command roles, financial fields, mutations or provider changes. Full1070native156suites passed75.702s (/tmp/ledger-item-copy-full-native.log); conversion checks passed. Actual clipboard tests remain unverified until exact-commit native CI. Single-Item companion uncommitted: row context menu uses same live-eligibility copy contract and clipboard writer without touching selection. Whole-view copy-failure alert also works without bulk selection. Native group test adds actual Copy ID clipboard and zero-selection checks. Mac app/both XCTest typechecks pass; runtime pending. Other Item menu mutations remain unimplemented. ebf11e65/34353728741 iPhone group test TIMED OUT at300s immediately after Copy IDs, before any next AX action: direct UIPasteboard.general.string read in background runner is the suspect blocking call. Uncommitted correction reuses existing native PasteButton fixture to verify exact copied text in foreground; no stubbed payload. Both Copy cases retain exact IDs/count assertions; disposable-CI clipboard guard added. Group/refresh counts now revealed after layout expansion. Both XCTest typechecks pass; actual runtime pending. CI34370470714 confirms row context menu copied group-a when group-c was clicked on both platforms. Follow-on replaces outer native List with ScrollView/VStack in real staging and fixture, preserving Item task/sheet lifetime and separate checklist editor List. Keeps exact two-row payload checks; adds detail Item actions Copy ID under exact loaded Account/Item guard and isolated exact-text paste receiver. Root app/both XCTest compiles and independent review PASS; new runtime proof pending. CI34375623690/07712b11: group and detail Copy ID passed both platforms with actual clipboard assertions; outer ScrollView fixes shared-cell menu ownership. CI34380834552/9123b68: group Copy passed; detail test failed while receiver remained Reading copied report (log:11867). No proven app Copy failure. Follow-on exact-text fixture uses native PasteButton(payloadType:String.self), still asserting actual exact clipboard text; PDF/CSV provider path unchanged. Independent review, iOS API compile and app compile passed; precise old callback delay cause unproven; runtime confirmation pending. CI34385657700/6db iPhone group Copy PASS138.131s and detail Copy PASS40.877s using actual typed native paste. Full iPhone28of29; only gallery reveal failed. Log /tmp/ledger-6db-ios-ci.log.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-SELECTION-TOUCH-TARGETS",
-          "risk": "ui_fidelity",
-          "expected": "iPhone Select All has at least44pt touch height; physical Item and grouped Item selectors have44x44pt hit areas. Existing select/deselect/filter-pruning semantics remain unchanged and must pass actual interaction tests.",
-          "command": "DownloadedItemsView.swift enlarges label hit areas only on iOS; existing group and refresh/removal UI tests retain selection-count assertions and add size checks. Mac app/iOS XCTest typechecks passed. CI5721c40f had clipped SelectAll with0 selected; this usability correction is not proof of that failure's resolution. Native verification pending next batch. CI34375623690/07712b11 iPhone refresh/removal failed exact44pt comparison at43.99999999999997. Test now permits1e-6 coordinate rounding; app44pt target unchanged. Runtime confirmation pending. CI34380834552/9123b68 iPhone refresh/removal interaction passed150.374s with coordinate-rounding tolerance.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-IMAGE-COUNT-LIST-FIDELITY",
-          "risk": "sync_visibility",
-          "expected": "Image filtering distinguishes authorized marker count zero, positive count, and unavailable metadata; unknown is never No Image. Existing physical/report subscriptions deliver marker changes to atomic readers without photo downloads. Filter choices combine with other facets and clear normally.",
-          "command": "Image facets/count labels and atomic marker projections:16Core browsing,37focused provider,36physical SQL captures,4parser checks pass. Original full1050native passed1049; new mutable-loop watch test failed despite trace-proven timely delivery/consumption. Immutable per-event helper preserves immediate INSERT/UPDATE/DELETE/revocation;6clean strict passes plus focused suite. Precise old loop cause unproven; no production workaround. Commit129a1c70 CI34343168430 failed stale report-test indices; corrected test-local-property-management-stream.mjs uses named tables and preserves allguards, adds marker positive/empty/scope/denial evidence.106actualSQLcaptures and real MCP/HTTP report checks passed (/tmp/ledger-property-stream-named{,-mcp}.log); agent diff independently reviewed. Native filter UI still pending CI; thumbnails not implemented.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-IMAGE-NATIVE-GESTURES",
-          "risk": "ui_fidelity",
-          "expected": "At fit on iPhone, horizontal swipe changes the selected image and resets zoom; vertical drag dismisses the full viewer only beyond90pt and otherwise snaps back. Native pinch and zoomed pan remain functional. Pinned images share paging but not vertical dismissal. No new media storage or authorization boundary.",
-          "command": "Native surface/XCTest typechecks passed. CI34344962438/45799fb0 and34346080394/999cec7e failed pinned vertical swipe. Root inspected actual457 iPhone recording: the enclosing Item sheet disappeared, exposing the Items list. At fit, the image now consumes vertical navigation gestures even without a dismissal callback; zoomed native panning and gestures outside the image remain unchanged. Independent source review supports ownership correction, but ancestor-sheet runtime resolution still needs CI. Existing test now requires both Unpin and Item history to survive the drag. Full1069native156suites passed77.103s; standalone iOS gesture and XCTest typechecks passed. Recording: /tmp/ledger-gallery-visual.CqIjGi/swipe/13361714-1F98-4AF9-BDEC-710344BE47C0.mp4. No full gesture completion claim. Exact iPhone testDownloadedItemImageSwipeNavigationAndDismissal PASSED on2e16ed7f/34352288922 (69.172s) and ebf11e65/34353728741 (63.893s), covering pinned vertical retention, horizontal paging, zoomed pan and full-view dismissal. Whole runs failed elsewhere; gallery controls remain unresolved.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-IMAGE-VIEWER-CONTROLS",
-          "risk": "ui_fidelity",
-          "expected": "Full iPhone gallery occupies the screen; covering the parent route preserves its existing pin. At fit, navigation/zoom controls hide after2.2s and single tap toggles visibility; zoom/page changes reveal controls. Close and Pin remain usable. Hiding controls does not resize the image or reset zoom. Pinned viewer remains compact with visible navigation.",
-          "command": "Native presentation and cancellable view-local timer implemented; existing XCTest covers full height, pin retention, hide/reveal, zoomed visibility and stable geometry. CI34346080394/999cec7e terminal failed3Mac/3iPhone: Mac single-tap reveal and iPhone auto-hide remain unresolved. Root inspected457 gallery recording; final sampled frame visibly omits zoom/navigation controls, but that alone does not prove accessibility state at the failing assertion. dfe09955 adds hierarchy diagnostics; await its exact CI34350494701 before inferring a timer or accessibility fix. Separate definite selection lifecycle defect corrected: DownloadedItemsModel.selectionEvidence distinguishes temporary missing snapshots from authoritative filtered/empty results, so refresh/covering no longer clears selection indirectly.13focused model tests and full1069native156suites pass; Mac app/iOS XCTest typechecks pass. Native refresh-while-selected assertion added; runtime still pending. No broad Item completion claim. Follow-on root-reviewed CI log proves Mac reveal helper never tapped: initial visible check skipped tap, redundant predicate wait raced the2.2s hide timer. Helper now returns immediately when visible and waits only after an actual reveal tap; tapImageControl checks immediately rather than spending another predicate interval. Product timer/recognizers unchanged; runtime assertions retained. Both platform XCTest typechecks pass; next CI required. Feedback scheduling: supabase-conversion-control.yml now runs native-macos/native-ios independently behind unchanged prerequisite checks; stable Isolated target environment aggregate requires every dependency success. No test/timeout reduction, full Swift suite once, platform-separated failure artifacts. Root independently reviewed delegated workflow/guard diff;14CI tests pass, including actual aggregate shell success and16negative outcomes. YAML and standalone guard pass. Real elapsed saving not yet measured. c660 Mac completed19/22 passes, failed context menu, thumbnail AX value and detail-title reveal (/tmp/ledger-c660-macos-ci.log). Corrected full-visibility helper to permit exact scroll edges and avoid predicate waits for existing rows; runtime unverified. Added CI-only assertion screenshot attachments and small PNG/JPG failure artifacts while retaining full results and unchanged verdict gates. Read-only independent review accepted capture isolation/verdict preservation and found extraction-prefix escape; exact step/worker validation plus adversarial tests fix it.15CI tests, standalone guard, both native XCTest compilations and conversion check PASS. Screenshot export runtime remains pending; old xcresult export confirmed failures previously lacked image attachments. d9/34362533181 iPhone failed before UI: newer CI compiler rejected issue/self crossing MainActor.assumeIsolated in screenshot hook. Correction transfers only Sendable PNG Data, retaining original failure outside actor closure; independent review and both strict-concurrency XCTest compiles pass. Thumbnail actual render state now also appears in AX label because Mac group omitted AX value; test still requires Downloaded, not placeholder. Mac app typecheck passes. These corrections and Photos/export runtime remain pending exact CI. b4/34359013197 iPhone4/25 failed,1605sec (/tmp/ledger-b4-ios-ci.log): actual native paste returneda/b/c rather than selecteda/b and selection cleared, no timeout; selectionControls now explicitly borderless to isolate sibling List actions. Gallery AX value Image controls hid... proves timer reached hidden state while zoom buttons stayed exposed; both control groups now use hidden() with reserved layout, leaving native image surface and timer unchanged. Existing exact payload/count/geometry/hide assertions retained. Mac app compile and independent review PASS; exact-commit runtime still required. 3d/34363941225 terminal Mac19/22 and iPhone23/27 passed. iPhone read-only details PASS28.807s. Small failure screenshots now exported and inspected: Mac Item title right-click opens thumbnail retry menu; LabeledContent is visibly present but AX frame extends1pt beyond scroll; gallery reset reads controls after auto-hide. Corrections replace nested retry menu with explicit local retry control, test two distinct Item Copy IDs/retry, permit bounded1pt containment, reveal controls before reset check and require their existence. Independent review and focused compiles pass; exact new runtime pending. CI34370470714 gallery still failed on intentionally hidden controls/counter reads. Follow-on guards missing elements, avoids redundant predicate polling delay after completed reveal tap, and reveals before exact counter assertions. Auto-hide behavior and exact assertions retained; runtime pending. CI34375623690/07712b11 gallery failed both platforms: Mac delayed reset predicate missed visible interval; iPhone zoom-in hit point expired. Follow-on tests use real hide/reveal for fresh interval and immediate reset assertion; app timer unchanged. Independent review and strict app/both XCTest typechecks passed. Runtime confirmation pending. CI34380834552/9123b68 terminal: iPhone gallery failed because rendered-image selector matched full gallery AND underlying pinned reference (log /tmp/ledger-9123-ios-ci.log:11151). Helper now scopes image to existing target-item-image-viewer container; pin is not hidden/removed. Reviewed; iOS XCTest compile passed, runtime confirmation pending. CI34385657700/6db Mac1076native PASS; gallery fails at container lookup because native macOS exposes Group, not Other (2e2 log hierarchy19919). Follow-on keeps exact full-viewer identifier and scopes its image through any native container type; Mac strict XCTest typecheck passes, runtime pending. 2e2 iPhone gallery Previous event arrived2.57s after reveal, beyond2.2s timer; exact counter stayed1of2. Localized50ms polling replaces built-in1s existence polling with unchanged5s deadline and exists+hittable requirement. Both strict XCTest compiles and independent review pass; reviewer notes event delivery can still race, so runtime proof remains required. CI34385657700/6db iPhone28of29; sole gallery reveal failure1252 again follows slow native existence polling. Already-addressed by e3f4ba9a prompt wait; await exact CI34389224602, no app timer change. e3f4/CI34389224602 Mac1076native PASS/UI23of24: gallery now passes hide/reveal/zoom/page/pin through final close, fails1079. Root viewed small screenshot15D1B4AE in /tmp/ledger-e3-gallery.gJdszT:450pt window clips gallery header/footer after unpin. Real fixed-height layout defect. Follow-on Mac-only photo/surface yield height to fixed controls; removed pin-dependent600 minimum. Native test requires image>40pt, hittable in-window Done and eventual disappearance. iPhone layout/timer unchanged. Both XCTest compiles pass; app compile and exact new runtime pending. 01ca iPhone28of29, only old reveal1252; log /tmp/ledger-01ca-ios-ci.log. e3f4 iPhone gallery PASS155.193s (full run28of29; unrelated Not Set filter menu selection failed1457). Log /tmp/ledger-e3f4-ios-ci.log. Mac adaptive-layout follow-on998329bd compiled/reviewed/pushed; automatic CI34393195728 pending. CI34393195728/998329bd Mac1080native PASS,23/24UI: sole failure app.frame.contains(done.frame) after image-height/hittability passed. Screenshot /tmp/ledger-998-gallery.E57VcO/Test-LedgerTargetStaging-2026.09.09_19-22-48-+0000.xcresult/7D86B5F6-C4C7-47E3-AB16-85FE1058D32E.png visibly confirms header/Done/footer inside window. Mac assertion now uses containing window; actual tap/disappearance preserved. Root screenshot inspection and independent review PASS; strict Mac XCTest compile PASS. Await next exact-commit runtime proof.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-IMAGE-EXPORT",
-          "risk": "media_durability",
-          "expected": "Save/share exports the selected authorized image only after destination preparation and revalidation. Clear/reload/reference removal, unavailable bytes and pre-handoff cancellation reject delivery. Duplicate requests stay blocked until OS completion. iOS add-only Photos saving reports success only after actual save; sharing cancellation is not an error. External destination copies cannot be recalled.",
-          "command": "DownloadedItemImagesModel.exportImage and tests:12focused tests/28cases plus full1058native155suites passed; root reviewed delegated code. Native share reuses existing presentation lock/Mac session with in-memory platform image; Photos uses original bytes and generated add-only purpose string. iOS native delivery,bothXCTest,Macapp/environment checks passed; final UI error-copy check pending. Added native iOS Share cancellation/re-enable assertion; Photos success/denial and image share completion still unverified. ADR records authorization and destination lifetime. CI5721c40f terminal20Mac/3fail,22iPhone/2fail; exact logs identified Mac image AXrole,ambiguous Workflow option,Sort reveal corrected in this batch. iPhonePin/SelectAll remain unproved against newer code. Uncommitted focused iPhone Photos tests now exercise real add-only permission denial/retry and success alert after native save, retaining the image and re-enabling controls. Existing disposable-CI guard prevents developer library writes or permission resets; synthetic image only. XCTest resetAuthorizationStatus(.photos) verified in installed SDK headers. iOS test compilation passed; OS prompt labels/reset behavior and saved outcome remain runtime-unverified. No assertion of original-byte readback from Photos or share completion. 3d/34363941225 actual iPhone PhotosDenied PASS26.784s, PhotosSaved crashed. Retained crash report proves PHPhotoLibrary.changes queue triggers Swift actor assertion in DownloadedImagePhotoSaving.save closure. Explicit @Sendable callback correction preserves original Data, add-only permission and real save completion; independent review and exact iOS helper strict-concurrency compile PASS. New save runtime remains required; no successful Photos byte-readback claim. CI34370470714 at426baa0c: actual iPhone PhotosSaved PASS19.869s and PhotosDenied PASS25.016s after actor fix; original-byte readback from Photos remains unclaimed. Whole run failed other UI assertions (Mac19/22, iPhone24/27). CI34375623690/07712b11 iPhone Photos save and denial tests passed again; original-byte readback from Photos remains unclaimed.",
-          "status": "planned"
-        },
-        {
-          "id": "ITEM-IMAGE-PROTECTED-READ",
-          "risk": "media_durability",
-          "expected": "Only the same live authorized Item reference may return verified protected bytes; reference replacement, Account removal and close reject in-flight results. Cached bytes remain reusable offline without being mistaken for Item authority. Missing catalog metadata is not No Image.",
-          "command": "DownloadedItemImagesTests, DownloadedImageObjectReferenceTests, ItemImageCatalogLocalReaderTests, LedgerPowerSyncAttachmentDurabilityProviderTests and itemImageDownloadAuthorization passed; native gallery interaction pending exact-commit CI.",
-          "status": "planned"
-        },
-        {
-          "id": "INDIVIDUAL-NOTES-EXACT-MCP-PARITY",
-          "risk": "app_mcp_parity",
-          "expected": "App and MCP retain unknown historical metadata and exact timestamp ordering with identical request fingerprints and authorized page boundaries, including undated continuation.",
-          "command": "ProjectNoteDataTests, ProjectNotePowerSyncQueryTests, projectArchivalReview.test.ts and test-local-project-note-read.mjs; exact cross-runtime integration remains pending.",
-          "status": "planned"
-        },
-        {
-          "id": "LEGACY-NOTES-PAYMENT-IMPORT-COMPATIBILITY",
-          "risk": "accounting",
-          "expected": "Sharing canonical source-envelope encoding preserves existing payment bytes and exact cents. The synthetic runner commits two payments and one parent legacy-note fact atomically, with separate journal counts and independent committed readback.",
-          "command": "Existing FirebaseClientPaymentImportParametersTests golden fixture passed unchanged. Expanded test-local-payment-import-recovery.mjs checks2payments/60cents plus1legacy note, both interruption boundaries and rollback on conflicting notes; runtime execution pending local Docker availability.",
-          "status": "planned"
         }
       ],
       "deferredBehaviors": [
-        "This workflow claims only the Project-to-Space-to-checklist path, not the Business Inventory entry path already covered by the scoped Space browser workflow.",
-        "Other Project tabs, Project setup/edit/archive, Space search/create/edit/archive, checklist collection editing, Items, media, note mutation/legacy migration, budgets, accounting, MCP, hosted Sync/Auth, production and cutover remain separate workflows.",
-        "No broad Project directory or Project detail story is claimed from this narrow path.",
-        "Live checklist mutation authorization remains subject to O-053. The user has been asked specifically about check/uncheck actors; the UI fixture grants no production permission and does not settle other Space command roles."
+        "Downloaded Item list/detail/media behavior is owned by downloaded-item-browsing-and-detail, even when entered through this navigation shell.",
+        "Note transformation/import and migration reconciliation belong to item-history-source-reconciliation. This record owns only their read-only Project presentation.",
+        "Project/Space creation, editing and archival, checklist structure editing, full financial workspaces, hosted verification and cutover are not claimed here.",
+        "Live checklist mutation authorization remains subject to O-053; synthetic fixture permissions do not approve production command roles."
       ],
       "blockers": [],
       "verification": {
@@ -27386,7 +27565,7 @@
         "review": {
           "required": true,
           "status": "passed",
-        "summary": "CI34259667977 at71bce05c04d82cf7561a46ee2a083b8628392d4a confirms580SQL tests/19files, all15macOSUI and12of13iOSUI passed. Legacy Project notes separation (four presence combinations), Project and Inventory checklist interactions and Inventory remembered navigation passed on iOS. Private legacy-note import passed3observed-lock races and2terminated-session recovery boundaries, conflict rollback and committed readback. Whole run failed only unrelated PDF text-selection test. Local900tests/134suites passed before commit. Individual note migration, complete Project layout, local executable recovery, hosted integration and broad workflow completeness remain unverified. Prior independent scope/lifecycle/route reviews remain applicable to unchanged code. Follow-on A031: main independently reviewed FirebaseProjectNoteConversion.swift and source authority. Six FirebaseProjectNoteConversionTests passed (28191 terminal0), including byte-distinct Unicode scope, missing/null/empty metadata, mcp-agent, arbitrary source, unknown evidence, exact nanoseconds, update-without-editor and malformed fields. Source extraction only; existing target note model/schema/cursors still cannot represent all historical metadata. No individual-note persistence/read completeness claim. A031 read-contract batch: exact Core timestamps/nullable historical metadata, originalCreatorId, integer ms/remainder SQL and PowerSync paging, matching MCP cursor/fingerprint. Root independently reviewed agent Core/MCP/fixture work; agent static SQL/provider and compatibility-sort reviews returned GO. Combined28native tests48705 and all38MCP tests passed. Full914tests/136suites failed48.024s only old no-temp-sort plan assertion; focused reproduction confirmed. Updated actual-query indexed-scope test32640 passed; temporary scoped sort and unmeasured large-project latency explicitly recorded in A031. AppmacOS typecheck88291, environment/contracts/conversion/10CIguards/diff passed. SQL52checks and HTTP fixtures updated but runtime not executed locally (Docker timeout); exact-commit CI pending. Pure converter retains source facts, but private individual-note import/parameters and incompatible source-field handling remain unfinished; this is not migration or broad workflow completion. Individual-note importer follow-on: new private SQL20260908192948 and pgTAP, exact16-parameter exporter and six focused tests64638 passed. Synthetic runner now includes1individual note with2payments+1legacy note in one transaction/journal and byte-exact fresh readback. Build18322 and recovery-script syntax passed. Root reviewed delegated SQL/recovery harness; independent agent reviewed root exporter/runner GO. Separate-process recovery and new SQL runtime remain unexecuted (Docker93269 ETIMEDOUT); source compatibility gaps including blank creator names remain unresolved. No broad completion claim. Historical blank-name follow-on: Core/MCP/import/presentation and encrypted-reopen tests retain empty/whitespace creator names distinct fromnull, withNUL rejected; new SQL20260908194745 drops only historical nonblankname constraint. Independent review GO. Full922native137suites68076 passed48.080s;39MCPtests, typecheck, conversion/environment41288 anddiff passed. SQL runtime is pending containing-commit CI; no historical-content or whole-workflow completion claim. Location-history follow-on: DownloadedItemsView opens an existing Item sheet with current/ended physical intervals, missing-label/partial copy, refresh and Done. New DownloadedItemHistoryModel clears stale/foreign/error results; separate history read port uses existing authorized placements/runtime without new subscription or financial inference. Root reviewed delegated reader/runtime/tests; independent UI/model review led to byte-exact Account/Item task reload key. Root found malformed timestamp normalization/Unicode digit hazards; agent fixed with calendar/offset validation and exact fractional comparison. Eleven provider tests69841 cover interval order/overlap, missing labels, cross-Account denial, reader revocation/no subscription and encrypted reopen; four model tests1780 passed. Complete app macOS14/Swift6 typecheck86037 and full938native139suites35596 passed51.168s. Native UI test extended, but actual interaction and dedicated runtime-wrapper drain proof remain pending; no full Item/history/workflow completion claim. Space Item entry follow-on: exact Space filter/count and shared history navigation added to validated Project/Inventory detail. Root reviewed delegated fixture/UI tests; controls recorded above. Core5tests53247, runtime lifecycle2tests98205/livewatch1test20525, full940native139suites10729 passed51.339s. App typecheck56711/count-view typecheck passed. CI34276506572 stopped before native tests on outdated exact runtime assertions; only reviewed history methods/protocol added, environment and10CIguards4889 passed. Actual interaction, create/add/shared search/sort and broad Space Item completeness remain pending. Checklist status accessibility fix: CI34274974413/1a497ca4 passed all earlier gates and12/13iOS interactions, failing Inventory status lookup. Its actual screen recording shows checked Item, one accepted invocation and queued status; accessibility query fails as LabeledContent changes from horizontal to vertical. Status row now exposes one explicit label/value element; Project/Inventory UI assertion requires exact queued value rather than any pending substring. Main reviewed focused UI-only diff; full app typecheck56251, syntax parse and conversion check passed. Native interaction proof for this fix remains pending; unchanged domain/provider full940-test evidence is reused. Project Item accounting readback follow-on: DownloadedProjectItems/DownloadedProjectItemsWatch pair all physical placements and relationship-derived accounting in one SQLite transaction, reused scoped report subscription, limited access retains physical rows with unknown accounting, removed access denies and runtime close drains. DownloadedItemsModel/View use the combined stream for Project/Space grouping without hiding unknown Items or changing Inventory. Root reviewed provider joins, scope constructor and runtime ownership; 19 focused tests and full1014 native tests/150 suites pass (/tmp/ledger-project-items-root-tests.log, /tmp/ledger-project-items-full-native.log); full app typecheck passed. UI fixture adds accounted/unknown section coverage; exact-commit native UI CI still required. No Link/edit writes or broad Item-workspace completeness claim. Separate iPhone CI34318832216 failed14/15 at profile/report Share five-second predicate. Independent artifact review found failure snapshot byte-identical to pre-report snapshot (SHA1f557677e2c29b6e9704acc3b982ac80f2de364f0), despite intermediate report assertions; evidence /tmp/ledger-profile-ci-34318832216.hq4i3n. Test now waits existing report-ready totals then directly asserts Share enabled with hierarchy diagnostics; no app eligibility changes and no claim that simulator stall is fixed. Item browsing follow-on: existing downloaded name/SKU/created_at feed canonical name fallback, scoped descriptive search, four stable sort orders, unknown-date-last handling and expandable accounting groups; no-match differs from no downloaded rows, Clear dismisses keyboard. Root fixed reviewer-found history CTE name omission and verified canonical history name plus actual +00:00 timestamps. Full1018native151suites passed /tmp/ledger-item-browsing-full-native-fixed.log; app typecheck/environment passed. Conversion gate failed at686939fe due invalid saved-state scope/action count; corrected state now passes the directly executed conversion check. Mac UI runs34324450033 and34324884277 failed the same two Item tests: native DisclosureGroup rendered section labels without Item rows inside the embedded List cell. Replaced it with explicit expansion buttons and sibling rows, retaining counts, default expansion and shared accessibility IDs. Added Name/SKU All/Only/All-except facets, OR within/AND across, scoped search intersection and Clear filters. Independent review found no blocker; native UI test now exercises SKU exclusion/Clear as well as search, four sort orders and collapse/reopen. Five focused tests and full1020native151suites passed (/tmp/ledger-item-facets-full-native.log); app and both XCTest typechecks plus environment checks passed. Actual UI confirmation for this correction remains pending; no full Item-workspace claim. Other facets, full cards/detail/selection and writes remain incomplete. Atomic Item-read CI34323220368/5538ef14 is terminal GREEN:803DB,1014native150suites,17MacUI,15iPhoneUI and both builds. Selection follow-on uses stable physical IDs, select/deselect-all-visible, Clear, row open-vs-toggle and pruning on search/filter/scope/loading/access changes. Root reviewed delegated helper/tests; independent reviewer found no UI blocker. Eight focused tests and1023native151suites passed (/tmp/ledger-item-selection-full-native.log); app/Mac+iPhone XCTest typechecks passed. UI assertions cover checkbox, row selection without navigation, all/clear, filtered selection non-restoration and removal with active selection. Actual same-commit UI execution remains pending; selected price totals, bulk mutations, grouping and broader Item workflow remain unfinished. Archived Inventory parent correction: migration20260909081820 extends the existing archived-Project SELECT policy to exact current physical parents in either scope; physical_account_items includes only active or currently referenced Spaces. No write grants or unrelated archived browsing. Root reviewed delegated SQL/17pgTAP assertions; independent review approved stream predicates and native restart test. Full820DB27files and1024native151suites passed (/tmp/ledger-archived-space-full-{db,native}.log),24 privileged actual-stream SQL captures and4 real parser tests passed. Advisors show only existing two-permissive-Space-SELECT warning, no security error. This preserves offline readability after encrypted restart; hosted replication and the Space facet UI remain unverified/unimplemented respectively. Space facet follow-on: existing owned subscriptions now read physical rows plus scoped Space choices atomically; includes empty active and referenced archived Spaces without a second directory watcher. UI uses exact IDs, No Space, All/Only/All-except, clear/reset and hides Space facet in Space Detail; missing/duplicate names disambiguate and selection uses the existing pruning pipeline. Root reviewed delegated reader/runtime/tests; independent Core/UI review GO.23provider+9Core focused and1026native151suites passed (/tmp/ledger-space-facet-full-native.log), app/Mac+iPhone XCTest typechecks and environment passed. UI test exercises None/empty/archived/No Space/Clear and hidden detail facet. Selection CI34327982123 terminal16/17Mac failure was clipped search field(y122–148 versus scroll viewport144–510), not typing after full visibility; opt-in reveal now requires whole-field containment and corrects scroll direction, preserving assertions.2c0421ad CI34327248788 MacUI passed, iPhone remains live. New controls/scroll correction require exact-commit UI CI; no full Item workflow claim. Read-only Item workflow/bookmark batch: migration20260909090456 adds nullable raw workflow_status/bookmark with explicit SELECT only under existing membership RLS. Both Item streams/native schema/atomic reader preserve raw and nullable evidence, reject malformed local booleans; owned watch and encrypted restart tests cover updates/removal. Core shares approved purchase aliases, preserves unknown legacy values (no Sold-specific policy), and keeps workflow separate from accounting. UI adds status label/bookmark indicator plus All/Only/All-except facets; nil/false both match shipped Not Bookmarked filtering. No edit authority or detail-toggle claim. Root reviewed provider SQL/native changes; independent Core/UI/tests review GO.12focusedDB+24provider+11Core passed; full832DB28files and1029native151suites passed (/tmp/ledger-item-status-full-{db,native}.log).24actualphysicalSQLcaptures/report11queries/4actualparser checks passed; advisors retain only existing Space performance warning. App and both XCTest typechecks, environment and diff checks passed. New standalone native UI test covers status/indicator/filter/reset; exact-commit UI CI pending. Broader cards/grouping/detail/writers remain incomplete. Source/grouping follow-on: migration20260909091747 and both streams retain distinct nullable original/immediate source metadata; shared physical/combined readers preserve raw blanks/nulls and encrypted/live updates under unchanged membership RLS/SELECT-only grants. Core grouping uses original vendor+SKU with unambiguous name fallback against full unfiltered fixed location; structured keys prevent delimiter collisions and no physical identity is merged. Source labels/facets use current_source before source; search includes both. UI adds group count/expand/collapse/indexed physical rows and eligible group selection, exact source/SKU labels and Source All/Only/All-except filter. Price totals/thumbnails/details/writers remain incomplete. Independent review caught fixed-Space candidate pollution and missing collapse interaction; both corrected with tests.40focused/1034native151suites and843DB29files passed (/tmp/ledger-source-grouping-full-{native,db}.log), actualstream/parser/advisor/environment/app+bothXCTesttypechecks passed. Root reviewed provider boundaries and independent Core/UI review GO. ADR records source-label/import/movement obligations without reconstructing mutable Transaction history. CI34331154071 and34331900121 failed repeated full-field reveal overshoot; macOS helper now uses measured pixel scrolling with unchanged containment assertion. MacUI failure no longer suppresses iPhone attempt; mandatory original-outcome gate then fails job before artifact capture.12CIguardtests and independent sequencing review pass. New group/source nativeUI acceptance and corrected scroll require exact-commit CI; no whole Item workflow claim. Item original-image read batch: item_image_objects/sets/references with deferred completeness constraints and unique primary index, SELECT-only tenant RLS/private Storage GET, current-revision item_images Sync Stream and atomic local reader. Shared protected image cache/transport reuses existing logo bytes without granting Item authority. Runtime revalidates live reference and access around cache/download awaits; exact UTF8 parents/reference/object identity rejects canonical Unicode aliases. Model clears stale/foreign/ended streams; gallery renders actual bytes, primary/order, previous/next, retry and explicit incomplete-versus-empty states. Full1046native155suites and863DB30files passed (/tmp/ledger-item-images-full-{native,db}.log); after identity tightening9focused4suites passed (/tmp/ledger-item-images-byte-identity.log).20focusedDB/18actualstreamcaptures and4parser checks passed. Root reviewed provider boundary; independent cache/runtime/UI review found no additional defect. App/both XCTest typechecks passed before final identity guard change; final checks and exact-commit native UI remain pending. New gallery UI test and fully-visible status filter interaction added. No claim for thumbnails/Image facet, full zoom/pan/pinning, uploads/edits/deletion, approved auth transport wiring, hosted Storage, migration or whole Item completion. Gallery inspection follow-on: decoded-pixel-only native UIScrollView/NSScrollView adds fit-relative1-5 pinch/pan and centered2.5 double tap/click; no new byte loader or backend state. Gallery adds0.5 zoom steps/reset, stable reset-control layout, exact-reference selection and wrapping Previous/Next with single-image navigation omitted. Root review caught resize/reset feedback; fixed-height control slot prevents it. Independent native review fixed queued-report/external-binding race and verified AppKit centeredAt coordinates against SDK header. Both standalone native platform and XCTest typechecks passed; integrated app typecheck and native UI evidence pending. Extended gallery test covers0.5 change/reset,double gesture2.5,image-change reset and wraparound. Pinning, swipe pager/dismiss, auto-hide chrome, save/share and thumbnails remain unfinished; native gesture runtime verification is not inferred from typechecking. Pinning/interaction follow-on: view-local pin ID/request generation reuses the live authorized gallery/cache/native zoom surface beside partial Item location details. Compact20-50percent resize with accessibility adjustments, wide384sidebar, navigation/unpin/replacement; no backend preference/state. Independent review found same-ID re-pin not resetting selected image and compact overflow; root corrected request identity and layout. Expanded UI assertions cover pin, detail refresh while pinned, navigation, same-ID re-pin and unpin; resize/wide/rotation and full editing host remain unverified. Both XCTest and app typechecks passed before final sizing adjustment; final integrated check recorded at checkpoint. ffd1b55a CI34335057826 terminal failed19MacUI/3 and21iPhoneUI/3; actual PDF/CSV Copy passed32/28s. Logs show clipped SelectAll/Filter taps, repeated None across Mac submenus, and iPhone dismissal at statusbar y26. Fixes fully reveal controls before toggles, scope Space→None and choose unchanged Name→All to dismiss; exact assertions remain. Mac continue-on-error conclusion is not pass evidence; mandatory outcome gate correctly failed.6355430e CI34338531249 failed Mac build because new gallery was absent from committed Xcode project; regenerated existing specification includes both new views. Environment check now catches target app files omitted from project. No native pin/gallery completion or hosted/cutover claim."
+          "summary": "Scope repair only: Project/Inventory navigation and Project-note presentation remain here; Item/media checks and note-import checks moved with their exact IDs/statuses. Prior detailed review and run evidence is preserved in this same record at f66e2927. Existing individual passed checks are retained; this accumulated workflow has no new completion claim."
         },
         "ci": {
           "status": "passed",
@@ -28304,7 +28483,8 @@
         "rls",
         "powersync_sync",
         "local_offline",
-        "app_ui"
+        "app_ui",
+        "app_mcp"
       ],
       "riskDomains": [
         "migration_fidelity",
@@ -28314,7 +28494,8 @@
         "tenant_authorization",
         "sync_visibility",
         "offline_durability",
-        "ui_fidelity"
+        "ui_fidelity",
+        "app_mcp_parity"
       ],
       "uiJourneys": [],
       "acceptanceChecks": [
@@ -28478,6 +28659,48 @@
           "expected": "Actual SDK registers exact Account subscription offline; local rows arrive without waiting for network; membership removal terminates access. Delayed setup/cleanup tests show runtime close drains owned work. No hosted or complete-inventory claim.",
           "command": "swift test --package-path LedgeriOS --filter DownloadedItemPlacementWatchTests",
           "status": "passed"
+        },
+        {
+          "id": "LEGACY-NOTES-MIGRATION-FIDELITY",
+          "risk": "migration_fidelity",
+          "expected": "Retain exact legacy text and source document with reconciled source-to-target scope; import must not duplicate individual notes.",
+          "command": "Conversion/parameter tests and existing payment source fixtures pass. Private SQL importer and existing synthetic runner now load text/source atomically; expanded before/after-commit recovery harness awaits an available local database. No production migration claim.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-DATABASE-INTEGRITY",
+          "risk": "database_integrity",
+          "expected": "Nullable legacy_notes preserves exact text without modifying description or individual notes.",
+          "command": "CI34257496449/8c6ddb04 applied legacy read migration and passed all548SQL tests/18files including project_legacy_notes_read.test.sql. Follow-on report stream field-list assertion then failed on newly added legacy_notes; expected exact field list updated. New import SQL migration/tests and concurrent replay execution pending next CI.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-HANDLER-IDEMPOTENCY",
+          "risk": "handler_idempotency",
+          "expected": "No new mutation grants or changed command semantics; actual import must be idempotent.",
+          "command": "Private invoker-rights import_project_legacy_notes locks exact Project, retains immutable source/text, rejects conflicts and performs no UPDATE on exact replay. SQL idempotency/rollback/role-denial tests added, execution pending. No API write grant.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-TENANT-AUTHORIZATION",
+          "risk": "tenant_authorization",
+          "expected": "Same-Account active membership scopes legacy-note reads; removal denies access.",
+          "command": "Provider archive/reopen/removal passed. SQL member/cross-Account/removal/no-write-grant checks await CI.",
+          "status": "planned"
+        },
+        {
+          "id": "INDIVIDUAL-NOTES-EXACT-MCP-PARITY",
+          "risk": "app_mcp_parity",
+          "expected": "App and MCP retain unknown historical metadata and exact timestamp ordering with identical request fingerprints and authorized page boundaries, including undated continuation.",
+          "command": "ProjectNoteDataTests, ProjectNotePowerSyncQueryTests, projectArchivalReview.test.ts and test-local-project-note-read.mjs; exact cross-runtime integration remains pending.",
+          "status": "planned"
+        },
+        {
+          "id": "LEGACY-NOTES-PAYMENT-IMPORT-COMPATIBILITY",
+          "risk": "accounting",
+          "expected": "Sharing canonical source-envelope encoding preserves existing payment bytes and exact cents. The synthetic runner commits two payments and one parent legacy-note fact atomically, with separate journal counts and independent committed readback.",
+          "command": "Existing FirebaseClientPaymentImportParametersTests golden fixture passed unchanged. Expanded test-local-payment-import-recovery.mjs checks2payments/60cents plus1legacy note, both interruption boundaries and rollback on conflicting notes; runtime execution pending local Docker availability.",
+          "status": "planned"
         }
       ],
       "deferredBehaviors": [

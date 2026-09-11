@@ -7,6 +7,38 @@ import Testing
 struct DownloadedItemsModelTests {
     private let account = try! AccountID(validating: "account-items")
 
+    @Test("Accounting-filter eligibility follows atomic updates and rejects stale selection")
+    func accountingFilterSelection() async throws {
+        let unknown = try projectSnapshot()
+        let original = try #require(unknown.accounting)
+        let complete = try ProjectItemAccountingSectionsSnapshot(accountId: original.accountId,
+            projectId: original.projectId, clientId: original.clientId, items: original.rows.map(\.evidence),
+            isCompleteForAccounting: true, quality: .ready, localDataVersion: .init(validating: "complete"), asOf: Date())
+        let known = try DownloadedProjectItems(placements: unknown.placements, accounting: complete)
+        let model = DownloadedItemsModel()
+        var filters = DownloadedItemFilters()
+        filters.accounting = .only([ProjectItemAccountingResolution.unaccountedFor.rawValue])
+        func visible() -> [ItemID]? { model.selectionEvidence(accountId: account, scope: known.placements.scope, filters: filters) }
+        #expect(visible() == nil)
+        await model.load(accountId: account, scope: known.placements.scope, reader: ProjectReader(snapshots: [known]))
+        var selection = DownloadedItemSelection()
+        selection.toggleAll(visible: try #require(visible()))
+        #expect(selection.ids.count == 1)
+        model.clear()
+        #expect(visible() == nil) // A temporary absence is not an empty filtered result.
+        if let ids = visible() { selection.reconcile(visible: ids) }
+        #expect(selection.ids.count == 1)
+        await model.load(accountId: account, scope: known.placements.scope, reader: ProjectReader(snapshots: [known, unknown]))
+        #expect(visible() == [])
+        selection.reconcile(visible: try #require(visible()))
+        #expect(selection.ids.isEmpty)
+        filters.accounting = .only([ProjectItemAccountingResolution.relationshipEvidenceIncomplete.rawValue])
+        #expect(visible()?.count == 1)
+        await model.load(accountId: account, scope: known.placements.scope, reader: ProjectReader(snapshots: [known], fails: true))
+        #expect(visible() == nil)
+        #expect(model.accounting == nil)
+    }
+
     @Test("Temporary missing snapshots preserve selection; real empty/filter results prune it")
     func selectionRequiresDownloadedEvidence() async throws {
         let snapshot = try projectSnapshot()

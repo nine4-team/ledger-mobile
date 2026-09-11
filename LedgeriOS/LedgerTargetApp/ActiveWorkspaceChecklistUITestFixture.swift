@@ -552,7 +552,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                     }
                     let accounting = try ProjectItemAccountingSectionsSnapshot(accountId: accountId,
                         projectId: projectId, clientId: clientId, items: evidence,
-                        isCompleteForAccounting: false, quality: .ready,
+                        isCompleteForAccounting: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-complete-item-accounting"), quality: .ready,
                         localDataVersion: .init(validating: "ui-item-accounting"), asOf: Date())
                     continuation.yield(try DownloadedProjectItems(placements: physical, accounting: accounting))
                     continuation.finish()

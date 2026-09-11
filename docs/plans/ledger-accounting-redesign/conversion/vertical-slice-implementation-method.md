@@ -71,6 +71,14 @@ claim a broad outcome.
 checkpoint, active workflow, next actions, blockers, and exclusions there. It
 does not own behavior, authority, acceptance criteria, or evidence history.
 
+`activeWorkflow.baseCommit` identifies the exact start of the current batch;
+keep it fixed until that batch ends. `verifiedCheckpoint` independently records
+the last fully verified commit and must not advance without its evidence.
+Current file-ownership checks compare against the batch base, not all work since
+the last green run. Starting a new batch does not waive unfinished verification
+or authorize declaring earlier work complete. The active outcome must match the
+checklist record so the resume pointer cannot silently redefine its scope.
+
 ### Product Behavior Catalog
 
 This compatibility heading remains for historical links. Method v4 folds the
@@ -139,6 +147,12 @@ must not be rewritten, synchronized, or replaced.
 5. Run focused falsification tests while working; review the integrated diff and
    obtain specialist review for changed high-risk boundaries or early delegated
    implementations.
+   Review the changed outcome, acceptance checks, and exclusions together when
+   checks are added and at batch closure. A navigation shell is not the owner of
+   every feature reached through it. Move unrelated checks to their owning
+   record; an intentional scope change must reconcile all three fields. This is
+   part of the existing diff review, not a new approval document. Machine checks
+   enforce the batch base and outcome agreement, not semantic truth of prose.
 6. At the integrated boundary, run `npm run conversion:check` and the applicable
    full local test set once. Use the automatic pull-request CI run for the exact
    commit; never manually dispatch duplicate CI for that commit.

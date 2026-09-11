@@ -20,6 +20,14 @@
 - `current-execution-state.json` is only a compact resume pointer: checkpoint,
   active workflow, next actions, blockers, and exclusions. Do not turn it into a
   second tracker.
+- Set `activeWorkflow.baseCommit` to the exact starting commit of the current
+  batch and keep it fixed during that batch. It is not a verification claim:
+  preserve the last green `verifiedCheckpoint` independently. Never expand the
+  active record merely to cover earlier batches since that green checkpoint.
+  The active outcome must match its checklist record. Before adding acceptance
+  checks or closing a batch, inspect the changed outcome/checks/exclusions
+  together; put unrelated work under its owning record. If scope truly changes,
+  reconcile those fields explicitly instead of appending to an old catch-all.
 - Existing target catalogs, workflow records, implementation trackers, surface
   classifications, crosswalks, dossiers, and generated audits are historical
   evidence. Preserve their exact commits and CI references, but do not keep them

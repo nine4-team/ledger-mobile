@@ -803,6 +803,94 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(item.exists)
     }
 
+    func testDownloadedItemAccountingFilter() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let filters = app.descendants(matching: .any).matching(identifier: "target-items-filters").firstMatch
+        let count = app.staticTexts["target-items-downloaded-count"]
+        let selected = app.staticTexts["target-items-selected-count"]
+        func choose(_ facet: String, _ option: String) {
+            reveal(filters, in: app, fullyInsideScrollView: true)
+            filters.tap()
+            #if os(macOS)
+            let submenu = app.menuItems[facet]
+            XCTAssertTrue(submenu.waitForExistence(timeout: 5))
+            submenu.tap()
+            let choice = submenu.menuItems[option]
+            #else
+            let submenu = app.buttons[facet]
+            XCTAssertTrue(submenu.waitForExistence(timeout: 5))
+            submenu.tap()
+            let choice = app.buttons[option]
+            #endif
+            XCTAssertTrue(choice.waitForExistence(timeout: 5))
+            choice.tap()
+        }
+        func expectCount(_ value: Int, selected selectedValue: Int? = nil) {
+            XCTAssertTrue(waitUntil { self.displayedText(count) == "Matching Items: \(value) of 3 downloaded" })
+            if let selectedValue {
+                XCTAssertTrue(waitUntil { self.displayedText(selected) == "\(selectedValue) selected" })
+            }
+        }
+        let selectAll = app.buttons["target-items-select-all"]
+        reveal(selectAll, in: app, fullyInsideScrollView: true)
+        selectAll.tap()
+        choose("Accounting", "Accounted For") // All-except removes the one accounted chair.
+        expectCount(2, selected: 2)
+        XCTAssertFalse(app.buttons["target-physical-item-physical-ui-chair"].exists)
+        choose("Accounting", "None")
+        expectCount(0, selected: 0)
+        choose("Accounting", "Unaccounted For")
+        expectCount(0) // Missing relationship evidence cannot prove Unaccounted For.
+        choose("Accounting", "Accounting status unknown")
+        expectCount(2)
+        choose("Accounting", "Accounted For") // OR within the facet.
+        expectCount(3)
+        choose("Bookmark", "Not Bookmarked") // AND across facets leaves the bookmarked chair.
+        expectCount(1)
+        XCTAssertTrue(app.buttons["target-physical-item-physical-ui-chair"].waitForExistence(timeout: 5))
+        let clear = app.buttons["target-items-filters-clear"]
+        reveal(clear, in: app, fullyInsideScrollView: true)
+        clear.tap()
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "Downloaded Items: 3" })
+        XCTAssertFalse(clear.exists)
+
+        // A separate complete fixture proves actual Unaccounted rows, not an
+        // interpretation of absent/partial evidence. No production connection.
+        app.terminate()
+        app.launchArguments.append("--ledger-ui-test-complete-item-accounting")
+        app.launch()
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        choose("Accounting", "None")
+        choose("Accounting", "Unaccounted For")
+        expectCount(2)
+        choose("Accounting", "All")
+        XCTAssertTrue(waitUntil { self.displayedText(count) == "Downloaded Items: 3" })
+
+        app.terminate()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-reset-inventory-scope"]
+        app.launch()
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        reveal(filters, in: app, fullyInsideScrollView: true)
+        filters.tap()
+        #if os(macOS)
+        XCTAssertTrue(app.menuItems["Bookmark"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.menuItems["Accounting"].exists)
+        #else
+        XCTAssertTrue(app.buttons["Bookmark"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Accounting"].exists)
+        #endif
+    }
+
     func testDownloadedItemImageEvidenceFilter() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

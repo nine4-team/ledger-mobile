@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 412,
-  "resumeAfterWorkflowId": "active-workspace-to-space-checklist",
-  "updatedAt": "2026-09-09",
+  "stateVersion": 416,
+  "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
+  "updatedAt": "2026-09-10",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {
@@ -10,24 +10,25 @@
     "version": 4
   },
   "verifiedCheckpoint": {
-    "name": "ATOMIC-PROJECT-ITEMS-BOTH-PLATFORMS-GREEN",
-    "commit": "5538ef14635d2e38818bfe8e958d28d15a557cb8",
-    "ciRun": 34323220368,
+    "name": "ITEM-READ-NATIVE-INTEGRATION-GREEN",
+    "commit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631",
+    "ciRun": 34396683481,
     "ciStatus": "passed",
-    "meaning": "Exact CI passed803DB,1014native150suites,17MacUI,15iPhoneUI and both builds. Atomic physical/accounting Item readback and history/refresh/removal verified. Later filters/expansion/selection need their own UI runs. No broad Item, hosted, migration or cutover completion."
+    "meaning": "Exact automatic CI succeeded in all five jobs, including24MacUI and29iPhoneUI tests. September10 review closed only the gallery-controls and native-gestures acceptance checks. This is evidence for the committed code, not uncommitted Purchase/process changes or broad Item, hosted, migration or cutover completion."
   },
   "activeWorkflow": {
-    "id": "active-workspace-to-space-checklist",
+    "id": "downloaded-item-browsing-and-detail",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Browse downloaded Items with coherent physical/accounting evidence and faithful scoped search, ordering and detail navigation; preserve the broader unfinished Item workflow requirements.",
+    "outcome": "Browse downloaded Project/Inventory Items, filter and select them, inspect read-only details and images, and follow the current Space link. Finish the existing read batch through native verification; editing, full Purchase/Invoice destinations and migration are separate work. Preserve incomplete financial/history evidence explicitly.",
     "nextActions": [
-      "CI34393195728/998329bd: conversion/provider PASS; Mac1080native156suites PASS151.025s,23of24UI. Sole failure gallery window-bounds assertion1089; screenshot /tmp/ledger-998-gallery.E57VcO/Test-LedgerTargetStaging-2026.09.09_19-22-48-+0000.xcresult/7D86B5F6-C4C7-47E3-AB16-85FE1058D32E.png confirms layout controls inside window and Done hittable. Corrected Mac assertion to containing window, retains tap/disappearance. iPhone102607582182 still live; watcher38993 owned root, do not duplicate or restart. Preserve result for prior Not Set failure.",
-      "Category6a4951a4/CI34391233972 CANCELLED as superseded ancestor. Completed1080native156suites PASS145.424s, all4 category restart/watch/scope/model tests pass; retained /tmp/ledger-6a49-macos-ci.log. UI oldgalleryclose failed, addressed latest. Latest998 must prove integration.",
-      "e3f4/CI34389224602 TERMINAL FAILED; watch46754 consumed exit1, do not resume. Mac23of24: clipped gallery close, fixed998. iPhone28of29: gallery PASS155.193s; new workflow/bookmark filter failure1457 after Not Set. Screenshot /tmp/ledger-e3-gallery.gJdszT/ios/ios/3E9D169E-BF0C-4295-9A98-78A211E4C4F0.png shows submenu still open, Not Set unchecked, Returned checked. Intended tap did not take effect; filtering logic cause NOT proved. Log /tmp/ledger-e3f4-ios-ci.log. Preserve evidence, inspect latest same test before changes.",
-      "Accounting association implementation ready for checkpoint: atomic current placement/category/accounting read, canonical optional-placement filter, live accounting invalidation. Existing UI tests cover known/unavailable/Inventory; new reader restart/scope/access/same-count updates and model replacement tests. Root and independent review PASS; extracted SQL/EXPLAIN PASS; corrected macOS14 Core/AppModel emissions, focused reader/test and full app typechecks PASS. Modules /tmp/ledger-association-modules.YeqIKm. Commit/push this batch, record automatic CI, await runtime proof. No schema/writes/permissions changes. O-065 unresolved; audit complete; hosted/migration/cutover unverified."
-    ]
+      "Active diagnostic goal: ITEM-ACCOUNTING-FILTER-VALUES/COMPOSITION/LIFECYCLE/NATIVE implementation and tests are written. Focused19 tests and full1087 tests/156suites PASS82.151s; process32negative/10positive and15CI guard tests pass. Local Mac app/XCTest build passed but UI startup timed out enabling automation before any interaction. Use automatic PR CI for native proof; do not repeat unchanged local startup. Logs /tmp/ledger-accounting-filter-{focused,full-native,mac}.log. Exact CI remains required before closure.",
+      "Other Item checks remain planned: inspect their id/expected/status first, then only the selected check evidence and relevant CI lines. Do not reload every historical command narrative or rerun green native CI to recover context. No broad Item completion has been claimed.",
+      "Existing uncommitted Purchase projection and all source/test changes remain preserved and unverified. They belong to a subsequent bounded destination batch, not gallery closure. O-065 and other product gates, hosted validation and cutover remain unresolved.",
+      "Keep baseCommit fixed at f66e2927 for this read batch; verifiedCheckpoint does not verify the dirty tree. Record coarse usage intervals in the existing efficiency assessment, including discovery, implementation, tests and closure. Do not expand beyond the four accounting-filter acceptance checks for this implementation observation."
+    ],
+    "baseCommit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631"
   },
   "blockers": [],
   "guardrails": [

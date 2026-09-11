@@ -23,7 +23,8 @@ public final class DownloadedItemsModel {
                                   filters: DownloadedItemFilters = .init()) -> [ItemID]? {
         guard case .downloaded(let snapshot) = state,
               snapshot.accountId == accountId, snapshot.scope == scope else { return nil }
-        return snapshot.rows(in: spaceId,matching: search,order: order,filters: filters).map(\.itemId)
+        return snapshot.rows(in: spaceId,matching: search,order: order,filters: filters,
+                             accounting: accounting).map(\.itemId)
     }
 
     public func load(accountId: AccountID, scope: ItemPlacementScope, reader: any DownloadedItemPlacementReading) async {

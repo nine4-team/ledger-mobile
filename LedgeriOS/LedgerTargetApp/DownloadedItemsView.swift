@@ -64,6 +64,20 @@ struct DownloadedItemsView: View {
             .pickerStyle(.menu)
             .accessibilityIdentifier("target-items-sort")
             Menu("Filter Items") {
+                if case .project = scope {
+                    Menu("Accounting") {
+                        Button("All") { filters.accounting = .all }
+                        Button("None") { filters.accounting = .only([]) }
+                        Divider()
+                        facetToggle(ProjectItemAccountingResolution.accountedFor.rawValue,
+                                    label: "Accounted For", selection: $filters.accounting)
+                        facetToggle(ProjectItemAccountingResolution.unaccountedFor.rawValue,
+                                    label: "Unaccounted For", selection: $filters.accounting)
+                        facetToggle(ProjectItemAccountingResolution.relationshipEvidenceIncomplete.rawValue,
+                                    label: "Accounting status unknown", selection: $filters.accounting)
+                    }
+                    .accessibilityIdentifier("target-items-accounting-filter")
+                }
                 facetMenu("Name", selection: $filters.name)
                 facetMenu("SKU", selection: $filters.sku)
                 Menu("Image") {
@@ -123,7 +137,8 @@ struct DownloadedItemsView: View {
                 Text("Item data is unavailable or incomplete. Reconnect and try again.")
                     .accessibilityIdentifier("target-items-unavailable")
             case .downloaded(let snapshot):
-                let rows = snapshot.rows(in: spaceId, matching: search, order: order, filters: filters)
+                let rows = snapshot.rows(in: spaceId, matching: search, order: order, filters: filters,
+                                         accounting: model.accounting)
                 if snapshot.accountId == accountId, snapshot.scope == scope {
                     Text(search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !filters.isActive
                         ? "Downloaded Items: \(rows.count)"

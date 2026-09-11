@@ -249,6 +249,32 @@ function validateDerivedLayers(record, paths, prefix) {
   }
 }
 
+function validateActiveBoundary(active, record) {
+  requireCondition(/^[0-9a-f]{40}$/.test(active.baseCommit ?? ""),
+    "activeWorkflow.baseCommit must name the exact start of this batch, independently of the last green checkpoint.");
+  requireCondition(active.outcome === record.outcome,
+    "Active outcome must match its checklist record; reconcile the scope rather than maintaining two descriptions.");
+}
+
+function validateBatchPaths(record, paths) {
+  for (const path of paths) {
+    requireCondition((record.affectedComponents ?? []).some(
+      (component) => path === component || path.startsWith(`${component}/`)),
+    `${record.workflowId}: changed target path ${path} is absent from affectedComponents.`);
+  }
+  validateDerivedLayers(record, paths, record.workflowId);
+}
+
+function batchTargetChanges(baseCommit, git = (args) => execFileSync("git", args,
+  { cwd: repositoryRoot, encoding: "utf8" })) {
+  const changed = git(["diff", "--name-only", baseCommit]).split(/\r?\n/).filter(Boolean);
+  const untracked = git(["ls-files", "--others", "--exclude-standard"]).split(/\r?\n/).filter(Boolean);
+  return [...new Set([...changed, ...untracked])].filter((path) =>
+    path.startsWith("LedgeriOS/LedgerTarget") || path === "LedgeriOS/Package.swift" ||
+    path === "LedgeriOS/project.yml" || path.startsWith("LedgerTargetMCP/") ||
+    path.startsWith("supabase/") || path.startsWith("powersync/"));
+}
+
 function hasHeading(filePath, heading) {
   return readFileSync(filePath, "utf8")
     .split(/\r?\n/)
@@ -1990,7 +2016,42 @@ function runSelfTests() {
     validateDerivedLayers(value, ["supabase/migrations/example.sql"], value.workflowId);
   }, /requires layer postgres_schema/);
 
-  console.log("Conversion current-state self-tests passed: 29 negative cases and 8 positive/cumulative cases.");
+  expectFailure("active scope disagreement", () => {
+    validateActiveBoundary({ baseCommit: "a".repeat(40), outcome: "Item browsing" },
+      { outcome: "Space checklist" });
+  }, /Active outcome must match/);
+  expectFailure("missing batch base", () => {
+    validateActiveBoundary({ outcome: "Item browsing" }, { outcome: "Item browsing" });
+  }, /baseCommit must name/);
+  expectFailure("undeclared current batch path", () => {
+    validateBatchPaths({ workflowId: "items", affectedComponents: ["LedgeriOS/LedgerTargetCore/Items.swift"],
+      layers: ["domain"], riskDomains: [] }, ["LedgeriOS/LedgerTargetCore/Other.swift"]);
+  }, /absent from affectedComponents/);
+
+  {
+    // Regression: an older unverified workflow must not become the active
+    // workflow's ownership obligation. New untracked files still must.
+    const base = "b".repeat(40);
+    const paths = batchTargetChanges(base, (args) => {
+      if (args[0] === "diff") {
+        return args[2] === base
+          ? "LedgeriOS/LedgerTargetCore/Items.swift\npowersync/sync-streams.yaml\n"
+          : "LedgeriOS/LedgerTargetCore/OlderWorkflow.swift\n";
+      }
+      return "supabase/migrations/new-read.sql\ndocs/audit.md\n";
+    });
+    if (JSON.stringify(paths) !== JSON.stringify([
+      "LedgeriOS/LedgerTargetCore/Items.swift", "powersync/sync-streams.yaml",
+      "supabase/migrations/new-read.sql",
+    ])) throw new Error("Batch ownership must use its own base and retain untracked implementation.");
+    const start = errors.length;
+    validateActiveBoundary({ baseCommit: base, outcome: "Item browsing" }, { outcome: "Item browsing" });
+    validateBatchPaths({ workflowId: "items", affectedComponents: ["LedgeriOS/LedgerTargetCore/Items.swift"],
+      layers: ["domain"], riskDomains: [] }, [paths[0]]);
+    if (errors.length !== start) throw new Error("A matching bounded workflow must pass.");
+  }
+
+  console.log("Conversion current-state self-tests passed: 32 negative cases and 10 positive/cumulative cases.");
 }
 
 validateChecklist(checklist);
@@ -2088,6 +2149,15 @@ if (state) {
         requireCondition(record.workflowId === active.id, "Active record workflowId does not match current state.");
         requireCondition(record.kind === active.kind, "Active record kind does not match current state.");
         requireCondition(record.status === active.status, "Active record status does not match current state.");
+        validateActiveBoundary(active, record);
+        if (/^[0-9a-f]{40}$/.test(active.baseCommit ?? "")) {
+          try {
+            execFileSync("git", ["merge-base", "--is-ancestor", active.baseCommit, "HEAD"],
+              { cwd: repositoryRoot, stdio: "ignore" });
+          } catch {
+            errors.push("activeWorkflow.baseCommit must be an ancestor of HEAD.");
+          }
+        }
       } catch (error) {
         errors.push(`Unable to read active workflow record: ${error.message}`);
       }
@@ -2128,35 +2198,11 @@ try {
 
 const productBehaviorSummary = validateWorkflowSet(workflowRecords);
 
-if (state?.activeWorkflow?.kind !== "selection" && /^[0-9a-f]{40}$/.test(state?.verifiedCheckpoint?.commit ?? "")) {
+if (state?.activeWorkflow?.kind !== "selection" && /^[0-9a-f]{40}$/.test(state?.activeWorkflow?.baseCommit ?? "")) {
   const activeRecord = workflowRecords.find((record) => record.workflowId === state.activeWorkflow.id);
   if (activeRecord) {
-    const changedPaths = execFileSync(
-      "git",
-      ["diff", "--name-only", state.verifiedCheckpoint.commit],
-      { cwd: repositoryRoot, encoding: "utf8" },
-    ).split(/\r?\n/).filter(Boolean);
-    const untrackedPaths = execFileSync(
-      "git",
-      ["ls-files", "--others", "--exclude-standard"],
-      { cwd: repositoryRoot, encoding: "utf8" },
-    ).split(/\r?\n/).filter(Boolean);
-    const isTargetPath = (path) =>
-      path.startsWith("LedgeriOS/LedgerTarget") ||
-      path === "LedgeriOS/Package.swift" ||
-      path === "LedgeriOS/project.yml" ||
-      path.startsWith("LedgerTargetMCP/") ||
-      path.startsWith("supabase/");
-    const changedTargetPaths = [...new Set([...changedPaths, ...untrackedPaths])].filter(isTargetPath);
-    for (const path of changedTargetPaths) {
-      requireCondition(
-        (activeRecord.affectedComponents ?? []).some(
-          (component) => path === component || path.startsWith(`${component}/`),
-        ),
-        `${activeRecord.workflowId}: changed target path ${path} is absent from affectedComponents.`,
-      );
-    }
-    validateDerivedLayers(activeRecord, changedTargetPaths, activeRecord.workflowId);
+    const changedTargetPaths = batchTargetChanges(state.activeWorkflow.baseCommit);
+    validateBatchPaths(activeRecord, changedTargetPaths);
   }
 }
 

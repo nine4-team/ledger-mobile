@@ -179,11 +179,14 @@ public struct DownloadedItemFilters: Equatable, Sendable {
     public var bookmark: DownloadedItemFacetSelection = .all
     public var source: DownloadedItemFacetSelection = .all
     public var image: DownloadedItemFacetSelection = .all
+    public var accounting: DownloadedItemFacetSelection = .all
     public init() {}
     public var isActive: Bool {
-        name != .all || sku != .all || space != .all || workflowStatus != .all || bookmark != .all || source != .all || image != .all
+        name != .all || sku != .all || space != .all || workflowStatus != .all || bookmark != .all || source != .all || image != .all || accounting != .all
     }
 
+    /// Physical-field facets only; rows(in:matching:order:filters:accounting:)
+    /// additionally evaluates the Project accounting facet with scoped evidence.
     public func includes(_ row: PhysicalItemPlacement) -> Bool {
         name.includes(row.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
             && sku.includes((row.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "missing" : "has")
@@ -328,10 +331,20 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
     /// Search only downloaded descriptive fields. Unknown creation dates sort
     /// last in both directions; missing evidence is never a fabricated date.
     public func rows(in spaceId: SpaceID?, matching query: String, order: DownloadedItemOrder,
-                     filters: DownloadedItemFilters = .init()) -> [PhysicalItemPlacement] {
+                     filters: DownloadedItemFilters = .init(),
+                     accounting: ProjectItemAccountingSectionsSnapshot? = nil) -> [PhysicalItemPlacement] {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Only an exact, atomically read Project snapshot may classify these
+        // physical Items. Missing/restricted/mismatched evidence stays unknown.
+        let resolutions: [ItemID: ProjectItemAccountingResolution]
+        if filters.accounting != .all, let accounting,
+           (try? DownloadedProjectItems(placements: self, accounting: accounting)) != nil {
+            resolutions = Dictionary(uniqueKeysWithValues: accounting.rows.map { ($0.evidence.itemId, $0.resolution) })
+        } else { resolutions = [:] }
         return rows(in: spaceId).filter { row in
-            filters.includes(row) && (term.isEmpty || [row.displayName, row.description, row.sku ?? "", row.source ?? "", row.currentSource ?? ""]
+            let matchesAccounting = scope == .businessInventory || filters.accounting.includes(
+                (resolutions[row.itemId] ?? .relationshipEvidenceIncomplete).rawValue)
+            return matchesAccounting && filters.includes(row) && (term.isEmpty || [row.displayName, row.description, row.sku ?? "", row.source ?? "", row.currentSource ?? ""]
                 .contains { $0.localizedCaseInsensitiveContains(term) })
         }.sorted { lhs, rhs in
             switch order {
