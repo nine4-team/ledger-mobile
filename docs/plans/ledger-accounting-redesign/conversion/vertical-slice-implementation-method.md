@@ -202,6 +202,10 @@ behavior. Add missing tests when implementing that behavior.
 - During development, use focused local unit/model checks for calculations and
   state changes, and integration checks for affected database, authorization,
   sync, replay and durability boundaries. Fast tests do not replace risk evidence.
+  Do not over-select a cheap suite: the local SQL suite ran948assertions in about
+  one second in the Purchase-read trial. For shared SQL grants/schema changes,
+  running that suite locally is useful early feedback, not the expensive broad
+  native/UI duplication this method avoids.
 - Run targeted UI scenarios when rendering, interaction, navigation or the
   UI-to-data integration changes. Include affected consumers of shared components
   and relevant platforms, not only screens whose files changed. Logic-only work
@@ -223,6 +227,9 @@ native CI. The current default shell Node 20 cannot parse that dependency. If th
 shell has the older runtime, invoke the existing command through
 `npx --yes --package=node@24.14.0 node ...`; do not treat a runtime syntax error as
 a product failure or repeatedly retry with the same incompatible runtime.
+For a script that itself invokes `npx`, use the actual Node24 executable directly:
+resolve it once with `npx --yes --package=node@24.14.0 node -p process.execPath`.
+An outer npm execution environment can interfere with nested package selection.
 
 | Need | Existing command / entry point |
 |---|---|

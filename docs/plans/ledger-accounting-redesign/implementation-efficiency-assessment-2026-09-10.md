@@ -6,6 +6,22 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ### September 11 Purchase-read process trial (in progress)
 
+After the second compatibility fix: full local SQL suite passes948assertions in
+33files / about1s; real MCP/HTTP checks pass; the native actual-stream/MCP parity
+test passes1test /0.139s. No full local native/UI rerun. These inexpensive shared
+consumer checks should have preceded the initial push: avoiding expensive broad
+duplication must not become over-narrow test selection. Existing guidance now
+explicitly permits the cheap full SQL suite for shared grant/schema changes.
+
+CI34648180814 passed SQL and stream checks, then failed the report-parity fixture's
+hard-coded12query count (now13). Updated the existing capture and native consumer
+together, adding source-table identity validation to prevent positional mislabeling.
+Local real MCP/HTTP checks and generated parity artifact passed. This shared-stream
+consumer was missed in initial test selection; it is not unrelated feature work.
+The first local MCP attempt also exposed nested `npx --package=node` environment
+interference with the script's own `npx` invocation; invoking the cached Node24
+binary directly resolved it. Count that setup attempt, not just the successful run.
+
 CI34647677526 failed on one older physical-read test expecting every payment
 SELECT to throw, rather than checking employee row denial. Fresh migration replay
 and the new Purchase SQL test succeeded; native jobs did not run. Updated that

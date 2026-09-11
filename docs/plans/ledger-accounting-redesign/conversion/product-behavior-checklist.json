@@ -25455,6 +25455,7 @@
         "supabase/tests",
         "powersync",
         "scripts/test-local-property-management-stream.mjs",
+        "scripts/test-local-property-report-mcp.mjs",
         "scripts/tests/sync-output-tables.test.mjs",
         "docs/architecture/redesign/architecture-decisions.md"
       ],
