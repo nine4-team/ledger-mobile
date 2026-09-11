@@ -25484,50 +25484,50 @@
           "id": "PURCHASE-READ-BOUNDARY",
           "risk": "general",
           "expected": "Verify only canonical Item-linked Purchase backend reads. Preserve unrelated gallery changes without claiming UI, writes, migration or hosted completion.",
-          "command": "Scoped diff review and relevant native/SQL/stream verification",
-          "status": "planned"
+          "command": "git diff --name-only 505dc2bb658076b0536e705038dd29b020747baf 6f9efa2ed58ef4d92410ef22354f8d38a39ad774",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-INTEGRITY",
           "risk": "database_integrity",
           "expected": "Canonical money, classification, foreign keys and imported immutability remain intact.",
-          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
-          "status": "planned"
+          "command": "npx --yes supabase@2.116.0 test db --local",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-NO-WRITES",
           "risk": "handler_idempotency",
           "expected": "Repeated reads create no payment mutations or new handler authority; API payment writes remain denied.",
-          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
-          "status": "planned"
+          "command": "npx --yes supabase@2.116.0 test db --local",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-FACTS",
           "risk": "accounting",
           "expected": "Preserve exact canonical positive Int64 cents, currency and connection scope; malformed or missing facts do not fabricate payment amounts or erase physical history.",
-          "command": "CurrentItemPlacementLocalReaderTests; item_linked_purchase_read.test.sql",
-          "status": "planned"
+          "command": "swift test --package-path LedgeriOS --no-parallel --filter CurrentItemPlacementLocalReaderTests",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-AUTH",
           "risk": "tenant_authorization",
           "expected": "Only active full-financial members read current Item-linked Purchases; foreign, limited, removed, anonymous and API service access remain denied. No new writes or source-byte access.",
-          "command": "item_linked_purchase_read.test.sql; imported_client_payment_storage.test.sql",
-          "status": "planned"
+          "command": "npx --yes supabase@2.116.0 test db --local",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-SYNC",
           "risk": "sync_visibility",
           "expected": "The actual stream SQL preserves exact text cents and scope; ended links/placements and financial downgrades remove eligibility. Hosted replication is not established by local SQL tests.",
-          "command": "scripts/test-local-property-management-stream.mjs; scripts/tests/sync-output-tables.test.mjs",
-          "status": "planned"
+          "command": "npx --yes --package=node@24.14.0 node scripts/test-local-property-management-stream.mjs",
+          "status": "passed"
         },
         {
           "id": "PURCHASE-READ-OFFLINE",
           "risk": "offline_durability",
           "expected": "Facts survive encrypted database reopen, notify local readers on changes, and disappear from reads after learned access loss or placement departure.",
-          "command": "CurrentItemPlacementLocalReaderTests",
-          "status": "planned"
+          "command": "swift test --package-path LedgeriOS --no-parallel --filter CurrentItemPlacementLocalReaderTests",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
@@ -25543,9 +25543,13 @@
             "npx --yes supabase@2.116.0 test db --local supabase/tests/item_linked_purchase_read.test.sql supabase/tests/imported_client_payment_storage.test.sql",
             "npx --yes --package=node@24.14.0 node scripts/test-local-property-management-stream.mjs",
             "npx --yes --package=node@24.14.0 node --test scripts/tests/sync-output-tables.test.mjs",
-            "npx --yes --package=node@24.14.0 node scripts/check-target-environment.mjs"
+            "npx --yes --package=node@24.14.0 node scripts/check-target-environment.mjs",
+            "npx --yes supabase@2.116.0 test db --local",
+            "git diff --name-only 505dc2bb658076b0536e705038dd29b020747baf 6f9efa2ed58ef4d92410ef22354f8d38a39ad774",
+            "/Users/benjaminmackenzie/.npm/_npx/3e062c1ecdbab29f/node_modules/node/bin/node scripts/test-local-property-report-mcp.mjs",
+            "LEDGER_REPORT_PARITY_INPUT=/tmp/ledger-purchase-report-parity.json swift test --package-path LedgeriOS --no-parallel --filter PropertyManagementReportLocalReaderTests/actualMCPReaderParity"
           ],
-          "summary": "25native reader/7Core tests,47SQL assertions,117actual stream SQL captures,5parser tests passed. Local migration ledger predates already-applied schema; db push failed on existing name column, so only the new Purchase migration was applied transactionally to the verified isolated container. Clean migration replay requires CI. Current-state gate flags preserved unrelated gallery dirt; not a product-test pass."
+          "summary": "25reader including NULL corruption/reopen/revocation,7Core,948SQL assertions in33files,117stream captures,5parser tests and real MCP/native parity passed. Logs linked in implementation-efficiency-assessment-2026-09-10.md. Exact implementation diff excludes UI. Preserved gallery dirt still trips raw local scope check; clean CI conversion passed. Clean CI migration/security passed at6f9efa2e; local migration-ledger divergence remains documented."
         },
         "review": {
           "required": true,
@@ -25553,9 +25557,57 @@
           "summary": "Primary agent scoped review: RLS and stream require current links/placements/full membership; existing composite FKs bind Account/Project/Client/classification; no write grants. Exact cents and malformed currency/origin handling tested; no UI replacement. This is primary review, not an independent subagent sign-off."
         },
         "ci": {
-          "status": "not_run"
+          "status": "not_run",
+          "commit": "6f9efa2ed58ef4d92410ef22354f8d38a39ad774",
+          "run": 34649367344,
+          "attempt": 1,
+          "summary": "Overall completion not established. Clean conversion and database/security jobs and full native package test step passed. Remaining build/UI checks still running. No whole-run success claim."
         }
-      }
+      },
+      "implementationEvidence": [
+        {
+          "layer": "domain",
+          "paths": [
+            "LedgeriOS/LedgerTargetCore/DownloadedItemPlacements.swift"
+          ]
+        },
+        {
+          "layer": "postgres_schema",
+          "paths": [
+            "supabase/migrations/20260909195719_item_linked_purchase_read.sql"
+          ]
+        },
+        {
+          "layer": "postgres_handler",
+          "paths": [
+            "supabase/migrations/20260909195719_item_linked_purchase_read.sql"
+          ]
+        },
+        {
+          "layer": "rls",
+          "paths": [
+            "supabase/migrations/20260909195719_item_linked_purchase_read.sql"
+          ]
+        },
+        {
+          "layer": "powersync_sync",
+          "paths": [
+            "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
+          ]
+        },
+        {
+          "layer": "local_offline",
+          "paths": [
+            "LedgeriOS/LedgerTargetPowerSync/CurrentItemPlacementLocalReader.swift"
+          ]
+        },
+        {
+          "layer": "accounting",
+          "paths": [
+            "supabase/migrations/20260909195719_item_linked_purchase_read.sql"
+          ]
+        }
+      ]
     },
     {
       "schemaVersion": 1,

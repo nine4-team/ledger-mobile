@@ -53,12 +53,13 @@ What cost avoidable effort:
 - Preserved unrelated gallery edits cause the raw local scope check to fail.
   They are excluded from committed Purchase work; clean CI traceability passes.
 
-CI selection keeps a full-UI commit/run/attempt pointer in the existing resume
-record. Backend success cannot advance it; unclassified or UI-impact changes
-remain conservative. Inspection found historical run34563203081 attempt1 passed
-but attempt2 failed iOS UI. That failure is retained, not hidden: the current
-selection baseline is earlier clean run34396683481 attempt1 at f66e2927.
-No unrelated UI repair is authorized.
+CI selection uses the existing fixed batch base. An initial full-UI-baseline
+design was corrected during review because it pulled older UI work into unrelated
+backend batches. No extra baseline tracker is retained. Unclassified/UI-impact
+changes within a batch remain conservative; full integration/release checks remain
+explicit. Historical run34563203081 attempt1 passed but attempt2 failed iOS UI.
+That failure remains recorded; backend success cannot resolve it or prove release
+readiness. No unrelated UI repair is authorized.
 
 Live goal counter checkpoints (**reported tokens, not subscription usage**):
 

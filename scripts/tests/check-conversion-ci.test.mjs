@@ -36,7 +36,7 @@ test("only UI execution may be conditional; its selector cannot be replaced by a
     "ui-required: ${{ steps.ui-scope.outputs.required }}", "ui-required: false"); }, /UI selection/);
 });
 
-test("selector uses the full-UI ancestor and fails closed without usable evidence", t => {
+test("selector uses the fixed batch ancestor and fails closed without usable evidence", t => {
   const root = mkdtempSync(join(tmpdir(), "ledger-ui-selection-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync("git", args, { cwd: root, stdio: "pipe" }).toString().trim();
@@ -45,18 +45,21 @@ test("selector uses the full-UI ancestor and fails closed without usable evidenc
   const base = git("rev-parse", "HEAD");
   const directory = "docs/plans/ledger-accounting-redesign/conversion";
   mkdirSync(join(root, directory), { recursive: true });
-  const state = { activeWorkflow: { id: "backend", recordPath: `${directory}/checklist.json` }, lastFullUIVerification: { commit: base } };
+  const state = { activeWorkflow: { id: "backend", recordPath: `${directory}/checklist.json`, baseCommit: base } };
   const save = () => writeFileSync(join(root, directory, "current-execution-state.json"), JSON.stringify(state));
   writeFileSync(join(root, directory, "checklist.json"), JSON.stringify({ executionRecords: [{ workflowId: "backend", layers: ["domain"] }] }));
   save();
   assert.equal(selectUI({ root, event: "pull_request" }).required, false);
+  writeFileSync(join(root, directory, "checklist.json"), JSON.stringify({ executionRecords: [{ workflowId: "backend", layers: ["domain", "app_ui"] }] }));
+  assert.equal(selectUI({ root, event: "pull_request" }).required, true);
+  writeFileSync(join(root, directory, "checklist.json"), JSON.stringify({ executionRecords: [{ workflowId: "backend", layers: ["domain"] }] }));
   mkdirSync(join(root, "LedgeriOS/LedgerTargetApp"), { recursive: true });
   writeFileSync(join(root, "LedgeriOS/LedgerTargetApp/View.swift"), "// changed UI\n");
   git("add", ".");
   git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "presentation");
   assert.equal(selectUI({ root, event: "pull_request" }).required, true);
   for (const invalid of [undefined, "invalid", "a".repeat(40)]) {
-    state.lastFullUIVerification.commit = invalid;
+    state.activeWorkflow.baseCommit = invalid;
     save();
     assert.equal(selectUI({ root, event: "pull_request" }).required, true);
   }

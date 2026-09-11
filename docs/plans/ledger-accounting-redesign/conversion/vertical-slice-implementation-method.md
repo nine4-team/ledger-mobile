@@ -219,14 +219,14 @@ behavior. Add missing tests when implementing that behavior.
   until release. CI always retains native unit/integration tests, platform builds,
   fresh migrations, database/security and shared-consumer checks. It skips only
   the two UI execution steps for bounded backend-only changes. The selector uses
-  changes since `current-execution-state.json:lastFullUIVerification`, not the last
-  push or batch base, so a previous unverified UI change remains visible. Advance
-  that commit/run pointer only after both full UI suites pass; missing/invalid
+  changes since the active workflow's fixed `baseCommit`, not the last push, so
+  earlier UI changes within this batch remain visible. Missing/invalid
   ancestry, unknown paths, presentation/build changes or an active UI layer require
   full UI conservatively. `workflow_dispatch` is explicit full verification for
   broad integration/release checkpoints, not a routine duplicate of PR CI. Record
-  the exact CI attempt. A known subsequent failure must not be hidden by selecting
-  an earlier passing attempt as the current full-UI baseline.
+  the exact CI attempt. CI success proves this batch, not the entire accumulated
+  branch. Older failed workflows remain unresolved in their existing records;
+  starting or passing a new batch cannot waive them or prove release readiness.
   Path classification cannot detect every semantic UI-to-data contract change:
   when such behavior changes, include the UI layer and targeted affected scenarios
   in the existing workflow record even if no view file changes.

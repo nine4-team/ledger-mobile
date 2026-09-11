@@ -76,10 +76,10 @@
   batch into the pending batch's acceptance record.
 - CI keeps native unit/integration tests, both platform builds, fresh migrations
   and security checks required. UI automation is selected from changes since
-  `lastFullUIVerification`, not just the latest push. Advance that existing resume
-  pointer only after both full platform UI suites pass at the named commit/run;
-  backend-only success must not advance it. Unknown or presentation/build changes
-  run UI conservatively. Explicit full verification runs all UI tests. Semantic
+  the active batch's fixed `baseCommit`, not just the latest push. A new batch's
+  success does not resolve older failed workflows or prove release readiness.
+  Unknown or presentation/build changes run UI conservatively. Explicit full
+  verification runs all UI tests at broad integration/release checkpoints. Semantic
   UI-to-data behavior changes require targeted UI evidence even with no view diff.
 - Use the method's "Quiet CI waiting" protocol for long test runs. Do not burn
   model turns polling unchanged status or repeatedly reviewing logs. Save the

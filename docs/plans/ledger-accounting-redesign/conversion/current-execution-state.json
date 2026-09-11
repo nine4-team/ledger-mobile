@@ -1,11 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 434,
-  "lastFullUIVerification": {
-    "commit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631",
-    "ciRun": 34396683481,
-    "attempt": 1
-  },
+  "stateVersion": 436,
   "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
   "updatedAt": "2026-09-11",
   "branch": "codex/supabase-powersync-implementation",
@@ -29,11 +24,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
     "nextActions": [
-      "Bounded Purchase read implemented at6f9efa2ed58ef4d92410ef22354f8d38a39ad774. Local25reader/7Core/948SQL/117stream/5parser and actualMCP/native parity passed. CI34649367344 attempt1 has passed conversion and clean database/security; native jobs still running. Use saved exact run, not earlier commits. No unrelated UI repairs.",
-      "User-authorized CI/process correction locally implemented: select-ci-ui-tests.mjs, workflow/checker/tests, AGENTS and method.18tests pass /tmp/ledger-purchase-ci-policy-tests.log. Retains native/backend/security/build checks; selects UI since last clean full-UI proof. Not yet committed/pushed. Do not push every small edit or dispatch duplicate CI. Review remaining current run before choosing one coherent push.",
-      "Historical34563203081 attempt1 passed, attempt2 failed iOS UI. Recorded exact attempt and preserved failure; lastFullUIVerification points to earlier clean34396683481/f66e2927. Do not silently promote an earlier passing attempt or treat a backend-only pass as fresh UI proof.",
-      "Efficiency assessment consolidated with local evidence and counter310028; cached/uncached/output unavailable. Capture final counter at closure, not recurring token audits. Existing heartbeat ledger-purchase-read-verification follows34649367344; pause on completion/supersession. Preserve unrelated gallery dirt, token diagnostic edits and incomplete broader reuse audit.",
-      "Local migration ledger lags applied schema; only new migration applied transactionally after approved Docker restart. Clean CI provides migration replay evidence. Raw local scope check flags preserved gallery dirt; clean committed conversion passed. No Firebase, production, hosted access, payment writes or expanded implementation."
+      "Purchase implementation6f9efa2ed58ef4d92410ef22354f8d38a39ad774: all seven scoped acceptance checks passed locally; clean database/security jobs and full native package test step passed in CI34649367344 attempt1. Both builds also passed; old broad UI steps remain running. Overall CI/workflow remains pending. Do not rerun passing Purchase tests, start another GitHub batch, or repair unrelated UI.",
+      "CI/process correction: cba2652d committed locally, plus reviewed fixed-batch-base correction pending local checkpoint; nothing pushed after6f9efa2e.18local CI-policy tests pass; actual selector returns UI=false for this backend batch. Uses existing activeWorkflow.baseCommit and app_ui layer, no extra tracker. Preserves full backend/security/native/build gates. Explicit full run for integration/release; older failed workflows remain unresolved.",
+      "Next on actual CI completion: review exact run34649367344 attempt1; update existing checklist and concise efficiency assessment, capture final goal counter, retire watcher session3170/heartbeat ledger-purchase-read-verification, close goal only if required proof is satisfied. User is concerned about duplicate GitHub runs: do not push the process correction solely to rerun this already-tested feature. Preserve exact-commit evidence.",
+      "Historical34563203081 attempt1 passed but attempt2 failed iOS UI. Exact attempts now recorded. New backend success cannot resolve older failed UI or establish branch/release readiness. No unrelated UI repairs or expanded implementation authorized; broader reuse audit stays incomplete.",
+      "Preserve gallery test patch, token diagnostic edits and all audit/temp artifacts. Local migration ledger lags applied schema; clean CI proved migration replay. Local state gate still flags preserved gallery dirt; clean committed state gate passed. No Firebase, production/hosted access, payment writes or cutover. Report cached/uncached/output as unavailable; do not infer subscription savings."
     ],
     "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
   },
