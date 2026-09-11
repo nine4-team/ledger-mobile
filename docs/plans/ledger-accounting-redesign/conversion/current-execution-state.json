@@ -1,6 +1,11 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 430,
+  "stateVersion": 434,
+  "lastFullUIVerification": {
+    "commit": "f66e2927f7ea816a15d50e81f2f7ae08e9960631",
+    "ciRun": 34396683481,
+    "attempt": 1
+  },
   "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
   "updatedAt": "2026-09-11",
   "branch": "codex/supabase-powersync-implementation",
@@ -13,8 +18,9 @@
     "name": "ITEM-ACCOUNTING-FILTER-BOTH-PLATFORMS-GREEN",
     "commit": "505dc2bb658076b0536e705038dd29b020747baf",
     "ciRun": 34563203081,
+    "attempt": 1,
     "ciStatus": "passed",
-    "meaning": "All five exact-commit CI jobs passed, including1086native tests/156suites and25Mac/30iPhoneUI tests. Four accounting-filter checks passed; new native interaction passed Mac68.952s/iPhone131.451s. No broad Item, Purchase, hosted, migration or cutover completion. Pre-existing dirty Purchase changes are not part of this committed proof."
+    "meaning": "Historical attempt1 passed all five jobs, including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 subsequently failed iOS UI; this is NOT a currently clean full-UI baseline. Four accounting-filter checks passed in attempt1. No broad Item, Purchase, hosted, migration or cutover completion. Pre-existing dirty Purchase changes are not part of this committed proof."
   },
   "activeWorkflow": {
     "id": "item-linked-purchase-read",
@@ -23,11 +29,11 @@
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
     "nextActions": [
-      "Purchase-read trial only: scoped code review and local checks pass (25reader/7Core tests,47SQL assertions,117actual stream captures,5parser tests,environment). Logs /tmp/ledger-purchase-{read-hardened,core,db-applied,stream-sql,stream-parser-node24,environment}.log. No UI code/tests, payment writes or broad workflow completion.",
-      "CI34648180814/c017f9f8 terminal FAILED after SQL/stream success: report parity capture and native consumer expected12tables rather than13. Both fixtures corrected; source-table identity assertion added. Real MCP/HTTP capture and native actualMCPReaderParity pass; full local SQL948assertions/33files pass in1s. Logs /tmp/ledger-purchase-{report-mcp-direct,native-parity,db-full}.log; parity fixture /tmp/ledger-purchase-report-parity.json. Commit relevant fixture fixes and use new automatic CI, updating existing heartbeat. No UI repair.",
-      "Docker restarted with user approval. Local schema/migration ledger diverge: db push failed on existing name column; applied only20260909195719 transactionally to verified isolated database. FocusedSQL passed; CI must prove fresh migrations. Do not repair unrelated migration history or access hosted systems.",
-      "Live goal counters and limitations recorded under September11 Purchase-read process trial in existing efficiency assessment; latest pre-CI counter144832. Historical session logs stale, cached/uncached/output split unavailable; do not call this subscription usage. Include subsequent CI review/reporting.",
-      "Preserve gallery test patch and all unrelated work; gallery heartbeat stays PAUSED. Broader reuse investigation and remaining-plan correction remain incomplete. This user-authorized backend trial is the only exception to the prior implementation pause."
+      "Bounded Purchase read implemented at6f9efa2ed58ef4d92410ef22354f8d38a39ad774. Local25reader/7Core/948SQL/117stream/5parser and actualMCP/native parity passed. CI34649367344 attempt1 has passed conversion and clean database/security; native jobs still running. Use saved exact run, not earlier commits. No unrelated UI repairs.",
+      "User-authorized CI/process correction locally implemented: select-ci-ui-tests.mjs, workflow/checker/tests, AGENTS and method.18tests pass /tmp/ledger-purchase-ci-policy-tests.log. Retains native/backend/security/build checks; selects UI since last clean full-UI proof. Not yet committed/pushed. Do not push every small edit or dispatch duplicate CI. Review remaining current run before choosing one coherent push.",
+      "Historical34563203081 attempt1 passed, attempt2 failed iOS UI. Recorded exact attempt and preserved failure; lastFullUIVerification points to earlier clean34396683481/f66e2927. Do not silently promote an earlier passing attempt or treat a backend-only pass as fresh UI proof.",
+      "Efficiency assessment consolidated with local evidence and counter310028; cached/uncached/output unavailable. Capture final counter at closure, not recurring token audits. Existing heartbeat ledger-purchase-read-verification follows34649367344; pause on completion/supersession. Preserve unrelated gallery dirt, token diagnostic edits and incomplete broader reuse audit.",
+      "Local migration ledger lags applied schema; only new migration applied transactionally after approved Docker restart. Clean CI provides migration replay evidence. Raw local scope check flags preserved gallery dirt; clean committed conversion passed. No Firebase, production, hosted access, payment writes or expanded implementation."
     ],
     "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
   },

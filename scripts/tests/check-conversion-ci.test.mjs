@@ -1,8 +1,66 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawnSync, execFileSync } from "node:child_process";
 import test from "node:test";
+import { needsUI, selectUI } from "../select-ci-ui-tests.mjs";
+
+test("backend-only changes omit UI but presentation, integration and unknown paths keep it", () => {
+  const backend = ["supabase/migrations/read.sql", "powersync/sync-streams.yaml",
+    "LedgeriOS/LedgerTargetCore/DownloadedItemPlacements.swift",
+    "LedgeriOS/LedgerTargetPowerSync/CurrentItemPlacementLocalReader.swift",
+    "scripts/test-local-property-report-mcp.mjs", "docs/plan.md"];
+  assert.equal(needsUI(backend), false);
+  assert.equal(needsUI(backend, { full: true }), true);
+  assert.equal(needsUI(backend, { uiLayer: true }), true);
+  for (const path of ["LedgeriOS/LedgerTargetStaging/ItemView.swift",
+    "LedgeriOS/LedgerTargetApp/ItemModel.swift", "LedgeriOS/Package.swift",
+    "LedgeriOS/LedgerTargetStagingUITests/WorkspaceChecklistUITests.swift",
+    "package.json", "scripts/build-target.mjs", "unknown-file"]) {
+    assert.equal(needsUI([...backend, path]), true, path);
+  }
+  // A later backend push does not erase outstanding UI changes from the range.
+  assert.equal(needsUI(["LedgeriOS/LedgerTargetStaging/OldUnverifiedView.swift", ...backend]), true);
+  assert.equal(selectUI({ root: repositoryRoot, event: "workflow_dispatch" }).required, true);
+});
+
+test("only UI execution may be conditional; its selector cannot be replaced by a constant", () => {
+  for (const condition of ["false", "true", "needs.conversion-control.outputs.ui-required != 'true'"]) {
+    expectFailure(value => { value.workflow = value.workflow.replace(
+      "if: needs.conversion-control.outputs.ui-required == 'true'", `if: ${condition}`); }, /conditionally skip|execution overrides/);
+  }
+  expectFailure(value => { value.workflow = value.workflow.replace(
+    "run: node scripts/select-ci-ui-tests.mjs", "run: echo required=false"); }, /UI selection/);
+  expectFailure(value => { value.workflow = value.workflow.replace(
+    "ui-required: ${{ steps.ui-scope.outputs.required }}", "ui-required: false"); }, /UI selection/);
+});
+
+test("selector uses the full-UI ancestor and fails closed without usable evidence", t => {
+  const root = mkdtempSync(join(tmpdir(), "ledger-ui-selection-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const git = (...args) => execFileSync("git", args, { cwd: root, stdio: "pipe" }).toString().trim();
+  git("init", "-q");
+  git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "baseline");
+  const base = git("rev-parse", "HEAD");
+  const directory = "docs/plans/ledger-accounting-redesign/conversion";
+  mkdirSync(join(root, directory), { recursive: true });
+  const state = { activeWorkflow: { id: "backend", recordPath: `${directory}/checklist.json` }, lastFullUIVerification: { commit: base } };
+  const save = () => writeFileSync(join(root, directory, "current-execution-state.json"), JSON.stringify(state));
+  writeFileSync(join(root, directory, "checklist.json"), JSON.stringify({ executionRecords: [{ workflowId: "backend", layers: ["domain"] }] }));
+  save();
+  assert.equal(selectUI({ root, event: "pull_request" }).required, false);
+  mkdirSync(join(root, "LedgeriOS/LedgerTargetApp"), { recursive: true });
+  writeFileSync(join(root, "LedgeriOS/LedgerTargetApp/View.swift"), "// changed UI\n");
+  git("add", ".");
+  git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "presentation");
+  assert.equal(selectUI({ root, event: "pull_request" }).required, true);
+  for (const invalid of [undefined, "invalid", "a".repeat(40)]) {
+    state.lastFullUIVerification.commit = invalid;
+    save();
+    assert.equal(selectUI({ root, event: "pull_request" }).required, true);
+  }
+});
 
 import {
   repositoryRoot,

@@ -64,10 +64,23 @@
   layer/risk; compilation or prose is not proof.
 - Use the method's "Verification execution" commands: focused local checks while
   building, then `npm run conversion:check` and appropriate broader verification
-  at the integrated batch boundary. Let normal exact-commit CI supply its required
+  at the integrated batch boundary. Before pushing, run cheap affected-consumer
+  checks: shared SQL grants/schema warrant the full local SQL suite; changed sync
+  projections warrant their existing MCP/native parity consumers. Let normal exact-commit CI supply its required
   broad checks; do not automatically duplicate them locally or dispatch duplicate
   CI. A local broad run needs a concrete reason (for example unavailable CI or
   native failure diagnosis), not a new approval or tracking document.
+- Push coherent batches, not each tiny edit. While CI runs, continue independent
+  authorized work; pending checks block accepting affected work as verified, not
+  all progress. Keep evidence tied to its tested commit, and do not mix a new
+  batch into the pending batch's acceptance record.
+- CI keeps native unit/integration tests, both platform builds, fresh migrations
+  and security checks required. UI automation is selected from changes since
+  `lastFullUIVerification`, not just the latest push. Advance that existing resume
+  pointer only after both full platform UI suites pass at the named commit/run;
+  backend-only success must not advance it. Unknown or presentation/build changes
+  run UI conservatively. Explicit full verification runs all UI tests. Semantic
+  UI-to-data behavior changes require targeted UI evidence even with no view diff.
 - Use the method's "Quiet CI waiting" protocol for long test runs. Do not burn
   model turns polling unchanged status or repeatedly reviewing logs. Save the
   exact run/attempt and next action in the existing resume pointer. Prefer existing

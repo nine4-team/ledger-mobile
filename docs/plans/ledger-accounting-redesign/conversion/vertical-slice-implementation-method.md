@@ -185,6 +185,10 @@ must not be rewritten, synchronized, or replaced.
    risk, or diagnosing a native failure. Never manually dispatch duplicate CI
    merely to obtain another green result.
    Follow "Quiet CI waiting" below while long-running verification executes.
+   Push a coherent batch, not every small edit. Pending CI blocks acceptance of
+   the affected batch, not independent authorized work. Keep its fixed tested
+   revision/evidence while working on the next bounded outcome; do not expand the
+   pending record to absorb unrelated work or claim untested changes passed.
 7. Record concrete file/test/review/commit/CI evidence in the unified checklist,
    update the compact resume pointer, and continue.
 
@@ -212,8 +216,25 @@ behavior. Add missing tests when implementing that behavior.
   does not by itself require UI automation.
 - Broaden regression when impact cannot be bounded confidently, at integrated
   checkpoints, and for release readiness. Do not postpone all UI verification
-  until release. The existing CI workflow currently runs both platform UI suites;
-  this guidance does not disable those jobs or waive any required gate.
+  until release. CI always retains native unit/integration tests, platform builds,
+  fresh migrations, database/security and shared-consumer checks. It skips only
+  the two UI execution steps for bounded backend-only changes. The selector uses
+  changes since `current-execution-state.json:lastFullUIVerification`, not the last
+  push or batch base, so a previous unverified UI change remains visible. Advance
+  that commit/run pointer only after both full UI suites pass; missing/invalid
+  ancestry, unknown paths, presentation/build changes or an active UI layer require
+  full UI conservatively. `workflow_dispatch` is explicit full verification for
+  broad integration/release checkpoints, not a routine duplicate of PR CI. Record
+  the exact CI attempt. A known subsequent failure must not be hidden by selecting
+  an earlier passing attempt as the current full-UI baseline.
+  Path classification cannot detect every semantic UI-to-data contract change:
+  when such behavior changes, include the UI layer and targeted affected scenarios
+  in the existing workflow record even if no view file changes.
+- Before pushing, run inexpensive checks for affected shared consumers, not just
+  the new test. SQL grants/schema changes warrant the full fast local SQL suite;
+  sync projection changes warrant the existing actual-stream and MCP/native parity
+  tests. Record the normal result once. A broken local prerequisite must be named,
+  not silently treated as passing or repeatedly rediscovered in CI.
 - After failure, diagnose the relevant output and verify a fix narrowly before
   broader verification. Do not rerun unchanged passing suites during each edit or
   retry until green. A retry for a suspected flake needs a stated diagnostic reason;

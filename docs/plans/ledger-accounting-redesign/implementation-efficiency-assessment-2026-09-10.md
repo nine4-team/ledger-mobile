@@ -4,106 +4,80 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ## Conclusion
 
-### September 11 Purchase-read process trial (in progress)
+### September 11 Purchase-read process trial (verification pending)
 
-Final requirement review added a NULL-field corruption test: it reproduced
-`.nullValueFound("account_id")`, which incorrectly prevented physical history
-readback. The local reader now treats missing payment fields as unavailable
-financial evidence, using optional cursor reads while retaining physical history.
-This is a real implementation correction; it is not an unrelated UI repair.
-CI34648906045 passed fresh database/provider verification before this later fix;
-its native run cannot verify code changed afterward.
+**Result so far:** the bounded backend read is implemented and locally verified.
+Clean GitHub database/security checks pass at implementation commit
+`6f9efa2ed58ef4d92410ef22354f8d38a39ad774`; run34649367344 attempt1 is still
+running native verification. Do not call this complete or infer whole-app progress.
 
-After the second compatibility fix: full local SQL suite passes948assertions in
-33files / about1s; real MCP/HTTP checks pass; the native actual-stream/MCP parity
-test passes1test /0.139s. No full local native/UI rerun. These inexpensive shared
-consumer checks should have preceded the initial push: avoiding expensive broad
-duplication must not become over-narrow test selection. Existing guidance now
-explicitly permits the cheap full SQL suite for shared grant/schema changes.
+**Recommendation:** run cheap affected-consumer checks before pushing a coherent
+batch; keep CI in the background and select UI automation by actual impact.
+This trial has not demonstrated a subscription savings percentage.
 
-CI34648180814 passed SQL and stream checks, then failed the report-parity fixture's
-hard-coded12query count (now13). Updated the existing capture and native consumer
-together, adding source-table identity validation to prevent positional mislabeling.
-Local real MCP/HTTP checks and generated parity artifact passed. This shared-stream
-consumer was missed in initial test selection; it is not unrelated feature work.
-The first local MCP attempt also exposed nested `npx --package=node` environment
-interference with the script's own `npx` invocation; invoking the cached Node24
-binary directly resolved it. Count that setup attempt, not just the successful run.
+Scope: existing current-Item Purchase facts, exact money, authorized sync and
+encrypted local readback. No UI reconstruction, payment writes, complete
+Transaction destination, hosted replication or migration/cutover delivery.
+Full-Purchase amounts are not per-Item allocations. Missing/malformed payment
+evidence cannot erase physical history. Broader reuse investigation remains incomplete.
 
-CI34647677526 failed on one older physical-read test expecting every payment
-SELECT to throw, rather than checking employee row denial. Fresh migration replay
-and the new Purchase SQL test succeeded; native jobs did not run. Updated that
-test to preserve the employee no-leak requirement and added denial for future
-ungranted payment columns. The three affected SQL files pass66assertions locally
-(`/tmp/ledger-purchase-db-compatibility.log`). This is a relevant compatibility
-repair, not a retry-until-green or an unrelated UI fix. A new commit's normal CI
-must verify the correction. Automatic goal continuation woke the model before
-the scheduled return; this interval was not zero-AI waiting (status checks and one
-60-second wait occurred). Do not attribute all recorded overhead to test execution.
+Evidence already obtained (execution times exclude compilation/setup):
 
-Bounded work: finish the pre-existing canonical Item-linked Purchase backend read;
-no UI, payment writes, complete Transaction destination or migration delivery.
-New work tightened malformed currency/origin handling and exact-money edge cases,
-documented full-Purchase versus per-Item amounts, and tested the existing reader.
-Unrelated gallery test edits remain outside the batch.
+| Verification | Result |
+|---|---|
+| Current Item reader, including NULL metadata, exact cents, revocation and reopen | 25 tests passed / 6.910s; /tmp/ledger-purchase-null-fixed.log |
+| Core value/scope checks | 7 tests passed / 0.004s; /tmp/ledger-purchase-core.log |
+| Full local SQL | 948 assertions, 33 files / about 1s; /tmp/ledger-purchase-db-full.log |
+| Actual stream SQL | 117 captures, 13 projections passed; /tmp/ledger-purchase-stream-sql.log |
+| PowerSync parser | 5 tests passed / 0.378s; /tmp/ledger-purchase-stream-parser-node24.log |
+| Existing MCP/HTTP and native shared-data parity | passed; /tmp/ledger-purchase-report-mcp-direct.log; /tmp/ledger-purchase-native-parity.log |
+| CI selection correction | 18 local tests passed / 0.319s; /tmp/ledger-purchase-ci-policy-tests.log; not yet deployed |
 
-Local evidence: 25 reader tests / 6.964s, 7 core tests / 0.004s (test execution,
-not compilation); 47 SQL assertions passed; 117 actual stream SQL captures passed;
-5 stream-parser tests / 0.378s; environment validation and diff whitespace passed.
-The initial 24-reader baseline also passed. No local UI or full native suite run.
-Clean-environment CI remains required; local checks are not whole-feature readiness.
+What cost avoidable effort:
+- Initial selection missed a legacy SQL assertion and the report fixture's query
+  count. CI34647677526 and34648180814 failed on those compatibility checks.
+  The full SQL and existing shared consumers should have run locally first.
+- Final review reproduced a real NULL-field reader bug and fixed it. Earlier
+  CI34648906045 was cancelled because it cannot verify this subsequent change.
+- Docker hung and needed the user-approved restart. Its local migration ledger
+  lagged already-applied schema; only the new migration was applied directly.
+  Fresh CI migration replay supplies the clean-environment proof.
+- Node20 could not parse the pinned service dependency; Node24 worked. An outer
+  npx invocation interfered with nested npx; direct cached Node24 resolved it.
+- Written guidance changed, but automatic CI still launched both entire UI suites.
+  User-authorized process correction now changes the workflow, its checker and
+  existing guidance together. It retains native/backend/security/build checks.
+- Goal continuations woke the model during waiting. This was **not zero-model
+  waiting**. Status reviews, process changes, discussion and record maintenance
+  are overhead, not the tests executing.
+- Preserved unrelated gallery edits cause the raw local scope check to fail.
+  They are excluded from committed Purchase work; clean CI traceability passes.
 
-Observed overhead, not hidden from this trial:
-- Historical token logs were stale; two bounded lookups found no current request
-  boundary. Live goal counters are available, but no cached/uncached/output split.
-- System Node20 failed parsing the service dependency before tests ran. Retrying
-  with CI's Node24.14.0 passed; existing command guidance now records that runtime.
-- Docker was unresponsive; the user approved restart. Its local schema was ahead
-  of its migration ledger, so db push failed on an already-existing column. Only
-  the new read migration was then applied transactionally to the verified local
-  container, and affected SQL tests passed. CI must verify fresh migration replay.
-- New execution-record setup initially failed schema validation; corrected. One
-  remaining local scope-check error attributes the preserved gallery test dirt to
-  this batch. Do not add UI work or weaken the checker to claim a pass. The clean
-  committed batch must exclude that unrelated patch.
+CI selection keeps a full-UI commit/run/attempt pointer in the existing resume
+record. Backend success cannot advance it; unclassified or UI-impact changes
+remain conservative. Inspection found historical run34563203081 attempt1 passed
+but attempt2 failed iOS UI. That failure is retained, not hidden: the current
+selection baseline is earlier clean run34396683481 attempt1 at f66e2927.
+No unrelated UI repair is authorized.
 
-Live goal counter checkpoints (reported tokens, not subscription consumption):
+Live goal counter checkpoints (**reported tokens, not subscription usage**):
 
-| Boundary | Cumulative reported goal tokens | Interval tokens |
+| Boundary | Cumulative | Interval |
 |---|---:|---:|
 | Goal creation (1789159907) | 0 | — |
-| Initial inspection / baseline native test | 17,652 | 17,652 |
-| Implementation, local hardening and environment troubleshooting | 131,132 | 113,480 |
-| Local verification review, before CI preparation | 144,832 | 13,700 |
-| Commit, automatic CI launch and waiting setup | 159,106 | 14,274 |
-| Two relevant CI compatibility repairs, local consumer checks and third automatic CI launch | 212,744 | 53,638 |
+| Initial inspection / baseline test | 17,652 | 17,652 |
+| Implementation, hardening and environment recovery | 131,132 | 113,480 |
+| Local review before CI preparation | 144,832 | 13,700 |
+| Commit, CI launch and wait setup | 159,106 | 14,274 |
+| Compatibility repairs, consumer checks and third CI launch | 212,744 | 53,638 |
+| Later hardening, discussion, CI-policy repair and evidence review | 310,028 | 97,284 |
 
-Latest implementation commit `f36195e99557f4380bddb89ad7080aeaf131f06b`, automatic
-CI34648906045 attempt1 (pending). It supersedes the two failed runs below; do not
-interpret their failures as current success or restart their watchers.
-
-Committed/pushed `105d40817c23d793b0622b05b609415f85146c44`; automatic
-CI34647677526 attempt1. Conversion/traceability job passed in the clean checkout,
-confirming the local carryover-gallery error is not part of the committed batch.
-Provider/native jobs remain pending. Existing CLI watcher polls internally at60s;
-verified thread heartbeat provides a10min fallback return, not instant model
-notification. No duplicate CI or full local native/UI run. Prior process-document
-edits included in this checkpoint are carryover, not all newly authored trial work.
-
-These mixed activity intervals are not precise per-task attribution. Initial work
-before goal creation and future CI/reporting are not in the latest count; final
-closure must report the later counter and this limitation. Cached input, uncached
-input and output are **unavailable**, not zero. No subscription percentage,
-whole-project completion percentage or controlled savings estimate follows from
-these readings. The test execution itself was fast; setup, environment recovery,
-record updates and review consumed the observed surrounding effort.
-
-The sampled work followed the backend-neutral architecture and added meaningful
-local functionality. It also incurred demonstrated avoidable test repair and
-tracking overhead. The strongest correction is to enforce a stable feature
-boundary and a focused native feedback loop, not to restart architecture or
-remove security/offline testing. Widespread unnecessary UI reconstruction and
-specific token savings are **not established**.
+Cached input, uncached input and output counts are **unavailable**, not zero.
+Two bounded historical-log lookups found no current request baseline; do not
+rescan them. Mixed intervals cannot provide exact per-task attribution. Initial
+pre-goal setup and work after the last reading are excluded. Final closure must
+record a later counter. No controlled comparison, subscription percentage or
+whole-project completion estimate follows from these counters.
 
 ## Scope and evidence
 

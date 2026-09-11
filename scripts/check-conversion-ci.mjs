@@ -29,6 +29,7 @@ const retiredConversionCommands = Object.freeze([
 
 const nativeUIClipboardStep = [
   "      - name: Exercise target workspace checklist UI",
+  "        if: needs.conversion-control.outputs.ui-required == 'true'",
   "        env:",
   '          TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"',
   "        run: npm run target:staging:ui:test:macos",
@@ -130,6 +131,9 @@ function commandsForNamedStep(lines, stepName) {
   const relativeEnd = lines.slice(start + 1).findIndex((line) => /^      - name:/.test(line));
   const end = relativeEnd < 0 ? lines.length : start + 1 + relativeEnd;
   const block = lines.slice(start + 1, end);
+  if (stepName === "Exercise iOS workspace and report UI") {
+    requireCondition(block.shift() === "        if: needs.conversion-control.outputs.ui-required == 'true'", "iOS UI requires the reviewed scope condition");
+  }
   requireCondition(block[0] === "        run: |", `${stepName} must use a literal run block`);
   return block
     .slice(1)
@@ -178,15 +182,15 @@ function validateWorkflowSafety(lines) {
     .slice(triggerStart, permissionsStart)
     .filter((line) => line.trim() !== "");
   requireCondition(
-    JSON.stringify(triggerLines) === JSON.stringify(["on:", "  pull_request:"]),
-    "workflow must run unconditionally for pull requests only",
+    JSON.stringify(triggerLines) === JSON.stringify(["on:", "  pull_request:", "  workflow_dispatch:"]),
+    "workflow must support pull requests and explicit full verification",
   );
   requireExactLine(lines, "  contents: read", "read-only workflow permission");
 
   const executionOverride = /^\s*(?:env|defaults|shell|working-directory|container)\s*:/;
   requireCondition(
     !lines.some((line, index) => executionOverride.test(line)
-      && lines.slice(index - 1, index + 3).join("\n") !== nativeUIClipboardStep),
+      && lines.slice(index - 2, index + 3).join("\n") !== nativeUIClipboardStep),
     "environment or execution overrides require security review",
   );
 
@@ -214,13 +218,24 @@ function validateWorkflowSafety(lines) {
       (lines[index - 1] === "      - name: Export native UI failure screenshots" && lines[index + 1] === "        run: |") ||
       (lines[index - 1] === "      - name: Preserve native UI failure screenshots" && lines[index + 1] === "        uses: actions/upload-artifact@v4")
     );
-    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || allowedFailureImages || requiredAggregate,
+    const allowedUIScope = line === "        if: needs.conversion-control.outputs.ui-required == 'true'"
+      && ((owningJob === "  native-macos:" && lines[index - 1] === "      - name: Exercise target workspace checklist UI")
+        || (owningJob === "  native-ios:" && lines[index - 1] === "      - name: Exercise iOS workspace and report UI"));
+    requireCondition(allowedCleanup || allowedDiagnostics || allowedReportEvidence || allowedFailureImages || requiredAggregate || allowedUIScope,
       "jobs must not conditionally skip or tolerate failures");
   }
 }
 
 function validateConversionJob(lines) {
   const conversion = jobLines(lines, "conversion-control");
+  requireCondition(conversion.join("\n").includes([
+    "    outputs:",
+    "      ui-required: ${{ steps.ui-scope.outputs.required }}",
+  ].join("\n")) && conversion.join("\n").includes([
+    "      - name: Select UI verification",
+    "        id: ui-scope",
+    "        run: node scripts/select-ci-ui-tests.mjs",
+  ].join("\n")), "UI selection must use the reviewed selector and exact output");
   requireExactLine(conversion, "    runs-on: ubuntu-latest", "conversion Linux runner");
   const actualCommands = commandsForNamedStep(conversion, "Validate conversion control plane");
   requireCondition(

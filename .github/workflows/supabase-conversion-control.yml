@@ -2,6 +2,7 @@ name: Supabase conversion control
 
 on:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,6 +12,8 @@ jobs:
     name: Conversion state and traceability
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      ui-required: ${{ steps.ui-scope.outputs.required }}
 
     steps:
       - name: Check out repository
@@ -35,6 +38,10 @@ jobs:
 
       - name: Confirm checks did not rewrite tracked artifacts
         run: git diff --exit-code
+
+      - name: Select UI verification
+        id: ui-scope
+        run: node scripts/select-ci-ui-tests.mjs
 
   target-environment:
     name: Isolated target environment
@@ -120,6 +127,7 @@ jobs:
         run: npm run target:staging:build:macos
 
       - name: Exercise target workspace checklist UI
+        if: needs.conversion-control.outputs.ui-required == 'true'
         env:
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD: "true"
         run: npm run target:staging:ui:test:macos
@@ -180,6 +188,7 @@ jobs:
         run: npm run target:staging:build:ios
 
       - name: Exercise iOS workspace and report UI
+        if: needs.conversion-control.outputs.ui-required == 'true'
         run: |
           report_device_id="$(xcrun simctl list devices available -j | node --input-type=module -e '
             let input=""; for await (const chunk of process.stdin) input+=chunk;
