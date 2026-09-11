@@ -89,6 +89,21 @@
   base it on that suite's observed runtime, never a blanket hour. Review concise
   results before accepting the batch; retire its watcher. After compaction, reuse
   saved results rather than repeating discovery, testing, or historical log reads.
+- Required verification comes from the batch's behavior and risks, not every job
+  an old CI workflow happens to launch. Preserve required results and cancel
+  unrelated surplus tests when safe; do not wait for unrelated UI to close a
+  backend task. Keep the real overall CI conclusion: scoped passes are not a
+  green whole-app/release gate. Check actual CI behavior before the next push.
+- For requested token-efficiency measurements, follow sections 2-3 of
+  `docs/plans/ledger-accounting-redesign/token-efficiency-diagnostic-plan.md`.
+  Read the same live counter at start, each activity switch, and closure; one
+  reading closes one activity and opens the next. Separate implementation,
+  verification, rework, environment, process repair, discussion, monitoring,
+  context recovery and reporting. Preserve gaps as mixed/unattributed; never
+  guess a split. Check the first two intervals and reconcile the final activity
+  distribution to the total. Use the existing assessment and one resume pointer,
+  not a new catalog or per-tool-call log. A completed goal's counter cannot measure
+  new work; reported goal tokens are not subscription consumption.
 - M3-M5 are cumulative product gates, not surface-stage gates. M3 requires the
   audited checklist and verified target behavior; M4 adds migration/rehearsal;
   M5 adds explicit cutover readiness. Mapped code surfaces never prove product

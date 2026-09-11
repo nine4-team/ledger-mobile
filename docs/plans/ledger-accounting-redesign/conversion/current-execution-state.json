@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 436,
+  "stateVersion": 440,
   "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
   "updatedAt": "2026-09-11",
   "branch": "codex/supabase-powersync-implementation",
@@ -20,15 +20,15 @@
   "activeWorkflow": {
     "id": "item-linked-purchase-read",
     "kind": "backend_control",
-    "status": "ci_verification",
+    "status": "complete",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
     "nextActions": [
-      "Purchase implementation6f9efa2ed58ef4d92410ef22354f8d38a39ad774: all seven scoped acceptance checks passed locally; clean database/security jobs and full native package test step passed in CI34649367344 attempt1. Both builds also passed; old broad UI steps remain running. Overall CI/workflow remains pending. Do not rerun passing Purchase tests, start another GitHub batch, or repair unrelated UI.",
-      "CI/process correction: cba2652d committed locally, plus reviewed fixed-batch-base correction pending local checkpoint; nothing pushed after6f9efa2e.18local CI-policy tests pass; actual selector returns UI=false for this backend batch. Uses existing activeWorkflow.baseCommit and app_ui layer, no extra tracker. Preserves full backend/security/native/build gates. Explicit full run for integration/release; older failed workflows remain unresolved.",
-      "Next on actual CI completion: review exact run34649367344 attempt1; update existing checklist and concise efficiency assessment, capture final goal counter, retire watcher session3170/heartbeat ledger-purchase-read-verification, close goal only if required proof is satisfied. User is concerned about duplicate GitHub runs: do not push the process correction solely to rerun this already-tested feature. Preserve exact-commit evidence.",
-      "Historical34563203081 attempt1 passed but attempt2 failed iOS UI. Exact attempts now recorded. New backend success cannot resolve older failed UI or establish branch/release readiness. No unrelated UI repairs or expanded implementation authorized; broader reuse audit stays incomplete.",
-      "Preserve gallery test patch, token diagnostic edits and all audit/temp artifacts. Local migration ledger lags applied schema; clean CI proved migration replay. Local state gate still flags preserved gallery dirt; clean committed state gate passed. No Firebase, production/hosted access, payment writes or cutover. Report cached/uncached/output as unavailable; do not infer subscription savings."
+      "Bounded Purchase-read trial FINISHED. Implementation6f9efa2ed58ef4d92410ef22354f8d38a39ad774 is unchanged by later process commits. Seven acceptance checks pass; local exact-money/scope/offline tests and clean CI backend/native/build checks pass. Checklist CI status is explicitly scoped to these required backend checks, NOT overall-run success.",
+      "Run34649367344 attempt1 was cancelled after required backend checks passed; only unrelated iOS UI remained (macOS job passed). Full-run conclusion remains cancelled. Do not resume its UI tests or present it as a green cumulative gate. Watch session3170 terminated; heartbeat ledger-purchase-read-verification PAUSED. No follow-up work remains for this trial.",
+      "User authorized publishing the prepared CI/process corrections (cba2652d,3e9a8a86 plus latest guidance) to activate them on GitHub.18local policy tests pass; selector uses the fixed batch base and app_ui layer and selects no UI for this backend batch. Allow the single normal automatic run from this publication; record its exact commit/run after dispatch. No manual duplicate CI or new implementation batch authorized.",
+      "Efficiency assessment reconciles the completed goal's460863reported tokens but marks task/activity attribution insufficient; no cached/uncached/output split or subscription savings established. Before the next requested measurement, follow diagnostic-plan sections2-3: fresh live source, counter at each activity switch, early two-interval check, explicit mixed gaps, final category distribution including reporting. AGENTS/method now require stopping surplus tests and distinguish the earlier quiet experiment from this noisy trial. This publication activates those corrections; it is not another feature trial.",
+      "Preserve all unrelated dirty work; broader reuse investigation remains incomplete and paused. Historical34563203081 attempt1 passed but attempt2 failed iOS UI, still unresolved. Neither this backend result nor cancelled CI establishes app/merge/release/cutover readiness. No Firebase, production/hosted access or payment writes."
     ],
     "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
   },

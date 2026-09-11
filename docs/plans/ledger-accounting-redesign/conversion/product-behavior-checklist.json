@@ -25428,12 +25428,9 @@
       "workflowId": "item-linked-purchase-read",
       "title": "Read canonical Purchase facts linked to a current Item",
       "kind": "backend_control",
-      "status": "ci_verification",
+      "status": "complete",
       "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
-      "noCurrentBaselineReason": "Bounded backend read supporting existing Item accounting provenance; this batch does not claim an independently completed user-facing control.",
-      "targetStoryIds": [
-        "accounting-relationship-provenance"
-      ],
+      "noCurrentBaselineReason": "Supporting backend work for accounting-relationship-provenance only. This bounded read does not complete that product story, its UI, Transaction destination or broader accounting workflow. Canonical authority links below retain the governing product behavior.",
       "authority": [
         {
           "role": "canonical_target",
@@ -25557,11 +25554,17 @@
           "summary": "Primary agent scoped review: RLS and stream require current links/placements/full membership; existing composite FKs bind Account/Project/Client/classification; no write grants. Exact cents and malformed currency/origin handling tested; no UI replacement. This is primary review, not an independent subagent sign-off."
         },
         "ci": {
-          "status": "not_run",
+          "status": "passed",
+          "scope": "Required Purchase backend checks only; NOT whole-run success",
           "commit": "6f9efa2ed58ef4d92410ef22354f8d38a39ad774",
           "run": 34649367344,
           "attempt": 1,
-          "summary": "Overall completion not established. Clean conversion and database/security jobs and full native package test step passed. Remaining build/UI checks still running. No whole-run success claim."
+          "overallRunConclusion": "cancelled",
+          "summary": "Bounded backend acceptance uses completed required checks: conversion, clean local Supabase migration/SQL/RLS/RPC/stream/parity, native environment/contracts/MCP,1090native tests in156suites/139.402s, and both platform builds. Full macOS job also passed. Remaining iOS UI run cancelled as outside this backend-only scope after user clarified it must not block this task. This is NOT a successful overall GitHub run and cannot satisfy a cumulative whole-app/merge/release gate. No new UI or hosted evidence claimed.",
+          "evidencePaths": [
+            "/tmp/ledger-purchase-ci-final-evidence.json",
+            "/tmp/ledger-purchase-native-ci-final.log"
+          ]
         }
       },
       "implementationEvidence": [

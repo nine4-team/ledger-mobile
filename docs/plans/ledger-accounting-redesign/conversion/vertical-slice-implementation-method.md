@@ -191,6 +191,9 @@ must not be rewritten, synchronized, or replaced.
    pending record to absorb unrelated work or claim untested changes passed.
 7. Record concrete file/test/review/commit/CI evidence in the unified checklist,
    update the compact resume pointer, and continue.
+   For a requested efficiency sample, follow the activity-boundary protocol in
+   `../token-efficiency-diagnostic-plan.md` sections 2-3. Check measurement after
+   the first two intervals, not just at closure.
 
 Do not create comment-only scaffolds, new dossiers, standalone evidence essays,
 READY commits, promotion-only commits, or a new management schema for ordinary
@@ -235,6 +238,16 @@ behavior. Add missing tests when implementing that behavior.
   sync projection changes warrant the existing actual-stream and MCP/native parity
   tests. Record the normal result once. A broken local prerequisite must be named,
   not silently treated as passing or repeatedly rediscovered in CI.
+- After failure, diagnose the relevant output and verify a fix narrowly before
+- Name required checks in the existing batch record before launching them. An
+  inherited workflow's extra jobs do not automatically become requirements of a
+  backend-only task. If an overbroad run is already running, preserve completed
+  required evidence and cancel unnecessary remaining work when it has no required
+  consumer. Do not cancel required tests or excuse relevant failures. Record scoped
+  passes separately from the overall run's real cancelled/failed conclusion;
+  neither is a green cumulative release gate. Check the actual workflow/selector
+  before the next push: written guidance alone does not change GitHub behavior.
+  Do not push documentation-only policy tweaks just to launch another feature run.
 - After failure, diagnose the relevant output and verify a fix narrowly before
   broader verification. Do not rerun unchanged passing suites during each edit or
   retry until green. A retry for a suspected flake needs a stated diagnostic reason;
@@ -312,6 +325,13 @@ Keep all required tests; change how the agent waits, not what verification prove
    minute model polling, repetitive commentary, log reads, or unrelated audits.
    A non-AI watcher may poll internally. Short focused tests may return directly;
    active diagnosis of an observed failure is not unchanged-status polling.
+   An immediate goal-continuation wake-up is not a new CI event. Reuse the saved
+   run and expected return; do not turn early wake-ups into new log reviews,
+   repeated one-minute polling loops, or unrelated work invented to fill the wait.
+   Check whether outstanding work is actually required before waiting at all.
+   Never mark an unfinished goal complete just to suppress wake-ups. If available
+   goal/notification controls prevent quiet waiting, state that limitation rather
+   than claiming zero-model waiting or silently looping.
 4. On return, read status once for the saved attempt/session. If still running,
    adjust any scheduled return to remaining work rather than blindly repeating
    an interval. Investigate a concrete stall or
@@ -326,9 +346,11 @@ Keep all required tests; change how the agent waits, not what verification prove
    never waives review or permits promotion of a failing batch.
 
 This is the default operating rule, not a claim that a machine check can enforce
-agent waiting behavior. The September 11 trial demonstrated zero polling during
-idle time; its cost estimate was not a controlled whole-batch or subscription
-savings measurement. Do not add routine token audits to normal feature work.
+agent waiting behavior. The earlier isolated waiting experiment and the later
+Purchase trial are different samples: the Purchase trial had repeated model
+wake-ups and unnecessary waiting. Neither establishes whole-batch subscription
+savings. Measure activities when requested; do not add routine token audits to
+every normal feature task.
 
 ## Test Obligations by Risk
 
@@ -378,7 +400,10 @@ outcomes cannot count as implemented. Code-surface mapping, classification, or
 historical stage promotion never satisfies M3-M5.
 
 Preserve immutable historical CI evidence. New or changed completion evidence
-must bind to the exact implementation commit and successful automatic CI run.
+must bind to the exact implementation commit and actual required-check results.
+Normal batch acceptance uses successful selected CI. If a legacy overbroad run
+was cancelled after required checks passed, record that limited proof explicitly;
+do not call the whole run successful or use it to satisfy a cumulative CI gate.
 
 ## Context Continuity
 

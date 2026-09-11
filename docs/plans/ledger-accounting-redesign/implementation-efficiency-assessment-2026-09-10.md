@@ -4,16 +4,28 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ## Conclusion
 
-### September 11 Purchase-read process trial (verification pending)
+### September 11 Purchase-read process trial — finished
 
-**Result so far:** the bounded backend read is implemented and locally verified.
-Clean GitHub database/security checks pass at implementation commit
-`6f9efa2ed58ef4d92410ef22354f8d38a39ad774`; run34649367344 attempt1 is still
-running native verification. Do not call this complete or infer whole-app progress.
+**Result:** the bounded backend read is implemented and verified at
+`6f9efa2ed58ef4d92410ef22354f8d38a39ad774`. Run34649367344 attempt1 passed clean
+database/security, contracts/MCP, 1,090 native tests in156suites (139.402s), and
+both platform builds. The macOS job also passed. The remaining unrelated iOS UI
+run was cancelled after the user clarified that it must not block this task.
+The full run's conclusion is **cancelled**, not success. Backend acceptance is
+explicitly scoped; it cannot stand in for cumulative app/merge/release verification.
+Evidence: /tmp/ledger-purchase-ci-final-evidence.json and
+/tmp/ledger-purchase-native-ci-final.log, plus the exact GitHub run/attempt above.
+Watcher stopped and heartbeat paused. No further trial work or UI repair remains.
 
 **Recommendation:** run cheap affected-consumer checks before pushing a coherent
 batch; keep CI in the background and select UI automation by actual impact.
 This trial has not demonstrated a subscription savings percentage.
+
+The prior successful full-UI run34563203081 attempt1 took15m10s on macOS
+and34m12s on iOS (GitHub step timestamps). Those durations are UI execution,
+not the sub-second SQL suite or an agent's polling timer. The old-policy
+run included that broad work; the local policy correction has not been
+pushed or used to launch another GitHub run.
 
 Scope: existing current-Item Purchase facts, exact money, authorized sync and
 encrypted local readback. No UI reconstruction, payment writes, complete
@@ -72,13 +84,31 @@ Live goal counter checkpoints (**reported tokens, not subscription usage**):
 | Commit, CI launch and wait setup | 159,106 | 14,274 |
 | Compatibility repairs, consumer checks and third CI launch | 212,744 | 53,638 |
 | Later hardening, discussion, CI-policy repair and evidence review | 310,028 | 97,284 |
+| Process correction, unnecessary waiting, discussion and closure evidence | 445,203 | 135,175 |
+| Final scope/evidence checks and result recording | 457,000 | 11,797 |
+| Goal completion receipt / closing remainder | 460,863 | 3,863 |
 
 Cached input, uncached input and output counts are **unavailable**, not zero.
 Two bounded historical-log lookups found no current request baseline; do not
 rescan them. Mixed intervals cannot provide exact per-task attribution. Initial
-pre-goal setup and work after the last reading are excluded. Final closure must
-record a later counter. No controlled comparison, subscription percentage or
+pre-goal setup and post-goal conversation are excluded. The closing receipt totals
+460,863 reported tokens over4,580seconds (about76minutes). No controlled comparison, subscription percentage or
 whole-project completion estimate follows from these counters.
+
+Measurement assessment: the counter intervals reconcile, but the activity
+distribution is insufficient. The largest mixed interval group (232,459 tokens,
+50.4% of the total) combines process changes, discussion, waiting, review and late
+code fixes. It cannot be called all CI, all waste or all implementation. Sections
+2-3 of `token-efficiency-diagnostic-plan.md` now require activity-switch readings,
+an early two-interval check and a final reconciled activity distribution. That is
+a forward correction, not retroactive attribution or proof of future savings.
+
+The process trial exposed a failure to follow the intended policy: even after
+recognizing that UI was outside scope, the agent continued waiting on it. That
+waiting and repeated goal wake-ups were unnecessary. The corrected policy is
+saved in commits cba2652d and3e9a8a86, tested locally, and deliberately not pushed
+just to launch another CI batch. It still needs normal use on a future authorized
+batch; this trial does not demonstrate its end-to-end token savings.
 
 ## Scope and evidence
 
