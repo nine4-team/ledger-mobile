@@ -6,6 +6,14 @@ Date: 2026-09-10. Original assessment only; the separately requested process rep
 
 ### September 11 Purchase-read process trial (in progress)
 
+Final requirement review added a NULL-field corruption test: it reproduced
+`.nullValueFound("account_id")`, which incorrectly prevented physical history
+readback. The local reader now treats missing payment fields as unavailable
+financial evidence, using optional cursor reads while retaining physical history.
+This is a real implementation correction; it is not an unrelated UI repair.
+CI34648906045 passed fresh database/provider verification before this later fix;
+its native run cannot verify code changed afterward.
+
 After the second compatibility fix: full local SQL suite passes948assertions in
 33files / about1s; real MCP/HTTP checks pass; the native actual-stream/MCP parity
 test passes1test /0.139s. No full local native/UI rerun. These inexpensive shared
@@ -68,6 +76,11 @@ Live goal counter checkpoints (reported tokens, not subscription consumption):
 | Implementation, local hardening and environment troubleshooting | 131,132 | 113,480 |
 | Local verification review, before CI preparation | 144,832 | 13,700 |
 | Commit, automatic CI launch and waiting setup | 159,106 | 14,274 |
+| Two relevant CI compatibility repairs, local consumer checks and third automatic CI launch | 212,744 | 53,638 |
+
+Latest implementation commit `f36195e99557f4380bddb89ad7080aeaf131f06b`, automatic
+CI34648906045 attempt1 (pending). It supersedes the two failed runs below; do not
+interpret their failures as current success or restart their watchers.
 
 Committed/pushed `105d40817c23d793b0622b05b609415f85146c44`; automatic
 CI34647677526 attempt1. Conversion/traceability job passed in the clean checkout,

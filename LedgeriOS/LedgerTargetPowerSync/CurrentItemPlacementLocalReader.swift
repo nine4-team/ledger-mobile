@@ -66,22 +66,26 @@ struct CurrentItemPlacementLocalReader: Sendable {
             WHERE link.placement_id=? AND link.ended_at IS NULL
             ORDER BY payment.id
             """, parameters: [placementId.rawValue]) { cursor in
-                let id = try TransactionID(validating: cursor.getString(name: "id"))
-                let text = try cursor.getString(name: "amount_minor_units")
+                guard let rawId = try cursor.getStringOptional(name: "id"),
+                      let text = try cursor.getStringOptional(name: "amount_minor_units"),
+                      let currency = try cursor.getStringOptional(name: "currency") else {
+                    throw PropertyManagementReportLocalReadFailure.malformedEvidence
+                }
+                let id = try TransactionID(validating: rawId)
                 guard ids.contains(id),
-                      try cursor.getString(name: "account_id") == evidence.accountId.rawValue,
-                      try cursor.getString(name: "project_id") == evidence.projectId.rawValue,
-                      try cursor.getString(name: "client_id") == evidence.clientId.rawValue,
-                      try cursor.getString(name: "type") == "purchase",
-                      try cursor.getString(name: "role") == "standalone",
-                      try cursor.getString(name: "origin") == "firebase_client_payment",
+                      try cursor.getStringOptional(name: "account_id") == evidence.accountId.rawValue,
+                      try cursor.getStringOptional(name: "project_id") == evidence.projectId.rawValue,
+                      try cursor.getStringOptional(name: "client_id") == evidence.clientId.rawValue,
+                      try cursor.getStringOptional(name: "type") == "purchase",
+                      try cursor.getStringOptional(name: "role") == "standalone",
+                      try cursor.getStringOptional(name: "origin") == "firebase_client_payment",
                       let minorUnits = Int64(text), minorUnits > 0, String(minorUnits) == text else {
                     throw PropertyManagementReportLocalReadFailure.malformedEvidence
                 }
                 return try DownloadedItemClientPurchase(id: id, accountId: evidence.accountId,
                     projectId: evidence.projectId, clientId: evidence.clientId, itemId: evidence.itemId,
                     placementId: placementId, amount: Money(minorUnits: minorUnits,
-                        currency: CurrencyCode(validating: cursor.getString(name: "currency"))))
+                        currency: CurrencyCode(validating: currency)))
             }
     }
 

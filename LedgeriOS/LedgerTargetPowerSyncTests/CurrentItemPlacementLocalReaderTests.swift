@@ -53,6 +53,13 @@ struct CurrentItemPlacementLocalReaderTests {
             let exact = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
             #expect(exact.currentClientPaidPurchases.first?.amount.minorUnits == 9_007_199_254_740_993)
             #expect(exact.currentClientPaidPurchases.first?.amount.currency.rawValue == "USD")
+            for field in ["account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin"] {
+                _ = try await db.execute(sql: "UPDATE spike_transactions SET \(field)=NULL WHERE id='purchase'", parameters: nil)
+                let incomplete = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+                #expect(incomplete.currentClientPaidPurchases.isEmpty)
+                #expect(incomplete.description == "Chair")
+                _ = try await db.execute(sql: "UPDATE spike_transactions SET account_id='account-item',project_id='project-item',client_id='client',type='purchase',role='standalone',amount_minor_units='9007199254740993',currency='USD',origin='firebase_client_payment' WHERE id='purchase'", parameters: nil)
+            }
             for amount in ["0", "-1", "01", "+1", "1.0", "9223372036854775808"] {
                 _ = try await db.execute(sql: "UPDATE spike_transactions SET amount_minor_units=? WHERE id='purchase'", parameters: [amount])
                 let invalid = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
