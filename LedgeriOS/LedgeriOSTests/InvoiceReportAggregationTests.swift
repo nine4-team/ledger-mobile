@@ -27,8 +27,8 @@ struct InvoiceReportAggregationTests {
         #expect(result.hasFallbackPrices == false)
     }
 
-    @Test("Item without projectPrice falls back to purchasePrice and flags missing")
-    func fallbackPrice() {
+    @Test("Item without projectPrice uses purchase-price floor without flagging missing")
+    func purchasePriceFloor() {
         let item = makeItem(id: "i1", name: "Lamp", purchasePriceCents: 8_000, projectPriceCents: nil)
         var invoice = Invoice()
         invoice.id = "inv1"
@@ -42,8 +42,8 @@ struct InvoiceReportAggregationTests {
 
         #expect(result.chargeLines.count == 1)
         #expect(result.chargeLines[0].priceCents == 8_000)
-        #expect(result.chargeLines[0].isMissingPrice == true)
-        #expect(result.hasFallbackPrices == true)
+        #expect(result.chargeLines[0].isMissingPrice == false)
+        #expect(result.hasFallbackPrices == false)
     }
 
     @Test("Unknown ids are silently skipped")

@@ -174,7 +174,7 @@ private enum AssignmentTransactionScope: Hashable {
 struct NewItemView: View {
     @State private var resolvedContext: ItemCreationContext?
     @State private var selectedProject: Project?
-    private let initialImageRefs: [AttachmentRef]
+    @State private var inheritedImageRefs: [AttachmentRef]
     private let initialSkuCandidates: [String]
     private let convertingProtoItemId: String?
     private let initialAssignmentHint: ProtoItemAssignmentHint
@@ -203,8 +203,8 @@ struct NewItemView: View {
         self._sku = State(initialValue: initialSku ?? "")
         self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
         self._selectedSpaceId = State(initialValue: initialSpaceId)
+        self._inheritedImageRefs = State(initialValue: initialImageRefs)
         self.initialSkuCandidates = initialSkuCandidates
-        self.initialImageRefs = initialImageRefs
         self.convertingProtoItemId = convertingProtoItemId
         self.initialAssignmentHint = initialAssignmentHint
         self.onCreated = onCreated
@@ -241,6 +241,9 @@ struct NewItemView: View {
     @State private var transactionListener: ListenerRegistration?
     @State private var enabledProjectCategoryIds: Set<String> = []
     @State private var projectCategoryListener: ListenerRegistration?
+    @State private var draftMediaListener: ListenerRegistration?
+    @State private var importedDraftUploadIds: Set<String> = []
+    @State private var importedDraftFileNames: Set<String> = []
 
     // Pickers
     @State private var showDestinationPicker = false
@@ -269,7 +272,7 @@ struct NewItemView: View {
     private var isItemIdentityMissing: Bool {
         !ItemFormValidation.isValidItem(
             name: name,
-            imageCount: imageDatas.count + initialImageRefs.count
+            imageCount: imageDatas.count + inheritedImageRefs.count
         )
     }
 
@@ -306,7 +309,7 @@ struct NewItemView: View {
         }
         if !ItemFormValidation.isValidItem(
             name: name,
-            imageCount: imageDatas.count + initialImageRefs.count
+            imageCount: imageDatas.count + inheritedImageRefs.count
         ) {
             requirements.append("add a name or at least one image")
         }
@@ -504,6 +507,7 @@ struct NewItemView: View {
         .task {
             startTransactionSubscription()
             startProjectCategorySubscription()
+            startDraftMediaSubscription()
             await loadSelectedTransactionIfNeeded()
         }
         .task(id: selectedTransactionId) {
@@ -518,6 +522,8 @@ struct NewItemView: View {
             transactionListener = nil
             projectCategoryListener?.remove()
             projectCategoryListener = nil
+            draftMediaListener?.remove()
+            draftMediaListener = nil
         }
         .onAppear {
             if selectedSpaceId == nil,
@@ -818,7 +824,7 @@ struct NewItemView: View {
 
             if !imageDatas.isEmpty {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
-                    ForEach(Array(initialImageRefs.enumerated()), id: \.offset) { _, attachment in
+                    ForEach(Array(inheritedImageRefs.enumerated()), id: \.offset) { _, attachment in
                         FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
                             ProgressView()
                         }
@@ -844,9 +850,9 @@ struct NewItemView: View {
                         }
                     }
                 }
-            } else if !initialImageRefs.isEmpty {
+            } else if !inheritedImageRefs.isEmpty {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
-                    ForEach(Array(initialImageRefs.enumerated()), id: \.offset) { _, attachment in
+                    ForEach(Array(inheritedImageRefs.enumerated()), id: \.offset) { _, attachment in
                         FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
                             ProgressView()
                         }
@@ -861,7 +867,7 @@ struct NewItemView: View {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle")
-                    Text(imageDatas.isEmpty && initialImageRefs.isEmpty ? "Add Images" : "Add More Images")
+                    Text(imageDatas.isEmpty && inheritedImageRefs.isEmpty ? "Add Images" : "Add More Images")
                 }
                 .font(Typography.input)
                 .foregroundStyle(BrandColors.textSecondary)
@@ -875,8 +881,8 @@ struct NewItemView: View {
             }
             .buttonStyle(.plain)
 
-            if !imageDatas.isEmpty || !initialImageRefs.isEmpty {
-                let imageCount = imageDatas.count + initialImageRefs.count
+            if !imageDatas.isEmpty || !inheritedImageRefs.isEmpty {
+                let imageCount = imageDatas.count + inheritedImageRefs.count
                 Text("\(imageCount) \(imageCount == 1 ? "image" : "images")")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
@@ -918,7 +924,15 @@ struct NewItemView: View {
     private var imageSourceMenu: some View {
         ActionMenuSheet(
             title: "Add Image",
-            items: [
+            items: imageSourceMenuItems,
+            onSelectAction: { action in
+                imageSourcePendingAction = action
+            }
+        )
+    }
+
+    private var imageSourceMenuItems: [ActionMenuItem] {
+        var items = [
                 ActionMenuItem(
                     id: "camera",
                     label: "Camera",
@@ -935,11 +949,22 @@ struct NewItemView: View {
                         showPhotoPicker = true
                     }
                 ),
-            ],
-            onSelectAction: { action in
-                imageSourcePendingAction = action
-            }
-        )
+            ]
+        if Clipboard.containsImage {
+            items.append(ActionMenuItem(
+                id: "paste-image",
+                label: "Paste Image",
+                icon: "doc.on.clipboard",
+                onPress: {
+                    do {
+                        imageDatas.append(try ImageTransferHelper.pastedImageUpload().data)
+                    } catch {
+                        submissionError = error.localizedDescription
+                    }
+                }
+            ))
+        }
+        return items
     }
 
     // MARK: - Shared Picker Button
@@ -1056,6 +1081,42 @@ struct NewItemView: View {
         }
     }
 
+    private func startDraftMediaSubscription() {
+        draftMediaListener?.remove()
+        draftMediaListener = nil
+
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = convertingProtoItemId else { return }
+
+        // A quick draft can be opened for assignment before its background
+        // uploads have written URLs to Firestore. Preserve those durable local
+        // bytes so every quantity copy receives the captured photos.
+        let queuedImages = mediaUploadQueue.pendingImageUploads(
+            entityType: ProtoItemsService.entityType,
+            entityId: protoItemId
+        )
+        for queuedImage in queuedImages where importedDraftUploadIds.insert(queuedImage.id).inserted {
+            imageDatas.append(queuedImage.data)
+            if let fileName = queuedImage.fileName {
+                importedDraftFileNames.insert(fileName)
+            }
+        }
+        inheritedImageRefs.removeAll { attachment in
+            attachment.fileName.map(importedDraftFileNames.contains) == true
+        }
+
+        draftMediaListener = ProtoItemsService().subscribeToProtoItem(
+            accountId: accountId,
+            protoItemId: protoItemId
+        ) { protoItem in
+            Task { @MainActor in
+                self.inheritedImageRefs = (protoItem?.photos ?? []).filter { attachment in
+                    attachment.fileName.map(self.importedDraftFileNames.contains) != true
+                }
+            }
+        }
+    }
+
     @MainActor
     private func loadSelectedTransactionIfNeeded() async {
         guard let accountId = accountContext.currentAccountId,
@@ -1115,7 +1176,7 @@ struct NewItemView: View {
         item.projectPriceCents = parseCents(projectPrice)
         item.marketValueCents = parseCents(marketValue)
         item.transactionId = selectedTransactionId
-        item.images = initialImageRefs.isEmpty ? nil : initialImageRefs
+        item.images = inheritedImageRefs.isEmpty ? nil : inheritedImageRefs
         if projectId != nil, projectTransactionMode == .existing {
             item.budgetCategoryId = selectedTransaction?.budgetCategoryId
         }

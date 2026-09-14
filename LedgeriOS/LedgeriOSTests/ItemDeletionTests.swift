@@ -549,6 +549,7 @@ struct ItemDeletionTests {
         #expect(createdItems.allSatisfy { $0.accountId == acct })
         #expect(createdItems.allSatisfy { $0.transactionId == "tx1" })
         #expect(createdItems[0].spaceId == "space1")
+        #expect(createdItems.allSatisfy { $0.createdAt != nil })
         #expect(batch.commitCalled)
 
         #expect(batch.sets.count == 2)
@@ -557,6 +558,7 @@ struct ItemDeletionTests {
             #expect(itemSets.count == 1)
             #expect(itemSets[0].fields["accountId"] as? String == acct)
             #expect(itemSets[0].fields["transactionId"] as? String == "tx1")
+            #expect(itemSets[0].fields["createdAt"] != nil)
             if id == createdItems[0].id {
                 #expect(itemSets[0].fields["spaceId"] as? String == "space1")
             }
@@ -595,6 +597,38 @@ struct ItemDeletionTests {
         #expect(itemSet.fields["projectId"] is NSNull)
         #expect(itemSet.fields["budgetCategoryId"] is NSNull)
         #expect(batch.commitCalled)
+    }
+
+    @Test("create quantity copies for transaction — preserves images on every item")
+    func createQuantityCopiesPreserveImages() throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let images = [
+            AttachmentRef(url: "https://example.com/item.jpg", kind: .image, isPrimary: true),
+        ]
+        var source = makeItem(id: nil, images: images)
+        source.projectId = "project1"
+        source.budgetCategoryId = "cat1"
+
+        let createdItems = try service.createItemsForTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            budgetCategoryId: "cat1",
+            items: Array(repeating: source, count: 3),
+            onCommitError: { _, _ in }
+        )
+
+        #expect(createdItems.count == 3)
+        #expect(createdItems.allSatisfy { $0.images == images })
+        for item in createdItems {
+            let itemId = try #require(item.id)
+            let fields = try #require(
+                batch.setsForPath("accounts/\(acct)/items/\(itemId)").first?.fields
+            )
+            let storedImages = try #require(fields["images"] as? [[String: Any]])
+            #expect(storedImages.count == 1)
+            #expect(storedImages.first?["url"] as? String == images[0].url)
+        }
     }
 
     @Test("create empty item array — does not commit")

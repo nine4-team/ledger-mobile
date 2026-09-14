@@ -118,8 +118,8 @@ struct TransactionCreationStepResolverTests {
         ) == .waitingForItems)
     }
 
-    @Test("Planned inventory purchase requires a client-facing price")
-    func plannedPurchaseRequiresProjectPrice() {
+    @Test("Planned inventory purchase accepts the purchase-price floor")
+    func plannedPurchaseAcceptsPurchasePriceFloor() {
         var transaction = Transaction()
         transaction.intendedBudgetCategoryId = "furnishings"
         var item = Item()
@@ -130,7 +130,7 @@ struct TransactionCreationStepResolverTests {
             activeItems: [item],
             projectExists: true,
             categoryExists: true
-        ) == .missingProjectPrices)
+        ) == .readyToSell)
     }
 
     @Test("Planned inventory purchase is ready after destination and pricing validation")

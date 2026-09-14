@@ -218,7 +218,15 @@ struct ItemDraftCaptureSheet: View {
     private var imageSourceMenu: some View {
         ActionMenuSheet(
             title: "Add Photos",
-            items: [
+            items: imageSourceMenuItems,
+            onSelectAction: { action in
+                imageSourcePendingAction = action
+            }
+        )
+    }
+
+    private var imageSourceMenuItems: [ActionMenuItem] {
+        var items = [
                 ActionMenuItem(
                     id: "camera",
                     label: "Camera",
@@ -231,11 +239,22 @@ struct ItemDraftCaptureSheet: View {
                     icon: "photo.on.rectangle",
                     onPress: { showPhotoPicker = true }
                 ),
-            ],
-            onSelectAction: { action in
-                imageSourcePendingAction = action
-            }
-        )
+            ]
+        if Clipboard.containsImage {
+            items.append(ActionMenuItem(
+                id: "paste-image",
+                label: "Paste Image",
+                icon: "doc.on.clipboard",
+                onPress: {
+                    do {
+                        imageDatas.append(try ImageTransferHelper.pastedImageUpload().data)
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
+            ))
+        }
+        return items
     }
 
     private func saveAndReset() async {

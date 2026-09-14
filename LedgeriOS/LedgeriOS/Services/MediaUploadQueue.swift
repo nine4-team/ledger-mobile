@@ -66,6 +66,12 @@ struct UploadMetadata: Codable, Identifiable {
 @MainActor
 @Observable
 final class MediaUploadQueue {
+    struct PendingImageUpload {
+        let id: String
+        let data: Data
+        let fileName: String?
+    }
+
     private(set) var pendingCount: Int = 0
     private(set) var failedCount: Int = 0
     private(set) var failedUploads: [UploadMetadata] = []
@@ -171,6 +177,26 @@ final class MediaUploadQueue {
     func pendingUploadIds(entityType: String, entityId: String) -> [String] {
         loadEntries(where: { $0.entityType == entityType && $0.entityId == entityId })
             .map(\.id)
+    }
+
+    /// Returns durable local bytes that have not finished uploading for an entity.
+    /// Assignment uses this to carry quick-draft photos forward even when the
+    /// Firestore listener has not received their remote URLs yet.
+    func pendingImageUploads(entityType: String, entityId: String) -> [PendingImageUpload] {
+        loadEntries(where: {
+            $0.entityType == entityType
+                && $0.entityId == entityId
+                && $0.contentType.hasPrefix("image/")
+        })
+        .compactMap { metadata in
+            guard let url = localImageURL(for: metadata.id),
+                  let data = try? Data(contentsOf: url) else { return nil }
+            return PendingImageUpload(
+                id: metadata.id,
+                data: data,
+                fileName: metadata.fileName
+            )
+        }
     }
 
     // MARK: - Private: Processing

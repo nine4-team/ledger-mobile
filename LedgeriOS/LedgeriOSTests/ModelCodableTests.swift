@@ -25,6 +25,25 @@ struct ModelCodableTests {
 
     // MARK: - Item
 
+    @Test("New inventory items persist creation dates and sort by creation time")
+    func inventoryCreationDates() throws {
+        let oldDate = Date(timeIntervalSince1970: 1_000)
+        let newDate = Date(timeIntervalSince1970: 2_000)
+        var old = Item()
+        old.id = "z-old"
+        old = ItemsService.timestampedForCreation(old, now: oldDate)
+        var recent = Item()
+        recent.id = "a-new"
+        recent = ItemsService.timestampedForCreation(recent, now: newDate)
+
+        let fields = try encodeToDict(recent)
+        #expect((fields["createdAt"] as? Timestamp)?.dateValue() == newDate)
+        #expect(recent.updatedAt == newDate)
+        let sorted = [old, recent].sorted(by: ListFilterSortCalculations.sortComparator(for: .createdDesc))
+        #expect(sorted.map(\.id) == ["a-new", "z-old"])
+        #expect(ItemsService.timestampedForCreation(old, now: newDate).createdAt == oldDate)
+    }
+
     @Test("Item encodes all fields correctly")
     func itemEncoding() throws {
         var item = Item()

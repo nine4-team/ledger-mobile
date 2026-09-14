@@ -1,7 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 #if canImport(UIKit)
 import Photos
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 struct ImageGallery: View {
@@ -72,6 +75,7 @@ struct ImageGallery: View {
                         pinButton
                     }
                     Spacer()
+                    copyButton
                     saveButton
                     shareButton
                 }
@@ -259,6 +263,15 @@ struct ImageGallery: View {
 
     // MARK: - Save Button
 
+    private var copyButton: some View {
+        Button {
+            copyCurrentImage()
+        } label: {
+            controlButtonLabel(systemName: "doc.on.doc")
+        }
+        .accessibilityLabel("Copy image")
+    }
+
     @ViewBuilder
     private var saveButton: some View {
         if currentIndex < images.count, onSaveImage != nil {
@@ -288,7 +301,22 @@ struct ImageGallery: View {
         Task {
             do {
                 try await onSaveImage(attachment)
-                saveAlertMessage = "Image saved to Photos."
+                saveAlertMessage = "Image saved to device."
+            } catch is CancellationError {
+                return
+            } catch {
+                saveAlertMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func copyCurrentImage() {
+        guard currentIndex < images.count else { return }
+        let attachment = images[currentIndex]
+        Task {
+            do {
+                try await ImageTransferHelper.copyToClipboard(attachment)
+                saveAlertMessage = "Image copied. Open another item and choose Add, then Paste Image."
             } catch {
                 saveAlertMessage = error.localizedDescription
             }
@@ -418,7 +446,37 @@ enum ImageSaveError: LocalizedError {
 
 enum ImageSaveHelper {
     static func saveToDevice(_ attachment: AttachmentRef) async throws {
+        let data = try await ImageTransferHelper.imageData(for: attachment)
+
         #if canImport(UIKit)
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized || status == .limited else {
+            throw ImageSaveError.permissionDenied
+        }
+
+        try await PHPhotoLibrary.shared().performChanges {
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: data, options: nil)
+        }
+        #elseif canImport(AppKit)
+        let destination = await MainActor.run { () -> URL? in
+            let panel = NSSavePanel()
+            panel.title = "Save Image"
+            panel.canCreateDirectories = true
+            panel.allowedContentTypes = [.image]
+            panel.nameFieldStringValue = ImageTransferHelper.suggestedFileName(for: attachment)
+            return panel.runModal() == .OK ? panel.url : nil
+        }
+        guard let destination else { throw CancellationError() }
+        try data.write(to: destination, options: .atomic)
+        #else
+        throw ImageSaveError.unsupportedPlatform
+        #endif
+    }
+}
+
+enum ImageTransferHelper {
+    static func imageData(for attachment: AttachmentRef) async throws -> Data {
         guard let resolvedURL = await StorageURLResolver.resolve(attachment.url) else {
             throw ImageSaveError.missingURL
         }
@@ -429,22 +487,45 @@ enum ImageSaveHelper {
             throw ImageSaveError.missingURL
         }
 
-        guard UIImage(data: data) != nil else {
-            throw ImageSaveError.invalidImageData
-        }
-
-        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        guard status == .authorized || status == .limited else {
-            throw ImageSaveError.permissionDenied
-        }
-
-        try await PHPhotoLibrary.shared().performChanges {
-            let request = PHAssetCreationRequest.forAsset()
-            request.addResource(with: .photo, data: data, options: nil)
-        }
+        #if canImport(UIKit)
+        guard UIImage(data: data) != nil else { throw ImageSaveError.invalidImageData }
+        #elseif canImport(AppKit)
+        guard NSImage(data: data) != nil else { throw ImageSaveError.invalidImageData }
         #else
         throw ImageSaveError.unsupportedPlatform
         #endif
+        return data
+    }
+
+    @MainActor
+    static func copyToClipboard(_ attachment: AttachmentRef) async throws {
+        let data = try await imageData(for: attachment)
+        try Clipboard.copyImage(data: data)
+    }
+
+    @MainActor
+    static func pastedImageUpload() throws -> AttachmentUpload {
+        AttachmentUpload.image(
+            data: try Clipboard.pastedImageData(),
+            fileName: "Pasted Image.png",
+            contentType: .png
+        )
+    }
+
+    static func suggestedFileName(for attachment: AttachmentRef) -> String {
+        if let fileName = attachment.fileName?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !fileName.isEmpty {
+            return fileName
+        }
+        switch attachment.contentType?.lowercased() {
+        case "image/png": return "Ledger Image.png"
+        case "image/heic": return "Ledger Image.heic"
+        case "image/heif": return "Ledger Image.heif"
+        case "image/gif": return "Ledger Image.gif"
+        case "image/webp": return "Ledger Image.webp"
+        default: break
+        }
+        return "Ledger Image.jpg"
     }
 }
 

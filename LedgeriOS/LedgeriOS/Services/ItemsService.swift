@@ -127,9 +127,17 @@ struct ItemsService: ItemsServiceProtocol {
             throw ItemAssociationError.linkedItemCreation
         }
         try Self.validateCategory(projectId: item.projectId, categoryId: item.budgetCategoryId)
-        let priceNormalized = ItemPricePolicy.normalizedForPersistence(item)
+        let priceNormalized = ItemPricePolicy.normalizedForPersistence(Self.timestampedForCreation(item))
         let id = try repo(accountId: accountId).create(AttachmentPrimaryPolicy.normalized(priceNormalized))
         return id
+    }
+
+    /// Persist a concrete date so offline snapshots can sort newly created items immediately.
+    static func timestampedForCreation(_ item: Item, now: Date = Date()) -> Item {
+        var item = item
+        item.createdAt = item.createdAt ?? now
+        item.updatedAt = item.updatedAt ?? now
+        return item
     }
 
     func createItemsForTransaction(
@@ -160,7 +168,7 @@ struct ItemsService: ItemsServiceProtocol {
         let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
 
         for (itemId, sourceItem) in zip(itemIds, items) {
-            let priceNormalized = ItemPricePolicy.normalizedForPersistence(sourceItem)
+            let priceNormalized = ItemPricePolicy.normalizedForPersistence(Self.timestampedForCreation(sourceItem))
             var item = AttachmentPrimaryPolicy.normalized(priceNormalized)
             item.id = itemId
             item.accountId = accountId

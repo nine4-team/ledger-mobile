@@ -501,6 +501,19 @@ struct MediaGallerySection: View {
             )
         }
 
+        if canUploadImages, Clipboard.containsImage {
+            items.append(
+                ActionMenuItem(
+                    id: "paste-image",
+                    label: "Paste Image",
+                    icon: "doc.on.clipboard",
+                    onPress: {
+                        Task { await pasteImage() }
+                    }
+                )
+            )
+        }
+
         items.append(
             ActionMenuItem(
                 id: "files",
@@ -592,6 +605,17 @@ struct MediaGallerySection: View {
             ))
         }
 
+        if attachment.kind == .image {
+            items.append(ActionMenuItem(
+                id: "copy-image",
+                label: "Copy Image",
+                icon: "doc.on.doc",
+                onPress: {
+                    copyImage(attachment)
+                }
+            ))
+        }
+
         if attachment.kind == .image, onSaveImage != nil {
             items.append(ActionMenuItem(
                 id: "save",
@@ -629,10 +653,32 @@ struct MediaGallerySection: View {
         Task {
             do {
                 try await onSaveImage(attachment)
-                saveAlertMessage = "Image saved to Photos."
+                saveAlertMessage = "Image saved to device."
+            } catch is CancellationError {
+                return
             } catch {
                 saveAlertMessage = error.localizedDescription
             }
+        }
+    }
+
+    private func copyImage(_ attachment: AttachmentRef) {
+        Task {
+            do {
+                try await ImageTransferHelper.copyToClipboard(attachment)
+                saveAlertMessage = "Image copied. Open another item and choose Add, then Paste Image."
+            } catch {
+                saveAlertMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func pasteImage() async {
+        do {
+            let upload = try ImageTransferHelper.pastedImageUpload()
+            await handlePickedImageUpload(upload)
+        } catch {
+            uploadError = error.localizedDescription
         }
     }
 }
