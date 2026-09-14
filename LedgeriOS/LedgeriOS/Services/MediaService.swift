@@ -11,6 +11,17 @@ protocol StorageUploading: Sendable {
     func delete(url: String) async throws
 }
 
+enum MediaServiceError: LocalizedError, Equatable {
+    case invalidStorageURL
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidStorageURL:
+            "The attachment does not have a valid Firebase Storage URL."
+        }
+    }
+}
+
 /// Live implementation backed by Firebase Storage.
 struct FirebaseStorageUploader: StorageUploading {
     func putData(_ data: Data, path: String, contentType: String) async throws -> String {
@@ -23,7 +34,12 @@ struct FirebaseStorageUploader: StorageUploading {
     }
 
     func delete(url: String) async throws {
-        let ref = Storage.storage().reference(forURL: url)
+        guard let parsedURL = URL(string: url) else {
+            throw MediaServiceError.invalidStorageURL
+        }
+        // Firebase's string overload terminates the process for malformed URLs.
+        // The URL overload reports the same validation failures as Swift errors.
+        let ref = try Storage.storage().reference(for: parsedURL)
         try await ref.delete()
     }
 }
@@ -116,8 +132,14 @@ final class MediaService {
 
     /// Deletes the file at the given download URL from Firebase Storage.
     /// - Parameter url: The download URL string returned by `uploadImage`.
-    /// - Throws: `StorageErrorCode` if the reference cannot be resolved or the delete fails.
+    /// - Throws: `MediaServiceError` for an invalid URL, or `StorageErrorCode` if deletion fails.
     func deleteImage(url: String) async throws {
-        try await uploader.delete(url: url)
+        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedURL.hasPrefix("gs://")
+                || trimmedURL.hasPrefix("https://")
+                || trimmedURL.hasPrefix("http://") else {
+            throw MediaServiceError.invalidStorageURL
+        }
+        try await uploader.delete(url: trimmedURL)
     }
 }

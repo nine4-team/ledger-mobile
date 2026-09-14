@@ -888,6 +888,7 @@ private struct ItemDetailContentView: View {
     private func uploadImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
               !itemId.isEmpty else { return }
+        let itemsService = ItemsService()
         let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
@@ -895,18 +896,6 @@ private struct ItemDetailContentView: View {
             entityId: itemId,
             filename: filename
         )
-
-        // H7: Write placeholder first so the Firestore record survives upload failures
-        var images = liveItem.images ?? []
-        let isPrimary = images.isEmpty
-        images.append(AttachmentRef(
-            url: "",
-            fileName: upload.displayFileName,
-            contentType: upload.contentType,
-            isPrimary: isPrimary,
-            isUploading: true
-        ))
-        updateItem(fields: ["images": images.map(attachmentDict)])
 
         // Upload bytes (H8: MediaService retries on transient failures)
         let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
@@ -916,33 +905,60 @@ private struct ItemDetailContentView: View {
             contentType: upload.contentType
         )
 
-        // Replace placeholder with real URL
-        var updatedImages = liveItem.images ?? []
-        if let idx = updatedImages.firstIndex(where: { $0.url.isEmpty && $0.fileName == upload.displayFileName }) {
-            updatedImages[idx].url = url
-            updatedImages[idx].thumbnailUrlSm = thumbnails.sm
-            updatedImages[idx].thumbnailUrlMd = thumbnails.md
-            updatedImages[idx].isUploading = nil
-        } else {
-            // Listener hasn't reflected the placeholder yet — append the resolved ref directly
-            updatedImages.append(AttachmentRef(
+        do {
+            // Only complete attachments belong in Firestore. Failed/in-progress
+            // uploads remain UI state instead of invalid empty-URL records.
+            let latestItem = try await itemsService.getItem(accountId: accountId, itemId: itemId)
+            var images = latestItem?.images ?? liveItem.images ?? []
+            images.append(AttachmentRef(
                 url: url,
                 thumbnailUrlSm: thumbnails.sm,
                 thumbnailUrlMd: thumbnails.md,
                 fileName: upload.displayFileName,
                 contentType: upload.contentType,
-                isPrimary: isPrimary
+                isPrimary: images.isEmpty
             ))
+            try await itemsService.updateItem(
+                accountId: accountId,
+                itemId: itemId,
+                fields: ["images": images.map(attachmentDict)]
+            )
+        } catch {
+            // The upload succeeded but its Firestore reference did not. Avoid
+            // leaking objects that the user cannot reach from the item.
+            for uploadedURL in [url, thumbnails.sm, thumbnails.md].compactMap({ $0 }) {
+                try? await mediaService.deleteImage(url: uploadedURL)
+            }
+            throw error
         }
-        updateItem(fields: ["images": updatedImages.map(attachmentDict)])
     }
 
     private func removeImage(_ attachment: AttachmentRef) {
+        guard let accountId = accountContext.currentAccountId,
+              !itemId.isEmpty else { return }
         var images = liveItem.images ?? []
-        images.removeAll { $0.url == attachment.url }
-        updateItem(fields: ["images": images.map(attachmentDict)])
+        guard let index = images.firstIndex(of: attachment) else { return }
+        images.remove(at: index)
+        let service = ItemsService()
+        let fields: [String: Any] = ["images": images.map(attachmentDict)]
+        nonisolated(unsafe) let sendableFields = fields
+        let storageURL = attachment.url.trimmingCharacters(in: .whitespacesAndNewlines)
+
         Task {
-            try? await mediaService.deleteImage(url: attachment.url)
+            do {
+                // Remove the Firestore reference before deleting its bytes so a
+                // failed database write cannot leave a permanently broken image.
+                try await service.updateItem(
+                    accountId: accountId,
+                    itemId: itemId,
+                    fields: sendableFields
+                )
+                if !storageURL.isEmpty {
+                    try await mediaService.deleteImage(url: storageURL)
+                }
+            } catch {
+                print("🔴 removeImage failed: \(error)")
+            }
         }
     }
 

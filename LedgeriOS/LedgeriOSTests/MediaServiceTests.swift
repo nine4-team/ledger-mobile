@@ -209,4 +209,26 @@ struct MediaServiceTests {
             try await service.deleteImage(url: "https://storage.example.com/missing.jpg")
         }
     }
+
+    @Test("deleteImage rejects an empty placeholder URL before calling Firebase Storage")
+    func deleteImageRejectsEmptyPlaceholderURL() async {
+        let mock = MockStorageUploader()
+        let service = MediaService(uploader: mock)
+
+        await #expect(throws: MediaServiceError.invalidStorageURL) {
+            try await service.deleteImage(url: "   ")
+        }
+        #expect(mock.lastDeletedURL == nil)
+    }
+
+    @Test("deleteImage rejects a non-Storage URL before calling Firebase Storage")
+    func deleteImageRejectsInvalidURL() async {
+        let mock = MockStorageUploader()
+        let service = MediaService(uploader: mock)
+
+        await #expect(throws: MediaServiceError.invalidStorageURL) {
+            try await service.deleteImage(url: "pending-upload")
+        }
+        #expect(mock.lastDeletedURL == nil)
+    }
 }
