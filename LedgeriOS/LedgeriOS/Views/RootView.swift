@@ -157,7 +157,7 @@ private struct FailedUploadsView: View {
 
     private func displayName(for entityType: String) -> String {
         switch entityType {
-        case "protoItems": "Item needing assignment"
+        case "protoItems": "Item Quick Draft"
         case "items": "Item"
         case "projects": "Project"
         case "spaces": "Space"

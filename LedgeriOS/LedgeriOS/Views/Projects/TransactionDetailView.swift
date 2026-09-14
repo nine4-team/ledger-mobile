@@ -740,13 +740,13 @@ struct TransactionDetailView: View {
             )
         }
         .confirmationDialog(
-            "Remove Item?",
+            "Delete Quick Draft?",
             isPresented: Binding(
                 get: { protoItemPendingDelete != nil },
                 set: { if !$0 { protoItemPendingDelete = nil } }
             )
         ) {
-            Button("Remove Item", role: .destructive) {
+            Button("Delete Draft", role: .destructive) {
                 if let protoItem = protoItemPendingDelete {
                     Task { await deleteProtoItem(protoItem) }
                 }
@@ -1190,7 +1190,7 @@ struct TransactionDetailView: View {
 
     private var itemDraftsSection: some View {
         CollapsibleSection(
-            title: "Needs Assignment",
+            title: "Item Quick Drafts",
             isExpanded: sectionBinding("item-drafts"),
             badge: "\(activeTransactionProtoItems.count)",
             onAdd: { showCreateItemDraft = true }
@@ -1198,7 +1198,7 @@ struct TransactionDetailView: View {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 if activeTransactionProtoItems.isEmpty {
                     ContentUnavailableView {
-                        Label("All items are assigned", systemImage: "checkmark.circle")
+                        Label("No quick drafts", systemImage: "checkmark.circle")
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xl)

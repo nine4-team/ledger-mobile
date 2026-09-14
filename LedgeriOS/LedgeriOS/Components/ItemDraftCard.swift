@@ -26,7 +26,7 @@ struct ItemDraftCard: View {
     }
 
     private var showsFromInventoryControl: Bool {
-        protoItem.projectId != nil && onToggleFromInventory != nil
+        protoItem.projectId != nil && protoItem.transactionId == nil && onToggleFromInventory != nil
     }
 
     private var hasMenuActions: Bool {
@@ -76,7 +76,7 @@ struct ItemDraftCard: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: "Needs Assignment",
+                title: "Item Quick Draft",
                 items: menuItems,
                 onSelectAction: { action in
                     menuPendingAction = action
@@ -111,13 +111,13 @@ struct ItemDraftCard: View {
     private var menuItems: [ActionMenuItem] {
         var items: [ActionMenuItem] = []
         if let onConvert {
-            items.append(ActionMenuItem(id: "convert", label: "Assign Item", icon: "arrow.triangle.branch", onPress: onConvert))
+            items.append(ActionMenuItem(id: "convert", label: "Convert to Item", icon: "arrow.triangle.branch", onPress: onConvert))
         }
         if let onMerge {
-            items.append(ActionMenuItem(id: "merge", label: "Match Existing Item", icon: "arrow.triangle.merge", onPress: onMerge))
+            items.append(ActionMenuItem(id: "merge", label: "Merge with Existing Item", icon: "arrow.triangle.merge", onPress: onMerge))
         }
         if let onDelete {
-            items.append(ActionMenuItem(id: "delete", label: "Remove Item", icon: "trash", isDestructive: true, onPress: onDelete))
+            items.append(ActionMenuItem(id: "delete", label: "Delete Draft", icon: "trash", isDestructive: true, onPress: onDelete))
         }
         return items
     }
@@ -141,7 +141,7 @@ struct ItemDraftCard: View {
         }
         .frame(width: 44, height: 44)
         .buttonStyle(.plain)
-        .accessibilityLabel(protoItem.usesInventoryRouting ? "From our inventory" : "Set assignment route")
+        .accessibilityLabel(protoItem.usesInventoryRouting ? "Marked From Business Inventory" : "Mark From Business Inventory")
     }
 
     @ViewBuilder
@@ -180,10 +180,12 @@ struct ItemDraftCard: View {
             }
 
             HStack(spacing: Spacing.sm) {
-                FindableText(protoItem.effectiveAssignmentHint.displayLabel)
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.primary)
-                    .lineLimit(1)
+                if protoItem.projectId != nil, protoItem.transactionId == nil, protoItem.usesInventoryRouting {
+                    FindableText("From Business Inventory")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.primary)
+                        .lineLimit(1)
+                }
 
                 FindableText("Qty: \(displayQuantity)")
                     .font(Typography.caption)

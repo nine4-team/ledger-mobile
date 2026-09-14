@@ -35,12 +35,12 @@ struct ItemDraftCaptureSheet: View {
     }
 
     private var canSave: Bool {
-        (!imageDatas.isEmpty || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) && !isSaving
+        (!imageDatas.isEmpty || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) && !isSaving
     }
 
     var body: some View {
         FormSheet(
-            title: "Quick Add Item",
+            title: "New Item Quick Draft",
             primaryAction: FormSheetAction(
                 title: "Save & Next",
                 isLoading: isSaving,
@@ -50,9 +50,16 @@ struct ItemDraftCaptureSheet: View {
             secondaryAction: FormSheetAction(title: "Done") {
                 dismiss()
             },
+            actionHint: !canSave && !isSaving ? "Add a name, notes, or a photo to save a quick draft." : nil,
             error: errorMessage
         ) {
             VStack(spacing: Spacing.md) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    DetailRow(label: "Location", value: projectId == nil ? "Business Inventory" : (projectName ?? "Current project"))
+                    if transactionId != nil {
+                        DetailRow(label: "Transaction", value: transactionName ?? "Linked transaction")
+                    }
+                }
                 FormField(label: "Name", text: $name, placeholder: "Optional")
                 FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
                 quantitySection
@@ -66,31 +73,13 @@ struct ItemDraftCaptureSheet: View {
 
     private var assignmentHintSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("How should this item be handled?")
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
-            InlineOptionPicker(selection: $assignmentHint, options: [
-                InlineOption(id: .undecided, label: ProtoItemAssignmentHint.undecided.displayLabel),
-                InlineOption(id: .clientPaid, label: ProtoItemAssignmentHint.clientPaid.displayLabel),
-                InlineOption(id: .businessPaid, label: ProtoItemAssignmentHint.businessPaid.displayLabel),
-                InlineOption(id: .fromInventory, label: ProtoItemAssignmentHint.fromInventory.displayLabel),
-            ])
-            Text(assignmentHintExplanation)
+            Toggle("From Business Inventory", isOn: Binding(
+                get: { assignmentHint == .fromInventory },
+                set: { assignmentHint = $0 ? .fromInventory : .undecided }
+            ))
+            Text("Use this when the item came from your business inventory.")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
-        }
-    }
-
-    private var assignmentHintExplanation: String {
-        switch assignmentHint {
-        case .undecided:
-            "You can decide when this item is assigned."
-        case .clientPaid:
-            "Ledger will start assignment on the client-paid route."
-        case .businessPaid:
-            "Ledger will start assignment on the business-paid route."
-        case .fromInventory:
-            "Assignment will offer an existing inventory purchase or a new inventory-first item. Either route records the sale into this project."
         }
     }
 
@@ -253,7 +242,7 @@ struct ItemDraftCaptureSheet: View {
         guard let accountId = accountContext.currentAccountId else { return }
         let capturedImageDatas = imageDatas
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !capturedImageDatas.isEmpty || !trimmedNotes.isEmpty else { return }
+        guard canSave else { return }
 
         isSaving = true
         errorMessage = nil
@@ -295,12 +284,11 @@ struct ItemDraftCaptureSheet: View {
             quantity = 1
             assignmentHint = .undecided
             imageDatas = []
-            showImageSourceMenu = true
             mediaUploadQueue.processQueue()
             isSaving = false
         } catch {
             isSaving = false
-            errorMessage = "Failed to save the item. Please try again."
+            errorMessage = "Failed to save the quick draft. Please try again."
         }
     }
 

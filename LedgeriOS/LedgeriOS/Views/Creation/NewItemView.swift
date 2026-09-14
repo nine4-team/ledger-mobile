@@ -63,7 +63,7 @@ private struct AssignmentTransactionPickerModal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             HStack {
-                Text("Choose Existing Record")
+                Text("Choose Transaction")
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
@@ -598,12 +598,12 @@ struct NewItemView: View {
 
     private var itemForm: some View {
         FormSheet(
-            title: convertingProtoItemId == nil ? "New Item" : "Assign Item",
+            title: convertingProtoItemId == nil ? "New Item" : "Convert to Item",
             description: convertingProtoItemId == nil
                 ? "Add a name or at least one image, plus a price, to create an item."
-                : "Complete the details and choose the accounting route. The captured item will then move out of Needs Assignment.",
+                : "Complete the details to turn this quick draft into an item.",
             primaryAction: FormSheetAction(
-                title: convertingProtoItemId == nil ? "Create Item" : "Assign Item",
+                title: convertingProtoItemId == nil ? "Create Item" : "Convert to Item",
                 isLoading: isCreating,
                 isDisabled: !isValid
             ) {
@@ -631,7 +631,7 @@ struct NewItemView: View {
                         fieldLabel("Transaction", isMissing: isTransactionChoiceMissing)
 
                         if projectId != nil {
-                            Text("Choose an existing record or create the item through inventory. The final choice here—not the capture-time hint—is authoritative.")
+                            Text("Choose a transaction to link this item to, or create it through Business Inventory.")
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -1338,7 +1338,7 @@ struct NewItemView: View {
             } catch {
                 await MainActor.run {
                     isCreating = false
-                    submissionError = "Couldn't assign the item from inventory. No records were changed."
+                    submissionError = "Couldn't convert the draft from inventory. No records were changed."
                 }
             }
         }

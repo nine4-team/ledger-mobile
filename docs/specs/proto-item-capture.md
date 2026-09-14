@@ -5,6 +5,21 @@ Last updated: 2026-08-19
 
 User-facing name: **Item Quick Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Quick Draft" or "Item Quick Drafts".
 
+### Firebase draft details
+
+The draft detail screen uses **Details**, with a Space picker scoped to the
+draft's project or Business Inventory. If a transaction is linked, show its
+Transaction summary. Otherwise, project drafts show a **From Business Inventory**
+toggle with the explanation "Use this when the item came from your business
+inventory." Inventory drafts never show this toggle. Apply the same visibility
+rule to the draft card's inventory control and marker.
+
+Capture uses the same project-only inventory toggle when no transaction is
+supplied. Do not present Client paid / We paid hints as payer facts or choices.
+Existing hint fields remain readable for compatibility. The primary action is
+**Convert to Item**, with **Merge with Existing Item** and **Delete Draft** as
+separate actions. These presentation changes preserve the conversion routes.
+
 ## Summary
 
 Proto item capture lets a designer record a physical object quickly before all item details are known. A proto item is a persistent photo group plus lightweight context. It is not a real `Item` yet and does not affect project budgets, inventory value, transactions, invoices, or reports until it is converted.

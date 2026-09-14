@@ -21,6 +21,11 @@ struct ItemQuickDraftDetailView: View {
     @State private var errorMessage: String?
     @State private var skuDraft: String
     @State private var quantityDraft: Int
+    @State private var isSavingChanges = false
+
+    private var hasPendingChanges: Bool {
+        nameHasChanges || notesHasChanges || skuHasChanges || quantityHasChanges
+    }
 
     private let protoItemsService = ProtoItemsService()
 
@@ -65,7 +70,7 @@ struct ItemQuickDraftDetailView: View {
             AdaptiveContentWidth {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     nameSection
-                    assignmentSection
+                    detailsSection
                     mediaSection
                     actionsSection
                     if let errorMessage {
@@ -79,15 +84,15 @@ struct ItemQuickDraftDetailView: View {
             }
         }
         .background(BrandColors.background.ignoresSafeArea())
-        .navigationTitle("Needs Assignment")
+        .navigationTitle("Item Quick Draft")
         .navBarTitleDisplayMode(.inline)
         .onAppear(perform: subscribe)
         .onDisappear {
             listener?.remove()
             listener = nil
         }
-        .confirmationDialog("Remove Item?", isPresented: $showDeleteConfirmation) {
-            Button("Remove Item", role: .destructive) {
+        .confirmationDialog("Delete Quick Draft?", isPresented: $showDeleteConfirmation) {
+            Button("Delete Draft", role: .destructive) {
                 Task { await deleteDraft() }
             }
             Button("Cancel", role: .cancel) {}
@@ -148,21 +153,7 @@ struct ItemQuickDraftDetailView: View {
     private var nameSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             FormField(label: "Name", text: $nameDraft, placeholder: "Optional")
-            if nameHasChanges {
-                Button("Save Name") {
-                    Task { await saveName() }
-                }
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.primary)
-            }
             FormField(label: "Notes", text: $notesDraft, placeholder: "Optional notes", axis: .vertical)
-            if notesHasChanges {
-                Button("Save Notes") {
-                    Task { await saveNotes() }
-                }
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.primary)
-            }
             FormField(label: "SKU", text: $skuDraft, placeholder: "Barcode or SKU number")
             if !skuCandidates.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -170,7 +161,6 @@ struct ItemQuickDraftDetailView: View {
                         ForEach(skuCandidates, id: \.self) { candidate in
                             Button {
                                 skuDraft = candidate
-                                Task { await saveSku() }
                             } label: {
                                 Text(candidate)
                                     .font(Typography.caption)
@@ -191,15 +181,17 @@ struct ItemQuickDraftDetailView: View {
                     }
                 }
             }
-            if skuHasChanges {
-                Button("Save SKU") {
-                    Task { await saveSku() }
-                }
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.primary)
-            }
             quantitySection
+            if hasPendingChanges {
+                AppButton(title: "Save Changes", isLoading: isSavingChanges) {
+                    Task { await savePendingChanges() }
+                }
+                Text("Save your changes before leaving. Convert and Merge also save these changes.")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
         }
+        .disabled(isSavingChanges)
     }
 
     private var quantitySection: some View {
@@ -251,13 +243,6 @@ struct ItemQuickDraftDetailView: View {
                     .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
             )
 
-            if quantityHasChanges {
-                Button("Save Quantity") {
-                    Task { await saveQuantity() }
-                }
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.primary)
-            }
         }
     }
 
@@ -286,10 +271,11 @@ struct ItemQuickDraftDetailView: View {
         )
     }
 
-    private var assignmentHintBinding: Binding<ProtoItemAssignmentHint> {
+    private var inventoryBinding: Binding<Bool> {
         Binding(
-            get: { liveProtoItem.effectiveAssignmentHint },
-            set: { hint in
+            get: { liveProtoItem.usesInventoryRouting },
+            set: { isFromInventory in
+                let hint: ProtoItemAssignmentHint = isFromInventory ? .fromInventory : .undecided
                 liveProtoItem.assignmentHint = hint
                 liveProtoItem.isFromInventory = hint == .fromInventory
                 Task { await saveAssignmentHint(hint) }
@@ -309,22 +295,29 @@ struct ItemQuickDraftDetailView: View {
         return availableSpaces.first(where: { $0.id == spaceId })?.name ?? "Unknown Space"
     }
 
-    private var assignmentSection: some View {
+    private var detailsSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Assignment")
+            Text("Details")
                 .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
-
-            Text("This is a routing hint only. The choice you confirm while assigning the item is authoritative.")
+            Text("Changes here save automatically.")
                 .font(Typography.caption)
                 .foregroundStyle(BrandColors.textSecondary)
 
-            InlineOptionPicker(selection: assignmentHintBinding, options: [
-                InlineOption(id: .undecided, label: ProtoItemAssignmentHint.undecided.displayLabel),
-                InlineOption(id: .clientPaid, label: ProtoItemAssignmentHint.clientPaid.displayLabel),
-                InlineOption(id: .businessPaid, label: ProtoItemAssignmentHint.businessPaid.displayLabel),
-                InlineOption(id: .fromInventory, label: ProtoItemAssignmentHint.fromInventory.displayLabel),
-            ])
+            if let transactionId = liveProtoItem.transactionId {
+                let transaction = projectContext.transactions.first { $0.id == transactionId }
+                    ?? accountContext.allTransactions.first { $0.id == transactionId }
+                DetailRow(
+                    label: "Transaction",
+                    value: transaction.map { TransactionDisplayCalculations.displayName(for: $0) }
+                        ?? "Linked transaction (\(transactionId))"
+                )
+            } else if liveProtoItem.projectId != nil {
+                Toggle("From Business Inventory", isOn: inventoryBinding)
+                Text("Use this when the item came from your business inventory.")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text("Space")
@@ -355,17 +348,20 @@ struct ItemQuickDraftDetailView: View {
     private var actionsSection: some View {
         VStack(spacing: Spacing.sm) {
             AppButton(
-                title: "Assign Item",
-                action: { showConvertToItem = true }
+                title: "Convert to Item",
+                isDisabled: isSavingChanges,
+                action: { Task { if await savePendingChanges() { showConvertToItem = true } } }
             )
             AppButton(
-                title: "Match Existing Item",
+                title: "Merge with Existing Item",
                 variant: .secondary,
-                action: { showMergeWithExistingItem = true }
+                isDisabled: isSavingChanges,
+                action: { Task { if await savePendingChanges() { showMergeWithExistingItem = true } } }
             )
             AppButton(
-                title: "Remove Item",
+                title: "Delete Draft",
                 variant: .secondary,
+                isDisabled: isSavingChanges,
                 action: { showDeleteConfirmation = true }
             )
         }
@@ -384,78 +380,63 @@ struct ItemQuickDraftDetailView: View {
                 dismiss()
                 return
             }
+            let keepName = nameHasChanges
+            let keepNotes = notesHasChanges
+            let keepSku = skuHasChanges
+            let keepQuantity = quantityHasChanges
             liveProtoItem = item
-            if !nameHasChanges {
+            if !keepName {
                 nameDraft = item.name ?? ""
             }
-            if !notesHasChanges {
+            if !keepNotes {
                 notesDraft = item.notes ?? ""
             }
-            if !skuHasChanges {
+            if !keepSku {
                 skuDraft = item.sku ?? ""
             }
-            if !quantityHasChanges {
+            if !keepQuantity {
                 quantityDraft = max(item.quantity ?? 1, 1)
             }
         }
     }
 
-    private func saveName() async {
+    @MainActor
+    @discardableResult
+    private func savePendingChanges() async -> Bool {
+        guard !isSavingChanges else { return false }
+        guard hasPendingChanges else { return true }
         guard let accountId = accountContext.currentAccountId,
-              let protoItemId = liveProtoItem.id else { return }
-        let trimmed = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        do {
-            try await protoItemsService.updateProtoItem(
-                accountId: accountId,
-                protoItemId: protoItemId,
-                fields: ["name": trimmed.isEmpty ? FieldValue.delete() : trimmed]
-            )
-        } catch {
-            errorMessage = "Failed to update name."
+              let protoItemId = liveProtoItem.id else {
+            errorMessage = "Unable to save this quick draft. Please reopen it and try again."
+            return false
         }
-    }
-
-    private func saveSku() async {
-        guard let accountId = accountContext.currentAccountId,
-              let protoItemId = liveProtoItem.id else { return }
-        let trimmed = skuDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedName = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedNotes = notesDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedSku = skuDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedQuantity = max(quantityDraft, 1)
+        isSavingChanges = true
+        errorMessage = nil
+        defer { isSavingChanges = false }
         do {
             try await protoItemsService.updateProtoItem(
                 accountId: accountId,
                 protoItemId: protoItemId,
-                fields: ["sku": trimmed.isEmpty ? FieldValue.delete() : trimmed]
+                fields: [
+                    "name": savedName.isEmpty ? FieldValue.delete() : savedName,
+                    "notes": savedNotes.isEmpty ? FieldValue.delete() : savedNotes,
+                    "sku": savedSku.isEmpty ? FieldValue.delete() : savedSku,
+                    "quantity": savedQuantity,
+                ]
             )
+            // Conversion and merge must see the saved values without waiting for the listener.
+            liveProtoItem.name = savedName.isEmpty ? nil : savedName
+            liveProtoItem.notes = savedNotes.isEmpty ? nil : savedNotes
+            liveProtoItem.sku = savedSku.isEmpty ? nil : savedSku
+            liveProtoItem.quantity = savedQuantity
+            return true
         } catch {
-            errorMessage = "Failed to update SKU."
-        }
-    }
-
-    private func saveNotes() async {
-        guard let accountId = accountContext.currentAccountId,
-              let protoItemId = liveProtoItem.id else { return }
-        let trimmed = notesDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        do {
-            try await protoItemsService.updateProtoItem(
-                accountId: accountId,
-                protoItemId: protoItemId,
-                fields: ["notes": trimmed.isEmpty ? FieldValue.delete() : trimmed]
-            )
-        } catch {
-            errorMessage = "Failed to update notes."
-        }
-    }
-
-    private func saveQuantity() async {
-        guard let accountId = accountContext.currentAccountId,
-              let protoItemId = liveProtoItem.id else { return }
-        do {
-            try await protoItemsService.updateProtoItem(
-                accountId: accountId,
-                protoItemId: protoItemId,
-                fields: ["quantity": max(quantityDraft, 1)]
-            )
-        } catch {
-            errorMessage = "Failed to update quantity."
+            errorMessage = "Failed to save changes. Please try again."
+            return false
         }
     }
 
@@ -472,7 +453,7 @@ struct ItemQuickDraftDetailView: View {
                 ]
             )
         } catch {
-            errorMessage = "Failed to update the assignment route."
+            errorMessage = "Failed to update the inventory marker."
         }
     }
 
@@ -617,7 +598,7 @@ struct ItemQuickDraftDetailView: View {
             )
             dismiss()
         } catch {
-            errorMessage = "The item was created, but assignment did not finish."
+            errorMessage = "The item was created, but the quick draft could not be marked converted."
         }
     }
 
