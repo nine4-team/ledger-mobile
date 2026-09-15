@@ -248,6 +248,7 @@ struct TransactionDetailView: View {
     @State private var showBulkSetSpace = false
     @State private var showBulkReturnToInventory = false
     @State private var showBulkSellToProject = false
+    @State private var showBulkReturnToProject = false
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
@@ -792,6 +793,21 @@ struct TransactionDetailView: View {
         .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 SellItemsModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                    Task {
+                        await loadLineageItems()
+                        await loadExternalItems()
+                    }
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkReturnToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(
+                    items: selectedItems,
+                    accountId: accountId,
+                    entryPoint: .returnToProject
+                ) {
                     selectedItemIds.removeAll()
                     Task {
                         await loadLineageItems()
@@ -1459,6 +1475,14 @@ struct TransactionDetailView: View {
                 onClearSpace: { clearSpaceForSelected() },
                 onReturnToInventory: selectedScope == .project && selectedItemsCanReturnToInventory
                     ? { showBulkReturnToInventory = true }
+                    : nil,
+                onReturnToProject: selectedScope == .inventory
+                    && ProjectDestinationPresentation.resolve(
+                        for: selectedItems,
+                        transactions: accountContext.allTransactions,
+                        projects: accountContext.allProjects
+                    ) == .returnToProject
+                    ? { showBulkReturnToProject = true }
                     : nil,
                 onSellToProject: selectedScope == nil ? nil : { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },

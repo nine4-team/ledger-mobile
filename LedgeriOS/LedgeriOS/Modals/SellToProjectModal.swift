@@ -2,11 +2,17 @@ import SwiftUI
 import FirebaseFirestore
 
 /// Entry point for financial cross-scope item flows.
-/// Inventory items with proven source-project provenance return there directly;
-/// other inventory items and project items use the normal sale destination flow.
+/// Inventory items with proven source-project provenance can either return there
+/// or use the normal sale destination flow to sell onward to another project.
+enum SellItemsModalEntryPoint: Equatable {
+    case sell
+    case returnToProject
+}
+
 struct SellItemsModal: View {
     let items: [Item]
     let accountId: String
+    let entryPoint: SellItemsModalEntryPoint
     let onComplete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -15,6 +21,18 @@ struct SellItemsModal: View {
     private enum Destination {
         case project
         case inventory
+    }
+
+    init(
+        items: [Item],
+        accountId: String,
+        entryPoint: SellItemsModalEntryPoint = .sell,
+        onComplete: @escaping () -> Void
+    ) {
+        self.items = items
+        self.accountId = accountId
+        self.entryPoint = entryPoint
+        self.onComplete = onComplete
     }
 
     private var canSellToInventory: Bool {
@@ -37,7 +55,7 @@ struct SellItemsModal: View {
 
     var body: some View {
         Group {
-            if let returnDestination {
+            if entryPoint == .returnToProject, let returnDestination {
                 ReturnToProjectModal(
                     items: items,
                     accountId: accountId,

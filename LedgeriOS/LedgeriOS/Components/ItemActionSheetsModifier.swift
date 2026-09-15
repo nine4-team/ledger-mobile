@@ -58,6 +58,17 @@ private struct ItemActionSheetsModifier: ViewModifier {
                     }
                 }
             }
+            .adaptivePresentation(item: $controller.returnToProjectItem, style: .form) { item in
+                if let accountId {
+                    SellItemsModal(
+                        items: [item],
+                        accountId: accountId,
+                        entryPoint: .returnToProject
+                    ) {
+                        onActionComplete?()
+                    }
+                }
+            }
             .adaptivePresentation(item: $controller.sellToProjectItem, style: .form) { item in
                 if let accountId {
                     SellItemsModal(items: [item], accountId: accountId) {

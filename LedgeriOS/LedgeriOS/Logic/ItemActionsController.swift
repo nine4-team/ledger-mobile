@@ -17,6 +17,7 @@ final class ItemActionsController {
     var setSpaceItem: Item?
     var transactionPickerItem: Item?
     var returnToInventoryItem: Item?
+    var returnToProjectItem: Item?
     var sellToProjectItem: Item?
     var reassignItem: Item?
     var makeCopiesItem: Item?
@@ -35,7 +36,7 @@ final class ItemActionsController {
     ///   - accountId: Used for inline clear writes (clear space / clear transaction).
     ///   - onSelect: Optional bulk-selection callback (caller wires to its `Set<String>`).
     ///   - includeReturnToInventory: Surface the "Return to Inventory" action. Default: project items that originally came from inventory.
-    ///   - includeSellToProject: Surface the project-destination action. Proven inventory provenance can present it as "Return to Project"; otherwise it is "Sell". Default: true for project/inventory.
+    ///   - includeSellToProject: Surface the project-destination Sell action. Proven inventory provenance also exposes a separate "Return to Project" reversal. Default: true for project/inventory.
     func buildMenu(
         for item: Item,
         scope: ItemScope,
@@ -50,6 +51,8 @@ final class ItemActionsController {
             scope == .project && InventoryOperationsService.cameFromInventory(item)
         )
         let wantsSellToProject = includeSellToProject ?? (scope == .project || scope == .inventory)
+        let wantsReturnToProject = scope == .inventory
+            && projectDestinationPresentation == .returnToProject
 
         let callbacks = SingleItemMenuCallbacks(
             onSelect: onSelect,
@@ -64,6 +67,9 @@ final class ItemActionsController {
             },
             onReturnToInventory: wantsReturnToInventory
                 ? { [weak self] in self?.returnToInventoryItem = item }
+                : nil,
+            onReturnToProject: wantsReturnToProject
+                ? { [weak self] in self?.returnToProjectItem = item }
                 : nil,
             onSellToProject: wantsSellToProject
                 ? { [weak self] in self?.sellToProjectItem = item }

@@ -170,6 +170,7 @@ private struct SpaceDetailContentView: View {
     @State private var showBulkSetSpace = false
     @State private var showBulkReturnToInventory = false
     @State private var showBulkSellToProject = false
+    @State private var showBulkReturnToProject = false
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
@@ -486,6 +487,17 @@ private struct SpaceDetailContentView: View {
         .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 SellItemsModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkReturnToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(
+                    items: selectedItems,
+                    accountId: accountId,
+                    entryPoint: .returnToProject
+                ) {
                     selectedItemIds.removeAll()
                 }
             }
@@ -996,6 +1008,14 @@ private struct SpaceDetailContentView: View {
                 onClearSpace: { clearSpaceForSelected() },
                 onReturnToInventory: selectedItemsCanReturnToInventory && !isInventorySpace
                     ? { showBulkReturnToInventory = true }
+                    : nil,
+                onReturnToProject: isInventorySpace
+                    && ProjectDestinationPresentation.resolve(
+                        for: selectedItems,
+                        transactions: accountContext.allTransactions,
+                        projects: accountContext.allProjects
+                    ) == .returnToProject
+                    ? { showBulkReturnToProject = true }
                     : nil,
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },

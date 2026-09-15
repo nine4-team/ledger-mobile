@@ -14,6 +14,7 @@ struct InventoryItemsSubTab: View {
     @State private var showBulkStatusPicker = false
     @State private var showBulkSetSpace = false
     @State private var showBulkSellToProject = false
+    @State private var showBulkReturnToProject = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkReassign = false
     @State private var showBulkDeleteConfirmation = false
@@ -101,6 +102,17 @@ struct InventoryItemsSubTab: View {
                 }
             }
         }
+        .adaptivePresentation(isPresented: $showBulkReturnToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(
+                    items: selectedItems,
+                    accountId: accountId,
+                    entryPoint: .returnToProject
+                ) {
+                    selectedItemIds.removeAll()
+                }
+            }
+        }
         .adaptivePresentation(isPresented: $showBulkReassign, style: .form) {
             ReassignToProjectModal(items: selectedItems) { selectedItemIds.removeAll() }
         }
@@ -142,6 +154,9 @@ struct InventoryItemsSubTab: View {
                 onClearTransaction: { clearTransactionForSelected() },
                 onSetSpace: { showBulkSetSpace = true },
                 onClearSpace: { clearSpaceForSelected() },
+                onReturnToProject: {
+                    showBulkReturnToProject = true
+                },
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
                 onCopyIDs: { Clipboard.copyLines(selectedItemIds) },

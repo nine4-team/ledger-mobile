@@ -186,6 +186,7 @@ private struct ItemDetailContentView: View {
     @State private var showSetSpace = false
     @State private var showReassign = false
     @State private var showReturnToInventory = false
+    @State private var showReturnToProject = false
     @State private var showSellToProject = false
     @State private var showTransactionPicker = false
     @State private var showReturnTransactionPicker = false
@@ -322,6 +323,17 @@ private struct ItemDetailContentView: View {
         .adaptivePresentation(isPresented: $showReturnToInventory, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 MoveToInventoryModal(items: [liveItem], accountId: accountId) {
+                    dismiss()
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showReturnToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(
+                    items: [liveItem],
+                    accountId: accountId,
+                    entryPoint: .returnToProject
+                ) {
                     dismiss()
                 }
             }
@@ -726,6 +738,14 @@ private struct ItemDetailContentView: View {
                 onClearSpace: hasSpace ? { clearItemField("spaceId") } : nil,
                 onReturnToInventory: itemScope == .project && InventoryOperationsService.cameFromInventory(liveItem)
                     ? { showReturnToInventory = true }
+                    : nil,
+                onReturnToProject: itemScope == .inventory
+                    && ProjectDestinationPresentation.resolve(
+                        for: [liveItem],
+                        transactions: accountContext.allTransactions,
+                        projects: accountContext.allProjects
+                    ) == .returnToProject
+                    ? { showReturnToProject = true }
                     : nil,
                 onSellToProject: { showSellToProject = true },
                 onReassignToProject: { showReassign = true },

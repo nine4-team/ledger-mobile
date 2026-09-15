@@ -20,6 +20,7 @@ struct ItemMenuBuilderTests {
             onSetSpace: {},
             onClearSpace: {},
             onReturnToInventory: {},
+            onReturnToProject: {},
             onSellToProject: {},
             onReassignToProject: {},
             onMakeCopies: {},
@@ -36,6 +37,7 @@ struct ItemMenuBuilderTests {
             onSetSpace: {},
             onClearSpace: {},
             onReturnToInventory: {},
+            onReturnToProject: {},
             onSellToProject: {},
             onReassignToProject: {},
             onDelete: {}
@@ -197,7 +199,7 @@ struct ItemMenuBuilderTests {
 
     // MARK: - Scope: Inventory
 
-    @Test("Inventory scope shows Return to Project instead of Sell")
+    @Test("Inventory scope shows Return to Project and Sell when provenance is known")
     func inventoryScopeReturnToProject() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list,
@@ -207,9 +209,10 @@ struct ItemMenuBuilderTests {
         )
         let menuIds = ids(menu)
         #expect(!menuIds.contains("return-to-inventory"))
-        #expect(!menuIds.contains("sell"))
+        #expect(menuIds.contains("sell"))
         #expect(menuIds.contains("return-to-project"))
         #expect(menu.first(where: { $0.id == "return-to-project" })?.label == "Return to Project")
+        #expect(menu.first(where: { $0.id == "sell" })?.label == "Sell")
     }
 
     @Test("Inventory scope keeps Sell when no return project is known")
@@ -342,7 +345,7 @@ struct ItemMenuBuilderTests {
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Bulk menu inventory scope shows Return to Project instead of Sell")
+    @Test("Bulk menu inventory scope shows Return to Project and Sell when provenance is known")
     func bulkMenuInventoryScope() {
         let menu = ItemMenuBuilder.buildBulkMenu(
             scope: .inventory,
@@ -351,7 +354,7 @@ struct ItemMenuBuilderTests {
         )
         let menuIds = ids(menu)
         #expect(!menuIds.contains("return-to-inventory"))
-        #expect(!menuIds.contains("sell"))
+        #expect(menuIds.contains("sell"))
         #expect(menuIds.contains("return-to-project"))
         #expect(menu.first(where: { $0.id == "return-to-project" })?.label == "Return to Project")
         #expect(menuIds.contains("correct-move"))

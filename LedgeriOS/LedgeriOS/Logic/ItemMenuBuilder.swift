@@ -53,6 +53,7 @@ struct SingleItemMenuCallbacks {
     var onClearSpace: (() -> Void)?
     // Sell / Return — real business events (transactions created, budgets shift)
     var onReturnToInventory: (() -> Void)?
+    var onReturnToProject: (() -> Void)? = nil
     var onSellToProject: (() -> Void)?
     // Correct / Move — within-scope correction (no transactions, no budget impact)
     var onReassignToProject: (() -> Void)?
@@ -73,6 +74,7 @@ struct BulkItemMenuCallbacks {
     var onSetSpace: (() -> Void)?
     var onClearSpace: (() -> Void)?
     var onReturnToInventory: (() -> Void)?
+    var onReturnToProject: (() -> Void)? = nil
     var onSellToProject: (() -> Void)?
     var onReassignToProject: (() -> Void)?
     var onCopyIDs: (() -> Void)?
@@ -215,13 +217,20 @@ enum ItemMenuBuilder {
                 ))
             }
         }
-        if let onSellToProject = callbacks.onSellToProject {
-            let isReturnToProject = scope == .inventory
-                && projectDestinationPresentation == .returnToProject
+        if scope == .inventory && projectDestinationPresentation == .returnToProject,
+           let onReturnToProject = callbacks.onReturnToProject {
             items.append(ActionMenuItem(
-                id: isReturnToProject ? "return-to-project" : "sell",
-                label: isReturnToProject ? "Return to Project" : "Sell",
-                icon: isReturnToProject ? "arrow.uturn.backward" : "arrow.right.square",
+                id: "return-to-project",
+                label: "Return to Project",
+                icon: "arrow.uturn.backward",
+                onPress: onReturnToProject
+            ))
+        }
+        if let onSellToProject = callbacks.onSellToProject {
+            items.append(ActionMenuItem(
+                id: "sell",
+                label: "Sell",
+                icon: "arrow.right.square",
                 onPress: onSellToProject
             ))
         }
@@ -316,13 +325,20 @@ enum ItemMenuBuilder {
                 ))
             }
         }
-        if let onSellToProject = callbacks.onSellToProject {
-            let isReturnToProject = scope == .inventory
-                && projectDestinationPresentation == .returnToProject
+        if scope == .inventory && projectDestinationPresentation == .returnToProject,
+           let onReturnToProject = callbacks.onReturnToProject {
             items.append(ActionMenuItem(
-                id: isReturnToProject ? "return-to-project" : "sell",
-                label: isReturnToProject ? "Return to Project" : "Sell",
-                icon: isReturnToProject ? "arrow.uturn.backward" : "arrow.right.square",
+                id: "return-to-project",
+                label: "Return to Project",
+                icon: "arrow.uturn.backward",
+                onPress: onReturnToProject
+            ))
+        }
+        if let onSellToProject = callbacks.onSellToProject {
+            items.append(ActionMenuItem(
+                id: "sell",
+                label: "Sell",
+                icon: "arrow.right.square",
                 onPress: onSellToProject
             ))
         }
