@@ -56,3 +56,12 @@ tmp/
 fastlane/report.xml
 LedgeriOS/.build/
 .firecrawl/
+
+# Local native QA captures (keep on disk, never include in source commits).
+/.native-pdf-batch.*/
+/.native-pdf-followup.*/
+/.notes-ui-ci-evidence.*/
+/.pdf-ios-ci-evidence.*/
+/.pdf-ui-ci-evidence.*/
+/.pdf-ui-ci-latest.*/
+/.report-ci-evidence-*/
