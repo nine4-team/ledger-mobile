@@ -178,7 +178,7 @@ const columns = {
   spike_budget_categories: ["id", "account_id", "display_name", "kind", "lifecycle", "is_system", "excludes_from_overall_budget", "visibility_class", "presentation_order", "revision", "created_at_ms", "updated_at_ms"],
   item_charge_occurrences: ["id","account_id","project_id","item_id","placement_id","category_id","amount_minor_units","currency","revision","withdrawn_at"],
   collected_invoice_lines: ["id","account_id","invoice_id","source_kind","source_id","item_id","source_revision","category_id","signed_amount_minor_units","currency","line_position","description","source_snapshot_json"],
-  collected_invoices: ["id","account_id","project_id","client_id","sealed","purchase_id","invoice_revision","currency","total_minor_units"],
+  collected_invoices: ["id","account_id","project_id","client_id","sealed","purchase_id","invoice_revision","currency","total_minor_units","display_metadata"],
 };
 assert.deepEqual([...reportQueries.keys()].sort(), Object.keys(columns).sort(), "Review every report projection");
 const financialTables = new Set(["spike_transactions", "item_client_payment_connections", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"]);

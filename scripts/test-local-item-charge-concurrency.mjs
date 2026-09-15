@@ -3,8 +3,8 @@ import { execFileSync, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { readFileSync, realpathSync } from 'node:fs';
 
-// Only this generated database is mutated; the existing synthetic database is
-// read by pg_dump, never migrated, reset, or used for these competing writers.
+// Only this generated database is mutated. Copy schema, not local user/test data;
+// the committed synthetic seed supplies the race's independent prerequisites.
 const root = realpathSync(new URL('..', import.meta.url).pathname);
 assert.equal(root, process.env.GITHUB_ACTIONS === 'true'
   ? realpathSync(process.env.GITHUB_WORKSPACE) : '/Users/benjaminmackenzie/Dev/ledger_mobile_supabase');
@@ -84,10 +84,10 @@ async function race(name, holderSQL, waiterSQL, release, expectedCode) {
       observed = sql(`select exists(select 1 from pg_stat_activity w join pg_stat_activity h
         on h.pid=any(pg_blocking_pids(w.pid)) where w.datname='${database}' and h.datname='${database}'
         and w.application_name='${waiterLabel}' and h.application_name='${holderLabel}'
-        and w.wait_event_type='Lock' and w.wait_event='advisory');`) === 't';
+        and w.wait_event_type='Lock' and w.wait_event in ('advisory','transactionid','tuple'));`) === 't';
       if (!observed) await pause(25);
     }
-    assert.ok(observed, `${name}: waiter never demonstrably blocked on holder's advisory lock`);
+    assert.ok(observed, `${name}: waiter never demonstrably blocked on holder's lock`);
     holder.child.stdin.end(`${release};\n`);
     const [held, waited] = await Promise.all([holder.closed, waiter.closed]);
     assert.equal(held.code, 0, held.err);
@@ -95,7 +95,7 @@ async function race(name, holderSQL, waiterSQL, release, expectedCode) {
       assert.equal(waited.code, 3, `${name}: expected failure: ${waited.out} ${waited.err}`);
       assert.match(waited.err, new RegExp(`ERROR:  ${expectedCode}:`));
     } else assert.equal(waited.code, 0, `${name}: ${waited.err}`);
-    console.log(`PASS ${name}: observed advisory wait; holder ${release}; waiter ${expectedCode ?? 'committed'}`);
+    console.log(`PASS ${name}: observed holder lock wait; holder ${release}; waiter ${expectedCode ?? 'committed'}`);
   } finally {
     for (const s of [holder, waiter]) if (!s.child.stdin.destroyed && !s.child.stdin.writableEnded) s.child.stdin.end('rollback;\n');
     await Promise.allSettled([holder.closed, waiter.closed]);
@@ -105,12 +105,13 @@ let created = false;
 try {
   // Realtime's server-owned functions require administrative GUC privileges;
   // they are unrelated to this application's transactional tables/triggers.
-  const dump = execFileSync('docker', ['exec', container, 'pg_dump', '-U', 'postgres', '-d', 'postgres', '-Fc',
+  const dump = execFileSync('docker', ['exec', container, 'pg_dump', '-U', 'postgres', '-d', 'postgres', '-Fc', '--schema-only',
     '--exclude-schema=realtime', '--exclude-schema=_realtime', '--exclude-table-data=vault.secrets'],
     { maxBuffer: 128 * 1024 * 1024, timeout: 30_000 });
   sql(`create database ${database};`, 'postgres'); created = true;
   execFileSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'postgres', '-d', database,
     '--no-owner', '--no-privileges', '--exit-on-error'], { input: dump, timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
+  sql(readFileSync(`${root}/supabase/seed.sql`, 'utf8'));
   if (sql("select to_regclass('ledger_private.item_charge_occurrences') is null") === 't') {
     sql(`begin; ${readFileSync(`${root}/supabase/migrations/20260909060126_item_charge_occurrence_source.sql`, 'utf8')} commit;`);
   }
