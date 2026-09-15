@@ -39,7 +39,7 @@ public enum FirebaseLineageSourceReview {
             // cannot silently disappear merely because its path is invalid.
             let collectionTokens = path.enumerated().filter { $0.offset.isMultiple(of: 2) }.map(\.element)
             let collection = collectionTokens.contains("lineageEdges") ? "lineageEdges"
-                : collectionTokens.first { collections.contains($0) }
+                : (path.count <= 4 ? collectionTokens.first { collections.contains($0) } : nil)
             guard let collection else { continue }
             let start = issues.count
             func reject(_ kind: FirebaseLineageSourceDocumentIssue.Kind) {
@@ -62,7 +62,7 @@ public enum FirebaseLineageSourceReview {
                 if let account = entries.first(where: { $0.key == "accountId" }) {
                     if case .string(let embedded) = account.value,
                        embedded.utf8.elementsEqual(accountScopeID.utf8) {
-                        // Optional on reference documents, required by lineage reader.
+                    // Optional legacy duplicate; the validated path owns scope.
                     } else { reject(.accountScopeMismatch) }
                 }
             } else {

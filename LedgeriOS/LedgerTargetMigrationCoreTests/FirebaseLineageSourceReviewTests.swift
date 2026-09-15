@@ -184,6 +184,22 @@ struct FirebaseLineageSourceReviewTests {
         #expect(nonMap.fields == FirebaseSourceValue.string("not-a-map"))
     }
 
+    @Test("Unscoped references are reported while unrelated nested documents remain evidence only")
+    func unscopedReferencesAreNotSilentlyIgnored() {
+        let unscoped = Self.reference("unscoped", collection: "items", id: "item",
+            path: ["items", "item"])
+        let nested = Self.reference("attachment", collection: "items", id: "item",
+            path: ["accounts", "account", "items", "item", "attachments", "photo"])
+        let edge = Self.lineage("edge", kind: "association", item: "item")
+        let documents = [unscoped, nested, edge]
+        let result = FirebaseLineageSourceReview.review(documents: documents, accountScopeID: "account")
+        #expect(result.documents == documents)
+        #expect(result.issues.contains(Self.issue("unscoped", .invalidPath)))
+        #expect(!result.issues.contains { $0.sourceRecordID == "attachment" })
+        #expect(result.lineage.first?.issues.contains(.missingItem("item")) == true)
+        #expect(result.lineage.first?.canAttemptMapping == false)
+    }
+
     private static func reference(
         _ sourceRecordID: String,
         account: String = "account",
