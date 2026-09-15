@@ -1,10 +1,14 @@
 import Foundation
 import LedgerTargetCore
+import PowerSync
 
 public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
     case accountScopeMismatch
     case principalScopeMismatch
     case runtimeClosed
+    case workspaceMembershipNotReady
+    case syncAlreadyStarted
+    case syncRequiresExclusiveWorkspace
     case removalPersistenceFailed
     case removalCloseFailed
     case databaseCloseFailed(
@@ -17,6 +21,9 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
         case .accountScopeMismatch: "workspace_runtime_account_scope_mismatch"
         case .principalScopeMismatch: "workspace_runtime_principal_scope_mismatch"
         case .runtimeClosed: "workspace_runtime_closed"
+        case .workspaceMembershipNotReady: "workspace_membership_download_or_reconciliation_required"
+        case .syncAlreadyStarted: "workspace_sync_already_started"
+        case .syncRequiresExclusiveWorkspace: "workspace_sync_requires_exclusive_runtime"
         case .removalPersistenceFailed: "workspace_removal_persistence_failed"
         case .removalCloseFailed: "workspace_removal_close_failed"
         case .databaseCloseFailed(let attachment, let structured):
@@ -26,11 +33,40 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 }
 
 public final class LedgerOfflineClientRuntime:
-    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising,
+    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
-    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, Sendable
+    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
+    public func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
+        try await lifecycleOwner.readInvoicingCharges(accountId: accountId, projectId: projectId)
+    }
+    public func watchInvoicingCharges(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectInvoicingItems?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startInvoicingChargeWatch(id: id, accountId: accountId,
+                projectId: projectId, continuation: continuation)
+        }
+    }
+    public func watchDownloadedTransactionAttachments(scope: TransactionScope, transactionId: TransactionID,
+        section: TransactionAttachmentSection) -> AsyncThrowingStream<DownloadedTransactionAttachments?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startTransactionAttachmentWatch(id: id, scope: scope,
+                transactionId: transactionId, section: section, continuation: continuation)
+        }
+    }
+    public func readDownloadedTransactionAttachments(scope: TransactionScope, transactionId: TransactionID,
+        section: TransactionAttachmentSection) async throws -> DownloadedTransactionAttachments {
+        try await lifecycleOwner.readDownloadedTransactionAttachments(scope: scope, transactionId: transactionId, section: section)
+    }
+    public func loadDownloadedTransactionAttachment(catalog: DownloadedTransactionAttachments,
+        attachment: DownloadedTransactionAttachment, allowDownload: Bool) async throws -> Data? {
+        try await lifecycleOwner.loadDownloadedTransactionAttachment(catalog: catalog, attachment: attachment,
+            allowDownload: allowDownload)
+    }
+    public func readTransactionExport(scope: TransactionScope, orderedTransactionIDs: [TransactionID]?,
+                                      asOf: ProtectedArtifactEpochMilliseconds) async throws -> TransactionExportSnapshot {
+        try await lifecycleOwner.readTransactionExport(scope: scope, orderedTransactionIDs: orderedTransactionIDs, asOf: asOf)
+    }
     public func watchDownloadedProjectItems(accountId: AccountID, projectId: ProjectID)
         -> AsyncThrowingStream<DownloadedProjectItems, Error> {
         trackedStream { id, continuation in
@@ -40,6 +76,20 @@ public final class LedgerOfflineClientRuntime:
     }
     func uploadPendingCommands(using appliers: LedgerPowerSyncCommandAppliers) async throws {
         try await lifecycleOwner.uploadPendingCommands(using: appliers)
+    }
+
+    /// Start SDK-managed delivery/downloads for this already-open workspace.
+    /// The session owner supplies credentials and command transports bound to
+    /// this Principal. Starting sync is not authentication or a grant of access.
+    /// Nil download credentials do not disable uploads: command transports
+    /// independently obtain and validate their authenticated user credentials.
+    /// Reuse this runtime for all views. Sync requires sole runtime ownership;
+    /// opening/closing a second handle can disconnect the SDK's shared coordinator.
+    public func startSync(
+        credentialProvider: @escaping @Sendable () async throws -> PowerSyncCredentials?,
+        appliers: LedgerPowerSyncCommandAppliers
+    ) async throws {
+        try await lifecycleOwner.startSync(credentialProvider: credentialProvider, appliers: appliers)
     }
     private let removalHandler: @Sendable () async throws -> Void
 
@@ -98,6 +148,25 @@ public final class LedgerOfflineClientRuntime:
         }
     }
 
+    public func readDownloadedTransactionReceipt(scope: TransactionScope, transactionId: TransactionID) async throws
+        -> TransactionReceiptSnapshot {
+        try await lifecycleOwner.readDownloadedTransactionReceipt(scope: scope, transactionId: transactionId)
+    }
+
+    public func watchTransactionReceipt(scope: TransactionScope, transactionId: TransactionID)
+        -> AsyncThrowingStream<TransactionReceiptUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startTransactionReceiptWatch(id: id, scope: scope,
+                transactionId: transactionId, continuation: continuation)
+        }
+    }
+
+    public func watchTransactions(scope: TransactionScope) -> AsyncThrowingStream<TransactionBrowserUpdate, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startTransactionBrowserWatch(id: id, scope: scope, continuation: continuation)
+        }
+    }
+
     public func readDownloadedPropertyManagementReport(accountId: AccountID, projectId: ProjectID,
         currency: CurrencyCode, asOf: ProtectedArtifactEpochMilliseconds) async throws -> PropertyManagementReportSnapshot {
         try await lifecycleOwner.readDownloadedPropertyManagementReport(accountId: accountId,
@@ -147,6 +216,97 @@ public final class LedgerOfflineClientRuntime:
 
     public func createProject(_ command: CreateProjectCommand) async throws -> OperationReceipt {
         try await lifecycleOwner.createProject(command)
+    }
+
+    public func submit(_ command: CategoryManagementCommand) async throws -> OperationReceipt {
+        try await lifecycleOwner.manageCategories(command)
+    }
+
+    public func inventorySaleStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await lifecycleOwner.inventorySaleStatus(operationId)
+    }
+
+    public func readInventorySaleReview(itemIds: [ItemID]) async throws -> InventorySaleReview {
+        try await lifecycleOwner.readInventorySaleReview(itemIds: itemIds)
+    }
+
+    public func watchInventorySaleReview(itemIds: [ItemID]) -> AsyncThrowingStream<InventorySaleReview?, Error> {
+        trackedStream { id,continuation in
+            await self.lifecycleOwner.startInventorySaleReviewWatch(id: id,itemIds: itemIds,continuation: continuation)
+        }
+    }
+
+    public func watchInventorySale(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startInventorySaleWatch(id: id, operationId: operationId,
+                continuation: continuation)
+        }
+    }
+
+    /// Retain UUID/time with the user's reviewed selection across retries.
+    public func sellInventoryItems(_ payload: InventorySalePayload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.sellInventoryItems(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func watchCategoryOperations() -> AsyncThrowingStream<[OperationSnapshot], Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startCategoryOperationWatch(id: id, continuation: continuation)
+        }
+    }
+
+    public func createExpense(_ draft: BusinessPaidExpenseDraft, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
+        try await lifecycleOwner.createExpense(draft, operationUUID: operationUUID, capturedAt: capturedAt, recovery: recovery)
+    }
+
+    public func expenseAttachmentCaptureScope(projectId: ProjectID, expenseId: ExpenseID) async throws -> AttachmentCaptureScope {
+        try await lifecycleOwner.expenseAttachmentCaptureScope(projectId: projectId, expenseId: expenseId)
+    }
+    public func saveExpenseEntry(_ entry: ExpenseEntryRecovery, replacing previous: ExpenseEntryRecovery? = nil) async throws {
+        try await lifecycleOwner.saveExpenseEntry(entry, replacing: previous)
+    }
+    public func restoreExpenseEntryCaptures(_ entry: ExpenseEntryRecovery) async throws -> [LocalAttachmentCapture] {
+        try await lifecycleOwner.restoreExpenseEntryCaptures(entry)
+    }
+
+    public func readExpenses(accountId: AccountID, projectId: ProjectID) async throws -> ProjectExpenses {
+        try await lifecycleOwner.readExpenses(accountId: accountId, projectId: projectId)
+    }
+
+    public func readCollectedInvoiceReport(accountId: AccountID, projectId: ProjectID, invoiceId: InvoiceID,
+        asOf: ProtectedArtifactEpochMilliseconds) async throws -> CollectedInvoiceReportSnapshot {
+        try await lifecycleOwner.readCollectedInvoiceReport(accountId: accountId, projectId: projectId,
+            invoiceId: invoiceId, asOf: asOf)
+    }
+
+    public func readCollectedInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [FrozenInvoiceContents] {
+        try await lifecycleOwner.readCollectedInvoices(accountId: accountId, projectId: projectId)
+    }
+
+    public func watchCollectedInvoices(accountId: AccountID, projectId: ProjectID, invoiceId: InvoiceID? = nil) -> AsyncThrowingStream<[FrozenInvoiceContents]?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startCollectedInvoiceWatch(id: id, accountId: accountId, projectId: projectId, invoiceId: invoiceId, continuation: continuation)
+        }
+    }
+
+    public func loadExpenseReceipt(projectId: ProjectID, expenseId: ExpenseID,
+        attachmentId: AttachmentID, allowDownload: Bool = true) async throws -> Data? {
+        try await lifecycleOwner.loadExpenseReceipt(projectId: projectId, expenseId: expenseId,
+            attachmentId: attachmentId, allowDownload: allowDownload)
+    }
+
+    public func watchExpenses(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectExpenses?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startExpenseWatch(id: id, accountId: accountId, projectId: projectId, continuation: continuation)
+        }
+    }
+
+    /// UI convenience: bind the same domain command to this workspace. The
+    /// caller retains UUID/time across retries, never backend credentials.
+    public func submitCategoryChange(_ payload: CategoryManagementPayload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.manageCategories(payload, operationUUID: operationUUID,
+                                                   capturedAt: capturedAt)
     }
 
     public func archive(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
@@ -382,9 +542,50 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.pendingUploadCount()
     }
 
+    /// Before presenting cached data after online activation, require downloaded
+    /// permissions to agree. Do not expose stale full-access data after learning
+    /// a reduced scope, or rewrite synced membership from an HTTP response.
+    public func requireMatchingDownloadedMembership(_ authorization: WorkspaceMembershipAuthorization) async throws {
+        try await lifecycleOwner.requireMatchingDownloadedMembership(authorization)
+    }
+
+    /// Wait on the existing directory stream, not a timer or a second database
+    /// handle. Its owned watch is cancelled/drained by normal workspace close.
+    public func waitForCategoryWorkspaceReady(_ authorization: WorkspaceMembershipAuthorization) async throws {
+        for try await snapshot in watchBudgetCategories() {
+            try Task.checkCancellation()
+            guard snapshot.local.isCompleteForQuery, snapshot.local.quality == .ready else { continue }
+            try await requireMatchingDownloadedMembership(authorization)
+            return
+        }
+        try Task.checkCancellation()
+        throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+    }
+
     public func encryptionCipher() async throws -> String {
         try await lifecycleOwner.encryptionCipher()
     }
+
+    public func transactionAttachmentCaptureScope(scope: TransactionScope, transactionId: TransactionID)
+        async throws -> AttachmentCaptureScope {
+        try await lifecycleOwner.transactionAttachmentCaptureScope(scope: scope, transactionId: transactionId)
+    }
+
+    public func captureTransactionAttachment(_ capture: LocalAttachmentCapture, scope: TransactionScope)
+        async throws -> AttachmentLocalDurabilityReceipt {
+        try await lifecycleOwner.captureTransactionAttachment(capture, scope: scope)
+    }
+
+    public func publishTransactionAttachment(_ receipt: AttachmentLocalDurabilityReceipt, scope: TransactionScope,
+        using client: SupabaseTransactionAttachmentUpload) async throws -> TransactionAttachmentPublication {
+        try await lifecycleOwner.publishTransactionAttachment(receipt, scope: scope, using: client)
+    }
+
+    #if DEBUG
+    public func rejectTransactionAttachmentUIFixture() async throws {
+        try await lifecycleOwner.rejectTransactionAttachmentUIFixture()
+    }
+    #endif
 
     public func captureAttachment(
         _ capture: LocalAttachmentCapture
@@ -453,4 +654,6 @@ public final class LedgerOfflineClientRuntime:
 }
 
 extension LedgerOfflineClientRuntime: SpaceListQuerying {}
+extension LedgerOfflineClientRuntime: InventorySaleReviewReading {}
+extension LedgerOfflineClientRuntime: InventorySaleWorkflowServing {}
 extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

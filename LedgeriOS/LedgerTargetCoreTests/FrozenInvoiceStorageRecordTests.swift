@@ -1,7 +1,6 @@
 import Foundation
 import Testing
-import LedgerTargetCore
-@testable import LedgerTargetMigrationCore
+@testable import LedgerTargetCore
 
 @Suite("Frozen Invoice private storage transport")
 struct FrozenInvoiceStorageRecordTests {
@@ -24,6 +23,24 @@ struct FrozenInvoiceStorageRecordTests {
             #expect(actualLine.description.utf8.elementsEqual(expectedLine.description.utf8))
         }
         #expect(try actual.categoryTotals() == expected.categoryTotals())
+    }
+
+    @Test func displayMetadataRoundTripAndValidation() throws {
+        let base = try fixture()
+        let metadata = try InvoiceDisplayMetadata(invoiceNumber: "  INV-001  ", notes: "First\nSecond",
+            issuedAtMilliseconds: "-1000", paidAtMilliseconds: "-1")
+        let invoice = try FrozenInvoiceContents(invoiceId: base.invoiceId, invoiceRevision: base.invoiceRevision,
+            scope: base.scope, purchaseId: base.purchaseId, lines: base.lines, total: base.total, displayMetadata: metadata)
+        let record = try FrozenInvoiceStorageRecord.make(invoice)
+        let restored = try JSONDecoder().decode(FrozenInvoiceStorageRecord.self, from: JSONEncoder().encode(record)).restored()
+        #expect(restored == invoice)
+        #expect(restored.displayMetadata?.invoiceNumber == "  INV-001  ")
+        #expect(restored.displayMetadata?.displayDate == Date(timeIntervalSince1970: -0.001))
+        #expect(try FrozenInvoiceStorageRecord.make(base).restored().displayMetadata == nil)
+        for invalid in ["01", "-0", "1.5", "253402300800000", "-62135596800001"] {
+            #expect(throws: InvoiceDisplayMetadata.Failure.invalid) { try InvoiceDisplayMetadata(paidAtMilliseconds: invalid) }
+        }
+        #expect(throws: InvoiceDisplayMetadata.Failure.invalid) { try InvoiceDisplayMetadata(notes: "bad\0notes") }
     }
 
     @Test("Mixed signed contents round-trip exact cents, provenance and original line order")

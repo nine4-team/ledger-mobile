@@ -154,7 +154,8 @@ an open workflow decision.
 
 ## Story 5: Sell the Same Item Again
 
-If the returned Item is later sold from Business Inventory:
+If an Item is sold onward from Business Inventory—including a returned
+inventory-originated Item or an Item acquired from a project under Story 6:
 
 1. create a brand-new positive Item charge and sale occurrence;
 2. use the destination project's current approved project price;
@@ -163,6 +164,15 @@ If the returned Item is later sold from Business Inventory:
 
 Never reopen or reuse an earlier occurrence merely because the Item ID is the
 same.
+
+Sell always uses an ordinary eligible destination-project picker. Eligibility
+for Return to the source Project is an additional option, never a replacement
+for Sell or a reason to lock Sell to that source. For example, an Item acquired
+from Kristen's project may be sold onward to Mason's project. Close its current
+Inventory placement/active movement membership, retain acquisition and previous
+accounting provenance, and create the new destination charge/occurrence. Do not
+erase historical acquisition/paid Transaction membership or create a synthetic
+Project Purchase: D-007/D-008 require actual client money movement for that record.
 
 ## Story 6: Sell a Project-Originated Item to Business Inventory
 
@@ -180,6 +190,10 @@ This is 1584 acquiring an Item that originated in and was owned by the project.
 The project budget decreases immediately by the origin-aware basis. A client
 refund Transaction does not exist until cash moves or a credit is settled.
 
+While this inventory-entry provenance is current and proves a return destination,
+the Item exposes both **Return to Project** and **Sell**. Acquiring it from a
+project does not reserve it exclusively for that project.
+
 ## Story 7: Return a Project-Originated Item to Its Source Project
 
 If an Item acquired into Business Inventory is returned to its proven source
@@ -194,6 +208,16 @@ project:
 The user does not choose a different project, category, or recalculated amount
 inside this Return action. If provenance cannot prove a single source, Ledger
 must fall back to an ordinary Sell flow or block rather than guess.
+
+Evaluate the two actions independently for single Items and bulk selections.
+A bulk selection eligible for one proven source Project offers both actions;
+Return restores each Item's own frozen category/amount, not a common recalculated
+basis. Mixed source Projects or mixed project-origin/inventory-origin Items do
+not offer a guessed bulk Return, but retain Sell when each Item is otherwise
+eligible. Ordinary inventory Items and inventory-originated Items that came back
+through a return are Sell-only. Missing provenance may block Return without
+blocking an independently valid Sell; missing evidence required for Sell still
+blocks that sale. Revalidate the selected Items and destination on acceptance.
 
 ## Story 8: Transfer between Projects Owned by the Same Client
 
@@ -297,6 +321,20 @@ At minimum, automated tests must cover:
 - sell → collect → return → resell to a different project;
 - project-originated sale to inventory at purchase cost;
 - return to source project from immutable inventory-entry snapshot;
+- Kristen → Inventory acquisition → Mason: both single-Item actions are visible;
+  Return is source-locked, Sell opens destination choice and creates Mason's new
+  normalized-price charge/occurrence, not a synthetic Purchase. Current Inventory
+  placement ends; acquisition, prior credits and paid history remain unchanged;
+- same-source bulk selection offers both actions; Return preserves per-Item
+  source categories/amounts, while Sell uses the selected destination's basis;
+- mixed-source/mixed-origin bulk selection retains eligible Sell without a guessed
+  Return destination; ordinary and returned inventory-origin Items are Sell-only;
+- the same single/bulk/mixed-origin and Kristen → Inventory → Mason cases through
+  MCP/API commands: Return eligibility or missing Return-only evidence cannot
+  reject an otherwise valid sale; identical accounting/history invariants apply;
+- stale provenance/selection, unauthorized destination and cancel do not partially
+  move Items; mixed-batch failure rolls back all effects, and offline replay
+  cannot duplicate placements, charges or budget effects;
 - Project A → Project B with uncollected source demand;
 - Project A → Project B with paid source demand;
 - same-Client direct Transfer with open demand, live Invoice demand, and paid

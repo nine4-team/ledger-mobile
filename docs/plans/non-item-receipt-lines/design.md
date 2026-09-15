@@ -70,8 +70,8 @@ This is one accounting-model revision with several inseparable changes:
    lines.
 5. Stop requiring or inferring vendor-receipt completeness from
    `subtotalCents` and `taxRatePct`.
-6. Replace the percentage tolerance with exact cent arithmetic and, at most, a
-   one-cent source-rounding tolerance.
+6. Replace the percentage tolerance with exact cent arithmetic. The user confirmed
+   on 2026-09-13 that even a one-cent residual is not complete; no hidden tolerance.
 7. Keep generated inventory-movement subtotal and Item tax-rate mechanics
    unchanged until that subsystem receives its own design.
 
@@ -88,9 +88,8 @@ This revision does not change:
 - inventory lineage and historical item membership; or
 - whether a vendor cost is billable to a client.
 
-The remaining product decisions are limited to billability, whether a
-receipt-authored one-cent discrepancy should use tolerance or an explicit
-rounding line, and how transaction-to-Item tax-rate inheritance should work.
+Remaining product decisions concern billability, treatment of explicit rounding
+lines, and transaction-to-Item tax-rate inheritance. Silent tolerance is excluded.
 
 ## Canonical shape
 
@@ -197,10 +196,11 @@ used by trusted completeness. This design changes which receipt amounts join
 that item total; it does not rewrite inventory lineage.
 
 The current 1% tolerance must not survive this change. A missing $29 BLVD Home
-delivery fee fell within that tolerance and was marked complete. Prefer exact
-equality, with a maximum one-cent tolerance only where source receipt arithmetic
-itself differs by a cent. The audit panel and MCP must always display the exact
-residual.
+delivery fee fell within that tolerance and was marked complete. Require exact
+equality, including when the source receipt itself differs by one cent (user
+clarification 2026-09-13). The audit panel and MCP must display the exact residual.
+An explicit rounding line is not generated automatically; its treatment remains
+subject to the approved receipt-line rules.
 
 Persist these audit fields:
 
@@ -264,9 +264,8 @@ $898.53 merchandise credit + $60.64 tax refund - $106.65 return shipping
 = $852.52 reconstructed versus $852.53 printed total
 ```
 
-The Wayfair source is arithmetically off by one cent. That is evidence for a
-cent-level tolerance or an explicit source rounding line, not a percentage
-tolerance.
+The Wayfair source is arithmetically off by one cent and remains unbalanced.
+Preserve that evidence; do not silently forgive it or generate a rounding line.
 
 ## Current field-interaction audit
 

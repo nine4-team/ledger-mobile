@@ -4,6 +4,7 @@ struct BulkSelectionBar: View {
     let selectedCount: Int
     var totalCount: Int?
     var totalCents: Int?
+    var totalText: String?
     var actionLabel: String = "Actions"
     let onBulkActions: () -> Void
     let onClear: () -> Void
@@ -23,8 +24,8 @@ struct BulkSelectionBar: View {
                     .fontWeight(.bold)
                     .foregroundStyle(BrandColors.textPrimary)
 
-                if let totalCents {
-                    Text(CurrencyFormatting.formatCentsWithDecimals(totalCents))
+                if let total = totalText ?? totalCents.map(CurrencyFormatting.formatCentsWithDecimals) {
+                    Text(total)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }

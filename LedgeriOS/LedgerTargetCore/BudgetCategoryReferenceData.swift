@@ -44,10 +44,10 @@ public struct BudgetCategoryName: Codable, Equatable, Hashable, Sendable {
     public init(validating rawValue: String) throws {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let hasControl = trimmed.unicodeScalars.contains {
-            CharacterSet.controlCharacters.contains($0)
+            $0.properties.generalCategory == .control || $0.properties.generalCategory == .format
         }
         guard !trimmed.isEmpty,
-              trimmed.count <= 100,
+              trimmed.unicodeScalars.count <= 100,
               !hasControl else {
             throw BudgetCategoryReferenceFailure.invalidName
         }
@@ -70,8 +70,10 @@ public struct BudgetCategoryName: Codable, Equatable, Hashable, Sendable {
         try container.encode(rawValue)
     }
 
-    fileprivate var comparisonKey: String {
-        rawValue.lowercased()
+    var comparisonKey: String {
+        // Context-sensitive Unicode lowercasing matches JavaScript/Postgres
+        // (for example Greek final sigma); Swift's default is context-free.
+        (rawValue as NSString).lowercased
     }
 }
 

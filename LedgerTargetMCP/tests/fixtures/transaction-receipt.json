@@ -1,0 +1,14 @@
+{
+  "accountId": "account", "principalId": "principal", "transactionId": "transaction",
+  "scopeKind": "project", "projectId": "project", "clientId": "client",
+  "type": "purchase", "currency": "USD", "amountMinorUnits": "3050",
+  "category": {"id": "category", "name": "Items", "kind": "itemized", "revision": "1"},
+  "nonItemReceiptLines": [
+    {"id": "tax", "description": "Sales Tax", "amountMinorUnits": "100", "effect": "increase", "quantity": "10"},
+    {"id": "discount", "description": "Discount", "amountMinorUnits": "50", "effect": "decrease", "quantity": null}
+  ],
+  "items": [
+    {"itemId": "a", "amountMinorUnits": "1000", "membershipKind": "linked", "name": "Lamp", "sku": null},
+    {"itemId": "b", "amountMinorUnits": "2000", "membershipKind": "sold", "name": "Historical chair", "sku": "CHAIR-2", "source": "Original vendor", "currentSource": "Display vendor", "currentSpaceName": "Current room", "imageCount": "2"}
+  ]
+}

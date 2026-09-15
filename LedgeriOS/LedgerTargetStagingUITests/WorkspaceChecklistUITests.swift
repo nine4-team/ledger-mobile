@@ -1,5 +1,6 @@
 import XCTest
 import CoreText
+import PDFKit
 #if os(macOS)
 import AppKit
 #elseif os(iOS)
@@ -31,6 +32,1102 @@ final class WorkspaceChecklistUITests: XCTestCase {
         super.record(captured)
     }
 
+    func testTransactionImagePinKeepsDetailsAndClearsOnWithdrawal() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-attachments"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        let photo = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Photo 1.png")).firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        photo.tap()
+        let pin = app.buttons["target-transaction-image-pin"]
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        pin.tap()
+        let panel = app.descendants(matching: .any)["target-transaction-pinned-panel"].firstMatch
+        let unpin = app.buttons["target-transaction-pinned-image-unpin"]
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.buttons["target-transaction-images-done"].exists)
+        let counter = app.staticTexts["target-transaction-pinned-images-counter"]
+        XCTAssertTrue(waitUntil { self.displayedText(counter) == "1 of 2" })
+        app.buttons["target-transaction-pinned-images-next"].tap()
+        XCTAssertTrue(waitUntil { self.displayedText(counter) == "2 of 2" })
+        app.buttons["target-transaction-pinned-images-previous"].tap()
+        XCTAssertTrue(waitUntil { self.displayedText(counter) == "1 of 2" })
+        XCTAssertTrue(panel.frame.height > 100)
+        let detail = app.scrollViews["target-transaction-detail-scroll"].firstMatch
+        XCTAssertTrue(detail.exists)
+        #if os(iOS)
+        XCTAssertLessThan(panel.frame.maxY, detail.frame.maxY)
+        let resize = app.descendants(matching: .any)["pinned-image-layout-resize"].firstMatch
+        let renderedImage = panel.images["target-item-image-rendered"]
+        let initialHeight = renderedImage.frame.height
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: resize.frame.midX, dy: resize.frame.midY))
+        start.press(forDuration: 0.3, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 70)))
+        // The container includes the ignored top safe area; a collapsing
+        // navigation title can offset its growth. Measure the rendered image.
+        XCTAssertTrue(waitUntil { renderedImage.frame.height > initialHeight + 10 },
+            "Resize: initial \(initialHeight), final \(renderedImage.frame.height), value \(String(describing: resize.value)); \(app.debugDescription)")
+        #endif
+        reveal(photo, in: app, within: detail)
+        photo.tap()
+        XCTAssertTrue(app.buttons["target-transaction-images-done"].waitForExistence(timeout: 5))
+        app.buttons["target-transaction-images-done"].tap()
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5), "Gallery close retains the pin")
+        unpin.tap()
+        XCTAssertTrue(panel.waitForNonExistence(timeout: 5))
+        let pdf = app.staticTexts["Vendor receipt.pdf"].firstMatch
+        reveal(pdf, in: app, within: detail)
+        pdf.tap()
+        let pinPDF = app.buttons["Pin PDF for reference"]
+        XCTAssertTrue(pinPDF.waitForExistence(timeout: 5))
+        pinPDF.tap()
+        let pinnedPDF = app.descendants(matching: .any)["target-transaction-pinned-pdf"].firstMatch
+        XCTAssertTrue(pinnedPDF.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { pinnedPDF.value as? String == "1 PDF pages" })
+        XCTAssertFalse(app.buttons["Close PDF"].exists)
+        XCTAssertFalse(app.buttons["target-transaction-pinned-images-next"].exists,
+            "PDF pages use PDFKit, not photo navigation")
+        unpin.tap()
+        XCTAssertTrue(panel.waitForNonExistence(timeout: 5))
+        reveal(photo, in: app, within: detail)
+        photo.tap()
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        pin.tap()
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        app.buttons["Withdraw attachment access"].tap()
+        XCTAssertTrue(panel.waitForNonExistence(timeout: 5), "No pinned pixels after withdrawal")
+        XCTAssertTrue(app.staticTexts["Transaction Unavailable"].waitForExistence(timeout: 5))
+    }
+
+    #if os(iOS)
+    func testCaptureBatchRetainsFailureAfterLaterSuccess() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-capture-batch"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Add Attachment"].waitForExistence(timeout: 10))
+        app.buttons["Add Attachment"].tap()
+        XCTAssertTrue(app.buttons["Photo Library"].waitForExistence(timeout: 5))
+        app.buttons["Photo Library"].tap()
+        let photos = app.images.matching(identifier: "PXGGridLayout-Info")
+        XCTAssertTrue(photos.element(boundBy: 1).waitForExistence(timeout: 10), app.debugDescription)
+        photos.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        photos.element(boundBy: 1).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        app.navigationBars["Photos"].buttons["Done"].tap()
+        let result = app.staticTexts["capture-batch-result"]
+        XCTAssertTrue(waitUntil { self.displayedText(result) == "Attempts: 2; accepted: 1" }, app.debugDescription)
+        XCTAssertTrue(app.staticTexts["capture-batch-error"].exists)
+        XCTAssertEqual(displayedText(app.staticTexts["capture-batch-error"]), "First attachment refused by test callback")
+        XCTAssertTrue(app.buttons["Add Attachment"].isEnabled)
+    }
+
+    func testTransactionPDFCaptureSurvivesAppRestart() throws {
+        try exerciseTransactionPDFCapture(source: "Files")
+    }
+
+    func testTransactionDedicatedPDFCaptureSurvivesAppRestart() throws {
+        try exerciseTransactionPDFCapture(source: "PDF")
+    }
+
+    private func exerciseTransactionPDFCapture(source: String) throws {
+        continueAfterFailure = false
+        guard let directory = ProcessInfo.processInfo.environment["LEDGER_UI_TEST_FILES_DIRECTORY"],
+              directory.contains("/CoreSimulator/Devices/"), directory.hasSuffix("/File Provider Storage") else {
+            throw XCTSkip("Requires the explicitly selected disposable simulator's Files directory")
+        }
+        let fileName = "Ledger receipt \(UUID().uuidString).pdf"
+        let file = URL(fileURLWithPath: directory).appendingPathComponent(fileName)
+        try syntheticVendorPDF(lines: ["Synthetic Ledger attachment"]).write(to: file, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-capture", "--capture-fixture-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let add = app.buttons["Add Attachment"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), app.debugDescription)
+        add.tap()
+        let files = app.buttons[source]
+        XCTAssertTrue(files.waitForExistence(timeout: 5), app.debugDescription)
+        files.tap()
+        let browse = app.buttons["Browse"].firstMatch
+        if browse.waitForExistence(timeout: 5) { browse.tap() }
+        let local = app.staticTexts["On My iPhone"].firstMatch
+        XCTAssertTrue(local.waitForExistence(timeout: 5), app.debugDescription)
+        local.tap()
+        let document = app.cells[file.deletingPathExtension().lastPathComponent + ", pdf"].firstMatch
+        XCTAssertTrue(document.waitForExistence(timeout: 5), app.debugDescription)
+        document.tap()
+        let open = app.buttons["Open"].firstMatch
+        if open.waitForExistence(timeout: 2) { open.tap() }
+        let pending = app.descendants(matching: .any)["target-transaction-attachment-pending"].firstMatch
+        XCTAssertTrue(pending.waitForExistence(timeout: 10), app.debugDescription)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(pending.waitForExistence(timeout: 15), app.debugDescription)
+        let attachment = app.staticTexts[fileName].firstMatch
+        XCTAssertTrue(attachment.exists, app.debugDescription)
+        attachment.tap()
+        let viewer = app.descendants(matching: .any)["target-transaction-pdf-viewer"]
+        XCTAssertTrue(viewer.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" }, app.debugDescription)
+        app.buttons["Close PDF"].tap()
+    }
+
+    func testTransactionDocumentPickerCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-capture", "--capture-fixture-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let add = app.buttons["Add Attachment"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), app.debugDescription)
+        for source in ["Files", "PDF"] {
+            add.tap()
+            let option = app.buttons[source]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), app.debugDescription)
+            option.tap()
+            let cancel = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons["Cancel"]
+            XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
+            cancel.tap()
+            XCTAssertTrue(cancel.waitForNonExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(add.isEnabled)
+            XCTAssertFalse(app.descendants(matching: .any)["target-transaction-attachment-pending"].exists)
+            XCTAssertFalse(app.staticTexts["capture-ui-error"].exists)
+        }
+    }
+
+    func testExpensePhotoSaveForLaterSurvivesAppRestart() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-capture", "--ledger-ui-test-expense-capture",
+            "--capture-fixture-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let create = app.buttons["New Expense"]
+        XCTAssertTrue(create.waitForExistence(timeout: 15), app.debugDescription)
+        create.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        vendor.tap(); vendor.typeText("Retained photo expense")
+        let form = app.descendants(matching: .any)["target-expense-form"]
+        let add = app.buttons["Add receipt"]
+        reveal(add, in: app, within: form.scrollViews.firstMatch); add.tap()
+        app.buttons["Photo Library"].tap()
+        let photo = app.images["PXGGridLayout-Info"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), app.debugDescription)
+        photo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let confirm = app.navigationBars["Photos"].buttons["Done"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
+        let remove = app.buttons["Remove selection"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 15), app.debugDescription)
+        app.buttons["Save for later"].tap()
+        let unfinished = app.buttons["capture-unfinished-expense"]
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5), app.debugDescription)
+        app.terminate(); app.launch()
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 15), app.debugDescription)
+        unfinished.tap()
+        XCTAssertTrue(remove.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(vendor.value as? String, "Retained photo expense")
+        XCTAssertFalse(app.buttons["Retry receipt recovery"].exists)
+        app.buttons["Save for later"].tap()
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
+    }
+
+    func testTransactionPhotoCaptureSurvivesAppRestart() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        let fixtureID = UUID().uuidString
+        app.launchArguments = ["--ledger-ui-test-transaction-capture", "--capture-fixture-id=\(fixtureID)"]
+        app.launch()
+        defer { app.terminate() }
+        let add = app.buttons["Add Attachment"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), app.debugDescription)
+        add.tap()
+        let library = app.buttons["Photo Library"]
+        XCTAssertTrue(library.waitForExistence(timeout: 5), app.debugDescription)
+        library.tap()
+        // The disposable simulator library is seeded before this focused test.
+        // This uses the system Photos picker, not an injected capture callback.
+        let photo = app.images["PXGGridLayout-Info"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), app.debugDescription)
+        // This system picker reports an invalid AX hit point for its visible
+        // image tile. Tap the observed tile center, not a guessed screen offset.
+        photo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let confirm = app.navigationBars["Photos"].buttons["Done"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), app.debugDescription)
+        confirm.tap()
+        let pending = app.descendants(matching: .any)["target-transaction-attachment-pending"].firstMatch
+        XCTAssertTrue(pending.waitForExistence(timeout: 15), app.debugDescription)
+        pending.tap()
+        XCTAssertTrue(app.buttons["target-transaction-images-done"].waitForExistence(timeout: 5), app.debugDescription)
+        let image = app.images["target-item-image-rendered"].firstMatch
+        XCTAssertTrue(image.waitForExistence(timeout: 5), app.debugDescription)
+        app.buttons["target-transaction-images-done"].tap()
+        app.buttons["Simulate rejected upload"].tap()
+        let rejected = app.descendants(matching: .any)["target-transaction-attachment-rejected"].firstMatch
+        XCTAssertTrue(rejected.waitForExistence(timeout: 5), app.debugDescription)
+        let recovery = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@", "Originals are saved on this device. Open an attachment to share a copy.")).firstMatch
+        XCTAssertTrue(recovery.waitForExistence(timeout: 5), app.debugDescription)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(rejected.waitForExistence(timeout: 15), app.debugDescription)
+        rejected.tap()
+        XCTAssertTrue(app.buttons["target-transaction-images-done"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(image.waitForExistence(timeout: 5), app.debugDescription)
+        let copy = app.buttons["target-transaction-image-copy"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5))
+        copy.tap()
+        XCTAssertTrue(waitUntil { copy.value as? String == "Copied" }, app.debugDescription)
+        app.buttons["target-transaction-images-done"].tap()
+        add.tap()
+        let paste = app.buttons["Paste Image"]
+        XCTAssertTrue(paste.waitForExistence(timeout: 5), app.debugDescription)
+        paste.tap()
+        let pasted = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Pasted Image.'")).firstMatch
+        XCTAssertTrue(pasted.waitForExistence(timeout: 10), app.debugDescription)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(pasted.waitForExistence(timeout: 15), app.debugDescription)
+        app.buttons["Verify local originals"].tap()
+        XCTAssertTrue(app.staticTexts["capture-originals-verified"].waitForExistence(timeout: 10), app.debugDescription)
+    }
+    #endif
+
+    func testTransactionAttachmentsUseExistingPDFAndImageViewers() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-attachments"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        let pdf = app.staticTexts["Vendor receipt.pdf"].firstMatch
+        XCTAssertTrue(pdf.waitForExistence(timeout: 5))
+        pdf.tap()
+        let pdfViewer = app.descendants(matching: .any)["target-transaction-pdf-viewer"]
+        XCTAssertTrue(pdfViewer.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { pdfViewer.value as? String == "1 PDF pages" }, app.debugDescription)
+        #if os(iOS)
+        app.buttons["Share PDF"].tap()
+        let activity = app.otherElements["ActivityListView"].firstMatch
+        XCTAssertTrue(waitUntil { activity.exists || app.alerts["Attachment"].exists })
+        XCTAssertTrue(activity.exists, app.debugDescription)
+        let dismissShare = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(waitUntil { dismissShare.isHittable })
+        dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Share PDF"].waitForExistence(timeout: 5))
+        #endif
+        app.buttons["Close PDF"].tap()
+        let photo = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Photo 1.png")).firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        photo.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-transaction-image-viewer"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["target-item-image-rendered"].waitForExistence(timeout: 5))
+        #if os(iOS)
+        let share = app.buttons["target-transaction-image-share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5))
+        share.tap()
+        XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(waitUntil { dismissShare.isHittable })
+        dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { share.isEnabled })
+        XCTAssertTrue(app.buttons["target-transaction-image-save"].exists)
+        XCTAssertFalse(app.alerts["Attachment"].exists, "Canceling Share is not an export error")
+        #endif
+        app.buttons["target-transaction-images-done"].tap()
+        app.buttons["target-transaction-attachments-other"].tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Photo 0.png")).firstMatch.waitForExistence(timeout: 5))
+        transactionDetailBack(in: app).tap()
+        app.buttons["Withdraw access"].tap()
+        XCTAssertTrue(app.staticTexts["Transactions are unavailable."].waitForExistence(timeout: 5))
+    }
+
+    #if os(macOS)
+    func testTransactionImageSavesOriginalThroughMacPicker() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-attachments"]
+        app.launch()
+        defer { app.terminate() }
+        let amount = app.staticTexts["$100.00"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 10))
+        reveal(amount, in: app)
+        amount.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        let photo = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Photo 1.png")).firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        photo.tap()
+        let save = app.buttons["target-transaction-image-save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        save.tap()
+        let panel = app.windows["save-panel"]
+        let cancel = panel.buttons["CancelButton"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        cancel.tap()
+        XCTAssertTrue(waitUntil { save.isEnabled })
+        XCTAssertFalse(app.alerts["Attachment"].exists)
+        save.tap()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-image-save-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        // Native Save panel grants the app access to this explicitly selected destination.
+        app.typeKey("g", modifierFlags: [.command, .shift])
+        let path = panel.sheets["GoToWindow"].textFields["PathTextField"]
+        XCTAssertTrue(path.waitForExistence(timeout: 5), app.debugDescription)
+        path.typeKey("a", modifierFlags: .command)
+        path.typeText(directory.path + "/")
+        app.typeKey(.return, modifierFlags: [])
+        let confirm = panel.buttons["OKButton"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        let destination = directory.appendingPathComponent("Photo 1.png")
+        XCTAssertTrue(waitUntil { FileManager.default.fileExists(atPath: destination.path) })
+        let expected = try XCTUnwrap(Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jH1sAAAAASUVORK5CYII="))
+        XCTAssertEqual(try Data(contentsOf: destination), expected)
+        XCTAssertTrue(app.buttons["target-transaction-images-done"].exists)
+        XCTAssertFalse(app.alerts["Attachment"].exists)
+    }
+    #endif
+
+    func testTransactionBrowserPartialListAndExistingDetail() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["target-transactions-partial"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Select all"].exists, "Inventory does not gain Project-only controls")
+        XCTAssertTrue(app.staticTexts["1 item"].exists, "Card counts currently linked Items, not historical membership")
+        XCTAssertTrue(app.staticTexts["Receipt balanced"].exists)
+        XCTAssertTrue(app.staticTexts["$100.00"].exists)
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Notes"].exists)
+        XCTAssertTrue(app.buttons["Details"].exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ OR value CONTAINS %@", "Company card", "Company card")).firstMatch.exists)
+        for value in ["Subtotal", "$92.50", "Tax Rate", "8.125%"] {
+            XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format:
+                "label == %@ OR value == %@", value, value)).firstMatch.exists,
+                "Itemized detail preserves recorded metadata: \(value)")
+        }
+        app.buttons["Notes"].tap()
+        app.buttons["Notes"].tap()
+        transactionDetailBack(in: app).tap()
+        app.buttons["Filter Transactions"].tap()
+        guard app.buttons["Receipt Audit"].waitForExistence(timeout: 5) else {
+            XCTFail("Filter hierarchy: \(app.debugDescription)")
+            return
+        }
+        app.buttons["Receipt Audit"].tap()
+        XCTAssertTrue(app.buttons["Mismatch"].waitForExistence(timeout: 5))
+        app.buttons["Mismatch"].tap()
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.staticTexts["target-transactions-no-match"].waitForExistence(timeout: 5))
+        app.buttons["Filter Transactions"].tap()
+        app.buttons["Reset Filters"].tap()
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.staticTexts["Receipt balanced"].waitForExistence(timeout: 5))
+        app.buttons["Search"].tap()
+        let search = app.textFields["Search transactions..."]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("no matching vendor")
+        XCTAssertTrue(app.staticTexts["target-transactions-no-match"].waitForExistence(timeout: 5))
+        app.buttons["Withdraw access"].tap()
+        XCTAssertTrue(app.staticTexts["Transactions are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["$100.00"].exists)
+    }
+
+    func testTransactionBrowserProjectPaymentUsesExistingDetailWithoutVendorAudit() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--project-payment"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["target-transactions-partial"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Select all"].exists)
+        XCTAssertTrue(app.staticTexts["Client payment"].firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["1 item"].exists, "Client payment card uses retained Item membership without vendor receipt evidence")
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Notes"].exists && app.buttons["Details"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["target-vendor-receipt-audit"].exists,
+            "Client payment detail must not start vendor receipt audit")
+        XCTAssertFalse(app.staticTexts["Subtotal"].exists)
+        XCTAssertFalse(app.staticTexts["Tax Rate"].exists)
+        transactionDetailBack(in: app).tap()
+        app.buttons["Withdraw access"].tap()
+        XCTAssertTrue(app.staticTexts["Transactions are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["$100.00"].exists)
+    }
+
+    func testPaymentItemsKeepFrozenInvoiceAndOpenExistingHistory() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--project-payment", "--ledger-ui-test-payment-history"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["2 items"].exists, "Closed link and frozen line for one chair count it once")
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5))
+        let scroll = app.scrollViews["target-transaction-detail-scroll"].firstMatch
+        for _ in 0..<9 {
+            if app.staticTexts["Invoice Total"].isHittable { break }
+            scroll.swipeUp()
+        }
+        XCTAssertTrue(app.staticTexts["Frozen chair at collection"].exists)
+        XCTAssertTrue(app.staticTexts["Delivery at collection"].exists)
+        XCTAssertTrue(app.staticTexts["$45.00"].exists, "Frozen total stays separate from payment cash")
+        XCTAssertFalse(app.descendants(matching: .any)["target-vendor-receipt-audit"].exists)
+        let chair = app.staticTexts["Historical chair"].firstMatch
+        for _ in 0..<7 {
+            if chair.isHittable { break }
+            scroll.swipeDown()
+        }
+        XCTAssertTrue(chair.isHittable)
+        chair.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5)).withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.staticTexts["target-item-detail-name"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Same physical Item"].exists)
+        XCTAssertTrue(app.staticTexts["Other Project"].exists)
+    }
+
+    func testTransactionRelatedItemsOpenExistingPhysicalHistory() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5))
+        let scroll = app.scrollViews["target-transaction-detail-scroll"].firstMatch
+        func show(_ element: XCUIElement) {
+            for _ in 0..<8 {
+                if element.exists && element.isHittable { return }
+                scroll.swipeUp()
+            }
+            XCTAssertTrue(element.isHittable, "Related Item must be reachable\n\(app.debugDescription)")
+        }
+        let linkedPrice = app.staticTexts["$60.00"].firstMatch
+        show(linkedPrice)
+        linkedPrice.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.staticTexts["target-item-detail-name"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Current lamp"].exists)
+        app.buttons["target-item-history-done"].tap()
+        // CollapsibleSection's button label includes its Item-count badge.
+        let sold = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Sold Items")).firstMatch
+        show(sold); sold.tap()
+        let historicalPrice = app.staticTexts["$40.00"].firstMatch
+        show(historicalPrice)
+        historicalPrice.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.staticTexts["target-item-detail-name"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Historical chair"].exists)
+        let location = app.staticTexts["target-item-detail-current-location"]
+        XCTAssertTrue(location.waitForExistence(timeout: 5))
+        XCTAssertEqual(displayedText(location), "Other Project")
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(transactionDetailBack(in: app).exists, "Closing Item returns to its Transaction")
+    }
+
+    func testTransactionRelatedItemGroupExpandsAndKeepsPhysicalIdentity() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-groups"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["2 items"].exists)
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5))
+        let scroll = app.scrollViews["target-transaction-detail-scroll"].firstMatch
+        let group = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Current lamp")).firstMatch
+        for _ in 0..<8 {
+            if group.exists && group.isHittable { break }
+            scroll.swipeUp()
+        }
+        XCTAssertTrue(group.isHittable)
+        XCTAssertTrue(group.label.contains("$60.00"), "Grouped button includes exact receipt total: \(group.label)")
+        XCTAssertTrue(group.label.contains("Multiple spaces"))
+        XCTAssertTrue(group.label.contains("Copy display vendor"), "Summary uses the first Item with image evidence")
+        XCTAssertFalse(app.staticTexts["1/2"].exists)
+        group.tap()
+        let second = app.staticTexts["2/2"].firstMatch
+        for _ in 0..<5 {
+            if second.exists && second.isHittable { break }
+            scroll.swipeUp()
+        }
+        XCTAssertTrue(second.isHittable)
+        second.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.staticTexts["target-item-detail-name"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Current lamp"].exists)
+        app.buttons["target-item-history-done"].tap()
+        XCTAssertTrue(transactionDetailBack(in: app).exists)
+    }
+
+    func testReusedTransactionCardControlsAndLabels() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-card"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        for label in ["Purchase", "Sep 13, 2026", "Business Inventory", "Furnishings", "Existing card notes"] {
+            XCTAssertTrue(app.staticTexts[label].exists, label)
+        }
+        // The existing ID row combines its caption/value for accessibility.
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ OR value CONTAINS %@", "transaction-fixture", "transaction-fixture")).firstMatch.exists)
+        let state = app.staticTexts["transaction-card-actions"]
+        func expectState(_ expected: String) {
+            let predicate = NSPredicate(format: "label == %@ OR value == %@", expected, expected)
+            expectation(for: predicate, evaluatedWith: state)
+            waitForExpectations(timeout: 5)
+        }
+        app.buttons["Select Fixture vendor"].tap()
+        expectState("Selected: yes; opened: 0; copied: no")
+        app.buttons["Add bookmark"].tap()
+        XCTAssertTrue(app.buttons["Remove bookmark"].exists)
+        expectState("Selected: yes; opened: 0; copied: no")
+        app.buttons["More options"].tap()
+        XCTAssertTrue(app.buttons["Copy ID"].waitForExistence(timeout: 5))
+        app.buttons["Copy ID"].tap()
+        expectState("Selected: yes; opened: 0; copied: yes")
+        // FindableText supports text selection on macOS. Open from the card's
+        // trailing padding, not the text-selection surface.
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        expectState("Selected: yes; opened: 1; copied: yes")
+    }
+
+    func testReusedTransactionAuditPanelExactEvidenceAndApplicability() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-audit"]
+        app.launch()
+        defer { app.terminate() }
+        let status = app.staticTexts["transaction-audit-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10))
+        #if os(macOS)
+        XCTAssertEqual(status.value as? String, "Difference: -$0.01")
+        #else
+        XCTAssertEqual(status.label, "Difference: -$0.01")
+        #endif
+        XCTAssertTrue(app.staticTexts["Other receipt lines — net: $0.50"].exists)
+        XCTAssertTrue(app.staticTexts["Sold items (1): $20.00"].exists)
+        app.buttons["Use exact total"].tap()
+        XCTAssertTrue(app.staticTexts["Balanced"].waitForExistence(timeout: 5))
+        app.buttons["Remove Item price"].tap()
+        XCTAssertTrue(app.staticTexts["Receipt details incomplete"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Physical Item total: Unknown"].exists)
+        XCTAssertTrue(app.staticTexts["Historical chair"].exists)
+        for kind in ["General", "Fee", "Itemized"] {
+            app.buttons["Edit Category"].tap()
+            XCTAssertTrue(app.buttons[kind].waitForExistence(timeout: 5))
+            app.buttons[kind].tap()
+            app.buttons["Save"].tap()
+            XCTAssertTrue(app.staticTexts["Current category: \(kind.lowercased())"].waitForExistence(timeout: 5))
+            if kind == "Itemized" { XCTAssertTrue(status.waitForExistence(timeout: 5)) }
+            else { XCTAssertFalse(status.exists) }
+        }
+        app.buttons["Restore Item price"].tap()
+        XCTAssertTrue(app.staticTexts["Balanced"].waitForExistence(timeout: 5))
+    }
+
+    func testCollectedInvoicesUseExistingPipelineControls() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense", "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let section = app.buttons["Invoices"].firstMatch
+        #if os(macOS)
+        let invoiceScroll = app.sheets.firstMatch.scrollViews.firstMatch
+        XCTAssertTrue(invoiceScroll.waitForExistence(timeout: 5))
+        reveal(section, in: app, within: invoiceScroll)
+        #else
+        reveal(section, in: app)
+        #endif
+        section.tap()
+        let row = app.descendants(matching: .any)["target-invoicing-invoice-paid-expense-invoice"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["INV-UI-001"].exists)
+        let sent = app.buttons["Sent"].firstMatch
+        reveal(sent, in: app); sent.tap()
+        XCTAssertTrue(row.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Created, sent and canceled Invoice coverage is not connected yet."].exists)
+        app.buttons["Paid"].firstMatch.tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.tap()
+        XCTAssertTrue(app.staticTexts["Invoice Total"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Design studio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Showing saved business profile."].exists)
+        XCTAssertTrue(app.staticTexts["INV-UI-001"].exists)
+        let notes = app.textViews.matching(NSPredicate(format: "value == %@ OR label == %@", "Invoice notes", "Invoice notes")).firstMatch
+        XCTAssertTrue(notes.waitForExistence(timeout: 5))
+        #if os(iOS)
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5), "Withdrawn financial data cannot remain in the open preview")
+        XCTAssertFalse(app.staticTexts["Invoice Total"].exists)
+        XCTAssertFalse(app.buttons["target-invoice-download"].isEnabled)
+        #endif
+    }
+
+    func testCollectedInvoiceDownloadCancellation() throws {
+        try exerciseCollectedInvoiceDownload(save: false)
+    }
+
+    func testCollectedInvoiceDownloadSave() throws {
+        try exerciseCollectedInvoiceDownload(save: true)
+    }
+
+    #if os(macOS)
+    func testCollectedInvoiceSaveRevalidationFailureAndRetry() throws {
+        try exerciseCollectedInvoiceDownload(save: true, retry: true)
+    }
+    #endif
+
+    private func exerciseCollectedInvoiceDownload(save: Bool, retry: Bool = false) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense"]
+        if save { app.launchArguments.append("--ledger-ui-test-long-invoice") }
+        if retry { app.launchArguments.append("--ledger-ui-test-invoice-export-retry") }
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let section = app.buttons["Invoices"].firstMatch
+        #if os(macOS)
+        let invoiceScroll = app.sheets.firstMatch.scrollViews.firstMatch
+        XCTAssertTrue(invoiceScroll.waitForExistence(timeout: 5))
+        reveal(section, in: app, within: invoiceScroll)
+        #else
+        reveal(section, in: app)
+        #endif
+        section.tap()
+        let row = app.descendants(matching: .any)["target-invoicing-invoice-paid-expense-invoice"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5)); row.tap()
+        let download = app.buttons["target-invoice-download"]
+        XCTAssertTrue(download.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Invoice Total"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Net Amount Due"].exists)
+        XCTAssertTrue(app.staticTexts["Shipping"].firstMatch.waitForExistence(timeout: 5),
+            "Invoice lines should use the downloaded category name")
+        let paymentText = "Collected by Purchase paid-expense-payment"
+        let paymentEvidence = app.descendants(matching: .any)["invoice-report-provenance"].firstMatch
+        XCTAssertTrue(paymentEvidence.waitForExistence(timeout: 5),
+            "The Invoice must retain its actual collection Purchase connection")
+        XCTAssertTrue(paymentEvidence.label.contains(paymentText) ||
+            (paymentEvidence.value as? String)?.contains(paymentText) == true)
+        XCTAssertTrue(waitUntil { download.isEnabled }); download.tap()
+        if save {
+            #if os(macOS)
+            for attempt in 0..<(retry ? 2 : 1) {
+            let panel = app.windows["save-panel"]
+            let name = panel.textFields["saveAsNameTextField"]
+            XCTAssertTrue(name.waitForExistence(timeout: 15))
+            XCTAssertTrue((name.value as? String)?.hasPrefix("invoice-INV-UI-001") == true)
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-invoice-save-" + UUID().uuidString)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            app.typeKey("g", modifierFlags: [.command, .shift])
+            let path = panel.sheets["GoToWindow"].textFields["PathTextField"]
+            XCTAssertTrue(path.waitForExistence(timeout: 5))
+            path.typeKey("a", modifierFlags: [.command])
+            path.typeText(directory.path + "/")
+            app.typeKey(.return, modifierFlags: [])
+            panel.buttons["OKButton"].tap()
+            let destination = directory.appendingPathComponent("invoice-INV-UI-001.pdf")
+            if retry && attempt == 0 {
+                let failure = app.sheets["alert"]
+                XCTAssertTrue(failure.waitForExistence(timeout: 5))
+                XCTAssertTrue(failure.staticTexts["Invoice download failed"].exists)
+                XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path),
+                    "Rejected save-time authorization must not write the destination")
+                failure.buttons["action-button-1"].tap()
+                XCTAssertTrue(waitUntil { download.isEnabled })
+                download.tap()
+                continue
+            }
+            XCTAssertTrue(waitUntil { FileManager.default.fileExists(atPath: destination.path) })
+            let document = try XCTUnwrap(PDFDocument(url: destination))
+            let savedPDF = XCTAttachment(contentsOfFile: destination)
+            savedPDF.name = "Invoice saved PDF"
+            savedPDF.lifetime = .keepAlways
+            add(savedPDF)
+            XCTAssertGreaterThan(document.pageCount, 1)
+            let text = try XCTUnwrap(document.string).split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            for index in 0..<80 {
+                XCTAssertTrue(text.contains(String(format: "Invoice row %03d", index)))
+            }
+            XCTAssertTrue(text.contains("90,071,992,547,615.22"))
+            XCTAssertTrue(text.contains("Invoice Total") && !text.contains("Net Amount Due"))
+            XCTAssertTrue(text.contains("paid-expense-payment"))
+            XCTAssertTrue(text.contains("invoice-ui-test-v1"))
+            XCTAssertTrue(text.contains("Last completed sync (UTC milliseconds): 1000"))
+            XCTAssertTrue(text.contains("Report read (UTC milliseconds):"))
+            XCTAssertTrue(text.contains("Accounting: collected-invoice-v1"))
+            }
+            #else
+            let saveButton = app.buttons["Save"].firstMatch
+            XCTAssertTrue(saveButton.waitForExistence(timeout: 15), app.debugDescription)
+            saveButton.tap()
+            #endif
+        } else {
+            #if os(iOS)
+            let picker = app.otherElements["Browse View (Picker)"].firstMatch
+            XCTAssertTrue(picker.waitForExistence(timeout: 15), app.debugDescription)
+            // Files exposes the More button as an extra "Cancel" element on
+            // this OS. Dismiss the actual native sheet from its top edge.
+            let top = picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+            top.press(forDuration: 0.1, thenDragTo: picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
+            #else
+            let cancel = app.windows["save-panel"].buttons["CancelButton"]
+            XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription)
+            cancel.tap()
+            #endif
+        }
+        XCTAssertTrue(waitUntil { download.isEnabled }, app.debugDescription)
+        #if os(macOS)
+        XCTAssertFalse(app.sheets["alert"].exists)
+        #else
+        XCTAssertFalse(app.alerts["Invoice download failed"].exists)
+        #endif
+    }
+
+    func testPaidExpenseUsesExistingInvoicingStatusFilter() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        XCTAssertTrue(app.buttons["Expenses"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Expenses"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["Paid"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Invoice status unavailable"].exists)
+        app.buttons["Filter receivables"].tap()
+        XCTAssertTrue(app.buttons["Paid"].waitForExistence(timeout: 5)); app.buttons["Paid"].tap()
+        app.buttons["Close menu"].tap()
+        XCTAssertTrue(app.buttons["target-invoicing-expense-expense-ui-test"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Paid"].exists)
+    }
+
+    func testInvoicingReusesSourceAndSearchControls() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app)
+        XCTAssertTrue(invoicing.waitForExistence(timeout: 5))
+        invoicing.tap()
+        let vendor = app.staticTexts["Receipt vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Invoice status unavailable"].exists)
+        app.buttons["target-invoicing-expense-expense-ui-test"].tap()
+        XCTAssertTrue(app.staticTexts["Shipping"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Delivery"].exists)
+        XCTAssertTrue(app.staticTexts["No receipts attached."].exists)
+        app.navigationBars.buttons["Invoicing"].tap()
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        let search = app.textFields["Search receivables..."]
+        XCTAssertTrue(search.exists)
+        search.tap()
+        search.typeText("no matching vendor")
+        XCTAssertTrue(app.staticTexts["No matching Expenses in downloaded data."].waitForExistence(timeout: 5))
+        XCTAssertFalse(vendor.exists)
+        app.buttons["Items"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["No matching Item charges in downloaded data."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["No matching Expenses in downloaded data."].exists)
+        app.buttons["Filter receivables"].tap()
+        XCTAssertTrue(app.buttons["Paid"].waitForExistence(timeout: 5))
+        app.buttons["Paid"].tap()
+        app.buttons["Close menu"].tap()
+        app.buttons["Expenses"].firstMatch.tap()
+        let unavailable = app.staticTexts["Some Expense Invoice statuses are unavailable; only confirmed paid Expenses are shown."]
+        XCTAssertTrue(unavailable.waitForExistence(timeout: 5))
+        app.buttons["Filter receivables"].tap()
+        app.buttons["Clear"].tap()
+        XCTAssertFalse(app.buttons["Clear"].exists)
+        app.buttons["Close menu"].tap()
+        XCTAssertTrue(app.staticTexts["No matching Expenses in downloaded data."].waitForExistence(timeout: 5))
+        app.buttons.matching(NSPredicate(format: "label == %@", "Expenses")).element(boundBy: 1).tap()
+        XCTAssertFalse(app.staticTexts["No matching Expenses in downloaded data."].exists)
+        app.buttons["target-invoicing-close"].tap()
+        XCTAssertTrue(invoicing.waitForExistence(timeout: 5))
+    }
+
+    #if os(iOS)
+    func testOpenExpenseFormWithdrawsWithFinancialAccess() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-unfinished-expense",
+            "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let unfinished = app.buttons["target-unfinished-expense-unfinished-expense"]
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
+        reveal(unfinished, in: app, fullyInsideScrollView: true,
+            within: app.scrollViews.containing(.button, identifier: "target-unfinished-expense-unfinished-expense").firstMatch)
+        unfinished.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertEqual(vendor.value as? String, "Saved unfinished vendor")
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(vendor.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Expense access is unavailable. Previously saved work remains on this device."].waitForExistence(timeout: 5))
+        XCTAssertFalse(unfinished.exists)
+        XCTAssertFalse(app.buttons["Add Expenses"].exists)
+        XCTAssertFalse(app.buttons["Save for later"].exists)
+    }
+
+    func testUnfinishedReceiptFailureRetainsEntryAndOffersRetry() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-unfinished-expense", "--ledger-ui-test-unfinished-receipt-failure"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let unfinished = app.buttons["target-unfinished-expense-unfinished-expense"]
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5)); unfinished.tap()
+        let retry = app.buttons["Retry receipt recovery"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save"].isEnabled)
+        XCTAssertNotEqual(app.textFields["Vendor"].value as? String, "Saved unfinished vendor")
+        let form = app.descendants(matching: .any)["target-expense-form"]
+        reveal(retry, in: app, within: form.scrollViews.firstMatch); retry.tap()
+        XCTAssertTrue(app.staticTexts["The receipt is still unavailable. Its saved reference is retained; no Expense was submitted."].waitForExistence(timeout: 5))
+        app.buttons["Save for later"].tap()
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
+    }
+
+    func testUnfinishedExpenseReopensExistingForm() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-unfinished-expense"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let unfinished = app.buttons["target-unfinished-expense-unfinished-expense"]
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5)); unfinished.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertEqual(vendor.value as? String, "Saved unfinished vendor")
+        XCTAssertEqual(app.textFields["0.00"].value as? String, "125.50")
+        let retain = app.buttons["Save for later"]
+        XCTAssertTrue(retain.waitForExistence(timeout: 5)); XCTAssertTrue(retain.isEnabled); retain.tap()
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
+    }
+
+    func testPendingExpensesAreDistinctFromDownloadedExpenses() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-pending-expenses", "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        XCTAssertTrue(app.staticTexts["Saved on device — pending sync"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Not saved to server — needs review"].exists)
+        XCTAssertTrue(app.buttons["target-invoicing-expense-expense-ui-test"].exists)
+        app.buttons["target-pending-expense-pending-rejected"].tap()
+        XCTAssertTrue(app.staticTexts["Retained draft"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["This Expense was rejected. Your original details are retained below. Closing this view does not discard or resolve it."].exists)
+        XCTAssertFalse(app.buttons["Retry Save"].exists)
+        app.buttons["Receipt 1"].tap()
+        let viewer = app.descendants(matching: .any)["target-expense-pdf-viewer"]
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" })
+        app.buttons["Close PDF"].tap()
+        XCTAssertTrue(app.staticTexts["Retained draft"].waitForExistence(timeout: 5))
+        app.buttons["Receipt 2"].tap()
+        XCTAssertTrue(app.images["target-item-image-rendered"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.images["target-item-image-rendered"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Expense details are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Retained draft"].exists)
+    }
+
+    func testExpenseWithoutReceiptPersistsCurrentFormBeforeSave() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-recovery-save"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let add = app.buttons["Add Expenses"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5)); vendor.tap(); vendor.typeText("Current vendor")
+        let amount = app.textFields["0.00"]
+        amount.tap(); amount.typeText("125.50")
+        app.buttons["target-expense-category"].tap()
+        app.buttons["Shipping"].firstMatch.tap()
+        XCTAssertEqual(vendor.value as? String, "Current vendor")
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Expense saved on this device (queued). It appears here after sync."].waitForExistence(timeout: 5))
+    }
+
+    #endif
+
+    func testExpenseCreationUsesExistingFormAndRejectsInvalidAmount() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-lines"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let add = app.buttons["Add Expenses"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5)); vendor.tap(); vendor.typeText("Shipping vendor")
+        XCTAssertEqual(vendor.value as? String, "Shipping vendor")
+        let amount = app.textFields["0.00"]
+        amount.tap(); amount.typeText("0")
+        XCTAssertEqual(amount.value as? String, "0")
+        #if os(iOS)
+        let form = app.descendants(matching: .any)["target-expense-form"]
+        let draftIdentity = form.value as? String
+        app.buttons["target-expense-category"].tap()
+        app.buttons["Shipping"].firstMatch.tap()
+        XCTAssertEqual(form.value as? String, draftIdentity, "Category selection must preserve the same form instance")
+        let formScroll = form.scrollViews.firstMatch
+        #else
+        app.popUpButtons["target-expense-category"].tap()
+        app.menuItems["Shipping"].tap()
+        // The workspace and Invoicing sheet also expose scroll views. Use the
+        // Expense form's own scroll view, identified by its Vendor field.
+        let formScroll = app.scrollViews.containing(.textField, identifier: "Vendor").firstMatch
+        #endif
+        XCTAssertEqual(vendor.value as? String, "Shipping vendor")
+        XCTAssertTrue(app.buttons["Save"].isEnabled)
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Enter a positive amount with no more than two decimal places."].waitForExistence(timeout: 5))
+        amount.tap(); amount.typeText("125.50")
+        let addLine = app.buttons["Add receipt line"]
+        reveal(addLine, in: app, fullyInsideScrollView: true, within: formScroll); addLine.tap()
+        let wording = app.textFields["Receipt wording"]
+        // Adding a row must succeed before trying to scroll to its fields.
+        XCTAssertTrue(wording.waitForExistence(timeout: 2), "Add receipt line did not create a row")
+        reveal(wording, in: app, within: formScroll); wording.tap(); wording.typeText("Delivery")
+        let lineAmount = app.textFields["Line amount"]
+        reveal(lineAmount, in: app, within: formScroll); lineAmount.tap(); lineAmount.typeText("10.25")
+        #if os(iOS)
+        lineAmount.typeText("\n")
+        #endif
+        let effect = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH 'target-expense-line-effect-'")).firstMatch
+        reveal(effect, in: app, fullyInsideScrollView: true, within: formScroll)
+        let decrease = effect.descendants(matching: .any).matching(NSPredicate(format: "label == 'Decrease'")).firstMatch
+        XCTAssertTrue(decrease.exists)
+        decrease.tap()
+        let quantity = app.textFields["Quantity"]
+        reveal(quantity, in: app, fullyInsideScrollView: true, within: formScroll); quantity.tap(); quantity.typeText("-2")
+        #if os(iOS)
+        quantity.typeText("\n")
+        #endif
+        reveal(addLine, in: app, fullyInsideScrollView: true, within: formScroll); addLine.tap()
+        let removeExtra = app.buttons.matching(identifier: "Remove line").element(boundBy: 1)
+        reveal(removeExtra, in: app, fullyInsideScrollView: true, within: formScroll); removeExtra.tap()
+        XCTAssertEqual(app.buttons.matching(identifier: "Remove line").count, 1)
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Expense saved on this device (queued). It appears here after sync."].waitForExistence(timeout: 5))
+    }
+
+    func testUnfinishedExpenseRequiresAvailableBudgetCategory() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-unfinished-expense",
+            "--ledger-ui-test-expense-missing-category"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let unfinished = app.buttons["target-unfinished-expense-unfinished-expense"]
+        XCTAssertTrue(unfinished.waitForExistence(timeout: 5)); unfinished.tap()
+        let restoredVendor = app.textFields.matching(NSPredicate(format: "value == %@", "Saved unfinished vendor")).firstMatch
+        XCTAssertTrue(restoredVendor.waitForExistence(timeout: 5))
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Choose an available budget category before saving."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Expense saved on this device (queued). It appears here after sync."].exists)
+        #if os(macOS)
+        app.popUpButtons["target-expense-category"].tap()
+        app.menuItems["Shipping"].tap()
+        #else
+        app.buttons["target-expense-category"].tap()
+        app.buttons["Shipping"].firstMatch.tap()
+        #endif
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Expense saved on this device (queued). It appears here after sync."].waitForExistence(timeout: 5))
+    }
+
+    #if os(iOS)
+    func testExpenseReceiptsReuseViewersAndWithdrawAccess() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-receipts", "--ledger-ui-test-expense-withdrawal"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
+        let pdf = app.staticTexts["Receipt 1"].firstMatch
+        XCTAssertTrue(pdf.waitForExistence(timeout: 5)); pdf.tap()
+        let viewer = app.descendants(matching: .any)["target-expense-pdf-viewer"]
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" })
+        app.buttons["Close PDF"].tap()
+        let image = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Receipt image 2")).firstMatch
+        XCTAssertTrue(image.waitForExistence(timeout: 5)); image.tap()
+        XCTAssertTrue(app.images["target-item-image-rendered"].waitForExistence(timeout: 5))
+        app.buttons["target-expense-gallery-images-done"].tap()
+        XCTAssertTrue(pdf.waitForExistence(timeout: 5)); pdf.tap()
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" })
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(viewer.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Expense details are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Shipping"].exists)
+    }
+    #endif
+
     func testClientSummaryPhysicalPreviewAndIncompleteShare() throws {
         continueAfterFailure = false
         for incomplete in [false, true] {
@@ -60,6 +1157,208 @@ final class WorkspaceChecklistUITests: XCTestCase {
             app.buttons["target-client-report-refresh"].tap()
             XCTAssertTrue(share.waitForExistence(timeout: 5))
         }
+    }
+
+    func testCategorySettingsCreateEditArchiveRestoreAndCancel() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let categories = app.buttons["target-settings-budget-categories"]
+        XCTAssertTrue(categories.waitForExistence(timeout: 5))
+        categories.tap()
+        XCTAssertTrue(app.buttons["Edit Furnishings"].waitForExistence(timeout: 5))
+
+        app.buttons["Add Category"].tap()
+        let name = app.textFields.firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        func text(_ value: String) -> XCUIElement {
+            app.windows.firstMatch.staticTexts
+                .matching(NSPredicate(format: "label == %@ OR value == %@", value, value)).firstMatch
+        }
+        app.buttons["Create"].tap()
+        XCTAssertTrue(text("Name is required").waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Furnishings")
+        app.buttons["Create"].tap()
+        XCTAssertTrue(text("A category with this name already exists").waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Furnishings".count))
+        name.typeText("Lighting")
+        XCTAssertTrue(app.buttons["General"].exists)
+        XCTAssertTrue(app.buttons["Fee"].exists)
+        app.buttons["Itemized"].tap()
+        #if os(macOS)
+        let excluded = app.checkBoxes["category-exclude-overall-budget"]
+        #else
+        let excluded = app.switches["category-exclude-overall-budget"].firstMatch
+        #endif
+        excluded.tap()
+        app.buttons["Create"].tap()
+        let edit = app.buttons["Edit Lighting"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        edit.tap()
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Lighting")
+        XCTAssertEqual((excluded.value as? NSNumber)?.intValue ?? Int(excluded.value as? String ?? ""), 1)
+        app.buttons["General"].tap()
+        app.buttons["Save"].tap()
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+
+        app.buttons["Archive Lighting"].tap()
+        #if os(macOS)
+        app.sheets.buttons["Archive"].firstMatch.tap()
+        #else
+        let confirmArchive = app.buttons["Archive"]
+        XCTAssertTrue(confirmArchive.waitForExistence(timeout: 5), app.debugDescription)
+        confirmArchive.tap()
+        #endif
+        let restore = app.buttons["Unarchive"]
+        XCTAssertTrue(restore.waitForExistence(timeout: 5))
+        XCTAssertFalse(edit.exists)
+        restore.tap()
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        XCTAssertFalse(restore.exists)
+
+        #if os(iOS)
+        app.buttons["Reorder Lighting"].press(forDuration: 0.8,
+            thenDragTo: app.buttons["Reorder Furnishings"])
+        #else
+        app.activate()
+        XCTAssertTrue(waitUntil { app.state == .runningForeground })
+        XCTAssertTrue(app.buttons["category-name-Lighting"].isHittable)
+        // macOS moves the native List row, not the Edit button inside it.
+        // Start in the row inset and drop above the first row's insertion edge.
+        let dragStart = app.buttons["category-name-Lighting"]
+            .coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5))
+            .withOffset(CGVector(dx: -8, dy: 0))
+        let dragEnd = app.buttons["category-name-Furnishings"]
+            .coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
+            .withOffset(CGVector(dx: -8, dy: -6))
+        dragStart.press(forDuration: 0.8, thenDragTo: dragEnd)
+        #endif
+        XCTAssertTrue(waitUntil { edit.frame.minY < app.buttons["Edit Furnishings"].frame.minY },
+            "Reorder must change the visible category order")
+
+        app.buttons["Add Category"].tap()
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Discard this category")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Edit Discard this category"].exists)
+    }
+
+    func testDownloadedAccountEntryWithoutOnlineSession() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-offline-entry", "--ledger-ui-test-entry-id=\(UUID().uuidString)"]
+        app.launch()
+        defer {
+            if app.buttons["offline-entry-cleanup"].exists { app.buttons["offline-entry-cleanup"].tap() }
+            app.terminate()
+        }
+        let account = app.buttons["Offline Test Account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["offline-entry-selected"].exists, "Even one downloaded Account requires explicit selection")
+        let signIn = app.buttons["Sign In"]
+        reveal(signIn, in: app, within: app.scrollViews["target-account-entry-scroll"])
+        signIn.tap()
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+        let downloaded = app.buttons["Use Downloaded Accounts"]
+        reveal(downloaded, in: app, within: app.scrollViews["target-account-entry-scroll"])
+        downloaded.tap()
+        XCTAssertTrue(account.waitForExistence(timeout: 5))
+        account.tap()
+        XCTAssertTrue(app.staticTexts["Offline selection verified"].waitForExistence(timeout: 5))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(account.waitForExistence(timeout: 10), "The next process must restore the protected admission")
+        XCTAssertFalse(app.staticTexts["offline-entry-selected"].exists)
+        account.tap()
+        XCTAssertTrue(app.staticTexts["Offline selection verified"].waitForExistence(timeout: 5))
+        app.buttons["offline-entry-cleanup"].tap()
+        XCTAssertTrue(app.staticTexts["offline-entry-cleaned"].waitForExistence(timeout: 5))
+    }
+
+    func testCategoryEditorClosesWhenCategoryAccessIsWithdrawn() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-category-withdraw-on-save"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let categories = app.buttons["target-settings-budget-categories"]
+        XCTAssertTrue(categories.waitForExistence(timeout: 5))
+        categories.tap()
+        let edit = app.buttons["Edit Design Fee"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        edit.tap()
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Design Fee")
+        app.buttons["General"].tap()
+        app.buttons["Save"].tap()
+        XCTAssertTrue(waitUntil { !app.buttons["Save"].exists }, "Withdrawn category must dismiss its cached editor")
+        XCTAssertTrue(app.buttons["Add Category"].waitForExistence(timeout: 5))
+        XCTAssertFalse(edit.exists)
+        XCTAssertFalse(app.staticTexts["Design Fee"].exists)
+        XCTAssertFalse(app.textFields.matching(NSPredicate(format: "value == %@", "Design Fee")).firstMatch.exists)
+    }
+
+    func testInlineCategoryCreationPreservesProjectDraft() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inline-category"]
+        app.launch()
+        defer { app.terminate() }
+        let name = app.textFields["target-project-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10))
+        name.tap()
+        name.typeText("Keep this Project draft")
+        #if os(macOS)
+        app.popUpButtons["target-project-existing-client"].tap()
+        app.menuItems["UI Test Client"].tap()
+        #else
+        app.buttons["target-project-existing-client"].tap()
+        app.buttons["UI Test Client"].tap()
+        #endif
+        let next = app.buttons["target-project-next"]
+        XCTAssertTrue(waitUntil { next.isEnabled })
+        next.tap()
+        let add = app.buttons["target-project-add-category"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { add.isEnabled })
+        add.tap()
+        let categoryName = app.textFields.firstMatch
+        XCTAssertTrue(categoryName.waitForExistence(timeout: 5))
+        categoryName.tap()
+        categoryName.typeText("Inline Lighting")
+        app.buttons["Create"].tap()
+        func categoryText(_ name: String) -> XCUIElement {
+            app.windows.firstMatch.descendants(matching: .any)
+                .matching(NSPredicate(format: "label == %@ OR value == %@", name, name)).firstMatch
+        }
+        XCTAssertTrue(categoryText("Inline Lighting").waitForExistence(timeout: 5), app.windows.firstMatch.debugDescription)
+        reveal(next, in: app)
+        next.tap()
+        // Budget entry lists selected categories only: the new category must be
+        // selected without losing the original category or submitting a Project.
+        XCTAssertTrue(app.textFields["target-project-allocation-category-ui-test"].waitForExistence(timeout: 5), app.windows.firstMatch.debugDescription)
+        XCTAssertTrue(categoryText("Inline Lighting").waitForExistence(timeout: 5))
+        XCTAssertTrue(categoryText("Furnishings").exists)
+        reveal(app.buttons["target-project-secondary-action"], in: app)
+        app.buttons["target-project-secondary-action"].tap()
+        XCTAssertTrue(add.waitForExistence(timeout: 5), app.windows.firstMatch.debugDescription)
+        reveal(app.buttons["target-project-secondary-action"], in: app)
+        app.buttons["target-project-secondary-action"].tap()
+        XCTAssertTrue(name.waitForExistence(timeout: 5), app.windows.firstMatch.debugDescription)
+        XCTAssertEqual(name.value as? String, "Keep this Project draft")
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
     }
 
     func testAccountSettingsDownloadedProfileRefreshAndDismiss() throws {
@@ -98,6 +1397,397 @@ final class WorkspaceChecklistUITests: XCTestCase {
             .waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertTrue(share.waitForExistence(timeout: 5))
         XCTAssertTrue(share.isEnabled, app.debugDescription)
+    }
+
+    func testProjectTransactionExportWatchCompletionDisablesExport() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-workspace-transactions",
+            "--ledger-ui-test-export-watch-finish"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let options = app.buttons["target-project-options"].firstMatch
+        reveal(options, in: app, upwards: false, fullyInsideScrollView: true)
+        options.tap()
+        let openExport = app.buttons["Export Transactions"]
+        XCTAssertTrue(openExport.waitForExistence(timeout: 5))
+        openExport.tap()
+        XCTAssertTrue(app.staticTexts["Project Transactions are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["1 transaction will be exported"].exists)
+        XCTAssertTrue(app.buttons["Export"].exists)
+        XCTAssertFalse(app.buttons["Export"].isEnabled)
+    }
+
+    func testProjectTransactionExportScopeFieldsAndShareCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-workspace-transactions"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        func openExport(expectedCount: Int) {
+            let options = app.buttons["target-project-options"].firstMatch
+            reveal(options, in: app, upwards: false, fullyInsideScrollView: true)
+            options.tap()
+            let export = app.buttons["Export Transactions"]
+            XCTAssertTrue(export.waitForExistence(timeout: 5))
+            export.tap()
+            let description = "\(expectedCount) transaction\(expectedCount == 1 ? "" : "s") will be exported"
+            XCTAssertTrue(app.staticTexts[description].waitForExistence(timeout: 5))
+        }
+        openExport(expectedCount: 1)
+        let source = app.buttons["transaction-export-field-source"]
+        XCTAssertEqual(source.value as? String, "Selected")
+        app.buttons["Select All"].tap()
+        XCTAssertTrue(app.buttons["Reset to Default"].exists)
+        app.buttons["Reset to Default"].tap()
+        XCTAssertEqual(source.value as? String, "Selected")
+        app.buttons["Cancel"].tap()
+
+        let transactions = app.buttons["target-project-transactions"]
+        reveal(transactions, in: app)
+        transactions.tap()
+        XCTAssertTrue(app.staticTexts["Client payment"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Search"].tap()
+        let search = app.textFields["Search transactions..."]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("no matching fixture")
+        XCTAssertTrue(app.staticTexts["target-transactions-no-match"].waitForExistence(timeout: 5))
+        openExport(expectedCount: 0)
+        app.buttons["Cancel"].tap()
+        let back = app.buttons["target-active-workspace-back"]
+        reveal(back, in: app, upwards: false); back.tap()
+
+        // Leaving Transactions restores all-Project semantics, not its no-match set.
+        openExport(expectedCount: 1)
+        let images = app.buttons["transaction-export-field-receiptImages"]
+        let fields = app.scrollViews.containing(.button, identifier: "transaction-export-field-source").firstMatch
+        func showField(_ field: XCUIElement) {
+            #if os(iOS)
+            // Controlled drags avoid overshooting checkboxes in this short sheet.
+            for _ in 0..<10 {
+                if field.isHittable { break }
+                let distance = fields.frame.midY - field.frame.midY
+                let limit = fields.frame.height * 0.35
+                let center = fields.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.press(forDuration: 0.05, thenDragTo: center.withOffset(
+                    CGVector(dx: 0, dy: max(-limit, min(limit, distance)))))
+            }
+            XCTAssertTrue(field.isHittable, app.debugDescription)
+            #else
+            reveal(field, in: app, fullyInsideScrollView: true, within: fields)
+            #endif
+        }
+        showField(images)
+        XCTAssertEqual(images.value as? String, "Not selected")
+        images.tap()
+        app.buttons["Export"].tap()
+        XCTAssertTrue(app.staticTexts["Receipt Images export is not implemented yet. Deselect it to export the other fields."]
+            .waitForExistence(timeout: 5))
+        showField(images)
+        images.tap()
+        XCTAssertEqual(images.value as? String, "Not selected")
+        let categories = app.buttons["transaction-export-field-itemCategories"]
+        showField(categories); categories.tap()
+        XCTAssertEqual(categories.value as? String, "Selected")
+        // This fixture now supplies current Item categories for its Project
+        // payment. Missing attribution remains covered by the value tests.
+        app.buttons["Export"].tap()
+        #if os(iOS)
+        let activity = app.otherElements["ActivityListView"].firstMatch
+        XCTAssertTrue(activity.waitForExistence(timeout: 10))
+        let dismissShare = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(waitUntil { dismissShare.isHittable })
+        dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        #else
+        // The native picker first appears as a popover inside Ledger while
+        // services load. Cancel that actual presentation without assuming a
+        // separate ShareSheetUI process has already launched.
+        let share = app.popovers.firstMatch
+        XCTAssertTrue(share.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(share.buttons["Copy"].waitForExistence(timeout: 10),
+            "Wait for native services to load before keyboard cancellation")
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(share.waitForNonExistence(timeout: 5))
+        #endif
+        XCTAssertTrue(waitUntil { app.buttons["target-project-options"].firstMatch.isEnabled })
+        XCTAssertFalse(app.alerts["Export failed"].exists)
+        openExport(expectedCount: 1)
+        app.buttons["Cancel"].tap()
+    }
+
+    func testHostedEntryDownloadsAuthorizedProject() throws {
+        let configuration = ProcessInfo.processInfo.environment
+        guard configuration["LEDGER_HOSTED_QA_ENTRY"] == "1" else {
+            throw XCTSkip("Requires the explicitly authorized hosted Ledger private QA copy")
+        }
+        let email = try XCTUnwrap(configuration["LEDGER_HOSTED_QA_EMAIL"])
+        let password = try XCTUnwrap(configuration["LEDGER_HOSTED_QA_PASSWORD"])
+        XCTAssertEqual(email, "upload-owner-4b1e9766-5791-48a9-a7b1-15a541807e64@ledger-tests.invalid")
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launch() // Real entry and live providers; no fixture arguments or injected admission.
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "targetStaging"))
+            .firstMatch.waitForExistence(timeout: 10))
+        let emailField = app.textFields["Email"]
+        // A cached Account can remain accessible without an online session.
+        // This hosted test must sign in, not mistake that offline entry for live sync.
+        if !emailField.exists, app.buttons["Sign In"].exists {
+            app.buttons["Sign In"].tap()
+        }
+        if emailField.waitForExistence(timeout: 3) {
+            emailField.tap(); emailField.typeText(email)
+            app.secureTextFields["Password"].tap()
+            app.secureTextFields["Password"].typeText(password)
+            let submit = try XCTUnwrap(app.buttons.matching(identifier: "Sign In").allElementsBoundByIndex.last)
+            reveal(submit, in: app, within: app.scrollViews["target-account-entry-scroll"])
+            submit.tap()
+        }
+        let account = app.buttons["PRIVATE REAL-DATA COPY — partial import"]
+        XCTAssertTrue(account.waitForExistence(timeout: 20))
+        let savePassword = app.sheets["Save Password?"]
+        if savePassword.waitForExistence(timeout: 3) { savePassword.buttons["Not Now"].tap() }
+        account.tap()
+        let project = app.buttons["target-active-project-card-realcopy-b9d236394770-project-b9d236394770249424e87c90"]
+        XCTAssertTrue(project.waitForExistence(timeout: 30), app.debugDescription)
+        reveal(project, in: app)
+        project.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-items-downloaded-count"]
+            .waitForExistence(timeout: 30), app.debugDescription)
+        // Exact current-placement count from the retained, non-overwritten QA copy.
+        // A first local empty snapshot is not completion of its live download.
+        XCTAssertTrue(app.staticTexts["Downloaded Items: 623"].waitForExistence(timeout: 30), app.debugDescription)
+        XCTAssertFalse(app.descendants(matching: .any)["target-items-downloaded-empty"].exists)
+        if let transactionID = configuration["LEDGER_HOSTED_QA_CAPTURE_TRANSACTION"] {
+            XCTAssertEqual(transactionID, "realcopy-b9d236394770-transaction-883c52f8ca114ce0e2515aa0")
+            let transactions = app.buttons["target-project-transactions"]
+            let workspace = app.scrollViews["target-workspace-scroll"]
+            if !transactions.isHittable {
+                // A full-page swipe overshoots this short header on the long Item list.
+                let start = workspace.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                let delta = max(-200, min(200, workspace.frame.midY - transactions.frame.midY))
+                start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: delta)))
+            }
+            XCTAssertTrue(transactions.isHittable)
+            transactions.tap()
+            let searchButton = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@",
+                "target-transaction-browser-controls", "Search")).firstMatch
+            reveal(searchButton, in: app)
+            searchButton.tap()
+            let search = app.textFields["Search transactions..."]
+            XCTAssertTrue(search.waitForExistence(timeout: 10))
+            search.tap(); search.typeText(transactionID)
+            searchButton.tap()
+            let transaction = app.staticTexts.matching(identifier: "target-transaction-" + transactionID).firstMatch
+            reveal(transaction, in: app)
+            XCTAssertTrue(transaction.waitForExistence(timeout: 15))
+            transaction.tap()
+            // The shared section gives its header and content the same identifier.
+            // Select the content, not the first matching header button.
+            let receipts = app.otherElements["target-transaction-attachments-receipts"].firstMatch
+            let add = receipts.buttons["Add Attachment"]
+            let detail = app.scrollViews["target-transaction-detail-scroll"]
+            XCTAssertTrue(detail.waitForExistence(timeout: 10))
+            reveal(add, in: app, within: detail)
+            XCTAssertTrue(add.waitForExistence(timeout: 15))
+            add.tap()
+            app.buttons["Photo Library"].tap()
+            let photo = app.images["PXGGridLayout-Info"].firstMatch
+            XCTAssertTrue(photo.waitForExistence(timeout: 10))
+            photo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            app.navigationBars["Photos"].buttons["Done"].tap()
+            // The reviewed section starts empty. Open its actual captured photo;
+            // do not require a transient pending overlay to win a network race.
+            let captured = receipts.images.firstMatch
+            XCTAssertTrue(captured.waitForExistence(timeout: 15), app.debugDescription)
+            captured.tap()
+            let pin = app.buttons["target-transaction-image-pin"]
+            XCTAssertTrue(pin.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertTrue(app.images["target-item-image-rendered"].firstMatch.waitForExistence(timeout: 10))
+            pin.tap()
+            let panel = app.descendants(matching: .any)["target-transaction-pinned-panel"].firstMatch
+            XCTAssertTrue(panel.waitForExistence(timeout: 10))
+            XCTAssertTrue(panel.images["target-item-image-rendered"].firstMatch.waitForExistence(timeout: 10))
+            // No simulated completion: the separate server read must confirm publication.
+            let pending = app.descendants(matching: .any)["target-transaction-attachment-pending"].firstMatch
+            XCTAssertTrue(waitUntil { !pending.exists }, app.debugDescription)
+            XCTAssertFalse(app.descendants(matching: .any)["target-transaction-attachment-rejected"].exists)
+            XCTAssertTrue(panel.images["target-item-image-rendered"].firstMatch.exists)
+            return
+        }
+        if let itemID = configuration["LEDGER_HOSTED_QA_MEDIA_ITEM"] {
+            // Optional live-media verification, not a new gallery/gesture test.
+            XCTAssertTrue(itemID.hasPrefix("realcopy-b9d236394770-item-"))
+            let name = try XCTUnwrap(configuration["LEDGER_HOSTED_QA_MEDIA_SEARCH"])
+            let search = app.textFields["target-items-search"]
+            reveal(search, in: app)
+            search.tap(); search.typeText(name + "\n")
+            let item = app.buttons["target-physical-item-\(itemID)"]
+            reveal(item, in: app, fullyInsideScrollView: true)
+            XCTAssertTrue(item.waitForExistence(timeout: 10))
+            item.tap()
+            openItemImages(in: app)
+            XCTAssertTrue(app.images["target-item-image-rendered"].firstMatch.waitForExistence(timeout: 20))
+            XCTAssertFalse(app.staticTexts["target-item-images-unavailable"].exists)
+            XCTAssertFalse(app.staticTexts["target-item-images-incomplete"].exists)
+        }
+    }
+
+    func testNormalLocalEntryRestoresWorkspace() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_ENTRY"] == "1" else {
+            throw XCTSkip("Requires the local build and an existing disposable local signed-in account")
+        }
+        let transactionID = try XCTUnwrap(ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_TRANSACTION"])
+        XCTAssertTrue(transactionID.hasPrefix("upload-http-transaction-"))
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launch() // No fixture entry, injected admission, or alternate workspace.
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "targetLocal"))
+            .firstMatch.waitForExistence(timeout: 10))
+        if let email = ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_EMAIL"] {
+            XCTAssertTrue(email.hasSuffix("@ledger-tests.invalid"))
+            let password = try XCTUnwrap(ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_PASSWORD"])
+            let emailField = app.textFields["Email"]
+            XCTAssertTrue(emailField.waitForExistence(timeout: 10))
+            emailField.tap(); emailField.typeText(email)
+            app.secureTextFields["Password"].tap()
+            app.secureTextFields["Password"].typeText(password)
+            let submit = try XCTUnwrap(app.buttons.matching(identifier: "Sign In").allElementsBoundByIndex.last)
+            reveal(submit, in: app, within: app.scrollViews["target-account-entry-scroll"])
+            submit.tap()
+        }
+        let account = app.buttons["Synthetic Primary Account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 10))
+        account.tap()
+        let savePassword = app.sheets["Save Password?"]
+        if savePassword.waitForExistence(timeout: 3) { savePassword.buttons["Not Now"].tap() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        reveal(inventory, in: app)
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-inventory-section"].waitForExistence(timeout: 10))
+        app.descendants(matching: .any)["target-inventory-section"].buttons["Transactions"].tap()
+        if ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_EXPECT_REMOVAL"] == "1" {
+            let row = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@",
+                "target-transaction-upload-http-", "$0.01")).firstMatch
+            reveal(row, in: app)
+            XCTAssertTrue(row.waitForExistence(timeout: 15))
+            row.tap()
+            XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 10))
+            print("LEDGER_NORMAL_LOCAL_READY_FOR_REMOVAL")
+            XCTAssertTrue(app.descendants(matching: .any)["target-workspace-access-removed"]
+                .waitForExistence(timeout: 60), app.debugDescription)
+            XCTAssertFalse(transactionDetailBack(in: app).exists)
+            XCTAssertFalse(row.exists)
+            return
+        }
+        let searchButton = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@",
+            "target-transaction-browser-controls", "Search")).firstMatch
+        reveal(searchButton, in: app)
+        searchButton.tap()
+        let search = app.textFields["Search transactions..."]
+        reveal(search, in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap(); search.typeText(transactionID)
+        searchButton.tap() // Collapse the existing search UI and dismiss its keyboard; retain the filter.
+        let transaction = app.staticTexts.matching(NSPredicate(format: "identifier == %@ AND label == %@",
+            "target-transaction-" + transactionID, "$0.01")).firstMatch
+        reveal(transaction, in: app)
+        XCTAssertTrue(transaction.waitForExistence(timeout: 15))
+        transaction.tap()
+        let pdf = app.staticTexts["Original receipt.pdf"].firstMatch
+        XCTAssertTrue(pdf.waitForExistence(timeout: 15))
+        pdf.tap()
+        let viewer = app.descendants(matching: .any)["target-transaction-pdf-viewer"]
+        XCTAssertTrue(viewer.waitForExistence(timeout: 10))
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" }, app.debugDescription)
+        app.buttons["Close PDF"].tap()
+        transactionDetailBack(in: app).tap()
+        XCTAssertTrue(transaction.waitForExistence(timeout: 10))
+        transaction.tap()
+        XCTAssertTrue(pdf.waitForExistence(timeout: 10))
+        pdf.tap()
+        XCTAssertTrue(viewer.waitForExistence(timeout: 10))
+        XCTAssertTrue(waitUntil { viewer.value as? String == "1 PDF pages" }, app.debugDescription)
+        app.buttons["Close PDF"].tap()
+    }
+
+    func testNormalLocalRemovedWorkspaceCannotReopen() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_NORMAL_LOCAL_REMOVAL_REOPEN"] == "1" else {
+            throw XCTSkip("Requires the retained workspace from a completed local live-removal test")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "targetLocal"))
+            .firstMatch.waitForExistence(timeout: 10))
+        let account = app.buttons["Synthetic Primary Account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 15))
+        account.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-workspace-access-removed"]
+            .waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertFalse(app.buttons["target-business-inventory-card"].exists)
+        XCTAssertFalse(app.textFields["target-client-name"].exists)
+    }
+
+    func testWorkspaceTransactionEntryBackReentryAndRemoval() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-workspace-transactions",
+                               "--ledger-ui-test-reset-inventory-section"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let transactions = app.buttons["target-project-transactions"]
+        let back = app.buttons["target-active-workspace-back"]
+        for _ in 0..<2 {
+            reveal(transactions, in: app)
+            transactions.tap()
+            XCTAssertTrue(app.staticTexts["Client payment"].firstMatch.waitForExistence(timeout: 5))
+            XCTAssertTrue(app.buttons["Select all"].exists)
+            app.buttons["Select all"].tap()
+            let amount = app.staticTexts.matching(NSPredicate(format: "identifier == %@ AND label == %@",
+                "target-transaction-transaction-browser-fixture", "$100.00")).firstMatch
+            reveal(amount, in: app, fullyInsideScrollView: true)
+            amount.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+                .withOffset(CGVector(dx: 8, dy: 0)).tap()
+            XCTAssertTrue(transactionDetailBack(in: app).waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertFalse(app.descendants(matching: .any)["target-vendor-receipt-audit"].exists)
+            transactionDetailBack(in: app).tap()
+            XCTAssertTrue(app.staticTexts["1 selected"].waitForExistence(timeout: 5), app.debugDescription)
+            reveal(back, in: app, upwards: false)
+            back.tap()
+            XCTAssertTrue(transactions.waitForExistence(timeout: 5))
+        }
+        back.tap()
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 5))
+        inventory.tap()
+        #if os(macOS)
+        app.radioButtons["Transactions"].tap()
+        #else
+        app.segmentedControls.buttons["Transactions"].tap()
+        #endif
+        XCTAssertTrue(app.staticTexts["Fixture vendor"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Client payment"].exists)
+        XCTAssertFalse(app.buttons["Select all"].exists, "Inventory must not acquire Project-only controls")
+        let remove = app.buttons["target-ui-fixture-remove-account"]
+        reveal(remove, in: app, upwards: false)
+        remove.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-workspace-access-removed"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Fixture vendor"].exists)
+        XCTAssertFalse(app.staticTexts["$100.00"].exists)
     }
 
     func testInventoryNavigationAndRememberedSection() throws {
@@ -934,6 +2624,171 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testInventorySaleReviewCancelAndConfirm() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+                               "--ledger-ui-test-reset-inventory-section"]
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        item.tap()
+        func openSale() {
+            let actions = app.descendants(matching: .any)["target-item-detail-actions"]
+            XCTAssertTrue(actions.waitForExistence(timeout: 5))
+            actions.tap()
+            #if os(macOS)
+            let sale = app.menuItems["Sell to Project"]
+            #else
+            let sale = app.buttons["Sell to Project"]
+            #endif
+            XCTAssertTrue(sale.waitForExistence(timeout: 5))
+            sale.tap()
+            let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+            XCTAssertTrue(project.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.staticTexts["Archived UI Test Project"].exists)
+            project.tap()
+        }
+        openSale()
+        let field = app.textFields["0.00"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap(); field.typeText("125.50")
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.staticTexts["USD 125.50"].waitForExistence(timeout: 5))
+        app.buttons["sale-step-back"].tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, "125.50")
+        app.buttons["sale-step-close"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+        openSale()
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap(); field.typeText("125.50")
+        app.buttons["Continue"].tap()
+        app.buttons["Confirm Sale"].tap()
+        XCTAssertTrue(app.staticTexts["target-sale-status"].waitForExistence(timeout: 5))
+        app.buttons["sale-step-close"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    #if os(iOS)
+    func testInventorySaleReviewChangesRequireFreshReview() throws {
+        try exerciseSaleReviewChange(withdraws: false)
+    }
+    func testInventorySaleReviewWithdrawalBlocksConfirmation() throws {
+        try exerciseSaleReviewChange(withdraws: true)
+    }
+    private func exerciseSaleReviewChange(withdraws: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+            "--ledger-ui-test-reset-inventory-section", withdraws ? "--ledger-ui-test-sale-review-withdraws" : "--ledger-ui-test-sale-review-changes"]
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10)); inventory.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        app.descendants(matching: .any)["target-item-detail-actions"].tap()
+        app.buttons["Sell to Project"].tap()
+        let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+        XCTAssertTrue(project.waitForExistence(timeout: 5)); project.tap()
+        let field = app.textFields["0.00"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5)); field.tap(); field.typeText("125.50")
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.buttons["Confirm Sale"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        if withdraws {
+            XCTAssertTrue(app.staticTexts["Sale review is unavailable. Item location or purchase-cost access may have changed."].waitForExistence(timeout: 5))
+            XCTAssertFalse(project.exists)
+        } else {
+            XCTAssertTrue(project.waitForExistence(timeout: 5))
+        }
+        XCTAssertFalse(app.buttons["Confirm Sale"].exists)
+        XCTAssertFalse(app.staticTexts["USD 125.50"].exists)
+        if !withdraws {
+            project.tap()
+            XCTAssertTrue(app.staticTexts["USD 250.00"].waitForExistence(timeout: 5))
+        }
+        app.buttons["sale-step-close"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+    }
+    #endif
+
+    func testInventoryPendingSalePresentation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+                               "--ledger-ui-test-pending-sale"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        XCTAssertTrue(app.staticTexts["target-item-pending-sale-physical-ui-chair"].exists)
+        item.tap()
+        XCTAssertTrue(app.staticTexts["target-item-detail-pending-sale"].waitForExistence(timeout: 5))
+        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-current-location"]), "UI Test Project · Sale pending sync")
+        XCTAssertEqual(displayedText(app.staticTexts["target-item-detail-space"]), "Not assigned to a Space")
+        let actions = app.descendants(matching: .any)["target-item-detail-actions"]
+        actions.tap()
+        #if os(macOS)
+        XCTAssertFalse(app.menuItems["Sell to Project"].exists)
+        #else
+        XCTAssertFalse(app.buttons["Sell to Project"].exists)
+        #endif
+    }
+
+    func testInventoryBulkSaleUsesOneCommand() throws {
+        try exerciseInventoryBulkSale(alreadyAccepted: false)
+    }
+
+    func testInventorySaleAlreadyAcceptedDoesNotOfferRetry() throws {
+        try exerciseInventoryBulkSale(alreadyAccepted: true)
+    }
+
+    private func exerciseInventoryBulkSale(alreadyAccepted: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-bulk-sale",
+                               "--ledger-ui-test-reset-inventory-section"]
+        if alreadyAccepted { app.launchArguments.append("--ledger-ui-test-sale-already-accepted") }
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+        inventory.tap()
+        let select = app.buttons["target-items-select-all"]
+        reveal(select, in: app, fullyInsideScrollView: true)
+        select.tap()
+        let sale = app.buttons["target-items-sell"]
+        reveal(sale, in: app, fullyInsideScrollView: true)
+        sale.tap()
+        let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+        XCTAssertTrue(project.waitForExistence(timeout: 5))
+        project.tap()
+        XCTAssertTrue(app.buttons["Confirm Sale"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts.matching(identifier: "USD 125.50").count, 3)
+        app.buttons["Confirm Sale"].tap()
+        if alreadyAccepted {
+            XCTAssertTrue(app.staticTexts["target-sale-already-accepted"].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["Retry Sale"].exists)
+            XCTAssertFalse(app.buttons["Confirm Sale"].exists)
+            app.buttons["sale-step-close"].tap()
+            XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+            return
+        }
+        XCTAssertTrue(app.staticTexts["target-sale-status"].waitForExistence(timeout: 5))
+        app.buttons["sale-step-close"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
     func testDownloadedItemReadOnlyDetails() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1097,7 +2952,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         revealImageControls(in: app)
         assertImageCounter("1 of 2", in: app)
         let imageFrame = rendered.frame
-        XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
+        let gallery = app.descendants(matching: .any)["target-item-image-viewer"]
+        XCTAssertTrue(waitUntil { (gallery.value as? String) == "Image controls hidden" },
             "Controls auto-hide at fit zoom\n\(app.debugDescription)")
         XCTAssertTrue(app.buttons["target-item-images-done"].isHittable)
         XCTAssertTrue(app.buttons["target-item-image-pin"].isHittable)
@@ -1105,7 +2961,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertEqual(rendered.frame.height, imageFrame.height, accuracy: 1)
         revealImageControls(in: app)
         rendered.tap()
-        XCTAssertTrue(waitUntil { !app.buttons["target-item-image-zoom-in"].isHittable },
+        XCTAssertTrue(waitUntil { (gallery.value as? String) == "Image controls hidden" },
             "Single tap hides controls without dismissing")
         revealImageControls(in: app)
         let zoomOut = app.buttons["target-item-image-zoom-out"]
@@ -1124,7 +2980,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
         XCTAssertTrue(waitUntil { zoom.label == "2.5×" || (zoom.value as? String) == "2.5×" })
         let hiddenWhileZoomed = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in !app.buttons["target-item-image-zoom-reset"].isHittable },
+            predicate: NSPredicate { _, _ in (gallery.value as? String) == "Image controls hidden" },
             object: nil)
         hiddenWhileZoomed.isInverted = true
         XCTAssertEqual(XCTWaiter.wait(for: [hiddenWhileZoomed], timeout: 2.5), .completed,
@@ -1165,6 +3021,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         // Select and pin another reference without an intermediate unpin.
         tapImageControl("target-item-images-next", in: app)
+        assertImageCounter("2 of 2", in: app)
         pin.tap()
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         let pinnedCount = app.staticTexts["target-pinned-images-counter"]
@@ -1174,6 +3031,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         openItemImages(in: app)
         XCTAssertTrue(pin.waitForExistence(timeout: 5))
         tapImageControl("target-item-images-next", in: app)
+        assertImageCounter("2 of 2", in: app)
         pin.tap()
         XCTAssertTrue(waitUntil { pinnedCount.label == "2 of 2" || (pinnedCount.value as? String) == "2 of 2" })
         unpin.tap()
@@ -1205,7 +3063,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseItemPhotosSaving(allow: true)
     }
 
-    private func exerciseItemPhotosSaving(allow: Bool) throws {
+    func testTransactionImagePhotosDenied() throws {
+        try exerciseItemPhotosSaving(allow: false, transaction: true)
+    }
+
+    func testTransactionImagePhotosSaved() throws {
+        try exerciseItemPhotosSaving(allow: true, transaction: true)
+    }
+
+    private func exerciseItemPhotosSaving(allow: Bool, transaction: Bool = false) throws {
         // The existing CI flag identifies the disposable simulator. Never
         // reset a developer's Photos permissions or save into their library.
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
@@ -1214,18 +3080,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.resetAuthorizationStatus(for: .photos)
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images"]
+        app.launchArguments = transaction
+            ? ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-attachments"]
+            : ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images"]
         app.launch()
         defer { app.terminate(); app.resetAuthorizationStatus(for: .photos) }
-        let project = app.buttons["target-active-project-card-project-ui-test"]
-        XCTAssertTrue(project.waitForExistence(timeout: 10))
-        project.tap()
-        let item = app.buttons["target-physical-item-physical-ui-chair"]
-        reveal(item, in: app, fullyInsideScrollView: true)
-        item.tap()
-        openItemImages(in: app)
+        if transaction {
+            XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+            app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+                .withOffset(CGVector(dx: 8, dy: 0)).tap()
+            let photo = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Photo 1.png")).firstMatch
+            XCTAssertTrue(photo.waitForExistence(timeout: 5))
+            photo.tap()
+        } else {
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let item = app.buttons["target-physical-item-physical-ui-chair"]
+            reveal(item, in: app, fullyInsideScrollView: true)
+            item.tap()
+            openItemImages(in: app)
+        }
         XCTAssertTrue(app.images["target-item-image-rendered"].waitForExistence(timeout: 10))
-        let save = app.buttons["target-item-image-save"]
+        let save = app.buttons[transaction ? "target-transaction-image-save" : "target-item-image-save"]
         XCTAssertTrue(save.waitForExistence(timeout: 5))
         save.tap()
         let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -1242,18 +3119,20 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
         let expected = allow ? "Image saved to Photos."
             : "Allow Ledger to add photos in Settings, then try saving again."
-        XCTAssertTrue(result.staticTexts[expected].exists, app.debugDescription)
+        XCTAssertTrue(result.staticTexts[expected].waitForExistence(timeout: 5), app.debugDescription)
         result.buttons["OK"].tap()
+        XCTAssertTrue(result.waitForNonExistence(timeout: 5))
         XCTAssertTrue(waitUntil { save.isEnabled })
         XCTAssertFalse(app.descendants(matching: .any)
             .matching(identifier: "target-item-image-exporting").firstMatch.exists)
-        XCTAssertTrue(app.images["target-item-image-rendered"].exists)
+        XCTAssertTrue(app.images["target-item-image-rendered"].waitForExistence(timeout: 5))
         if !allow {
             // Denied access stays explicit on retry, without another OS prompt.
             save.tap()
             XCTAssertTrue(result.waitForExistence(timeout: 5))
-            XCTAssertTrue(result.staticTexts[expected].exists)
+            XCTAssertTrue(result.staticTexts[expected].waitForExistence(timeout: 5))
             result.buttons["OK"].tap()
+            XCTAssertTrue(result.waitForNonExistence(timeout: 5))
             XCTAssertTrue(waitUntil { save.isEnabled })
         }
     }
@@ -1318,7 +3197,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertEqual(displayedText(count), "1 of 2", "Zoomed drags must pan, not page or dismiss")
         XCTAssertTrue(app.buttons["target-item-images-done"].exists)
         tapImageControl("target-item-image-zoom-reset", in: app)
-        XCTAssertTrue(waitUntil { self.displayedText(zoom) == "1.0×" })
+        // Reset starts the real auto-hide timer. Verify the native image's
+        // persistent zoom value, not a label that correctly disappears at fit.
+        XCTAssertTrue(waitUntil { (rendered.value as? String) == "1.0× zoom" },
+            "Reset must return the native image to fit, even after controls hide")
         let start = rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 50)))
         XCTAssertTrue(app.buttons["target-item-images-done"].exists, "Short drag must snap back")
@@ -1360,9 +3242,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // Start a fresh visibility interval. Reusing controls near the end of
         // their timeout races XCTest's snapshot and event-delivery overhead.
         // Exercise the real hide/reveal gestures; do not disable auto-hide.
-        if zoomIn.exists {
+        // SwiftUI can retain faded controls in the accessibility tree, even
+        // reporting them as hittable. Observe the gallery's visibility state;
+        // subsequent control taps still verify the actual interaction.
+        if (viewer.value as? String) == "Image controls visible" {
             image.tap()
-            XCTAssertTrue(waitUntil { !zoomIn.exists }, "Single tap hides image controls")
+            XCTAssertTrue(waitUntil { (viewer.value as? String) == "Image controls hidden" },
+                "Single tap hides image controls\n\(app.debugDescription)")
         }
         image.tap()
         // XCTest's built-in existence wait polls at roughly one second. That
@@ -1371,7 +3257,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // retain the real app timer and the same five-second failure deadline.
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
-            if zoomIn.exists && zoomIn.isHittable { return }
+            if (viewer.value as? String) == "Image controls visible" && zoomIn.isHittable { return }
             Thread.sleep(forTimeInterval: 0.05)
         }
         XCTFail("Single tap reveals image controls")
@@ -1388,7 +3274,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
         revealImageControls(in: app)
         let control = app.buttons[identifier]
         XCTAssertTrue(control.isHittable, "Image control must be revealed: \(identifier)")
-        control.tap()
+        // Resolve geometry before restarting the 2.2-second visibility window.
+        // Element.tap() performs additional AX lookups before dispatch, which
+        // can outlast that window on CI and silently tap a now-hidden button.
+        // A coordinate tap still exercises hit testing and the real gesture;
+        // it avoids those repeated lookups. Never retry the action (Next wraps).
+        let frame = control.frame
+        XCTAssertFalse(frame.isEmpty)
+        let point = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
+        revealImageControls(in: app)
+        point.tap()
     }
 
     func testDownloadedItemGroupsAndImmediateSource() throws {
@@ -2051,6 +3947,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(space.waitForExistence(timeout: 5))
         XCTAssertFalse(item.exists)
         XCTAssertFalse(status.exists)
+    }
+
+    private func transactionDetailBack(in app: XCUIApplication) -> XCUIElement {
+        #if os(iOS)
+        return app.buttons["BackButton"].firstMatch
+        #else
+        return app.buttons["Done"]
+        #endif
     }
 
     private func displayedText(_ element: XCUIElement) -> String {

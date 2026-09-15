@@ -1,35 +1,35 @@
 import Foundation
-import LedgerTargetCore
 
-package enum FrozenInvoiceStorageFailure: Error { case malformedRecord, unsupportedText }
+public enum FrozenInvoiceStorageFailure: Error { case malformedRecord, unsupportedText }
 
 /// Private persistence transport, not collection authorization. The existing
 /// frozen contract remains the authority for scope, identities and arithmetic.
-package struct FrozenInvoiceStorageRecord: Codable, Sendable {
-    package struct Line: Codable, Sendable {
-        package let id: String
-        package let line_position: Int
-        package let source_kind: String
-        package let source_id: String
-        package let item_id: String?
-        package let source_revision: String
-        package let category_id: String
-        package let signed_amount_minor_units: String
-        package let description: String
+public struct FrozenInvoiceStorageRecord: Codable, Sendable {
+    struct Line: Codable, Sendable {
+        let id: String
+        let line_position: Int
+        let source_kind: String
+        let source_id: String
+        let item_id: String?
+        let source_revision: String
+        let category_id: String
+        let signed_amount_minor_units: String
+        let description: String
         // Text carries the existing typed source JSON without a JS Number hop.
-        package let source_snapshot_json: String
+        let source_snapshot_json: String
     }
-    package let invoice_id: String
-    package let invoice_revision: String
-    package let account_id: String
-    package let project_id: String
-    package let client_id: String
-    package let purchase_id: String
-    package let currency: String
-    package let total_minor_units: String
-    package let lines: [Line]
+    let invoice_id: String
+    let invoice_revision: String
+    let account_id: String
+    let project_id: String
+    let client_id: String
+    let purchase_id: String
+    let currency: String
+    let total_minor_units: String
+    let lines: [Line]
+    let display_metadata: InvoiceDisplayMetadata?
 
-    package static func make(_ value: FrozenInvoiceContents) throws -> Self {
+    public static func make(_ value: FrozenInvoiceContents) throws -> Self {
         guard let project = value.scope.projectId, let client = value.scope.clientId else {
             throw FrozenInvoiceStorageFailure.malformedRecord
         }
@@ -47,10 +47,10 @@ package struct FrozenInvoiceStorageRecord: Codable, Sendable {
         return Self(invoice_id: value.invoiceId.rawValue, invoice_revision: String(value.invoiceRevision),
             account_id: value.scope.accountId.rawValue, project_id: project.rawValue, client_id: client.rawValue,
             purchase_id: value.purchaseId.rawValue, currency: value.total.currency.rawValue,
-            total_minor_units: String(value.total.minorUnits), lines: lines)
+            total_minor_units: String(value.total.minorUnits), lines: lines, display_metadata: value.displayMetadata)
     }
 
-    package func restored() throws -> FrozenInvoiceContents {
+    public func restored() throws -> FrozenInvoiceContents {
         let scope = TransactionScope.project(accountId: try AccountID(validating: account_id),
             projectId: try ProjectID(validating: project_id), clientId: try ClientID(validating: client_id))
         let code = try CurrencyCode(validating: currency)
@@ -74,7 +74,7 @@ package struct FrozenInvoiceStorageRecord: Codable, Sendable {
         return try FrozenInvoiceContents(invoiceId: InvoiceID(validating: invoice_id),
             invoiceRevision: Self.integer(invoice_revision), scope: scope,
             purchaseId: TransactionID(validating: purchase_id), lines: decoded,
-            total: Money(minorUnits: Self.integer(total_minor_units), currency: code))
+            total: Money(minorUnits: Self.integer(total_minor_units), currency: code), displayMetadata: display_metadata)
     }
 
     private static func integer(_ value: String) throws -> Int64 {

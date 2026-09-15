@@ -1,6 +1,11 @@
 # Decision Packet — O-006/O-033 Expense Locks and Collection Payment
 
 Status: proposed recommendation; product decision not yet approved
+2026-09-15 clarification: manual collection prompts for payment amount; partial
+payments are out of scope; Expenses stay editable until collection; delivery is
+outside Ledger. The resend/delivered-revision requirements and the full field
+matrix below remain proposals, not approved implementation requirements. See
+the decision log's dated collection clarification.
 Last reviewed: 2026-08-31
 Owners: Expenses, Invoicing, Collection, Payment Evidence, Corrections
 Unlocks: 14 unique residual surfaces (O-006: 9; O-033: 10; overlap: 5)

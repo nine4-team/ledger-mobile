@@ -29,6 +29,12 @@ end;
 $$;
 
 select lives_ok($$select pg_temp.freeze_invoice('frozen-one')$$,'Complete signed allocations can be sealed');
+select is((select count(*) from ledger_private.collected_invoice_lines where invoice_id='frozen-one' and sync_project_id='frozen-project'),
+ 2::bigint,'Frozen line routing derives its immutable Project from the exact Invoice');
+select throws_ok($$update ledger_private.collected_invoice_lines set sync_project_id='forged' where id='frozen-one-charge'$$,
+ '55000',null,'The original immutable-line guard also prevents routing changes after migration');
+select is((select tgenabled::text from pg_trigger where tgrelid='ledger_private.collected_invoice_lines'::regclass
+ and tgname='collected_invoice_line_immutable'),'O','Migration restores the immutable-line guard for all ordinary writes');
 select is((select string_agg(id,',' order by line_position) from ledger_private.collected_invoice_lines where invoice_id='frozen-one'),
   'frozen-one-charge,frozen-one-credit','Input line order is retained independently of identity sorting');
 select is((select sum(signed_amount_minor_units) from ledger_private.collected_invoice_lines where invoice_id='frozen-one'),100::numeric,'Credits reduce frozen allocations exactly once');
@@ -67,6 +73,35 @@ create function pg_temp.frozen_record(p_id text) returns jsonb language sql as $
        'item_id','frozen-item','source_revision','2','category_id','furnishings','signed_amount_minor_units','100',
        'description',E'  Original\n第二行  ','source_snapshot_json','{"item":{"itemId":"frozen-item","occurrenceId":"'||p_id||'-occurrence"}}')))
 $$;
+select ledger_private.import_client_payment('payment-metadata-record','account-primary','frozen-project','client-existing',
+  100,'USD','synthetic-frozen','metadata-record','\x04'::bytea);
+select lives_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"invoiceNumber":"  INV-001  ","notes":"First\nSecond","paidAtMilliseconds":"-1"}}'::jsonb)$$,
+  'Display metadata freezes with the same Invoice');
+select is(ledger_private.read_collected_invoice('account-primary','metadata-record')#>>'{display_metadata,invoiceNumber}',
+  '  INV-001  ','Invoice label bytes are preserved without normalization');
+select is(ledger_private.read_collected_invoice('account-primary','metadata-record')#>>'{display_metadata,notes}',
+  E'First\nSecond','Multiline Invoice notes preserved');
+select is(ledger_private.read_collected_invoice('account-primary','metadata-record')#>>'{display_metadata,paidAtMilliseconds}',
+  '-1','Original timestamp projection remains exact decimal text');
+select ok(not (ledger_private.read_collected_invoice('account-primary','frozen-one') ? 'display_metadata'),
+  'Older Invoice has unknown metadata, not invented defaults');
+select lives_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"invoiceNumber":"  INV-001  ","notes":"First\nSecond","paidAtMilliseconds":"-1","sentAtMilliseconds":null}}'::jsonb)$$,
+  'Exact metadata replay normalizes optional null consistently');
+select throws_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"invoiceNumber":"Changed"}}'::jsonb)$$,'22000',null,'Changed metadata cannot rewrite a collected Invoice');
+select throws_ok($$update ledger_private.collected_invoices set display_metadata='{}' where id='metadata-record'$$,
+  '55000',null,'Direct metadata update remains immutable');
+select throws_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"paidAtMilliseconds":"253402300800000"}}'::jsonb)$$,'22023',null,'Out-of-range timestamp rejected');
+select throws_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"paidAtMilliseconds":1}}'::jsonb)$$,'22023',null,'Numeric timestamp cannot replace exact wire text');
+select throws_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('metadata-record') ||
+  '{"display_metadata":{"unexpected":"field"}}'::jsonb)$$,'22023',null,'Unknown display fields rejected');
+select ok(not has_function_privilege('authenticated','ledger_private.valid_invoice_display_metadata(jsonb)','EXECUTE'),
+  'Metadata validator adds no application API');
+
 select ledger_private.import_client_payment('payment-stored-record','account-primary','frozen-project','client-existing',
   101,'USD','synthetic-frozen','stored-record','\x02'::bytea);
 select lives_ok($$select ledger_private.store_collected_invoice(pg_temp.frozen_record('stored-record'))$$,
@@ -112,14 +147,14 @@ select throws_ok($$select ledger_private.store_collected_invoice(jsonb_set(pg_te
 select throws_ok($$select ledger_private.store_collected_invoice(jsonb_set(pg_temp.frozen_record('failed-record'),
   '{lines,0,source_revision}','2'))$$,'22023',null,'Numeric source revision cannot replace required decimal string');
 select ok((select bool_and(not has_function_privilege(r,'ledger_private.store_collected_invoice(jsonb)','EXECUTE')
-  and not has_function_privilege(r,'ledger_private.read_collected_invoice(text,text)','EXECUTE'))
-  from unnest(array['anon','authenticated','service_role']) r),'All API roles denied store/read functions');
+  and (r='authenticated' or not has_function_privilege(r,'ledger_private.read_collected_invoice(text,text)','EXECUTE')))
+  from unnest(array['anon','authenticated','service_role']) r),'All API roles denied store; only authenticated RLS-bound readers may load payment history');
 select ok((select bool_and(not prosecdef and proconfig @> array['search_path=""']) from pg_proc
   where oid in ('ledger_private.store_collected_invoice(jsonb)'::regprocedure,
     'ledger_private.read_collected_invoice(text,text)'::regprocedure)),'Private store/read use invoker rights and empty search path');
 set local role authenticated;
 select throws_ok($$select ledger_private.store_collected_invoice('{}'::jsonb)$$,'42501',null,'Authenticated API cannot store');
-select throws_ok($$select ledger_private.read_collected_invoice('account-primary','stored-record')$$,'42501',null,'Authenticated API cannot read');
+select throws_ok($$select ledger_private.read_collected_invoice('account-primary','stored-record')$$,'23503',null,'Authenticated role without an authorized principal cannot read frozen history');
 reset role;
 select * from finish();
 rollback;

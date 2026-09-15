@@ -1,11 +1,12 @@
 import Foundation
 
 /// Generates HTML strings for PDF report rendering via WKWebView.
-/// Styles ported from `src/utils/reportHtml.ts` — keep in sync.
+/// Shared original report layout; target callers supply authorized display data.
 enum ReportHTMLBuilder {
 
     // MARK: - Client Summary
 
+    #if canImport(FirebaseFirestore)
     static func clientSummary(
         data: ClientSummaryData,
         projectName: String,
@@ -117,6 +118,8 @@ enum ReportHTMLBuilder {
         return wrapHTML(title: "Client Summary", body: body)
     }
 
+    #endif
+
     // MARK: - Invoice
 
     static func invoice(
@@ -128,7 +131,10 @@ enum ReportHTMLBuilder {
         invoiceName: String? = nil,
         invoiceStatusLabel: String? = nil,
         invoiceDate: Date? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        currencyCode: String = "USD",
+        totalLabel: String = "Net Amount Due",
+        provenance: String? = nil
     ) -> String {
         var body = ""
 
@@ -161,12 +167,12 @@ enum ReportHTMLBuilder {
 
         // Charges
         if !data.chargeLines.isEmpty {
-            body += invoiceSectionHTML(title: "Charges", lines: data.chargeLines)
+            body += invoiceSectionHTML(title: "Charges", lines: data.chargeLines, currencyCode: currencyCode)
         }
 
         // Credits
         if !data.creditLines.isEmpty {
-            body += invoiceSectionHTML(title: "Credits", lines: data.creditLines)
+            body += invoiceSectionHTML(title: "Credits", lines: data.creditLines, currencyCode: currencyCode)
         }
 
         // Totals
@@ -175,15 +181,15 @@ enum ReportHTMLBuilder {
           <tbody>
             <tr>
               <td class="total-label">Charges Total</td>
-              <td class="total-value">\(formatCents(data.chargesSubtotalCents))</td>
+              <td class="total-value">\(formatCents(data.chargesSubtotalCents, currencyCode: currencyCode))</td>
             </tr>
             <tr>
               <td class="total-label">Credits Total</td>
-              <td class="total-value">(\(formatCents(data.creditsSubtotalCents)))</td>
+              <td class="total-value">(\(formatCents(data.creditsSubtotalCents, currencyCode: currencyCode)))</td>
             </tr>
             <tr class="net-row">
-              <td class="total-label">Net Amount Due</td>
-              <td class="total-value">\(formatCents(data.netDueCents))</td>
+              <td class="total-label">\(esc(totalLabel))</td>
+              <td class="total-value">\(formatCents(data.netDueCents, currencyCode: currencyCode))</td>
             </tr>
           </tbody>
         </table>
@@ -193,11 +199,14 @@ enum ReportHTMLBuilder {
             body += #"<div class="meta"><strong>Notes:</strong><br/>\#(esc(notes))</div>"#
         }
 
+        if let provenance { body += #"<div class="meta">\#(esc(provenance))</div>"# }
+
         return wrapHTML(title: "Invoice", body: body)
     }
 
     // MARK: - Property Management
 
+    #if canImport(FirebaseFirestore)
     static func propertyManagement(
         data: PropertyManagementData,
         projectName: String,
@@ -272,15 +281,23 @@ enum ReportHTMLBuilder {
         }
     }
 
-    private static func invoiceSectionHTML(title: String, lines: [InvoiceLineEntry]) -> String {
-        let rows = lines.map { line in
+    #endif
+
+    private static func invoiceSectionHTML(title: String, lines: [InvoiceLineEntry], currencyCode: String) -> String {
+        let rows = InvoiceReportData.groups(lines).map { group in
+            let lineRows = group.lines.map { line in
             let priceClass = line.isMissingPrice ? #" class="missing-price""# : ""
             return """
             <tr>
               <td>\(esc(line.name))</td>
-              <td class="right"\(priceClass)>\(formatCents(line.priceCents))</td>
+              <td class="right"\(priceClass)>\(formatCents(line.priceCents, currencyCode: currencyCode))</td>
             </tr>
             """
+            }.joined()
+            guard group.categoryId != nil else { return lineRows }
+            return #"<tr><th colspan="2">\#(esc(group.categoryName ?? "Category name unavailable"))</th></tr>"#
+                + lineRows
+                + #"<tr><td>Category Total</td><td class="right">\#(formatCents(group.subtotalCents, currencyCode: currencyCode))</td></tr>"#
         }.joined()
 
         return """
@@ -295,6 +312,7 @@ enum ReportHTMLBuilder {
         """
     }
 
+    #if canImport(FirebaseFirestore)
     private static func propertySpaceSectionHTML(
         title: String,
         items: [Item],
@@ -329,6 +347,8 @@ enum ReportHTMLBuilder {
         </table>
         """
     }
+
+    #endif
 
     private static func headerHTML(
         businessName: String?,
@@ -367,6 +387,7 @@ enum ReportHTMLBuilder {
         <html lang="en">
         <head>
           <meta charset="utf-8" />
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>\(esc(title))</title>
           <style>\(reportStyles)</style>
@@ -386,8 +407,12 @@ enum ReportHTMLBuilder {
             .replacingOccurrences(of: "'", with: "&#039;")
     }
 
+    private static func formatCents(_ cents: Decimal, currencyCode: String = "USD") -> String {
+        (cents / 100).formatted(.currency(code: currencyCode))
+    }
+
     private static func formatCents(_ cents: Int) -> String {
-        CurrencyFormatting.formatCentsWithDecimals(cents)
+        formatCents(Decimal(cents))
     }
 
     // MARK: - CSS (from reportHtml.ts getReportStyles)

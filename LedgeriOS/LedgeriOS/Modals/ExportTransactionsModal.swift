@@ -1,5 +1,6 @@
 import SwiftUI
 
+#if canImport(FirebaseFirestore)
 /// Column selector sheet for CSV export. Lets users pick which fields to include.
 struct ExportTransactionsModal: View {
     let transactions: [Transaction]
@@ -13,16 +14,49 @@ struct ExportTransactionsModal: View {
     @State private var errorMessage: String?
 
     private var allFields: [ExportFieldConfig] { ExportFields.all }
-    private var isAllSelected: Bool { selectedFieldIds.count == allFields.count }
+    var body: some View {
+        ExportTransactionFieldsForm(transactionCount: transactions.count, fields: allFields,
+            defaultSelectedIds: ExportFields.defaultSelectedIds, selectedFieldIds: $selectedFieldIds,
+            errorMessage: errorMessage, canExport: true, onExport: exportCSV)
+    }
+
+    private func exportCSV() {
+        let selectedFields = allFields.filter { selectedFieldIds.contains($0.id) }
+        let csv = TransactionExportCalculations.exportTransactionsCSV(
+            transactions: transactions, categories: categories, items: items, selectedFields: selectedFields)
+        let dateStamp = ISO8601DateFormatter().string(from: Date()).prefix(10)
+        let fileName = "project-\(projectId ?? "export")-\(dateStamp).csv"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        do { try csv.write(to: tempURL, atomically: true, encoding: .utf8) }
+        catch { errorMessage = "Failed to export transactions."; return }
+        onExport?(tempURL)
+        dismiss()
+    }
+}
+#endif
+
+/// The original sheet body, with backend-bound rows and file delivery removed.
+/// Both callers keep the same selection controls, defaults and form layout.
+struct ExportTransactionFieldsForm: View {
+    let transactionCount: Int?
+    let fields: [ExportFieldConfig]
+    let defaultSelectedIds: Set<String>
+    @Binding var selectedFieldIds: Set<String>
+    let errorMessage: String?
+    let canExport: Bool
+    let onExport: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    private var isAllSelected: Bool { selectedFieldIds == Set(fields.map(\.id)) }
 
     var body: some View {
         FormSheet(
             title: "Export Transactions",
-            description: "\(transactions.count) transaction\(transactions.count == 1 ? "" : "s") will be exported",
+            description: transactionCount.map { "\($0) transaction\($0 == 1 ? "" : "s") will be exported" }
+                ?? "Transaction data is not ready to export.",
             primaryAction: FormSheetAction(
                 title: "Export",
-                isDisabled: selectedFieldIds.isEmpty,
-                action: { exportCSV() }
+                isDisabled: selectedFieldIds.isEmpty || !canExport,
+                action: onExport
             ),
             secondaryAction: FormSheetAction(
                 title: "Cancel",
@@ -39,9 +73,9 @@ struct ExportTransactionsModal: View {
                     Spacer()
                     Button(isAllSelected ? "Reset to Default" : "Select All") {
                         if isAllSelected {
-                            selectedFieldIds = ExportFields.defaultSelectedIds
+                            selectedFieldIds = defaultSelectedIds
                         } else {
-                            selectedFieldIds = Set(allFields.map(\.id))
+                            selectedFieldIds = Set(fields.map(\.id))
                         }
                     }
                     .font(Typography.small)
@@ -50,7 +84,7 @@ struct ExportTransactionsModal: View {
 
                 // Field checkboxes
                 VStack(spacing: Spacing.sm) {
-                    ForEach(allFields) { field in
+                    ForEach(fields) { field in
                         Button {
                             toggleField(field.id)
                         } label: {
@@ -66,6 +100,8 @@ struct ExportTransactionsModal: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("transaction-export-field-\(field.id)")
+                        .accessibilityValue(selectedFieldIds.contains(field.id) ? "Selected" : "Not selected")
                     }
                 }
             }
@@ -82,27 +118,4 @@ struct ExportTransactionsModal: View {
         }
     }
 
-    private func exportCSV() {
-        let selectedFields = allFields.filter { selectedFieldIds.contains($0.id) }
-        let csv = TransactionExportCalculations.exportTransactionsCSV(
-            transactions: transactions,
-            categories: categories,
-            items: items,
-            selectedFields: selectedFields
-        )
-
-        let dateStamp = ISO8601DateFormatter().string(from: Date()).prefix(10)
-        let fileName = "project-\(projectId ?? "export")-\(dateStamp).csv"
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-        do {
-            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
-        } catch {
-            errorMessage = "Failed to export transactions."
-            return
-        }
-
-        onExport?(tempURL)
-        dismiss()
-    }
 }

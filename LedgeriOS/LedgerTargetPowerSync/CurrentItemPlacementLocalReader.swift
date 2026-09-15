@@ -51,7 +51,9 @@ struct CurrentItemPlacementLocalReader: Sendable {
             return try .init(accountId: accountId, itemId: itemId, description: physical.description,
                 intervals: physical.intervals, details: physical.details,
                 currentBudgetCategoryName: physical.currentBudgetCategoryName,
-                currentAccountingResolution: accounting, currentClientPaidPurchases: purchases)
+                currentAccountingResolution: accounting, currentClientPaidPurchases: purchases,
+                pendingSale: Self.pendingSalePlacements(transaction: transaction,accountId: accountId,principalId: principalId)
+                    .first(where: { $0.itemId == itemId })?.pendingSale)
         }
     }
 
@@ -218,12 +220,15 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 categoryName = name
             }
         }
+        guard let startEvidence = PhysicalItemPlacementHistoryInterval.StartEvidence(rawValue: try cursor.getStringOptional(name: "start_evidence") ?? "unknown") else {
+            throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+        }
         return try HistoryRow(description: description, interval: PhysicalItemPlacementHistoryInterval(
             placementId: EntityID(validating: id), scope: scope,
             spaceId: cursor.getStringOptional(name: "space_id").map { try SpaceID(validating: $0) },
             projectDisplayName: cursor.getStringOptional(name: "project_name"),
             spaceDisplayName: cursor.getStringOptional(name: "space_name"),
-            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at")),
+            startedAt: cursor.getString(name: "started_at"), endedAt: cursor.getStringOptional(name: "ended_at"), startEvidence: startEvidence),
             details: details, currentBudgetCategoryName: categoryName)
     }
 
@@ -247,8 +252,9 @@ struct CurrentItemPlacementLocalReader: Sendable {
             AND (s.scope_kind IS NOT p.scope_kind OR s.project_id IS NOT p.project_id))
       )
       SELECT access.is_active,COALESCE(i.name,i.description) AS description,i.revision,validity.invalid_count,
+        (SELECT count(*) FROM spike_local_operations) AS pending_change_signal,
         i.name,i.description AS raw_description,i.sku,i.source,i.current_source,i.notes,i.workflow_status,i.bookmark,i.created_at,
-        p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,
+        p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,p.start_evidence,
         project.display_name AS project_name,space.display_name AS space_name,
         i.account_id AS item_account,i.id AS history_item_id,
         assignment.id AS category_assignment_id,assignment.account_id AS category_account,
@@ -304,7 +310,11 @@ struct CurrentItemPlacementLocalReader: Sendable {
     static func readSnapshot(transaction: any Transaction, accountId: AccountID,
                              principalId: PrincipalID, scope: ItemPlacementScope) throws -> DownloadedItemPlacements {
         // This read checks active membership even when there are no Items.
-        let rows = try read(transaction: transaction, accountId: accountId, principalId: principalId, scope: scope)
+        var rows = try read(transaction: transaction, accountId: accountId, principalId: principalId, scope: scope)
+        let pending = try pendingSalePlacements(transaction: transaction, accountId: accountId, principalId: principalId)
+        let pendingIds = Set(pending.map(\.itemId))
+        rows.removeAll { pendingIds.contains($0.itemId) }
+        rows.append(contentsOf: pending.filter { $0.scope == scope })
         let kind: String
         let project: String?
         switch scope {
@@ -344,10 +354,10 @@ struct CurrentItemPlacementLocalReader: Sendable {
         case .businessInventory: kind = "business_inventory"; project = nil
         case .project(let id): kind = "project"; project = id.rawValue
         }
-        return [accountId.rawValue, principalId.rawValue, accountId.rawValue, kind, project]
+        return [accountId.rawValue, principalId.rawValue, accountId.rawValue, kind, project, nil, nil]
     }
 
-    private static func row(cursor: any SqlCursor, scope: ItemPlacementScope) throws -> PhysicalItemPlacement? {
+    private static func row(cursor: any SqlCursor, scope: ItemPlacementScope, requireCurrent: Bool = true) throws -> PhysicalItemPlacement? {
             guard try cursor.getInt(name: "is_active") == 1 else {
                 throw CurrentItemPlacementReadFailure.accountUnavailable
             }
@@ -355,7 +365,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
             guard let item = try cursor.getStringOptional(name: "item_id"),
                   let description = try cursor.getStringOptional(name: "description"),
                   let revision = try cursor.getIntOptional(name: "revision"), revision > 0,
-                  try cursor.getInt(name: "active_count") == 1,
+                  (try cursor.getInt(name: "active_count") == 1 || !requireCurrent),
                   try cursor.getInt(name: "space_valid") == 1,
                   try cursor.getInt(name: "project_valid") == 1 else {
                 throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
@@ -377,6 +387,65 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 source: cursor.getStringOptional(name: "source"),
                 currentSource: cursor.getStringOptional(name: "current_source"),
                 imageCount: cursor.getIntOptional(name: "image_count").map(Int64.init))
+    }
+
+    static func pendingSalePlacements(transaction: any Transaction, accountId: AccountID,
+                                      principalId: PrincipalID) throws -> [PhysicalItemPlacement] {
+        let membership = try transaction.get(sql: "SELECT count(*) AS n FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='active'",
+            parameters: [accountId.rawValue,principalId.rawValue]) { try $0.getInt(name: "n") }
+        guard membership == 1 else { throw CurrentItemPlacementReadFailure.accountUnavailable }
+        let commands = try transaction.getAll(sql: """
+            SELECT id,command_envelope_json,local_state FROM spike_local_operations
+            WHERE account_id=? AND actor_principal_id=? AND command_type='sell_inventory_items'
+              AND local_state IN ('queued','applying','applied') ORDER BY accepted_at_ms,id
+            """, parameters: [accountId.rawValue,principalId.rawValue]) { cursor in
+                (try cursor.getString(name: "id"),try cursor.getString(name: "command_envelope_json"),
+                 try cursor.getString(name: "local_state"))
+            }
+        var pending: [ItemID: PhysicalItemPlacement] = [:]
+        for record in commands {
+            let command = try OperationContractCodec.decode(InventorySaleCommand.self,
+                from: Data("{\"envelope\":\(record.1)}".utf8))
+            let envelope = command.envelope
+            guard envelope.accountId == accountId, envelope.actorPrincipalId == principalId,
+                  envelope.operationId.rawValue == record.0, let state = LocalOperationState(rawValue: record.2),
+                  try LocalOperationIdentityGuard.inspect(transaction: transaction, operationId: envelope.operationId,
+                    expectedFamily: .sellInventoryItems, expectedFingerprint: InventorySaleUploadRequest(command).fingerprint) == .matchingOwner else {
+                throw LocalOperationIdentityGuardFailure.malformedEvidence
+            }
+            guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(envelope.payload.projectId,
+                account: accountId,principal: principalId,in: transaction) else { continue }
+            for item in envelope.payload.items {
+                let facts = try transaction.getAll(sql: """
+                    SELECT id,scope_kind,project_id,ended_at FROM spike_item_placements
+                    WHERE account_id=? AND item_id=? AND (ended_at IS NULL OR id=?)
+                    """, parameters: [accountId.rawValue,item.itemId.rawValue,item.newPlacementId.rawValue]) { cursor in
+                        (try cursor.getString(name: "id"),try cursor.getString(name: "scope_kind"),
+                         try cursor.getStringOptional(name: "project_id"),try cursor.getStringOptional(name: "ended_at"))
+                    }
+                guard facts.filter({ $0.3 == nil }).count <= 1 else {
+                    throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+                }
+                if let downloaded = facts.first(where: { $0.0 == item.newPlacementId.rawValue }) {
+                    guard downloaded.1 == "project", downloaded.2 == envelope.payload.projectId.rawValue else {
+                        throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+                    }
+                    continue // This sale's placement has downloaded, possibly already ended in a later cycle.
+                }
+                if facts.contains(where: { $0.3 == nil && $0.0 != item.placementId.rawValue }) { continue }
+                var args = parameters(accountId: accountId,principalId: principalId,scope: .businessInventory)
+                args[5] = item.placementId.rawValue; args[6] = item.placementId.rawValue
+                let sources = try transaction.getAll(sql: sql, parameters: args) {
+                    try row(cursor: $0,scope: .businessInventory,requireCurrent: false)
+                }.compactMap { $0 }
+                guard let source = sources.first, sources.count == 1, source.itemId == item.itemId else { continue }
+                let intent = try InventorySalePendingPlacement(command: command,projectName: project.displayName.rawValue,
+                    itemId: item.itemId,state: state)
+                guard pending[item.itemId] == nil else { throw LocalOperationIdentityGuardFailure.malformedEvidence }
+                pending[item.itemId] = try intent.resolve(source: source,current: facts.isEmpty ? nil : source)
+            }
+        }
+        return pending.values.sorted { $0.itemId.rawValue < $1.itemId.rawValue }
     }
 
     private static func creationDate(_ raw: String?) -> Date? {
@@ -413,9 +482,11 @@ struct CurrentItemPlacementLocalReader: Sendable {
         LEFT JOIN spike_projects project ON project.id = p.project_id AND project.account_id = p.account_id
         LEFT JOIN spike_spaces s ON s.id = p.space_id AND s.account_id = p.account_id
           AND s.scope_kind = p.scope_kind AND s.project_id IS p.project_id
-        WHERE p.account_id = ? AND p.scope_kind = ? AND p.project_id IS ? AND p.ended_at IS NULL
+        WHERE p.account_id = ? AND p.scope_kind = ? AND p.project_id IS ?
+          AND ((? IS NULL AND p.ended_at IS NULL) OR p.id=?)
       )
-      SELECT access.is_active, selected.* FROM access
+      SELECT access.is_active, selected.*,
+        (SELECT count(*) FROM spike_local_operations) AS pending_change_signal FROM access
       LEFT JOIN selected ON access.is_active
       ORDER BY selected.item_id, selected.placement_id
       """

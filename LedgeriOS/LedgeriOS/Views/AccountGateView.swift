@@ -1,22 +1,20 @@
 import SwiftUI
 
+#if canImport(FirebaseAuth)
 struct AccountGateView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
 
-    @State private var isCreatingAccount = false
-    @State private var createAccountError: String?
-
     var body: some View {
-        Group {
-            if accountContext.isDiscovering {
-                loadingView
-            } else if accountContext.discoveredAccounts.isEmpty {
-                noAccountsView
-            } else {
-                accountPickerView
-            }
-        }
+        AccountGatePresentation(accounts: accountContext.discoveredAccounts,
+            isDiscovering: accountContext.isDiscovering, name: { $0.name },
+            onSelect: { account in
+                guard let uid = authManager.currentUser?.uid else { return }
+                accountContext.selectAccount(accountId: account.id, userId: uid)
+            }, onCreate: {
+                guard let uid = authManager.currentUser?.uid else { return }
+                try await accountContext.createAccount(name: "My account", userId: uid)
+            }, onSignOut: { authManager.signOut() })
         .task {
             guard !AppRuntime.isUnitTestHost else { return }
 
@@ -41,6 +39,34 @@ struct AccountGateView: View {
             if accountContext.discoveredAccounts.count == 1,
                let only = accountContext.discoveredAccounts.first {
                 accountContext.selectAccount(accountId: only.id, userId: uid)
+            }
+        }
+    }
+}
+#endif
+
+/// Original Account picker and empty-state form, with provider dependencies
+/// supplied by the caller. Rendering never selects or creates an Account.
+struct AccountGatePresentation<Account: Identifiable>: View {
+    let accounts: [Account]
+    let isDiscovering: Bool
+    let name: (Account) -> String
+    let onSelect: (Account) -> Void
+    let onCreate: () async throws -> Void
+    let onSignOut: () -> Void
+    var canCreateAccount = true
+    var canSignOut = true
+    @State private var isCreatingAccount = false
+    @State private var createAccountError: String?
+
+    var body: some View {
+        Group {
+            if isDiscovering {
+                loadingView
+            } else if accounts.isEmpty {
+                noAccountsView
+            } else {
+                accountPickerView
             }
         }
     }
@@ -98,12 +124,13 @@ struct AccountGateView: View {
                     .padding(.vertical, Spacing.md)
                     .background(BrandColors.primary, in: RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
                 }
-                .disabled(isCreatingAccount)
+                .disabled(isCreatingAccount || !canCreateAccount)
 
                 Button("Sign Out", role: .destructive) {
-                    authManager.signOut()
+                    onSignOut()
                 }
                 .font(Typography.button)
+                .disabled(!canSignOut)
             }
             .padding(.horizontal, Spacing.xxl)
         }
@@ -120,14 +147,13 @@ struct AccountGateView: View {
                     .padding(.top, Spacing.xxxl)
 
                 LazyVStack(spacing: Spacing.cardListGap) {
-                    ForEach(accountContext.discoveredAccounts) { account in
+                    ForEach(accounts) { account in
                         Button {
-                            guard let uid = authManager.currentUser?.uid else { return }
-                            accountContext.selectAccount(accountId: account.id, userId: uid)
+                            onSelect(account)
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text(account.name)
+                                    Text(name(account))
                                         .font(Typography.h3)
                                         .foregroundStyle(BrandColors.textPrimary)
                                 }
@@ -137,6 +163,7 @@ struct AccountGateView: View {
                             }
                             .padding(Spacing.cardPadding)
                             .background(BrandColors.surface, in: RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -146,10 +173,11 @@ struct AccountGateView: View {
                 Spacer()
 
                 Button("Sign Out", role: .destructive) {
-                    authManager.signOut()
+                    onSignOut()
                 }
                 .font(Typography.button)
                 .padding(.bottom, Spacing.xl)
+                .disabled(!canSignOut)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -157,13 +185,12 @@ struct AccountGateView: View {
     }
 
     private func createAccount() {
-        guard let uid = authManager.currentUser?.uid else { return }
         isCreatingAccount = true
         createAccountError = nil
 
         Task {
             do {
-                try await accountContext.createAccount(name: "My account", userId: uid)
+                try await onCreate()
             } catch {
                 createAccountError = "Could not create an account. Please try again."
             }
@@ -172,6 +199,7 @@ struct AccountGateView: View {
     }
 }
 
+#if canImport(FirebaseAuth)
 #Preview {
     AccountGateView()
         .environment(AuthManager())
@@ -180,3 +208,4 @@ struct AccountGateView: View {
             membersService: AccountMembersService()
         ))
 }
+#endif

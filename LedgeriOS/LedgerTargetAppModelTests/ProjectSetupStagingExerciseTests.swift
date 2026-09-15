@@ -6,6 +6,51 @@ import Testing
 @Suite("Project Setup Staging Application Flow")
 @MainActor
 struct ProjectSetupStagingExerciseTests {
+    @Test("Inline category creation preserves the Project draft and selects the downloaded result")
+    func inlineCategoryCreationPreservesDraft() async throws {
+        let clients = ControlledStream<ClientListSnapshot>()
+        let categories = ControlledStream<BudgetCategoryReferenceSnapshot>()
+        let setup = SetupProbe()
+        let model = try Self.model()
+        let initial = try Self.categorySnapshot()
+        let newId = try BudgetCategoryID(validating: "inline-category")
+        let management = CategoryManagementRuntime(watch: { categories.stream }, submit: { payload, uuid, _ in
+            #expect(payload.action == .create)
+            #expect(payload.categoryId == newId)
+            #expect(payload.kind == .general)
+            return OperationReceipt(operationId: try OperationID(validating: uuid.uuidString), localState: .queued)
+        })
+        await model.start(runtime: Self.runtime(clients, categories, setup, categoryManagement: management))
+        clients.yield(try Self.clientSnapshot())
+        categories.yield(initial)
+        await Self.waitUntil { model.categoryManagementSession?.canSave == true && model.clients.count == 2 }
+        model.projectName = "Keep my draft"
+        model.projectDescription = "No lost work"
+        model.selectedClientId = try ClientID(validating: "client-one")
+        let deselected = try #require(model.categories.last?.id)
+        model.setCategory(deselected, selected: false)
+        let selected = try #require(model.categories.first?.id)
+        model.setAllocationText("125.00", for: selected)
+        try await model.createCategory(id: newId, name: BudgetCategoryName(validating: "Lighting"),
+            kind: .general, excluded: false)
+        #expect(model.projectName == "Keep my draft")
+        #expect(model.projectDescription == "No lost work")
+        #expect(model.selectedClientId?.rawValue == "client-one")
+        #expect(!model.selectedCategoryIds.contains(deselected))
+        #expect(model.budgetAllocationText[selected] == "125.00")
+        // Saving the Account category must not create a Project or reset its form.
+        #expect(await setup.commands().isEmpty)
+        let payload = CategoryManagementPayload(action: .create, categoryId: newId,
+            name: try BudgetCategoryName(validating: "Lighting"), kind: .general, excludesFromOverallBudget: false)
+        categories.yield(try Self.categorySnapshot(rows: CategoryManagement.applying(payload, to: initial)))
+        await Self.waitUntil { model.selectedCategoryIds.contains(newId) }
+        #expect(!model.selectedCategoryIds.contains(deselected))
+        #expect(model.budgetAllocationText[selected] == "125.00")
+        await model.stop()
+        #expect(model.categoryManagementSession == nil)
+        #expect(await setup.commands().isEmpty)
+    }
+
     @Test("Compiled SwiftUI source inventory wires recorded controls to AppModel actions")
     func swiftUISourceContract() throws {
         let ledgerDirectory = URL(fileURLWithPath: #filePath)
@@ -1180,7 +1225,8 @@ struct ProjectSetupStagingExerciseTests {
         _ categories: ControlledStream<BudgetCategoryReferenceSnapshot>,
         _ setup: SetupProbe,
         operations: ControlledStream<OperationSnapshot> = ControlledStream(),
-        activation: RuntimeActivationProbe? = nil
+        activation: RuntimeActivationProbe? = nil,
+        categoryManagement: CategoryManagementRuntime? = nil
     ) -> ProjectSetupStagingRuntime {
         ProjectSetupStagingRuntime(
             watchClients: {
@@ -1192,7 +1238,8 @@ struct ProjectSetupStagingExerciseTests {
                 return categories.stream
             },
             create: { command in try await setup.create(command) },
-            watchOperation: { _ in operations.stream }
+            watchOperation: { _ in operations.stream },
+            categoryManagement: categoryManagement
         )
     }
 

@@ -70,6 +70,7 @@
 		41D9319222D75C37A1DA765A /* TransactionsTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */; };
 		421B533E9EF396862F02C85A /* AccountPresetsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */; };
 		42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */; };
+		B9B402112026091500000001 /* InvoiceReportData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B402112026091500000002 /* InvoiceReportData.swift */; };
 		4443A4A251A8A9A80018D179 /* ItemFormValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1A364580DEA092553FDE82 /* ItemFormValidation.swift */; };
 		4736BEA99AE52195374A39CB /* ProjectCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D728B501E3FD1CF2F39E557D /* ProjectCard.swift */; };
 		488DB893D93ABE7780F286DA /* ParseDebugReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3499445B08E06435FF4D4F /* ParseDebugReport.swift */; };
@@ -130,6 +131,7 @@
 		89093C53EC106057286750CB /* ExportTransactionsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A42382CD300502891CBCC6A1 /* ExportTransactionsModal.swift */; };
 		89B7DA9202AD40FE7C087A39 /* SpaceSearchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30214FADBE63EDDE57E62712 /* SpaceSearchDetailView.swift */; };
 		8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */; };
+		1D0C1949763A227C51215BDB /* MediaGalleryPresentationCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB8DE1DFBEC01F254A2A4691 /* MediaGalleryPresentationCalculations.swift */; };
 		8C022C22D824861D91971EF3 /* EditProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */; };
 		8E2660D3F9C826B26BFF25EE /* ProjectFormValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */; };
 		8E9D15A7F8B24657A6B5F9F1 /* LoadingLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D15A7F8B24657A6B5F9F0 /* LoadingLifecycleTests.swift */; };
@@ -178,6 +180,7 @@
 		B6E0ED19457893CB889A0B25 /* BudgetTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD203EAE8B8232355376751 /* BudgetTabView.swift */; };
 		B8D7F0C660F65A3B0C78B656 /* InventorySpacesSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2538F854507B4CA8A499223E /* InventorySpacesSubTab.swift */; };
 		BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */; };
+		6ACAC3F0C19E8192F92264E7 /* ImageGalleryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915C234ED13CB88B1D8FFAD1 /* ImageGalleryPresentation.swift */; };
 		BA9FA5CF36AA56B2BEFE2F40 /* ImageThumbnailGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EC92FFA9C18C4F52AD23C1 /* ImageThumbnailGeneratorTests.swift */; };
 		BABD6D50486B9B785AA62BFE /* SpacesTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A32986DD6B2D33762465CCB /* SpacesTabPlaceholder.swift */; };
 		BAE5B2B58298E2EBC4B92BF9 /* NewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 217E428E23D79EDE3C0AA4A2 /* NewItemView.swift */; };
@@ -308,8 +311,10 @@
 		PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFT0001000000000000F001 /* PDFThumbnailTile.swift */; };
 		PDFV0001000000000000B001 /* PDFViewerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFV0001000000000000F001 /* PDFViewerSheet.swift */; };
 		PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00001000000000000F001 /* PinnedImagePanel.swift */; };
+		B10E2E95A17C01092E62BA84 /* PinnedImagePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9637CB55CFF88CC7B11D8FF3 /* PinnedImagePresentation.swift */; };
 		PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00002000000000000F001 /* PinnedImageLayout.swift */; };
 		PIN00003000000000000B001 /* PinnedImageCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00003000000000000F001 /* PinnedImageCalculations.swift */; };
+		B09A71902C2C04AEB401F2A4 /* PinnedImageGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1514F0B61B112852C27B534 /* PinnedImageGeometry.swift */; };
 		PIN00004000000000000B001 /* PinnedImageCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */; };
 		A9EBA01129DA460BA2880301 /* SpaceReviewNoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBA01129DA460BA2880302 /* SpaceReviewNoteTests.swift */; };
 		PIN00B00100000000000C0001 /* PinnedBudgetsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */; };
@@ -363,6 +368,7 @@
 		WP08B00100000000000A0001 /* AccountToolbarMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000A0001 /* AccountToolbarMenu.swift */; };
 		WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0001 /* GroupedItemCard.swift */; };
 		WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0002 /* MediaGallerySection.swift */; };
+		C4A700010000000000000001 /* MediaCapturePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A700010000000000000002 /* MediaCapturePresentation.swift */; };
 		WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0006 /* ListSelectAllRow.swift */; };
 		WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0007 /* ListSelectionInfo.swift */; };
 		WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000L0001 /* SelectionCalculations.swift */; };
@@ -373,6 +379,7 @@
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
+		CF6827574E7BEA0A2DC51876 /* LegacyGalleryImageLoading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCF333AFB131B4821418C05 /* LegacyGalleryImageLoading.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -509,6 +516,7 @@
 		815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScrollableTabBar.swift; sourceTree = "<group>"; };
 		8357990136C2918E1FDE6FE2 /* BudgetCategoryManagementView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategoryManagementView.swift; sourceTree = "<group>"; };
 		835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportAggregationCalculations.swift; sourceTree = "<group>"; };
+		B9B402112026091500000002 /* InvoiceReportData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceReportData.swift; sourceTree = "<group>"; };
 		83B035C5F6843F54D353A518 /* DocumentPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		857F2893750ABBED0530AF4C /* BudgetProgress.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetProgress.swift; sourceTree = "<group>"; };
 		862F852843A06A4E1AD326AF /* IncompleteReturnDetectionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IncompleteReturnDetectionTests.swift; sourceTree = "<group>"; };
@@ -658,6 +666,7 @@
 		E612A9BD362149A996A6D89F /* ItemDraftCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDraftCard.swift; sourceTree = "<group>"; };
 		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
 		E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
+		BB8DE1DFBEC01F254A2A4691 /* MediaGalleryPresentationCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryPresentationCalculations.swift; sourceTree = "<group>"; };
 		E6C001C78127D35A8B1050F0 /* VendorDefaultsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaultsService.swift; sourceTree = "<group>"; };
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewSpaceView.swift; sourceTree = "<group>"; };
@@ -667,6 +676,7 @@
 		F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageGroupingState.swift; sourceTree = "<group>"; };
 		F46635D3BC4F27F91DEDDE73 /* UniversalSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UniversalSearchView.swift; sourceTree = "<group>"; };
 		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
+		915C234ED13CB88B1D8FFAD1 /* ImageGalleryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGalleryPresentation.swift; sourceTree = "<group>"; };
 		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
 		F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		F7A3032F2348CD92C41812A9 /* ItemEntryFlowView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemEntryFlowView.swift; sourceTree = "<group>"; };
@@ -699,8 +709,10 @@
 		PDFT0001000000000000F001 /* PDFThumbnailTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFThumbnailTile.swift; sourceTree = "<group>"; };
 		PDFV0001000000000000F001 /* PDFViewerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerSheet.swift; sourceTree = "<group>"; };
 		PIN00001000000000000F001 /* PinnedImagePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImagePanel.swift; sourceTree = "<group>"; };
+		9637CB55CFF88CC7B11D8FF3 /* PinnedImagePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImagePresentation.swift; sourceTree = "<group>"; };
 		PIN00002000000000000F001 /* PinnedImageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageLayout.swift; sourceTree = "<group>"; };
 		PIN00003000000000000F001 /* PinnedImageCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculations.swift; sourceTree = "<group>"; };
+		B1514F0B61B112852C27B534 /* PinnedImageGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageGeometry.swift; sourceTree = "<group>"; };
 		PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculationTests.swift; sourceTree = "<group>"; };
 		A9EBA01129DA460BA2880302 /* SpaceReviewNoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceReviewNoteTests.swift; sourceTree = "<group>"; };
 		PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedBudgetsSection.swift; sourceTree = "<group>"; };
@@ -762,6 +774,7 @@
 		WP08F00100000000000A0001 /* AccountToolbarMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountToolbarMenu.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0001 /* GroupedItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedItemCard.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0002 /* MediaGallerySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGallerySection.swift; sourceTree = "<group>"; };
+		C4A700010000000000000002 /* MediaCapturePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCapturePresentation.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0006 /* ListSelectAllRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectAllRow.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0007 /* ListSelectionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionInfo.swift; sourceTree = "<group>"; };
 		WP08F00100000000000L0001 /* SelectionCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculations.swift; sourceTree = "<group>"; };
@@ -772,6 +785,7 @@
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
+		4CCF333AFB131B4821418C05 /* LegacyGalleryImageLoading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyGalleryImageLoading.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -864,12 +878,15 @@
 				BL00000000000000000F0020 /* InvoiceLineCalculations.swift */,
 				6186D40779AF445E9263F512 /* ReviewCalculations.swift */,
 				835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */,
+				B9B402112026091500000002 /* InvoiceReportData.swift */,
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
 				CDFA0001000000000000F001 /* FinancialAccessPolicy.swift */,
 				C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */,
 				32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */,
 				E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */,
+				BB8DE1DFBEC01F254A2A4691 /* MediaGalleryPresentationCalculations.swift */,
 				PIN00003000000000000F001 /* PinnedImageCalculations.swift */,
+				B1514F0B61B112852C27B534 /* PinnedImageGeometry.swift */,
 				09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */,
 				C5A0020100000000000L0002 /* ProgressBarCalculations.swift */,
 				B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */,
@@ -1250,10 +1267,13 @@
 				200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */,
 				DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */,
 				F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */,
+				915C234ED13CB88B1D8FFAD1 /* ImageGalleryPresentation.swift */,
 				ZOOM0001000000000000F001 /* ZoomableScrollView.swift */,
+				4CCF333AFB131B4821418C05 /* LegacyGalleryImageLoading.swift */,
 				PDFV0001000000000000F001 /* PDFViewerSheet.swift */,
 				PDFT0001000000000000F001 /* PDFThumbnailTile.swift */,
 				PIN00001000000000000F001 /* PinnedImagePanel.swift */,
+				9637CB55CFF88CC7B11D8FF3 /* PinnedImagePresentation.swift */,
 				PIN00002000000000000F001 /* PinnedImageLayout.swift */,
 				DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */,
 				C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */,
@@ -1287,6 +1307,7 @@
 				D4E5F6071829304D5E6F7081 /* ItemsListControlBar.swift */,
 				0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */,
 				WP08F00100000000000C0002 /* MediaGallerySection.swift */,
+				C4A700010000000000000002 /* MediaCapturePresentation.swift */,
 				WP08F00100000000000C0006 /* ListSelectAllRow.swift */,
 				WP08F00100000000000C0007 /* ListSelectionInfo.swift */,
 				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
@@ -1539,6 +1560,7 @@
 				7BB72213AC112E76A44E9F5E /* ImageCache.swift in Sources */,
 				1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */,
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
+				B9B402112026091500000001 /* InvoiceReportData.swift in Sources */,
 				2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */,
 				06546175DE8D4D61A06A6768 /* FinancesTabView.swift in Sources */,
 				BE98ABCF37AE4A6CA0CD7FEE /* ReportPDFSharing.swift in Sources */,
@@ -1630,14 +1652,19 @@
 				E612A9BD362149A996A6D8A0 /* ItemDraftCard.swift in Sources */,
 				D98670FB4B844C34A26042A5 /* BudgetProgressDisplay.swift in Sources */,
 				8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */,
+				1D0C1949763A227C51215BDB /* MediaGalleryPresentationCalculations.swift in Sources */,
 				PIN00003000000000000B001 /* PinnedImageCalculations.swift in Sources */,
+				B09A71902C2C04AEB401F2A4 /* PinnedImageGeometry.swift in Sources */,
 				7EA0238CE609443FB0E24364 /* ActionMenuCalculations.swift in Sources */,
 				274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */,
 				BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */,
+				6ACAC3F0C19E8192F92264E7 /* ImageGalleryPresentation.swift in Sources */,
 				ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */,
+				CF6827574E7BEA0A2DC51876 /* LegacyGalleryImageLoading.swift in Sources */,
 				PDFV0001000000000000B001 /* PDFViewerSheet.swift in Sources */,
 				PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */,
 				PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */,
+				B10E2E95A17C01092E62BA84 /* PinnedImagePresentation.swift in Sources */,
 				PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */,
 				1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */,
 				A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */,
@@ -1688,6 +1715,7 @@
 				03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */,
 				3A4C5D6E7F8091A2B3C4D5E7 /* ControlAction.swift in Sources */,
 				WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */,
+				C4A700010000000000000001 /* MediaCapturePresentation.swift in Sources */,
 				WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */,
 				WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */,
 				WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */,

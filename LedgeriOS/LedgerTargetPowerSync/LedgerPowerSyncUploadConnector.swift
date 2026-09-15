@@ -263,12 +263,33 @@ public protocol SpaceChecklistRevisionCommandApplying: Sendable {
 
 /// Resolved command transports only. This does not grant workspace access or
 /// choose an authentication provider; the lifecycle owns admission and drainage.
-struct LedgerPowerSyncCommandAppliers: Sendable {
+public struct LedgerPowerSyncCommandAppliers: Sendable {
     let clientCreation: any ClientCreationCommandApplying
-    var projectCreation: (any ProjectCreationCommandApplying)? = nil
-    var projectArchive: (any ProjectArchiveCommandApplying)? = nil
-    var clientArchive: (any ClientArchiveCommandApplying)? = nil
-    var spaceChecklistRevision: (any SpaceChecklistRevisionCommandApplying)? = nil
+    var projectCreation: (any ProjectCreationCommandApplying)?
+    var projectArchive: (any ProjectArchiveCommandApplying)?
+    var clientArchive: (any ClientArchiveCommandApplying)?
+    var spaceChecklistRevision: (any SpaceChecklistRevisionCommandApplying)?
+    var categoryManagement: (any CategoryManagementCommandApplying)?
+    var inventorySale: (any InventorySaleCommandApplying)?
+    var expenseCreation: (any CreateExpenseCommandApplying)?
+
+    public init(clientCreation: any ClientCreationCommandApplying,
+                projectCreation: (any ProjectCreationCommandApplying)? = nil,
+                projectArchive: (any ProjectArchiveCommandApplying)? = nil,
+                clientArchive: (any ClientArchiveCommandApplying)? = nil,
+                spaceChecklistRevision: (any SpaceChecklistRevisionCommandApplying)? = nil,
+                categoryManagement: (any CategoryManagementCommandApplying)? = nil,
+                inventorySale: (any InventorySaleCommandApplying)? = nil,
+                expenseCreation: (any CreateExpenseCommandApplying)? = nil) {
+        self.clientCreation = clientCreation
+        self.projectCreation = projectCreation
+        self.projectArchive = projectArchive
+        self.clientArchive = clientArchive
+        self.spaceChecklistRevision = spaceChecklistRevision
+        self.categoryManagement = categoryManagement
+        self.inventorySale = inventorySale
+        self.expenseCreation = expenseCreation
+    }
 }
 
 final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @unchecked Sendable {
@@ -283,6 +304,11 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let spaceChecklistRevisionApplier:
         (any SpaceChecklistRevisionCommandApplying)?
     private let now: @Sendable () -> Date
+    private let categoryManagementApplier: (any CategoryManagementCommandApplying)?
+    private let inventorySaleApplier: (any InventorySaleCommandApplying)?
+    private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
+    private let verifiedExpenseReceipts: @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID>
+    private let workspaceUpload: (@Sendable () async throws -> Void)?
 
     init(
         accessFence: LedgerWorkspaceAccessFence,
@@ -293,6 +319,11 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         clientArchiveApplier: (any ClientArchiveCommandApplying)? = nil,
         spaceChecklistRevisionApplier:
             (any SpaceChecklistRevisionCommandApplying)? = nil,
+        categoryManagementApplier: (any CategoryManagementCommandApplying)? = nil,
+        inventorySaleApplier: (any InventorySaleCommandApplying)? = nil,
+        expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
+        verifiedExpenseReceipts: @escaping @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID> = { _ in [] },
+        workspaceUpload: (@Sendable () async throws -> Void)? = nil,
         now: @Sendable @escaping () -> Date = Date.init
     ) {
         self.credentialProvider = credentialProvider
@@ -302,6 +333,11 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.projectArchiveApplier = projectArchiveApplier
         self.clientArchiveApplier = clientArchiveApplier
         self.spaceChecklistRevisionApplier = spaceChecklistRevisionApplier
+        self.categoryManagementApplier = categoryManagementApplier
+        self.inventorySaleApplier = inventorySaleApplier
+        self.expenseCreationApplier = expenseCreationApplier
+        self.verifiedExpenseReceipts = verifiedExpenseReceipts
+        self.workspaceUpload = workspaceUpload
         self.now = now
     }
 
@@ -321,12 +357,32 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
 
     public func uploadData(database: any PowerSyncDatabaseProtocol) async throws {
         try requireAccess()
+        // SDK scheduling must enter the same owned, fenced upload used by
+        // explicit delivery. The inner connector has no override, so it executes
+        // the single command implementation below against the owned database.
+        if let workspaceUpload { return try await workspaceUpload() }
         guard let transaction = try await database.getNextCrudTransaction() else { return }
         try requireAccess()
         guard transaction.crud.count == 1, let entry = transaction.crud.first else {
             throw LedgerPowerSyncUploadFailure.invalidTransactionShape
         }
         switch entry.table {
+        case LedgerPowerSyncTable.expenseCommands:
+            guard let expenseCreationApplier else { throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table) }
+            try await ExpenseCreationUpload.apply(entry, database: database, accessFence: accessFence,
+                applier: expenseCreationApplier, verifiedReceipts: verifiedExpenseReceipts)
+        case LedgerPowerSyncTable.inventorySaleCommands:
+            guard let inventorySaleApplier else {
+                throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
+            }
+            try await InventorySaleUpload.apply(entry, database: database,
+                accessFence: accessFence, applier: inventorySaleApplier)
+        case LedgerPowerSyncTable.categoryCommands:
+            guard let categoryManagementApplier else {
+                throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
+            }
+            try await CategoryManagementUpload.apply(entry, database: database,
+                accessFence: accessFence, applier: categoryManagementApplier)
         case LedgerPowerSyncTable.clientCommands:
             let request = try Self.clientCreationRequest(from: transaction.crud)
             let result = try await clientCreationApplier.apply(request)

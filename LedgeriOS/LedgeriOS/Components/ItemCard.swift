@@ -1,16 +1,13 @@
 import SwiftUI
 
-struct ItemCard: View {
-    let item: Item
-
-    // External context (varies by caller)
-    var priceLabel: String?
-    var budgetCategoryName: String?
-    var locationLabel: String?
-    var projectName: String?
-    var indexLabel: String?
-    var statusOverride: String?
-    var stackSkuAndSource: Bool = true
+/// Original Item card layout with backend-dependent lookups supplied by its owner.
+struct ItemCardPresentation<Thumbnail: View>: View {
+    let id: String?
+    let displayName: String
+    let metadata: [String]
+    let thumbnail: Thumbnail
+    var badges: [CardBadge] = []
+    var bookmarked = false
 
     // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
@@ -34,49 +31,6 @@ struct ItemCard: View {
     // Warning
     var warningMessage: String?
 
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(AccountContext.self) private var accountContext
-
-    private var resolvedInvoiceStatus: InvoiceStatus? {
-        guard let id = item.id else { return nil }
-        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "invoice-status") {
-            accountContext.invoiceStatus(forItemId: id)
-        }
-    }
-
-    private var badges: [CardBadge] {
-        ItemCardCalculations.badgeItems(
-            statusLabel: statusOverride ?? item.status?.displayLabel,
-            budgetCategoryName: budgetCategoryName,
-            indexLabel: indexLabel,
-            // Tight on iPhone — only show invoice badge in regular width.
-            invoiceStatus: horizontalSizeClass == .regular ? resolvedInvoiceStatus : nil
-        )
-    }
-
-    private var resolvedSpaceName: String? {
-        guard let spaceId = item.spaceId else { return nil }
-        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "space-name") {
-            accountContext.spaceName(for: spaceId)
-        }
-    }
-
-    private var metadata: [String] {
-        ItemCardCalculations.metadataLines(
-            name: item.name,
-            sku: item.sku,
-            // Show the immediate source ("Inventory" for items sold from inventory)
-            // with a fallback to the original vendor for legacy items written
-            // before `currentSource` existed.
-            sourceLabel: item.currentSource ?? item.source,
-            locationLabel: locationLabel,
-            priceLabel: priceLabel,
-            projectName: projectName,
-            spaceName: resolvedSpaceName,
-            stackSkuAndSource: stackSkuAndSource
-        )
-    }
-
     var body: some View {
         let base = Card(
             padding: 0,
@@ -86,19 +40,19 @@ struct ItemCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 CardHeader(
                     isSelected: isSelected,
-                    selectionLabel: item.displayName,
+                    selectionLabel: displayName,
                     badges: badges,
-                    bookmarked: item.bookmark == true,
+                    bookmarked: bookmarked,
                     onBookmarkPress: onBookmarkPress,
                     warningMessage: warningMessage,
-                    menuTitle: item.displayName,
+                    menuTitle: displayName,
                     menuItems: menuItems
                 )
                 contentArea
             }
         }
         .contentShape(Rectangle())
-        .findEntity(id: item.id)
+        .findEntity(id: id)
         .findMatchHighlight()
 
         if let onPress {
@@ -113,7 +67,7 @@ struct ItemCard: View {
     private var contentArea: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
-                FindableText(item.displayName)
+                FindableText(displayName)
                     .font(Typography.h3)
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(3)
@@ -129,7 +83,7 @@ struct ItemCard: View {
             }
 
             HStack(alignment: .top, spacing: Spacing.md) {
-                thumbnailView
+                thumbnail
 
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(metadata.enumerated()), id: \.offset) { index, line in
@@ -187,32 +141,14 @@ struct ItemCard: View {
         .padding(Spacing.lg)
     }
 
-    // MARK: - Thumbnail
+}
 
-    @ViewBuilder
-    private var thumbnailView: some View {
-        if let primaryImage = ItemCardCalculations.primaryImage(from: item.images) {
-            FirebaseImage(url: primaryImage.url, thumbnailUrl: primaryImage.thumbnailUrlSm, contentMode: .fill) {
-                ProgressView()
-                    .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
-            }
-            .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
-            .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
-            )
-        } else {
-            placeholderView(icon: "photo")
-        }
-    }
-
-    private func placeholderView(icon: String) -> some View {
+struct ItemCardPlaceholder: View {
+    var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .fill(BrandColors.surfaceTertiary)
-            Image(systemName: icon)
+            Image(systemName: "photo")
                 .font(.system(size: 24))
                 .foregroundStyle(BrandColors.textTertiary)
         }
@@ -221,6 +157,71 @@ struct ItemCard: View {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
         )
+    }
+}
+
+#if canImport(FirebaseFirestore)
+/// Existing app binding. All lookups and image loading retain their old owners.
+struct ItemCard: View {
+    let item: Item
+    var priceLabel: String?
+    var budgetCategoryName: String?
+    var locationLabel: String?
+    var projectName: String?
+    var indexLabel: String?
+    var statusOverride: String?
+    var stackSkuAndSource: Bool = true
+    var isSelected: Binding<Bool>?
+    var accent: Bool = false
+    var onBookmarkPress: (() -> Void)?
+    var isMarkedInPhoto: Bool = false
+    var photoMatchActionTitle: String?
+    var isPhotoMatchTarget: Bool = false
+    var onPhotoMatchPress: (() -> Void)?
+    var onPress: (() -> Void)?
+    var menuItems: [ActionMenuItem] = []
+    var warningMessage: String?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AccountContext.self) private var accountContext
+
+    private var resolvedInvoiceStatus: InvoiceStatus? {
+        guard let id = item.id else { return nil }
+        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "invoice-status") {
+            accountContext.invoiceStatus(forItemId: id)
+        }
+    }
+    private var resolvedSpaceName: String? {
+        guard let spaceId = item.spaceId else { return nil }
+        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "space-name") {
+            accountContext.spaceName(for: spaceId)
+        }
+    }
+    var body: some View {
+        ItemCardPresentation(id: item.id, displayName: item.displayName,
+            metadata: ItemCardCalculations.metadataLines(name: item.name, sku: item.sku,
+                sourceLabel: item.currentSource ?? item.source, locationLabel: locationLabel,
+                priceLabel: priceLabel, projectName: projectName, spaceName: resolvedSpaceName,
+                stackSkuAndSource: stackSkuAndSource), thumbnail: thumbnail,
+            badges: ItemCardCalculations.badgeItems(statusLabel: statusOverride ?? item.status?.displayLabel,
+                budgetCategoryName: budgetCategoryName, indexLabel: indexLabel,
+                invoiceStatus: horizontalSizeClass == .regular ? resolvedInvoiceStatus : nil),
+            bookmarked: item.bookmark == true, isSelected: isSelected, accent: accent,
+            onBookmarkPress: onBookmarkPress, isMarkedInPhoto: isMarkedInPhoto,
+            photoMatchActionTitle: photoMatchActionTitle, isPhotoMatchTarget: isPhotoMatchTarget,
+            onPhotoMatchPress: onPhotoMatchPress, onPress: onPress, menuItems: menuItems,
+            warningMessage: warningMessage)
+    }
+    @ViewBuilder private var thumbnail: some View {
+        if let primaryImage = ItemCardCalculations.primaryImage(from: item.images) {
+            FirebaseImage(url: primaryImage.url, thumbnailUrl: primaryImage.thumbnailUrlSm, contentMode: .fill) {
+                ProgressView().frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
+            }
+            .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+            .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+            .overlay(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+        } else { ItemCardPlaceholder() }
     }
 }
 
@@ -297,3 +298,4 @@ struct ItemCard: View {
     )
     .padding(Spacing.screenPadding)
 }
+#endif

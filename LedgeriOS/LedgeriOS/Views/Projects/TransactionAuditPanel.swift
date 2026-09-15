@@ -1,5 +1,6 @@
 import SwiftUI
 
+#if canImport(FirebaseFirestore)
 /// Audit panel for transaction completeness.
 /// Reads stored audit data from the Cloud Function — no client-side computation.
 /// Status is shown via the "Needs Review" badge on the CollapsibleSection header.
@@ -26,92 +27,80 @@ struct TransactionAuditPanel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            progressSection
-            detailBreakdown
-
-            if !itemsMissingPrice.isEmpty {
-                missingPriceListSection
-            }
-        }
+        TransactionAuditPanelPresentation(progressPercentage: min(completenessRatio * 100, 100),
+            isComplete: isComplete, itemCount: itemsCount, statusLabel: remainingLabel,
+            details: details, missingPriceTitle: usesProjectPrice ? "Missing Project Price" : "Missing Purchase Price",
+            missingPriceSummary: "\(itemsMissingPrice.count) items missing \(usesProjectPrice ? "project" : "purchase") price",
+            missingItems: itemsMissingPrice, itemName: { $0.displayName }, itemSKU: { $0.sku })
     }
-
-    // MARK: - Progress Bar
-
-    private var progressSection: some View {
-        VStack(spacing: Spacing.xs) {
-            ProgressBar(
-                percentage: min(completenessRatio * 100, 100),
-                fillColor: statusBarColor,
-                height: 8
-            )
-
-            HStack {
-                Text("\(itemsCount) items")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                Spacer()
-
-                Text(remainingLabel)
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-        }
-    }
-
-    // MARK: - Detail Breakdown
 
     private var hasLineageBreakdown: Bool {
         (audit.returnedItemsCount ?? 0) > 0 || (audit.soldItemsCount ?? 0) > 0
     }
 
-    private var detailBreakdown: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            detailLine(
-                label: hasExplicitSubtotal ? "Subtotal (pre-tax)" : "Estimated subtotal (pre-tax)",
-                value: CurrencyFormatting.formatCentsWithDecimals(resolvedSubtotalCents)
-            )
-
-            if hasLineageBreakdown {
-                detailLine(
-                    label: "Linked items",
-                    value: CurrencyFormatting.formatCentsWithDecimals(audit.linkedItemsSumCents ?? 0)
-                )
-
-                if let returnedCount = audit.returnedItemsCount, returnedCount > 0 {
-                    detailLine(
-                        label: "Returned items (\(returnedCount))",
-                        value: CurrencyFormatting.formatCentsWithDecimals(audit.returnedItemsSumCents ?? 0)
-                    )
-                }
-
-                if let soldCount = audit.soldItemsCount, soldCount > 0 {
-                    detailLine(
-                        label: "Sold items (\(soldCount))",
-                        value: CurrencyFormatting.formatCentsWithDecimals(audit.soldItemsSumCents ?? 0)
-                    )
-                }
-            }
-
-            detailLine(
-                label: hasLineageBreakdown ? "Total (pre-tax)" : "Associated items total (pre-tax)",
-                value: CurrencyFormatting.formatCentsWithDecimals(itemsSumCents)
-            )
-
-            let missingCount = itemsMissingPrice.count
-            if missingCount > 0 {
-                Text("\(missingCount) items missing \(usesProjectPrice ? "project" : "purchase") price")
-                    .font(Typography.caption)
-                    .foregroundStyle(StatusColors.inProgressText)
-            }
+    private var details: [String] {
+        func line(_ name: String, _ cents: Int) -> String {
+            "\(name): \(CurrencyFormatting.formatCentsWithDecimals(cents))"
         }
+        var rows = [line(hasExplicitSubtotal ? "Subtotal (pre-tax)" : "Estimated subtotal (pre-tax)", resolvedSubtotalCents)]
+        if hasLineageBreakdown {
+            rows.append(line("Linked items", audit.linkedItemsSumCents ?? 0))
+            if let count = audit.returnedItemsCount, count > 0 { rows.append(line("Returned items (\(count))", audit.returnedItemsSumCents ?? 0)) }
+            if let count = audit.soldItemsCount, count > 0 { rows.append(line("Sold items (\(count))", audit.soldItemsSumCents ?? 0)) }
+        }
+        rows.append(line(hasLineageBreakdown ? "Total (pre-tax)" : "Associated items total (pre-tax)", itemsSumCents))
+        return rows
     }
 
-    private func detailLine(label: String, value: String) -> some View {
-        Text("\(label): \(value)")
-            .font(Typography.caption)
-            .foregroundStyle(BrandColors.textSecondary)
+    private var remainingLabel: String {
+        if varianceCents <= 0 {
+            return "\(CurrencyFormatting.formatCentsWithDecimals(-varianceCents)) remaining"
+        } else {
+            return "Over by \(CurrencyFormatting.formatCentsWithDecimals(varianceCents))"
+        }
+    }
+}
+#endif
+
+/// Original panel layout with provider-independent inputs. Neither this view nor
+/// its progress bar decides whether receipt accounting is complete.
+struct TransactionAuditPanelPresentation<MissingItem: Identifiable>: View {
+    let progressPercentage: Double?
+    let isComplete: Bool
+    let itemCount: Int
+    let statusLabel: String
+    let details: [String]
+    let missingPriceTitle: String
+    let missingPriceSummary: String
+    let missingItems: [MissingItem]
+    let itemName: (MissingItem) -> String
+    let itemSKU: (MissingItem) -> String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            VStack(spacing: Spacing.xs) {
+                if let progressPercentage {
+                    ProgressBar(percentage: progressPercentage,
+                        fillColor: isComplete ? StatusColors.metBarComplete : StatusColors.inProgressBar, height: 8)
+                }
+                HStack {
+                    Text("\(itemCount) items")
+                    Spacer()
+                    Text(statusLabel).accessibilityIdentifier("transaction-audit-status")
+                }
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+            }
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                ForEach(Array(details.enumerated()), id: \.offset) { _, text in
+                    Text(text).font(Typography.caption).foregroundStyle(BrandColors.textSecondary)
+                }
+                if !missingItems.isEmpty {
+                    Text(missingPriceSummary).font(Typography.caption).foregroundStyle(StatusColors.inProgressText)
+                }
+            }
+            if !missingItems.isEmpty { missingPriceListSection }
+        }
     }
 
     // MARK: - Missing Price List
@@ -121,7 +110,7 @@ struct TransactionAuditPanel: View {
             CardDivider()
                 .padding(.vertical, Spacing.sm)
 
-            Text(usesProjectPrice ? "Missing Project Price" : "Missing Purchase Price")
+            Text(missingPriceTitle)
                 .font(Typography.small.weight(.medium))
                 .foregroundStyle(BrandColors.textPrimary)
 
@@ -136,15 +125,15 @@ struct TransactionAuditPanel: View {
             .foregroundStyle(BrandColors.textSecondary)
 
             // Item rows
-            ForEach(itemsMissingPrice) { item in
+            ForEach(missingItems) { item in
                 HStack {
-                    Text(item.displayName)
+                    Text(itemName(item))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text(item.sku ?? "—")
+                    Text(itemSKU(item) ?? "—")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                         .frame(width: 80, alignment: .leading)
@@ -153,17 +142,4 @@ struct TransactionAuditPanel: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private var remainingLabel: String {
-        if varianceCents <= 0 {
-            return "\(CurrencyFormatting.formatCentsWithDecimals(-varianceCents)) remaining"
-        } else {
-            return "Over by \(CurrencyFormatting.formatCentsWithDecimals(varianceCents))"
-        }
-    }
-
-    private var statusBarColor: Color {
-        isComplete ? StatusColors.metBarComplete : StatusColors.inProgressBar
-    }
 }

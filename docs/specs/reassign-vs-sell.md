@@ -31,6 +31,25 @@ basis and one eligible source destination for the selected Items. Return to
 Inventory and vendor return remain separate intents, as do physical movement,
 vendor cash, pending client credit and client cash refund.
 
+For Inventory Items, Sell and Return-to-source eligibility are independent, not
+an either/or presentation enum. Current proven project-origin acquisition permits
+both **Return to Project** (source-locked) and **Sell** (ordinary destination
+picker, including another Project). Ordinary inventory and returned
+inventory-origin Items are Sell-only. For bulk selections, a common proven source
+may enable Return with each Item's immutable basis; mixed source/origin never
+guesses a shared Return and must not suppress an otherwise eligible Sell.
+The canonical lifecycle's Kristen → Inventory → Mason regression applies to
+both single and bulk action routing. No menu or picker creates legacy synthetic
+Purchase/Return Transactions.
+
+The same independent eligibility applies to MCP/API entry points, not just UI
+menus. A new-sale command must not reject a project-origin Inventory Item merely
+because Return is available, or because evidence needed only for Return is
+missing. Both entry points use the same canonical command validation. Include
+Kristen → Inventory → Mason and mixed-origin/source-project batches through MCP
+in regression coverage, preserving frozen history and creating a new Item charge
+occurrence rather than a synthetic Purchase.
+
 Preserve review of the chosen destination and applicable price/category before
 acceptance. Use canonical Furnishings/Additional Requests and origin-aware pricing,
 not source movement-Transaction category inheritance or current-price fallback.

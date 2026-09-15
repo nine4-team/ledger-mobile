@@ -7,7 +7,8 @@ enum ProjectSetupStagingRuntimeAdapter {
             watchClients: { runtime.watchClients() },
             watchBudgetCategories: { runtime.watchBudgetCategories() },
             create: { command in try await runtime.createProject(command) },
-            watchOperation: { runtime.watchProjectCreationOperation($0) }
+            watchOperation: { runtime.watchProjectCreationOperation($0) },
+            categoryManagement: CategoryManagementRuntimeAdapter.adapt(runtime)
         )
     }
 }

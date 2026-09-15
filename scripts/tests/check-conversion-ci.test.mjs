@@ -160,6 +160,11 @@ test("actual aggregate shell rejects each unsuccessful dependency result", () =>
 });
 
 test("native workers remain independent, same-commit and retain separate failure evidence", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace(
+      "-parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-",
+      "-parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO");
+  }, /iOS UI must preserve/);
   for (const platform of ["macos", "ios"]) {
     expectFailure(value => {
       value.workflow = value.workflow.replace(`name: native-ui-failure-${platform}-`, "name: native-ui-failure-");
@@ -182,8 +187,17 @@ test("native workers remain independent, same-commit and retain separate failure
     }, /read-only diff guard/);
   }
   for (const original of ["-parallel-testing-enabled NO", "-default-test-execution-time-allowance 300", "          bash scripts/test-local-vendor-pdf-parser.sh"]) {
-    expectFailure(value => { value.workflow = value.workflow.replace(original, ""); }, /iOS UI must preserve|target gate/);
+    expectFailure(value => {
+      const start = value.workflow.indexOf(original.includes("bash") ? "  native-macos:" : "  native-ios:");
+      value.workflow = value.workflow.slice(0, start) + value.workflow.slice(start).replace(original, "");
+    }, /iOS UI must preserve|target gate/);
   }
+});
+
+test("reused export unit tests run independently of UI selection", () => {
+  expectFailure(value => {
+    value.workflow = value.workflow.replace("-only-testing:LedgerTargetSharedLogicTests", "-only-testing:OtherTests");
+  }, /shared export unit/);
 });
 
 test("report parity cannot silently lose its same-commit fixture", () => {
@@ -198,7 +212,7 @@ test("report parity cannot silently lose its same-commit fixture", () => {
 test("repository conversion CI retains the required product and implementation gates", () => {
   const { packageJson, workflow } = inputs();
   assert.deepEqual(validateConversionCI(packageJson, workflow), {
-    conversionCommands: 7,
+    conversionCommands: 8,
     packageGates: 15,
     legacyScripts: 15,
     jobs: 5,

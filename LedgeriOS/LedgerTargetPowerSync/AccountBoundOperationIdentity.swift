@@ -8,6 +8,9 @@ enum AccountBoundOperationFamily: String, Sendable {
     case projectArchive = "project-archive"
     case clientArchive = "client-archive"
     case spaceChecklistRevision = "space-checklist-revision"
+    case categoryManagement = "category-management"
+    case inventorySale = "inventory-sale"
+    case expenseCreation = "expense-create"
 }
 
 enum AccountBoundOperationIdentity {

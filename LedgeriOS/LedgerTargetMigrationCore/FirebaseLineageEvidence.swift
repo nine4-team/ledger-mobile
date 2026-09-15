@@ -79,7 +79,7 @@ public enum FirebaseLineageEvidenceReader {
 
         let accountID = string(
             "accountId",
-            required: true,
+            required: false,
             allowEmpty: false,
             documentID: true,
             fields: fields,
@@ -141,7 +141,7 @@ public enum FirebaseLineageEvidenceReader {
             "createdBy",
             required: false,
             allowEmpty: false,
-            documentID: true,
+            documentID: false,
             fields: fields,
             issues: &issues
         )

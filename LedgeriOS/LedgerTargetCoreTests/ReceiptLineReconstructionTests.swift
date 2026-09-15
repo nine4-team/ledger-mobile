@@ -4,6 +4,84 @@ import Testing
 
 @Suite("Non-Item Receipt Line Reconstruction Contracts")
 struct ReceiptLineReconstructionTests {
+    @Test("Linked and historical Items contribute once, including after leaving the current Transaction")
+    func membershipReconstructionPreservesHistoryWithoutDoubleCounting() throws {
+        let fixture = try Self.fixture()
+        let a = try ItemID(validating: "a")
+        let b = try ItemID(validating: "b")
+        let unrelated = try ItemID(validating: "unrelated")
+        let prices = [a: Self.money(6_000, fixture.currency), b: Self.money(4_000, fixture.currency),
+            unrelated: Self.money(999_999, fixture.currency)]
+        let lines = try [Self.line("tax", "Sales Tax", 1_000, .increase, currency: fixture.currency),
+                         Self.line("discount", "Discount", 500, .decrease, currency: fixture.currency)]
+        for classification in [fixture.purchase, fixture.returnRecord] {
+            func calculate(_ linked: [ItemID], _ history: [ItemID]) throws -> TransactionReceiptReconstruction {
+                try .init(accountId: fixture.accountId, transactionId: TransactionID(validating: "membership-audit"),
+                    classification: classification, recordedFinalAmount: Self.money(10_500, fixture.currency),
+                    linkedItemIds: linked, historicalItemIds: history, itemAmounts: prices,
+                    isItemMembershipComplete: true, lines: lines)
+            }
+            let before = try calculate([a, a], [a, b, b])
+            let after = try calculate([], [b, a, a])
+            #expect(before == after)
+            #expect(before.physicalItemTotal == Self.money(10_000, fixture.currency))
+            #expect(before.auditStatus(for: .itemized) == .balanced)
+            #expect(before.auditStatus(for: .general) == .notApplicable)
+            #expect(before.auditStatus(for: .fee) == .notApplicable)
+            #expect(try OperationContractCodec.decode(TransactionReceiptReconstruction.self,
+                from: OperationContractCodec.encode(after)) == before)
+        }
+    }
+
+    @Test("Incomplete membership and missing prices are unknown, never a balanced zero")
+    func membershipReconstructionRejectsMissingAndInvalidEvidence() throws {
+        let fixture = try Self.fixture()
+        let a = try ItemID(validating: "a")
+        let b = try ItemID(validating: "b")
+        func calculate(_ ids: [ItemID], _ prices: [ItemID: Money], complete: Bool = true) throws -> TransactionReceiptReconstruction {
+            try .init(accountId: fixture.accountId, transactionId: TransactionID(validating: "missing-audit"),
+                classification: fixture.purchase, recordedFinalAmount: Self.money(0, fixture.currency),
+                linkedItemIds: ids, historicalItemIds: [], itemAmounts: prices,
+                isItemMembershipComplete: complete, lines: [])
+        }
+        #expect(throws: ReceiptLineReconstructionFailure.incompleteItemEvidence) { try calculate([], [:], complete: false) }
+        #expect(throws: ReceiptLineReconstructionFailure.incompleteItemEvidence) { try calculate([a], [:]) }
+        #expect(throws: ReceiptLineReconstructionFailure.invalidItemAmount) {
+            try calculate([a], [a: Self.money(-1, fixture.currency)])
+        }
+        #expect(throws: ReceiptLineReconstructionFailure.currencyMismatch) {
+            try calculate([a], [a: Self.money(0, CurrencyCode(validating: "EUR"))])
+        }
+        #expect(throws: ReceiptLineReconstructionFailure.arithmeticOverflow) {
+            try calculate([a, b], [a: Self.money(.max, fixture.currency), b: Self.money(1, fixture.currency)])
+        }
+        #expect(try calculate([a], [a: Self.money(0, fixture.currency)]).auditStatus(for: .itemized) == .balanced)
+        #expect(try calculate([], [:]).auditStatus(for: .itemized) == .balanced)
+    }
+
+    @Test("Receipt audit uses exact cents for both Purchases and Returns")
+    func auditNeverHidesOneCentResidual() throws {
+        let fixture = try Self.fixture()
+        for classification in [fixture.purchase, fixture.returnRecord] {
+            for residual: Int64 in [-1, 0, 1, 29_00] {
+                let evidence = try TransactionReceiptReconstruction(
+                    accountId: fixture.accountId,
+                    transactionId: TransactionID(validating: "audit-exact"),
+                    classification: classification,
+                    recordedFinalAmount: Self.money(10_000, fixture.currency),
+                    physicalItemTotal: Self.money(9_000 + residual, fixture.currency),
+                    lines: [Self.line("tax", "Tax", 1_000, .increase, currency: fixture.currency)])
+                #expect(evidence.auditStatus(for: .itemized) == (residual == 0 ? .balanced : .mismatch))
+                #expect(evidence.auditStatus(for: .general) == .notApplicable)
+                #expect(evidence.auditStatus(for: .fee) == .notApplicable)
+                let restored = try OperationContractCodec.decode(TransactionReceiptReconstruction.self,
+                    from: OperationContractCodec.encode(evidence))
+                #expect(restored.auditStatus(for: .itemized) == evidence.auditStatus(for: .itemized))
+                #expect(restored.variance == Self.money(residual, fixture.currency))
+            }
+        }
+    }
+
     @Test("Purchase and Return evidence reconstruct exact ordered receipt totals")
     func exactPurchaseAndReturnReconstruction() throws {
         let fixture = try Self.fixture()

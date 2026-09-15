@@ -28,6 +28,42 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         await model.stop()
     }
 
+    @Test("Transactions use the represented Project route, including archive history, and withdraw with Project access",
+          arguments: [DirectoryLifecycleState.active, .archived], [true, false])
+    func transactionNavigation(lifecycle: DirectoryLifecycleState, hasReader: Bool) async throws {
+        let source = RouteSource<ProjectListSnapshot>()
+        let model = Self.model()
+        model.openTransactionsTab()
+        #expect(model.route == .stopped)
+        await model.start(runtime: Self.runtime(
+            projectDirectory: source, projectDetail: RouteSource(),
+            spaceDirectory: RouteSource(), spaceDetail: RouteSource(),
+            projectRequests: RouteRecorder(), listRequests: RouteRecorder(), detailRequests: RouteRecorder(),
+            transactionBrowser: hasReader ? RouteTransactionBrowser() : nil))
+        model.openTransactionsTab()
+        #expect(model.route == .projectDirectory)
+        let project = try Self.project("transaction-project", lifecycle: lifecycle)
+        source.yield(try Self.projectList([project]))
+        if lifecycle == .archived { model.setDirectorySegment(.archived) }
+        await Self.wait { model.directoryProjects.count == 1 }
+        await model.selectProject(projectId: project.id)
+        model.openTransactionsTab()
+        if hasReader {
+            #expect(model.route == .projectTransactions(project.id))
+            #expect(model.representedProjectId == project.id && model.representedProjectIsAvailable)
+            await model.back()
+            #expect(model.route == .projectWorkspace(project.id))
+            model.openTransactionsTab()
+            source.yield(try Self.projectList([]))
+            await Self.wait { model.route == .projectWorkspace(project.id) && !model.representedProjectIsAvailable }
+            model.openTransactionsTab()
+        }
+        #expect(model.route == .projectWorkspace(project.id))
+        await model.stop()
+        model.openTransactionsTab()
+        #expect(model.route == .stopped && model.transactionBrowser == nil)
+    }
+
     @Test("Inventory section preferences cannot bleed between Accounts")
     func inventoryPreferences() throws {
         let suite = "ledger-inventory-test-\(UUID().uuidString)"
@@ -531,7 +567,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         spaceDetail: RouteSource<SpaceCoreDetailsUpdate>,
         projectRequests: RouteRecorder<ProjectCoreDetailsRequest>,
         listRequests: RouteRecorder<SpaceListRequest>,
-        detailRequests: RouteRecorder<SpaceCoreDetailsRequest>
+        detailRequests: RouteRecorder<SpaceCoreDetailsRequest>,
+        transactionBrowser: (any TransactionBrowsing)? = nil
     ) -> ActiveWorkspaceToSpaceChecklistStagingRuntime {
         ActiveWorkspaceToSpaceChecklistStagingRuntime(
             projectBrowsing: ProjectBrowsingStagingRuntime(
@@ -551,7 +588,8 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
                     return spaceDetail.stream
                 }
             ),
-            checklistToggle: toggleRuntime()
+            checklistToggle: toggleRuntime(),
+            transactionBrowser: transactionBrowser
         )
     }
 
@@ -761,6 +799,12 @@ private final class RouteCounter: @unchecked Sendable {
     private var count = 0
     var value: Int { lock.withLock { count } }
     func increment() { lock.withLock { count += 1 } }
+}
+
+private final class RouteTransactionBrowser: TransactionBrowsing, Sendable {
+    func watchTransactions(scope: TransactionScope) -> AsyncThrowingStream<TransactionBrowserUpdate, Error> {
+        AsyncThrowingStream { $0.finish() }
+    }
 }
 
 private actor RouteChecklistAcceptance {

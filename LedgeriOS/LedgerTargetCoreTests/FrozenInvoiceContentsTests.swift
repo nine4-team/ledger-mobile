@@ -42,6 +42,30 @@ struct FrozenInvoiceContentsTests {
         #expect(try JSONDecoder().decode(FrozenInvoiceContents.self, from: JSONEncoder().encode(snapshot)) == snapshot)
     }
 
+    @Test("Report sections preserve sealed mixed lines and order without changing signs")
+    func reportSections() throws {
+        let lines = try [Self.line("a", cents: 100), Self.line("b", cents: -20),
+            Self.line("c", cents: 0, source: .expense(expenseId: ExpenseID(validating: "zero"))),
+            Self.line("d", cents: 30, source: .feeInstallment(installmentId: FeeInstallmentID(validating: "fee"))),
+            Self.line("e", cents: -10)]
+        let sections = try Self.snapshot(lines, total: 100).reportSections()
+        #expect(sections.charges == [lines[0], lines[2], lines[3]])
+        #expect(sections.credits == [lines[1], lines[4]])
+        #expect(sections.chargesMinorUnits == 130)
+        #expect(sections.creditsMinorUnits == 30)
+    }
+
+    @Test("Report section totals stay exact beyond Int64 while the sealed net fits")
+    func reportSectionLargeTotals() throws {
+        let lines = try [Self.line("a", cents: Int64.max), Self.line("b", cents: -Int64.max),
+            Self.line("c", cents: 9_007_199_254_740_993)]
+        let invoice = try Self.snapshot(lines, total: 9_007_199_254_740_993)
+        let sections = invoice.reportSections()
+        #expect(sections.chargesMinorUnits == Decimal(Int64.max) + Decimal(9_007_199_254_740_993 as Int64))
+        #expect(sections.creditsMinorUnits == Decimal(Int64.max))
+        #expect(sections.chargesMinorUnits - sections.creditsMinorUnits == Decimal(invoice.total.minorUnits))
+    }
+
     @Test("One physical Item can have distinct billed cycles without rewriting earlier history")
     func resaleHistory() throws {
         let original = try Self.snapshot([Self.line("first-sale", cents: 100)], total: 100)

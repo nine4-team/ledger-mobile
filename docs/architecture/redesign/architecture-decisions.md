@@ -4,6 +4,132 @@ Status: active
 Architecture version: 0.2
 Last reviewed: 2026-09-07
 
+### Synced membership removal confirmation (2026-09-14)
+
+The bootstrap stream excludes inactive memberships. Normal startup now observes
+the selected membership and requests the existing authenticated access check when
+that row changes, rather than waiting only for credential refresh or another
+request. Missing rows never directly mean removal: only the existing exact server
+denial locks the workspace and preserves encrypted pending work. Initial sync,
+offline errors and expired credentials do not erase admission. The observation
+uses the runtime's existing cancellation/drain ownership, without a timer or new
+UI. Focused observation tests and live removal integration are required; reduced
+financial scope remains governed by O-058, not decided here.
+`/tmp/ledger-membership-observation-test.log` passed the real local-database
+observation test0.206s: initial absence, insertion and removal all request server
+confirmation, while an unavailable confirmation preserves runtime access; close
+drains the watcher. Existing exact-denial/late-read/scope checks passed4tests0.808s
+in `/tmp/ledger-normal-binding-removal-native.log`. Live server→sync→UI removal
+remains unverified.
+Live attempt `/tmp/ledger-normal-live-removal-exact-ui.log` reached the real
+membership update. PowerSync reported the removal and closed the client stream,
+but the locked-screen assertion failed after60s; the wrapper restored the exact
+disposable membership to active. The normal workspace gate covered only navigation
+root content, leaving pushed destinations outside it. The gate now surrounds the
+whole navigation stack, with the runtime task outside the conditional contents.
+This correction requires a new live test identity: do not clear a learned-removal
+lock merely to reuse the old fixture's retained local work.
+Live gate verification now passes: `/tmp/ledger-normal-removal-focused-ui.log`,
+one actual normal-entry iPhone test33.663s. It opens a real downloaded Transaction,
+then the external wrapper changes only the disposable local membership to removed.
+The app shows Account Access Removed and no longer exposes the detail Back button
+or Transaction row; the wrapper restores membership to active afterward. The
+original device's removal-locked data is untouched. Search/PDF regression remains
+a separate test, not a prerequisite for this access-removal scenario. This proves
+local server→PowerSync→normal app removal, not hosted or pending-work recovery.
+`/tmp/ledger-normal-removal-reopen-ui.log` then passed11.618s: normal process
+relaunch with the same native keychain still denies the retained workspace after
+Account selection, despite restored server membership. No local state was cleared.
+This adds real device-keychain restart evidence, not crash-during-write proof.
+
+### Normal workspace media transport binding (2026-09-14)
+
+Normal sync startup previously wired uploads but left the shared media downloader
+nil. It now binds the existing private downloader to the runtime's exact workspace
+identity before starting sync. Item images, Transaction attachments and Account
+logos reuse this transport; viewers are unchanged. Each network fetch revalidates
+membership and the original signed-in identity; existing readers still recheck
+local reference authority before admitting bytes. Actor-owned binding avoids
+mutable shared-resource access and is released on close. Cached offline reads
+remain available without online authorization. Verification:
+`/tmp/ledger-normal-media-binding.log` passed five native scope/transport tests
+in0.144s, including foreign Account/principal and closed-runtime binding denial.
+`/tmp/ledger-normal-media-wired-ui.log` passed the actual local app-entry test
+in27.336s: restored sign-in, selected Account, opened Inventory Transactions,
+searched for the uploaded Transaction and rendered its one-page PDF. This uses
+the normal runtime, not fixture-entry injection. Real-project data, Back/reentry,
+withdrawal and on-screen pending→published continuity remain separate gaps.
+Follow-up `/tmp/ledger-normal-media-reentry-ui.log`: normal-entry PDF→Back→same
+Transaction→PDF passed37.772s; existing fixture-backed navigation/access-removal
+regression passed27.716s. Both tests executed, zero failures. The latter proves
+UI withdrawal behavior, not live server-driven revocation of this normal session.
+
+### Workspace navigation lifetime correction (2026-09-14)
+
+The normal-entry receipt test reached an authorized synced Transaction but its
+destination became unavailable (`/tmp/ledger-normal-local-receipt-keyboard-ui.log`).
+The workspace runtime task was attached to content inside the navigation stack;
+navigating away could cancel it and close the database. The selected Account's
+workspace now owns the navigation stack and attaches runtime lifetime to that
+container, outside its pushed content. Cancellation/removal cleanup remains the
+existing implementation. Diagnostics sit outside that stack in a disclosure;
+Transaction, gallery and PDF components are unchanged. Verify the same normal
+entry plus Back/reentry and withdrawal before claiming this integration complete.
+The Account/sign-in branches retain their own scrolling container outside the
+selected workspace. Offline picker→sign-in→downloaded picker→selection→restart
+passed19.067s in `/tmp/ledger-account-entry-scroll-reviewed-ui.log`. The first
+attempt failed on a test helper's workspace-only scroll assumption; both entry
+scroll calls now name their actual container. No original form was rebuilt.
+
+### Normal-entry local development configuration (2026-09-14)
+
+Debug builds compiled with `LEDGER_TARGET_LOCAL` use the already-running local
+services and a build-supplied `LedgerLocalPublishableKey` Info.plist value. The
+environment is fixed at compilation, not selected at launch. This uses normal sign-in and workspace
+composition, not a fixture entry or synthetic admission. Both endpoints are fixed
+to loopback (Supabase54321, PowerSync5590); the key must be publishable. Release
+builds ignore the override. Local manifests use targetLocal and a distinct local
+storage/keychain namespace, leaving hosted sessions and data untouched. Hosted
+configuration remains the default and still requires a PowerSync instance.
+The initial runtime-selected draft was corrected after the environment checker
+flagged its conflict with compile-time isolation; no sign-in/data mutation occurred.
+This enables actual-app QA without creating paid resources or another UI. Build
+and real sign-in/sync validation remain required; no production readiness claim.
+Follow-up evidence: `/tmp/ledger-normal-local-plist-build.log` built successfully.
+Normal simulator entry visibly reported targetLocal/targetLocalDevelopment, signed
+in through Auth with the existing disposable upload-test user, and selected
+Synthetic Primary Account; encrypted workspace opened. Full workspace sync and
+publication UI inspection remain unverified. Build arguments are
+`LEDGER_TARGET_COMPILATION_CONDITIONS=LEDGER_TARGET_LOCAL` and
+`LEDGER_LOCAL_PUBLISHABLE_KEY=<local publishable key>`; the generated
+`LedgerTargetInfo.plist` carries the build substitution, never a secret key.
+Unsigned Release simulator compilation with the local flag also passed
+(`/tmp/ledger-local-flag-release-build.log`); packaged version remains0.1.0/build1.
+The local branch additionally requires DEBUG, so the flag alone cannot enable it
+in Release. This is compilation/configuration evidence, not a release UI test.
+
+### Attachment publication presentation follow-up (2026-09-14; A-036)
+
+The Transaction viewer previously dismissed on any section revision change,
+including successful publication of its own pending attachment. Presentation may
+now rebind that pending selection to a newer, complete catalog only when scope,
+Transaction, section, relationship ID and immutable byte identity match. It uses
+the new reference for reads; strict `retains` checks for in-flight exports are
+unchanged. Removal, replacement and unrelated revision changes still dismiss.
+This adapts the existing viewer, not its UI or storage architecture. Focused
+tests: `TransactionAttachmentCaptureAdmissionTests.publicationPresentation`;
+The pinned panel also follows this transition and resolves PDFs from the current
+catalog, rather than its original pending reference. A selected image must retain
+its exact byte identity. Actual upload-to-open-viewer/pin continuity remains
+unverified; the existing pin/withdrawal UI scenario is regression coverage only.
+Verification: native identity/admission6 tests passed0.024s
+(`/tmp/ledger-publication-identity-reviewed.log`); existing iPhone pin/withdrawal
+passed39.384s (`/tmp/ledger-publication-pin-regression.log`). Actual local runtime
+publication passed23.914s (`/tmp/ledger-publication-live.log`): two images and a
+PDF each emitted pending evidence and a matching published replacement, denied
+reuse of old export authority, and retained exact bytes after encrypted offline
+restart. Test fixture `4b1e9766-5791-48a9-a7b1-15a541807e64` remains local.
+
 This register records cross-cutting technical decisions. Product behavior remains
 in the redesign product decision log. A proposed decision is not an
 implementation authorization.
@@ -22,17 +148,1064 @@ progress tracker; use the existing unified checklist for implementation status.
 - **superseded** — retained for history but no longer the target; and
 - **rejected** — considered and deliberately not chosen.
 
+## A-036 — Canonical Vendor Transaction Receipt Evidence
+
+Status: accepted technical direction for D-016/D-030; implementation remains
+partial. This does not approve unresolved product policy, hosted deployment or
+production migration. A-003/A-004 retain their spike gates.
+
+Capture metadata: extend the existing local capture/receipt, not its queue or
+vault, with original media type, filename and Transaction section. Bind these
+fields into the receipt fingerprint and pending/concurrent replay identity.
+Restart must retain Receipts vs Other Images rather than infer it from bytes.
+Media type syntax reuses downloaded-object validation; byte inspection and parent
+write permission remain required at the capture/upload boundary. Filenames are
+display metadata, never canonical storage locations. Metadata-bearing receipts
+use v2 fingerprint material; absent metadata retains exact v1 material for
+existing durable work. Older receipts remain readable but cannot be silently
+assigned an upload type or section. TX-CAPTURE-METADATA owns focused proof. This
+does not complete capture UI, parent linkage, upload, verification or deletion.
+No extra queue, Firebase adapter or replacement UI is introduced.
+
+Capture preparation uses the original bytes, not picker MIME/filename guesses.
+`AttachmentCapturePreparation` shares `OriginalImageSource` with the existing
+Item thumbnail generator, identifies actual image MIME through ImageIO, and
+checks PDF parsing only when the calling flow permits PDFs. It retains original
+bytes and filenames without re-encoding, decryption or extension-based routing.
+The byte ceiling matches the existing 64MiB authenticated media transport.
+Original thumbnail validation/recipe behavior remains covered by its existing
+tests. Preparation alone is not acceptance or parent write authority.
+TX-CAPTURE-BYTES records scoped tests.
+
+`captureTransactionAttachment` now binds the capture to the runtime's principal,
+Account/environment and current Transaction scope, preserving member media edits
+under O-065 and current financial visibility, not adding an Owner/Admin gate.
+It serializes local acceptance per Transaction section, counts synced and queued
+attachment IDs once against the existing 50-file limit, refuses unknown section
+coverage and incompatible identity reuse, and rechecks the parent immediately
+before the existing queue commit. The durable receipt carries the parent/section
+intent; no additional queue is introduced. Capacity reads use an indexed,
+metadata-only parent query, not bulk byte decryption or orphan reconciliation.
+Denied pre-commit attempts may leave protected orphan bytes but never a success
+receipt; existing reconciliation owns those bytes. Learned removal after a
+commit still follows existing lock/retention behavior rather than erasing work.
+Other Images capture remains image-only as in its original add callbacks; this
+does not remove PDF viewing/pinning for existing references. TX-CAPTURE-ADMISSION
+owns local proof. Visible pending-reference integration, structured publication,
+server authorization/verification and upload remain unfinished; none is inferred
+from these local tests.
+
+Pending Transaction attachments now project the existing durable capture receipt
+into the same catalog and gallery, rather than a second media store/renderer.
+The initial reference ID is the capture's stable attachment ID, not a vault
+receipt fingerprint; publication must retain it. Receipt-backed references load
+original encrypted bytes locally even when network downloads are disabled.
+Current parent/financial visibility is checked before and after pending metadata
+or bytes are read. One owned watch combines structured changes with metadata-only
+queue changes; cancellation drains both. The existing thumbnail upload overlay
+is shared for the queued clock indicator, which does not claim uploading or
+completion. Matching authoritative object evidence suppresses duplicate pending
+references; unknown legacy metadata remains incomplete, not invented.
+TX-CAPTURE-PENDING records local projection/watch/restart/revocation proof.
+New captures persist explicit section-local order and first-attachment primary
+intent in the existing fingerprinted receipt metadata. The runtime allocates
+these under its existing section capture lock; exact retries reuse the stored
+intent. Older receipts remain compatible without invented historical order.
+The local runtime test covers equal-time/reverse-ID two-file capture, watch,
+original-byte reads, encrypted restart and exact retry. Publication must preserve
+that intent; existing revision guards may still close the viewer on publication.
+Do not expose a supposedly complete capture flow or retire queue records merely
+because a Storage call succeeds. Structured result/readback and byte preservation
+must govern publication/drainage.
+
+Capture controls are extracted from `MediaGallerySection` into the shared
+`MediaCapturePresentation` modifier, used by both that original wrapper and the
+target Transaction section. CameraCapture, DocumentPicker, PhotosPicker, Files
+and drop handling are reused, not recreated. AttachmentKind moves beside the
+existing backend-independent AttachmentUpload value to avoid importing Firestore
+models into the target. Target callbacks prepare original bytes off-main, then
+use the existing authorized capture runtime; no second queue or picker screen.
+Shared file reads now run off-main while security-scoped access remains held;
+missing photo data/document failures are surfaced and picker cancellation is
+silent. This improves error delivery, not permission or upload authority.
+TX-CAPTURE-PENDING retains non-Photos/multiselect picker interaction, Camera overlap
+and capacity feedback, publication/upload and viewer-continuity gaps. Both
+platform builds alone do not verify those behaviors.
+
+The explicit DEBUG capture UI route now seeds only synthetic downloaded records
+in a UUID-scoped local workspace and opens the live encrypted runtime. It never
+starts sync or contacts a configured endpoint; production environments refuse it.
+The UI uses the normal Transaction section and system picker, with queue and
+original-byte reopening performed by real providers. Seeded service completeness
+is not live replication evidence. Existing in-memory browser fixtures remain
+rendering-only proof. TX-CAPTURE-PENDING owns the focused picker/restart result.
+
+D-031 Transaction Copy/Paste shares these same boundaries: the existing gallery
+accepts an optional Copy callback, using AuthorizedMediaExport's revalidation
+and original-byte loading before the shared Clipboard helper writes the image
+representation (never a URL/token/path). The existing Add menu gains an opt-in
+Paste Image action; clipboard inspection happens only after that explicit action.
+Paste uses normal preparation, scope/capacity admission and the durable receipt,
+creating a new relationship rather than reusing the source ID. The clipboard is
+outside Ledger's protected store, as D-031 allows; learned removal cannot recall
+an already authorized external copy. TX-COPY-PASTE records actual clipboard and
+encrypted-restart proof plus remaining platform/denial gaps. Other media owners
+must opt into their own authorized callbacks; Transaction proof does not certify
+Item/Space integration.
+
+Shared capture now holds one busy state for the entire selected batch, retaining
+the first failure through later successes. CameraCapture's optional asynchronous
+acceptance callback keeps shutter/Done disabled through processing and save,
+increments its count only after acceptance, and displays failures/capacity.
+The original synchronous callback remains available for existing creation-form
+callers; the shared gallery supplies asynchronous acceptance. The existing camera
+delegate delivers success/failure exactly once, including failed processing,
+instead of leaving acceptance waiting forever. Camera JPEG preparation, preview,
+zoom and focus UI are unchanged. macOS no longer offers the nonfunctional
+UIKit-only Camera action. Simulator picker checks cannot prove hardware-camera
+failure/capture behavior; physical-device verification remains required.
+
+Server upload admission now reserves one immutable, Account-scoped Storage path
+before any byte transfer. The reservation is owned by the authenticated capturing
+principal, binds the Transaction section, checksum, byte count, media type,
+filename and local ordering intent, and is readable only while that principal
+retains current access to the parent Transaction. Exact retries return the same
+path; conflicting identity reuse, hidden parents, removed members, foreign
+Accounts, unsupported media and already-full sections are refused. The path is
+content-addressed and does not expose a user filename. Authenticated clients may
+insert a new object only at their exact visible reservation and may read it only
+for authenticated verification; the reservation grants no overwrite, delete,
+list or signed-URL route. No service-role key or broad service grant is added.
+
+The reservation itself is admission, not publication. A reservation does not consume a final
+50-file slot, prove that bytes arrived, make a gallery reference visible, or
+permit the local durable receipt to drain. Final publication must independently
+verify the stored bytes, MIME, size and SHA-256, atomically recheck capacity,
+retain the capture's stable reference ID/order/primary intent, and write a durable
+applied or rejected result. Concurrent offline reservations may therefore be
+rejected at publication if other attachments fill the section first. The
+reservation and unverified object are deliberately absent from PowerSync and the
+published attachment catalog.
+
+The upload implementation now uses resumable TUS transfers with six-MiB chunks
+and the server's HEAD offset for recovery. The authenticated Edge verifier hashes
+the stored bytes and invokes a service-only publication command. Publication
+rechecks access and capacity, preserves the attachment identity, and records one
+immutable result. Missing bytes remain retryable; concurrent verifiers re-read
+the result after acquiring the upload lock. The native client checks publication
+before retransferring after an ambiguous response. No local capture is deleted
+by these transport methods. The existing encrypted local queue now persists TUS
+checkpoints and publication results in one nullable local-only column (older
+receipts need no rewrite). Terminal results cannot regress to pending; applied
+and rejected captures retain their bytes and pending-work protection but no
+longer block selection of the next upload. Native restart tests cover both
+outcomes, exact retries, byte retention and offset bounds: 33 focused provider
+and transport tests pass in `/tmp/ledger-attachment-queue-progress-tests.log`
+(the real-service test is separately gated).
+
+The runtime now connects publication to these saved checkpoints and rechecks
+local Account/Transaction access between network phases. An interrupted runner
+resumes its persisted checkpoint; terminal results do not invoke transport again.
+After publication, the runtime reads the synced-only attachment catalog. Only a
+complete matching section at or beyond the publication revision, with the exact
+reference/content identity and no pending overlay, permits queue drainage.
+Drainage atomically moves the original protected-file evidence into the existing
+download cache and removes the pending row; it does not delete, copy or re-encrypt
+the bytes. Cache evidence therefore also accepts its original Transaction-bound
+encryption identity; live parent authorization is still required by every reader.
+The cache/queue transition survives encrypted restart without an orphan. Focused
+provider/transport/runtime checks pass36 tests in2.466s
+(`/tmp/ledger-attachment-runner-drain-tests.log`), including stale/incomplete/
+pending/wrong-section refusal and learned-removal denial before credentials.
+The authenticated session now starts one runtime-owned attachment worker. Queue
+and synced-reference changes plus SDK status updates wake a coalesced work pass;
+a30-second retry wake handles transient failures even when SDK status is quiet.
+Per-file cooldown prevents event bursts from hammering failed/incomplete uploads.
+Only queue metadata is scanned; originals are decrypted when actually attempted.
+Rejected publications retain protected pending work but are not retried; applied
+ones await synced-only readback without repeating transport. One failed file
+does not block later files. Close/removal cancels the worker and awaits all its
+database/status observers before closing protected resources. The existing
+session-bound credential provider prevents retargeting uploads after sign-in
+changes. Native37 tests pass in2.480s
+(`/tmp/ledger-attachment-scheduler-consumers.log`), including duplicate-start
+coalescing, both-file attempts after a failure, retained receipts, close drainage,
+and foreign-workspace denial. Initial scheduler compilation failures (missing
+watch parameters/throw propagation) remain in the earlier scheduler logs.
+Actual-service-to-runtime proof now passes in22.412s
+(`/tmp/ledger-attachment-runtime-live.log`): real Supabase sign-in/authorization,
+SDK-managed replication, two new captures after worker startup, automatic TUS and
+independent publication, matching synced references, drained pending work, and
+exact cached originals after an offline runtime restart. No rows or completeness
+markers were injected into the native databases, and offline reads disallowed
+network download. The script independently confirms two published references and
+results. Local fixture76b49be4-401f-41a5-b28a-a8d2eafc54dc remains; the verifier
+process was stopped afterward. A deterministic runtime clock test now proves
+no retry at29seconds and both files retried at30seconds, followed by automatic
+worker startup/close; six admission scenarios pass in1.069s
+(`/tmp/ledger-attachment-retry-timing.log`). The delayed-sync provider test now
+reopens after publication but before reference arrival: no reupload, no drainage
+for empty/stale/incomplete/pending/wrong-section evidence, original bytes remain
+readable, and later exact evidence transfers ownership into restart-safe cache
+(`/tmp/ledger-attachment-delayed-sync.log`, PASS0.084s). This complements the real
+SDK arrival test above; no extra live-service outage harness was introduced.
+Rejected uploads now project their persisted outcome separately
+from attachment identity: the existing overlay shows a warning, retains viewer
+access, and explains how to export the saved original. Native33 checks pass
+(`/tmp/ledger-attachment-rejection-native.log`), including restart, parent/section
+isolation and unchanged viewer identity. The existing iPhone capture test passes
+in45.893s (`/tmp/ledger-attachment-rejection-ui-reviewed.log`): synthetic rejection,
+restart, original rendering, Copy/Paste recovery and byte equality. Its first
+failure was the recovery-text selector; the captured screenshot proved the text
+visible, and only the selector changed. No viewer/pinning rebuild, automatic
+resubmission of a terminal rejection or deletion/discard behavior was introduced.
+
+Photos investigation isolated a target-only navigation deviation. The identical
+Transaction attachment section passes denial/OK/retry at the root (22.410s,
+`/tmp/ledger-photos-without-detail-sheet.log`) but fails inside a plain sheet with
+no browser/session involved (27.146s, `/tmp/ledger-photos-isolated-sheet.log`).
+Thus browser invalidation is not necessary to reproduce the presentation failure.
+The original Project and Inventory tabs navigate to Transaction details; the
+target had introduced a sheet beneath the gallery. Restore navigation, retaining
+the same detail controls, gallery and Photos callback. The destination owns a
+live read using the existing TransactionBrowserSession while the list is offscreen;
+it does not freeze the selected row or bypass withdrawal checks. This reuses the
+existing list projection rather than introducing another read model; a dedicated
+single-row watch can replace it later if measured cost warrants one.
+
+The normal-route Photos denial/retry and save tests now pass (26.715s/18.705s,
+`/tmp/ledger-photos-original-navigation.log`). The actual staging root and its
+workspace fixture now supply the NavigationStack missing from their ScrollView
+composition. Existing Project/Inventory entry, detail/back/reentry and Account
+removal pass25.768s (`/tmp/ledger-workspace-navigation-root.log`); attachment
+viewer/share/withdrawal passes33.908s (`/tmp/ledger-navigation-attachment-consumers-back.log`).
+Initial consumer failures exposed obsolete Done-button selectors and then the
+missing workspace stack; tests now use the observed native Back control on iOS.
+Item pinning/withdrawal and Transaction-to-Item physical history additionally
+pass39.631s/21.809s (`/tmp/ledger-navigation-item-consumers.log`). The unsigned Mac
+build passes (`/tmp/ledger-navigation-macos-build.log`); this is not Mac UI proof.
+Mac navigation and other shared-root consumers still need verification.
+The browser preserves selection intent across detail navigation, but clears its
+rows and restores only IDs present in the next authorized, filtered result.
+Invalidation clears that intent. Existing session tests plus one focused case
+pass7tests0.019s (`/tmp/ledger-navigation-selection-native.log`); actual workspace
+selection/detail/back/reentry/removal passes27.899s
+(`/tmp/ledger-navigation-selection-scoped.log`). Earlier selection UI failures
+also reproduced with the change removed: the unscoped amount selector hit the
+bulk total instead of the card. The test now binds amount label plus card ID.
+Temporary isolation fixtures were removed; the
+normal-route tests remain. Earlier scene/feedback/alert-selector/cover/wrapper
+experiments did not solve this bug and are not retained. No gallery/pinning
+replacement, delay workaround, database change or Photos API change was needed.
+
+Migration20260914173810 now replays successfully in the CLI's fresh shadow
+database and its local history is reconciled:19 journal statements match the
+reviewed migration, including the publication function and no drops
+(`/tmp/ledger-attachment-publication-journal{,-verified}.log`). The installed
+publisher body matches the file exactly; trigger authority/search paths remain
+as specified. The default comparison failed on a local-only replication role;
+the alternative migra comparison completed
+(`/tmp/ledger-attachment-publication-replay-migra.{log,sql}`). Its output still
+contains pre-existing local-role grants, re-emitted read/admission functions and
+private-trigger visibility/drop artifacts, not an empty schema diff. None of
+that generated SQL was applied. No current schema/data reset or UI/retention
+policy change was made.
+
+Deferred attachment consistency checks run after the publishing function returns,
+so they require their own database authority. The attachment consistency validator
+and three routing triggers now use definer authority with an empty search path
+and no API execution grants; the parent-propagation trigger remains an invoker.
+These triggers derive or validate canonical relationships and grant no client
+mutation capability. Exact privilege tests and local security advisors cover the
+boundary. The shared SQL suite passes 1,380 assertions
+(`/tmp/ledger-attachment-resume-sql-final.log`); six native transport/publication
+tests pass (`/tmp/ledger-attachment-resume-native-final.log`, with the separate
+real-service test skipped there). Later queue/runtime and fresh-replay evidence
+is recorded above; these earlier scoped checks alone are not whole-app readiness.
+
+The real local service test also passes missing-file verification before upload,
+interruption after six MiB, HEAD resume, exact-byte readback, concurrent verifier
+calls returning the same result, one published reference, and allowed/denied
+member access (`/tmp/ledger-attachment-resume-local-service-final.log`). Its first
+run exposed Storage's HTTP 400 / `NoSuchKey` / payload 404 convention; only that
+specific response now means incomplete upload. Other failures remain errors.
+
+Local pgTAP evidence is
+`/tmp/ledger-upload-intent.ymUIoG/tests-final-39.log` (39 assertions), including
+retry identity, cross-Account and financial visibility, membership removal,
+capacity, Storage-path and privilege checks. The shared database suite passed
+1,351 assertions before the four final guard assertions were added; those four
+then passed in the focused file. Security advisors reported no issues. Migration
+`20260914171121_transaction_attachment_upload_reservation.sql` is a reviewed,
+upload-only replacement for an unsafe generated diff that was never executed;
+the corrected local journal contains 16 statements and no table drop. Fresh
+replay produced the known environment/private-function diff artifacts plus
+function formatting, not an empty diff. Actual TUS transfer, server byte
+verification, publication, result readback and queue drainage remain unfinished.
+
+Transaction reference pinning (D-032): extract the original `PinnedImageLayout`
+into `PinnedImageLayoutPresentation`, retaining its compact split, resize gesture
+and regular-width sidebar. The original wrapper still supplies its original
+panel; the target supplies authorized attachments to existing
+`PinnedImagePresentation`, `DownloadedMediaPhotoView` and PDFKit. The original
+PDF viewer's loading/error/rendering content is shared as
+`PDFDocumentPresentation`. No second pin layout, zoom renderer, pin database or
+Firebase adapter is introduced. The target's view-local selection watches the
+original Transaction/catalog revision and closes when that evidence or access is
+withdrawn. Image paging stays within that section's images; PDFs retain PDFKit
+navigation and do not expose photo matching. Physical bytes remain the existing
+protected reader's responsibility.
+
+Initial pin UI failures in `/tmp/ledger-transaction-pin-ios.log` and
+`/tmp/ledger-transaction-pin-ios-stable-watch.log` did not establish missing pins:
+the latter hierarchy shows the panel, Unpin, image counter and detail. Its outer
+identifier propagated over child control identifiers. Explicit accessibility
+containment corrects that boundary; the earlier Group-to-ZStack change alone did
+not solve it. Focused image/PDF pin and existing viewer verification is in
+`/tmp/ledger-transaction-pin-pdf-ios.log`: existing viewer/share passed33.857s;
+pin failed a helper targeting the workspace instead of the Transaction scroll.
+The scoped/fixed-drag attempts retain resize assertion failures. Their hierarchy
+showed image growth and 33→38 percent; the accessibility container's safe-area
+height was offset by navigation-title collapse. The test now measures rendered
+image growth, not that container. `/tmp/ledger-transaction-pin-pdf-ios-rendered.log`
+passed the full pin scenario39.330s: image paging/resize, gallery reopen, PDF pin,
+unpin and image-access withdrawal. `/tmp/ledger-transaction-pin-macos-build.log`
+built successfully; this is not Mac UI proof. This integration does not complete annotations, mutations, actual-runtime
+viewer delivery or the overall Transaction workflow.
+
+Photos-save investigation remains unresolved. `/tmp/ledger-transaction-photos-ios.log`
+passes existing Item denial/save but fails Transaction viewer continuity after
+the expected notice. Native byte readback in `-byte-readback.log` matches the
+synthetic Transaction PNG exactly (68 bytes), on disposable Simulator
+00856A66-A552-41B8-B9DC-1E6EA1E6DBFC, never the user's library.
+
+Outer/viewer alert relocation, a bound host, gallery feedback input, explicit
+body reads, reference feedback, active-scene gating, local message transfer and
+a separate presented export owner did NOT fix the new tests. All experimental
+production changes and diagnostics were removed, restoring the pre-investigation
+presentation/export code; only the new tests and evidence remain. Do not treat
+those hypotheses as accepted architecture. Failed logs use the same prefix with
+suffixes `-ios-{viewer-alert,bound-feedback,shared-alert-booted,observed-feedback,
+feedback-owner,active-feedback,local-feedback,presented-owner-clean}.log`.
+`-ios-shared-alert.log` instead failed runner UIKit bootstrap before tests;
+`-ios-presented-owner.log` failed actor-isolation compilation, not UI behavior.
+
+`-lifetime.log` proves live generation, selected image and nonnil export notice;
+`-presentation.log` and `-alert-stack.log` show UIKit creating, hiding/re-showing
+and dismissing a PlatformAlertController. Gating on active scene changed that
+timing but did not prevent dismissal. The exact dismissal cause is not established.
+Next diagnosis must trace dismissal/acknowledgment directly (including whether
+automation triggers it), not repeat speculative structural patches or broad UI
+runs.
+
+The subsequent direct callback trace (`/tmp/ledger-transaction-photos-dismiss-callbacks.log`)
+shows the full-screen selection cleared before the explicit OK action; neither
+the gallery's isPresented setter nor section disappearance fired. Transaction Save
+now calls the existing gallery's async `onSaveImage` contract, with the same
+authorized operation extracted as `performExport`; errors return to the existing
+gallery feedback instead of a new alert channel. This is reuse of the original
+contract, not a new viewer. `-ios-existing-save-callback.log` still fails notice
+visibility, so this is NOT a verified fix. All tracing code was removed. Manual
+reproduction is gated on desktop unlock, requested non-blockingly; no password
+or production access is needed.
+
+D-031 Mac file save is now wired in both Item and Transaction galleries. Extract
+`PDFDownloadHelper.selectDestination` from its existing NSSavePanel; the original
+PDF wrapper calls the same picker. The target shares the existing native delivery
+lock, suggests a basename with the MIME type's extension, treats cancellation as
+non-error, revalidates after selection and byte loading, and hands original bytes
+to an asynchronous atomic file write. UI stays responsive; completion/busy state
+waits for the write, not just picker dismissal. External copies remain user-owned
+after handoff. No image renderer, new cache, backend permission or PDF importer is
+introduced.
+
+`/tmp/ledger-image-file-save-native.log` passes13tests/2suites0.114s. The existing
+export test now checks5phases with a real temporary destination: before/after
+selection and after-load denial plus cancellation preserve existing file bytes;
+success replaces them with the exact input. This injects the selection step and
+does NOT prove NSSavePanel interaction. Project generation and iOS build passed;
+final Mac build passed (`BUILD SUCCEEDED` in `/tmp/ledger-image-file-save-macos-final.log`). Actual picker,
+overwrite/error feedback and signed/sandboxed release behavior remain unverified.
+The staging project currently declares no app-sandbox entitlements; the original
+app's entitlements are not target proof and were not imported or changed.
+
+The existing `spike_transactions` table previously represented only immutable
+imported client payments. Extend that same Transaction owner for ordinary vendor
+Purchases/Returns in Project or Inventory scope. Keep embedded non-Item receipt
+lines on the Transaction, with exact signed minor-unit evidence and source
+wording/quantity. Do not turn client-payment amounts or project charge prices
+into vendor purchase costs. Authority: `docs/plans/non-item-receipt-lines/design.md`
+and `docs/specs/invoice-centered-project-accounting.md`.
+
+`transaction_receipt_items` retains one relationship per Transaction/physical
+Item, its receipt-basis amount (nullable when unknown), and linked/returned/sold
+membership. This preserves historical receipt contributions without copying
+physical Items or replacing placement/lineage. It is not a second generic history
+system. Future writers and migration must supply authoritative amounts and retain
+these relationships; this read implementation does not infer missing prices.
+
+Transaction Item groups reuse the original `GroupedItemCard` with an injected
+protected thumbnail and share the existing downloaded-Item grouping algorithm.
+Recorded source plus SKU/name identifies presentation groups; current source is
+only a display override. Membership sections remain separate, expansion keeps
+every physical Item ID, and totals use exact receipt-basis amounts (unknown stays
+unknown). The invoker receipt view and native/MCP snapshots expose existing source,
+current Space and image-set count fields. The existing receipt stream also supplies
+the active placement (including Items now elsewhere), its Space and image-set
+marker under the same receipt/category/tenant authorization. No new tables or
+write authority are introduced. Groups select the first Item with image evidence
+without downloading every child's media; its existing protected image reader still
+owns bytes and loading failures. Current Space labels never rewrite receipt costs.
+Client-payment Item detail composition remains incomplete.
+Verification is recorded under TX-GROUP in the unified checklist.
+
+Payment contents use retained Item/payment connection intervals and the existing
+sealed Invoice contents, not `currentItemCategories`. That current-only query
+cannot establish historical paid membership after an Item leaves a Project.
+The full-financial-member connection read policy now includes closed intervals;
+existing physical reports continue filtering current links/placements explicitly.
+Frozen Invoice reads reuse their existing invoker loader and RLS, with the needed
+read columns granted to authenticated callers; no store/write permissions change.
+`FrozenInvoiceStorageRecord` and its unchanged validation tests move from the
+migration module into Core so migration and app reads share exact source, amount,
+category and description decoding. `TransactionPaymentContents` binds that history
+to the exact principal, Account, Project, Client and Purchase, deduplicating only
+display Item IDs, never historical connections or frozen lines. It does not infer
+vendor costs, apportion lump-sum cash or settle O-033.
+
+The existing browser/detail RPC now composes that view. Its scoped PowerSync
+stream includes closed connections and every sealed Invoice line (Item, Expense
+and Fee), not only currently placed Item charges. Overlapping report streams use
+identical full row projections; their current-eligibility filters remain unchanged.
+Frozen amounts/revisions/source JSON travel as text; SQLite keeps its existing
+exact integer source-revision column. The native reader joins these facts in the
+same completed scope snapshot and reuses the Core decoder. MCP requires Node 24
+to validate embedded Int64 JSON from its original numeric token, avoiding a lossy
+JavaScript Number conversion. Native/MCP share a frozen-payment fixture and reject
+scope, source and total mismatches. No new tables, writers or collection policy.
+Actual local HTTP/PowerSync/native encrypted-reopen and removal evidence is under
+TX-PAYMENT-CONTENTS. Current Item metadata is now a separate typed value shared
+by vendor and payment cards. Its supplied membership must exactly match retained
+links/frozen Item lines; missing metadata is not an empty Item list. The same
+stream supplies current Item/Space/image-set metadata even after an Item moves
+elsewhere, under full financial access. It uses existing table projections, not
+another Item/history store. Payment counts use retained membership rather than
+current category attachments. The existing ItemCard/GroupedItemCard and history
+view serve both sources. Frozen descriptions and exact amounts appear in a
+Collected Invoice section using existing detail rows; payment cash is never
+apportioned into invented Item costs. iPhone flow and existing grouping checks
+passed; the new Mac history-navigation check remains unverified after a system
+security-dialog interruption. This does not complete the whole workflow.
+
+Transaction Receipts and Other Images use section-specific current-set markers
+and references (`transaction_attachment_sets` / `transaction_attachment_references`).
+Those facts retain filenames, ordering and primary choice separately from immutable
+byte identity. They reuse `item_image_objects` despite its compatibility name: it
+already stores Account/object/hash/path, not an Item parent. Explicit PDF objects
+now share the existing protected transport and encrypted cache; default image
+callers and Item image-reference constraints remain image-only. This avoids another
+object store, byte queue or PDF-specific vault. No capture, detach, deletion or
+retention policy is decided by this read path.
+
+Transaction RLS controls section/reference reads; only current references expose
+objects and private authenticated Storage GET. The scope-wide Transaction stream
+is configured for the same metadata and exact text revisions/byte counts, but
+initial actual replication failed the pinned service's dynamic-parameter limit.
+Diagnosis found existing physical Item/Space/category joins were also responsible,
+not just the new attachment queries. The running service's own parser (0.40.0,
+now also pinned for local checks) showed 6,555 raw bucket candidates / 1,489 parameter results
+with only 50 additional Items. Rewriting JOIN as IN alone did not solve this.
+
+**Scalability correction:** Reuse the existing Account-member physical read
+authorization directly for Item labels, image-set counts, current placements and
+active/still-used Spaces within the Transaction subscription. These are the same
+explicit columns as `physical_account_items`, not all Account financial data or
+image bytes. Eight separate vendor/payment metadata queries become four. Their
+completed Transaction checkpoint still covers the required metadata, so callers
+do not need to visit the Items tab first or coordinate another readiness flag.
+Tradeoff: the subscription also downloads authorized physical metadata not linked
+to its particular Transactions. It does not download their receipt relationships,
+amounts, Invoice contents or attachment objects without financial authorization.
+This supersedes the earlier receipt-filtered physical-metadata description above.
+
+Project Item-category rows use their existing category/member RLS scope, including
+retained attributions; the local current-category query still joins only active
+placements. This avoids a parameter lookup for every Item merely to obtain its
+category label. Payment-connection queries also remove a redundant placement join:
+the exact composite FK and placement scope CHECK already guarantee that parent.
+Closed payment intervals and frozen Invoice contents remain full-financial-only.
+No schema, grants, monetary facts, Item identity or product policy changes here.
+
+This follows PowerSync's documented [scope-key guidance](https://docs.powersync.com/sync/advanced/reducing-bucket-count#denormalizing-the-scope-key):
+the partition key must exist on the source row; correlated joins and subqueries
+do not change that. Ledger already has the authorized Account key on these rows.
+The test-only service evaluator and existing local integration fixture now measure
+both [service limits](https://docs.powersync.com/sync/streams/bucket-count#limits),
+plus assert that all scaled Item/category/receipt rows remain selected. Earlier
+700-Item and 7,000-Item budget estimates are superseded: the evaluator incorrectly
+deduplicated equal parameter values from different source rows, and then captured
+only selected test Accounts. Actual service storage preserves those source rows.
+The corrected evaluator includes all explicit Sync source tables in the isolated
+local database, retains duplicate parameter values, and separately deduplicates
+bucket IDs. Small native/offline evidence remains valid only for its tested rules.
+Explicit Account indexes, supported IFNULL for nullable Project matching and a
+positive same-row origin CASE reduce needless compiler branch expansion while
+preserving scope/origin checks. Cross-table permission CASE is unsupported and
+was reverted; ordinary/full permission predicates remain intact. Latest rule
+tuning requires actual-service proof as well as parser/raw-SQL checks. No new
+shared native subscription or readiness coordinator has been implemented.
+
+**Derived Space predicate:** `20260914115106_space_sync_current_item_count.sql`
+adds a server-maintained count of current Item placements per Space. The existing
+immutable placement history remains authority; this count only lets all three
+Space streams include active or still-used archived Spaces without enumerating
+every placement during subscription authorization. A locked transactional backfill
+and statement-level invoker triggers maintain exact increments/decrements; sorted
+Space updates avoid inconsistent lock order within a statement. Existing placement
+guards prohibit reopening/reparenting/deletion. Ordinary user roles get no count
+write permission, RLS remains placement-based, and the counter is neither projected
+to native clients nor allowed to bump the user-visible Space revision. Tradeoff:
+one derived column and trigger maintenance instead of per-Item parameter growth.
+The local SQL suite, fresh migration replay, exact function-body review and
+concurrent insert/close checks cover this boundary; exact results belong to
+TX-ATTACHMENTS, not a new progress record.
+
+Default category/allocation queries now resolve authorized Account/category sets
+directly instead of enumerating unrelated category rows before authorization.
+Their selected IDs are checked against actual RLS for full, restricted, foreign
+and removed users. No financial policy changes. The corrected 10-Project/
+7,000-Item simulation fits at 973 parameter rows / 131 unique buckets. Actual
+service download subsequently completed all five checked Item/relationship
+tables in 4.546s; the native offline/reopen/category-replay/removal test also
+passed on these rules. This narrow shape has little headroom: spreading the same
+Items across 100 vendor Transactions preserves row coverage but needs 1,423
+parameter rows / 311 unique buckets, exceeding the 1,000 parameter limit.
+That failure motivated the following routing correction; it is not erased by a
+passing smaller fixture. The Invoice follow-up is recorded below. Do not raise
+limits, omit required offline data, or claim release readiness.
+
+**Scoped Transaction child routing:** `20260914122550_transaction_sync_routing.sql`
+adds derived scope/Project/category fields to the existing receipt Item links,
+attachment section markers and attachment references. Private invoker triggers
+read the exact canonical Transaction under a shared row lock; parent changes
+propagate in the same transaction. Current-reference eligibility derives from the
+exact marker revision, including withdrawal of retained older references. No
+original link, revision, amount, Item identity or attachment history is replaced.
+Locked installation/backfill prevents a partially routed migration. Existing RLS
+still checks canonical parents; no public writer, new permission policy or broader
+financial download scope is introduced. Concurrent conflicting writes may abort
+and need transaction retry; this does not implement an attachment write workflow.
+
+References also carry the four immutable object descriptor values (hash, byte
+count, media type and path) already authorized for that current reference. This
+removes a second per-object lookup without another object store or byte cache.
+The native attachment reader uses those fields to construct the same protected
+object reference; missing/invalid descriptors remain incomplete, not empty or
+downloadable. Item image streams and canonical object/Storage authorization stay
+unchanged. Tradeoff: modest derived data on child rows plus four small maintenance
+functions instead of unbounded Transaction/marker/object parameter enumeration.
+Direct tampering is overwritten from canonical parents; immutable object guards
+ensure descriptors cannot become stale through object edits.
+
+Queries decrease from 19 to 17, and total outputs from 67 queries to 65 with the
+same 29 source tables. With 7,000 Items, 1,000 vendor Transactions and 4,995 current
+attachment descriptors, the corrected source evaluator retains every checked row
+at 535 parameter results / 144 unique buckets, the same budget as the 100-Transaction
+case. SQL1295 and focused native offline/reopen cases pass. The actual service
+completed that heavy download in 23.135s; the native SDK's encrypted reopen,
+category replay and removal check also passed. Separate database connections
+proved both parent-first and child-first lock contention preserve child routing
+and amounts. The following Invoice and byte checks extend this evidence; viewer
+integration remains incomplete. Generated schema-diff drops caused
+by the CLI role's limited visibility are not migration authority: reviewed SQL
+retains existing tables/views/functions and excludes local service grants/roles.
+**Frozen Invoice line routing:** the same 1,000-Invoice test initially required
+1,535 parameter rows / 1,144 buckets. Migration
+`20260914124147_invoice_line_sync_routing.sql` adds only a derived immutable
+`sync_project_id` to frozen lines. It backfills under an exclusive table lock,
+temporarily disabling only the immutable-line trigger inside that transaction,
+and derives new values in the existing parent-locking insert guard. Committed
+headers and lines cannot move or change, so no propagation function is needed.
+The stream replaces its per-Invoice join with that Project field, preserving
+Account, principal and full-financial-access checks. It relies on the existing
+deferred completeness constraint: no unsealed header or incomplete Invoice can
+commit. Thus removing the joined `sealed` predicate does not expose drafts in
+committed replication. It does not introduce Invoice collection functionality.
+The combined 7,000-Item / 1,000-vendor-Transaction / 4,995-attachment /
+1,000-frozen-Invoice fixture retained all required rows and amounts with 514
+parameter rows / 143 buckets; the actual local service completed in 3.583s.
+SQL1298 includes derived-scope and still-enabled immutability tests. Fresh replay,
+installed insert-guard body/invoker/search-path comparison and all55 migration
+versions match. The existing Space performance warning remains; no generated
+environment/function-visibility drops or grants were applied.
+
+The native reader
+reuses Transaction scope, category-overlay, membership and completed-stream checks
+inside the same SQLite read as the attachment catalog. Missing markers or missing
+objects are incomplete, never an empty gallery; retained old revisions cannot
+become current evidence. The existing runtime owns the finite read lease and
+Account-removal fence. The tradeoff is preserving a historical table/cache name
+and reusing the full Transaction read check rather than adding another permission
+implementation. Transaction byte loading now extracts and shares the existing
+Item cache/download sequence, with its own finite runtime lease. Exact section
+revision/reference, current Transaction/category/membership and removal fence are
+checked around cache/network awaits. Revocation during a write may leave protected
+cached bytes but never returns them; cached presence alone grants no access.
+The unchanged real vault verifies hash/length and encrypted restart. Native tests
+inject revision, reference, membership, category, parent-scope and access removal
+at cache-read, download and cache-write boundaries in both Project and Inventory.
+Existing Item original/thumbnail and encrypted-PDF tests pass after extraction.
+No second byte store, transport or viewer was introduced. The live attachment
+watch now owns the existing Transaction subscription and workspace stream task;
+changes to references/markers, Transaction/category/membership and local category
+operations invalidate the catalog. Nil withdraws displayed media; an incomplete
+catalog remains explicitly incomplete. Native Project/Inventory watch tests cover
+reference changes, revision withdrawal, Fee/General access restoration and removal;
+runtime tests cover wrong-Account admission and cancellation before database close.
+
+Presentation reuses `ThumbnailGrid.swift`, `PDFViewerSheet.swift` and
+`ImageGalleryPresentation` by moving their backend-dependent inputs outside the
+original layout. The legacy wrappers remain behind the same compilation boundary
+used by the original card extractions. The existing decoded-image adapter in
+`DownloadedItemImagesView.swift` is shared with Transaction images; no new image
+decoder, gestures, PDF renderer, byte cache or transport. That file's inclusion in
+this workflow covers this extraction, not acceptance of its inherited unfinished
+Item gallery work. `TransactionAttachmentsSection` supplies current references and
+protected bytes and withdraws an open selection on revision/access changes.
+Sharing, saving, pinning and attachment mutation remain incomplete. Focused
+iPhone read integration passed: decoded PDF, existing image gallery, close/reentry,
+Other Images and withdrawal. Native watch/admission tests passed in both scopes.
+The first iPhone run failed test selectors (PDFKit accessibility and counted header
+labels); the corrected test asserts the real decoded PDF page count. macOS builds,
+but its UI runner could not enable automation while the desktop was locked; no
+macOS UI pass is claimed. Existing Item-gallery/browser consumer checks also
+passed on iPhone after the shared extraction (145.837s and25.945s), including the
+Item gallery's original zoom/navigation/pinning/close behavior. Exact runs remain
+in the checklist/state; this is not whole-workflow or hosted readiness.
+MCP attachment reads use an explicit paginated `get_transaction_attachments`
+tool on the existing Transaction reader, rather than embedding all attachments
+in every `get_transaction_detail` response as the earlier resume note proposed.
+This implements the bounded-response/continuation requirements in
+`docs/specs/mcp-interface.md` without a new backend, table or parallel reader.
+The invoker RPC returns only public reference IDs, order, primary status, kind
+and filename; it never returns Storage paths, object credentials or bytes.
+Pages are limited to 100 references and the MCP reader caps decoded responses
+at 2 MiB. Continuation requires the same exact revision; a changed revision
+returns HTTP 409 so callers restart instead of combining different sets.
+Unknown remains distinct from known-empty. Existing Transaction RLS remains
+authority, including current-category visibility and membership removal.
+`PT409`, not `40001`, expresses this product conflict: the latter can trigger
+PostgREST transaction retries, rather than a caller-visible pagination conflict.
+No schema, writer or Sync Stream expansion accompanies this read API.
+
+Verification: `/tmp/ledger-transaction-attachment-page-sql.log` passes 44 files /
+1,316 assertions; `-mcp.log` passes 18 MCP tests, and `-mcp-reviewed.log` passes
+the six attachment tests after malformed-revision hardening. `-types-reviewed.log`
+passes. `-http-access.log` proves actual HTTP metadata, empty sets, stale-revision
+409, hidden/foreign denial, General restoration and same-token removal denial.
+Migration `20260914132953_transaction_attachment_page.sql` replayed successfully
+(`-fresh-schema.log`). Direct catalog comparison confirms its function body,
+invoker/stable/empty-search-path properties and authenticated-only execute ACL.
+The diff re-emits the identical function body plus existing environment/role
+artifacts; it is not an empty schema diff and none of its suggested drops were
+applied. The 56-version local migration journal matches the files. Advisors
+retain only the existing Space policy warning. The initial multi-statement CLI
+query failed before application; the existing local psql fallback succeeded.
+TX-ATTACHMENTS retains actual runtime-to-viewer byte integration, protected
+share/save/pin, capture/upload/detach and retention evidence as unfinished.
+No UI replacement, hosted readiness or complete media workflow is claimed.
+
+**Attachment delivery reuse:** Transaction image Share/Save now calls the same
+native sharing/Photos adapters as Item images. `AuthorizedMediaExport` extracts
+the existing permission → authorized-byte-read → destination sequence; each
+caller validates its live selection before and after awaits. Item API/error names
+remain compatible. PDF sharing uses `ProtectedReportDelivery`/`ReportScratchStore`,
+not a second temporary-file implementation. It verifies the selected bytes' hash
+and count, re-reads current Transaction attachment access after file creation,
+and checks the visible selection immediately before system handoff. Completion,
+not view disappearance or task cancellation, owns scratch cleanup. Pinning and
+actual Photos permission/save UI evidence remain unfinished.
+
+The iPhone integration exposed a pre-existing scratch-store Simulator limitation,
+not a replacement PDF renderer defect. A small native Simulator syscall probe
+isolated it: `F_SETPROTECTIONCLASS` accepts class A on directories but subsequent
+file creation returns EPERM; setting class A on a regular file also returns EPERM
+(`/tmp/ledger-transaction-attachment-scratch-syscalls{-rdwr,}.log`). The speculative
+trusted-parent traversal edit did not fix it and was reverted. Simulator builds
+now exercise real 0700/0600 ownership, authorization and completion cleanup without
+claiming hardware Data Protection. Physical iOS builds still require class A with
+no fallback; device lock/unlock proof remains a release prerequisite. Apple's
+[complete-protection contract](https://developer.apple.com/documentation/foundation/fileprotectiontype/complete)
+requires encrypted files to be inaccessible while locked; a Simulator UI pass
+cannot prove that. Failure values now distinguish protection failures and retain
+operation/errno context without exposing document contents or paths.
+
+Focused final native delivery checks pass 22 tests / five suites in 0.132s
+(`/tmp/ledger-transaction-attachment-delivery-final-native.log`): Item consumer,
+Transaction permission/download withdrawal, PDF stale/denied/changed-byte rejection,
+retention through cancellation/system failure, and scratch ownership/recovery.
+Initial iPhone failures remain in `/tmp/ledger-transaction-attachment-delivery-ios*.log`;
+the first supported-Simulator run also failed because the previous empty test
+scratch root retained that setting. Only that exact empty generated directory
+was removed (no app data or attachments). `-ios-recovered.log` then passed both
+named tests: Transaction PDF/image Share and cancellation/reentry/Other Images/
+withdrawal (33.319s), and existing report Share/Print cancellation (47.383s).
+This proves synthetic Simulator interaction and shared file lifetime, not physical
+Data Protection, actual Photos saving or production/hosted data integration.
+The affected Mac target also builds (`-delivery-macos-build.log`); Mac interaction
+verification remains separate from that build result.
+
+The invoker read RPC returns one authorized snapshot, including current category
+and complete Item membership. Category RLS controls visibility, including archived
+categories and normal Fee-to-General visibility. Audit applicability follows
+current kind; exact Item-plus-line arithmetic remains the existing domain helper.
+No persisted completion flag, tax inference, draft/posting gate or new financial
+write grant is introduced. Native and MCP readers bind the result to the requested
+Account/principal/Transaction. Online snapshot completeness must not be assumed
+for partial PowerSync delivery; local completeness and UI binding remain required.
+
+Imported payment immutability remains intact. An additional Invoice link guard
+rejects vendor Purchases as collection payments. Its currently allowed origin is
+the implemented imported-payment origin; the future collection command must
+explicitly add its own verified payment origin, not reuse `vendor_payment`.
+
+Verification: the local schema passed 1,130 assertions across 37 SQL files,
+including 35 receipt authorization/history assertions
+(`/tmp/ledger-transaction-receipt-sql-policy-reviewed.log`). Real local HTTP/MCP
+read, category visibility change and revocation passed
+(`/tmp/ledger-transaction-receipt-local-http.log`). Advisors found only the existing
+unrelated `spike_spaces` multiple-permissive-policy warning after the Transaction
+policies were merged (`/tmp/ledger-transaction-receipt-advisors-reviewed.log`).
+The `transaction_receipts` download is scoped to one Project or Inventory, not
+one subscription per Transaction or an unconditional whole-Account financial
+download. It includes receipt relationships after sale/return plus the category
+and membership needed to authorize the read. `TransactionReceiptPowerSyncQuery`
+reads those rows and the exact retained stream checkpoint in one transaction,
+using the existing category projection for pending offline type edits. Shared
+checkpoint and subscription-lifetime helpers are reused, with the original report
+entry point retained for compatibility. No parallel completion registry is added.
+The workspace runtime owns finite reads and live watches; removal/cancellation
+uses its existing fencing and drainage. The SDK core-protocol test proves rows
+without checkpoint completion cannot qualify, and completed Project/Inventory
+evidence survives encrypted reopen. Live changes/rejection/unknown price/visibility
+and removal pass with existing category/report consumers (21 tests,
+`/tmp/ledger-transaction-receipt-offline-watch-consumers.log`). Actual checked-in
+stream SQL scope/authorization/history cases pass locally
+(`/tmp/ledger-transaction-receipt-stream-local-http.log`). These do not prove
+hosted replication or UI integration. Initial compiler failures (generic helper
+type inference and mutable non-Sendable capture) remain in
+`/tmp/ledger-transaction-receipt-offline.log`; both were corrected without changing
+the authorization/completeness requirements.
+
+The original `TransactionAuditPanel` layout is extracted into provider-independent
+presentation inputs, retaining its progress/detail/missing-Item structure and
+original ProgressBar. Its source-only wrapper retains the legacy binding but is
+not compiled into the target; this is UI reuse, not a Firebase backend adapter or
+redesigned Firebase implementation. `TransactionReceiptAuditPresentation` supplies
+the D-016 equation with exact Decimal-formatted money, history breakdowns and
+explicit unknown values. General/Fee categories omit the audit panel; rounded bar
+percentages never supply a verdict. Three pure presentation tests pass, including
+one-cent residuals and amounts above Double's exact integer range
+(`/tmp/ledger-transaction-audit-presentation.log`). The exact reused-panel/form
+interaction test passes on Mac (1 test/24.072s) and iPhone (1 test/24.587s):
+`/tmp/ledger-transaction-audit-ui-macos-fixed.log` and
+`/tmp/ledger-transaction-audit-ui-ios-fixed.log`. Both initial runs failed only
+the accessibility text assertion; the test now reads macOS `value` and iOS
+`label`, without an app change. Initial failure logs retain the same names
+without `-fixed`. The DEBUG interaction host is
+component evidence only, not a replacement Transaction screen or proof that the
+target's full Transaction route is complete. The live binding now connects the
+existing runtime receipt watch to this same panel through a view-owned
+`TransactionReceiptAuditSession`, without another cache or subscription owner.
+Scope/principal/Transaction mismatches, incomplete reads, access withdrawal,
+failure and cancellation clear prior financial values. SwiftUI identity includes
+the runtime and full bound scope so switching detail inputs replaces local view
+state. Four session tests pass in 0.008s
+(`/tmp/ledger-transaction-audit-session.log`). The updated component fixture feeds
+the same observing view through a synthetic stream; it does not prove hosted
+replication. Its initial Mac run exposed observation attached to conditional
+`Group` children: hiding General/Fee stopped later Itemized updates. Attaching
+observation to a stable container fixes the real lifecycle issue; the unchanged
+scenario passes Mac 1/21.322s
+(`/tmp/ledger-transaction-audit-live-ui-macos-fixed.log`; failure preserved in
+`/tmp/ledger-transaction-audit-live-ui-macos.log`). The same live-binding scenario
+also passes iPhone 1/24.271s (`/tmp/ledger-transaction-audit-live-ui-ios.log`).
+Actual Transaction routing still requires integration under its existing owner.
+
+Item labels now travel with the authorized receipt snapshot rather than a second
+caller-supplied lookup/dictionary. The RPC joins the permanent physical Item by
+Account and Item ID; names/SKUs are current descriptive data, not frozen receipt
+prices or a new Item/history store. Optional labels retain compatibility with
+older snapshots; missing labels fall back to Item ID without inventing prices.
+The receipt stream adds a fifth query for the existing `spike_items` projection,
+identical to `physical_account_items` so overlapping subscriptions do not supply
+competing partial rows. The native reader joins those downloaded records within
+its existing authorized read transaction and observes Item changes. An initial
+attempt to select joined-table label fields into receipt evidence was rejected
+by the real PowerSync parser (`/tmp/ledger-receipt-labels-stream-parser.log`);
+the corrected existing-table output passes six parser/projection checks
+(`/tmp/ledger-receipt-labels-stream-parser-reviewed.log`). No new local table or
+subscription owner is introduced. Security/index review retains same-account
+joins, existing keyed Item lookup and unchanged invoker/RLS permissions.
+
+Local evidence: 32 native tests/six suites pass in 3.833s, including encrypted
+reopen, live rename/SKU changes, cross-account label refusal and unchanged
+financial reconstruction (`/tmp/ledger-receipt-labels-native-reviewed.log`).
+Six MCP tests and typecheck pass (`/tmp/ledger-receipt-labels-mcp.log`,
+`/tmp/ledger-receipt-labels-mcp-types.log`). The same reused-panel scenario passes
+Mac 1/21.980s and iPhone 1/24.084s (`/tmp/ledger-receipt-labels-ui-macos.log`,
+`/tmp/ledger-receipt-labels-ui-ios.log`). At checkpoint501, revised SQL/HTTP
+assertions were blocked by Docker's mount failure; earlier passes did not cover
+these label changes. Recovery subsequently completed without data/configuration
+deletion, coordinated with Boards after the normal restart timed out. Standing
+user permission to restart Docker is recorded in AGENTS.md.
+
+The revised RPC was applied locally (only its function/grants, not a blind full
+migration replay). SQL37files/1130 assertions PASS
+(`/tmp/ledger-receipt-labels-sql.log`); real local HTTP/category/receipt and all five
+checked-in stream queries PASS (`/tmp/ledger-receipt-labels-local-http.log`).
+Existing report-stream13projections/121captures PASS
+(`/tmp/ledger-receipt-labels-report-stream.log`). Advisors exit0 with only the
+pre-existing multiple-permissive-SELECT warning for `spike_spaces`
+(`/tmp/ledger-receipt-labels-advisors.log`). A fresh shadow DB successfully applies
+all checked-in migrations and has no public/ledger_private schema difference
+from the working DB (`/tmp/ledger-category-migration-diff.log`). The subsequent
+comparison includes `storage` and is also empty
+(`/tmp/ledger-local-migration-storage-diff.log`); the existing attachments bucket
+has its expected identity and remains private. Development history was missing
+26 entries beginning20260908035218, predating this batch. After proving current
+schema equivalence, `migration repair --local --status applied` repaired only
+those local history entries, without replaying migrations or changing application
+data (`/tmp/ledger-local-migration-history-repair.log`). All41 versions now match
+(`/tmp/ledger-local-migration-history-verified.log`). `db pull --local` with
+`--strict-coverage` over public/ledger_private/storage finds nothing to generate
+(`/tmp/ledger-local-migration-pull-verified.log`): CLI exit1 carries
+`LegacyDbPullInSyncError`/"No schema changes found", not a failed migration.
+No migration file was created or rewritten by that check. This repairs the local
+development journal; it neither claims historical execution timestamps nor
+authorizes production migration.
+The native authenticated HTTP adapter also preserves these labels and its
+existing scope/denial handling (1 test/0.019s,
+`/tmp/ledger-receipt-labels-native-http.log`). This uses intercepted HTTP, not the
+local database (which has since recovered).
+
+Local replication proof now uses `powersync/local-service.mjs` (Node24), pinned
+PowerSync service1.24.0/digest, the checked-in streams, and only the verified
+Ledger-local Docker network/database. It derives27 explicitly named source
+tables from the installed stream parser. Separate replication/storage roles and
+a separate local bucket database keep PowerSync's internal tables out of app
+migrations. The service binds only127.0.0.1:5590; generated credentials/config
+remain under ignored `tmp/ledger-powersync-local` with0700 directory/0600 files.
+Existing resources are checked before reuse; no reset, hosted service, or
+application-data migration is involved. Initial source validation rejected the
+legitimate private-schema sources; the explicit allowlist now includes public
+and ledger_private, never wildcard tables. Setup and repeat setup both pass
+(`/tmp/ledger-local-powersync-start-reviewed.log`,
+`/tmp/ledger-local-powersync-reentrant.log`).
+
+Run the existing category local harness with Node24/tsx and
+`--native-replication`. It now passes real service download, an offline type edit,
+encrypted close/reopen, reconnect/upload, replicated operation acknowledgement
+and authoritative receipt readback, then restoration of General classification.
+No local rows/checkpoints are injected in this new native case. Existing
+lost-response replay and Client/inline-category/Project checks also pass
+(`/tmp/ledger-category-real-replication.log`); MCP typecheck completes without
+errors (`/tmp/ledger-category-real-replication-mcp-types.log`). This closes the
+split transport proof for this local category scenario, not hosted validation,
+full Transaction routing, the complete authorization matrix, or batch acceptance.
+A-003/A-004 remain proposed pending their complete vertical-spike requirements.
+
+The same local replication case now also requests a populated foreign Account
+directly through the SDK, intentionally bypassing the app scope guard, and waits
+for the service checkpoint before asserting zero foreign rows in all five receipt
+tables. A nonce-protected loopback test callback removes only the synthetic user's
+membership; real replication withdraws its categories/Transactions/receipt links,
+and native receipt reads and category edits fail closed. No privileged credential
+is passed to Swift. This expanded single native case PASS
+(`/tmp/ledger-category-live-access-boundary.log`), including the existing HTTP/SQL
+checks in its parent harness. Fixture cleanup removes both exact synthetic Accounts.
+`--native-replication` now selects only that case, avoiding order dependence on
+the removed user's other SDK tests; `--native-auth-sdk` retains the separate
+Client/Project/lost-response scenario and its earlier evidence. No production code
+or stream policy changed for this security test.
+
+Launcher review added rejection of Docker endpoint/context overrides and nonlocal
+sockets before setup, plus exact checks of an existing container's loopback port,
+Ledger-only network and read-only configuration mounts. Both override-denial
+cases PASS (`/tmp/ledger-local-powersync-endpoint-guards.log`); normal local reuse
+also PASS (`/tmp/ledger-local-powersync-reviewed-reentry.log`). No reset or
+replacement container was needed.
+
+Transaction Item links reuse the original `ItemCard` layout through explicit
+presentation inputs and open the existing `DownloadedItemDetailView`; no second
+Item detail or lineage store is introduced. Linked, returned and sold membership
+selects the retained physical Item ID. Direct history entry owns the existing
+authorized `physical_account_items` subscription, so visiting the Items tab first
+is not a prerequisite. Downloaded evidence remains explicitly partial: missing
+placements, labels and financial provenance are not invented or declared complete.
+Cancellation drains late subscription cleanup; local offline/reopen and removal
+proof lives with the Transaction workflow. Item mutation, grouping and full media
+behavior retain their existing owners and unfinished acceptance.
+
+Project Transactions use the existing workspace route model, including Back,
+archived history and Project-evidence withdrawal. A NavigationLink alone did not
+work in the workspace's non-NavigationStack composition. This adapts navigation,
+not the shared screen layouts or financial authority.
+
+Transaction CSV adaptation reuses the original serializer with backend-neutral
+row/column inputs. Formatting is pure: it cannot authorize rows, determine
+readiness, or fetch receipt assets. Exact integer formatting replaces Double
+money conversion; user-text formula protection is separate from numeric cells.
+The configured legacy overload delegates to the same serializer. Export delivery
+still requires the complete authorized snapshot and existing protected-scratch
+lifetime; the browser's current `partial` coverage is not export readiness.
+Raw receipt URLs and unresolved column semantics must not bypass that boundary.
+`TransactionExportSnapshot` binds the same display/receipt records to the complete
+authorized source, principal, scope, ordered selection, as-of and source/authority
+versions. Partial updates are rejected. Its delivery adapter reuses
+`ProtectedReportDelivery` and requires fresh matching readback before handing
+bytes to the system; no second scratch store or cleanup protocol is introduced.
+The original `ExportFieldConfig` now separates its unchanged 20 field labels,
+order and eight defaults from source-model extraction so the selector can be
+reused. Target values preserve unknowns, exact money and ordered readable/JSON
+receipt lines; unsupported legacy fields fail explicitly, not as blank exports.
+This does not retire those fields or settle status/payable/receipt-sharing policy.
+The export provider now reuses the existing auto-subscribed Project directory and
+scoped receipt download. One SQLite read checks parent/Client identity, membership,
+both retained checkpoints, categories and receipt facts; the financial checkpoint
+cannot predate the directory/permission checkpoint, compared at SDK microsecond
+precision. It rejects unexplained missing categories or unsupported local origins.
+Runtime finite leases provide the existing Account/closure fencing. No new stream,
+table, permission grant or generic completeness registry is introduced.
+Completeness here means all authorized rows in the current server data contract,
+not implemented future accounting writers. The local HTTP harness checks that the
+validated origin constraint still allows exactly the two supported origins; adding
+an origin requires updating native/MCP/stream coverage. Browser product coverage
+continues to be labelled partial. Real local service export/readback and encrypted
+offline reopen pass (`/tmp/ledger-transaction-export-live.log`), including processed
+order and removal denial. Eight provider/checkpoint/runtime tests pass, including
+the existing report consumer and one-microsecond negative ordering case
+(`/tmp/ledger-transaction-export-provider-reviewed.log`). Full field-data coverage,
+selector binding and actual system delivery remain unfinished.
+The target overload now feeds the original serializer directly. Its rectangular
+CSV has one tagged manifest row followed by ordered Transaction rows; mandatory
+stable ID/currency columns preserve interpretation regardless of selected fields.
+The manifest records scope, principal, as-of, source/snapshot/authority versions
+and selections, including a genuinely empty or no-match export. Unavailable fields
+fail even with zero rows, and no receipt URLs are generated. This format follows
+the existing report convention of explicitly typed metadata rows, not a new export
+product. A hostless Xcode unit-test target compiles the original CSV/field files
+against the actual target core, avoiding duplicate implementations or UI automation
+for file-content checks. Three tests pass in0.006s; regular CI includes that small
+target independently of its UI selector. No new runtime module was introduced.
+
+Project export now binds the original `ExportTransactionsModal` sheet body and
+Project Options menu to the existing authorized reader and protected delivery.
+The parent holds its download watch through system completion, not merely while
+the selector is visible. Transactions captures its processed IDs and full source
+rows; source-hash mismatch rejects stale or partial selections. Other Project
+routes request all rows. Scope changes/cancellation fence late reads; OS completion
+still owns scratch cleanup. Original fields/defaults remain, with additional
+non-default receipt-evidence fields. Unimplemented field data is explicitly
+rejected, not silently omitted or retired; the default export is not release-ready
+until Receipt Images is implemented. Platform evidence and remaining gaps belong
+to TX-EXPORT/TX-UI in the existing checklist.
+
+Retained legacy subtotal and tax-rate metadata stays nullable on the same
+Transaction, separate from receipt reconstruction. Subtotal uses exact minor units;
+the rate uses finite Postgres numeric and text on the wire/local store, avoiding
+floating-point loss. Missing metadata remains unknown: no back-solving from tax
+lines, new tax policy, writer permission or stored audit flag. The invoker display
+view and existing three stream projections expose the same authorized values.
+The generated migration explicitly retains column grants and invoker security,
+excluding local-only replication-role grants. Export and source-version hashing
+consume these facts directly. Purchased By follows canonical scope ownership,
+including Returns. Local SQL, native, MCP, shared CSV and actual replication
+evidence is recorded in TX-DATA/TX-EXPORT/TX-SYNC, not a separate tracker.
+
+Current Item-category export reads existing Project placements and category
+attribution, joined to currently linked vendor receipt Items or active client-payment
+connections. Historical receipt evidence stays intact; missing/hidden attribution
+blocks that field instead of defaulting to the Transaction category. An invoker
+view and one scope-wide local query share this meaning. Three existing relationship
+projections join the Transaction stream, matching the physical-report outputs;
+no stored category/history copy or report-sized financial subscription is added.
+Live replication omitted generated connection type/role values. Both projections
+now emit the exact `purchase`/`standalone` constants enforced by their generated
+columns/composite FK. No write or visibility permissions change. Verification
+and gaps remain in TX-EXPORT/TX-DATA/TX-SYNC.
+
+Screen integration now proceeds under the Transactions record. One workspace-owned
+watch supplies canonical display snapshots to the existing cards and selected
+detail; there is no separate detail cache or duplicate Transaction entity. The
+original hero and grouped-filter shell take display inputs, while the original
+search bar, Notes/Details controls and audit panel remain shared. Project and
+Inventory entry points bind the scope explicitly; Inventory never gains a synthetic
+Project identity or Project-only select-all.
+
+Scope-wide payment reads now separate financial authorization from Item context:
+active full-financial Account members can read imported client payments without
+requiring a currently placed Item. Otherwise standalone payments and history after
+an Item leaves a Project would disappear. `financial-access-controls.md` owns this
+authority; unclassified imported payments remain full-only, and O-060 is not
+resolved for mixed collected visibility. Existing Item/payment connections and
+placement/lineage evidence remain intact, with their own contextual queries.
+Vendor reads still follow current category visibility. No writer grants, source
+bytes or accounting locks change.
+
+Browser rows now carry the same optional receipt evidence as the dedicated audit
+reader. List/detail/audit RPCs share an explicit invoker receipt view; the local
+browser loads scope-wide Item evidence once within its existing SQLite read
+transaction and completed subscription, not once per card. Cards, audit filters
+and selected detail use `TransactionReceiptSnapshot`'s existing exact calculation.
+Selected detail therefore needs no separate receipt subscription or cache.
+Embedded receipt identity, scope, amount and category revision must match its
+display row; missing evidence is not a zero-Item or balanced receipt.
+
+Card Item count preserves currently linked membership; returned/sold Items remain
+in the audit and history. Receipt Audit filters/badges explicitly describe balance,
+missing prices or missing download, not whole-Transaction completeness, posting
+permission or Review-queue membership. O-029/O-032/O-063 still own those unresolved
+behaviors. No persisted audit flag or second arithmetic implementation is added.
+The extracted filter shell now supplies a concrete zero-size presentation anchor
+instead of `EmptyView`. The focused Mac test reproduced a disabled window with no
+sheet; the anchor fix passed the same open/select/dismiss/reset interaction. It
+changes hosting, not the original menu controls or layout.
+
+List/detail RPCs share one explicit security-invoker display view, preserving
+underlying RLS and column grants. The existing scoped receipt download also carries
+imported payments (identical projection to overlapping Item subscriptions), avoiding
+a second download/cache for the browser. Vendor receipt evidence remains distinct;
+imported payments do not acquire receipt Items or an invented category. Native
+reads recheck local financial membership to suppress stale rows after downgrade.
+
+This is still partial implementation: the current stream covers vendor Purchases,
+Returns and imported client payments, so even zero downloaded rows remain a
+**partial list**, not an authoritative empty Transaction workspace. New Invoice collection, Transfers,
+remaining filters/actions, Item/media integration and full route verification are
+unfinished. Unknown metadata stays unknown; date-sort fallback does not overwrite
+the displayed Transaction date. Existing financial locks and Item/payment history
+are unchanged. Component/model/local-query evidence belongs to the Transactions
+record, not category-management completion. Continue the approved dependencies
+without routine scope approval; retain the outstanding category integration checks.
+
+Native/shared-contract evidence and remaining integration status belong to
+`CATEGORY-ACCOUNTING` in the existing product checklist. The initially unrecorded
+local draft now has the schema-equivalence, fresh migration and repaired-history
+proof above; actual Transaction routing and the coherent batch gate remain open.
+
 ## Decision Summary
 
 | ID | Status | Decision |
 |---|---|---|
+| A-036 | accepted | Canonical vendor Transaction receipt evidence, separate from collected client payments |
 | A-001 | accepted | Use domain-oriented ports and backend adapters |
 | A-002 | accepted | Separate commands from local queries |
 | A-003 | proposed | Supabase Postgres becomes target server authority |
 | A-004 | proposed | PowerSync SQLite becomes the target local data plane |
 | A-005 | proposed | Complex mutations use durable idempotent operation envelopes |
 | A-006 | proposed | Structured sync excludes attachment bytes |
-| A-007 | proposed | Choose Supabase Auth at launch or a temporary Firebase Auth integration |
+| A-007 | accepted | Supabase Auth at target launch; identity migration and recovery require verification |
 | A-008 | proposed | Do not use permanent or general-purpose dual writing |
 | A-009 | proposed | Use expand–migrate–switch–contract |
 | A-010 | proposed | Use internal principals independent of auth-provider subjects |
@@ -60,6 +1233,132 @@ progress tracker; use the existing unified checklist for implementation status.
 | A-032 | implementation in progress, integration unverified | Keep downloaded Account branding separate from pending uploads |
 | A-033 | implementation in progress, integration unverified | Derive report eligibility from existing Item accounting relationships |
 | A-034 | corrected locally, hosted validation pending | Preserve native table names in PowerSync query outputs |
+| A-035 | implementation in progress, integration unverified | Apply category management as one shared revision-checked command family |
+
+## A-035 — Shared Category Commands and Derived Visibility
+
+Settings and inline Project creation share `CategoryManagementPayload` actions:
+create, edit, archive, restore and reorder. Reuse the existing durable operation
+queue and immutable result table; no separate category delivery service. A single
+envelope carries the request, avoiding parallel arguments that can disagree.
+Account-bound operation IDs and exact envelope hashes prevent replay collisions.
+Account-visible results identify the Account category set, not a possibly hidden
+Fee category. Payloads and their individual category IDs stay in the private local
+command, so shared result reads need no new category-identity disclosure.
+The handler locks current membership, then operation identity, then the Account
+category set. This serializes names and ordering; a complete visible active order
+swaps existing slots atomically, leaving hidden, archived and system slots alone.
+The existing order uniqueness constraint is deferrable but initially immediate,
+so swaps are legal while duplicates still fail at statement completion.
+The case-insensitive name uniqueness key is NFC-normalized, matching Swift's
+canonical-equivalence comparison without rewriting the user's display spelling.
+The database unique index and command check use the same key; MCP validates
+directories equivalently. This prevents composed/decomposed duplicate names.
+Swift uses Foundation's context-sensitive lowercasing for that key, matching
+JavaScript/Postgres for Greek final sigma and dotted-I expansion. The shared form
+and domain directory/admission comparisons use the same rule.
+For edits, display-name bytes are compared exactly before deciding whether to
+advance revision. Canonical equivalence must not turn a byte-changing edit into
+a local no-op when Postgres would advance it; subsequent offline edits need the
+same expected revision. Exact-byte native/SQL and encrypted-reopen tests cover it.
+Wire names must already have surrounding Unicode whitespace removed; the handler
+rejects untrimmed input without changing the bytes covered by its operation hash.
+Control rejection uses Unicode Cc/Cf categories: Swift reads scalar properties,
+MCP uses Unicode property matching, and SQL spells out those ranges because its
+locale-dependent POSIX class misses formatting controls. This also avoids the
+local Foundation CharacterSet misclassifying supplementary variation selectors.
+On 2026-09-13 the user delegated the length choice: at most 100 Unicode code
+points after trimming, using Swift unicodeScalars, JavaScript string iteration
+and Postgres char_length. This avoids a custom grapheme-segmentation subsystem.
+Combining marks count separately; existing stored names are not rewritten.
+Boundary verification is required across all three implementations.
+
+Local acceptance atomically stores the existing operation row, changed-definition
+JSON and one insert-only PowerSync command. It never overwrites downloaded rows.
+The category reader and admission share one projection implementation; rejected
+effects disappear while their original commands remain retained. Applied effects
+yield to synced definitions at the resulting revision or later. Account-local
+acceptance timestamps are monotonic so successive offline edits remain ordered
+even when the device clock repeats. Pending edits cannot bypass learned financial
+access loss. Existing operation identity and upload machinery now include this
+command family; no second queue, history system or delivery service was introduced.
+
+The 2026-09-13 review reproduced a withdrawal bug: after financial access is
+downgraded, sync removes Fee rows entirely, but an edit overlay could recreate
+the old row. The shared projection now requires a currently visible downloaded
+baseline, except for an unreplicated local creation and its subsequent edits.
+A matching terminal result downloaded through the existing operation-results
+stream retires that operation's overlay; a historical applied creation cannot
+then revive a withdrawn category. The reader observes operation-result changes
+as well as categories and membership. No command/history is deleted, no new
+table or sticky category permission is added, and a downloaded General row is
+immediately ordinarily visible. If a result arrives before its category, absence
+does not grant access; actual combined-stream delivery still needs hosted proof.
+Local regressions cover withdrawal, offline create/edit, result-only notifications
+and restart with retained commands (`CategoryManagementPowerSyncTests`).
+
+The writer uses the existing workspace finite-operation lease, so close waits for
+accepted work before closing SQLite and refuses new writes during drainage. Both
+admission and the reference reader consult the exact auto-subscribed
+`spike_projects` stream (which already contains categories), not a global sync
+timestamp or a new stream. Offline use has no time-based expiry; the pinned SDK
+restores exact stream completion from encrypted storage on reopen, verified with
+synthetic persisted stream metadata and no connection. Settings and Project
+setup bind the original list and form through `CategoryManagementSession`; it
+retains request identity across uncertain retries. Inline creation does not submit
+a Project or reset its draft, and selects the new category when locally observed.
+
+Category status is read from those same local operation records as standard
+`OperationSnapshot` values, not a second UI journal. The reader shares the existing
+category watch cancellation/drainage mechanism, revalidates local command ownership
+and current membership, and emits no category names or hidden category IDs.
+Settings and Project setup distinguish locally saved, synced and rejected changes,
+including results retained across restart. Scheduling now uses the existing
+PowerSync SDK through workspace-owned `startSync`. The SDK callback enters the
+same fenced, cancellable command-upload method used by explicit delivery; there
+is no second queue, polling loop or command handler. Startup and uploads drain,
+then the workspace disconnects before closing SQLite. Shared connection admission
+stays held through database close to prevent a late-close/reconnect race.
+The session owner still supplies Principal-bound credentials and command
+transports; no authentication provider is selected and hosted setup is deferred.
+Nil download credentials do not disable the SDK's independent upload loop.
+Real-SDK tests with synthetic appliers cover pre/post-connect queued categories,
+applied/rejected results retained after reopening, exclusivity and close/removal
+drainage, including a delayed credential refresh during close. This is not
+authentication proof. The pinned SDK shares a sync coordinator by database
+filename and disconnects it when any associated database handle closes. Therefore
+sync requires one runtime owner per workspace: all views reuse that runtime.
+Existing offline-only multiple-handle behavior remains available, but handles
+must close before one starts sync; no additional handle may open during sync.
+The existing access fence counts pending/open handles, including failed bootstrap
+cleanup, so initialization cannot race connection startup. Registration is released
+only after the runtime closes. This avoids an extra reconnect coordinator or SDK
+fork; the tradeoff is explicit single-runtime ownership during sync, not a limit
+on how many views can use the same runtime. Same-file close/reopen ownership tests
+and the 109-test workspace/Item-provider regression run pass. The real authenticated
+app session still needs to supply correctly Principal-bound credentials/transports.
+
+The MCP `manage_budget_categories` tool uses the same five-action envelope and RPC.
+Its Account/principal come from the host's resolved context, never tool arguments;
+its stable caller UUID becomes the same Account-bound operation namespace. Shared
+Swift/MCP fixtures cover canonical bytes, hashes and decimal revision strings.
+The server remains the transactional authorization authority for both clients.
+`list_budget_categories` obtains visible IDs and revisions through a caller-RLS
+RPC; it does not use elevated credentials or infer permission from a tool argument.
+
+Under D-030, the existing category visibility projection is derived from current
+kind on every write. It is not independent policy or a Fee-to-General transition
+flag. Current ordinary readers therefore see General definitions automatically.
+Existing category IDs/references survive edits and archive/restore; the command
+does not rewrite Items, Transactions, paid Invoice snapshots or payment amounts.
+This is target-only work; no Firebase implementation or production migration.
+
+Verification and remaining gaps are recorded in the active `category-management`
+checklist. HTTP request/response contracts, status replay/drainage and Swift/MCP
+canonical parity now have focused proof. Local HTTP lookup/mutations, concurrent
+name/revision conflicts and offline reopen pass. Database name length/control
+parity, affected accounting consumers and remaining UI interaction need proof; this is
+not acceptance of the whole batch or migration authorization.
 
 ## A-034 — PowerSync Output Names Must Match the Native Schema
 
@@ -771,23 +2070,179 @@ their own idempotency and failure state.
 
 ## A-007 — Target Authentication Choice
 
-**Proposal:** Either migrate to Supabase Auth for the target launch or keep
-Firebase Auth temporarily through Supabase Third-Party Auth and PowerSync token
-validation, then migrate identity as a separate release. The vertical spike and
-release-risk review must close this choice.
+**Decision (user, 2026-09-13):** Use Supabase Auth for the target launch.
+Do not implement a temporary Firebase Auth bridge. The provider choice is
+settled; existing-user identity migration, linking, invitations, recovery and
+PowerSync authorization still require implementation and verification.
 
-**Reason:** Supabase and PowerSync can validate Firebase-issued JWTs, which may
-lower simultaneous cutover risk, while migrating to Supabase Auth at launch
-would remove a legacy dependency earlier.
+**Reason:** The user selected Supabase Auth to consolidate the target backend
+and remove the Firebase identity dependency.
 
 **Consequence:** Ledger uses an internal principal ID and an issuer/subject
 identity mapping so a later Auth migration does not rewrite domain ownership.
-The temporary identity integration, if selected, does not require a Firestore,
-Firebase Storage, or Firebase application-data adapter.
+This choice does not authorize production identity access/migration, hosted or
+paid resource provisioning, or cutover. Preserve existing email/password and
+Google entry capabilities and approved offline access behavior.
 
-**Evidence protocol:** S2 compares Supabase Auth with an isolated identity-only
-Firebase contingency under the same disqualifying security tests and weighted
-migration/recovery criteria. No provider is selected by the protocol itself.
+**Evidence protocol:** Validate the selected Supabase Auth path against S2's
+security, migration and recovery requirements. Historical provider-comparison
+instructions do not require building or testing a Firebase alternative now.
+Provider selection is not evidence that migration or hosted integration works.
+
+**Implementation checkpoint (2026-09-13):** Pin official `supabase-swift`
+2.55.2 and use its Auth product for session persistence/refresh rather than
+implementing token rotation in Ledger. The category RPC accepts the shared
+`AuthClient`, bound to the Auth user UUID selected for its workspace; it rejects
+a missing, changed or anonymous identity before sending queued work. The UUID
+check is a transport safeguard, not authority to read an Account: server
+principal/membership checks and local workspace-removal fencing remain required.
+Online refresh failure does not authorize deletion of offline data.
+
+Eight focused HTTP/Auth tests (including expired-token refresh, session reopen,
+identity switch, sign-out and anonymous denial) pass in0.283s:
+`/tmp/ledger-category-auth-identity-refresh-tests.log`. The existing local
+category integration launcher now also supports `--native-auth-sdk`: a unique
+local test user signs in and refreshes through real Supabase Auth, uploads the
+encrypted/restarted queue through PowerSync scheduling, retries a lost response,
+and verifies authoritative category rows before cleaning the exact fixtures.
+Both cases pass: `/tmp/ledger-category-real-auth-explicit-transport.log`.
+
+The initial real-network run crashed in the SDK's default async HTTP callback
+(`swift_task_dealloc`; `/tmp/ledger-category-real-auth-local.log`). Passing the
+same real `URLSession` transport explicitly via `fetch` avoids the observed
+crash. Use that configuration during app integration; this is a verified local
+workaround, not a proven SDK/compiler root cause or an upstream SDK patch.
+Mock HTTP tests did not reveal it. Actual app login/startup, platform Keychain
+behavior, Google configuration and hosted replication remain unverified.
+API reference: [Swift sign-in](https://supabase.com/docs/reference/swift/auth-signinwithpassword)
+and the pinned SDK's `AuthClient.session`/`Configuration.fetch` source.
+
+**Presentation reuse:** `Views/AuthView.swift` now contains the original form as
+`AuthFormPresentation`, with three injected provider actions and diagnostic text.
+The original binding is a conditional thin wrapper; the target compiles the
+same form and existing `SegmentedControl` without Firebase. Layout, mode changes,
+confirmation, loading and error handling are preserved. Successful sign-in does
+not activate an Account. The target root now routes through
+`TargetOnlineAccountEntryView`, the original forms, and explicit selection.
+`spike_authorize_workspace` separately checks current membership under RLS;
+`SupabaseWorkspaceAuthorization` checks returned Account/Principal and credential
+identity. The workspace receives those IDs instead of hardcoded test IDs. It no
+longer opens a synthetic Project or Transfer source at launch. The target's
+public configuration identifies the single approved Ledger project in PPM.
+No hosted schema/data deployment or production migration has occurred.
+
+Before any workspace readers start, downloaded membership must match the
+server-confirmed role and financial scope. Missing, removed or changed scope
+withholds presentation and retains local data; it does not rewrite PowerSync
+membership from an HTTP response or approve an O-058 recovery/reduction policy.
+The entry path now starts the existing runtime's SDK connection before waiting
+on its category-directory stream and checking downloaded membership. The
+connection checks the physical workspace's environment/Account/Principal before
+any credentials or downloads, then binds Client, Project and category uploads to
+the selected Auth user through `SupabaseWorkspaceCommandRPC`. This maps existing
+commands; validation, durable delivery and result handling remain in their
+existing owners. The real PowerSync URL is still unconfigured, so the app reports
+that setup requirement and retains local work rather than claiming downloads.
+Offline reopening now uses persisted local admission independent of SDK refresh
+(A-016 below). Account creation and safe sign-out are visibly disabled until
+implemented. Google/callback and actual entry interaction still require
+verification. Reauthorization/removal during an already-running sync connection
+is not yet connected; do not call this release-ready.
+
+Authenticated Account discovery now uses `spike_read_authenticated_accounts`,
+a security-invoker RPC that resolves the signed-in user's existing Ledger
+principal and active memberships under RLS. An unlinked identity is an error,
+not an empty Account list; the lookup creates nothing and selects no Account.
+`SupabaseAuthenticatedSession` binds SDK credentials to one Auth user, and
+`SupabaseAuthenticatedAccountLookup` checks that identity again before returning
+the existing Account-selection snapshot. Neither grants offline workspace access.
+Local evidence: 14 lookup SQL assertions and the full 1,083-assertion SQL suite
+passed (`/tmp/ledger-auth-account-lookup-sql.log`,
+`/tmp/ledger-auth-account-lookup-full-sql.log`); 10 native HTTP/Auth tests passed
+(`/tmp/ledger-authenticated-account-lookup-native.log`). Real local Auth lookup
+and category upload/restart/replay integration also passed
+(`/tmp/ledger-auth-account-directory-local-integration.log`). These are dirty-tree
+local results, not hosted deployment, fresh migration-history, Keychain or
+integrated app-startup proof.
+
+Native Keychain coverage now verifies that the SDK restores an expired session
+from a uniquely scoped Keychain service without a network request, does not read
+it through another service, and removes only the test credential. The focused
+test passed in 0.055s (`/tmp/ledger-category-auth-keychain-fixed.log`). Its initial
+failure was a test assumption: the SDK throws `errSecItemNotFound` for missing
+items instead of returning nil; absence assertions now check the exact Security
+framework status. No custom credential store is needed. This proves same-process
+client reconstruction using real Keychain storage, not device/app-process restart,
+Account activation, or authorization to open offline data.
+
+`SupabaseOnlineSignIn` now provides email sign-in, signup (including the
+email-confirmation/no-session result), Google OAuth through the SDK, and the
+authenticated directory lookup. It serializes entry requests and exposes safe
+errors; a failed directory lookup retains the signed-in session and does not
+become an empty directory. Native live configuration uses SDK Keychain storage
+namespaced by target data namespace and Supabase origin; it is not a new session
+store. Tests cover password/directory behavior (12 passed,
+`/tmp/ledger-online-sign-in-native.log`) and signup/provider errors (2 tests,
+including both confirmation cases, `/tmp/ledger-online-sign-up-native.log`).
+The existing real local category integration now uses this entry binding and
+passes normal/replay cases (`/tmp/ledger-online-entry-category-integration.log`).
+Google provider/callback interaction and end-to-end app entry remain unverified.
+
+`Views/AccountGateView.swift` now exposes the same picker/empty/loading form as
+`AccountGatePresentation`, using callbacks for selection, creation and sign-out.
+The original conditional wrapper retains original discovery/selection behavior;
+the target presentation never automatically selects an Account. Both platform
+builds pass (`/tmp/ledger-account-gate-macos-build.log`,
+`/tmp/ledger-account-gate-ios-build.log`); these are compilation checks, not
+interaction/activation proof. Account creation, explicit authorized activation,
+session-ending safeguards and offline reopening still need their actual app
+bindings before this is a complete entry workflow. The online activation RPC
+passed12 SQL assertions and the full local SQL suite1095. Native authorization
+response/denial checks passed1 test, and cached-permission admission passed5 cases
+(matching, missing, reduced, removed, foreign). Real local Auth/category replay
+integration passed with the new authorization call. Logs:
+`/tmp/ledger-workspace-authorization-sql.log`,
+`/tmp/ledger-workspace-authorization-full-sql.log`,
+`/tmp/ledger-workspace-authorization-native.log`,
+`/tmp/ledger-workspace-activation-cached-scope.log`,
+`/tmp/ledger-workspace-authorization-live.log`.
+Both guarded-root builds pass (`/tmp/ledger-authenticated-root-guarded-macos.log`,
+`/tmp/ledger-authenticated-root-guarded-ios.log`); no root UI-interaction pass is
+claimed. Environment checks now accept the reviewed pinned Auth SDK and require
+the unreleased-build banner instead of mandating synthetic startup IDs. The
+existing vendor-parser source-list and excluded image-view checks still fail
+separately; overall conversion/CI is not green.
+
+Connection follow-up: Client/Project request mapping passes1 native test
+(`/tmp/ledger-workspace-transports-native-fixed.log`); startup readiness,
+cancellation/close, changed financial scope and foreign database rejection pass
+7 cases across2 tests (`/tmp/ledger-category-startup-readiness.log`). The app's
+real local Auth/category upload binding passes restart and replay
+(`/tmp/ledger-workspace-sync-category-live.log`). Both updated platform builds
+pass (`/tmp/ledger-startup-sync-macos-build.log`,
+`/tmp/ledger-startup-sync-ios-build.log`). These prove transport/startup behavior
+locally, not live PowerSync replication or offline app-entry completion.
+
+**Client/Project timestamp compatibility:** The combined category-to-Project
+integration exposed `project_setup_envelope_mismatch`: these new command
+constructors retained submillisecond `Date()` values although their existing
+RPCs require integer milliseconds and the queue stores integer milliseconds.
+New Client/Project commands now floor the timestamp before constructing their
+draft/envelope/fingerprint, matching the category command's existing convention.
+The shared codec and stored-command decoders are unchanged: previously accepted
+envelopes/fingerprints are not rewritten or silently repaired. Existing malformed
+pending commands still need explicit recovery; this change only prevents new
+ones. Ten focused contract tests pass, including fractional input and preserved
+legacy fractional-envelope decoding (`/tmp/ledger-create-command-timestamp-fixed.log`).
+Initial legacy tests incorrectly treated scalar fingerprints as JSON objects;
+both test fixtures were corrected, with the failed log retained.
+The real local Auth/SDK test then passed queued Client/category/Project creation
+across encrypted restart, verified the Project's Client/new-category links in
+Postgres, and retained category replay coverage
+(`/tmp/ledger-inline-category-project-timestamps-fixed.log`). The52 existing
+Client/Project storage and Project form tests also pass in2.385s
+(`/tmp/ledger-client-project-timestamp-consumers.log`). No schema change, hosted
+deployment, or new Project allocation policy was required.
 
 ## A-008 — No General-Purpose Dual Writing
 
@@ -893,6 +2348,90 @@ approved rules can be implemented without choosing a recovery procedure.
 Financial scope reduction short of Account removal and the recovery procedure
 remain open under O-058; full hosted activation/security readiness is not proved
 by this product decision.
+
+**Local admission binding (2026-09-13):** `OfflineWorkspaceAdmissionStore` keeps
+previously downloaded Account summaries and their authorized identity/scope in
+a separate Keychain service, namespaced by target build and Supabase origin.
+It contains no bearer credential, expiry or extra unlock prompt. The existing
+Keychain wrapper stores these records separately from encryption keys. iOS uses
+WhenUnlockedThisDeviceOnly; macOS uses its login Keychain (the macOS tests do not
+claim proof of iOS lock-state enforcement). Supabase token expiry or loss alone
+does not revoke local admission. Switching signed-in identity hides the former
+identity's admissions without deleting its data. Future session ending must
+revoke admission as part of its coordinated cleanup; sign-out remains disabled.
+
+`rememberDownloadedWorkspace` requires current Auth identity, complete category
+download evidence, matching physical workspace and matching downloaded
+membership before persistence. The reused Account picker offers downloaded
+Accounts first, without an online round trip; selection rechecks the saved grant,
+the existing monotonic removal registry and local membership. Missing/corrupt
+records, unavailable protection and mismatched permissions fail closed. A
+missing database cannot become authorized merely because its record survived.
+Sign-in/refresh remains separate and cannot manufacture a downloaded grant.
+
+An exact authenticated `workspace_access_denied` response during online
+selection now enters the existing shared removal coordinator: fence all open
+handles, persist denial, then drain/close while retaining pending work. Token
+failure, malformed response, unrelated403 and outage do not become revocation.
+Selection must match the last directory's identity/fingerprint, preventing a
+later signed-in user from using an old selection to revoke the former Principal.
+**Active-sync removal binding (2026-09-13):** the app's bound provider now
+revalidates the existing workspace through `spike_authorize_workspace` before
+each PowerSync credential grant. Client/Project/category upload transports
+revalidate after HTTP403, not after every successful operation. Only the exact
+authenticated membership denial records removal; expiry, outage, malformed or
+unrelated denial, and changed signed-in identity cannot manufacture it. A changed
+role/financial scope withholds new credentials but is not Account removal;
+O-058 still owns the local-data disposition. This is event-driven detection, not
+an immediate remote-revocation claim or a new polling service.
+
+Removal reporting now fences all registered handles and persists the existing
+monotonic marker **without awaiting database drainage inside the SDK callback**.
+The existing workspace removal stream wakes the app-owned cleanup task, which
+locks presentation and completes the coordinator's existing drain/close outside
+that callback. It subscribes before initial sync; its lifetime belongs to the
+workspace root rather than a child view removed by the access gate. Cleanup
+errors remain visible outside the locked content. Finalization requires an
+already-reported fence, so the public completion method cannot initiate a fresh
+removal. Persistence failure still fences in-process; finalization retries the
+marker and must not claim durable success if persistence/close fails. No pending
+operations, media, keys or databases are deleted, and recovery remains gated.
+
+Provider checks and real SDK credential-callback drainage pass in20 tests
+(`/tmp/ledger-sync-removal-provider-reviewed.log`,2.593s). The targeted runtime
+run passes3 tests/11 cases (`/tmp/ledger-sync-reported-removal-fixed.log`,0.495s):
+two upload-callback removal cases include initial persistence failure, immediate
+read denial, no self-drain, database close, denied normal reopening and retained
+encrypted queued work/media; the run also includes revalidation cases and the
+existing persistence-retry test. The provider run adds wrong-denial-code coverage.
+Initial test failures were incorrect fixture email/helper names, corrected without
+weakening assertions; `/tmp/ledger-sync-access-revalidation.log` and
+`/tmp/ledger-sync-reported-removal-runtime.log` preserve those failures.
+Both platforms build with the final root-lifetime/cleanup-error wiring
+(`/tmp/ledger-sync-removal-macos-reviewed.log`, `/tmp/ledger-sync-removal-ios-reviewed.log`).
+Actual hosted removal propagation and root-to-service integration remain unverified.
+
+Evidence:6 local admission/Auth tests passed (`/tmp/ledger-offline-admission-verified.log`),
+including expired/missing sessions, user switching, removal/protection failure,
+corrupt storage and real Keychain reconstruction. Runtime admission passes3 cases
+(`/tmp/ledger-offline-admission-runtime-fixed.log`): incomplete/reduced access
+cannot grant; allowed admission survives a queued category edit and encrypted
+reopen. Its download-complete signal is injected, not hosted replication proof.
+Exact-denial/identity/callback-failure test passes
+(`/tmp/ledger-online-denial-identity-bound.log`). Both offline-entry builds pass
+(`/tmp/ledger-offline-entry-macos-build.log`, `/tmp/ledger-offline-entry-ios-build.log`);
+the later denial-binding change is native-tested. The actual reused Account and
+Auth forms now pass the offline-entry interaction on macOS (1 test/23.108s,
+`/tmp/ledger-offline-entry-ui-macos.log`) and iPhone (1 test/17.266s,
+`/tmp/ledger-offline-entry-ui-ios-signed.log`): explicit selection, Sign In/back,
+no stored online session, and protected admission across app termination/relaunch.
+The DEBUG fixture seeds only a synthetic admission under a unique Keychain
+namespace and uses an `.invalid` endpoint; its destination asserts selection,
+not database readiness or replication. The initial iOS selector ran zero tests;
+the corrected unsigned run failed Keychain access (-34018). Ad-hoc signing
+resolved that prerequisite without a storage bypass; CI now requests it too.
+Device restart/lock and actual hosted first-download behavior remain unverified.
+No hosted provisioning or schema change occurred.
 
 The implementation may not claim immediate offline revocation. Logout and local
 account removal must follow the pending-work disposition policy, then clear the
@@ -1552,6 +3091,34 @@ Model tests cover these preparation/lifetime boundaries. Native Photos permissio
 save success and image share completion still require device evidence; this is
 not authorization for background exports, production access or hosted resources.
 
+### Original gallery presentation is shared; image authority remains outside it
+
+September 11: the approved gallery reuse batch extracts the original gallery and
+pinned-panel presentation plus pure geometry helpers. Both app builds use those
+components and the original native ZoomableScrollView. Original AttachmentRef/URL
+loading remains in wrappers excluded from the target. The target injects scoped
+image identity, authorized decoded pixels and its existing pin/export callbacks;
+it does not grant the presentation a public URL, cache or backend service.
+
+The native view handles pixels arriving before layout, cancels replaced loads and
+clears pixels on teardown. AppKit zoom bounds change in a valid order even for
+tiny images; programmatic zoom animation samples do not overwrite the requested
+zoom. Both Reset and double-click reset use that guarded binding path. These
+fixes address a reproduced tiny-image crash and a reset that stopped above fit.
+Selected-page loading, exact reference authorization,
+offline cache checks and export handoff lifetime remain target responsibilities.
+This preserves retained image/Item history and changes no accounting or product
+policy. The obsolete target zoom view is excluded from the target build, not deleted.
+
+Tradeoff: shared presentation changes require both platform/consumer verification.
+Original iOS app compilation and43focused target model/media tests passed; iPhone
+Photos success/denial, gallery controls and native gestures passed. macOS target
+build and direct CUA interaction checks passed, including the two reproduced
+zoom failures after their fixes. XCTest automation initialization failed; direct
+Mac checks are not a successful XCTest run. Original Mac wrapper compilation also
+passed without launching Firebase. Scoped evidence belongs to the existing four
+Item image checks; this does not establish whole-app or cutover readiness.
+
 ### Item cards use explicit pre-generated derivatives, not inferred image URLs
 
 Small card images reuse the immutable image-object store and protected byte cache.
@@ -1575,3 +3142,589 @@ independent review informed the JPEG metadata check. Publication, Sync integrati
 viewport-bounded loading and native card evidence remain required before this
 design constitutes working thumbnails. Track that work only in the existing
 `ITEM-CARD-THUMBNAILS` checklist entry.
+
+## Real-source lineage compatibility — 2026-09-14
+
+The authorized private project copy exposed two overly strict source-reader
+assumptions: 407 lineage records omit the duplicate `accountId` field, and 55
+use slash-containing historical author labels. A validated Account document path
+now establishes source scope when the duplicate field is absent; a conflicting
+embedded Account still fails. `createdBy` is retained as provenance text, never
+promoted to a target principal or authorization claim. Missing references still
+prevent semantic mapping, including for records without embedded `accountId`.
+
+Nested Project notes/categories remain preserved source documents, but the
+lineage reviewer no longer misclassifies them as malformed Project records.
+The typed REST reader feeds existing reconciliation without rewriting source
+facts or granting import eligibility. It preserves integer money and timestamp
+nanoseconds; raw private snapshots remain the original evidence. This does not
+authorize invented missing records, target accounting mappings, or cutover.
+
+Focused regression coverage is in `FirebaseRESTSnapshotReaderTests` and the
+existing lineage reader/reconciliation suites; live-copy review remains an
+incomplete migration rehearsal, not production readiness.
+
+## Imported current location is not a dated move — 2026-09-14
+
+Retain one placement model, adding immutable `start_evidence` to distinguish a
+recorded move from an `import_observation`. For an observation, `started_at` is
+when the source location was imported into the target, not a claim about when
+the Item physically arrived. Original source evidence and unresolved earlier
+history remain preserved by migration; Item creation/edit timestamps are not
+substituted for move dates. Later real moves close the observation normally.
+
+The existing history view labels observations as imported source locations with
+unknown move dates. Older local rows with unavailable start evidence also avoid
+claiming a known move date. Native schema/readers and all three placement Sync
+projections carry the distinction. Existing Account RLS is unchanged; only the
+new read column is granted, and no client write capability is added. This is a
+representation correction, not authorization to invent placement history or
+declare a migration complete.
+
+## Vendor-purchase import reuses Transaction storage — 2026-09-14
+
+The authorized real-data QA copy is explicitly separate from migration acceptance.
+`LedgerLocalPaymentImport --apply-partial-qa-copy` creates a private, clearly labeled
+local Account for the existing isolated QA principal. Its private manifest records
+excluded Transactions and intentionally unloaded fields/history/media; original
+snapshot bytes and the executed SQL are retained before commit. Client identities
+are Project-specific QA mappings, not approved production Client consolidation.
+Accounting completeness, migration recovery and cutover remain unproven. Partial
+QA data may exercise covered reads/UI/offline behavior, not validate omitted
+accounting workflows. An existing copy is never overwritten by rerunning the loader.
+
+Compatibility correction: the frozen Swift app's `Transaction.itemIds` is optional
+and existing calculations use `itemIds ?? []` (baseline `ca68d793`,
+`Models/Transaction.swift` and `Logic/BillingSummaryCalculations.swift`). Omitted
+or null lists therefore do not, by themselves, make a source purchase invalid.
+The reader retains the raw distinction and still rejects malformed lists,
+duplicates, reverse-link disagreements and unresolved history. An empty declared
+list does not establish export completeness. Source/conversion/parameter tests
+cover this compatibility rule.
+
+The private `import_vendor_purchase` operation reuses `spike_transactions`,
+`transaction_receipt_items`, and immutable `imported_transaction_sources`.
+It does not add a Receipt entity or route vendor spending through the imported
+client-payment operation. The caller supplies reconciled payer-derived money
+scope, category, Item relationships and nonphysical lines. Unknown Item costs
+remain null; source history is not replaced with current prices or placements.
+Swift parameter conversion requires all current and historical Item identities
+in the reviewed acquisition plan, unique target mappings, and decimal-text money.
+
+Transaction, relationships and original source bytes commit atomically. Identical
+replays succeed; conflicting scope, amounts, source bytes or relationship sets
+fail without overwriting existing facts. This is invoker-rights, operator-only
+code, with no app/API execution grant and no new financial-read permission.
+Ordinary target editing policy remains unchanged. Migration replay after a target
+edit must be investigated, not used to overwrite that edit.
+
+Local SQL integrity/security tests pass, including the shared database suite.
+End-to-end source loading, cross-session concurrency/recovery and actual app/sync
+readback still need proof. The operation does not settle ambiguous payer, tax,
+refund, collection or source-history decisions or authorize production cutover.
+
+### Hosted Ledger replication connection — 2026-09-14
+
+Under the user's explicit authorization, hosted Ledger Supabase uses a separate
+Ledger project in the existing PowerSync nine4-team organization. Boards is not
+shared or modified. The dedicated `ledger_powersync_replication` login has
+replication/BYPASSRLS and SELECT only on the 29 source tables compiled from the
+existing Sync Streams; publication `powersync` names those exact tables. It has
+no application-table writes or reads of raw imported-source evidence. Replication
+necessarily reads across Accounts; existing stream authorization, not Postgres
+RLS alone, must restrict what each client downloads. Connection TLS is
+`verify-full`; secrets remain outside source control and client builds.
+
+The hosted connection test passed and grants/publication were read back. Supabase
+client authentication is configured with development tokens disabled. Deployment
+`6aa89c2002481fb31b969564` completed on service 1.26.1; active rules version 3
+finished initial replication of all 29 tables with no reported table/stream errors.
+The deployed YAML exactly matches `powersync/sync-streams.yaml` SHA-256
+`d345bdf2544872f02612206225394645c0480540e3dd6ce072c11b2535d74324`.
+
+CLI 0.9/0.10 validated the rules but returned HTTP 500 when publishing with the
+dashboard-created password reference. Resubmitting the existing replication
+password through the management client's supported `{secret: ...}` field worked;
+no password, permissions, auth settings or rules were changed. This isolates a
+credential-reference compatibility issue, not a reason to weaken authorization.
+The retained CLI token stays in secure storage; the private replication credential
+stays outside source/app builds. Do not repeat blind failed deployments or rotate
+credentials merely to publish rules.
+
+Actual hosted app/offline/account-isolation tests remain required. Initial
+replication of the empty hosted Account dataset is not those proofs, real-data
+migration acceptance, or cutover approval.
+
+### Project Item sync routing — 2026-09-14
+
+The real 623-Item hosted Project fails with PowerSync `PSYNC_S2305` (1,000
+parameter results). Compilation reveals per-Item buckets and placement lookups,
+including for image markers with no image data. Successful SQL filtering and
+initial server replication did not test this client-subscription limit.
+
+Use the existing database-derived routing pattern: Item and image-marker
+`sync_project_id` values follow the canonical current placement. They are not
+editable location/history facts. Triggers derive incoming values, propagate
+movement transactionally, preserve Item edit revisions and retain all placement
+history. The stream retains Account membership authorization and exact selected
+Project filtering; routing fields are not added to its downloaded projection.
+Payment connections, category assignments and charges also copy current-placement
+eligibility; frozen Invoice lines derive eligibility from their charge. Existing
+canonical guards still run for canonical edits, deletion and no-op writes. Only
+actual derived-only changes bypass those UPDATE guards, after early triggers
+replace caller-supplied flags. Frozen source contents and revisions remain intact.
+Invoice-line derivation takes the existing source lock before lookup, including
+an absent legacy source. Category visibility and full financial membership checks
+remain in the stream. Categories, payment headers and Invoice headers still have
+their own identity-level lookups; this removes per-Item multiplication, not every
+possible subscription size limit.
+
+This trades six derived columns and their maintenance for project-sized Item,
+payment-link, charge and Invoice-line buckets without broader downloads or a
+second history model. Migrations `20260915015741` and `20260915015830` include
+backfills and no new API grants. The local pull's unrelated drops/local grants
+were excluded. Fresh shadow migration application passed; SQL suite passed
+1,424 assertions, compiler/projection suite passed 9 tests, and the report's
+13-query/121-capture authorization test passed. Additional frozen-line tests
+prove routing cannot rewrite contents or a frozen charge revision. Security
+advisors reported no warnings/errors. Both migrations are deployed to hosted
+Ledger; PowerSync operation `6aa8a6efa77ca1231d284192` completed with rules v4.
+The exact formerly failing hosted subscription now returns 200/NDJSON; hosted
+SQL verifies 623 Project routes and zero Item-routing mismatches. The existing
+hosted-entry iPhone test now displays all 623 Items and passes in 20.484 seconds
+(`/tmp/ledger-hosted-entry-ui-lazy-items.log`). Its initial rerun stalled in
+XCTest accessibility enumeration; changing the Item container from VStack to
+LazyVStack fixed that scale issue without replacing row UI. Media, offline and
+whole-app completion are not established by this result.
+
+### Hosted authenticated media download compatibility — 2026-09-14
+
+Hosted Storage requires `object.get_authenticated_info` as well as
+`object.get_authenticated` for private downloads. The previous exact operation
+filter rejected hosted reads even though the QA user could read the same object
+metadata under RLS. Use Supabase's exact normalized operation helper for those
+two operations in the existing logo, referenced-media and reserved-upload
+policies. Preserve their account/reference/uploader predicates; no listing,
+signed URL, public bucket or broader write authority is introduced.
+
+Migration `20260915030749_authenticated_media_download_info.sql` captures the
+change. Hosted imported media readback passed for96sections/115references with
+authorized byte checks and anonymous denial. The existing native interrupted
+TUS test passed against hosted Ledger in27.386s; concurrent/replayed verifier
+calls produced one attachment reference (`/tmp/ledger-hosted-native-attachment-retry.log`).
+Local SQL:1426checks/48files passed in4s; advisors found no issues. This is
+upload/read compatibility evidence, not full app or migration readiness.
+
+### Item-image subscription scale — 2026-09-14
+
+Keep the existing schema, history, native reader and viewer. Add explicit
+Account/Item subscription predicates to the four joined `item_image_sets`
+lookups in `item_images`. Inferring those equalities through joins exceeded
+PowerSync's1000-parameter-result limit on the authorized real copy, even for
+one selected Item. Explicit predicates avoid that intermediate expansion;
+current-revision and membership checks remain unchanged.
+
+Hosted rules5 operation6aa8b981a77ca1231d28456b completed03:21:46UTC.
+The exact formerly failing subscription returned200,8buckets,1set,2references,
+4original/thumbnail objects and2thumbnail links.10compiler/projection checks
+pass. This narrowly fixes the observed subscription; it is not an unlimited
+scale claim or evidence for unrelated workflows.
+
+### Inventory sale price and immutable basis — 2026-09-14
+
+Pending placement presentation (2026-09-15): derive an explicit pending move
+from the retained sale command; do not mutate downloaded placements or append
+invented history intervals. Preserve Item identity/descriptive fields, clear the
+old Space assignment in the destination presentation, and retain the marker
+until matching destination placement downloads. Rejection restores authoritative
+presentation; a later physical cycle takes precedence over the old command.
+Physical readback alone does not establish charge or Invoice completeness.
+`InventorySalePendingPlacement` implements the resolution rule. The local
+placement reader derives it from scope/digest-validated retained commands and
+the original authorized placement; no extra projection table is written.
+Inventory, Project and history watches observe local operation changes.47focused
+tests pass; explicit history/readback-gap/revocation proof is in
+`/tmp/ledger-sale-history-readback.log`. Actual native local PowerSync sale
+convergence passed in `/tmp/ledger-sale-native-live.log`: offline acceptance,
+restart/retry, RPC upload, downloaded destination and unchanged two-interval
+history, one exact charge and zero sale payment Transactions. This is one
+synthetic Item, not bulk/mixed-origin or pending UI interaction proof.
+
+Offline acquisition projection (2026-09-15): use the derived private
+`item_acquisition_reviews` table for PowerSync, not an independently cached HTTP
+response. Each physical Item has explicit absent/known/unavailable evidence
+computed from existing purchase receipts across scopes. Receipt writes refresh
+it atomically; existing Transaction→receipt propagation is reused. Category
+visibility changes refresh its access requirement, and the stream requires
+active membership plus full financial access for protected rows. A missing local
+row remains unavailable, never zero. No application role writes the projection;
+it is rebuildable and cannot replace acquisition receipts or paid history.
+Tradeoff: one derived table and receipt/Item/category triggers. Local
+SQL1492checks,10parser checks and52actual-query captures pass. Actual service
+withdrawal passed in /tmp/ledger-acquisition-live-sync-asserted.log. Concurrent
+receipt insertion passed in /tmp/ledger-sale-acquisition-concurrency.log: the
+second writer waits, then sees both acquisitions and publishes unavailable;
+removing one synthetic receipt restores the remaining cost. This does not prove
+every category/receipt interleaving or completed offline UI behavior.
+
+Offline review clarification (2026-09-15): price/cost input distinguishes known
+amount, confirmed absence, and unavailable evidence. Transaction receipt streams
+are scope-filtered; an empty local receipt query cannot prove no acquisition
+exists. `InventorySalePrice.review` rejects unavailable evidence even when the
+other amount is positive. Only confirmed absence of both positive values permits
+the existing price-entry step. Reuse the existing SellToProjectModal controls;
+do not infer zero cost or fetch only the Item's current-scope Transactions.
+The required complete acquisition projection/read remains unfinished; this rule
+does not itself prove that projection or authorize changing acquisition history.
+
+Implementation direction for the approved Inventory→Project lifecycle:
+keep the Item's editable project price separate from acquisition receipt amounts
+and frozen inventory-entry/paid-line amounts. Add a revisioned per-Item price
+fact; do not derive the destination price from a Transaction's mutable total or
+overwrite `transaction_receipt_items` to record a markup. The sale command must
+compare the reviewed price revision and current placement, persist the approved
+price floor, close Inventory placement, and create the destination placement and
+new positive charge occurrence in one transaction with one replay result.
+
+Reuse `spike_item_placements`, `item_charge_occurrences`, exact `Money`, and the
+existing operation-result identity contract. A missing Return-only source
+snapshot does not prevent a valid independent Sell. Returning to source instead
+uses an immutable inventory-entry amount/category and never this price rule.
+Acquisition links, old occurrences, credits, and collected records remain intact;
+no synthetic payment Transaction is created.
+
+This introduces one mutable price fact, not a competing history subsystem.
+The tradeoff is explicit price revision validation at command acceptance rather
+than read-time fallback. Canonical lifecycle and routing specs remain authority.
+`InventorySalePriceTests` proves only pure normalization; persistence, command
+atomicity/security/replay, app/MCP and offline verification remain unimplemented.
+
+Price persistence evidence: migration `20260915062051_inventory_sale_price.sql`
+matches the DDL applied locally; its journal is registered. Ten focused checks
+and all 1,436 local SQL checks pass; advisors report no issues. Filtered automatic
+diff failed on a pre-existing local replication-role dependency, so the CLI-created
+migration contains only the reviewed price table/guard, not replication changes.
+Hosted deployment and the sale command remain pending.
+
+Canonical category binding: `spike_accounts.furnishings_category_id` identifies
+the D-013 category independently of mutable display name, type and transaction
+default. Its Account-scoped foreign key prevents cross-tenant assignment; once
+assigned it cannot be silently cleared/repointed. Existing Accounts remain null
+until reviewed setup/import supplies the identity: no name-based backfill.
+This preserves the confirmed category-edit clarification (type edits cannot
+disable Item accounting). Migration20260915062338 is local-only; commands and
+setup/import integration must handle unresolved identity explicitly.
+
+## Item detail owns its current financial subscription — 2026-09-15
+
+Direct Item detail now retains the existing `property_management_report` stream
+for its current Project alongside `physical_account_items`. Previously its reader
+queried charge/payment tables without owning their download subscription, making
+financial detail depend on which Project screen had been visited earlier.
+Changing location releases the old Project subscription; closing or cancellation
+awaits cleanup before the runtime closes the database. Local physical information
+is emitted before requesting financial data. No history, financial access rules,
+or UI components are replaced. This reuses the existing stream rather than adding
+a second financial projection. Its broader Project working set is a tradeoff;
+only the current Project is retained by this detail watcher.
+
+Evidence: authorized live offline/restart/sale/charge readback passed in
+`/tmp/ledger-sale-native-charge-authorized.log`; subscription switching and delayed
+cleanup are tested in `DownloadedItemPlacementWatchTests` and
+`/tmp/ledger-history-financial-lifetime.log`. The earlier charge assertion against
+a user with no financial access was invalid and was corrected, not used to weaken
+authorization. This does not complete the separate Invoicing workspace.
+
+### Expense receipts reuse existing byte transfer — 2026-09-15
+
+D-009 keeps an Expense separate from a client-payment Transaction. The existing
+capture receipt already supports an Expense parent, so that identity must remain
+intact through upload. Do not create a Transaction just to satisfy the current
+Transaction attachment reservation/publication endpoints.
+
+`SupabaseTransactionAttachmentUpload.uploadReservedBytes` now holds the existing
+TUS implementation independently of Transaction admission. The Transaction adapter
+delegates after validating its reservation; a forthcoming Expense adapter must
+validate its own reservation before calling the same transport. Bucket, immutable
+Account/attachment/hash path, media type, byte count, hash, upload origin, offsets
+and resumable checkpoints remain checked. Bytes are hashed once, not once per
+adapter plus once per transport. No viewer or second upload engine is introduced.
+
+The historical class/checkpoint names remain for compatibility; this avoids an
+unnecessary broad rename while separating the concrete dependency. Expense
+reservation/publication and durable-byte reconciliation are still required.
+`SupabaseTransactionAttachmentUploadTests` covers the reused transport and its
+existing Transaction consumers; a passing transport test is not evidence of an
+end-to-end Expense receipt upload.
+
+Expense receipt reservation and verified media publication precede final Expense
+creation; the existing creation command atomically attaches the published objects.
+Publication alone creates no Expense, Transaction, Invoice or payment. The private
+claims keep the intended Expense/Project identity. A service-only publication
+wrapper rechecks the capturing user, current full financial membership and active
+Project/Client, then compares observed bytes and the immutable media identity on
+every retry. Its definer boundary avoids granting service_role access to the
+private schema; no client can invoke publication with invented byte observations.
+The Edge byte reader is extracted to `_shared/observe-attachment.ts` for reuse,
+retaining bounded downloads and hashing. Receipt reference reconciliation and the
+Expense Edge/native adapter remain required; this does not settle editing policy.
+
+The native creation queue may use its durable Expense verifier result as receipt
+readiness evidence before a synced reference exists. That evidence is bound to the
+capturing principal, Account, Expense, Project and immutable capture identity;
+the server still requires the canonical media object when inserting the Expense
+reference. This removes the circular wait between receipt reference download and
+Expense creation without inventing a synced row or treating uploaded bytes alone
+as verified. Existing downloaded-object readiness remains available for already
+synced receipts. Pending bytes are retained until separate reference readback;
+this readiness check does not clear the media queue or change retention policy.
+
+Expense receipt browsing reuses the existing image gallery and PDF presentation.
+The Transaction-specific PDF byte-loading wrapper is extracted as
+`AuthorizedPDFViewer` for both consumers; rendering and gestures are unchanged.
+Expense reads include available immutable object metadata without dropping receipt
+references whose metadata has not downloaded. Metadata is not read authority:
+byte access still uses the existing runtime's scoped, revalidated loader, and an
+open Expense viewer owns a live watch that closes it when access or references
+change. This does not add capture/edit/delete/export policy or a second media cache.
+
+Expense entry keeps form inputs in the existing submission session; receipt picker
+callbacks return only after the existing attachment store acknowledges durable
+bytes. Deselecting a receipt removes its draft reference, not its protected file.
+Closing with saved files requires an explicit warning; complete recovery of an
+unsubmitted form remains unfinished, so file retention is not claimed as recovery.
+
+Pending Expense presentation reads accepted envelopes from the existing local
+operation ledger, scoped to the current Account and principal under the same
+financial authorization as downloaded Expenses. It does not insert pretend Expense
+facts or accounting revisions. Queued/applying, applied-awaiting-download, and
+rejected entries remain visibly distinct; a downloaded Expense replaces its pending
+row without deleting command history. The existing encrypted-restart test covers
+pending readback and replacement with/without receipt references
+(`/tmp/ledger-pending-expense-read-tests.log`). Rejection correction and unsubmitted
+form recovery still require implementation; this is not whole-workflow acceptance.
+
+Pending Expense receipt reads now resolve bytes from the existing protected capture
+store only when the current principal's retained Expense command references that
+attachment. Financial/project authorization and the pending command are checked
+again after reading bytes. No downloaded object or server URL is invented. The
+existing Expense viewer selects its existing PDF/image presentation from those
+bytes and closes when the pending reference is withdrawn or replaced by download.
+Local Auth/PowerSync integration proves reopening and reading the pending receipt
+before sync, refusal under a different Expense, and normal post-sync receipt reads
+(`/tmp/ledger-pending-expense-local-bytes.log`). Unsubmitted captures remain a
+separate unfinished recovery case.
+
+Unsubmitted Expense capture now has one local-only recovery record in the existing
+encrypted structured database (`spike_expense_entry_recovery`). It stores raw form
+fields, stable Expense/operation/line IDs and receipt IDs, never receipt bytes or
+an accounting fact. The form is persisted before receipt capture is acknowledged;
+closing explicitly retains current details. Invoicing reads it under financial
+authorization and principal scope. Accepted commands hide it without deleting
+history; recovery refuses to overwrite an accepted command. Receipt restoration
+reuses the protected attachment store and rechecks the current recovery record
+after reading. Missing bytes block submission rather than dropping references.
+This is a concrete Expense capture requirement, not a generic draft framework.
+Crash/restart, UI reopening, session-ending counts and stale concurrent editor
+behavior still need verification before acceptance.
+
+Recovery verification: actual encrypted-runtime reopening restores the form and
+original capture, submission preserves identity and hides the unfinished entry,
+and accepted intent cannot be overwritten (`/tmp/ledger-expense-unfinished-restart-normalized.log`).
+The existing item-bound form opens retained fields and uses **Save for later** to
+persist before closing (`/tmp/ledger-expense-unfinished-ui-save-later.log`). The
+earlier close-warning approach is superseded: retention is non-destructive, so no
+confirmation dialog is needed. Uncertain capture IDs remain in recovery state
+rather than disappearing after a different file succeeds; their correction path,
+session-ending counting and stale concurrent editors remain unfinished.
+
+Session-ending summaries now count unfinished Expense forms separately from queued
+commands and attachment uploads. The existing stable-observation hash includes
+their content, so an edited form invalidates prior cleanup evidence. Ordinary
+logout is blocked even before receipt bytes exist; accepted Expense commands
+replace the unfinished responsibility rather than double-counting it. Zero-count
+fingerprints retain the previous format. Policy/provider/model checks passed
+(`/tmp/ledger-unfinished-session-protection-final.log`); the actual runtime test
+proves count persistence through restart and transition on submission
+(`/tmp/ledger-expense-unfinished-count-runtime.log`). Concurrent-editor and
+missing-receipt recovery work is still incomplete.
+
+Expense form updates and initial submission now compare the exact previously
+loaded local recovery record inside the same database write transaction. A stale
+editor cannot overwrite newer saved content or queue an Expense over it. Identical
+save retries remain idempotent, and a previously accepted command still follows
+its existing immutable retry path. This uses the existing record as a comparison
+token, not another revision ledger or conflict service. Actual runtime tests refuse
+stale save and stale submission, then accept the current saved version
+(`/tmp/ledger-expense-stale-editor-runtime.log`). Create/reopen UI checks pass
+(`/tmp/ledger-expense-recovery-and-create-ui.log`); stale-error UI interaction
+itself remains unverified.
+
+### 2026-09-15 — Keep business-paid General costs out of the acquisition importer
+
+`FirebaseAcquisitionConversion` previously planned an inventory Purchase for a
+business-paid General Project cost. D-009 requires Expense/Invoicing instead.
+That path now returns `businessExpenseRequiresMapping`; the existing QA-copy
+manifest records the exclusion and retains the original source. It does not
+guess outstanding debt, erase historical Item links, or create a new Expense
+before settlement/history mapping exists. Client-paid General purchases and
+business-paid itemized acquisitions retain their separate mappings. Six focused
+migration tests pass in `/tmp/ledger-expense-migration-classification.log`.
+Actual Expense migration remains unfinished, and existing copied data was not
+modified or retrospectively certified by this correction.
+
+Source inspection at `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` confirms
+`Invoice.lines` owns signed source amounts (`sourceType=transaction`, `sourceId`)
+and `transactionIds` is a membership index. Payment Transactions own
+`settlementInvoiceId`/`settlementInvoiceLineIds`; line
+`settlementTransactionIds` is only a reverse lookup. Migration must reconcile
+these with Invoice status and retained source amounts before declaring an
+Expense unpaid or collected. `Transaction.status` is cancellation-only, and
+`purchaseHandling` is separate from payer identity. Do not use missing settlement
+fields on the original cost, current category, or an incomplete invoice export
+as proof of unpaid debt. This is source evidence for the unfinished mapping,
+not a new product policy or approval to replay legacy per-category collection.
+
+The Expense-only paid-source migration now reuses `store_collected_invoice`
+inside an operator-only, invoker-rights transaction. It verifies the exact
+existing imported payment, inserts reconciled Expense rows, freezes Invoice
+contents and retains the source envelopes atomically. A relational source-ID
+uniqueness constraint prevents the same original cost being imported twice
+under different target IDs/Invoices; retained request data rejects changed
+retries. No app/API role receives access. Source inspection confirms the
+original Swift Transaction has optional `createdAt` and no creator field.
+Imported Expenses preserve unknown creation metadata as null, not migration
+time/operator identity. A deferred constraint requires durable import provenance
+when creation metadata is unknown; native creation still supplies the
+authenticated actor and server time. Existing read/sync projections do not
+consume these metadata columns. Source timestamps retain full original precision
+in the envelope, with microsecond precision in the Postgres projection.
+This is not live collection policy or a completed migration runner. Source
+media/mixed histories and synced paid-state evidence remain incomplete.
+The full local SQL suite passed1612assertions in54files; local advisors found
+no issues (`/tmp/ledger-expense-invoice-import-full-sql.log`,
+`/tmp/ledger-expense-invoice-import-advisors.log`).
+
+Expense paid reads reuse complete `FrozenInvoiceContents`, not a second status
+flag. The Expense stream includes complete Project Invoice contents for the
+already-required full-financial member; the local reader validates the whole
+Invoice and its exact Expense scope/revision/amount. Missing paid evidence means
+unknown, not available/unpaid: live Invoice coverage remains separate. Encrypted
+SQLite read/restart/revocation proof passed in
+`/tmp/ledger-expense-paid-local-read-fixed.log`; actual service download and UI
+status wiring remain to be verified.
+
+Follow-up verification: actual local Auth/RPC/PowerSync paid Expense download
+and offline restart passed (`/tmp/ledger-expense-paid-live-reloaded.log`), and
+the two focused iPhone status/filter scenarios passed
+(`/tmp/ledger-expense-paid-ui.log`). The existing row and filter were adapted,
+not replaced. Missing membership evidence still means unknown. The live RPC
+test caught a deferred metadata trigger permission error; native known metadata
+now returns without querying private tables after the definer context ends.
+No API grants were widened; all1616SQLassertions passed afterward.
+
+Expense receipt migration now composes the existing source-media copier,
+reference validator and protected Storage transport with the Swift converter.
+`--receipt-media` binds copied media to the exact private snapshot digest. Only
+sources accepted by complete Expense-only Invoice validation proceed to target
+byte verification. Check mode never uploads; apply can upload missing originals
+without upsert. Object catalog, ordered receipt links and financial rows share
+one database transaction. If later SQL fails, protected unreferenced bytes may
+remain for deterministic retry; no automatic deletion policy is introduced.
+Original references/metadata remain in source evidence; legacy primary/name
+presentation, other media and mixed histories are not thereby fully mapped.
+The existing synthetic copy-runner test verifies PDF/image Storage bytes,
+financial fields, ordered links, missing/corrupt media rejection and rollback
+(`/tmp/ledger-expense-receipt-bridge-e2e.log`). No new downloader or UI.
+
+Invoice display metadata now belongs to the same immutable collected Invoice:
+optional original number, notes and issued/sent/paid/canceled/voided timestamps.
+Older missing metadata stays unknown, with no generated name/import-time default.
+Timestamps travel as exact millisecond strings within the source Timestamp date
+range; original nanosecond evidence remains in the migration envelope. This is
+not new Invoice lifecycle authority. One constrained nullable JSONB column avoids
+a separately mutable metadata record; existing financial RLS applies, with only
+the new column added to the existing authenticated column-read grant. Exact retry
+comparison includes metadata, and existing immutability blocks subsequent edits.
+The same contract flows through native storage/sync, Expense and Transaction
+readers, MCP and source conversion. Invoice rows reuse the original date fallback
+(paid, then sent, then issued). Metadata validation, migration reconciliation and
+live/UI evidence are recorded in the Invoicing workflow; preview/live lifecycle
+coverage and older-record backfill remain separate unfinished work.
+
+The collected-Invoice preview reuses `InvoiceReportView`, not a new renderer.
+Its pure `InvoiceReportData`/line types are extracted from legacy aggregation;
+Decimal minor units preserve exact section totals even when charges and credits
+separately exceed Int64 but the net fits. Existing integer callers retain their
+initializer. The target maps sealed descriptions, signs and purchase-cost basis,
+never current Item prices. A scoped watch owns the open preview and clears it on
+withdrawal/error. Date fallback and logo loading are injectable so unknown dates
+are not presented as today and protected bytes can use the existing asset reader.
+Project/Client names use the existing workspace context. Business branding now
+uses the existing authorized profile watch and bounded logo decoder; absent,
+unavailable and stale branding remain explicit. PDF download is still unconnected;
+hiding download is not feature completion. Focused accounting and preview interaction evidence belong to the
+existing Invoicing checklist, not a separate report tracker.
+
+Invoice export work now belongs to the existing checklist's
+`invoice-report-readback` execution record. The original HTML layout remains;
+its target boundary excludes unrelated legacy report models, escapes display
+fields/provenance and disables network content through CSP. `renderData` extends
+the original PDF helper with per-call ownership, native pagination and thrown
+errors instead of its global one-page crop. Download completion extends the
+existing native helper; the existing protected report store still owns delivered
+scratch bytes and cleanup, and Invoice/profile reads revalidate at handoff.
+These changes are in progress, not accepted: native delivery unit checks pass,
+but long-document rendering, actual save/cancel, macOS temporary-render crash
+recovery, generation cancellation, filenames and visual output need evidence.
+No separate report design, accounting writer or download service is introduced.
+
+Invoice download filenames now use the existing protected scratch store's optional
+name hint: at most 60 ASCII letters/digits/hyphens, followed by a UUID and the
+validated format extension. Unsupported characters become hyphens. Recovery
+accepts this bounded shape as well as existing UUID-only files; ownership,
+descriptor-based access, permissions, active-session locks and completion-owned
+cleanup are unchanged. This supplies a readable iPhone filename without another
+plaintext copy or another save UI. The UUID remains visible to preserve unique
+names. Native scratch/delivery tests and actual iPhone Save passed; evidence is
+in `invoice-report-readback`. Mac render-only crash recovery remains separate
+and unfinished. No accounting relationships or source data change.
+
+Mac PDF generation uses AppKit's document-modal completion API with its printing
+thread enabled. A retained, unshown window provides the print context; this is
+not a new user-facing save interface. WebKit's synchronous preview path can
+return an unknown page count before pagination, which caused the observed
+unbounded spool. AppKit's completion callback runs on the print thread, so the
+callback is nonisolated and explicitly returns to MainActor for state cleanup.
+The original HTML and WebKit renderer remain shared. Actual 80-line, four-page
+Invoice output now passes content checks and visual review on Mac; interruption
+and render-file crash recovery are still incomplete, not waived by this result.
+
+The target Mac Invoice adapter now supplies an output URL reserved by the existing
+`ReportScratchStore.generatePDF` operation. The shared renderer remains independent
+of PowerSync. The store holds its existing session lock through native completion,
+handles native atomic replacement, and removes output after completion or error.
+Cancellation and WebKit failure during printing defer completion until the writer
+finishes; tests verify complete native output exists before the error returns.
+Startup recovery permits read-only group/other bits on abandoned native output
+only inside verified private, unlocked sessions; it still rejects unsafe ownership,
+links, executable or writable-by-others files. Normal generated output is normalized
+to 0600. Actual renderer/store integration and modeled abandoned-file tests pass;
+these do not claim an end-to-end forced-process-crash rehearsal.
+
+### Collected Invoice report read evidence (2026-09-15)
+
+The Invoice report now requests frozen contents and download provenance through
+the existing Invoicing read boundary. Its provider checks access, reads the
+retained stream checkpoint and hashes the selected frozen Invoice within one
+local database transaction. It reuses the existing report provenance value;
+there is no second sync tracker or new stored accounting history. The content
+version describes frozen Invoice data, not separately loaded branding/category
+labels, which retain their own final export checks.
+
+The original preview and HTML receive the read timestamp, source version,
+completed-sync timestamp and accounting authority identifier. Native handoff
+revalidates contents and visibility; a later checkpoint alone does not invalidate
+unchanged contents. No timestamp is an offline expiry. Provider restart and
+denial checks pass; app wiring and final rendered evidence remain under the
+existing Invoice report checklist, not a separate completion claim.

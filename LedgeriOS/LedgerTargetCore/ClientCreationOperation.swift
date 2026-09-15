@@ -110,6 +110,15 @@ public struct CreateClientCommand: Codable, Equatable, Sendable {
     public let fingerprint: OperationFingerprint
 
     public init(operationId: OperationID, draft: ClientCreationDraft) throws {
+        // New commands use the server's whole-millisecond wire contract. Decode
+        // keeps existing envelopes untouched so persisted fingerprints survive.
+        let milliseconds = (draft.capturedAt.timeIntervalSince1970 * 1000).rounded(.down)
+        guard milliseconds.isFinite, abs(milliseconds) < 1_000_000_000_000_000 else {
+            throw ClientCreationFailure.invalidClientCreatedAt
+        }
+        let draft = try ClientCreationDraft(accountId: draft.accountId, actorPrincipalId: draft.actorPrincipalId,
+            operationContractVersion: draft.operationContractVersion, clientId: draft.clientId,
+            displayName: draft.displayName, capturedAt: Date(timeIntervalSince1970: milliseconds / 1000))
         let payload = CreateClientPayload(
             clientId: draft.clientId,
             displayName: draft.displayName

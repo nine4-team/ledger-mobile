@@ -1,53 +1,69 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 440,
-  "resumeAfterWorkflowId": "downloaded-item-browsing-and-detail",
-  "updatedAt": "2026-09-11",
+  "stateVersion": 917,
+  "userRequestedPause": {
+    "date": "2026-09-15",
+    "status": "resumed",
+    "instruction": "User explicitly said proceed after the checkpoint pause. Resume authorized implementation; preserve the estimate as a dated judgment, not measured acceptance.",
+    "completionEstimate": "Judgment estimate, not measured acceptance: approximately 50% overall (40–60% uncertainty), including remaining hosted integration and cutover readiness. Relative weights sum to 100; category completion estimates: auth/offline infrastructure 10@65%; Clients/Projects/Spaces/checklists 10@60%; categories/settings 8@80%; Items/inventory/movement/history 15@45%; Transactions/audit 12@55%; Expenses/Invoicing/collection/refunds 15@35%; media/pinning 8@65%; reports/export 7@60%; MCP 5@40%; migration/hosted/release readiness 10@20%. Weighted result50.4%. These are not hours, token forecasts, accepted-workflow counts or a comparable historical velocity series. Invoice importers excluded as retired."
+  },
+  "resumeAfterWorkflowId": "local-vendor-pdf-review",
+  "updatedAt": "2026-09-15",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
-  "method": {
-    "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
-    "version": 4
-  },
+  "method": {"path":"docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md","version":4},
   "verifiedCheckpoint": {
     "name": "ITEM-ACCOUNTING-FILTER-BOTH-PLATFORMS-GREEN",
     "commit": "505dc2bb658076b0536e705038dd29b020747baf",
     "ciRun": 34563203081,
     "attempt": 1,
     "ciStatus": "passed",
-    "meaning": "Historical attempt1 passed all five jobs, including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 subsequently failed iOS UI; this is NOT a currently clean full-UI baseline. Four accounting-filter checks passed in attempt1. No broad Item, Purchase, hosted, migration or cutover completion. Pre-existing dirty Purchase changes are not part of this committed proof."
+    "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "item-linked-purchase-read",
-    "kind": "backend_control",
-    "status": "complete",
+    "id": "invoice-report-readback",
+    "integrationWorkflowIds": ["invoice-report-readback", "business-paid-expense-entry", "inventory-to-project-sale", "transaction-browser-and-detail", "category-management", "item-history-source-reconciliation", "learned-account-removal-enforcement", "property-management-report-delivery", "scoped-active-space-list-to-detail", "existing-client-project-creation", "downloaded-item-browsing-and-detail"],
+    "kind": "product_ui",
+    "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Read available canonical Purchase facts for a current Project Item through authorized sync and durable local storage. No UI, payment writes, complete Transaction destination or migration delivery.",
+    "outcome": "Route the Invoice report entry through the existing Invoice browser. Render exact live or frozen paid contents, signed groups/totals, status, notes and revision evidence. A linked Purchase explains payment without adding demand again; never substitute generic Project arrays or current Item price repairs.",
+    "baseCommit": "ca68d793f193463fd191d272891d02cf85b7c5c4",
     "nextActions": [
-      "Bounded Purchase-read trial FINISHED. Implementation6f9efa2ed58ef4d92410ef22354f8d38a39ad774 is unchanged by later process commits. Seven acceptance checks pass; local exact-money/scope/offline tests and clean CI backend/native/build checks pass. Checklist CI status is explicitly scoped to these required backend checks, NOT overall-run success.",
-      "Run34649367344 attempt1 was cancelled after required backend checks passed; only unrelated iOS UI remained (macOS job passed). Full-run conclusion remains cancelled. Do not resume its UI tests or present it as a green cumulative gate. Watch session3170 terminated; heartbeat ledger-purchase-read-verification PAUSED. No follow-up work remains for this trial.",
-      "User authorized publishing the prepared CI/process corrections (cba2652d,3e9a8a86 plus latest guidance) to activate them on GitHub.18local policy tests pass; selector uses the fixed batch base and app_ui layer and selects no UI for this backend batch. Allow the single normal automatic run from this publication; record its exact commit/run after dispatch. No manual duplicate CI or new implementation batch authorized.",
-      "Efficiency assessment reconciles the completed goal's460863reported tokens but marks task/activity attribution insufficient; no cached/uncached/output split or subscription savings established. Before the next requested measurement, follow diagnostic-plan sections2-3: fresh live source, counter at each activity switch, early two-interval check, explicit mixed gaps, final category distribution including reporting. AGENTS/method now require stopping surplus tests and distinguish the earlier quiet experiment from this noisy trial. This publication activates those corrections; it is not another feature trial.",
-      "Preserve all unrelated dirty work; broader reuse investigation remains incomplete and paused. Historical34563203081 attempt1 passed but attempt2 failed iOS UI, still unresolved. Neither this backend result nor cancelled CI establishes app/merge/release/cutover readiness. No Firebase, production/hosted access or payment writes."
-    ],
-    "baseCommit": "505dc2bb658076b0536e705038dd29b020747baf"
+      "Invoice local and hosted offline/readiness/withdrawal evidence is recorded under its owner. Do not repeat passing checks; finish integration review. Needed Mac UI checks are now authorized.",
+      "Hosted Invoice download and withdrawal checks passed; see Invoice owner. Review integrated report acceptance without repeating these tests. O-032 payment metadata remains unresolved.",
+      "Continue Invoicing live statuses and lifecycle under their own owners. O-034 sent-revision, O-009 adjustments and O-060 mixed visibility remain unresolved; paid full-access work does not decide them.",
+      "Expense iPhone and Mac line-controls passed. Separate unavailable-category behavior passed directly; automated coverage awaits isolated batch CI. See Expense owner. Transaction export/attachment gaps and Sale reconciliation retain their owners."
+    ]
   },
-  "blockers": [],
+  "blockers": [
+    "O-051 rejected-operation correction/replacement/resolution remains unapproved; preserve pending work and continue independent outcomes.",
+    "2026-09-15: manual collection prompts for amount; no partial-payment feature; Expenses editable until collected. Saved in specs/log. Full O-006/O-033 packet not approved; no mandatory resend gate (O-034 open).",
+    "O-023 attachment removal/retention, O-032 payment evidence, O-034 sent revisions, O-009 adjustments and O-060 mixed visibility remain unresolved in the decision log.",
+    "Earlier dirty category/gallery/Expense/Sale work retains separate owners; never broaden reports to satisfy ownership checks.",
+    "Hosted Ledger auth/rules deployed; full hosted app/sync and migration rehearsal incomplete. No extra charges or cutover authority."
+  ],
   "guardrails": [
-    "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile.",
-    "Do not implement redesigned behavior in Firebase.",
-    "Do not access or mutate production systems or production data.",
-    "Do not create paid or hosted resources, migrate data, freeze Firebase, release, or cut over without explicit user approval."
+    "User permits cursor/keyboard control when needed, superseding earlier session restriction. Prefer non-disruptive verification when sufficient; permission is not test evidence.",
+    "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile or implement redesigned Firebase behavior.",
+    "Source access is limited to the authorized read-only project QA copy; never mutate production Firebase.",
+    "Existing hosted Ledger config is authorized; new paid resources and production migration/freeze/release/cutover need approval."
   ],
   "resume": {
-    "requiredReads": [
-      "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
-      "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md"
-    ],
-    "requiredCommands": [
-      "git status --short --branch",
-      "npm run conversion:state:check"
-    ],
-    "instruction": "Continue the active workflow from nextActions. Load only its named authority sections and affected code until a concrete discrepancy requires broader history."
+    "requiredReads": ["docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json","docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md"],
+    "requiredCommands": ["git status --short --branch","npm run conversion:state:check"],
+    "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
+  },
+  "currentTask": {
+    "id": "invoice-report-readback-implementation",
+    "status": "implementation",
+    "acceptanceCheckIds": ["INVOICE-REPORT-CONTENT","INVOICE-REPORT-DELIVERY"],
+    "meaning": "Invoice hosted download/offline reopen and financial-withdrawal denial passed; exact evidence under Invoice owner. QA permissions restored none/false/false. Expense line-controls passed on both platforms; unavailable-category automation is blocked by desktop interference. Whole-report acceptance and product decisions remain open.",
+    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter CollectedInvoiceReportDeliveryTests","Focused iPhone testCollectedInvoiceDownloadCancellation; actual PDF visual/content verification."],
+    "lastResult": "Expense receipt durability fix verified, including reopened retry; see Expense publicReceiptDurabilityVerification. Native1359/193 suites (3 live skips), MCP116 and SQL1645 passed; details remain under Transaction accumulatedIntegrationVerification. No exact-commit CI yet.",
+    "activeProcesses": {"localEdgeService":14316},
+    "databaseReview": "Source review complete for commands/auth/categories, uploads, Expense storage/read/import, Transaction read/projections and Invoice/accounting sync. SQL PASS54 files/1645 assertions/4s: /tmp/ledger-database-integration-review.log session40737 exit0. Fresh migration replay remains pending; use existing CI fresh-stack job after checkpoint scope is resolved, not a destructive local reset.",
+    "immediateFollowup": "Integration scope/risk gate passes: /tmp/ledger-integration-risk-check.log. CI controls19 pass; target contracts/TypeScript pass (integration-ci-controls/contract-check logs). No GitHub run started.",
+    "uiAvailabilityWait": "Category UI failed11.423s before assertion; /tmp/ledger-expense-category-integration.log. Screenshot again shows Boards foreground. No retries until isolated execution. Direct pass retained.",
+    "nextVerification": "Native/MCP/SQL and source review complete; conversion gate now passes. Keep separate acceptance and fixed base. Prepare checkpoint for fresh-database/isolated UI CI. No tests or CI running."
   }
 }

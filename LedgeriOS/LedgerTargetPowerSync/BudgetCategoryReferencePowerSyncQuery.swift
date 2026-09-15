@@ -17,6 +17,35 @@ protocol BudgetCategoryReferenceLocalReading: Sendable {
     ) throws -> AsyncThrowingStream<[BudgetCategoryPowerSyncRow], Error>
 }
 
+/// Categories are included in the existing auto-subscribed projects stream.
+/// A sync of some other stream is not evidence that this directory downloaded.
+enum BudgetCategorySyncCompleteness {
+    private struct Identity: SyncStreamDescription {
+        let name = "spike_projects"
+        let parameters: JsonParam? = nil
+    }
+
+    static func isComplete(_ status: any SyncStatusData) -> Bool {
+        guard let stream = status.forStream(stream: Identity())?.subscription,
+              stream.active, stream.isDefault,
+              let epoch = stream.lastSyncedAt, epoch.isFinite, epoch >= 0 else { return false }
+        return true
+    }
+
+    static func observe(_ database: any PowerSyncDatabaseProtocol) -> AsyncStream<Bool> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await status in database.currentStatus.asFlow() {
+                    guard !Task.isCancelled else { break }
+                    continuation.yield(isComplete(status))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+}
+
 private final class PowerSyncBudgetCategoryReferenceLocalReader:
     BudgetCategoryReferenceLocalReading, @unchecked Sendable
 {
@@ -34,41 +63,58 @@ private final class PowerSyncBudgetCategoryReferenceLocalReader:
         accountId: AccountID,
         principalId: PrincipalID
     ) throws -> AsyncThrowingStream<[BudgetCategoryPowerSyncRow], Error> {
-        try database.watch(
-            sql: Self.categorySQL,
-            parameters: [
-                accountId.rawValue,
-                principalId.rawValue,
-                accountId.rawValue,
-            ]
-        ) { cursor in
-            try BudgetCategoryPowerSyncRow(cursor: cursor)
+        // The pinned SDK emits on table updates, including same-count edits.
+        // Read one coherent transaction per notification and use the same local
+        // projection as write admission rather than a second SQL implementation.
+        let changes = try database.watch(sql: """
+            SELECT
+              (SELECT count(*) FROM spike_account_memberships WHERE account_id = ? AND principal_id = ?),
+              (SELECT count(*) FROM spike_budget_categories WHERE account_id = ?),
+              (SELECT count(*) FROM spike_local_operations WHERE account_id = ? AND actor_principal_id = ?),
+              (SELECT count(*) FROM spike_operation_results WHERE account_id = ?)
+            """, parameters: [accountId.rawValue, principalId.rawValue, accountId.rawValue,
+                accountId.rawValue, principalId.rawValue, accountId.rawValue]) { try $0.getInt64(index: 0) }
+        return AsyncThrowingStream { continuation in
+            let task = Task { [database] in
+                do {
+                    for try await _ in changes {
+                        try Task.checkCancellation()
+                        let rows: [BudgetCategoryPowerSyncRow] = try await database.readTransaction { local in
+                            let financial = try local.getOptional(sql: """
+                                SELECT financial_access FROM spike_account_memberships
+                                WHERE account_id = ? AND principal_id = ? AND state = 'active'
+                                """, parameters: [accountId.rawValue, principalId.rawValue]) {
+                                    try $0.getString(name: "financial_access")
+                                }
+                            guard let financial else { return [Self.sentinel(active: false)] }
+                            let definitions = try CategoryManagementLocalProjection.read(local,
+                                account: accountId, principal: principalId, fullFinancialAccess: financial == "full")
+                            guard !definitions.isEmpty else { return [Self.sentinel(active: true)] }
+                            return definitions.map {
+                                BudgetCategoryPowerSyncRow(scopeRawValue: 1, id: $0.id.rawValue,
+                                    accountId: $0.accountId.rawValue, displayName: $0.name.rawValue,
+                                    kind: $0.kind.rawValue, lifecycle: $0.lifecycle.rawValue,
+                                    isSystem: $0.isSystem ? 1 : 0,
+                                    excludesFromOverallBudget: $0.excludesFromOverallBudget ? 1 : 0,
+                                    presentationOrder: Int64($0.presentationOrder), revision: Int64($0.revision))
+                            }
+                        }
+                        try Task.checkCancellation()
+                        continuation.yield(rows)
+                    }
+                    continuation.finish()
+                } catch is CancellationError { continuation.finish() }
+                catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 
-    private static let categorySQL = """
-        WITH scope AS (
-          SELECT EXISTS (
-            SELECT 1
-            FROM spike_account_memberships
-            WHERE account_id = ? AND principal_id = ? AND state = 'active'
-          ) AS is_active
-        )
-        SELECT scope.is_active,
-               category.id,
-               category.account_id,
-               category.display_name,
-               category.kind,
-               category.lifecycle,
-               category.is_system,
-               category.excludes_from_overall_budget,
-               category.presentation_order,
-               category.revision
-        FROM scope
-        LEFT JOIN spike_budget_categories AS category
-          ON scope.is_active AND category.account_id = ?
-        ORDER BY category.presentation_order, category.id
-        """
+    private static func sentinel(active: Bool) -> BudgetCategoryPowerSyncRow {
+        BudgetCategoryPowerSyncRow(scopeRawValue: active ? 1 : 0, id: nil, accountId: nil,
+            displayName: nil, kind: nil, lifecycle: nil, isSystem: nil,
+            excludesFromOverallBudget: nil, presentationOrder: nil, revision: nil)
+    }
 }
 
 final class BudgetCategoryReferencePowerSyncQuery:
@@ -87,19 +133,16 @@ final class BudgetCategoryReferencePowerSyncQuery:
         database: any PowerSyncDatabaseProtocol,
         principalId: PrincipalID,
         accountId: AccountID,
-        completenessObservation: @escaping CompletenessObservation = { _ in
-            AsyncStream { continuation in
-                continuation.yield(false)
-                continuation.finish()
-            }
-        },
+        completenessObservation: CompletenessObservation? = nil,
         now: @Sendable @escaping () -> Date = Date.init
     ) {
         self.init(
             localReader: PowerSyncBudgetCategoryReferenceLocalReader(database: database),
             principalId: principalId,
             accountId: accountId,
-            completenessObservation: completenessObservation,
+            completenessObservation: completenessObservation ?? { _ in
+                BudgetCategorySyncCompleteness.observe(database)
+            },
             now: now
         )
     }
@@ -371,7 +414,7 @@ struct BudgetCategoryReferenceObservedState: Sendable {
     }
 }
 
-private final class BudgetCategoryReferenceWatchTaskHandle: @unchecked Sendable {
+final class BudgetCategoryReferenceWatchTaskHandle: @unchecked Sendable {
     private let lock = NSLock()
     private var task: Task<Void, Never>?
     private var cancellationRequested = false
@@ -393,7 +436,7 @@ private final class BudgetCategoryReferenceWatchTaskHandle: @unchecked Sendable 
     }
 }
 
-private actor BudgetCategoryReferenceWatchRegistry {
+actor BudgetCategoryReferenceWatchRegistry {
     private var handles: [UUID: BudgetCategoryReferenceWatchTaskHandle] = [:]
     private var isClosing = false
     private var drainWaiters: [CheckedContinuation<Void, Never>] = []

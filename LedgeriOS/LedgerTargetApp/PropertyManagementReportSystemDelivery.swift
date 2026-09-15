@@ -4,6 +4,7 @@ import LedgerTargetAppModel
 import AppKit
 import ApplicationServices
 import PDFKit
+import UniformTypeIdentifiers
 #elseif os(iOS)
 import UIKit
 import Photos
@@ -42,6 +43,36 @@ import Photos
 enum PropertyManagementReportSystemDelivery {
     enum Action { case share, print }
     private static var presenting = false
+
+    #if os(macOS)
+    static func imageSaveDestination(fileName: String?, mediaType: String) async throws -> URL {
+        try Task.checkCancellation()
+        guard !presenting else { throw Failure.alreadyPresenting }
+        guard let type = UTType(mimeType: mediaType), type.conforms(to: .image),
+              let suffix = type.preferredFilenameExtension else { throw Failure.unreadableFile }
+        presenting = true
+        defer { presenting = false }
+        let leaf = ((fileName ?? "Image") as NSString).lastPathComponent
+        let base = (leaf as NSString).deletingPathExtension
+            .components(separatedBy: .controlCharacters).joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        let suggestedName = (base.isEmpty ? "Image" : base) + "." + suffix
+        guard let destination = await PDFDownloadHelper.selectDestination(fileName: suggestedName, contentType: type) else {
+            throw CancellationError()
+        }
+        try Task.checkCancellation()
+        return destination
+    }
+
+    /// The caller has revalidated immediately before handoff. Retain the
+    /// original bytes until the copy finishes without blocking the UI thread.
+    static func saveImage(_ bytes: Data, to destination: URL) async throws {
+        try Task.checkCancellation()
+        guard destination.isFileURL else { throw Failure.unavailablePresenter }
+        try await Task.detached(priority: .userInitiated) { @Sendable in
+            try bytes.write(to: destination, options: .atomic)
+        }.value
+    }
+    #endif
 
     enum Failure: LocalizedError {
         case unavailablePresenter, alreadyPresenting, unreadableFile, printingUnavailable, presentationFailed

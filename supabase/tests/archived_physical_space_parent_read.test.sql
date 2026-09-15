@@ -2,6 +2,12 @@ begin;
 set local search_path=public,extensions;
 select no_plan();
 
+select is((select count(*) from pg_policies
+  where schemaname='public' and tablename='spike_spaces'
+    and permissive='PERMISSIVE' and cmd='SELECT'
+    and 'authenticated'=any(roles)),1::bigint,
+ 'Space reads use one policy without duplicate membership checks');
+
 insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,
   created_at_ms,updated_at_ms,created_by_principal_id)
 values ('aps-project','account-primary','client-existing','Parent read',now(),now(),1,1,'principal-owner');

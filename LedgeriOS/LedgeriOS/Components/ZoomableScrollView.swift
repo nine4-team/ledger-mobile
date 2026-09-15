@@ -37,20 +37,20 @@ struct ImageAnnotationSymbol: View {
     }
 }
 
-enum ZoomableImageLoader {
-    static func prepare(_ data: Data) async -> PlatformImage? {
-        let startedAt = DispatchTime.now().uptimeNanoseconds
-        let preparedImage = await PlatformImageDecoder.decode(data)
-        let elapsed = Double(DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000
-        PerformanceDiagnostics.shared.duration(
-            "ZoomableImageDecode",
-            kind: preparedImage == nil ? "failed" : "success",
-            milliseconds: elapsed,
-            count: preparedImage?.image.estimatedDecodedByteCount ?? 0,
-            value: data.count
-        )
-        return preparedImage?.image
-    }
+#if canImport(UIKit)
+import UIKit
+typealias GalleryPlatformImage = UIImage
+#else
+import AppKit
+typealias GalleryPlatformImage = NSImage
+#endif
+
+/// Presentation input, not permission to fetch an image. The target supplies
+/// authorized pixels; legacy URL loading is in a separately compiled adapter.
+struct GalleryImageSource {
+    let identity: AnyHashable
+    var image: GalleryPlatformImage? = nil
+    var load: (@MainActor () async -> GalleryPlatformImage?)? = nil
 }
 
 #if canImport(UIKit)
@@ -87,20 +87,24 @@ private final class AccessibleAnnotationImageView: UIImageView {
 ///
 /// Shared by `ImageGallery` (full-screen viewer) and `PinnedImagePanel` (reference panel).
 struct ZoomableScrollView: UIViewRepresentable {
-    let url: URL?
+    let source: GalleryImageSource
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
     var annotations: [ZoomableImageAnnotation] = []
     var annotationSelectionEnabled = true
     var onImageTap: ((CGPoint) -> Void)?
     var onAnnotationTap: ((String) -> Void)?
+    var imageAccessibilityIdentifier: String? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
 
     func makeUIView(context: Context) -> UIScrollView {
-        let scrollView = UIScrollView()
+        let scrollView = LayoutScrollView()
+        scrollView.onViewportLayout = { [weak coordinator = context.coordinator] size in
+            coordinator?.refitIfNeeded(in: size)
+        }
         scrollView.delegate = context.coordinator
         scrollView.minimumZoomScale = 1.0
         scrollView.maximumZoomScale = 5.0
@@ -113,6 +117,8 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         // Image view
         let imageView = UIImageView()
+        imageView.isAccessibilityElement = true
+        imageView.accessibilityLabel = "Image"
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         scrollView.addSubview(imageView)
@@ -148,17 +154,19 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         // Don't load here — bounds are zero until the view is laid out.
         // updateUIView fires after layout with correct bounds, and its
-        // currentURL != url check will trigger the initial load.
+        // currentImageIdentity != source.identity check will trigger the initial load.
 
         return scrollView
     }
 
     func updateUIView(_ scrollView: UIScrollView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.imageView?.accessibilityIdentifier = imageAccessibilityIdentifier
+        context.coordinator.imageView?.accessibilityValue = String(format: "%.1f× zoom", Double(zoomScale))
 
-        // If URL changed, reload
-        if context.coordinator.currentURL != url {
-            context.coordinator.loadImage(url: url)
+        // If image identity changed, reload
+        if context.coordinator.currentImageIdentity != source.identity {
+            context.coordinator.loadImage(source: source)
         }
         context.coordinator.updateAnnotations(annotations)
 
@@ -173,6 +181,22 @@ struct ZoomableScrollView: UIViewRepresentable {
         }
     }
 
+    final class LayoutScrollView: UIScrollView {
+        var onViewportLayout: ((CGSize) -> Void)?
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            onViewportLayout?(bounds.size)
+        }
+    }
+
+    static func dismantleUIView(_ scrollView: UIScrollView, coordinator: Coordinator) {
+        (scrollView as? LayoutScrollView)?.onViewportLayout = nil
+        coordinator.loadTask?.cancel()
+        coordinator.currentLoadID = UUID()
+        coordinator.imageView?.image = nil
+        scrollView.delegate = nil
+    }
+
     // MARK: - Coordinator
 
     class Coordinator: NSObject, UIScrollViewDelegate {
@@ -181,7 +205,10 @@ struct ZoomableScrollView: UIViewRepresentable {
         var spinner: UIActivityIndicatorView?
         var errorView: UIImageView?
         var doubleTapGesture: UITapGestureRecognizer?
-        var currentURL: URL?
+        var currentImageIdentity: AnyHashable?
+        var currentLoadID = UUID()
+        var lastFitSize = CGSize.zero
+        var isFitting = false
         var annotations: [ZoomableImageAnnotation] = []
         fileprivate var annotationViews: [String: AccessibleAnnotationImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
@@ -208,8 +235,10 @@ struct ZoomableScrollView: UIViewRepresentable {
                 platformZoom: scrollView.zoomScale,
                 fitScale: scrollView.minimumZoomScale
             )
-            if abs(scale - parent.zoomScale) > 0.01 {
+            if !isFitting, abs(scale - parent.zoomScale) > 0.01 {
+                let loadID = currentLoadID
                 DispatchQueue.main.async {
+                    guard self.currentLoadID == loadID, self.imageView?.image != nil else { return }
                     self.parent.zoomScale = scale
                 }
             }
@@ -420,68 +449,48 @@ struct ZoomableScrollView: UIViewRepresentable {
         // MARK: Image Loading
 
         @MainActor
-        func loadImage(url: URL?) {
+        func loadImage(source: GalleryImageSource) {
             loadTask?.cancel()
-            currentURL = url
+            currentImageIdentity = source.identity
+            lastFitSize = .zero
+            let loadID = UUID()
+            currentLoadID = loadID
             spinner?.stopAnimating()
             imageView?.image = nil
             errorView?.isHidden = true
-
-            guard let url else {
-                errorView?.isHidden = false
+            if let image = source.image {
+                displayImage(image)
                 return
             }
-
-            let cacheKey = url.absoluteString
-            if let cachedImage = ImageCache.image(for: cacheKey) {
-                PerformanceDiagnostics.shared.event("ImageCache", kind: "zoomable-hit")
-                displayImage(cachedImage)
-                return
-            }
-
+            guard let load = source.load else { showError(); return }
             spinner?.startAnimating()
-
             loadTask = Task { @MainActor [weak self] in
-                PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: 1)
-                defer {
-                    PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: -1)
-                }
-                do {
-                    // Resolve gs:// URLs to HTTPS download URLs
-                    let loadableURL: URL
-                    if url.scheme == "gs" {
-                        guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
-                            self?.showError()
-                            return
-                        }
-                        loadableURL = resolved
-                    } else {
-                        loadableURL = url
-                    }
-
-                    let (data, _) = try await URLSession.shared.data(from: loadableURL)
-                    guard !Task.isCancelled, self?.currentURL == url else { return }
-                    guard let image = await ZoomableImageLoader.prepare(data) else {
-                        self?.showError()
-                        return
-                    }
-                    guard !Task.isCancelled, self?.currentURL == url else { return }
-                    ImageCache.store(image, for: cacheKey, cost: data.count)
-                    self?.displayImage(image)
-                } catch {
-                    if !Task.isCancelled {
-                        self?.showError()
-                    }
-                }
+                let image = await load()
+                guard !Task.isCancelled, self?.currentLoadID == loadID else { return }
+                if let image { self?.displayImage(image) }
+                else { self?.showError() }
             }
+        }
+
+        @MainActor
+        func refitIfNeeded(in viewport: CGSize) {
+            guard viewport.width > 0, viewport.height > 0, viewport != lastFitSize,
+                  let image = imageView?.image else { return }
+            displayImage(image)
         }
 
         @MainActor
         private func displayImage(_ image: UIImage) {
             guard let imageView, let scrollView = imageView.superview as? UIScrollView else { return }
+            isFitting = true
+            defer { isFitting = false }
             spinner?.stopAnimating()
             errorView?.isHidden = true
 
+            // Layout is independent of whether pixels arrive synchronously or from a URL.
+            // Reset the old image transform before installing its unscaled frame.
+            scrollView.minimumZoomScale = min(1, scrollView.minimumZoomScale)
+            scrollView.setZoomScale(1, animated: false)
             imageView.image = image
             let imageSize = image.size
             imageView.frame = CGRect(origin: .zero, size: imageSize)
@@ -491,6 +500,7 @@ struct ZoomableScrollView: UIViewRepresentable {
             let scrollBounds = scrollView.bounds
             guard scrollBounds.width > 0, scrollBounds.height > 0,
                   imageSize.width > 0, imageSize.height > 0 else { return }
+            lastFitSize = scrollBounds.size
 
             let widthScale = scrollBounds.width / imageSize.width
             let heightScale = scrollBounds.height / imageSize.height
@@ -503,7 +513,9 @@ struct ZoomableScrollView: UIViewRepresentable {
             centerImage(in: scrollView)
             layoutAnnotationViews(in: scrollView)
 
+            let loadID = currentLoadID
             DispatchQueue.main.async {
+                guard self.currentLoadID == loadID, self.imageView?.image != nil else { return }
                 self.parent.zoomScale = 1.0
             }
         }
@@ -524,9 +536,6 @@ struct ZoomableScrollView: UIViewRepresentable {
         }
     }
 
-    static func dismantleUIView(_ scrollView: UIScrollView, coordinator: Coordinator) {
-        coordinator.loadTask?.cancel()
-    }
 }
 #elseif canImport(AppKit)
 import SwiftUI
@@ -565,20 +574,24 @@ private final class AccessibleAnnotationNSImageView: NSImageView {
 ///
 /// Mirrors the iOS `UIViewRepresentable` + `UIScrollView` architecture.
 struct ZoomableScrollView: NSViewRepresentable {
-    let url: URL?
+    let source: GalleryImageSource
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
     var annotations: [ZoomableImageAnnotation] = []
     var annotationSelectionEnabled = true
     var onImageTap: ((CGPoint) -> Void)?
     var onAnnotationTap: ((String) -> Void)?
+    var imageAccessibilityIdentifier: String? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSScrollView()
+        let scrollView = LayoutScrollView()
+        scrollView.onViewportLayout = { [weak coordinator = context.coordinator] size in
+            coordinator?.refitIfNeeded(in: size)
+        }
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
@@ -639,12 +652,13 @@ struct ZoomableScrollView: NSViewRepresentable {
         // KVO on magnification to sync zoom back to SwiftUI
         context.coordinator.magnificationObservation = scrollView.observe(\.magnification, options: [.new]) { [weak coordinator = context.coordinator] scrollView, change in
             MainActor.assumeIsolated {
-                guard let coordinator, let newValue = change.newValue else { return }
+                guard let coordinator, !coordinator.isFitting, let newValue = change.newValue else { return }
                 let logicalScale = MediaGalleryCalculations.logicalZoomScale(
                     platformZoom: newValue,
                     fitScale: scrollView.minMagnification
                 )
-                if abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
+                if !coordinator.isApplyingZoom,
+                   abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
                     coordinator.parent.zoomScale = logicalScale
                 }
                 coordinator.layoutAnnotationViews(in: scrollView)
@@ -652,17 +666,19 @@ struct ZoomableScrollView: NSViewRepresentable {
         }
 
         // Load initial image
-        context.coordinator.loadImage(url: url)
+        context.coordinator.loadImage(source: source)
 
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.imageView?.setAccessibilityIdentifier(imageAccessibilityIdentifier)
+        context.coordinator.imageView?.setAccessibilityValue(String(format: "%.1f× zoom", Double(zoomScale)))
 
-        // If URL changed, reload
-        if context.coordinator.currentURL != url {
-            context.coordinator.loadImage(url: url)
+        // If image identity changed, reload
+        if context.coordinator.currentImageIdentity != source.identity {
+            context.coordinator.loadImage(source: source)
         }
         context.coordinator.updateAnnotations(annotations)
 
@@ -673,12 +689,36 @@ struct ZoomableScrollView: NSViewRepresentable {
             fitScale: scrollView.minMagnification
         )
         if abs(scrollView.magnification - targetScale) > 0.01 {
-            scrollView.animator().magnification = targetScale
+            // Animation samples are not new user zoom requests. Feeding them
+            // back into the binding retargets Reset before it reaches fit.
+            let coordinator = context.coordinator
+            let animationID = UUID()
+            coordinator.zoomAnimationID = animationID
+            coordinator.isApplyingZoom = true
+            NSAnimationContext.runAnimationGroup { _ in
+                scrollView.animator().magnification = targetScale
+            } completionHandler: { [weak coordinator] in
+                MainActor.assumeIsolated {
+                    guard let coordinator, coordinator.zoomAnimationID == animationID else { return }
+                    coordinator.isApplyingZoom = false
+                }
+            }
+        }
+    }
+
+    final class LayoutScrollView: NSScrollView {
+        var onViewportLayout: ((CGSize) -> Void)?
+        override func layout() {
+            super.layout()
+            onViewportLayout?(bounds.size)
         }
     }
 
     static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
+        (scrollView as? LayoutScrollView)?.onViewportLayout = nil
         coordinator.loadTask?.cancel()
+        coordinator.currentLoadID = UUID()
+        coordinator.imageView?.image = nil
         coordinator.magnificationObservation = nil
     }
 
@@ -708,8 +748,13 @@ struct ZoomableScrollView: NSViewRepresentable {
         var imageView: NSImageView?
         var spinner: NSProgressIndicator?
         var errorView: NSImageView?
-        var currentURL: URL?
+        var currentImageIdentity: AnyHashable?
+        var currentLoadID = UUID()
+        var lastFitSize = CGSize.zero
+        var isFitting = false
         var magnificationObservation: NSKeyValueObservation?
+        var isApplyingZoom = false
+        var zoomAnimationID = UUID()
         var annotations: [ZoomableImageAnnotation] = []
         fileprivate var annotationViews: [String: AccessibleAnnotationNSImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
@@ -731,7 +776,7 @@ struct ZoomableScrollView: NSViewRepresentable {
 
             if scrollView.magnification > scrollView.minMagnification + 0.01 {
                 // Zoom out to fit
-                scrollView.animator().magnification = scrollView.minMagnification
+                parent.zoomScale = 1.0
             } else {
                 // Zoom to 2.5x relative to fit, centered on click point
                 let clickPoint = recognizer.location(in: scrollView)
@@ -902,65 +947,41 @@ struct ZoomableScrollView: NSViewRepresentable {
         // MARK: Image Loading
 
         @MainActor
-        func loadImage(url: URL?) {
+        func loadImage(source: GalleryImageSource) {
             loadTask?.cancel()
-            currentURL = url
+            currentImageIdentity = source.identity
+            lastFitSize = .zero
+            let loadID = UUID()
+            currentLoadID = loadID
             spinner?.stopAnimation(nil)
             imageView?.image = nil
             errorView?.isHidden = true
-
-            guard let url else {
-                errorView?.isHidden = false
+            if let image = source.image {
+                displayImage(image)
                 return
             }
-
-            let cacheKey = url.absoluteString
-            if let cachedImage = ImageCache.image(for: cacheKey) {
-                PerformanceDiagnostics.shared.event("ImageCache", kind: "zoomable-hit")
-                displayImage(cachedImage)
-                return
-            }
-
+            guard let load = source.load else { showError(); return }
             spinner?.startAnimation(nil)
-
             loadTask = Task { @MainActor [weak self] in
-                PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: 1)
-                defer {
-                    PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: -1)
-                }
-                do {
-                    // Resolve gs:// URLs to HTTPS download URLs
-                    let loadableURL: URL
-                    if url.scheme == "gs" {
-                        guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
-                            self?.showError()
-                            return
-                        }
-                        loadableURL = resolved
-                    } else {
-                        loadableURL = url
-                    }
-
-                    let (data, _) = try await URLSession.shared.data(from: loadableURL)
-                    guard !Task.isCancelled, self?.currentURL == url else { return }
-                    guard let image = await ZoomableImageLoader.prepare(data) else {
-                        self?.showError()
-                        return
-                    }
-                    guard !Task.isCancelled, self?.currentURL == url else { return }
-                    ImageCache.store(image, for: cacheKey, cost: data.count)
-                    self?.displayImage(image)
-                } catch {
-                    if !Task.isCancelled {
-                        self?.showError()
-                    }
-                }
+                let image = await load()
+                guard !Task.isCancelled, self?.currentLoadID == loadID else { return }
+                if let image { self?.displayImage(image) }
+                else { self?.showError() }
             }
+        }
+
+        @MainActor
+        func refitIfNeeded(in viewport: CGSize) {
+            guard viewport.width > 0, viewport.height > 0, viewport != lastFitSize,
+                  let image = imageView?.image else { return }
+            displayImage(image)
         }
 
         @MainActor
         private func displayImage(_ image: NSImage) {
             guard let imageView, let scrollView = imageView.enclosingScrollView else { return }
+            isFitting = true
+            defer { isFitting = false }
             spinner?.stopAnimation(nil)
             errorView?.isHidden = true
 
@@ -972,16 +993,24 @@ struct ZoomableScrollView: NSViewRepresentable {
             let scrollBounds = scrollView.bounds
             guard scrollBounds.width > 0, scrollBounds.height > 0,
                   imageSize.width > 0, imageSize.height > 0 else { return }
+            lastFitSize = scrollBounds.size
 
             let widthScale = scrollBounds.width / imageSize.width
             let heightScale = scrollBounds.height / imageSize.height
             let fitScale = min(widthScale, heightScale)
 
+            // AppKit validates each bound immediately. A tiny image can need
+            // a fit scale above the previous maximum; a later large image can
+            // lower both bounds. Keep the intermediate range valid either way.
+            let maximum = max(fitScale * 5, 5.0)
+            scrollView.maxMagnification = max(scrollView.minMagnification, maximum)
             scrollView.minMagnification = fitScale
-            scrollView.maxMagnification = max(fitScale * 5, 5.0)
+            scrollView.maxMagnification = maximum
             scrollView.magnification = fitScale
 
+            let loadID = currentLoadID
             DispatchQueue.main.async {
+                guard self.currentLoadID == loadID, self.imageView?.image != nil else { return }
                 self.parent.zoomScale = 1.0
             }
 

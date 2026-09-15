@@ -203,6 +203,19 @@ credits should be charged together.
 - Whole-Invoice collection is the only supported collection mode for now.
   Partial payments and line-level collection are out of scope.
 
+### Manual collection and external delivery
+
+User clarification, 2026-09-15: marking an Invoice paid is a manual action that
+prompts for the payment amount. Do not automatically mark it paid on export,
+delivery, or an inferred payment. Partial-payment handling is outside this
+release. Expenses remain editable until collection.
+
+Users send Invoices outside Ledger. Changing an Expense after sending an
+export can make that external copy outdated, but this does not authorize an
+in-app sending service, mandatory resend acknowledgment, or a delivered-revision
+precondition for collection. O-034 still owns unresolved sent-status/revision
+behavior. Preserve collected facts under the existing rules below.
+
 ### Collect
 
 Collection is one atomic, idempotent operation:

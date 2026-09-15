@@ -5,27 +5,9 @@ import SwiftUI
 /// - **iPhone (compact width):** Resizable top panel with drag handle, content scrolls below.
 /// - **iPad (regular width):** Leading sidebar at fixed width, content fills remaining space.
 /// - **No pin:** Passes content through unchanged.
-struct PinnedImageLayout<Content: View>: View {
-    let pinnedAttachment: AttachmentRef?
-    let allImages: [AttachmentRef]
-    let onClose: () -> Void
-    let onChangeImage: (AttachmentRef) -> Void
-    var onUpdateCheckmarks: ((AttachmentRef, [ImageCheckmark]) -> Void)? = nil
-    var isMatchingItems: Bool = false
-    var pendingItemId: String? = nil
-    var pendingItemName: String? = nil
-    var groupPlacementSession: PhotoCheckmarkPlacementSession? = nil
-    var onAddReviewNote: ((AttachmentRef) -> Void)? = nil
-    var onToggleItemMatching: (() -> Void)? = nil
-    var onCancelPendingItemMatch: (() -> Void)? = nil
-    var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
-    var onPlaceGroupCheckmark: ((AttachmentRef, CGPoint) -> Void)? = nil
-    var onSaveGroupCheckmarks: (() -> Void)? = nil
-    var onRedoGroupCheckmarks: (() -> Void)? = nil
-    var itemNameForId: ((String) -> String?)? = nil
-    var onMoveItemCheckmark: (([String]) -> Void)? = nil
-    var onReassignItemCheckmark: (([String]) -> Void)? = nil
-    var onClearAllCheckmarks: (() -> Void)? = nil
+struct PinnedImageLayoutPresentation<Panel: View, Content: View>: View {
+    let pinIdentity: AnyHashable?
+    @ViewBuilder let panel: () -> Panel
     @ViewBuilder let content: () -> Content
 
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -36,11 +18,11 @@ struct PinnedImageLayout<Content: View>: View {
     private let maxFraction: CGFloat = 0.50
 
     var body: some View {
-        if let attachment = pinnedAttachment {
+        if let identity = pinIdentity {
             if sizeClass == .regular {
-                iPadLayout(attachment: attachment)
+                iPadLayout(identity: identity)
             } else {
-                iPhoneLayout(attachment: attachment)
+                iPhoneLayout(identity: identity)
             }
         } else {
             content()
@@ -49,84 +31,42 @@ struct PinnedImageLayout<Content: View>: View {
 
     // MARK: - iPhone Layout (vertical split)
 
-    private func iPhoneLayout(attachment: AttachmentRef) -> some View {
+    private func iPhoneLayout(identity: AnyHashable) -> some View {
         GeometryReader { geometry in
             let panelHeight = max(geometry.size.height * panelHeightFraction, 100)
             VStack(spacing: 0) {
-                PinnedImagePanel(
-                    attachment: attachment,
-                    allImages: allImages,
-                    onClose: onClose,
-                    onChangeImage: onChangeImage,
-                    onUpdateCheckmarks: onUpdateCheckmarks,
-                    isMatchingItems: isMatchingItems,
-                    pendingItemId: pendingItemId,
-                    pendingItemName: pendingItemName,
-                    groupPlacementSession: groupPlacementSession,
-                    onAddReviewNote: onAddReviewNote,
-                    onToggleItemMatching: onToggleItemMatching,
-                    onCancelPendingItemMatch: onCancelPendingItemMatch,
-                    onPlaceItemCheckmark: onPlaceItemCheckmark,
-                    onPlaceGroupCheckmark: onPlaceGroupCheckmark,
-                    onSaveGroupCheckmarks: onSaveGroupCheckmarks,
-                    onRedoGroupCheckmarks: onRedoGroupCheckmarks,
-                    itemNameForId: itemNameForId,
-                    onMoveItemCheckmark: onMoveItemCheckmark,
-                    onReassignItemCheckmark: onReassignItemCheckmark,
-                    onClearAllCheckmarks: onClearAllCheckmarks
-                )
+                panel()
                 .frame(height: panelHeight)
-                .id(attachment.url)
+                .id(identity)
                 .transition(.opacity)
 
                 resizeHandle(totalHeight: geometry.size.height)
 
                 content()
             }
-            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinnedAttachment?.url)
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinIdentity)
         }
     }
 
     // MARK: - iPad Layout (leading sidebar)
 
-    private func iPadLayout(attachment: AttachmentRef) -> some View {
+    private func iPadLayout(identity: AnyHashable) -> some View {
         GeometryReader { geometry in
             let sidebarWidth = max(
                 geometry.size.width - Dimensions.contentMaxWidth,
                 Dimensions.pinnedSidebarWidth
             )
             HStack(spacing: 0) {
-                PinnedImagePanel(
-                    attachment: attachment,
-                    allImages: allImages,
-                    onClose: onClose,
-                    onChangeImage: onChangeImage,
-                    onUpdateCheckmarks: onUpdateCheckmarks,
-                    isMatchingItems: isMatchingItems,
-                    pendingItemId: pendingItemId,
-                    pendingItemName: pendingItemName,
-                    groupPlacementSession: groupPlacementSession,
-                    onAddReviewNote: onAddReviewNote,
-                    onToggleItemMatching: onToggleItemMatching,
-                    onCancelPendingItemMatch: onCancelPendingItemMatch,
-                    onPlaceItemCheckmark: onPlaceItemCheckmark,
-                    onPlaceGroupCheckmark: onPlaceGroupCheckmark,
-                    onSaveGroupCheckmarks: onSaveGroupCheckmarks,
-                    onRedoGroupCheckmarks: onRedoGroupCheckmarks,
-                    itemNameForId: itemNameForId,
-                    onMoveItemCheckmark: onMoveItemCheckmark,
-                    onReassignItemCheckmark: onReassignItemCheckmark,
-                    onClearAllCheckmarks: onClearAllCheckmarks
-                )
+                panel()
                 .frame(width: sidebarWidth)
-                .id(attachment.url)
+                .id(identity)
                 .transition(.opacity)
 
                 Divider()
 
                 content()
             }
-            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinnedAttachment?.url)
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinIdentity)
         }
     }
 
@@ -159,7 +99,60 @@ struct PinnedImageLayout<Content: View>: View {
                         }
                 )
                 .accessibilityLabel("Resize pinned image panel")
+                .accessibilityValue("\(Int(panelHeightFraction * 100)) percent")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: panelHeightFraction = PinnedImageCalculations.clampedFraction(panelHeightFraction + 0.05)
+                    case .decrement: panelHeightFraction = PinnedImageCalculations.clampedFraction(panelHeightFraction - 0.05)
+                    @unknown default: break
+                    }
+                }
+                .accessibilityIdentifier("pinned-image-layout-resize")
                 .accessibilityAddTraits(.allowsDirectInteraction)
         }
     }
 }
+
+#if canImport(FirebaseFirestore)
+/// Original attachment/annotation adapter around the unchanged split layout.
+struct PinnedImageLayout<Content: View>: View {
+    let pinnedAttachment: AttachmentRef?
+    let allImages: [AttachmentRef]
+    let onClose: () -> Void
+    let onChangeImage: (AttachmentRef) -> Void
+    var onUpdateCheckmarks: ((AttachmentRef, [ImageCheckmark]) -> Void)? = nil
+    var isMatchingItems: Bool = false
+    var pendingItemId: String? = nil
+    var pendingItemName: String? = nil
+    var groupPlacementSession: PhotoCheckmarkPlacementSession? = nil
+    var onAddReviewNote: ((AttachmentRef) -> Void)? = nil
+    var onToggleItemMatching: (() -> Void)? = nil
+    var onCancelPendingItemMatch: (() -> Void)? = nil
+    var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
+    var onPlaceGroupCheckmark: ((AttachmentRef, CGPoint) -> Void)? = nil
+    var onSaveGroupCheckmarks: (() -> Void)? = nil
+    var onRedoGroupCheckmarks: (() -> Void)? = nil
+    var itemNameForId: ((String) -> String?)? = nil
+    var onMoveItemCheckmark: (([String]) -> Void)? = nil
+    var onReassignItemCheckmark: (([String]) -> Void)? = nil
+    var onClearAllCheckmarks: (() -> Void)? = nil
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        PinnedImageLayoutPresentation(pinIdentity: pinnedAttachment.map { AnyHashable($0.url) }) {
+            if let attachment = pinnedAttachment {
+                PinnedImagePanel(attachment: attachment, allImages: allImages,
+                    onClose: onClose, onChangeImage: onChangeImage,
+                    onUpdateCheckmarks: onUpdateCheckmarks, isMatchingItems: isMatchingItems,
+                    pendingItemId: pendingItemId, pendingItemName: pendingItemName,
+                    groupPlacementSession: groupPlacementSession, onAddReviewNote: onAddReviewNote,
+                    onToggleItemMatching: onToggleItemMatching, onCancelPendingItemMatch: onCancelPendingItemMatch,
+                    onPlaceItemCheckmark: onPlaceItemCheckmark, onPlaceGroupCheckmark: onPlaceGroupCheckmark,
+                    onSaveGroupCheckmarks: onSaveGroupCheckmarks, onRedoGroupCheckmarks: onRedoGroupCheckmarks,
+                    itemNameForId: itemNameForId, onMoveItemCheckmark: onMoveItemCheckmark,
+                    onReassignItemCheckmark: onReassignItemCheckmark, onClearAllCheckmarks: onClearAllCheckmarks)
+            }
+        } content: { content() }
+    }
+}
+#endif

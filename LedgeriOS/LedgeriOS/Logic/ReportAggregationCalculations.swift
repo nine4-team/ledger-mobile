@@ -1,25 +1,5 @@
 import Foundation
 
-// MARK: - Invoice Report Types
-
-/// A single line on the invoice — either an item or a non-item transaction.
-struct InvoiceLineEntry {
-    let name: String
-    let priceCents: Int
-    let isMissingPrice: Bool
-}
-
-struct InvoiceReportData {
-    let chargeLines: [InvoiceLineEntry]
-    let creditLines: [InvoiceLineEntry]
-    var chargesSubtotalCents: Int { chargeLines.reduce(0) { $0 + $1.priceCents } }
-    var creditsSubtotalCents: Int { creditLines.reduce(0) { $0 + $1.priceCents } }
-    var netDueCents: Int { chargesSubtotalCents - creditsSubtotalCents }
-    var hasFallbackPrices: Bool {
-        chargeLines.contains { $0.isMissingPrice } || creditLines.contains { $0.isMissingPrice }
-    }
-}
-
 // MARK: - Client Summary Types
 
 struct ClientSummaryData {

@@ -5,6 +5,22 @@ import LedgerTargetCore
 
 @Suite("Source Invoice settlement coverage")
 struct FirebaseInvoiceSettlementReviewTests {
+    @Test func invoiceDisplayFieldsPreserveOriginalValuesAndUnknowns() throws {
+        let source = Self.document("invoices", "display", ["invoiceNumber": .string("  INV-001  "),
+            "notes": .string("First\nSecond"), "datePaid": .timestamp(seconds: "-1", nanoseconds: 999_999_999)])
+        let before = try source.canonicalEvidenceData()
+        let decoded = try FirebaseInvoiceDisplayMetadata.read(source)
+        let display = try #require(decoded)
+        #expect(display.invoiceNumber == "  INV-001  ")
+        #expect(display.notes == "First\nSecond")
+        #expect(display.paidAtMilliseconds == "-1")
+        #expect(display.issuedAtMilliseconds == nil)
+        #expect(try source.canonicalEvidenceData() == before)
+        #expect(try FirebaseInvoiceDisplayMetadata.read(Self.document("invoices", "none", [:])) == nil)
+        #expect(throws: InvoiceDisplayMetadata.Failure.invalid) {
+            try FirebaseInvoiceDisplayMetadata.read(Self.document("invoices", "bad", ["datePaid": .string("2024-01-01")]))
+        }
+    }
     private static func map(_ fields: [String: FirebaseSourceValue]) -> FirebaseSourceValue {
         .map(fields.keys.sorted().map { .init(key: $0, value: fields[$0]!) })
     }
@@ -174,5 +190,105 @@ struct FirebaseInvoiceSettlementReviewTests {
         #expect(review.resolveSources(in: [exact]).lines[0].issues == [.transactionMeaningNotMapped])
         let manual = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"), "sourceType": .string("manual")])
         #expect(try Self.review(Self.invoice(lines: [manual]), [Self.payment()]).resolveSources(in: []).lines[0].issues == [.manualAdjustmentNotMapped])
+    }
+
+    @Test("Expense field mapping retains the exact paid Invoice line and requires proven settlement")
+    func mapsExpenseSourceWithoutRebilling() throws {
+        let line = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"),
+            "sourceType": .string("transaction"), "sourceId": .string("expense"), "snapshotName": .string("Historical vendor"),
+            "budgetCategoryId": .string("historical-category")])
+        let invoice = Self.invoice(lines: [line])
+        let category = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "presets", "default", "budgetCategories", "category"],
+            entityCode: "budgetCategories", evidenceKind: .record,
+            fields: Self.map(["metadata": Self.map(["categoryType": .string("general")])]), sourceRecordID: "category")
+        func source(_ amount: String = "100", created: FirebaseSourceValue = .null) -> FirebaseSourceDocument {
+            Self.document("transactions", "expense", ["projectId": .string("source-project"), "type": .string("purchase"),
+                "purchasedBy": .string("design-business"), "budgetCategoryId": .string("category"),
+                "amountCents": .integer(amount), "transactionDate": .string("2024-02-29"),
+                "source": .string("Current vendor"), "itemIds": .array([]), "createdAt": created])
+        }
+        func convert(_ payments: [FirebaseSourceDocument], amount: String = "100") throws -> FirebaseExpenseConversion.Result {
+            let review = try Self.review(invoice, payments).resolveSources(in: [source(amount), category])
+            return try FirebaseExpenseConversion.convertInvoiceSource(review, lineID: "line",
+                targetScope: .project(accountId: .init(validating: "target-account"), projectId: .init(validating: "target-project"),
+                    clientId: .init(validating: "target-client")), expenseID: .init(validating: "target-expense"),
+                categoryID: .init(validating: "target-category"), currency: .init(validating: "USD"), lineage: [])
+        }
+        guard case .invoiceSourceMapped(let draft, let original, let keptInvoice, let keptLine) = try convert([Self.payment()]) else {
+            Issue.record("Expected mapped source with paid evidence retained"); return
+        }
+        #expect(draft.vendor == "Current vendor" && draft.finalAmount.minorUnits == 100)
+        #expect(original == source() && keptInvoice == invoice && keptLine == line)
+        let reviewed = try Self.review(invoice, [Self.payment()]).resolveSources(in: [source(), category])
+        let targetScope = try TransactionScope.project(accountId: .init(validating: "target-account"),
+            projectId: .init(validating: "target-project"), clientId: .init(validating: "target-client"))
+        func paymentParameters(source: FirebaseSourceDocument = Self.payment(), account: String = "target-account",
+                               amount: String = "100") throws -> FirebaseClientPaymentImportParameters {
+            .init(p_id: "target-payment", p_account_id: account, p_project_id: "target-project",
+                p_client_id: "target-client", p_amount: amount, p_currency: "USD",
+                p_source_account: "source-account", p_source_document: source.documentPathSegments.last!,
+                p_source_bytes: "\\x" + (try source.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())
+        }
+        func frozen(_ mappings: [FirebaseExpenseConversion.Result], categories: [String: BudgetCategoryID],
+                    payment: FirebaseClientPaymentImportParameters? = nil, invoiceID: String = "target-invoice") throws -> FrozenInvoiceContents {
+            try FirebaseExpenseConversion.frozenInvoice(reviewed, mappedSources: mappings, targetScope: targetScope,
+                invoiceID: .init(validating: invoiceID), payment: payment ?? paymentParameters(),
+                invoiceRevision: 1, sourceRevision: 1, historicalCategories: categories,
+                currency: .init(validating: "USD")).restored()
+        }
+        let mapped = try convert([Self.payment()])
+        let historicalCategories = ["historical-category": try BudgetCategoryID(validating: "historical-target-category")]
+        let frozenRecord = try frozen([mapped], categories: historicalCategories)
+        #expect(frozenRecord.total.minorUnits == 100 && frozenRecord.lines.count == 1)
+        #expect(frozenRecord.lines[0].description == "Historical vendor")
+        #expect(frozenRecord.lines[0].categoryId.rawValue == "historical-target-category")
+        #expect(frozenRecord.lines[0].source == .expense(expenseId: draft.expenseId))
+        #expect(frozenRecord.purchaseId.rawValue == "target-payment")
+        #expect(frozenRecord.lines[0].id.rawValue.hasPrefix("import-line-"))
+        #expect(try frozen([mapped], categories: historicalCategories).lines[0].id == frozenRecord.lines[0].id)
+        #expect(try frozen([mapped], categories: historicalCategories, invoiceID: "other-invoice").lines[0].id != frozenRecord.lines[0].id)
+        let parameters = try FirebaseExpenseInvoiceImportParameters.make(review: reviewed, mappedSources: [mapped],
+            targetScope: targetScope, invoiceID: .init(validating: "target-invoice"), payment: paymentParameters(),
+            invoiceRevision: 1, sourceRevision: 1, historicalCategories: historicalCategories, currency: .init(validating: "USD"))
+        #expect(parameters.p_expenses.count == 1)
+        #expect(parameters.p_expenses[0].record.final_amount_minor_units == "100")
+        #expect(parameters.p_expenses[0].record.created_at == nil)
+        #expect(parameters.p_expenses[0].record.created_by_principal_id == nil)
+        #expect(parameters.p_expenses[0].source_document_id == "expense")
+        #expect(parameters.p_invoice_bytes == "\\x" + (try invoice.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())
+        func timestampParameters(_ created: FirebaseSourceValue) throws -> FirebaseExpenseInvoiceImportParameters {
+            let original = source(created: created)
+            let evidence = try Self.review(invoice, [Self.payment()]).resolveSources(in: [original, category])
+            let mapped = try FirebaseExpenseConversion.convertInvoiceSource(evidence, lineID: "line", targetScope: targetScope,
+                expenseID: .init(validating: "target-expense"), categoryID: .init(validating: "target-category"),
+                currency: .init(validating: "USD"), lineage: [])
+            return try .make(review: evidence, mappedSources: [mapped], targetScope: targetScope,
+                invoiceID: .init(validating: "target-invoice"), payment: paymentParameters(),
+                invoiceRevision: 1, sourceRevision: 1, historicalCategories: historicalCategories, currency: .init(validating: "USD"))
+        }
+        let timestamp = FirebaseSourceValue.timestamp(seconds: "-1", nanoseconds: 999_999_999)
+        let timestamped = try timestampParameters(timestamp)
+        #expect(timestamped.p_expenses[0].record.created_at == "1969-12-31T23:59:59.999999Z")
+        #expect(timestamped.p_expenses[0].source_bytes == "\\x" + (try source(created: timestamp).canonicalEvidenceData())
+            .map { String(format: "%02x", $0) }.joined())
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) {
+            try timestampParameters(.string("yesterday"))
+        }
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) {
+            try frozen([mapped], categories: historicalCategories, payment: paymentParameters(source: Self.payment("other-payment")))
+        }
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) {
+            try frozen([mapped], categories: historicalCategories, payment: paymentParameters(account: "other-account"))
+        }
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) {
+            try frozen([mapped], categories: historicalCategories, payment: paymentParameters(amount: "101"))
+        }
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) { try frozen([], categories: historicalCategories) }
+        #expect(throws: FirebaseExpenseConversion.MappingFailure.self) { try frozen([mapped], categories: [:]) }
+        guard case .unresolved(.settlementUnresolved) = try convert([]) else { Issue.record("Status-only paid evidence mapped"); return }
+        guard case .unresolved(.invoiceAmountRequiresMapping) = try convert([Self.payment()], amount: "200") else {
+            Issue.record("Changed source amount overwrote paid line amount"); return
+        }
     }
 }

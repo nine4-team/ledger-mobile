@@ -264,6 +264,52 @@ private struct Feed: DownloadedItemImageReading {
 
 private enum ExportTestFailure: Error { case denied,delivery }
 
+@Suite("Transaction attachment export boundary") @MainActor
+struct TransactionAttachmentExportBoundaryTests {
+    @Test(arguments: ["before", "permission", "download", "cancelled", "unchanged"])
+    func revalidatesSelectedReference(phase: String) async throws {
+        let account = try AccountID(validating: "account"), hash = String(repeating: "a", count: 64)
+        let object = try DownloadedMediaObjectReference(accountId: account, attachmentId: "image", sha256: hash,
+            byteCount: "3", mediaType: "image/png", storagePath: "accounts/account/attachments/image/\(hash)")
+        let selected = try DownloadedTransactionAttachment(id: .init(validating: "ref"), object: object,
+            position: 0, isPrimary: true, fileName: "Image.png")
+        let captured = try DownloadedTransactionAttachments(scope: .businessInventory(accountId: account),
+            transactionId: .init(validating: "transaction"), section: .receipts, revision: 1,
+            isComplete: true, attachments: [selected])
+        var visible: DownloadedTransactionAttachments? = phase == "before" ? nil : captured
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-media-export-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let destination = directory.appendingPathComponent("selected-image.png")
+        let previousBytes = Data([9,8,7])
+        try previousBytes.write(to: destination)
+        var prepared = false, loaded = false, delivered = false
+        do {
+            try await AuthorizedMediaExport.perform(validate: {
+                guard visible?.retains(selected, from: captured) == true else { throw ExportTestFailure.denied }
+            }, prepareDestination: {
+                prepared = true
+                if phase == "permission" { visible = nil }
+                if phase == "cancelled" { throw CancellationError() }
+            }, load: {
+                loaded = true
+                if phase == "download" { visible = nil }
+                return Data([1,2,3])
+            }, handoff: { bytes in
+                #expect(bytes == Data([1,2,3]))
+                try bytes.write(to: destination, options: .atomic)
+                delivered = true
+            })
+            #expect(phase == "unchanged")
+        } catch ExportTestFailure.denied { #expect(phase != "unchanged") }
+        catch is CancellationError { #expect(phase == "cancelled") }
+        #expect(prepared == (phase != "before"))
+        #expect(loaded == (phase == "download" || phase == "unchanged"))
+        #expect(delivered == (phase == "unchanged"))
+        #expect(try Data(contentsOf: destination) == (phase == "unchanged" ? Data([1,2,3]) : previousBytes))
+    }
+}
+
 @MainActor private final class ExportProbe {
     var prepared = false
     var reads = 0

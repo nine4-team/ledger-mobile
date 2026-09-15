@@ -1,5 +1,15 @@
 # Transaction Audit
 
+> **Target authority (2026-09-13):** The calculation and Firebase implementation
+> below describe the source app, not the Supabase target. Follow D-016/D-030 in
+> the [decision log](../plans/ledger-accounting-redesign/decision-log.md) and
+> [Non-Item Receipt Lines](../plans/non-item-receipt-lines/design.md): Item amounts
+> plus signed receipt lines must exactly match the final Transaction amount.
+> Current category controls audit applicability. No subtotal/tax inference,
+> percentage tolerance, or Firebase Function is part of the target calculation.
+> Saving incomplete receipt details remains allowed; audit completion is not
+> a new save/posting gate. Missing downloaded evidence is not zero evidence.
+
 ## Overview
 
 The transaction audit system provides completeness tracking for transactions with itemized budget categories. It compares the sum of linked item prices against the transaction's pre-tax subtotal to identify gaps in inventory records.

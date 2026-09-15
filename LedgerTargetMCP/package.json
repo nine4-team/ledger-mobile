@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=24" },
   "scripts": {
     "start:stdio": "tsx src/stdio.ts",
     "check": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "test:categories:local": "tsx tests/categoryManagement.local.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.27.1",

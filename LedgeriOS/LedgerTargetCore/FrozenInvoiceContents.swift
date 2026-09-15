@@ -97,9 +97,11 @@ public struct FrozenInvoiceContents: Codable, Equatable, Sendable {
     public let purchaseId: TransactionID
     public let lines: [FrozenInvoiceLine]
     public let total: Money
+    public let displayMetadata: InvoiceDisplayMetadata?
 
     public init(invoiceId: InvoiceID, invoiceRevision: Int64, scope: TransactionScope,
-                purchaseId: TransactionID, lines: [FrozenInvoiceLine], total: Money) throws {
+                purchaseId: TransactionID, lines: [FrozenInvoiceLine], total: Money,
+                displayMetadata: InvoiceDisplayMetadata? = nil) throws {
         guard scope.ownerKind == .project else { throw FrozenInvoiceContentsFailure.requiresProjectScope }
         guard invoiceRevision > 0 else { throw FrozenInvoiceContentsFailure.invalidRevision }
         guard !lines.isEmpty else { throw FrozenInvoiceContentsFailure.emptyContents }
@@ -127,12 +129,37 @@ public struct FrozenInvoiceContents: Codable, Equatable, Sendable {
         _ = try Self.totals(lines, currency: total.currency)
         self.invoiceId = invoiceId; self.invoiceRevision = invoiceRevision; self.scope = scope
         self.purchaseId = purchaseId; self.lines = lines; self.total = total
+        self.displayMetadata = displayMetadata
     }
 
     /// The Purchase face value must not be counted again in addition to these
     /// frozen category allocations when moving budget value from unpaid to paid.
     public func categoryTotals() throws -> [BudgetCategoryID: Money] {
         try Self.totals(lines, currency: total.currency)
+    }
+
+    /// Report grouping only: retain the sealed lines and their order within each
+    /// section. Decimal subtotals avoid overflowing Int64 when charges and credits
+    /// individually exceed the net payable amount. Never reconstruct from live Items.
+    public func reportSections() -> (
+        charges: [FrozenInvoiceLine], credits: [FrozenInvoiceLine],
+        chargesMinorUnits: Decimal, creditsMinorUnits: Decimal
+    ) {
+        var charges: [FrozenInvoiceLine] = []
+        var credits: [FrozenInvoiceLine] = []
+        var chargeTotal = Decimal.zero
+        var creditTotal = Decimal.zero
+        for line in lines {
+            let amount = Decimal(line.signedAmount.minorUnits)
+            if line.signedAmount.sign == .negative {
+                credits.append(line)
+                creditTotal -= amount
+            } else {
+                charges.append(line)
+                chargeTotal += amount
+            }
+        }
+        return (charges, credits, chargeTotal, creditTotal)
     }
 
     private static func totals(_ lines: [FrozenInvoiceLine], currency: CurrencyCode) throws -> [BudgetCategoryID: Money] {
@@ -150,7 +177,8 @@ public struct FrozenInvoiceContents: Codable, Equatable, Sendable {
             scope: c.decode(TransactionScope.self, forKey: .scope),
             purchaseId: c.decode(TransactionID.self, forKey: .purchaseId),
             lines: c.decode([FrozenInvoiceLine].self, forKey: .lines),
-            total: c.decode(Money.self, forKey: .total))
+            total: c.decode(Money.self, forKey: .total),
+            displayMetadata: c.decodeIfPresent(InvoiceDisplayMetadata.self, forKey: .displayMetadata))
     }
-    private enum CodingKeys: String, CodingKey { case invoiceId, invoiceRevision, scope, purchaseId, lines, total }
+    private enum CodingKeys: String, CodingKey { case invoiceId, invoiceRevision, scope, purchaseId, lines, total, displayMetadata }
 }

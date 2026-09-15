@@ -12,6 +12,9 @@ values ('placement-space-a','account-primary','project','placement-project-a','R
   ('placement-space-inventory','account-primary','business_inventory',null,'Warehouse');
 insert into public.spike_items(id,account_id,description,created_by_principal_id)
 values ('chair','account-primary','One physical chair','principal-owner');
+insert into public.item_image_sets(id,account_id,item_id,revision,expected_count,sync_project_id)
+values ('chair','account-primary','chair',1,0,'forged-project');
+select is((select sync_project_id from public.item_image_sets where id='chair'),null::text,'Image routing ignores a caller-supplied Project');
 
 create function pg_temp.place(p_id text,p_start timestamptz,p_end timestamptz default null,
   p_project text default null,p_space text default null,p_account text default 'account-primary')
@@ -23,6 +26,8 @@ returns void language sql as $$
 $$;
 
 select lives_ok($$select pg_temp.place('inventory-first','2026-01-01',null,null,'placement-space-inventory')$$,'Initial inventory placement');
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-inventory'),1::bigint,'Sync predicate counts current Inventory Item');
+select is((select revision from public.spike_spaces where id='placement-space-inventory'),1::bigint,'Derived count does not change editable Space revision');
 select is((select scope_kind from ledger_private.current_item_placements where item_id='chair'),'business_inventory','Current query reads inventory');
 select throws_ok($$select pg_temp.place('overlap','2026-01-02')$$,'23P01',null,'Second active placement rejected');
 select throws_ok($$select pg_temp.place('foreign','2025-01-01','2025-02-01',null,null,'account-other')$$,'23503',null,'Foreign Account cannot use Item identity');
@@ -41,14 +46,25 @@ $$;
 select throws_ok($$select pg_temp.move('wrong-space','2026-02-01','placement-project-b','placement-space-a')$$,
   '23503',null,'Wrong Project Space rejected');
 select is((select placement_id from ledger_private.current_item_placements where item_id='chair'),'inventory-first','Failed move rolls back closure');
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-inventory'),1::bigint,'Failed move restores source count atomically');
 select throws_ok($$select pg_temp.move('wrong-inventory-space','2026-02-01',null,'placement-space-a')$$,
   '23503',null,'Project Space cannot be assigned to Inventory');
 select throws_ok($$select pg_temp.move('wrong-project-space','2026-02-01','placement-project-a','placement-space-inventory')$$,
   '23503',null,'Inventory Space cannot be assigned to Project');
 
 select lives_ok($$select pg_temp.move('project-first','2026-02-01','placement-project-a','placement-space-a')$$,'Inventory to Project preserves first interval');
+select is((select sync_project_id from public.spike_items where id='chair'),'placement-project-a','Item routing follows current Project');
+select is((select sync_project_id from public.item_image_sets where id='chair'),'placement-project-a','Image marker follows Item in the same transaction');
+select lives_ok($$update public.spike_items set sync_project_id='forged-project' where id='chair'$$,'Supplied routing is overwritten from placement');
+select is((select sync_project_id from public.spike_items where id='chair'),'placement-project-a','Caller cannot reroute Item');
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-inventory'),0::bigint,'Movement removes current source count');
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-a'),1::bigint,'Movement adds exact destination count');
 select lives_ok($$select pg_temp.move('inventory-return','2026-03-01',null)$$,'Physical return closes Project interval');
+select is((select sync_project_id from public.item_image_sets where id='chair'),null::text,'Inventory return removes old Project image routing');
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-a'),0::bigint,'Last departure removes archived-parent sync eligibility');
 select lives_ok($$select pg_temp.move('project-resale','2026-04-01','placement-project-b')$$,'Resale creates a new interval for same Item');
+select is((select sync_project_id from public.item_image_sets where id='chair'),'placement-project-b','Resale routes existing image marker to new Project');
+select is((select revision from public.spike_items where id='chair'),1::bigint,'Routing updates preserve editable Item revision');
 select is((select count(*) from public.spike_items where id='chair'),1::bigint,'All cycles keep one physical Item');
 select is((select project_id from ledger_private.current_item_placements where item_id='chair'),'placement-project-b','Current query sees only latest Project');
 select is((select array_agg(id order by started_at,id) from public.spike_item_placements where item_id='chair'),
@@ -70,6 +86,29 @@ select throws_ok($$update public.spike_items set description='New label' where i
 select lives_ok($$update public.spike_items set description='Renamed chair',revision=2 where id='chair'$$,'Descriptive edit leaves location history intact');
 select throws_ok($$delete from public.spike_items where id='chair'$$,'23503',null,'Item deletion cannot orphan placement evidence');
 select throws_ok($$delete from public.spike_spaces where id='placement-space-a'$$,'23503',null,'Historical Space identity cannot be deleted');
+
+-- Statement-level transition tables aggregate a bulk import/close once per
+-- Space. Imported ended history and null Space placements must not count.
+insert into public.spike_items(id,account_id,created_by_principal_id)
+select 'count-bulk-'||n,'account-primary','principal-owner' from generate_series(1,3) n;
+insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,space_id,started_at,ended_at,
+  started_by_principal_id,ended_by_principal_id)
+select 'count-placement-'||n,'account-primary','count-bulk-'||n,'project','placement-project-a','placement-space-a',
+  '2026-01-01'::timestamptz,case when n=3 then '2026-02-01'::timestamptz end,
+  'principal-owner',case when n=3 then 'principal-owner' end from generate_series(1,3) n;
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-a'),2::bigint,'Bulk insert excludes ended history');
+update public.spike_spaces set lifecycle='archived' where id='placement-space-a';
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-a'),2::bigint,'Archive keeps active physical parent evidence');
+update public.spike_item_placements set ended_at='2026-03-01',ended_by_principal_id='principal-owner'
+where id like 'count-placement-%' and ended_at is null;
+select is((select sync_current_item_count from public.spike_spaces where id='placement-space-a'),0::bigint,'Bulk close removes each current Item exactly once');
+select ok(not exists(select 1 from public.spike_spaces s where s.sync_current_item_count <>
+  (select count(*) from public.spike_item_placements p where p.account_id=s.account_id and p.space_id=s.id and p.ended_at is null)),
+  'Derived predicate reconciles exactly with canonical placements');
+select ok((select not prosecdef and proconfig @> array['search_path=""'] from pg_proc
+  where oid='ledger_private.update_space_sync_item_count()'::regprocedure),'Counter trigger is invoker with empty search path');
+select ok((select bool_and(not has_column_privilege(r,'public.spike_spaces','sync_current_item_count','UPDATE'))
+  from unnest(array['anon','authenticated']) r),'Unprivileged API roles cannot change derived sync visibility');
 
 select ok((select bool_and(relrowsecurity and relforcerowsecurity) from pg_class
   where oid in ('public.spike_items'::regclass,'public.spike_item_placements'::regclass)),'Both tables force RLS');

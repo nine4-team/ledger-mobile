@@ -81,10 +81,10 @@ select is((select accounting#>>'{evidence,billableOccurrences,0,phase,invoiceId}
  'invoice-charge-two','Exact Invoice identity is retained in report provenance');
 select is((select count(*) from ledger_private.project_item_accounting_evidence('account-other','charge-project')),
  0::bigint,'Foreign Account cannot expose charge eligibility or membership');
-select throws_ok('select source_snapshot from ledger_private.collected_invoice_lines','42501',null,
- 'Physical report read grant excludes raw frozen source JSON');
-select throws_ok('select total_minor_units from ledger_private.collected_invoices','42501',null,
- 'Physical report read grant excludes private Invoice totals');
+select ok((select source_snapshot is not null from ledger_private.collected_invoice_lines where invoice_id='invoice-charge-two'),
+ 'Full financial payment reader can retain exact frozen source evidence');
+select is((select total_minor_units from ledger_private.collected_invoices where id='invoice-charge-two'),12345::bigint,
+ 'Full financial payment reader retains exact frozen Invoice total');
 reset role;
 update spike_account_memberships set financial_access='limited' where account_id='account-primary' and principal_id='principal-owner';
 set local role authenticated;
@@ -93,5 +93,21 @@ select is((select count(*) from ledger_private.project_item_accounting_evidence(
 select is((select count(id) from ledger_private.item_charge_occurrences),0::bigint,'RLS denies direct restricted charge reads');
 select is((select count(id) from ledger_private.collected_invoice_lines),0::bigint,'RLS denies direct restricted frozen membership reads');
 reset role;
+create temporary table frozen_routing_before as
+  select to_jsonb(l)-'sync_is_current' as facts from ledger_private.collected_invoice_lines l where id='line-charge-two';
+select throws_ok($$update ledger_private.collected_invoice_lines set sync_is_current=false where id='line-charge-two'$$,
+ '55000',null,'Caller cannot override a frozen line routing flag');
+select throws_ok($$update ledger_private.item_charge_occurrences set sync_is_current=false,amount_minor_units=99
+ where id='charge-two'$$,'55000',null,'Routing flag cannot bypass frozen charge protection');
+select lives_ok($$update public.spike_item_placements set ended_at='2026-04-01',ended_by_principal_id='principal-owner'
+ where id='charge-placement'$$,'Departure updates frozen-source routing without rewriting accounting');
+select is((select sync_is_current from ledger_private.item_charge_occurrences where id='charge-two'),false,
+ 'Departed charge no longer enters current Project sync');
+select is((select sync_is_current from ledger_private.collected_invoice_lines where id='line-charge-two'),false,
+ 'Frozen line follows departed charge for current Project sync');
+select is((select to_jsonb(l)-'sync_is_current' from ledger_private.collected_invoice_lines l where id='line-charge-two'),
+ (select facts from frozen_routing_before),'Every frozen line fact remains byte-equivalent as JSON');
+select is((select revision from ledger_private.item_charge_occurrences where id='charge-two'),1::bigint,
+ 'Routing never advances a frozen charge revision');
 select * from finish();
 rollback;

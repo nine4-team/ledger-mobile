@@ -38,6 +38,7 @@ migration mechanics.
 | [vendor-credits.md](vendor-credits.md) | Vendor cancellation credits and other vendor-issued purchase offsets; distinct from physical returns |
 | [reassign-vs-sell.md](reassign-vs-sell.md) | Correct/Move (no financial impact) vs Sell (scope change with budget impact) vs Return (vendor or inventory). UI menu labels and visibility rules. |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |
+| [ui/image-pinning.md](ui/image-pinning.md) | Preserved reference-panel interactions plus confirmed PDF pinning and native image-text interaction; source data types do not override target media authorization |
 | [project-closeout-report.md](project-closeout-report.md) | Proposed closeout narrative and explicit release/presentation decisions; canonical financial meanings take precedence |
 | [billing-invoicing.md](billing-invoicing.md) | Preserved billing-summary and contract-ingestion capabilities; old settlement shapes/algorithms remain source evidence only |
 | [invoice-import.md](invoice-import.md) | PDF/image extraction, vendor parsing, and draft transaction creation |

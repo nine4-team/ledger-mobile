@@ -14,6 +14,8 @@ public enum ReceiptLineReconstructionFailure: Error, Equatable, Sendable {
     case invalidEncodedLine
     case invalidEncodedFingerprint
     case invalidEncodedReconstruction
+    case incompleteItemEvidence
+    case invalidItemAmount
 
     public var diagnosticCode: String {
         switch self {
@@ -41,6 +43,10 @@ public enum ReceiptLineReconstructionFailure: Error, Equatable, Sendable {
             "receipt_reconstruction_fingerprint_encoding_invalid"
         case .invalidEncodedReconstruction:
             "receipt_reconstruction_encoding_invalid"
+        case .incompleteItemEvidence:
+            "receipt_reconstruction_item_evidence_incomplete"
+        case .invalidItemAmount:
+            "receipt_reconstruction_item_amount_invalid"
         }
     }
 }
@@ -168,6 +174,12 @@ public struct ReceiptReconstructionFingerprint: Codable, Equatable, Hashable, Se
     }
 }
 
+public enum TransactionReceiptAuditStatus: Equatable, Sendable {
+    case notApplicable
+    case balanced
+    case mismatch
+}
+
 public struct TransactionReceiptReconstruction: Codable, Equatable, Sendable {
     public let accountId: AccountID
     public let transactionId: TransactionID
@@ -181,6 +193,47 @@ public struct TransactionReceiptReconstruction: Codable, Equatable, Sendable {
     public let reconstructedTotal: Money
     public let variance: Money
     public let evidenceFingerprint: ReceiptReconstructionFingerprint
+
+    /// Derived from the current category, never a persisted completion flag.
+    /// Call only with fully known Item/line evidence; missing downloaded data
+    /// must not be represented as an empty list or zero total.
+    /// This checks receipt arithmetic, not Invoice collection or payment status.
+    public func auditStatus(for currentCategoryKind: BudgetCategoryKind) -> TransactionReceiptAuditStatus {
+        guard currentCategoryKind == .itemized else { return .notApplicable }
+        return variance == Money.zero(currency: variance.currency) ? .balanced : .mismatch
+    }
+
+    /// Reader-facing calculation: use the Transaction's linked membership plus
+    /// qualifying returned/sold history, not an Item's current Transaction link.
+    /// The scoped reader must supply complete membership and prices on this
+    /// Transaction's canonical basis. Missing prices are unknown, never zero.
+    /// This neither creates a history store nor changes Item prices/membership.
+    public init(
+        accountId: AccountID,
+        transactionId: TransactionID,
+        classification: TransactionClassification,
+        recordedFinalAmount: Money,
+        linkedItemIds: [ItemID],
+        historicalItemIds: [ItemID],
+        itemAmounts: [ItemID: Money],
+        isItemMembershipComplete: Bool,
+        lines: [NonItemReceiptLine]
+    ) throws {
+        guard isItemMembershipComplete else { throw ReceiptLineReconstructionFailure.incompleteItemEvidence }
+        // A physical Item that is both linked and in history still contributes
+        // once. Several qualifying history edges must not multiply its price.
+        let ids = Set(linkedItemIds).union(historicalItemIds)
+        var total = Money.zero(currency: recordedFinalAmount.currency)
+        for id in ids.sorted(by: { $0.rawValue.utf8.lexicographicallyPrecedes($1.rawValue.utf8) }) {
+            guard let amount = itemAmounts[id] else { throw ReceiptLineReconstructionFailure.incompleteItemEvidence }
+            guard amount.currency == total.currency else { throw ReceiptLineReconstructionFailure.currencyMismatch }
+            guard amount.sign != .negative else { throw ReceiptLineReconstructionFailure.invalidItemAmount }
+            do { total = try total.adding(amount) }
+            catch { throw ReceiptLineReconstructionFailure.arithmeticOverflow }
+        }
+        try self.init(accountId: accountId, transactionId: transactionId, classification: classification,
+            recordedFinalAmount: recordedFinalAmount, physicalItemTotal: total, lines: lines)
+    }
 
     public init(
         accountId: AccountID,

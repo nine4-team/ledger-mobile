@@ -71,7 +71,7 @@ select is(spike_read_client_summary_physical_report('account-primary','report-re
  '{"unavailable":{}}'::jsonb,'Unicode whitespace-only imported category matches native unavailable state');
 reset role;
 update spike_budget_categories set display_name='Renamed furnishings' where id='category-furnishings';
-update spike_budget_categories set visibility_class='company_financial' where id='category-furnishings';
+update spike_budget_categories set kind='fee' where id='category-furnishings';
 update spike_account_memberships set financial_access='limited'
  where account_id='account-primary' and principal_id='principal-owner';
 set local role authenticated;

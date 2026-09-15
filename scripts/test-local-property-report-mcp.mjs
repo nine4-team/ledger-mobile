@@ -125,7 +125,11 @@ try {
   await verifyCategoryDepartureSerialization();
   await client.connect(transport);
   const list = await client.listTools();
-  assert.deepEqual(list.tools.map(t => t.name), ['get_property_management_report', 'get_client_summary_physical_report']);
+  // This consumer owns report registration, not the unrelated category and
+  // Transaction capabilities now composed into the same server.
+  for (const name of ['get_property_management_report', 'get_client_summary_physical_report']) {
+    assert.equal(list.tools.filter(tool => tool.name === name).length, 1);
+  }
   const result = await client.callTool({ name: 'get_property_management_report', arguments: { projectId: project, currency: 'USD' } });
   assert.notEqual(result.isError, true);
   const snapshot = JSON.parse(result.content[0].text);

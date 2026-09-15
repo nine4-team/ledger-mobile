@@ -5,6 +5,29 @@ import Testing
 
 @Suite("Private Account logo download", .serialized)
 struct SupabaseAccountLogoDownloadTests {
+    @Test("PDF receipts share private transport, exact hash/length and redirect/size rejection")
+    func pdfDownload() async throws {
+        let bytes = Data("%PDF-1.4\nReceipt\n%%EOF".utf8)
+        let hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+        let reference = try DownloadedMediaObjectReference(accountId: AccountID(validating: "account"), attachmentId: "receipt",
+            sha256: hash, byteCount: String(bytes.count), mediaType: "application/pdf",
+            storagePath: "accounts/account/attachments/receipt/\(hash)", kind: .pdf)
+        LogoHTTPProtocol.handler = { request in
+            #expect(request.value(forHTTPHeaderField: "Accept") == "application/pdf")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer \(Self.token)")
+            #expect(request.url?.path == "/storage/v1/object/authenticated/ledger-attachments/\(reference.storagePath)")
+            return (200, [:], bytes)
+        }
+        let client = try client()
+        #expect(try await client.download(reference) == bytes)
+        LogoHTTPProtocol.handler = { _ in (302, ["Location":"https://foreign.invalid/receipt.pdf"], bytes) }
+        await #expect(throws: AccountLogoDownloadFailure.self) { try await client.download(reference) }
+        LogoHTTPProtocol.handler = { _ in (200, [:], Data("corrupted receipt".utf8)) }
+        await #expect(throws: AccountLogoDownloadFailure.self) { try await client.download(reference) }
+        LogoHTTPProtocol.handler = { _ in Issue.record("Oversized receipt reached HTTP"); return (500, [:], Data()) }
+        let bounded = try self.client(limit: 2)
+        await #expect(throws: AccountLogoDownloadFailure.self) { try await bounded.download(reference) }
+    }
     @Test("Verified private GET uses only user credentials and exact immutable path")
     func download() async throws {
         let reference = try reference()

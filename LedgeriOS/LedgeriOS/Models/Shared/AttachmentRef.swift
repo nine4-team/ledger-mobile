@@ -74,10 +74,6 @@ extension AttachmentRef {
     }
 }
 
-enum AttachmentKind: String, Codable, Sendable {
-    case image, pdf, file
-}
-
 /// Enforces the attachment invariant used by items, transactions, spaces, and
 /// quick drafts: every non-empty attachment collection has exactly one primary.
 enum AttachmentPrimaryPolicy {

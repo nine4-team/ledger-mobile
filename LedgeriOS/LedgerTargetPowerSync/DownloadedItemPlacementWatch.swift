@@ -6,13 +6,19 @@ import PowerSync
 struct DownloadedItemPlacementWatch: Sendable {
     let database: any PowerSyncDatabaseProtocol
     var subscribe: @Sendable (AccountID) async throws -> any SyncStreamSubscription
+    var subscribeProject: @Sendable (AccountID, ProjectID) async throws -> any SyncStreamSubscription
 
     init(database: any PowerSyncDatabaseProtocol,
-         subscribe: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil) {
+         subscribe: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil,
+         subscribeProject: (@Sendable (AccountID, ProjectID) async throws -> any SyncStreamSubscription)? = nil) {
         self.database = database
         self.subscribe = subscribe ?? { account in
             try await database.syncStream(name: "physical_account_items",
                 params: ["account_id": .string(account.rawValue)]).subscribe()
+        }
+        self.subscribeProject = subscribeProject ?? { account, project in
+            let identity = PropertyManagementReportStreamIdentity(accountId: account, projectId: project)
+            return try await database.syncStream(name: identity.name, params: identity.parameters).subscribe()
         }
     }
 
@@ -27,6 +33,43 @@ struct DownloadedItemPlacementWatch: Sendable {
                 try Task.checkCancellation()
                 let value = try await reader.readSnapshot(accountId: accountId, principalId: principalId, scope: scope)
                 guard await receive(value) else { return }
+            }
+        })
+    }
+
+    func runHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID,
+                    receive: @Sendable @escaping (DownloadedItemPlacementHistory) async -> Bool) async throws {
+        try await withOwnedSyncStreamWatch(subscribe: { try await subscribe(accountId) }, observe: {
+            let reader = CurrentItemPlacementLocalReader(database: database)
+            var projectId: ProjectID?
+            var financialSubscription: (any SyncStreamSubscription)?
+            do {
+                for try await _ in try reader.watchHistory(accountId: accountId, principalId: principalId, itemId: itemId) {
+                    try Task.checkCancellation()
+                    let value = try await reader.readHistory(accountId: accountId, principalId: principalId, itemId: itemId)
+                    guard await receive(value) else { break }
+                    let scope = value.intervals.first(where: { $0.endedAt == nil })?.scope
+                    let nextProject: ProjectID?
+                    if case .project(let id) = scope { nextProject = id } else { nextProject = nil }
+                    if projectId != nextProject {
+                        if let old = financialSubscription {
+                            financialSubscription = nil
+                            try await Task.detached { try await old.unsubscribe() }.value
+                        }
+                        projectId = nextProject
+                        if let projectId {
+                            financialSubscription = try await subscribeProject(accountId, projectId)
+                        }
+                    }
+                }
+            } catch {
+                if let subscription = financialSubscription {
+                    try await Task.detached { try await subscription.unsubscribe() }.value
+                }
+                throw error
+            }
+            if let subscription = financialSubscription {
+                try await Task.detached { try await subscription.unsubscribe() }.value
             }
         })
     }

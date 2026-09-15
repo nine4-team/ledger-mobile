@@ -1,0 +1,10 @@
+[
+  {
+    "envelopeJSON": "{\"accountId\":\"category-account\",\"actorPrincipalId\":\"member\",\"clientCreatedAt\":1800000000123,\"contractVersion\":\"category-management-v1\",\"operationId\":\"category-management-e74822d15392f741b7ee6aa891faa7e5123386eeac384eb1c54bf7773bd2c4a7-11111111-2222-3333-4444-555555555555\",\"payload\":{\"action\":\"create\",\"categoryId\":\"category\",\"excludesFromOverallBudget\":false,\"kind\":\"general\",\"name\":\"Art & Décor \\/ 🪑\"},\"preconditions\":[]}",
+    "fingerprint": "e53b72474f6d4bea6d042242ae68b245ad331ac48da5c6bf382e659035b26f40"
+  },
+  {
+    "envelopeJSON": "{\"accountId\":\"category-account\",\"actorPrincipalId\":\"member\",\"clientCreatedAt\":1800000000123,\"contractVersion\":\"category-management-v1\",\"operationId\":\"category-management-e74822d15392f741b7ee6aa891faa7e5123386eeac384eb1c54bf7773bd2c4a7-11111111-2222-3333-4444-555555555555\",\"payload\":{\"action\":\"reorder\",\"order\":[{\"categoryId\":\"second\",\"expectedRevision\":\"9223372036854775806\"},{\"categoryId\":\"first\",\"expectedRevision\":\"3\"}]},\"preconditions\":[]}",
+    "fingerprint": "f0ad79e0a750c98f58433f6c1908801c3cca36b9b1442e2b9da8bc74cac7155e"
+  }
+]

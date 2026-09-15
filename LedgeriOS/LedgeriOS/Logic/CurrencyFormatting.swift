@@ -14,6 +14,10 @@ enum CurrencyFormatting {
         BudgetDisplayCalculations.formatCentsWithDecimals(cents)
     }
 
+    static func formatCentsWithDecimals(_ cents: Decimal) -> String {
+        (cents / 100).formatted(.currency(code: "USD"))
+    }
+
     /// Formats cents in compact notation for large amounts.
     /// Examples: 150000 → "$1.5K", 1500000 → "$15K", 150000000 → "$1.5M"
     /// Falls back to whole-dollar format for amounts under $1,000.

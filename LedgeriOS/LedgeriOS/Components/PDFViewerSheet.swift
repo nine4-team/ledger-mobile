@@ -2,34 +2,20 @@ import SwiftUI
 import PDFKit
 
 /// Full-screen PDF viewer using PDFKit. Presented via fullScreenCover (iOS) or sheet (macOS).
-struct PDFViewerSheet: View {
-    let attachment: AttachmentRef
+struct PDFViewerPresentation: View {
+    let fileName: String?
+    let pdfDocument: PDFDocument?
+    let isLoading: Bool
     @Binding var isPresented: Bool
-    var onPinImage: ((AttachmentRef) -> Void)?
-
-    @State private var pdfDocument: PDFDocument?
-    @State private var isLoading = true
-    @State private var loadError = false
+    var onPinImage: (() -> Void)?
+    var onShare: (() -> Void)?
+    var shareURL: URL?
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            if isLoading {
-                ProgressView()
-                    .tint(.white)
-            } else if let pdfDocument {
-                PDFKitView(document: pdfDocument)
-            } else {
-                VStack(spacing: Spacing.sm) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.white.opacity(0.5))
-                    Text("Unable to load PDF")
-                        .font(Typography.small)
-                        .foregroundStyle(.white.opacity(0.7))
-                }
-            }
+            PDFDocumentPresentation(document: pdfDocument, isLoading: isLoading)
 
             // Chrome overlay
             VStack {
@@ -46,7 +32,7 @@ struct PDFViewerSheet: View {
 
                 Spacer()
 
-                if let fileName = attachment.fileName {
+                if let fileName {
                     Text(fileName)
                         .font(Typography.caption)
                         .foregroundStyle(.white.opacity(0.7))
@@ -61,30 +47,8 @@ struct PDFViewerSheet: View {
         #if canImport(UIKit)
         .statusBarHidden()
         #endif
-        .task {
-            await loadPDF()
-        }
-    }
-
-    private func loadPDF() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        guard let resolved = await StorageURLResolver.resolve(attachment.url) else {
-            loadError = true
-            return
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: resolved)
-            if let doc = PDFDocument(data: data) {
-                pdfDocument = doc
-            } else {
-                loadError = true
-            }
-        } catch {
-            loadError = true
-        }
+        .accessibilityElement(children: .contain)
+        .accessibilityValue(isLoading ? "Loading PDF" : pdfDocument.map { "\($0.pageCount) PDF pages" } ?? "Unable to load PDF")
     }
 
     private var closeButton: some View {
@@ -99,11 +63,12 @@ struct PDFViewerSheet: View {
                 .background(.black.opacity(0.5))
                 .clipShape(Circle())
         }
+        .accessibilityLabel("Close PDF")
     }
 
     private var pinButton: some View {
         Button {
-            onPinImage?(attachment)
+            onPinImage?()
             isPresented = false
         } label: {
             Image(systemName: "pin")
@@ -119,19 +84,68 @@ struct PDFViewerSheet: View {
 
     @ViewBuilder
     private var shareButton: some View {
-        if let url = URL(string: attachment.url) {
-            ShareLink(item: url) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(.black.opacity(0.5))
-                    .clipShape(Circle())
+        if let onShare {
+            Button(action: onShare) { shareIcon }.accessibilityLabel("Share PDF")
+        } else if let shareURL {
+            ShareLink(item: shareURL) { shareIcon }
+        }
+    }
+    private var shareIcon: some View {
+        Image(systemName: "square.and.arrow.up")
+            .font(.title3).fontWeight(.semibold).foregroundStyle(.white)
+            .frame(width: 40, height: 40).background(.black.opacity(0.5)).clipShape(Circle())
+    }
+}
+
+/// Shared existing PDF loading, rendering and failure presentation.
+struct PDFDocumentPresentation: View {
+    let document: PDFDocument?
+    let isLoading: Bool
+
+    var body: some View {
+        if isLoading {
+            ProgressView().tint(.white)
+        } else if let document {
+            PDFKitView(document: document)
+                .accessibilityIdentifier("pdf-viewer-document")
+        } else {
+            VStack(spacing: Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.white.opacity(0.5))
+                Text("Unable to load PDF")
+                    .font(Typography.small)
+                    .foregroundStyle(.white.opacity(0.7))
             }
         }
     }
 }
+
+#if canImport(FirebaseFirestore)
+/// Legacy loading remains outside the shared PDF presentation.
+struct PDFViewerSheet: View {
+    let attachment: AttachmentRef
+    @Binding var isPresented: Bool
+    var onPinImage: ((AttachmentRef) -> Void)?
+    @State private var pdfDocument: PDFDocument?
+    @State private var isLoading = true
+
+    var body: some View {
+        PDFViewerPresentation(fileName: attachment.fileName, pdfDocument: pdfDocument, isLoading: isLoading,
+            isPresented: $isPresented, onPinImage: onPinImage.map { action in { action(attachment) } },
+            shareURL: URL(string: attachment.url))
+            .task {
+                isLoading = true
+                defer { isLoading = false }
+                guard let resolved = await StorageURLResolver.resolve(attachment.url) else { return }
+                do {
+                    let (data, _) = try await URLSession.shared.data(from: resolved)
+                    pdfDocument = PDFDocument(data: data)
+                } catch { pdfDocument = nil }
+            }
+    }
+}
+#endif
 
 // MARK: - PDFKit View
 

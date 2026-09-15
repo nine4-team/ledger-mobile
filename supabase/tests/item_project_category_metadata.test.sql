@@ -30,7 +30,7 @@ set local role authenticated;
 select is((select count(*) from spike_item_project_categories where id='category-placement'),1::bigint,
  'Archived category remains resolvable without Project allocation evidence');
 reset role;
-update spike_budget_categories set visibility_class='company_financial' where id='category-furnishings';
+update spike_budget_categories set kind='fee' where id='category-furnishings';
 set local role authenticated;
 select is((select count(*) from spike_item_project_categories where id='category-placement'),0::bigint,
  'Hidden category identity is denied along with its label');

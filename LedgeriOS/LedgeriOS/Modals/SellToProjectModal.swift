@@ -1,4 +1,5 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
 import FirebaseFirestore
 
 /// Entry point for financial cross-scope item flows.
@@ -285,37 +286,13 @@ struct SellToProjectModal: View {
     // MARK: - Header
 
     private var stepHeader: some View {
-        HStack {
-            if canGoBack {
-                Button {
-                    if step == 3 && missingProjectPriceItems.isEmpty {
-                        step = 1
-                    } else {
-                        step -= 1
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundStyle(BrandColors.primary)
-                }
-                .buttonStyle(.plain)
+        SaleStepHeaderPresentation(title: stepTitle, canGoBack: canGoBack, onBack: {
+            if step == 3 && missingProjectPriceItems.isEmpty {
+                step = 1
+            } else {
+                step -= 1
             }
-
-            Text(stepTitle)
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
-
-            Spacer()
-
-            Button { dismiss() } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(BrandColors.textTertiary)
-                    .font(.title2)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, Spacing.screenPadding)
-        .padding(.top, Spacing.screenPadding)
-        .padding(.bottom, Spacing.md)
+        }, onClose: { dismiss() })
     }
 
     private var canGoBack: Bool {
@@ -352,43 +329,12 @@ struct SellToProjectModal: View {
     // MARK: - Step 2: Missing project prices
 
     private var step2ProjectPrices: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Set the project price for each item.")
-                .font(Typography.small)
-                .foregroundStyle(BrandColors.textSecondary)
-                .padding(.horizontal, Spacing.screenPadding)
-
-            if let error = errorMessage {
-                Text(error)
-                    .font(Typography.small)
-                    .foregroundStyle(StatusColors.missedText)
-                    .padding(.horizontal, Spacing.screenPadding)
-            }
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    ForEach(missingProjectPriceItems) { item in
-                        FormField(
-                            label: item.displayName.isEmpty ? "Item" : item.displayName,
-                            text: Binding(
-                                get: { projectPriceTexts[item.id ?? ""] ?? "" },
-                                set: { projectPriceTexts[item.id ?? ""] = $0 }
-                            ),
-                            placeholder: "0.00",
-                            helperText: item.sku
-                        )
-                    }
-                }
-                .padding(.horizontal, Spacing.screenPadding)
-            }
-
-            AppButton(title: "Continue") {
-                guard validateProjectPrices() else { return }
-                errorMessage = nil
-                step = 3
-            }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.bottom, Spacing.screenPadding)
+        SalePriceEntryPresentation(rows: missingProjectPriceItems.map {
+            .init(id: $0.id ?? "",title: $0.displayName,helperText: $0.sku)
+        },texts: $projectPriceTexts,errorMessage: errorMessage) {
+            guard validateProjectPrices() else { return }
+            errorMessage = nil
+            step = 3
         }
     }
 
@@ -558,6 +504,85 @@ struct SellToProjectModal: View {
             Task { @MainActor in
                 accountCategories = categories
             }
+        }
+    }
+}
+#endif
+
+/// Original sale navigation chrome; workflow state stays with its caller.
+struct SaleStepHeaderPresentation: View {
+    let title: String
+    let canGoBack: Bool
+    let onBack: () -> Void
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack {
+            if canGoBack {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(BrandColors.primary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Back")
+                .accessibilityIdentifier("sale-step-back")
+            }
+            Text(title)
+                .font(Typography.h2)
+                .foregroundStyle(BrandColors.textPrimary)
+            Spacer()
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .font(.title2)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Close sale")
+            .accessibilityIdentifier("sale-step-close")
+        }
+        .padding(.horizontal, Spacing.screenPadding)
+        .padding(.top, Spacing.screenPadding)
+        .padding(.bottom, Spacing.md)
+    }
+}
+
+/// The original price-entry controls, with data and validation owned by the caller.
+struct SalePriceEntryPresentation: View {
+    struct Row: Identifiable {
+        let id: String
+        let title: String
+        let helperText: String?
+    }
+    let rows: [Row]
+    @Binding var texts: [String: String]
+    let errorMessage: String?
+    let onContinue: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Set the project price for each item.")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+                .padding(.horizontal, Spacing.screenPadding)
+            if let error = errorMessage {
+                Text(error)
+                    .font(Typography.small)
+                    .foregroundStyle(StatusColors.missedText)
+                    .padding(.horizontal, Spacing.screenPadding)
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    ForEach(rows) { row in
+                        FormField(label: row.title.isEmpty ? "Item" : row.title,
+                            text: Binding(get: { texts[row.id] ?? "" },set: { texts[row.id] = $0 }),
+                            placeholder: "0.00",helperText: row.helperText)
+                    }
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+            }
+            AppButton(title: "Continue",action: onContinue)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.bottom, Spacing.screenPadding)
         }
     }
 }

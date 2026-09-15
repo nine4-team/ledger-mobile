@@ -4,6 +4,28 @@ import Testing
 
 @Suite("Downloaded image byte identity")
 struct DownloadedImageObjectReferenceTests {
+    @Test("PDF opt-in shares exact identity without relaxing image-only callers")
+    func pdfIdentity() throws {
+        let account = try AccountID(validating: "account"), hash = String(repeating: "b", count: 64)
+        let path = "accounts/account/attachments/receipt/\(hash)"
+        let pdf = try DownloadedMediaObjectReference(accountId: account, attachmentId: "receipt",
+            sha256: hash, byteCount: "123", mediaType: "application/pdf", storagePath: path, kind: .pdf)
+        #expect(pdf.mediaType == "application/pdf" && pdf.byteCount == 123)
+        #expect(throws: DownloadedMediaObjectReferenceFailure.self) {
+            try DownloadedImageObjectReference(accountId: account, attachmentId: "receipt",
+                sha256: hash, byteCount: "123", mediaType: "application/pdf", storagePath: path)
+        }
+        for mediaType in ["image/png", "text/html", "application/pdf; charset=utf-8", "application/pdf\r\nAuthorization: forged"] {
+            #expect(throws: DownloadedMediaObjectReferenceFailure.self) {
+                try DownloadedMediaObjectReference(accountId: account, attachmentId: "receipt",
+                    sha256: hash, byteCount: "123", mediaType: mediaType, storagePath: path, kind: .pdf)
+            }
+        }
+        #expect(throws: DownloadedMediaObjectReferenceFailure.self) {
+            try DownloadedMediaObjectReference(accountId: account, attachmentId: "receipt", sha256: hash,
+                byteCount: "123", mediaType: "application/pdf", storagePath: "accounts/foreign/attachments/receipt/\(hash)", kind: .pdf)
+        }
+    }
     @Test("Exact count and Account-bound content path are required")
     func identity() throws {
         let account = try AccountID(validating: "account")

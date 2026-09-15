@@ -8,6 +8,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
     var contentTypes: [UTType] = [.pdf]
     var onPickDocument: (Data, String) -> Void
     var onDismiss: () -> Void
+    var onFailure: (Error) -> Void = { _ in }
 
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes)
@@ -19,16 +20,19 @@ struct DocumentPicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onPickDocument: onPickDocument, onDismiss: onDismiss)
+        Coordinator(onPickDocument: onPickDocument, onDismiss: onDismiss, onFailure: onFailure)
     }
 
     final class Coordinator: NSObject, UIDocumentPickerDelegate {
         let onPickDocument: (Data, String) -> Void
         let onDismiss: () -> Void
+        let onFailure: (Error) -> Void
 
-        init(onPickDocument: @escaping (Data, String) -> Void, onDismiss: @escaping () -> Void) {
+        init(onPickDocument: @escaping (Data, String) -> Void, onDismiss: @escaping () -> Void,
+            onFailure: @escaping (Error) -> Void) {
             self.onPickDocument = onPickDocument
             self.onDismiss = onDismiss
+            self.onFailure = onFailure
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -37,20 +41,18 @@ struct DocumentPicker: UIViewControllerRepresentable {
                 return
             }
 
-            // Security-scoped resource access for Files.app
-            let didStartAccessing = url.startAccessingSecurityScopedResource()
-            defer {
-                if didStartAccessing {
-                    url.stopAccessingSecurityScopedResource()
+            Task { @MainActor in
+                let didStartAccessing = url.startAccessingSecurityScopedResource()
+                defer {
+                    if didStartAccessing { url.stopAccessingSecurityScopedResource() }
                 }
-            }
-
-            do {
-                let data = try Data(contentsOf: url)
-                let filename = url.lastPathComponent
-                onPickDocument(data, filename)
-            } catch {
-                onDismiss()
+                do {
+                    let data = try await Task.detached(priority: .userInitiated) { try Data(contentsOf: url) }.value
+                    onPickDocument(data, url.lastPathComponent)
+                } catch {
+                    onFailure(error)
+                    onDismiss()
+                }
             }
         }
 

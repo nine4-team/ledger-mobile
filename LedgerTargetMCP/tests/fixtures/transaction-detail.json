@@ -1,0 +1,9 @@
+{
+  "accountId": "account-primary", "principalId": "principal-restricted",
+  "transactionId": "detail-inventory", "scopeKind": "business_inventory",
+  "projectId": null, "clientId": null, "type": "return", "role": "standalone",
+  "origin": "vendor_payment", "amountMinorUnits": "9007199254740993", "currency": "USD",
+  "category": {"id": "category-system", "name": "Materials", "kind": "itemized", "revision": "1"},
+  "source": "Café vendor", "transactionDate": "2024-02-29", "createdAtMilliseconds": "1709251200123",
+  "notes": "First line\nSecond line", "paymentMethod": "Company card", "hasEmailReceipt": false
+}

@@ -13,17 +13,20 @@ public struct ProjectSetupStagingRuntime: ProjectSetupOperating, Sendable {
     private let categoryWatch: CategoryWatch
     private let createOperation: Create
     private let operationWatch: OperationWatch
+    public let categoryManagement: CategoryManagementRuntime?
 
     public init(
         watchClients: @escaping ClientWatch,
         watchBudgetCategories: @escaping CategoryWatch,
         create: @escaping Create,
-        watchOperation: @escaping OperationWatch
+        watchOperation: @escaping OperationWatch,
+        categoryManagement: CategoryManagementRuntime? = nil
     ) {
         clientWatch = watchClients
         categoryWatch = watchBudgetCategories
         createOperation = create
         operationWatch = watchOperation
+        self.categoryManagement = categoryManagement
     }
 
     public func watchClients() -> AsyncThrowingStream<ClientListSnapshot, Error> {
@@ -155,6 +158,8 @@ public final class ProjectSetupStagingExercise {
     public private(set) var receipt: OperationReceipt?
     public private(set) var submittedProject: SubmittedProjectSummary?
     public private(set) var isSubmitting = false
+    public private(set) var categoryManagementSession: CategoryManagementSession?
+    private var createdCategoriesAwaitingSelection: Set<BudgetCategoryID> = []
 
     public let accountCurrency: CurrencyCode
 
@@ -291,6 +296,9 @@ public final class ProjectSetupStagingExercise {
     }
 
     public func start(runtime: ProjectSetupStagingRuntime) async {
+        categoryManagementSession?.invalidate()
+        categoryManagementSession = nil
+        createdCategoriesAwaitingSelection = []
         generation = UUID()
         draftGeneration = UUID()
         let activeGeneration = generation
@@ -311,6 +319,17 @@ public final class ProjectSetupStagingExercise {
 
         guard generation == activeGeneration else { return }
         self.runtime = runtime
+
+        categoryManagementSession = runtime.categoryManagement.map {
+            CategoryManagementSession(accountId: accountId, runtime: $0)
+        }
+        if let session = categoryManagementSession {
+            let statusTaskId = UUID()
+            admittedTasks[statusTaskId] = Task { @MainActor [weak self] in
+                defer { self?.admittedTasks[statusTaskId] = nil }
+                await session.observeOperations()
+            }
+        }
 
         let clientTaskID = UUID()
         let clientTask = Task { @MainActor [weak self] in
@@ -356,6 +375,9 @@ public final class ProjectSetupStagingExercise {
     }
 
     public func stop() async {
+        categoryManagementSession?.invalidate()
+        categoryManagementSession = nil
+        createdCategoriesAwaitingSelection = []
         generation = UUID()
         draftGeneration = UUID()
         runtime = nil
@@ -373,6 +395,22 @@ public final class ProjectSetupStagingExercise {
         operationObservationTask?.cancel()
         operationObservationTask = nil
         await cancelAndDrainAdmittedTasks()
+    }
+
+    public func createCategory(id: BudgetCategoryID, name: BudgetCategoryName,
+        kind: BudgetCategoryKind, excluded: Bool) async throws {
+        guard !isDraftLocked, let session = categoryManagementSession else {
+            throw CategoryManagementFailure.categoryUnavailable
+        }
+        let active = generation
+        _ = try await session.save(.init(action: .create, categoryId: id, name: name,
+            kind: kind, excludesFromOverallBudget: excluded))
+        guard active == generation, !Task.isCancelled else { throw CancellationError() }
+        if categories.contains(where: { $0.id == id }) {
+            setCategory(id, selected: true)
+        } else {
+            createdCategoriesAwaitingSelection.insert(id)
+        }
     }
 
     public func setCategory(_ categoryId: BudgetCategoryID, selected: Bool) {
@@ -752,6 +790,7 @@ public final class ProjectSetupStagingExercise {
     ) {
         guard self.generation == generation else { return }
         guard snapshot.accountId == accountId else {
+            categoryManagementSession?.invalidate()
             categorySnapshot = nil
             categories = []
             categoryStatus = "blocked • completeness unknown"
@@ -761,6 +800,7 @@ public final class ProjectSetupStagingExercise {
             return
         }
         categorySnapshot = snapshot
+        try? categoryManagementSession?.receive(snapshot)
         categories = snapshot.local.rows.filter(\.isSelectableForProjectConfiguration)
         categoryStatus = Self.status(
             readiness: snapshot.local.quality.readiness,
@@ -775,6 +815,9 @@ public final class ProjectSetupStagingExercise {
         } else if snapshot.local.isCompleteForQuery {
             selectedCategoryIds.formIntersection(representedCategoryIds)
         }
+        let newlyVisible = createdCategoriesAwaitingSelection.intersection(representedCategoryIds)
+        selectedCategoryIds.formUnion(newlyVisible)
+        createdCategoriesAwaitingSelection.subtract(newlyVisible)
         budgetAllocations = budgetAllocations.filter {
             selectedCategoryIds.contains($0.key)
         }

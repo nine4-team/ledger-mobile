@@ -18,6 +18,7 @@ public enum AttachmentCaptureReceiptFailure: Error, Equatable, Sendable {
     case invalidEncodedPersistedEvidence
     case invalidEncodedReceiptFingerprint
     case invalidEncodedReceipt
+    case invalidCaptureMetadata
 
     public var diagnosticCode: String {
         switch self {
@@ -53,6 +54,8 @@ public enum AttachmentCaptureReceiptFailure: Error, Equatable, Sendable {
             "attachment_receipt_fingerprint_encoding_invalid"
         case .invalidEncodedReceipt:
             "attachment_capture_receipt_encoding_invalid"
+        case .invalidCaptureMetadata:
+            "attachment_capture_metadata_invalid"
         }
     }
 }
@@ -241,6 +244,52 @@ public struct AttachmentReceiptFingerprint: Codable, Equatable, Hashable, Sendab
     }
 }
 
+/// Original picker metadata, not a storage path or authority to attach to a parent.
+/// Persisted with the receipt so restart cannot lose the selected destination section.
+public struct AttachmentCapturePlacement: Codable, Equatable, Sendable {
+    public let localPosition: UInt32
+    public let makePrimaryIfEmpty: Bool
+
+    public init(localPosition: UInt32, makePrimaryIfEmpty: Bool) {
+        self.localPosition = localPosition
+        self.makePrimaryIfEmpty = makePrimaryIfEmpty
+    }
+}
+
+public struct AttachmentCaptureMetadata: Codable, Equatable, Sendable {
+    public let mediaType: String
+    public let fileName: String?
+    public let transactionSection: TransactionAttachmentSection?
+    public let placement: AttachmentCapturePlacement?
+
+    public init(mediaType: String, fileName: String?, transactionSection: TransactionAttachmentSection? = nil,
+        placement: AttachmentCapturePlacement? = nil) throws {
+        guard DownloadedMediaObjectReference.isImageMediaType(mediaType) || mediaType == "application/pdf" else {
+            throw AttachmentCaptureReceiptFailure.invalidCaptureMetadata
+        }
+        self.mediaType = mediaType
+        self.fileName = fileName
+        self.transactionSection = transactionSection
+        self.placement = placement
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(mediaType: container.decode(String.self, forKey: .mediaType),
+            fileName: container.decodeIfPresent(String.self, forKey: .fileName),
+            transactionSection: container.decodeIfPresent(TransactionAttachmentSection.self, forKey: .transactionSection),
+            placement: container.decodeIfPresent(AttachmentCapturePlacement.self, forKey: .placement))
+    }
+
+    fileprivate func validate(parent: LedgerEntityReference) throws {
+        guard (parent.kind == .transaction) == (transactionSection != nil) else {
+            throw AttachmentCaptureReceiptFailure.invalidCaptureMetadata
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey { case mediaType, fileName, transactionSection, placement }
+}
+
 public struct LocalAttachmentCapture: Equatable, Sendable {
     public let attachmentId: AttachmentID
     public let scope: AttachmentCaptureScope
@@ -248,16 +297,20 @@ public struct LocalAttachmentCapture: Equatable, Sendable {
     public let bytes: Data
     public let byteCount: UInt64
     public let contentSHA256: AttachmentContentSHA256
+    public let metadata: AttachmentCaptureMetadata?
 
     public init(
         attachmentId: AttachmentID,
         scope: AttachmentCaptureScope,
         capturedAt: AttachmentEpochMilliseconds,
-        bytes: Data
+        bytes: Data,
+        metadata: AttachmentCaptureMetadata? = nil
     ) throws {
         guard !bytes.isEmpty else {
             throw AttachmentCaptureReceiptFailure.emptyCaptureBytes
         }
+        try metadata?.validate(parent: scope.parent)
+        self.metadata = metadata
         self.attachmentId = attachmentId
         self.scope = scope
         self.capturedAt = capturedAt
@@ -343,6 +396,8 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
     public let capturedAt: AttachmentEpochMilliseconds
     public let persistedAt: AttachmentEpochMilliseconds
     public let fingerprint: AttachmentReceiptFingerprint
+    /// Nil identifies earlier byte-only receipts; never infer an upload type or section for them.
+    public let metadata: AttachmentCaptureMetadata?
 
     public init(
         accepting capture: LocalAttachmentCapture,
@@ -366,6 +421,7 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
         self.contentSHA256 = capture.contentSHA256
         self.capturedAt = capture.capturedAt
         self.persistedAt = persistedEvidence.persistedAt
+        self.metadata = capture.metadata
         self.fingerprint = try Self.makeFingerprint(
             attachmentId: attachmentId,
             scope: scope,
@@ -373,7 +429,8 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
             byteCount: byteCount,
             contentSHA256: contentSHA256,
             capturedAt: capturedAt,
-            persistedAt: persistedAt
+            persistedAt: persistedAt,
+            metadata: metadata
         )
     }
 
@@ -412,6 +469,8 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
                 AttachmentReceiptFingerprint.self,
                 forKey: .fingerprint
             )
+            let metadata = try container.decodeIfPresent(AttachmentCaptureMetadata.self, forKey: .metadata)
+            try metadata?.validate(parent: scope.parent)
             let expectedFingerprint = try Self.makeFingerprint(
                 attachmentId: attachmentId,
                 scope: scope,
@@ -419,7 +478,8 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
                 byteCount: byteCount,
                 contentSHA256: contentSHA256,
                 capturedAt: capturedAt,
-                persistedAt: persistedAt
+                persistedAt: persistedAt,
+                metadata: metadata
             )
             guard fingerprint == expectedFingerprint else {
                 throw AttachmentCaptureReceiptFailure.receiptFingerprintMismatch
@@ -433,6 +493,7 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
             self.capturedAt = capturedAt
             self.persistedAt = persistedAt
             self.fingerprint = fingerprint
+            self.metadata = metadata
         } catch let failure as AttachmentCaptureReceiptFailure {
             throw failure
         } catch {
@@ -447,18 +508,20 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
         byteCount: UInt64,
         contentSHA256: AttachmentContentSHA256,
         capturedAt: AttachmentEpochMilliseconds,
-        persistedAt: AttachmentEpochMilliseconds
+        persistedAt: AttachmentEpochMilliseconds,
+        metadata: AttachmentCaptureMetadata?
     ) throws -> AttachmentReceiptFingerprint {
         try AttachmentReceiptFingerprint.make(
             material: AttachmentReceiptFingerprintMaterial(
-                contract: "attachment_capture_receipt_v1",
+                contract: metadata == nil ? "attachment_capture_receipt_v1" : "attachment_capture_receipt_v2",
                 attachmentId: attachmentId,
                 scope: scope,
                 localObjectId: localObjectId,
                 byteCount: byteCount,
                 contentSHA256: contentSHA256,
                 capturedAt: capturedAt,
-                persistedAt: persistedAt
+                persistedAt: persistedAt,
+                metadata: metadata
             )
         )
     }
@@ -472,6 +535,7 @@ public struct AttachmentLocalDurabilityReceipt: Codable, Equatable, Sendable {
         case capturedAt
         case persistedAt
         case fingerprint
+        case metadata
     }
 }
 
@@ -490,4 +554,5 @@ private struct AttachmentReceiptFingerprintMaterial: Codable, Sendable {
     let contentSHA256: AttachmentContentSHA256
     let capturedAt: AttachmentEpochMilliseconds
     let persistedAt: AttachmentEpochMilliseconds
+    let metadata: AttachmentCaptureMetadata?
 }

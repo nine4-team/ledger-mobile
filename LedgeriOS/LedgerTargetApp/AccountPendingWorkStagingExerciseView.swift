@@ -38,6 +38,8 @@ struct AccountPendingWorkStagingExerciseView: View {
                 value: model.unverifiedAttachmentCountLabel
             )
             .accessibilityIdentifier("target-pending-work-attachment-count")
+            LabeledContent("Unfinished Expense forms", value: model.unfinishedEntryCountLabel)
+                .accessibilityIdentifier("target-pending-work-unfinished-count")
 
             if let diagnosticCode = model.diagnosticCode {
                 Text(diagnosticCode)

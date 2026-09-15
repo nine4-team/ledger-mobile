@@ -4,7 +4,7 @@ import { readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checklistRelativePath, loadProductChecklist, projectLegacyStructures } from "./ledger-product-checklist.mjs";
-import { backgroundAuditScope } from "./supabase-conversion-ledger.mjs";
+import { backgroundAuditScope, loadSourceInventory } from "./supabase-conversion-ledger.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "..");
@@ -16,12 +16,7 @@ const workflowRecordsRelative =
 const targetStoryCatalogRelative = checklistRelativePath;
 const checklist = loadProductChecklist();
 const checklistViews = projectLegacyStructures(checklist);
-const manifest = JSON.parse(
-  readFileSync(
-    join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json"),
-    "utf8",
-  ),
-);
+const manifest = loadSourceInventory();
 const surfacesById = new Map((manifest.surfaces ?? []).map((surface) => [surface.id, surface]));
 const canonicalTargetSpecs = new Set(checklistViews.canonicalSpecs);
 const targetStoryCatalog = checklistViews.catalog;
@@ -107,6 +102,9 @@ const allowedSourceOnlyAuthorities = new Set([
   "docs/specs/vendor-credits.md",
 ]);
 const completionWorkflowPath = ".github/workflows/supabase-conversion-control.yml";
+// These receipt contracts carry structured accounting evidence, not image bytes.
+// Keep this bounded to known files; a ReceiptImage/Attachment still requires media.
+const isReceiptArithmetic = (path) => /\/(?:ReceiptLineReconstruction(?:Tests)?\.swift|TransactionReceipt(?:Snapshot|PowerSyncQuery|AuditPresentation|AuditSession)(?:Tests)?\.swift|transactionReceiptRead(?:\.test)?\.ts|transaction-receipt\.json|(?:\d+_)?(?:transaction_receipt_read|transaction_browser_receipt_evidence|transaction_legacy_receipt_metadata|transaction_receipt_item_sources)(?:\.test)?\.sql)$/.test(path);
 
 const layerEvidencePredicates = new Map([
   ["domain", (path) => path.startsWith("LedgeriOS/LedgerTargetCore/")],
@@ -121,10 +119,11 @@ const layerEvidencePredicates = new Map([
   ["powersync_sync", (path) => path.startsWith("LedgeriOS/LedgerTargetPowerSync/")],
   ["local_offline", (path) => path.startsWith("LedgeriOS/LedgerTargetPowerSync/")],
   ["accounting", (path) =>
-    /(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/i.test(path)],
-  ["media", (path) => /(attachment|media|image|photo|receipt|ReportScratchStore)/i.test(path)],
+    isReceiptArithmetic(path) || /(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/i.test(path)],
+  ["media", (path) => !isReceiptArithmetic(path) && /(attachment|media|image|photo|receipt|ReportScratchStore)/i.test(path)],
   ["migration", (path) =>
     path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
+    /^LedgeriOS\/LedgerTargetCore(?:Tests)?\/FrozenInvoiceStorageRecord(?:Tests)?\.swift$/.test(path) ||
     path.startsWith("LedgeriOS/LedgerLocalPaymentImport/") ||
     /(^|\/)(migration|migrations)(\/|$)/i.test(path)],
   ["auth", (path) =>
@@ -198,7 +197,7 @@ function repositoryFile(value, field) {
   return repositoryEntry(value, field, { fileOnly: true });
 }
 
-function inferredLayersForPath(path) {
+function inferredLayersForPath(path, readSource = (path) => readFileSync(join(repositoryRoot, path), "utf8")) {
   const inferred = new Set();
   const lower = path.toLowerCase();
   if (
@@ -214,16 +213,27 @@ function inferredLayersForPath(path) {
   }
   if (path.startsWith("LedgerTargetMCP/")) inferred.add("app_mcp");
   if (path.startsWith("LedgeriOS/LedgerTargetMigrationCore/") ||
+      /^LedgeriOS\/LedgerTargetCore(?:Tests)?\/FrozenInvoiceStorageRecord(?:Tests)?\.swift$/.test(path) ||
       path.startsWith("LedgeriOS/LedgerLocalPaymentImport/")) inferred.add("migration");
   if (path.startsWith("supabase/migrations/") || path.startsWith("supabase/tests/")) {
     inferred.add("postgres_schema");
-    inferred.add("postgres_handler");
     inferred.add("rls");
+    // Tests describe evidence, not production handler implementations. For
+    // migrations keep inference conservative, including comments: any routine,
+    // anonymous block or dynamic execution token retains handler obligations.
+    // Missing files/directories remain conservative too. No SQL parser or
+    // per-file exemption catalog is needed for a policy-only migration.
+    if (path.startsWith("supabase/migrations/")) {
+      let mayChangeHandler = true;
+      try { mayChangeHandler = /\b(function|procedure|do|execute|call)\b/i.test(readSource(path)); }
+      catch { /* Missing source cannot establish a narrower boundary. */ }
+      if (mayChangeHandler) inferred.add("postgres_handler");
+    }
   }
-  if (/(attachment|media|image|photo|receipt)/.test(lower)) inferred.add("media");
+  if (!isReceiptArithmetic(path) && /(attachment|media|image|photo|receipt)/.test(lower)) inferred.add("media");
   if (/(auth|principal|session|keychain|identity)/.test(lower)) inferred.add("auth");
   if (/(delete|deletion|retention)/.test(lower)) inferred.add("deletion");
-  if (/(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/.test(lower)) {
+  if (isReceiptArithmetic(path) || /(invoice|purchase|expense|transaction|transfer|budget|accounting|refund|payment)/.test(lower)) {
     inferred.add("accounting");
   }
   return inferred;
@@ -263,6 +273,34 @@ function validateBatchPaths(record, paths) {
     `${record.workflowId}: changed target path ${path} is absent from affectedComponents.`);
   }
   validateDerivedLayers(record, paths, record.workflowId);
+}
+
+// An integration checkpoint can contain several independently tracked workflows.
+// Coverage is a missing-file guard, not proof of semantic ownership or acceptance.
+function validateIntegrationPaths(active, records, paths) {
+  const ids = active.integrationWorkflowIds;
+  if (ids === undefined) {
+    const record = records.find((record) => record.workflowId === active.id);
+    if (record) validateBatchPaths(record, paths);
+    return;
+  }
+  requireCondition(Array.isArray(ids) && ids.length > 1,
+    "integrationWorkflowIds must list the participating workflows.");
+  if (!Array.isArray(ids)) return;
+  requireCondition(new Set(ids).size === ids.length && ids.includes(active.id),
+    "integrationWorkflowIds must be unique and include the active workflow.");
+  const participants = ids.map((id) => records.find((record) => record.workflowId === id));
+  requireCondition(participants.every(Boolean), "integrationWorkflowIds contains an unknown workflow.");
+  for (const path of paths) {
+    const coveringRecords = participants.filter((record) => record?.affectedComponents?.some(
+      (component) => path === component || path.startsWith(`${component}/`)));
+    requireCondition(coveringRecords.length > 0,
+    `Integration checkpoint: changed target path ${path} has no participating workflow.`);
+    validateDerivedLayers({
+      layers: coveringRecords.flatMap((record) => record.layers ?? []),
+      riskDomains: coveringRecords.flatMap((record) => record.riskDomains ?? []),
+    }, [path], "Integration checkpoint");
+  }
 }
 
 function batchTargetChanges(baseCommit, git = (args) => execFileSync("git", args,
@@ -2029,6 +2067,28 @@ function runSelfTests() {
   }, /absent from affectedComponents/);
 
   {
+    const records = [
+      { workflowId: "items", affectedComponents: ["LedgeriOS/LedgerTargetCore/Items.swift"], layers: ["domain"] },
+      { workflowId: "invoices", affectedComponents: ["LedgeriOS/LedgerTargetCore/Invoices.swift"], layers: ["domain", "accounting"], riskDomains: ["accounting"] },
+    ];
+    const active = { id: "invoices", integrationWorkflowIds: ["items", "invoices"] };
+    validateIntegrationPaths(active, records, records.flatMap((record) => record.affectedComponents));
+    expectFailure("integration retains accounting risk", () => {
+      validateIntegrationPaths(active, records.map((record) => ({ ...record, riskDomains: [] })),
+        ["LedgeriOS/LedgerTargetCore/Invoices.swift"]);
+    }, /requires risk accounting/);
+    expectFailure("unowned integration path", () => {
+      validateIntegrationPaths(active, records, ["LedgeriOS/LedgerTargetCore/Other.swift"]);
+    }, /no participating workflow/);
+    expectFailure("unknown integration workflow", () => {
+      validateIntegrationPaths({ ...active, integrationWorkflowIds: ["invoices", "unknown"] }, records, []);
+    }, /unknown workflow/);
+    expectFailure("integration omits active workflow", () => {
+      validateIntegrationPaths({ ...active, integrationWorkflowIds: ["items", "items"] }, records, []);
+    }, /unique and include/);
+  }
+
+  {
     // Regression: an older unverified workflow must not become the active
     // workflow's ownership obligation. New untracked files still must.
     const base = "b".repeat(40);
@@ -2051,7 +2111,46 @@ function runSelfTests() {
     if (errors.length !== start) throw new Error("A matching bounded workflow must pass.");
   }
 
-  console.log("Conversion current-state self-tests passed: 32 negative cases and 10 positive/cumulative cases.");
+  for (const path of ["LedgeriOS/LedgerTargetCore/FrozenInvoiceStorageRecord.swift",
+    "LedgeriOS/LedgerTargetCoreTests/FrozenInvoiceStorageRecordTests.swift"]) {
+    if (!inferredLayersForPath(path).has("migration") || !pathSupportsLayer(path, "migration")) {
+      throw new Error(`Shared frozen transport lost migration coverage: ${path}`);
+    }
+  }
+  for (const path of ["LedgeriOS/LedgerTargetCore/TransactionReceiptSnapshot.swift",
+    "LedgeriOS/LedgerTargetPowerSync/TransactionReceiptPowerSyncQuery.swift",
+    "LedgerTargetMCP/src/transactionReceiptRead.ts", "LedgerTargetMCP/tests/transactionReceiptRead.test.ts",
+    "LedgerTargetMCP/tests/fixtures/transaction-receipt.json",
+    "supabase/migrations/20260914005525_transaction_receipt_read.sql",
+    "supabase/tests/transaction_receipt_read.test.sql",
+    "supabase/migrations/20260914055229_transaction_browser_receipt_evidence.sql",
+    "supabase/migrations/20260914081419_transaction_legacy_receipt_metadata.sql",
+    "supabase/migrations/20260914090706_transaction_receipt_item_sources.sql",
+    "supabase/tests/transaction_browser_receipt_evidence.test.sql"]) {
+    const layers = inferredLayersForPath(path);
+    if (layers.has("media") || !layers.has("accounting")) throw new Error(`Structured receipt misclassified: ${path}`);
+  }
+  for (const path of ["LedgeriOS/LedgerTargetApp/TransactionReceiptImage.swift",
+    "LedgerTargetMCP/src/receiptAttachment.ts"]) {
+    if (!inferredLayersForPath(path).has("media")) throw new Error(`Receipt media protection lost: ${path}`);
+  }
+  for (const sql of ["ALTER POLICY read_member ON public.items USING (true);", "CREATE TABLE public.items(id text);"]) {
+    const layers = inferredLayersForPath("supabase/migrations/example.sql", () => sql);
+    if (layers.has("postgres_handler") || !layers.has("postgres_schema") || !layers.has("rls")) {
+      throw new Error("Policy/schema migration must retain data/security risks without invented handlers.");
+    }
+  }
+  for (const sql of ["CREATE /* comment */ FUNCTION f() RETURNS int LANGUAGE sql AS 'SELECT 1';",
+    "DROP PROCEDURE p();", "DO $$ BEGIN EXECUTE 'select 1'; END $$;", "-- function changes reviewed separately"]) {
+    if (!inferredLayersForPath("supabase/migrations/example.sql", () => sql).has("postgres_handler")) {
+      throw new Error("Routine/dynamic migration lost handler obligations.");
+    }
+  }
+  if (!inferredLayersForPath("supabase/migrations/missing.sql", () => { throw new Error("missing"); }).has("postgres_handler") ||
+      inferredLayersForPath("supabase/tests/example.test.sql").has("postgres_handler")) {
+    throw new Error("Missing migration/test evidence classification is incorrect.");
+  }
+  console.log("Conversion current-state self-tests passed: 32 negative cases and 10 positive/cumulative cases, plus structured-receipt/media and SQL-risk classification.");
 }
 
 validateChecklist(checklist);
@@ -2202,7 +2301,7 @@ if (state?.activeWorkflow?.kind !== "selection" && /^[0-9a-f]{40}$/.test(state?.
   const activeRecord = workflowRecords.find((record) => record.workflowId === state.activeWorkflow.id);
   if (activeRecord) {
     const changedTargetPaths = batchTargetChanges(state.activeWorkflow.baseCommit);
-    validateBatchPaths(activeRecord, changedTargetPaths);
+    validateIntegrationPaths(state.activeWorkflow, workflowRecords, changedTargetPaths);
   }
 }
 

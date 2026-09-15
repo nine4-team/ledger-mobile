@@ -40,7 +40,7 @@ final class SupabaseAccountLogoDownload: @unchecked Sendable {
         try await download(reference.downloadedImageReference)
     }
 
-    func download(_ reference: DownloadedImageObjectReference) async throws -> Data {
+    func download(_ reference: DownloadedMediaObjectReference) async throws -> Data {
         guard reference.byteCount <= maximumBytes else { throw AccountLogoDownloadFailure.invalidBytes }
         let token = try await accessToken()
         guard Self.headerSafe(token), Self.role(token) == "authenticated" else {

@@ -1,14 +1,15 @@
 # Authentication & Offline Access
 Status: [modify]
-Last updated: 2026-09-07
+Last updated: 2026-09-13
 
 > **Target-state notice:** Ledger is now explicitly being redesigned as an
 > offline-first Supabase/PowerSync application. The open problem is no longer
 > whether the app should work offline; it is how a previously authorized device
 > may unlock cached account data, for how long, and how revocation, account
-> switching, pending work, and destructive logout behave. Architecture A-007
-> (target identity provider/bridge) and A-016 (offline authorization lease)
-> remain open.
+> switching, pending work, and destructive logout behave. A-007 now selects
+> Supabase Auth at target launch (user, 2026-09-13), without a Firebase Auth
+> bridge. Identity migration/linking/recovery verification and remaining A-016
+> offline authorization details are still open.
 > O-057 and O-058 in the central product decision log cross-reference those same
 > identity/onboarding and offline-access choices; they are not new approvals.
 
@@ -77,9 +78,11 @@ automatic selection. Session ending always uses its dedicated safety contract.
 
 First sign-in, signed-out reauthentication and provider recovery require
 connectivity. Offline unlock is a separate bounded capability, not a simulated
-provider login or permission to fetch new data. O-057/A-007 gates the complete
-target identity/onboarding implementation; it does not authorize Firebase
-data adapters or changes to production identities.
+provider login or permission to fetch new data. Implement target identity and
+onboarding with the selected Supabase Auth provider under A-007; O-057 retains
+the migration/linking/recovery questions and verification obligations. This
+does not authorize hosted provisioning, Firebase data adapters or changes to
+production identities.
 
 ## Offline Access Alternatives
 

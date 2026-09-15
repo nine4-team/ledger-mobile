@@ -75,6 +75,19 @@ struct PropertyManagementReportPowerSyncQuery: Sendable {
     static func completedCheckpoint(transaction: any Transaction,
                                     identity: PropertyManagementReportStreamIdentity) throws
         -> ProtectedArtifactEpochMilliseconds {
+        try completedStreamCheckpoint(transaction: transaction, identity: identity)
+    }
+
+    static func completedStreamCheckpoint(transaction: any Transaction,
+                                    identity: some SyncStreamDescription) throws
+        -> ProtectedArtifactEpochMilliseconds {
+        try .init(validating: completedStreamCheckpointMicroseconds(transaction: transaction, identity: identity) / 1_000)
+    }
+
+    // Ordering two downloads must retain the SDK's original precision. Rounding
+    // both to milliseconds could accept a slightly older financial checkpoint.
+    static func completedStreamCheckpointMicroseconds(transaction: any Transaction,
+                                    identity: some SyncStreamDescription) throws -> Int64 {
         let expected = identity.parameters.map(JsonValue.object) ?? .null
         let rows = try transaction.getAll(sql: """
             SELECT local_params, active, last_synced_at FROM ps_stream_subscriptions
@@ -90,6 +103,6 @@ struct PropertyManagementReportPowerSyncQuery: Sendable {
         }
         guard exact.count == 1, exact[0].0 == 1, let microseconds = exact[0].1,
               microseconds >= 1_000 else { throw PropertyManagementReportFailure.incompleteReadiness }
-        return try .init(validating: microseconds / 1_000)
+        return microseconds
     }
 }

@@ -16,8 +16,13 @@ public enum LedgerPowerSyncTable {
     public static let itemImageObjects = "item_image_objects"
     public static let itemCardThumbnails = "item_card_thumbnails"
     public static let itemPlacements = "spike_item_placements"
+    public static let itemProjectPrices = "item_project_prices"
+    public static let itemAcquisitionReviews = "item_acquisition_reviews"
     public static let itemClientPaymentConnections = "item_client_payment_connections"
     public static let transactions = "spike_transactions"
+    public static let transactionReceiptItems = "transaction_receipt_items"
+    public static let transactionAttachmentSets = "transaction_attachment_sets"
+    public static let transactionAttachmentReferences = "transaction_attachment_references"
     public static let itemChargeOccurrences = "item_charge_occurrences"
     public static let collectedInvoiceLines = "collected_invoice_lines"
     public static let collectedInvoices = "collected_invoices"
@@ -40,6 +45,13 @@ public enum LedgerPowerSyncTable {
     public static let spaceChecklistRevisionCommands = "spike_space_checklist_revision_commands"
     public static let spaceChecklistRevisionOverlays = "spike_space_checklist_revision_overlays"
     public static let localOperations = "spike_local_operations"
+    public static let categoryCommands = "spike_category_commands"
+    public static let inventorySaleCommands = "spike_inventory_sale_commands"
+    public static let expenseCommands = "spike_expense_commands"
+    public static let expenseEntryRecovery = "spike_expense_entry_recovery"
+    public static let expenses = "expenses"
+    public static let expenseReceiptLines = "expense_receipt_lines"
+    public static let expenseReceiptAttachments = "expense_receipt_attachments"
     public static let pendingWorkObservations = "spike_pending_work_observations"
     public static let operationResults = "spike_operation_results"
 }
@@ -49,8 +61,25 @@ public enum LedgerPowerSyncSchema {
         Table(name: LedgerPowerSyncTable.transactions,
             columns: [.text("account_id"), .text("project_id"), .text("client_id"),
                       .text("type"), .text("role"), .text("amount_minor_units"),
-                      .text("currency"), .text("origin")],
+                      .text("currency"), .text("origin"), .text("scope_kind"),
+                      .text("category_id"), .text("non_item_receipt_lines"),
+                      .text("source"), .text("transaction_date"), .text("created_at_ms"),
+                      .text("notes"), .text("payment_method"), .integer("has_email_receipt"),
+                      .text("legacy_subtotal_minor_units"), .text("legacy_tax_rate_pct")],
             indexes: [.ascending(name: "transaction_project", columns: ["account_id", "project_id"])]),
+        Table(name: LedgerPowerSyncTable.transactionReceiptItems,
+            columns: [.text("account_id"), .text("transaction_id"), .text("item_id"),
+                      .text("currency"), .text("amount_minor_units"), .text("membership_kind")],
+            indexes: [.ascending(name: "receipt_items_transaction", columns: ["account_id", "transaction_id"])]),
+        Table(name: LedgerPowerSyncTable.transactionAttachmentSets,
+            columns: [.text("account_id"), .text("transaction_id"), .text("section"),
+                      .text("revision"), .integer("expected_count")],
+            indexes: [.ascending(name: "transaction_attachment_set", columns: ["account_id", "transaction_id", "section"])]),
+        Table(name: LedgerPowerSyncTable.transactionAttachmentReferences,
+            columns: [.text("account_id"), .text("transaction_id"), .text("section"), .text("attachment_id"),
+                      .text("set_revision"), .integer("position"), .integer("is_primary"), .text("file_name"),
+                      .text("content_sha256"), .text("byte_count"), .text("media_type"), .text("storage_path")],
+            indexes: [.ascending(name: "transaction_attachment_reference", columns: ["account_id", "transaction_id", "section"])]),
         Table(name: LedgerPowerSyncTable.itemChargeOccurrences,
             columns: [.text("account_id"), .text("project_id"), .text("item_id"), .text("placement_id"),
                       .text("category_id"), .text("amount_minor_units"), .text("currency"),
@@ -59,10 +88,12 @@ public enum LedgerPowerSyncSchema {
         Table(name: LedgerPowerSyncTable.collectedInvoiceLines,
             columns: [.text("account_id"), .text("invoice_id"), .text("source_kind"), .text("source_id"),
                       .text("item_id"), .integer("source_revision"), .text("category_id"),
-                      .text("signed_amount_minor_units"), .text("currency")],
+                      .text("signed_amount_minor_units"), .text("currency"), .integer("line_position"),
+                      .text("description"), .text("source_snapshot_json")],
             indexes: [.ascending(name: "collected_line_source", columns: ["source_kind", "source_id"])]),
         Table(name: LedgerPowerSyncTable.collectedInvoices,
-            columns: [.text("account_id"), .text("project_id"), .text("client_id"), .integer("sealed")]),
+            columns: [.text("account_id"), .text("project_id"), .text("client_id"), .integer("sealed"),
+                      .text("purchase_id"), .text("invoice_revision"), .text("currency"), .text("total_minor_units"), .text("display_metadata")]),
         Table(name: LedgerPowerSyncTable.itemClientPaymentConnections,
             columns: [.text("account_id"), .text("project_id"), .text("client_id"), .text("item_id"),
                       .text("placement_id"), .text("transaction_id"), .text("transaction_type"),
@@ -90,9 +121,16 @@ public enum LedgerPowerSyncSchema {
             .integer("pixel_width"),.integer("pixel_height")],
             indexes: [.ascending(name: "thumbnail_original", columns: ["account_id","original_attachment_id"])]),
         Table(
+            name: LedgerPowerSyncTable.itemProjectPrices,
+            columns: [.text("account_id"), .text("item_id"), .text("amount_minor_units"),
+                      .text("currency"), .text("revision")]
+        ),
+        Table(name: LedgerPowerSyncTable.itemAcquisitionReviews,
+              columns: [.text("account_id"), .text("state"), .text("amount_minor_units"), .text("currency")]),
+        Table(
             name: LedgerPowerSyncTable.itemPlacements,
             columns: [.text("account_id"), .text("item_id"), .text("scope_kind"),
-                      .text("project_id"), .text("space_id"), .text("started_at"),
+                      .text("project_id"), .text("space_id"), .text("started_at"), .text("start_evidence"),
                       .text("started_by_principal_id"), .text("ended_at"),
                       .text("ended_by_principal_id")],
             indexes: [
@@ -494,13 +532,55 @@ public enum LedgerPowerSyncSchema {
                 .text("terminal_envelope_sha256"), .text("terminal_request_sha256"),
                 .integer("terminal_server_received_at_ms"),
                 .integer("terminal_completed_at_ms"),
-                .integer("checklist_readback_revision")
+                .integer("checklist_readback_revision"),
+                .text("category_projection_json")
             ],
             indexes: [
                 .ascending(name: "local_operation_account", columns: ["account_id"]),
                 .ascending(name: "local_operation_state", columns: ["local_state"])
             ],
             localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.categoryCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.inventorySaleCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"), .text("project_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.expenses,
+            columns: [.text("account_id"), .text("project_id"), .text("category_id"), .text("vendor"),
+                      .text("expense_date"), .text("final_amount_minor_units"), .text("currency"), .text("notes"), .text("revision")]
+        ),
+        Table(name: LedgerPowerSyncTable.expenseEntryRecovery,
+            columns: [.text("account_id"), .text("actor_principal_id"), .text("project_id"), .text("entry_json")],
+            localOnly: true),
+        Table(
+            name: LedgerPowerSyncTable.expenseReceiptLines,
+            columns: [.text("line_id"), .text("account_id"), .text("expense_id"), .integer("position"),
+                      .text("description"), .text("magnitude_minor_units"), .text("currency"), .text("effect"), .text("quantity")]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.expenseReceiptAttachments,
+            columns: [.text("account_id"), .text("expense_id"), .text("attachment_id"), .integer("position")]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.expenseCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"), .text("expense_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
         ),
         Table(
             name: LedgerPowerSyncTable.pendingWorkObservations,

@@ -1,13 +1,53 @@
 import SwiftUI
 
+#if canImport(FirebaseFirestore)
+// Existing source-app binding only. Both builds use the presentation below;
+// the Supabase target does not import BudgetCategory or a Firebase adapter.
 struct CategoryFormModal: View {
     enum Mode {
         case create
         case edit(BudgetCategory)
     }
 
-    /// App-facing category kinds backed by canonical `metadata.categoryType`.
-    enum Kind: Hashable {
+    let mode: Mode
+    var existingNames: [String] = []
+    let onSave: (String, BudgetCategoryType, Bool) -> Void
+
+    var body: some View {
+        CategoryFormPresentation(mode: presentationMode, existingNames: existingNames) { name, kind, excluded in
+            let type: BudgetCategoryType = switch kind {
+            case .general: .general
+            case .itemized: .itemized
+            case .fee: .fee
+            }
+            onSave(name, type, excluded)
+        }
+    }
+
+    private var presentationMode: CategoryFormPresentation.Mode {
+        switch mode {
+        case .create: return .create
+        case .edit(let category):
+            let kind: CategoryFormPresentation.Kind = switch category.resolvedCategoryType {
+            case .general: .general
+            case .itemized: .itemized
+            case .fee: .fee
+            }
+            return .edit(name: category.name, kind: kind,
+                excluded: category.metadata?.excludeFromOverallBudget ?? false)
+        }
+    }
+}
+#endif
+
+/// Reused category form: presentation inputs and a durable save action only.
+struct CategoryFormPresentation: View {
+    enum Mode {
+        case create
+        case edit(name: String, kind: Kind, excluded: Bool)
+    }
+
+    enum Kind: String, Hashable {
         case general
         case itemized
         case fee
@@ -20,27 +60,11 @@ struct CategoryFormModal: View {
             }
         }
 
-        var categoryType: BudgetCategoryType {
-            switch self {
-            case .general: return .general
-            case .itemized: return .itemized
-            case .fee: return .fee
-            }
-        }
-
-        /// Best-effort initialization from an existing category.
-        init(from category: BudgetCategory) {
-            switch category.resolvedCategoryType {
-            case .fee: self = .fee
-            case .itemized: self = .itemized
-            case .general: self = .general
-            }
-        }
     }
 
     let mode: Mode
     /// Callback fires with (name, categoryType, excludeFromBudget).
-    let onSave: (String, BudgetCategoryType, Bool) -> Void
+    let onSave: (String, Kind, Bool) async throws -> Void
     /// Names of existing categories (excluding the one being edited) for uniqueness validation (L14).
     let existingNames: [String]
 
@@ -52,6 +76,7 @@ struct CategoryFormModal: View {
     @State private var validationError: String?
     @State private var hasSubmitted = false
     @State private var showingKindInfo = false
+    @State private var isSaving = false
 
     private var kindOptions: [InlineOption<Kind>] {
         [
@@ -64,7 +89,7 @@ struct CategoryFormModal: View {
     init(
         mode: Mode,
         existingNames: [String] = [],
-        onSave: @escaping (String, BudgetCategoryType, Bool) -> Void
+        onSave: @escaping (String, Kind, Bool) async throws -> Void
     ) {
         self.mode = mode
         self.existingNames = existingNames
@@ -75,10 +100,10 @@ struct CategoryFormModal: View {
             _name = State(initialValue: "")
             _kind = State(initialValue: .general)
             _excludeFromOverallBudget = State(initialValue: false)
-        case .edit(let category):
-            _name = State(initialValue: category.name)
-            _kind = State(initialValue: Kind(from: category))
-            _excludeFromOverallBudget = State(initialValue: category.metadata?.excludeFromOverallBudget ?? false)
+        case .edit(let name, let kind, let excluded):
+            _name = State(initialValue: name)
+            _kind = State(initialValue: kind)
+            _excludeFromOverallBudget = State(initialValue: excluded)
         }
     }
 
@@ -92,6 +117,8 @@ struct CategoryFormModal: View {
             title: isEditing ? "Edit Category" : "New Category",
             primaryAction: FormSheetAction(
                 title: isEditing ? "Save" : "Create",
+                isLoading: isSaving,
+                isDisabled: isSaving,
                 action: handleSave
             ),
             secondaryAction: FormSheetAction(
@@ -129,11 +156,14 @@ struct CategoryFormModal: View {
                 }
 
                 Toggle("Exclude from Overall Budget", isOn: $excludeFromOverallBudget)
+                    .accessibilityIdentifier("category-exclude-overall-budget")
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textPrimary)
                     .tint(BrandColors.primary)
             }
         }
+        .disabled(isSaving)
+        .interactiveDismissDisabled(isSaving)
         .alert("Category Behavior", isPresented: $showingKindInfo) {
             Button("OK", role: .cancel) { showingKindInfo = false }
         } message: {
@@ -154,20 +184,22 @@ struct CategoryFormModal: View {
     // MARK: - Validation
 
     private var nameError: String? {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             return "Name is required"
         }
-        if trimmed.count > 100 {
+        if trimmed.unicodeScalars.count > 100 {
             return "Category name must be 100 characters or less"
         }
         // L13: Block control characters (newlines, tabs, etc.) in names
-        if trimmed.unicodeScalars.contains(where: { $0.value < 32 }) {
+        if trimmed.unicodeScalars.contains(where: {
+            $0.properties.generalCategory == .control || $0.properties.generalCategory == .format
+        }) {
             return "Category name cannot contain control characters"
         }
         // L14: Uniqueness check — case-insensitive, per-account
-        let lowered = trimmed.lowercased()
-        if existingNames.contains(where: { $0.lowercased() == lowered }) {
+        let lowered = (trimmed as NSString).lowercased
+        if existingNames.contains(where: { ($0 as NSString).lowercased == lowered }) {
             return "A category with this name already exists"
         }
         return nil
@@ -179,20 +211,29 @@ struct CategoryFormModal: View {
     }
 
     private func handleSave() {
+        guard !isSaving else { return }
         hasSubmitted = true
         let error = validate()
         validationError = error
         guard error == nil else { return }
 
-        onSave(
-            name.trimmingCharacters(in: .whitespaces),
-            kind.categoryType,
-            excludeFromOverallBudget
-        )
-        dismiss()
+        let savedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedKind = kind
+        let savedExclusion = excludeFromOverallBudget
+        isSaving = true
+        Task { @MainActor in
+            defer { isSaving = false }
+            do {
+                try await onSave(savedName, savedKind, savedExclusion)
+                dismiss()
+            } catch {
+                validationError = "Could not save this category. Your changes are still here; try again."
+            }
+        }
     }
 }
 
+#if canImport(FirebaseFirestore)
 #Preview("Create") {
     CategoryFormModal(mode: .create) { name, categoryType, exclude in
         print("Create: \(name), \(categoryType), exclude: \(exclude)")
@@ -208,3 +249,4 @@ struct CategoryFormModal: View {
         print("Edit: \(name), \(categoryType), exclude: \(exclude)")
     }
 }
+#endif

@@ -262,6 +262,7 @@ struct CardGlassModifier: ViewModifier {
 
 // MARK: - Previews
 
+#if canImport(FirebaseFirestore)
 #Preview("Full (Items/Transactions)") {
     @Previewable @State var sort = ItemSortOption.createdDesc
     @Previewable @State var filter = ItemFilterOption.all
@@ -300,3 +301,4 @@ struct CardGlassModifier: ViewModifier {
         }
     }
 }
+#endif

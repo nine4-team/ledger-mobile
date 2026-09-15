@@ -56,6 +56,12 @@ made consistent before implementation: the shipped full Item form accepts name
 or image, while the proto form accepts image or note. Do not silently require
 all three.
 
+When quantity is greater than one, the writer creates that many distinct
+physical Items and assigns the complete selected image set to every result.
+This remains true when image bytes are only locally accepted, queued, retrying,
+or recovered after restart; a partial result with images on only one Item is not
+a successful save.
+
 ### Then: optional and accounting details
 
 The user may continue in the same wizard to add:
@@ -265,14 +271,20 @@ Before the source freeze:
 The target app does **not** dual-read Firebase and contains no proto runtime
 repository. Rehearsals import immutable Firebase export fixtures into isolated
 target staging. At hard cutover, Ledger freezes Firebase writes, imports the
-final delta, and resolves every legacy proto to exactly one target Item or an
-explicit blocking quarantine result before target authority opens.
+final delta, and resolves every legacy proto to its intended physical Item set
+or an explicit blocking quarantine result before target authority opens.
 
 Resolution stores durable source-to-target correlation. Existing
-`protoItem.convertedItemId` is honored when valid; the target migration journal
-records the source proto ID and surviving Item ID. Retries return the same Item.
+`protoItem.convertedItemId` is honored when valid as already-converted evidence;
+the target migration journal records the source proto ID and every surviving
+Item ID. Retries return the same set.
 Media copying or path reuse must be explicit so migration cannot duplicate or
 orphan attachments.
+
+When legacy quantity represents multiple physical units, every materialized
+Item receives the complete legacy image set. If pending source bytes needed to
+establish that result are missing, migration records a blocking, recoverable
+quarantine result rather than producing Items with inconsistent media.
 
 Old proto writers are rejected only as part of the rehearsed hard-cutover
 source freeze, after open proto records and pending work are audited and the
@@ -334,6 +346,8 @@ During compatibility:
 ## Required Tests
 
 - Minimum-field creation writes one real Unaccounted For Item.
+- Quantity N creation writes N distinct Items with the complete selected image
+  set on every Item across offline queueing, restart and idempotent replay.
 - Adding optional details through the same wizard preserves Item ID.
 - Space changes never change accounting state.
 - Client-paid Link uses only an eligible current-project Purchase.
@@ -342,8 +356,11 @@ During compatibility:
 - Link retry is idempotent.
 - Link races with delete, move, Transfer, collection, and price edit fail or
   serialize safely.
-- Existing open proto record imports to exactly one target Item under retries.
+- Existing open proto record imports its intended physical Item set exactly once
+  under retries; quantity one still resolves to one target Item.
 - Proto migration preserves media, notes, quantity, Space, and correlation.
+- Legacy quantity expansion never produces a partial set with media attached
+  only to one physical Item; missing pending bytes block with recovery evidence.
 - The current Firebase app and MCP remain unchanged and functional before the
   hard-cutover window.
 - Target-only Item shapes are written only to isolated target environments

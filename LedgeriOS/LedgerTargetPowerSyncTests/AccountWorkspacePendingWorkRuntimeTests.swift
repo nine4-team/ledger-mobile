@@ -1,12 +1,119 @@
 import Foundation
+import Auth
 import LedgerTargetCore
 import PowerSync
 import Testing
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 
 @testable import LedgerTargetPowerSync
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("Actual local attachment scheduling publishes, syncs and retains offline bytes after restart",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_ATTACHMENT_RUNTIME"] == "1",
+                   "Run test-local-transaction-attachment-upload.mjs with LEDGER_ATTACHMENT_RUNTIME=1"),
+          .timeLimit(.minutes(1)))
+    func attachmentLiveReplication() async throws {
+        let input = ProcessInfo.processInfo.environment
+        guard input["LEDGER_ATTACHMENT_LOCAL_URL"] == "http://127.0.0.1:54321",
+              let account = input["LEDGER_ATTACHMENT_LOCAL_ACCOUNT"], account == "account-primary",
+              let principal = input["LEDGER_ATTACHMENT_LOCAL_PRINCIPAL"], principal.hasPrefix("upload-http-owner-"),
+              let parent = input["LEDGER_ATTACHMENT_LOCAL_TRANSACTION"], parent.hasPrefix("upload-http-transaction-"),
+              let attachment = input["LEDGER_ATTACHMENT_LOCAL_ATTACHMENT"], attachment.hasPrefix("upload-http-attachment-"),
+              let key = input["LEDGER_ATTACHMENT_LOCAL_KEY"], let email = input["LEDGER_ATTACHMENT_LOCAL_EMAIL"],
+              let password = input["LEDGER_ATTACHMENT_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "attachment-live-\(UUID())",
+            accountId: AccountID(validating: account), principalId: PrincipalID(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),
+            headers: ["apikey": key], storageKey: "attachment-live-\(UUID())", localStorage: CategoryAuthTestStorage(),
+            fetch: { try await URLSession.shared.data(for: $0) }, autoRefreshToken: false,
+            emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let scope = TransactionScope.businessInventory(accountId: context.accountId)
+        let transactionId = try TransactionID(validating: parent)
+        var originals: [(bytes: Data, mediaType: String, fileName: String)] = (0..<2).map {
+            (Data(repeating: UInt8(40 + $0), count: 1024 + $0), "image/png", "Local proof \($0).png")
+        }
+        #if canImport(CoreGraphics)
+        let pdf = NSMutableData()
+        let consumer = try #require(CGDataConsumer(data: pdf))
+        var page = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let document = try #require(CGContext(consumer: consumer, mediaBox: &page, nil))
+        document.beginPDFPage(nil); document.fill(CGRect(x: 10, y: 10, width: 20, height: 20))
+        document.endPDFPage(); document.closePDF()
+        originals.append((pdf as Data, "application/pdf", "Original receipt.pdf"))
+        #else
+        throw RuntimeInjectedFailure()
+        #endif
+        let runtime = try await context.openRuntime()
+        do {
+            try await entry.startWorkspaceSync(runtime, authorization: authorization,
+                powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+            var updates = runtime.watchDownloadedTransactionAttachments(scope: scope,
+                transactionId: transactionId, section: .receipts).makeAsyncIterator()
+            while let value = try await updates.next() {
+                if value?.isComplete == true { break }
+            }
+            let captureScope = try await runtime.transactionAttachmentCaptureScope(scope: scope, transactionId: transactionId)
+            for (index, original) in originals.enumerated() {
+                let bytes = original.bytes
+                let capture = try LocalAttachmentCapture(attachmentId: AttachmentID(validating: "\(attachment)-\(index)"),
+                    scope: captureScope, capturedAt: AttachmentEpochMilliseconds(validating: Int64(Date().timeIntervalSince1970 * 1000)),
+                    bytes: bytes, metadata: .init(mediaType: original.mediaType,
+                        fileName: original.fileName, transactionSection: .receipts))
+                _ = try await runtime.captureTransactionAttachment(capture, scope: scope)
+                var published = false
+                var pendingPresentation: (DownloadedTransactionAttachments, DownloadedTransactionAttachment)?
+                while let value = try await updates.next() {
+                    guard let value, value.isComplete,
+                          let reference = value.attachments.first(where: { $0.object.attachmentId == capture.attachmentId }) else { continue }
+                    if reference.localReceipt != nil {
+                        pendingPresentation = (value, reference)
+                        continue
+                    }
+                    guard try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 0 else { continue }
+                    let (pendingCatalog, pendingReference) = try #require(pendingPresentation)
+                    #expect(value.publishedReplacement(for: pendingReference, from: pendingCatalog) == reference)
+                    #expect(!value.retains(pendingReference, from: pendingCatalog))
+                    #expect(try await runtime.loadDownloadedTransactionAttachment(catalog: value,
+                        attachment: reference, allowDownload: false) == bytes)
+                    published = true
+                    break
+                }
+                #expect(published)
+            }
+            try await runtime.close()
+            let reopened = try await context.openRuntime()
+            let catalog = try await reopened.readDownloadedTransactionAttachments(scope: scope,
+                transactionId: transactionId, section: .receipts)
+            #expect(catalog.attachments.count == originals.count)
+            for (index, reference) in catalog.attachments.enumerated() {
+                let original = originals[index]
+                #expect(reference.localReceipt == nil)
+                #expect(reference.object.mediaType == original.mediaType)
+                #expect(reference.fileName == original.fileName)
+                #expect(reference.position == index)
+                #expect(reference.isPrimary == (index == 0))
+                #expect(try await reopened.loadDownloadedTransactionAttachment(catalog: catalog, attachment: reference,
+                    allowDownload: false) == original.bytes)
+            }
+            #expect(try await reopened.pendingWorkSummary().unverifiedAttachmentCount == 0)
+            try await reopened.close()
+            try await auth.signOut(scope: .local)
+        } catch {
+            try? await runtime.close()
+            throw error
+        }
+    }
+
     @Test("Item original and thumbnail bytes require the same live reference after download",
           arguments: ["unchanged", "reference", "removed", "thumbnail-link"], [false,true])
     func itemImageDownloadAuthorization(change: String, thumbnail: Bool) async throws {
@@ -69,6 +176,29 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await runtime.close()
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
             try await load(false)
+        }
+        if change == "unchanged" || (change == "thumbnail-link" && !thumbnail) {
+            // Reopen the actual encrypted workspace without reseeding its rows.
+            // The gallery normally permits downloads; an offline cache hit must
+            // still succeed with that option enabled, without calling transport.
+            var offline = context.dependencies()
+            offline.downloadImage = { _ in
+                Issue.record("Reopened authorized cache must not require the network")
+                throw RuntimeInjectedFailure()
+            }
+            let restored = try await context.openRuntime(dependencies: offline)
+            var restoredImages = restored.watchDownloadedItemImages(accountId: context.accountId, itemId: itemId).makeAsyncIterator()
+            let restoredCatalog = try #require(await restoredImages.next())
+            #expect(restoredCatalog.isComplete)
+            let restoredImage = try #require(restoredCatalog.images.first)
+            if thumbnail {
+                #expect(try await restored.loadDownloadedItemThumbnail(accountId: context.accountId,
+                    itemId: itemId, image: restoredImage, allowDownload: true) == bytes)
+            } else {
+                #expect(try await restored.loadDownloadedItemImage(accountId: context.accountId,
+                    itemId: itemId, image: restoredImage, allowDownload: true) == bytes)
+            }
+            try await restored.close()
         }
         context.remove()
     }
@@ -542,6 +672,71 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Invoice report public runtime retains download evidence and enforces access")
+    func collectedInvoiceReportPublicRead() async throws {
+        let context = try RuntimeTestContext(suffix: "invoice-report-read")
+        defer { context.remove() }
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            for sql in [
+                "UPDATE spike_account_memberships SET financial_access='full'",
+                "INSERT INTO collected_invoices(id,account_id,project_id,client_id,sealed,purchase_id,invoice_revision,currency,total_minor_units) VALUES('invoice','account-runtime','project-physical','client',1,'payment',1,'USD','99')",
+                "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,line_position,source_kind,source_id,source_revision,category_id,signed_amount_minor_units,currency,description,source_snapshot_json) VALUES('line','account-runtime','invoice',0,'fee_installment','fee',1,'category','99','USD','Frozen fee','{\"feeInstallment\":{\"installmentId\":\"fee\"}}')"
+            ] { _ = try await database.execute(sql: sql, parameters: nil) }
+            databases.append(database)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let database = try #require(databases.values.first)
+        let project = try ProjectID(validating: "project-physical")
+        @Sendable func read(_ account: AccountID) async throws -> CollectedInvoiceReportSnapshot {
+            try await runtime.readCollectedInvoiceReport(accountId: account, projectId: project,
+                invoiceId: .init(validating: "invoice"), asOf: .init(validating: 2000))
+        }
+        await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) { try await read(context.accountId) }
+        _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_expenses',1,0,?,1000000)",
+            parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
+        let report = try await read(context.accountId)
+        #expect(report.invoice.total.minorUnits == 99)
+        #expect(report.provenance.lastSyncedAt?.rawValue == 1000)
+        _ = try await database.execute(sql: "INSERT INTO collected_invoices(id,account_id,project_id,client_id,sealed,purchase_id,invoice_revision,currency,total_minor_units) VALUES('unrelated-incomplete','account-runtime','project-physical','client',1,'other-payment',1,'USD','42')", parameters: nil)
+        var receivedSelectedInvoice = false
+        for try await values in runtime.watchCollectedInvoices(accountId: context.accountId,
+            projectId: project, invoiceId: try .init(validating: "invoice")) {
+            guard let values else { continue }
+            #expect(values == [report.invoice])
+            receivedSelectedInvoice = true
+            break
+        }
+        #expect(receivedSelectedInvoice)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await read(.init(validating: "other-account"))
+        }
+        _ = try await database.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) { try await read(context.accountId) }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await read(context.accountId) }
+    }
+
+    @Test("Expense public save refuses receipt IDs without local bytes")
+    func expenseMissingReceiptCannotQueue() async throws {
+        let context = try RuntimeTestContext(suffix: "expense-missing-receipt")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime(dependencies: physicalItemDependencies(context))
+        let draft = try BusinessPaidExpenseDraft(accountId: context.accountId,
+            projectId: .init(validating: "project-physical"), expenseId: .init(validating: "expense-missing"),
+            vendor: "Vendor", date: "2026-09-15", finalAmount: .init(minorUnits: 100, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "category"), notes: "",
+            receiptAttachmentIds: [.init(validating: "receipt-not-captured")])
+        await #expect(throws: AttachmentLocalByteResolutionFailure.receiptNotFound) {
+            try await runtime.createExpense(draft, operationUUID: UUID(), capturedAt: Date())
+        }
+        #expect(try await runtime.pendingWorkSummary().queuedOperationCount == 0)
+        try await runtime.close()
+    }
+
     private func physicalItemDependencies(_ context: RuntimeTestContext) -> LedgerPowerSyncLocalBootstrapDependencies {
         var dependencies = context.dependencies()
         let validate = dependencies.validateStructuredDatabase
@@ -599,6 +794,191 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         Self.expectExactConstructionCounts(recorder.values)
         try await runtime.close()
         context.remove()
+    }
+
+    @Test("Transaction capture uses live member/financial scope and survives encrypted runtime reopen",
+        arguments: ["allowed", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
+    func transactionCaptureAdmission(scenario: String) async throws {
+        let context = try RuntimeTestContext(suffix: "transaction-capture-\(scenario)")
+        defer { context.remove() }
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        var dependencies = context.dependencies()
+        let clock = LockedRecorder<Date>()
+        let startedAt = Date(timeIntervalSince1970: 1_788_600_000)
+        clock.append(startedAt)
+        dependencies.now = { clock.values.last! }
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            databases.append(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
+                VALUES('capture-member',?,?,?,?)
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue,
+                    scenario == "removed" ? "removed" : "active", scenario == "hidden-fee" ? "restricted" : "full"])
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_budget_categories(id,account_id,display_name,kind,lifecycle,is_system,
+                    excludes_from_overall_budget,presentation_order,revision)
+                VALUES('capture-category',?,'Capture',?,'active',0,0,0,1)
+                """, parameters: [context.accountId.rawValue, scenario == "hidden-fee" ? "fee" : "general"])
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_transactions(id,account_id,scope_kind,origin,type,role,amount_minor_units,currency,category_id,
+                    non_item_receipt_lines,has_email_receipt)
+                VALUES('capture-parent',?,'business_inventory','vendor_payment','purchase','standalone','100','USD','capture-category','[]',0)
+                """, parameters: [context.accountId.rawValue])
+            let identity = TransactionReceiptStreamIdentity(scope: .businessInventory(accountId: context.accountId))
+            _ = try await database.syncStream(name: identity.name, params: identity.parameters).subscribe()
+            // Seed service acknowledgment/completion, as existing watch tests do.
+            // Let the SDK own canonical
+            // parameter encoding and registration identity, as the live watch does.
+            _ = try await database.execute(sql: "UPDATE ps_stream_subscriptions SET active=1,last_synced_at=1000000 WHERE stream_name='transaction_receipts'", parameters: nil)
+            if scenario != "unknown-section" {
+                _ = try await database.execute(sql: """
+                    INSERT INTO transaction_attachment_sets(id,account_id,transaction_id,section,revision,expected_count)
+                    VALUES('capture-set',?,'capture-parent','receipts','1',0)
+                    """, parameters: [context.accountId.rawValue])
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let original = try context.capture(id: "z-first-transaction-image")
+        let capture = try LocalAttachmentCapture(attachmentId: original.attachmentId,
+            scope: AttachmentCaptureScope(environment: original.scope.environment,
+                principalId: scenario == "foreign-principal" ? PrincipalID(validating: "foreign") : original.scope.principalId,
+                accountId: scenario == "foreign-account" ? AccountID(validating: "foreign") : original.scope.accountId,
+                parent: .init(kind: .transaction, id: EntityID(validating: "capture-parent"))),
+            capturedAt: original.capturedAt, bytes: original.bytes,
+            metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Original.png", transactionSection: .receipts))
+        let scope = TransactionScope.businessInventory(accountId: context.accountId)
+        if scenario == "allowed" {
+            let observations = LockedRecorder<DownloadedTransactionAttachments?>()
+            let transactionId = try TransactionID(validating: "capture-parent")
+            #expect(try await runtime.transactionAttachmentCaptureScope(scope: scope,
+                transactionId: transactionId) == capture.scope)
+            let stream = runtime.watchDownloadedTransactionAttachments(scope: scope,
+                transactionId: transactionId, section: .receipts)
+            let consumer = Task {
+                do { for try await value in stream { observations.append(value) } }
+                catch is CancellationError { }
+                catch LedgerOfflineClientRuntimeFailure.runtimeClosed { }
+            }
+            for _ in 0..<1000 {
+                if observations.values.contains(where: { $0?.isComplete == true }) { break }
+                try await Task.sleep(for: .milliseconds(2))
+            }
+            #expect(observations.values.contains(where: { $0?.isComplete == true && $0?.attachments.isEmpty == true }))
+            let receipt = try await runtime.captureTransactionAttachment(capture, scope: scope)
+            #expect(receipt.metadata?.mediaType == capture.metadata?.mediaType)
+            #expect(receipt.metadata?.fileName == capture.metadata?.fileName)
+            #expect(receipt.metadata?.placement == .init(localPosition: 0, makePrimaryIfEmpty: true))
+            for _ in 0..<1000 {
+                if observations.values.last??.attachments.first?.localReceipt == receipt { break }
+                try await Task.sleep(for: .milliseconds(2))
+            }
+            #expect(observations.values.last??.attachments.first?.localReceipt == receipt)
+            // Equal capture timestamps and reverse lexical IDs must not reorder
+            // sequential picker selections or assign two primary attachments.
+            let secondCapture = try LocalAttachmentCapture(
+                attachmentId: AttachmentID(validating: "a-second-transaction-image"), scope: capture.scope,
+                capturedAt: capture.capturedAt, bytes: Data("second original".utf8),
+                metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Second.png", transactionSection: .receipts))
+            let secondReceipt = try await runtime.captureTransactionAttachment(secondCapture, scope: scope)
+            #expect(secondReceipt.metadata?.placement == .init(localPosition: 1, makePrimaryIfEmpty: false))
+            for _ in 0..<1000 {
+                if observations.values.last??.attachments.count == 2 { break }
+                try await Task.sleep(for: .milliseconds(2))
+            }
+            #expect(observations.values.last??.attachments.map(\.id.rawValue)
+                == [capture.attachmentId.rawValue, secondCapture.attachmentId.rawValue])
+            let catalog = try await runtime.readDownloadedTransactionAttachments(scope: scope,
+                transactionId: transactionId, section: .receipts)
+            #expect(catalog.attachments.map(\.isPrimary) == [true, false])
+            let pending = try #require(catalog.attachments.first)
+            #expect(pending.fileName == "Original.png" && pending.localReceipt == receipt)
+            #expect(try await runtime.loadDownloadedTransactionAttachment(catalog: catalog,
+                attachment: pending, allowDownload: false) == capture.bytes)
+            let database = try #require(databases.values.first)
+            _ = try await database.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            for _ in 0..<1000 {
+                if let last = observations.values.last, last == nil { break }
+                try await Task.sleep(for: .milliseconds(2))
+            }
+            #expect(observations.values.last != nil && observations.values.last! == nil)
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) {
+                try await runtime.loadDownloadedTransactionAttachment(catalog: catalog, attachment: pending, allowDownload: false)
+            }
+            let upload = try SupabaseTransactionAttachmentUpload(
+                supabaseURL: URL(string: "http://127.0.0.1:54321")!, publishableKey: "sb_publishable_test",
+                accessToken: {
+                    Issue.record("Removed member must not request upload credentials or reach the network")
+                    throw CancellationError()
+                })
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) {
+                try await runtime.publishTransactionAttachment(receipt, scope: scope, using: upload)
+            }
+            _ = try await database.execute(sql: "UPDATE spike_account_memberships SET state='active'", parameters: nil)
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 2)
+            let uploadAttempts = LockedRecorder<String>()
+            let failingUpload = try SupabaseTransactionAttachmentUpload(
+                supabaseURL: URL(string: "http://127.0.0.1:54321")!, publishableKey: "sb_publishable_test",
+                accessToken: {
+                    uploadAttempts.append("attempt")
+                    throw CancellationError() // Exercise retry retention without making an HTTP request.
+                })
+            await runtime.lifecycleOwner.uploadPendingTransactionAttachments(using: failingUpload)
+            #expect(uploadAttempts.values.count == 2)
+            clock.append(startedAt.addingTimeInterval(29))
+            await runtime.lifecycleOwner.uploadPendingTransactionAttachments(using: failingUpload)
+            #expect(uploadAttempts.values.count == 2) // Events during cooldown cannot retry.
+            clock.append(startedAt.addingTimeInterval(30))
+            await runtime.lifecycleOwner.uploadPendingTransactionAttachments(using: failingUpload)
+            #expect(uploadAttempts.values.count == 4) // Exactly due; no real thirty-second test sleep.
+            clock.append(startedAt.addingTimeInterval(60))
+            try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: failingUpload)
+            try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: failingUpload)
+            for _ in 0..<1000 {
+                if uploadAttempts.values.count >= 6 { break }
+                try await Task.sleep(for: .milliseconds(2))
+            }
+            #expect(uploadAttempts.values.count == 6) // Both files attempted, duplicate start/events coalesced.
+            try await runtime.close()
+            #expect(uploadAttempts.values.count == 6)
+            try await consumer.value
+            let reopened = try await context.openRuntime()
+            #expect(try await reopened.resolveLocalAttachmentBytes(for: receipt) == capture.bytes)
+            let reopenedCatalog = try await reopened.readDownloadedTransactionAttachments(scope: scope,
+                transactionId: transactionId, section: .receipts)
+            let reopenedPending = try #require(reopenedCatalog.attachments.first)
+            #expect(reopenedCatalog.attachments.map(\.id.rawValue)
+                == [capture.attachmentId.rawValue, secondCapture.attachmentId.rawValue])
+            #expect(reopenedCatalog.attachments.map(\.isPrimary) == [true, false])
+            let reopenedSecond = try #require(reopenedCatalog.attachments.last)
+            #expect(reopenedSecond.localReceipt == secondReceipt)
+            #expect(try await reopened.loadDownloadedTransactionAttachment(catalog: reopenedCatalog,
+                attachment: reopenedSecond, allowDownload: false) == secondCapture.bytes)
+            #expect(reopenedPending.localReceipt == receipt)
+            #expect(try await reopened.loadDownloadedTransactionAttachment(catalog: reopenedCatalog,
+                attachment: reopenedPending, allowDownload: false) == capture.bytes)
+            #expect(try await reopened.captureTransactionAttachment(capture, scope: scope) == receipt)
+            #expect(try await reopened.captureTransactionAttachment(secondCapture, scope: scope) == secondReceipt)
+            #expect(try await reopened.pendingWorkSummary().unverifiedAttachmentCount == 2)
+            try await reopened.close()
+        } else {
+            do {
+                _ = try await runtime.captureTransactionAttachment(capture, scope: scope)
+                Issue.record("Expected capture refusal for \(scenario)")
+            } catch {
+                switch scenario {
+                case "foreign-account", "foreign-principal":
+                    #expect(error as? AttachmentCapturePowerSyncStoreFailure == .scopeMismatch)
+                case "removed": #expect(error as? CategoryManagementFailure == .categoryUnavailable)
+                case "hidden-fee": #expect(error as? DownloadedTransactionAttachments.Failure == .unavailable)
+                case "unknown-section": #expect(error as? TransactionAttachmentCaptureFailure == .unavailable)
+                default: Issue.record("Unexpected scenario \(scenario)")
+                }
+            }
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 0)
+            try await runtime.close()
+        }
     }
 
     @Test("WORKRUNTIME-TEST-002 invalid scope and equal keys refuse before storage")
@@ -751,6 +1131,451 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(changed.fingerprint != initial.fingerprint)
         try await changedRuntime.close()
         context.remove()
+    }
+
+    @Test("Historical Invoicing downloads both sale cycles and survives offline restart",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
+    func invoicingHistoricalLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], let source = env["LEDGER_SALE_LOCAL_PROJECT"],
+              let destination = env["LEDGER_SALE_LOCAL_DESTINATION_PROJECT"], let item = env["LEDGER_SALE_LOCAL_ITEM"],
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"], env["LEDGER_SALE_LOCAL_FINANCIAL_ACCESS"] == "full" else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "invoicing-live", accountId: .init(validating: account), principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "invoicing-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let runtime = try await context.openRuntime()
+        try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+        for try await snapshot in runtime.watchProjects() {
+            if Set(snapshot.local.rows.map { $0.id.rawValue }).isSuperset(of: [source, destination]) { break }
+        }
+        var originals: [ProjectInvoicingItems] = []
+        for (project, expected, amount) in [(source, InvoicingAvailability.paid, Int64(900)), (destination, .available, Int64(200))] {
+            var found = false
+            let projectId = try ProjectID(validating: project)
+            for try await snapshot in runtime.watchInvoicingCharges(accountId: context.accountId, projectId: projectId) {
+                guard let snapshot, let row = snapshot.rows.first(where: { $0.occurrence.itemId.rawValue == item }) else { continue }
+                #expect(row.amount.minorUnits == amount && row.availability == expected)
+                originals.append(snapshot); found = true; break
+            }
+            #expect(found)
+        }
+        try await runtime.close()
+        let offline = try await context.openRuntime()
+        for original in originals {
+            #expect(try await offline.readInvoicingCharges(accountId: context.accountId, projectId: original.projectId) == original)
+        }
+        #expect(originals.count == 2)
+        try await offline.close()
+    }
+
+    @Test("Expense offline creation converges through actual Auth, RPC and PowerSync",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
+    func expenseLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let hostedQA = env["LEDGER_EXPENSE_HOSTED_QA"] == "1"
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"],
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
+              let expense = env["LEDGER_SALE_LOCAL_ITEM"],
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"],
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        if hostedQA {
+            guard account == "realcopy-b9d236394770-account",
+                  principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+                  expense.hasPrefix("hosted-expense-flow-"), project.hasPrefix("hosted-expense-flow-"),
+                  email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        } else {
+            guard [account, principal, expense, project].allSatisfy({ $0.hasPrefix("sale-http-") }) else {
+                throw RuntimeInjectedFailure()
+            }
+        }
+        let context = try RuntimeTestContext(suffix: "expense-live", accountId: .init(validating: account), principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: hostedQA ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
+        let sync = URL(string: hostedQA ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "expense-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let first = try await context.openRuntime(), projectId = try ProjectID(validating: project)
+        try await entry.startWorkspaceSync(first, authorization: authorization, powerSyncURL: sync)
+        for try await value in first.watchProjects() { if value.local.rows.contains(where: { $0.id == projectId }) { break } }
+        var original: BusinessPaidExpenseDraft?
+        for try await value in first.watchExpenses(accountId: context.accountId, projectId: projectId) {
+            if let row = value?.expenses.first(where: { $0.id.rawValue == expense }) {
+                if env["LEDGER_EXPENSE_LOCAL_PAID"] == "1" {
+                    let paid = try #require(row.collectedInvoice)
+                    #expect(paid.total.minorUnits == (hostedQA ? 12_345 : Int64.max))
+                    #expect(paid.lines[0].description == "Frozen Expense description")
+                    #expect(paid.displayMetadata?.invoiceNumber == "INV-LIVE-001")
+                    #expect(paid.displayMetadata?.notes == "Original Invoice notes")
+                    #expect(paid.displayMetadata?.paidAtMilliseconds == "-1")
+                }
+                original = row.entry; break
+            }
+        }
+        let source = try #require(original)
+        #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max))
+        #expect(source.receiptLines.count == 1)
+        if env["LEDGER_EXPENSE_HOSTED_WITHDRAWAL"] == "1" {
+            guard hostedQA, env["LEDGER_EXPENSE_LOCAL_PAID"] == "1" else { throw RuntimeInjectedFailure() }
+            let invoice = try #require(try await first.readCollectedInvoices(accountId: context.accountId,
+                projectId: projectId).first)
+            _ = try await first.readCollectedInvoiceReport(accountId: context.accountId, projectId: projectId,
+                invoiceId: invoice.invoiceId, asOf: .init(validating: 2000))
+            FileHandle.standardOutput.write(Data("LEDGER_INVOICE_WITHDRAWAL_READY\n".utf8))
+            var withdrawn = false
+            do {
+                for try await value in first.watchCollectedInvoices(accountId: context.accountId,
+                    projectId: projectId, invoiceId: invoice.invoiceId) {
+                    if value == nil { withdrawn = true; break }
+                }
+            } catch ProjectInvoicingItemLocalReader.Failure.unavailable {
+                withdrawn = true
+            }
+            #expect(withdrawn)
+            await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) {
+                try await first.readCollectedInvoiceReport(accountId: context.accountId, projectId: projectId,
+                    invoiceId: invoice.invoiceId, asOf: .init(validating: 2001))
+            }
+            try await first.close()
+            let reopened = try await context.openRuntime()
+            await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) {
+                try await reopened.readCollectedInvoiceReport(accountId: context.accountId, projectId: projectId,
+                    invoiceId: invoice.invoiceId, asOf: .init(validating: 2002))
+            }
+            try await reopened.close()
+            return
+        }
+        try await first.close()
+        let attachmentId = try AttachmentID(validating: expense + "-offline-receipt")
+        let draft = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: projectId,
+            expenseId: .init(validating: expense + "-native"), vendor: source.vendor, date: source.date,
+            finalAmount: source.finalAmount, categoryId: source.categoryId, notes: "Offline native creation",
+            receiptAttachmentIds: [attachmentId], receiptLines: source.receiptLines)
+        let uuid = UUID(), capturedAt = Date(), offline = try await context.openRuntime()
+        let bytes = Data("%PDF-1.4\nOffline Expense receipt\n%%EOF\n".utf8)
+        let capture = try LocalAttachmentCapture(attachmentId: attachmentId,
+            scope: await offline.expenseAttachmentCaptureScope(projectId: projectId, expenseId: draft.expenseId),
+            capturedAt: .init(validating: 1_789_459_200_000), bytes: bytes,
+            metadata: .init(mediaType: "application/pdf", fileName: "Expense.pdf"))
+        let recovery = ExpenseEntryRecovery(accountId: context.accountId, projectId: projectId,
+            expenseId: draft.expenseId, operationUUID: uuid, capturedAt: capturedAt,
+            vendor: "Unfinished vendor", date: capturedAt, amountText: "", notes: "Still entering",
+            categoryId: nil, lines: [], attachmentIds: [attachmentId])
+        try await offline.saveExpenseEntry(recovery)
+        let beforeCapture = try await offline.pendingWorkSummary()
+        #expect(beforeCapture.unfinishedEntryCount == 1)
+        #expect(beforeCapture.unverifiedAttachmentCount == 0)
+        #expect(beforeCapture.hasBlockingWork)
+        let mediaReceipt = try await offline.captureAttachment(capture)
+        try await offline.close()
+        let recoveryRuntime = try await context.openRuntime()
+        let restoredEntries = try await recoveryRuntime.readExpenses(accountId: context.accountId, projectId: projectId).unfinishedEntries
+        #expect(restoredEntries == [recovery])
+        #expect(try await recoveryRuntime.pendingWorkSummary().unfinishedEntryCount == 1)
+        #expect(try await recoveryRuntime.restoreExpenseEntryCaptures(recovery) == [capture])
+        var newer = recovery
+        newer.notes = "Newer editor's saved details"
+        try await recoveryRuntime.saveExpenseEntry(newer, replacing: recovery)
+        var stale = recovery
+        stale.notes = "Stale editor's details"
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await recoveryRuntime.saveExpenseEntry(stale, replacing: recovery)
+        }
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await recoveryRuntime.createExpense(draft, operationUUID: uuid, capturedAt: capturedAt, recovery: recovery)
+        }
+        try await recoveryRuntime.close()
+        let savingRuntime = try await context.openRuntime()
+        let receipt = try await savingRuntime.createExpense(draft, operationUUID: uuid, capturedAt: capturedAt, recovery: newer)
+        #expect(receipt.localState == .queued)
+        #expect(try await savingRuntime.pendingWorkSummary().unfinishedEntryCount == 0)
+        #expect(try await savingRuntime.readExpenses(accountId: context.accountId, projectId: projectId).unfinishedEntries.isEmpty)
+        await #expect(throws: ExpenseCreationPowerSyncStore.Failure.duplicateExpense) {
+            try await savingRuntime.saveExpenseEntry(recovery)
+        }
+        try await savingRuntime.close()
+        let resumed = try await context.openRuntime()
+        #expect(try await resumed.createExpense(draft, operationUUID: uuid, capturedAt: capturedAt).operationId == receipt.operationId)
+        #expect(try await resumed.loadExpenseReceipt(projectId: projectId,
+            expenseId: draft.expenseId, attachmentId: attachmentId, allowDownload: false) == bytes)
+        await #expect(throws: ProjectExpenses.Failure.invalidEvidence) {
+            try await resumed.loadExpenseReceipt(projectId: projectId,
+                expenseId: source.expenseId, attachmentId: attachmentId, allowDownload: false)
+        }
+        try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+        var converged: ProjectExpenses?
+        for try await value in resumed.watchExpenses(accountId: context.accountId, projectId: projectId) {
+            if let row = value?.expenses.first(where: { $0.id == draft.expenseId }),
+               row.receiptObjects.map(\.attachmentId) == draft.receiptAttachmentIds {
+                #expect(row.entry == draft); converged = value; break
+            }
+        }
+        let expected = try #require(converged)
+        #expect(expected.expenses.count == 2)
+        if env["LEDGER_EXPENSE_LOCAL_PAID"] == "1" {
+            #expect(expected.expenses.first(where: { $0.id == source.expenseId })?.collectedInvoice != nil)
+            #expect(expected.expenses.first(where: { $0.id == draft.expenseId })?.collectedInvoice == nil)
+            let invoices = try await resumed.readCollectedInvoices(accountId: context.accountId, projectId: projectId)
+            #expect(invoices == expected.expenses.compactMap(\.collectedInvoice))
+            for try await downloaded in resumed.watchCollectedInvoices(accountId: context.accountId, projectId: projectId) {
+                guard let downloaded else { continue }
+                #expect(downloaded == invoices)
+                break
+            }
+        }
+        await resumed.lifecycleOwner.reconcilePendingExpenseAttachments()
+        #expect(try await resumed.pendingWorkSummary().unverifiedAttachmentCount == 0)
+        try await resumed.close()
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.readExpenses(accountId: context.accountId, projectId: projectId) == expected)
+        if env["LEDGER_EXPENSE_LOCAL_PAID"] == "1" {
+            let invoice = try #require(expected.expenses.first(where: { $0.id == source.expenseId })?.collectedInvoice)
+            // Use the public report boundary after reopening without starting
+            // sync, not just the Expense relationship or raw Invoice list.
+            let report = try await reopened.readCollectedInvoiceReport(accountId: context.accountId,
+                projectId: projectId, invoiceId: invoice.invoiceId,
+                asOf: .init(validating: Int64(Date().timeIntervalSince1970 * 1000)))
+            #expect(report.invoice == invoice)
+            #expect(report.provenance.lastSyncedAt != nil)
+            #expect(report.provenance.localDataVersion != nil)
+        }
+        #expect(try await reopened.loadExpenseReceipt(projectId: projectId,
+            expenseId: draft.expenseId, attachmentId: mediaReceipt.attachmentId, allowDownload: false) == bytes)
+        #expect(try await reopened.pendingWorkSummary().unverifiedAttachmentCount == 0)
+        // Exact retries remain valid after upload reconciliation retires the
+        // pending capture; they must not require a second capture or command.
+        #expect(try await reopened.createExpense(draft, operationUUID: uuid,
+            capturedAt: capturedAt).operationId == receipt.operationId)
+        try await reopened.close()
+    }
+
+    @Test("Offline sale converges through actual local Auth, RPC and PowerSync",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
+    func inventorySaleLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], principal.hasPrefix("sale-http-"),
+              let item = env["LEDGER_SALE_LOCAL_ITEM"], item.hasPrefix("sale-http-"),
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"], project.hasPrefix("sale-http-"),
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "sale-live",accountId: .init(validating: account),principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!, sync = URL(string: "http://127.0.0.1:5590")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),headers: ["apikey": key],
+            storageKey: "sale-live",localStorage: CategoryAuthTestStorage(),fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false,emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth,supabaseURL: url,publishableKey: key)
+        try await entry.signIn(email: email,password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot,requestedAt: Date()))
+        let first = try await context.openRuntime()
+        try await entry.startWorkspaceSync(first,authorization: authorization,powerSyncURL: sync)
+        let projectId = try ProjectID(validating: project), itemId = try ItemID(validating: item)
+        var projectLoaded = false
+        for try await value in first.watchProjects() {
+            if value.local.rows.contains(where: { $0.id == projectId }) { projectLoaded = true; break }
+        }
+        #expect(projectLoaded)
+        var downloaded: InventorySaleReview?
+        for try await value in first.watchInventorySaleReview(itemIds: [itemId]) {
+            if let value { downloaded = value; break }
+        }
+        _ = try #require(downloaded)
+        try await first.close()
+        let offline = try await context.openRuntime()
+        let review = try await offline.readInventorySaleReview(itemIds: [itemId])
+        let payload = try review.makePayload(projectId: projectId,currency: .init(validating: "USD"),
+            enteredPrices: [itemId: Money(minorUnits: Int64.max,currency: .init(validating: "USD"))])
+        let uuid = UUID(), captured = Date()
+        let receipt = try await offline.sellInventoryItems(payload,operationUUID: uuid,capturedAt: captured)
+        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.isEmpty)
+        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)).rows.first?.pendingSale != nil)
+        try await offline.close()
+        let resumed = try await context.openRuntime()
+        #expect(try await resumed.sellInventoryItems(payload,operationUUID: uuid,capturedAt: captured).operationId == receipt.operationId)
+        try await entry.startWorkspaceSync(resumed,authorization: authorization,powerSyncURL: sync)
+        var applied = false
+        for try await status in resumed.watchInventorySale(receipt.operationId) {
+            if status?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+            if status?.state.phase == .applied { applied = true; break }
+        }
+        #expect(applied)
+        var reconciled = false
+        for try await value in resumed.watchDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)) {
+            if let row = value.rows.first, row.placementId == payload.items[0].newPlacementId, row.pendingSale == nil {
+                #expect(value.rows.count == 1); reconciled = true; break
+            }
+        }
+        #expect(reconciled)
+        #expect(try await resumed.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.isEmpty)
+        var chargeRecognized = false
+        for try await history in resumed.watchDownloadedItemPlacementHistory(accountId: context.accountId,itemId: itemId) {
+            let expected: ProjectItemAccountingResolution = env["LEDGER_SALE_LOCAL_FINANCIAL_ACCESS"] == "full"
+                ? .accountedFor : .relationshipEvidenceIncomplete
+            if history.currentAccountingResolution == expected {
+                #expect(history.intervals.count == 2 && history.pendingSale == nil)
+                #expect(history.currentClientPaidPurchases.isEmpty)
+                chargeRecognized = true
+                break
+            }
+        }
+        #expect(chargeRecognized)
+        try await resumed.close()
+    }
+
+    @Test("Sale acceptance drains, survives restart and remains retained after access removal", .timeLimit(.minutes(1)), arguments: [false, true])
+    func inventorySaleUsesWorkspaceLifecycle(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "sale-lifecycle-\(removing)")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let gate = ManualGate()
+        var dependencies = context.dependencies(events: events)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_account_memberships(id,account_id,principal_id,state,financial_access) VALUES ('sale-member',?,?,'active','none')",
+                parameters: [context.accountId.rawValue,context.principalId.rawValue])
+            for sql in [
+                "INSERT INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES ('sale-client',?,'Client','active',1,1,1)",
+                "INSERT INTO spike_projects(id,account_id,client_id,display_name,lifecycle,revision) VALUES ('sale-project',?,'sale-client','Project','active',1)",
+                "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind) VALUES ('sale-old',?,'sale-item','business_inventory')"
+            ] { _ = try await database.execute(sql: sql,parameters: [context.accountId.rawValue]) }
+        }
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .sellInventoryItems { await gate.wait() }
+        }
+        let uuid = UUID(), capturedAt = Date(timeIntervalSince1970: 1_788_600_000)
+        let id = try InventorySaleOperationIdentity.make(accountId: context.accountId,uuid: uuid)
+        let payload = try InventorySalePayload(projectId: .init(validating: "sale-project"),currency: .init(validating: "USD"),
+            items: [.init(itemId: .init(validating: "sale-item"),placementId: .init(validating: "sale-old"),
+                priceRevision: 0,reviewedPriceMinorUnits: 100,newPlacementId: .init(validating: "sale-new"),
+                occurrenceId: .init(validating: "sale-charge"))])
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let seeded = try await runtime.pendingUploadCount()
+        let acceptance = Task { try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt) }
+        await gate.waitUntilEntered()
+        let close = Task { try await runtime.close() }
+        try await Task.sleep(for: .milliseconds(30))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await gate.release()
+        #expect(try await acceptance.value.localState == .queued)
+        try await close.value
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
+        }
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt).localState == .queued)
+        #expect(try await reopened.pendingUploadCount() == seeded + 1)
+        var updates = reopened.watchInventorySale(id).makeAsyncIterator()
+        #expect(try await updates.next()??.state.phase == .queued)
+        if removing { try await reopened.lockAccessPreservingPendingWork() }
+        else { try await reopened.close() }
+        try await Self.expectClosed(reopened.watchInventorySale(id))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
+        }
+        if removing {
+            await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
+                try await context.openRuntime()
+            }
+            // Test-only inspection of retained bytes, not permission to reopen
+            // this Account in the app after learning of membership removal.
+            var inspection = context.dependencies()
+            inspection.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+            let retained = try await context.openRuntime(dependencies: inspection)
+            #expect(try await retained.pendingUploadCount() == seeded + 1)
+            #expect(try await retained.pendingWorkSummary().queuedOperationCount == 1)
+            try await retained.close()
+        }
+    }
+
+    @Test("Category acceptance shares workspace drainage, restart and scope enforcement")
+    func categoryManagementUsesWorkspaceLifecycle() async throws {
+        let context = try RuntimeTestContext(suffix: "category-management-lifecycle")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let gate = ManualGate()
+        var dependencies = context.dependencies(events: events)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id, account_id, principal_id,
+                    role, state, financial_access)
+                VALUES ('category-member', ?, ?, 'member', 'active', 'full')
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+        }
+        dependencies.categoryDirectoryIsComplete = { _ in true }
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .manageCategories { await gate.wait() }
+        }
+        let operationUUID = UUID()
+        let command = try CategoryManagementCommand(
+            operationId: CategoryManagementOperationIdentity.make(accountId: context.accountId, uuid: operationUUID),
+            accountId: context.accountId, actorPrincipalId: context.principalId,
+            capturedAt: Date(timeIntervalSince1970: 1_788_600_000),
+            payload: .init(action: .create, categoryId: BudgetCategoryID(validating: "created-category"),
+                name: BudgetCategoryName(validating: "Lighting"), kind: .general,
+                excludesFromOverallBudget: false))
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        // The fixture inserts membership through SQLite, which itself creates
+        // synthetic CRUD. Count the one category command relative to that seed.
+        let seededUploadCount = try await runtime.pendingUploadCount()
+        let acceptance = Task {
+            try await runtime.submitCategoryChange(command.envelope.payload,
+                operationUUID: operationUUID, capturedAt: command.envelope.clientCreatedAt)
+        }
+        await gate.waitUntilEntered()
+        let close = Task { try await runtime.close() }
+        try await Task.sleep(for: .milliseconds(30))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.submit(command)
+        }
+        await gate.release()
+        #expect(try await acceptance.value.localState == .queued)
+        try await close.value
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.submit(command)
+        }
+
+        // Exact retries remain possible after restart even without new complete-
+        // directory evidence; they cannot enqueue or mutate a second operation.
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.submit(command).localState == .queued)
+        #expect(try await reopened.pendingUploadCount() == seededUploadCount + 1)
+        var categories = reopened.watchBudgetCategories().makeAsyncIterator()
+        let snapshot = try #require(try await categories.next())
+        #expect(snapshot.local.rows.map(\.name.rawValue) == ["Lighting"])
+        var statuses = reopened.watchCategoryOperations().makeAsyncIterator()
+        let status = try #require(try await statuses.next())
+        #expect(status.map(\.operationId) == [command.envelope.operationId])
+        #expect(status.first?.state.phase == .queued)
+        let foreign = try CategoryManagementCommand(operationId: command.envelope.operationId,
+            accountId: AccountID(validating: "another-account"), actorPrincipalId: context.principalId,
+            capturedAt: command.envelope.clientCreatedAt, payload: command.envelope.payload)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await reopened.submit(foreign)
+        }
+        try await reopened.close()
     }
 
     @Test("CATPOWER-TEST-005 runtime close and reopen preserve local category rows")
@@ -1278,6 +2103,38 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         closeContext.remove()
     }
 
+    @Test("Invoicing charge interface rejects foreign scope and drains on close")
+    func invoicingChargesLifecycle() async throws {
+        let context = try RuntimeTestContext(suffix: "invoicing-lifecycle")
+        defer { context.remove() }
+        let entered = EntryCounter()
+        var dependencies = context.dependencies()
+        dependencies.streamOperationCheckpoint = { operation in
+            if operation == .invoicingCharges {
+                await entered.enter(operation)
+                try await Task.sleep(for: .seconds(30))
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "project")
+        let foreign = try AccountID(validating: "foreign")
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readInvoicingCharges(accountId: foreign, projectId: project)
+        }
+        var wrong = runtime.watchInvoicingCharges(accountId: foreign, projectId: project).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) { try await wrong.next() }
+        let consumer = Task {
+            var values = runtime.watchInvoicingCharges(accountId: context.accountId, projectId: project).makeAsyncIterator()
+            await #expect(throws: CancellationError.self) { try await values.next() }
+        }
+        await entered.waitUntilEntered(1)
+        try await runtime.close()
+        try await consumer.value
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readInvoicingCharges(accountId: context.accountId, projectId: project)
+        }
+    }
+
     @Test("Project Items watch rejects foreign scope and drains on workspace close")
     func downloadedProjectItemsLifecycle() async throws {
         let context = try RuntimeTestContext(suffix: "project-items-lifecycle")
@@ -1307,6 +2164,70 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             projectId: try ProjectID(validating: "project-physical")).makeAsyncIterator()
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await closed.next() }
         context.remove()
+    }
+
+    @Test("Transaction browser rejects foreign scope and cancels before workspace database closure")
+    func transactionBrowserLifecycle() async throws {
+        let context = try RuntimeTestContext(suffix: "transaction-browser-lifecycle")
+        defer { context.remove() }
+        let entered = EntryCounter()
+        var dependencies = context.dependencies()
+        dependencies.streamOperationCheckpoint = { operation in
+            if operation == .transactionBrowser {
+                await entered.enter(operation)
+                // Deliberate cancellation point, not a 30-second test wait.
+                try await Task.sleep(for: .seconds(30))
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        var foreign = runtime.watchTransactions(scope: .businessInventory(accountId: try AccountID(validating: "foreign")))
+            .makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) { try await foreign.next() }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readTransactionExport(scope: .project(accountId: AccountID(validating: "foreign"),
+                projectId: ProjectID(validating: "project"), clientId: ClientID(validating: "client")),
+                orderedTransactionIDs: nil, asOf: .init(validating: 1_800_000_000_000))
+        }
+        let foreignAccount = try AccountID(validating: "foreign")
+        let hash = String(repeating: "a", count: 64)
+        let attachment = try DownloadedTransactionAttachment(id: .init(validating: "reference"),
+            object: .init(accountId: foreignAccount, attachmentId: "pdf", sha256: hash,
+                byteCount: "123", mediaType: "application/pdf", storagePath: "accounts/foreign/attachments/pdf/\(hash)", kind: .pdf),
+            position: 0, isPrimary: true, fileName: "Receipt.pdf")
+        let foreignCatalog = try DownloadedTransactionAttachments(scope: .businessInventory(accountId: foreignAccount),
+            transactionId: .init(validating: "transaction"), section: .receipts, revision: 1,
+            isComplete: true, attachments: [attachment])
+        var foreignAttachments = runtime.watchDownloadedTransactionAttachments(scope: foreignCatalog.scope,
+            transactionId: foreignCatalog.transactionId, section: .receipts).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) { try await foreignAttachments.next() }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.loadDownloadedTransactionAttachment(catalog: foreignCatalog,
+                attachment: attachment, allowDownload: true)
+        }
+        let scope = TransactionScope.businessInventory(accountId: context.accountId)
+        let consumer = Task {
+            var values = runtime.watchTransactions(scope: scope).makeAsyncIterator()
+            await #expect(throws: CancellationError.self) { try await values.next() }
+        }
+        let attachmentConsumer = Task {
+            var values = runtime.watchDownloadedTransactionAttachments(scope: scope,
+                transactionId: foreignCatalog.transactionId, section: .receipts).makeAsyncIterator()
+            await #expect(throws: CancellationError.self) { try await values.next() }
+        }
+        await entered.waitUntilEntered(2)
+        try await runtime.close()
+        await consumer.value
+        await attachmentConsumer.value
+        var closed = runtime.watchTransactions(scope: scope).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await closed.next() }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readTransactionExport(scope: scope, orderedTransactionIDs: nil,
+                asOf: .init(validating: 1_800_000_000_000))
+        }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.loadDownloadedTransactionAttachment(catalog: foreignCatalog,
+                attachment: attachment, allowDownload: true)
+        }
     }
 
     @Test("Removal signal reaches current and late presentation observers without unlocking")
@@ -1483,6 +2404,942 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("SDK automatically delivers category commands before and after connection",
+          .timeLimit(.minutes(1)), arguments: [false, true], [false, true])
+    func sdkDeliversCategoryCommands(queuedBeforeStart: Bool, rejected: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "sdk-category-\(queuedBeforeStart)-\(rejected)")
+        defer { context.remove() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id, account_id, principal_id, role, state, financial_access)
+                VALUES ('sdk-category-member', ?, ?, 'member', 'active', 'full')
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+            // This is downloaded fixture evidence, not an uploadable membership command.
+            _ = try await database.execute(sql: "DELETE FROM ps_crud", parameters: nil)
+        }
+        dependencies.categoryDirectoryIsComplete = { _ in true }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let command = try CategoryManagementCommand(
+            operationId: CategoryManagementOperationIdentity.make(accountId: context.accountId, uuid: UUID()),
+            accountId: context.accountId, actorPrincipalId: context.principalId,
+            capturedAt: Date(timeIntervalSince1970: 1_788_600_000),
+            payload: .init(action: .create, categoryId: BudgetCategoryID(validating: "sdk-created"),
+                name: BudgetCategoryName(validating: "Lighting"), kind: .general, excludesFromOverallBudget: false))
+        let gate = ManualGate()
+        await gate.release()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let appliers = LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation),
+            categoryManagement: RuntimeCategoryApplier(rejected: rejected))
+        if queuedBeforeStart { _ = try await runtime.submit(command) }
+        // Nil download credentials guarantee no hosted network connection.
+        // The actual SDK still owns and triggers its independent upload loop.
+        try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncAlreadyStarted) {
+            try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        }
+        if !queuedBeforeStart { _ = try await runtime.submit(command) }
+        var updates = runtime.watchCategoryOperations().makeAsyncIterator()
+        var terminal: OperationSnapshot?
+        while let rows = try await updates.next() {
+            if let row = rows.first, row.state.phase == (rejected ? .rejected : .applied) {
+                terminal = row
+                break
+            }
+        }
+        #expect(terminal?.operationId == command.envelope.operationId)
+        try await runtime.close()
+        let reopened = try await context.openRuntime()
+        var retained = reopened.watchCategoryOperations().makeAsyncIterator()
+        let rows = try #require(try await retained.next())
+        #expect(rows.first?.state.phase == (rejected ? .rejected : .applied))
+        #expect(try await reopened.pendingUploadCount() == 0)
+        try await reopened.close()
+    }
+
+    @Test("Membership changes request server confirmation; outages do not remove offline access",
+          .timeLimit(.minutes(1)))
+    func membershipRevalidationObservation() async throws {
+        let context = try RuntimeTestContext(suffix: "membership-observation")
+        defer { context.remove() }
+        let databases = AsyncStream<any PowerSyncDatabaseProtocol>.makeStream()
+        let checks = AsyncStream<Void>.makeStream()
+        defer { databases.continuation.finish(); checks.continuation.finish() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            databases.continuation.yield(database)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        var databaseIterator = databases.stream.makeAsyncIterator()
+        let database = try #require(await databaseIterator.next())
+        let authorization = WorkspaceMembershipAuthorization(environment: context.environment.manifest.environment,
+            authUserId: UUID(), principalId: context.principalId, accountId: context.accountId,
+            role: .owner, financialAccess: .full)
+        try await runtime.lifecycleOwner.startMembershipRevalidation(authorization) {
+            checks.continuation.yield(())
+            throw RuntimeInjectedFailure()
+        }
+        var iterator = checks.stream.makeAsyncIterator()
+        _ = try #require(await iterator.next())
+        _ = try await database.execute(sql: """
+            INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state,financial_access)
+            VALUES('watched-member',?,?,'owner','active','full')
+            """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+        _ = try #require(await iterator.next())
+        _ = try await database.execute(sql: "DELETE FROM spike_account_memberships WHERE id='watched-member'", parameters: nil)
+        _ = try #require(await iterator.next())
+        // A failed confirmation must not convert missing rows into learned removal.
+        try await runtime.lifecycleOwner.requireWorkspaceScope(authorization)
+        try await runtime.close()
+    }
+
+    @Test("Media transport binding rejects foreign workspace identity and closed runtimes")
+    func mediaDownloadBindingScope() async throws {
+        let context = try RuntimeTestContext(suffix: "media-binding")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let authorization = WorkspaceMembershipAuthorization(environment: context.environment.manifest.environment,
+            authUserId: UUID(), principalId: context.principalId, accountId: context.accountId,
+            role: .owner, financialAccess: .full)
+        for foreignPrincipal in [false, true] {
+            let foreign = WorkspaceMembershipAuthorization(environment: authorization.environment,
+                authUserId: authorization.authUserId,
+                principalId: foreignPrincipal ? try PrincipalID(validating: "foreign") : context.principalId,
+                accountId: foreignPrincipal ? context.accountId : try AccountID(validating: "foreign"),
+                role: .owner, financialAccess: .full)
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+                try await runtime.lifecycleOwner.bindMediaDownload(foreign) { _ in Data() }
+            }
+        }
+        try await runtime.lifecycleOwner.bindMediaDownload(authorization) { _ in Data() }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.lifecycleOwner.bindMediaDownload(authorization) { _ in Data() }
+        }
+    }
+
+    @Test(arguments: ["matching", "missing", "reduced", "removed", "foreign"])
+    func onlineActivationDoesNotExposeMismatchedCachedPermissions(mode: String) async throws {
+        let context = try RuntimeTestContext(suffix: "activation-\(mode)")
+        defer { context.remove() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            if mode != "missing" {
+                _ = try await database.execute(sql: """
+                    INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state,financial_access)
+                    VALUES('activation-member',?,?,'owner',?,'full')
+                    """, parameters: [context.accountId.rawValue, context.principalId.rawValue,
+                        mode == "removed" ? "removed" : "active"])
+                _ = try await database.execute(sql: "DELETE FROM ps_crud", parameters: nil)
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let authorization = WorkspaceMembershipAuthorization(environment: context.environment.manifest.environment,
+            authUserId: UUID(), principalId: context.principalId,
+            accountId: mode == "foreign" ? try AccountID(validating: "foreign") : context.accountId,
+            role: .owner, financialAccess: mode == "reduced" ? .none : .full)
+        if mode == "matching" {
+            try await runtime.requireMatchingDownloadedMembership(authorization)
+        } else {
+            let expected: LedgerOfflineClientRuntimeFailure = mode == "foreign"
+                ? .accountScopeMismatch : .workspaceMembershipNotReady
+            await #expect(throws: expected) { try await runtime.requireMatchingDownloadedMembership(authorization) }
+        }
+        #expect(try await runtime.pendingUploadCount() == 0)
+        try await runtime.close()
+    }
+
+    @Test("Category startup waits for directory readiness and respects cancellation/close",
+          .timeLimit(.minutes(1)), arguments: ["ready", "reduced", "cancel", "close"])
+    func categoryStartupReadiness(mode: String) async throws {
+        let context = try RuntimeTestContext(suffix: "category-startup-\(mode)")
+        defer { context.remove() }
+        let subscribed = ManualGate()
+        let completeness = AsyncStream<Bool>.makeStream()
+        defer { completeness.continuation.finish() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state,financial_access)
+                VALUES('startup-member',?,?,'employee','active','full')
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+            _ = try await database.execute(sql: "DELETE FROM ps_crud", parameters: nil)
+        }
+        dependencies.makeBudgetCategoryQuery = { database, principal, account, now in
+            BudgetCategoryReferencePowerSyncQuery(database: database, principalId: principal, accountId: account,
+                completenessObservation: { _ in
+                    Task { await subscribed.release() }
+                    return completeness.stream
+                }, now: now)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let authorization = WorkspaceMembershipAuthorization(environment: context.environment.manifest.environment,
+            authUserId: UUID(), principalId: context.principalId, accountId: context.accountId,
+            role: .employee, financialAccess: mode == "reduced" ? .none : .full)
+        let waiting = Task { try await runtime.waitForCategoryWorkspaceReady(authorization) }
+        await subscribed.wait()
+        completeness.continuation.yield(false)
+        if mode == "cancel" {
+            waiting.cancel()
+            await #expect(throws: CancellationError.self) { try await waiting.value }
+        } else if mode == "close" {
+            try await runtime.close()
+            do {
+                try await waiting.value
+                Issue.record("Closed workspace must not become ready")
+            } catch is CancellationError { }
+            catch let error as LedgerOfflineClientRuntimeFailure { #expect(error == .runtimeClosed) }
+        } else {
+            completeness.continuation.yield(true)
+            if mode == "reduced" {
+                await #expect(throws: LedgerOfflineClientRuntimeFailure.workspaceMembershipNotReady) {
+                    try await waiting.value
+                }
+            } else {
+                try await waiting.value
+            }
+        }
+        try await runtime.close()
+    }
+
+    @Test("Offline admission requires a completed download and survives a queued edit/restart",
+          .timeLimit(.minutes(1)), arguments: ["ready", "reduced", "incomplete"])
+    @MainActor func downloadedAdmissionUsesActualRuntime(mode: String) async throws {
+        let context = try RuntimeTestContext(suffix: "admission-runtime-\(mode)")
+        defer { context.remove() }
+        let observed = ManualGate()
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state,financial_access)
+                VALUES('admission-member',?,?,'employee','active','full')
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+            _ = try await database.execute(sql: "DELETE FROM ps_crud", parameters: nil)
+        }
+        dependencies.categoryDirectoryIsComplete = { _ in true }
+        dependencies.makeBudgetCategoryQuery = { database, principal, account, now in
+            BudgetCategoryReferencePowerSyncQuery(database: database, principalId: principal, accountId: account,
+                completenessObservation: { _ in AsyncStream { continuation in
+                    continuation.yield(mode != "incomplete")
+                    Task { await observed.release() }
+                } }, now: now)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let userId = UUID()
+        let memory = CategoryAuthTestStorage()
+        let store = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "admissions") },
+            write: { memory.store(key: "admissions", value: $0) }, requireNotRemoved: { _ in })
+        let auth = AuthClient(configuration: .init(url: URL(string: "https://target.invalid/auth/v1")!,
+            localStorage: CategoryAuthTestStorage(), fetch: { request in
+                let session = Session(accessToken: "offline-expired-fixture", tokenType: "bearer", expiresIn: 3600,
+                    expiresAt: 1_000, refreshToken: "fixture-refresh", user: User(id: userId,
+                        appMetadata: [:], userMetadata: [:], aud: "authenticated", createdAt: Date(), updatedAt: Date()))
+                return (try AuthClient.Configuration.jsonEncoder.encode(session),
+                    HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            }, autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", offlineAdmissions: store)
+        try await entry.signIn(email: "fixture@example.invalid", password: "fixture")
+        let authorization = WorkspaceMembershipAuthorization(environment: context.environment.manifest.environment,
+            authUserId: userId, principalId: context.principalId, accountId: context.accountId,
+            role: .employee, financialAccess: mode == "reduced" ? .none : .full)
+        let account = try AccountSummary(id: context.accountId, displayName: AccountDisplayName(validating: "Downloaded"))
+        #expect(try entry.downloadedWorkspaces(environment: .targetLocal).isEmpty)
+        let admission = Task { try await entry.rememberDownloadedWorkspace(authorization, account: account, runtime: runtime) }
+        await observed.wait()
+        if mode == "incomplete" {
+            admission.cancel()
+            await #expect(throws: CancellationError.self) { try await admission.value }
+        } else if mode == "reduced" {
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.workspaceMembershipNotReady) { try await admission.value }
+        } else {
+            try await admission.value
+            _ = try await runtime.submitCategoryChange(.init(action: .create,
+                categoryId: BudgetCategoryID(validating: "offline-created"),
+                name: BudgetCategoryName(validating: "Offline"), kind: .general, excludesFromOverallBudget: false),
+                operationUUID: UUID(), capturedAt: Date())
+        }
+        try await runtime.close()
+        let grants = try entry.downloadedWorkspaces(environment: .targetLocal)
+        if mode == "ready" {
+            let grant = try #require(grants.first)
+            try entry.requireOfflineAdmission(grant)
+            let reopened = try await context.openRuntime()
+            try await reopened.requireMatchingDownloadedMembership(grant.authorization)
+            #expect(try await reopened.pendingUploadCount() == 1)
+            var categories = reopened.watchBudgetCategories().makeAsyncIterator()
+            #expect(try await categories.next()?.local.rows.map(\.name.rawValue) == ["Offline"])
+            try await reopened.close()
+        } else {
+            #expect(grants.isEmpty)
+        }
+    }
+
+    @Test("App sync binding rejects a foreign database before credentials or network access",
+          arguments: ["account", "principal", "environment"])
+    @MainActor func appSyncRequiresMatchingWorkspace(mode: String) async throws {
+        let context = try RuntimeTestContext(suffix: "app-sync-scope-\(mode)")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let auth = AuthClient(configuration: .init(url: URL(string: "https://target.invalid/auth/v1")!,
+            localStorage: CategoryAuthTestStorage(), fetch: { _ in
+                Issue.record("Foreign workspace must not fetch credentials")
+                throw RuntimeInjectedFailure()
+            }, autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture")
+        let authorization = try WorkspaceMembershipAuthorization(
+            environment: mode == "environment" ? .targetProduction : context.environment.manifest.environment,
+            authUserId: UUID(), principalId: mode == "principal" ? PrincipalID(validating: "foreign") : context.principalId,
+            accountId: mode == "account" ? AccountID(validating: "foreign") : context.accountId,
+            role: .employee, financialAccess: .full)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: nil)
+        }
+        try await runtime.close()
+    }
+
+    @Test("Encrypted offline category command reaches local Postgres through SDK scheduling",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_CATEGORY_LOCAL_ACCOUNT"] != nil,
+                   "Run test:categories:local -- --native-sdk against the isolated local stack"),
+          .timeLimit(.minutes(1)), arguments: [false, true])
+    func sdkCategoryLocalServer(lostResponse: Bool) async throws {
+        let input = ProcessInfo.processInfo.environment
+        guard let address = input["LEDGER_CATEGORY_LOCAL_URL"], let url = URL(string: address),
+              url.scheme == "http", ["127.0.0.1", "localhost"].contains(url.host ?? ""),
+              let key = input["LEDGER_CATEGORY_LOCAL_KEY"],
+              let token = input["LEDGER_CATEGORY_LOCAL_TOKEN"],
+              let account = input["LEDGER_CATEGORY_LOCAL_ACCOUNT"], account.hasPrefix("category-http-") else {
+            throw RuntimeInjectedFailure()
+        }
+        let suffix = lostResponse ? "retry" : "normal"
+        let context = try RuntimeTestContext(suffix: "category-http-\(suffix)",
+            accountId: AccountID(validating: account),
+            principalId: PrincipalID(validating: input["LEDGER_CATEGORY_AUTH_PRINCIPAL"] ?? "principal-owner"))
+        defer { context.remove() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state,financial_access,
+                    can_manage_clients,can_manage_projects,can_manage_project_budgets)
+                VALUES('local-http-member',?,?,'employee','active','full',1,1,1)
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue])
+            _ = try await database.execute(sql: "DELETE FROM ps_crud", parameters: nil)
+        }
+        // Only membership/directory fixture data is seeded locally; the command
+        // and its terminal result must travel through the real runtime and RPC.
+        dependencies.categoryDirectoryIsComplete = { _ in true }
+        var runtime = try await context.openRuntime(dependencies: dependencies)
+        do {
+            let command = try CategoryManagementCommand(
+                operationId: CategoryManagementOperationIdentity.make(accountId: context.accountId, uuid: UUID()),
+                accountId: context.accountId, actorPrincipalId: context.principalId, capturedAt: Date(),
+                payload: .init(action: .create,
+                    categoryId: BudgetCategoryID(validating: "\(account)-sdk-\(suffix)"),
+                    name: BudgetCategoryName(validating: "SDK \(suffix)"), kind: .general,
+                    excludesFromOverallBudget: false))
+            #expect(try await runtime.submit(command).localState == .queued)
+            // Project setup's newly created category must be usable by the same
+            // real connection, not just by a category-only test applier.
+            let project: CreateProjectCommand?
+            if !lostResponse, input["LEDGER_CATEGORY_AUTH_EMAIL"] != nil {
+                let newClient = try CreateClientCommand(operationId: OperationID(validating: "\(account)-client-op"),
+                    draft: ClientCreationDraft(accountId: context.accountId, actorPrincipalId: context.principalId,
+                        operationContractVersion: OperationContractVersion(validating: "client-create-v1"),
+                        clientId: ClientID(validating: "client-runtime-\(account)"),
+                        displayName: ClientDisplayName(validating: "Inline project client"), capturedAt: Date()))
+                project = try CreateProjectCommand(operationId: OperationID(validating: "\(account)-project-op"),
+                    draft: ProjectSetupDraft(accountId: context.accountId, actorPrincipalId: context.principalId,
+                        operationContractVersion: OperationContractVersion(validating: "project-create-v1"),
+                        projectId: ProjectID(validating: "\(account)-project"),
+                        clientSelection: .existing(newClient.envelope.payload.clientId),
+                        displayName: ProjectDisplayName(validating: "Inline category project"), description: nil,
+                        categoryAllocations: [.init(categoryId: BudgetCategoryID(validating: "\(account)-sdk-normal"),
+                            allocation: nil)], capturedAt: Date()))
+                #expect(try await runtime.createClient(newClient).localState == .queued)
+                #expect(try await runtime.createProject(try #require(project)).localState == .queued)
+            } else {
+                project = nil
+            }
+            try await runtime.close()
+            runtime = try await context.openRuntime()
+            #expect(try await runtime.pendingUploadCount() == (project == nil ? 1 : 3))
+            let rpc: SupabaseCategoryManagementRPC
+            var signedInAuth: AuthClient?
+            var actualEntry: SupabaseOnlineSignIn?
+            var actualAuthorization: WorkspaceMembershipAuthorization?
+            if let email = input["LEDGER_CATEGORY_AUTH_EMAIL"] {
+                let password = try #require(input["LEDGER_CATEGORY_AUTH_PASSWORD"])
+                let expectedUserText = try #require(input["LEDGER_CATEGORY_AUTH_USER"])
+                let expectedUser = try #require(UUID(uuidString: expectedUserText))
+                let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),
+                    headers: ["apikey": key], storageKey: "category-local-auth-\(suffix)",
+                    localStorage: CategoryAuthTestStorage(),
+                    fetch: { request in try await URLSession.shared.data(for: request) },
+                    autoRefreshToken: false,
+                    emitLocalSessionAsInitialSession: true))
+                let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+                try await entry.signIn(email: email, password: password)
+                #expect(auth.currentSession?.user.id == expectedUser)
+                let refreshed = try await auth.refreshSession()
+                #expect(refreshed.user.id == expectedUser)
+                let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+                #expect(directory.identity.userId == expectedUser)
+                #expect(directory.snapshot.principalId == context.principalId)
+                #expect(directory.snapshot.accounts.map(\.id) == [context.accountId])
+                #expect(directory.snapshot.isComplete && directory.snapshot.quality == .ready)
+                let selection = try AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+                    from: directory.snapshot, requestedAt: Date())
+                let authorization = try await entry.authorize(selection)
+                #expect(authorization.authUserId == expectedUser)
+                #expect(authorization.principalId == context.principalId && authorization.accountId == context.accountId)
+                #expect(authorization.role == .employee && authorization.financialAccess == .full)
+                if let receiptId = input["LEDGER_CATEGORY_LOCAL_RECEIPT"] {
+                    let reader = try await entry.onlineTransactionReceipts(authorization)
+                    let receipt = try await reader.read(transactionId: TransactionID(validating: receiptId))
+                    #expect(receipt.accountId == context.accountId && receipt.principalId == context.principalId)
+                    #expect(receipt.categoryKind == .general && receipt.auditStatus == .notApplicable)
+                    #expect(receipt.reconstruction?.reconstructedTotal.minorUnits == 100)
+                    #expect(receipt.items.count == 1 && receipt.items.first?.membership == .sold)
+                }
+                actualEntry = entry
+                actualAuthorization = authorization
+                rpc = try SupabaseCategoryManagementRPC(supabaseURL: url, publishableKey: key,
+                    authClient: auth, authenticatedUserId: expectedUser)
+                signedInAuth = auth
+            } else {
+                rpc = try SupabaseCategoryManagementRPC(supabaseURL: url, publishableKey: key,
+                    accessToken: { token })
+            }
+            let applier = RuntimeLocalCategoryApplier(rpc: rpc, loseFirstResponse: lostResponse)
+            let gate = ManualGate()
+            await gate.release()
+            let cancelled = AsyncStream<Void>.makeStream()
+            if !lostResponse, let actualEntry, let actualAuthorization {
+                try await actualEntry.startWorkspaceSync(runtime, authorization: actualAuthorization, powerSyncURL: nil)
+            } else {
+                try await runtime.startSync(credentialProvider: { nil }, appliers: .init(
+                    clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation),
+                    categoryManagement: applier))
+            }
+            var updates = runtime.watchCategoryOperations().makeAsyncIterator()
+            var terminal: OperationSnapshot?
+            while let rows = try await updates.next() {
+                if let row = rows.first, row.state.phase == .applied { terminal = row; break }
+            }
+            #expect(terminal?.operationId == command.envelope.operationId)
+            if let project {
+                for try await result in runtime.watchProjectCreationOperation(project.envelope.operationId) {
+                    if result.state.phase == .applied || result.state.phase == .rejected {
+                        #expect(result.state.phase == .applied, "Project result: \(result.state)")
+                        break
+                    }
+                }
+            }
+            // Server retries return the original result, not another category or
+            // revision. The launcher also verifies authoritative rows via MCP.
+            let replay = try await rpc.apply(command)
+            let responses = await applier.responses
+            if lostResponse || actualEntry == nil {
+                #expect(responses.count >= (lostResponse ? 2 : 1))
+                #expect(responses.allSatisfy { $0 == replay })
+            } else {
+                #expect(responses.isEmpty) // Actual app connection path, not the loss-injection wrapper.
+            }
+            try await runtime.close()
+            runtime = try await context.openRuntime()
+            var retained = runtime.watchCategoryOperations().makeAsyncIterator()
+            #expect(try await retained.next()?.first?.state.phase == .applied)
+            #expect(try await runtime.pendingUploadCount() == 0)
+            try await runtime.close()
+            try await signedInAuth?.signOut(scope: .local)
+        } catch {
+            try? await runtime.close()
+            throw error
+        }
+    }
+
+    @Test("Real local replication preserves category edits and receipt evidence across offline restart",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_CATEGORY_SYNC_URL"] != nil,
+                   "Run categoryManagement.local.ts --native-replication with Ledger's local PowerSync service"),
+          .timeLimit(.minutes(1)))
+    func sdkCategoryLiveReplication() async throws {
+        let input = ProcessInfo.processInfo.environment
+        guard input["LEDGER_CATEGORY_SYNC_URL"] == "http://127.0.0.1:5590",
+              input["LEDGER_CATEGORY_LOCAL_URL"] == "http://127.0.0.1:54321",
+              let account = input["LEDGER_CATEGORY_LOCAL_ACCOUNT"], account.hasPrefix("category-http-"),
+              let principal = input["LEDGER_CATEGORY_AUTH_PRINCIPAL"],
+              let key = input["LEDGER_CATEGORY_LOCAL_KEY"], let email = input["LEDGER_CATEGORY_AUTH_EMAIL"],
+              let password = input["LEDGER_CATEGORY_AUTH_PASSWORD"], let receiptId = input["LEDGER_CATEGORY_LOCAL_RECEIPT"],
+              let foreignAccount = input["LEDGER_CATEGORY_FOREIGN_ACCOUNT"], foreignAccount == account + "-foreign",
+              let revokeText = input["LEDGER_CATEGORY_REVOKE_URL"], let revokeURL = URL(string: revokeText),
+              revokeURL.scheme == "http", revokeURL.host == "127.0.0.1", revokeURL.path.hasPrefix("/revoke-") else {
+            throw RuntimeInjectedFailure()
+        }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let syncURL = URL(string: "http://127.0.0.1:5590")!
+        let context = try RuntimeTestContext(suffix: "category-live-replication",
+            accountId: AccountID(validating: account), principalId: PrincipalID(validating: principal))
+        defer { context.remove() }
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),
+            headers: ["apikey": key], storageKey: "category-live-replication",
+            localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let selection = try AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date())
+        let authorization = try await entry.authorize(selection)
+        let scope = TransactionScope.businessInventory(accountId: context.accountId)
+        let transactionId = try TransactionID(validating: receiptId)
+        let projectScope = TransactionScope.project(accountId: context.accountId,
+            projectId: try ProjectID(validating: "\(account)-receipt-project"),
+            clientId: try ClientID(validating: "\(account)-receipt-client"))
+        func projectBrowser(_ runtime: LedgerOfflineClientRuntime) async throws -> [TransactionDetailSnapshot] {
+            for try await update in runtime.watchTransactions(scope: projectScope) {
+                if case .ready = update { throw RuntimeInjectedFailure() }
+                if case .partial(let rows) = update, rows.count == 3 {
+                    #expect(rows.map(\.transactionId.rawValue) == ["\(receiptId)-linked-payment", "\(receiptId)-payment", "\(receiptId)-project"])
+                    #expect(rows[1].amount.minorUnits == 9007199254740993 && rows[1].category == nil)
+                    #expect(rows[0].currentItemCategories?.first?.itemId.rawValue == "\(account)-item")
+                    #expect(rows[0].currentItemCategories?.first?.placementId.rawValue == "\(account)-item-project")
+                    #expect(rows[0].currentItemCategories?.first?.categoryId?.rawValue == "\(account)-a")
+                    #expect(rows[1].currentItemCategories == [] && rows[2].currentItemCategories == [])
+                    let contents = try #require(rows[0].paymentContents)
+                    #expect(contents.connections.count == 2 && contents.connections.contains { $0.endedAt != nil })
+                    #expect(contents.itemIDs.map(\.rawValue) == ["\(account)-item", "\(account)-item-payment-only"])
+                    let chair = try #require(contents.items?.first { $0.id.rawValue == "\(account)-item-payment-only" })
+                    #expect(chair.name == "Renamed paid chair" && chair.currentSpaceName == "Inventory room" && chair.imageCount == 0)
+                    #expect(contents.invoice?.lines.count == 3 && contents.invoice?.total.minorUnits == 123)
+                    #expect(contents.invoice?.lines.map(\.description) == ["Frozen Item", "Frozen Expense", "Frozen Fee"])
+                    #expect(rows[1].paymentContents?.connections == [] && rows[1].paymentContents?.invoice == nil)
+                    #expect(rows[2].paymentContents == nil)
+                    #expect(rows.allSatisfy { $0.classification.scope == projectScope && $0.principalId == context.principalId })
+                    let media = try await runtime.readDownloadedTransactionAttachments(scope: projectScope,
+                        transactionId: TransactionID(validating: "\(receiptId)-payment"), section: .receipts)
+                    guard media.isComplete else { continue }
+                    #expect(media.revision == 2 && media.attachments.count == 1)
+                    #expect(media.attachments.first?.fileName == "Vendor receipt.pdf")
+                    #expect(media.attachments.first?.object.byteCount == 9007199254740993)
+                    #expect(media.attachments.first?.object.mediaType == "application/pdf")
+                    let other = try await runtime.readDownloadedTransactionAttachments(scope: projectScope,
+                        transactionId: TransactionID(validating: "\(receiptId)-payment"), section: .other)
+                    #expect(other.isComplete && other.attachments.isEmpty)
+                    do {
+                        let exported = try await runtime.readTransactionExport(scope: projectScope,
+                            orderedTransactionIDs: nil, asOf: .init(validating: 1_800_000_000_000))
+                        #expect(exported.rows == rows)
+                        let selected = try await runtime.readTransactionExport(scope: projectScope,
+                            orderedTransactionIDs: rows.reversed().map(\.transactionId), asOf: exported.asOf)
+                        #expect(selected.rows == rows.reversed())
+                        #expect(try TransactionExportValues.cell(fieldID: "itemCategories", row: exported.rows[0]) == .text("\(account)-a"))
+                    } catch PropertyManagementReportFailure.incompleteReadiness { continue }
+                    return rows
+                }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func relatedItemHistory(_ runtime: LedgerOfflineClientRuntime) async throws -> DownloadedItemPlacementHistory {
+            let itemId = try ItemID(validating: "\(account)-item")
+            for try await history in runtime.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                if history.intervals.count == 2 {
+                    #expect(history.accountId == context.accountId && history.itemId == itemId)
+                    #expect(history.intervals.first?.scope == .project(projectScope.projectId!))
+                    #expect(history.intervals.last?.scope == .businessInventory)
+                    #expect(history.intervals.last?.endedAt != nil)
+                    #expect(history.isPartial) // Physical history is not a complete financial ledger.
+                    return history
+                }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func receipt(_ runtime: LedgerOfflineClientRuntime, kind: BudgetCategoryKind,
+                     revision: Int64? = nil) async throws -> TransactionReceiptSnapshot {
+            for try await update in runtime.watchTransactionReceipt(scope: scope, transactionId: transactionId) {
+                if case .ready(let value) = update, value.categoryKind == kind,
+                   revision == nil || value.categoryRevision == revision { return value }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func applied(_ runtime: LedgerOfflineClientRuntime, operationId: OperationID) async throws {
+            for try await rows in runtime.watchCategoryOperations() {
+                if let row = rows.first(where: { $0.operationId == operationId }) {
+                    if row.state.phase == .applied { return }
+                    if row.state.phase == .rejected { throw RuntimeInjectedFailure() }
+                }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func browser(_ runtime: LedgerOfflineClientRuntime, kind: BudgetCategoryKind,
+                     revision: Int64? = nil) async throws -> TransactionDetailSnapshot {
+            for try await update in runtime.watchTransactions(scope: scope) {
+                if case .ready = update { throw RuntimeInjectedFailure() } // Vendor coverage must remain explicitly partial.
+                if case .partial(let rows) = update,
+                   let row = rows.first(where: { $0.transactionId == transactionId }),
+                   row.category?.kind == kind, revision == nil || row.category?.revision == revision {
+                    #expect(rows.count == 1, "Inventory browser excludes Project and foreign Account Transactions")
+                    #expect(rows.allSatisfy { $0.classification.scope == scope && $0.principalId == context.principalId })
+                    return row
+                }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func edit(_ value: TransactionReceiptSnapshot, kind: BudgetCategoryKind) throws -> CategoryManagementCommand {
+            try CategoryManagementCommand(
+                operationId: CategoryManagementOperationIdentity.make(accountId: context.accountId, uuid: UUID()),
+                accountId: context.accountId, actorPrincipalId: context.principalId, capturedAt: Date(),
+                payload: .init(action: .edit, categoryId: value.categoryId,
+                    expectedRevision: UInt64(value.categoryRevision), name: BudgetCategoryName(validating: value.categoryName),
+                    kind: kind, excludesFromOverallBudget: false))
+        }
+        // Observe real downloaded tables without seeding rows or completeness.
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        func downloadedAcquisition() async throws {
+            let database = try #require(databases.values.last)
+            let stream = try database.watch(sql: "SELECT state,amount_minor_units,currency FROM item_acquisition_reviews WHERE id=? AND account_id=?",
+                parameters: ["\(account)-item",account]) {
+                    [try $0.getString(index: 0),$0.getStringOptional(index: 1),$0.getStringOptional(index: 2)]
+                }
+            for try await rows in stream where !rows.isEmpty {
+                #expect(rows == [["known","99","USD"]]); return
+            }
+            throw RuntimeInjectedFailure()
+        }
+        func downloadedPrice() async throws {
+            let database = try #require(databases.values.last)
+            let stream = try database.watch(sql: """
+                SELECT amount_minor_units,currency,revision FROM item_project_prices
+                WHERE account_id=? AND item_id=?
+                """, parameters: [account, "\(account)-item"]) {
+                    [try $0.getString(index: 0), try $0.getString(index: 1), try $0.getString(index: 2)]
+                }
+            for try await rows in stream where !rows.isEmpty {
+                #expect(rows == [["9223372036854775807", "USD", "1"]])
+                return
+            }
+            throw RuntimeInjectedFailure()
+        }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            databases.append(database)
+        }
+        var runtime = try await context.openRuntime(dependencies: dependencies)
+        do {
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: syncURL)
+            var downloadedDirectory = false
+            for try await categories in runtime.watchBudgetCategories() {
+                if categories.local.isCompleteForQuery, !categories.local.rows.isEmpty {
+                    downloadedDirectory = true
+                    break
+                }
+            }
+            #expect(downloadedDirectory)
+            let original = try await receipt(runtime, kind: .general)
+            let originalBrowser = try await browser(runtime, kind: .general)
+            #expect(originalBrowser.receipt == original)
+            #expect(originalBrowser.linkedItemCount == 0 && originalBrowser.receipt?.items.count == 1)
+            let originalProjectBrowser = try await projectBrowser(runtime)
+            let originalItemHistory = try await relatedItemHistory(runtime)
+            try await downloadedPrice()
+            try await downloadedAcquisition()
+            #expect(originalBrowser.source == "Café vendor")
+            #expect(originalBrowser.legacySubtotal?.minorUnits == 9_007_199_254_740_993)
+            #expect(originalBrowser.legacyTaxRatePct == "8.12345678901234567890")
+            #expect(originalBrowser.transactionDate == "2024-02-29")
+            #expect(originalBrowser.createdAtMilliseconds == 1709251200123)
+            #expect(originalBrowser.notes == "Preserved notes" && originalBrowser.paymentMethod == "Company card")
+            #expect(originalBrowser.hasEmailReceipt == false && originalBrowser.amount.minorUnits == 100)
+            #expect(original.items.first?.name == "Receipt Item")
+            #expect(original.items.first?.source == "Original vendor" && original.items.first?.currentSource == "Display vendor")
+            #expect(original.items.first?.currentSpaceName == "Current room" && original.items.first?.imageCount == 1)
+            #expect(original.items.first?.membership == .sold)
+            #expect(original.reconstruction?.reconstructedTotal.minorUnits == 100)
+            // Bypass the app's scope guard intentionally: the service itself
+            // must reject a malicious subscription to a populated other Account.
+            let database = try #require(databases.values.last)
+            let foreignScope = TransactionReceiptStreamIdentity(scope: .businessInventory(
+                accountId: try AccountID(validating: foreignAccount)))
+            let denied = try await database.syncStream(name: foreignScope.name, params: foreignScope.parameters).subscribe()
+            try await denied.waitForFirstSync()
+            for table in ["spike_transactions", "transaction_receipt_items", "spike_items", "spike_budget_categories", "spike_account_memberships"] {
+                let counts = try await database.getAll(sql: "SELECT count(*) FROM \(table) WHERE account_id=?",
+                    parameters: [foreignAccount]) { try $0.getInt(index: 0) }
+                #expect(counts == [0])
+            }
+            try await denied.unsubscribe()
+            try await runtime.close()
+
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            let offline = try await receipt(runtime, kind: .general)
+            try await downloadedPrice()
+            try await downloadedAcquisition()
+            #expect(try await projectBrowser(runtime) == originalProjectBrowser)
+            #expect(try await relatedItemHistory(runtime) == originalItemHistory)
+            #expect(try await browser(runtime, kind: .general) == originalBrowser)
+            #expect(offline.items == original.items)
+            let change = try edit(offline, kind: .itemized)
+            #expect(try await runtime.submit(change).localState == .queued)
+            let optimistic = try await receipt(runtime, kind: .itemized)
+            let optimisticBrowser = try await browser(runtime, kind: .itemized)
+            #expect(optimisticBrowser.receipt == optimistic)
+            #expect(optimisticBrowser.notes == originalBrowser.notes && optimisticBrowser.amount == originalBrowser.amount)
+            #expect(optimistic.auditStatus == .balanced && optimistic.items == original.items)
+            try await runtime.close()
+
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            #expect(try await runtime.pendingUploadCount() == 1)
+            let reopened = try await receipt(runtime, kind: .itemized)
+            #expect(try await browser(runtime, kind: .itemized) == optimisticBrowser)
+            #expect(reopened.items == original.items && reopened.auditStatus == .balanced)
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: syncURL)
+            try await applied(runtime, operationId: change.envelope.operationId)
+            let replicated = try await receipt(runtime, kind: .itemized, revision: original.categoryRevision + 1)
+            let replicatedBrowser = try await browser(runtime, kind: .itemized, revision: original.categoryRevision + 1)
+            #expect(replicatedBrowser.receipt == replicated)
+            #expect(replicatedBrowser.category?.revision == replicated.categoryRevision)
+            #expect(replicatedBrowser.notes == originalBrowser.notes && replicatedBrowser.amount == originalBrowser.amount)
+            let onlineReader = try await entry.onlineTransactionReceipts(authorization)
+            let server = try await onlineReader.read(transactionId: transactionId)
+            #expect(replicated == server)
+            #expect(replicated.items == original.items && replicated.reconstruction == original.reconstruction)
+            let restore = try edit(replicated, kind: .general)
+            #expect(try await runtime.submit(restore).localState == .queued)
+            try await applied(runtime, operationId: restore.envelope.operationId)
+            let restored = try await receipt(runtime, kind: .general, revision: replicated.categoryRevision + 1)
+            #expect(restored.items == original.items && restored.auditStatus == .notApplicable)
+            func changeReviewVisibility(_ mode: String) async throws {
+                var parts = try #require(URLComponents(url: revokeURL, resolvingAgainstBaseURL: false))
+                parts.queryItems = [URLQueryItem(name: "review",value: mode)]
+                var request = URLRequest(url: try #require(parts.url)); request.httpMethod = "POST"
+                let (_, response) = try await URLSession.shared.data(for: request)
+                #expect((response as? HTTPURLResponse)?.statusCode == 204)
+            }
+            let visibilityDatabase = try #require(databases.values.last)
+            try await changeReviewVisibility("ordinary")
+            let membershipChanges = try visibilityDatabase.watch(sql: "SELECT financial_access FROM spike_account_memberships WHERE account_id=? AND principal_id=?",
+                parameters: [account,principal]) { try $0.getString(index: 0) }
+            var restrictedMembershipDownloaded = false
+            for try await rows in membershipChanges where rows == ["none"] { restrictedMembershipDownloaded = true; break }
+            #expect(restrictedMembershipDownloaded)
+            try await downloadedAcquisition()
+            try await changeReviewVisibility("restricted")
+            let costChanges = try visibilityDatabase.watch(sql: "SELECT count(*) FROM item_acquisition_reviews WHERE id=?",
+                parameters: ["\(account)-item"]) { try $0.getInt(index: 0) }
+            var protectedCostWithdrawn = false
+            for try await counts in costChanges where counts == [0] { protectedCostWithdrawn = true; break }
+            #expect(protectedCostWithdrawn)
+            #expect(try await visibilityDatabase.get(sql: "SELECT count(*) FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='active'",
+                parameters: [account,principal]) { try $0.getInt(index: 0) } == 1)
+            try await changeReviewVisibility("ordinary")
+            try await downloadedAcquisition()
+            var revokeRequest = URLRequest(url: revokeURL)
+            revokeRequest.httpMethod = "POST"
+            let (_, revokeResponse) = try await URLSession.shared.data(for: revokeRequest)
+            #expect((revokeResponse as? HTTPURLResponse)?.statusCode == 204)
+            let currentDatabase = try #require(databases.values.last)
+            let remaining = try currentDatabase.watch(sql: """
+                SELECT count(*) FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='active'
+                UNION ALL SELECT count(*) FROM spike_transactions WHERE account_id=?
+                UNION ALL SELECT count(*) FROM transaction_receipt_items WHERE account_id=?
+                UNION ALL SELECT count(*) FROM spike_budget_categories WHERE account_id=?
+                UNION ALL SELECT count(*) FROM item_project_prices WHERE account_id=?
+                UNION ALL SELECT count(*) FROM item_acquisition_reviews WHERE account_id=?
+                """, parameters: [account, principal, account, account, account, account, account]) { try $0.getInt(index: 0) }
+            var withdrawn = false
+            for try await counts in remaining {
+                if counts == [0, 0, 0, 0, 0, 0] { withdrawn = true; break }
+            }
+            #expect(withdrawn)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await runtime.readDownloadedItemPlacementHistory(accountId: context.accountId,
+                    itemId: ItemID(validating: "\(account)-item"))
+            }
+            var deniedBrowser = runtime.watchTransactions(scope: scope).makeAsyncIterator()
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) { try await deniedBrowser.next() }
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) {
+                try await runtime.readTransactionExport(scope: projectScope, orderedTransactionIDs: nil,
+                    asOf: .init(validating: 1_800_000_000_000))
+            }
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) {
+                try await runtime.readDownloadedTransactionReceipt(scope: scope, transactionId: transactionId)
+            }
+            await #expect(throws: CategoryManagementFailure.categoryUnavailable) {
+                try await runtime.submit(edit(restored, kind: .itemized))
+            }
+            try await runtime.close()
+            try await auth.signOut(scope: .local)
+        } catch {
+            try? await runtime.close()
+            throw error
+        }
+    }
+
+    @Test("SDK upload is cancelled and drained before workspace close or removal",
+          .timeLimit(.minutes(1)), arguments: [false, true])
+    func sdkUploadDrainsBeforeClose(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "sdk-upload-close-\(removing)")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(events: events)
+        _ = try await runtime.createClient(context.clientCommand(id: "sdk-close"))
+        let gate = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let appliers = LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation))
+        try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        await gate.waitUntilEntered()
+        let close = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        var signals = cancelled.stream.makeAsyncIterator()
+        _ = await signals.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        }
+        await gate.release()
+        try await close.value
+        if removing {
+            await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
+                _ = try await context.openRuntime()
+            }
+        } else {
+            let reopened = try await context.openRuntime()
+            #expect(try await reopened.pendingWorkSummary().queuedOperationCount == 1)
+            try await reopened.close()
+        }
+    }
+
+    @Test("One runtime owns SDK sync for a physical workspace database", .timeLimit(.minutes(1)))
+    func sdkConnectionIsExclusiveAcrossWorkspaceHandles() async throws {
+        let context = try RuntimeTestContext(suffix: "sdk-exclusive")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        // Both handles use the SAME encrypted database file, not parallel
+        // fixtures. Close of either would disconnect a shared SDK coordinator.
+        let peer = try await context.openRuntime()
+        let gate = ManualGate()
+        await gate.release()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let appliers = LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace) {
+            try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        }
+        try await peer.close()
+
+        var failing = context.dependencies()
+        failing.validateStructuredDatabase = { _ in throw RuntimeInjectedFailure() }
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(
+            stage: .structuredDatabaseValidation, structuredDatabaseCleanup: .succeeded)) {
+            _ = try await context.openRuntime(dependencies: failing)
+        }
+        // A pending open reserves ownership before initialization can suspend.
+        let openingGate = ManualGate()
+        var openingDependencies = context.dependencies()
+        let validate = openingDependencies.validateStructuredDatabase
+        openingDependencies.validateStructuredDatabase = { database in
+            await openingGate.wait()
+            try await validate(database)
+        }
+        let opening = Task { try await context.openRuntime(dependencies: openingDependencies) }
+        await openingGate.waitUntilEntered()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace) {
+            try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        }
+        await openingGate.release()
+        let latePeer = try await opening.value
+        try await latePeer.close()
+
+        try await runtime.startSync(credentialProvider: { nil }, appliers: appliers)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncAlreadyStarted) {
+            _ = try await context.openRuntime()
+        }
+        try await runtime.close()
+        let reopened = try await context.openRuntime()
+        try await reopened.startSync(credentialProvider: { nil }, appliers: appliers)
+        try await reopened.close()
+    }
+
+    @Test("SDK credential refresh drains before workspace databases close", .timeLimit(.minutes(1)))
+    func sdkCredentialRefreshDrainsBeforeClose() async throws {
+        let context = try RuntimeTestContext(suffix: "sdk-credential-close")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(events: events)
+        let refresh = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let uploadGate = ManualGate()
+        await uploadGate.release()
+        try await runtime.startSync(credentialProvider: {
+            await withTaskCancellationHandler {
+                await refresh.wait()
+            } onCancel: { cancelled.continuation.yield(()) }
+            return nil
+        }, appliers: LedgerPowerSyncCommandAppliers(
+            clientCreation: RuntimeGatedClientApplier(gate: uploadGate, cancelled: cancelled.continuation)))
+        await refresh.waitUntilEntered()
+        let close = Task { try await runtime.close() }
+        var signals = cancelled.stream.makeAsyncIterator()
+        _ = await signals.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        await refresh.release()
+        try await close.value
+        #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+    }
+
+    @Test("Removal from SDK credential callback drains outside that callback", .timeLimit(.minutes(1)))
+    func reportedRemovalDuringSDKCredentialsDoesNotDeadlock() async throws {
+        let context = try RuntimeTestContext(suffix: "sdk-credential-removal")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(events: events)
+        let scope = try LedgerWorkspaceRemovalRegistry.identity(environment: context.environment.manifest.environment,
+            principalId: context.principalId, accountId: context.accountId)
+        let gate = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let uploadGate = ManualGate()
+        await uploadGate.release()
+        let start = Task {
+            try await runtime.startSync(credentialProvider: {
+                try await context.accessCoordinator.reportRemoval(identity: scope, persist: {})
+                await withTaskCancellationHandler { await gate.wait() }
+                    onCancel: { cancelled.continuation.yield(()) }
+                throw SupabaseWorkspaceAuthorization.Failure.accessDenied
+            }, appliers: .init(clientCreation: RuntimeGatedClientApplier(
+                gate: uploadGate, cancelled: cancelled.continuation)))
+        }
+        await gate.waitUntilEntered()
+        let cleanup = Task { try await context.accessCoordinator.finishReportedRemoval(identity: scope, persist: {}) }
+        var signals = cancelled.stream.makeAsyncIterator()
+        _ = await signals.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await gate.release()
+        do { try await start.value }
+        catch { #expect(error is CancellationError || error as? LedgerOfflineClientRuntimeFailure == .runtimeClosed) }
+        try await cleanup.value
+        #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(events.values.contains(.attachmentDatabaseCloseAttempted))
+    }
+
     @Test("Workspace close and removal cancel uploads and drain before closing databases", arguments: [false, true])
     func ownedUploadDrainsBeforeClose(removing: Bool) async throws {
         let context = try RuntimeTestContext(suffix: "owned-upload-drain-\(removing)")
@@ -1536,6 +3393,59 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         try await peer.close()
         peerContext.remove()
+        context.remove()
+    }
+
+    @Test("Removal reported inside upload fences immediately; external cleanup drains and retains work", arguments: [false, true])
+    func reportedRemovalDoesNotWaitForItsOwnUpload(persistenceFails: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "reported-removal-\(persistenceFails)")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(events: events)
+        let identity = try LedgerWorkspaceRemovalRegistry.identity(environment: context.environment.manifest.environment,
+            principalId: context.principalId, accountId: context.accountId)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.workspaceMembershipNotReady) {
+            try await context.accessCoordinator.finishReportedRemoval(identity: identity, persist: {})
+        }
+        _ = try await runtime.createClient(context.clientCommand(id: "reported-removal"))
+        let media = try context.capture(id: "reported-removal-media")
+        let receipt = try await runtime.captureAttachment(media)
+        let removals = runtime.watchAccessRemoval()
+        let gate = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let upload = Task {
+            try await runtime.uploadPendingCommands(using: .init(clientCreation: RuntimeReportingClientApplier(
+                coordinator: context.accessCoordinator, identity: identity, gate: gate,
+                cancelled: cancelled.continuation, persistenceFails: persistenceFails)))
+        }
+        // Reaching this gate proves reporting returned from inside the owned
+        // upload before that upload finished (the former self-drain hazard).
+        await gate.waitUntilEntered()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await runtime.pendingWorkSummary() }
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        let cleanup = Task {
+            var iterator = removals.makeAsyncIterator()
+            _ = await iterator.next()
+            try await context.accessCoordinator.finishReportedRemoval(identity: identity, persist: {})
+        }
+        var cancellation = cancelled.stream.makeAsyncIterator()
+        _ = await cancellation.next()
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await gate.release()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await upload.value }
+        try await cleanup.value
+        #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(events.values.contains(.attachmentDatabaseCloseAttempted))
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
+            try await context.openRuntime()
+        }
+        // Test-only inspection bypasses injected denial storage, not application
+        // recovery authority. Neither pending command nor media was deleted.
+        var inspection = context.dependencies()
+        inspection.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+        let retained = try await context.openRuntime(dependencies: inspection)
+        #expect(try await retained.pendingWorkSummary().queuedOperationCount == 1)
+        #expect(try await retained.resolveLocalAttachmentBytes(for: receipt) == media.bytes)
+        try await retained.close()
         context.remove()
     }
 
@@ -2738,14 +4648,18 @@ private final class RuntimeTestContext: @unchecked Sendable {
     let root: URL
     let accessCoordinator = LedgerWorkspaceAccessCoordinator()
     let environment: ValidatedLedgerEnvironment
-    let principalId = try! PrincipalID(validating: "principal-runtime")
-    let accountId = try! AccountID(validating: "account-runtime")
+    let principalId: PrincipalID
+    let accountId: AccountID
     let databaseKey = try! LedgerPowerSyncEncryptionKey(
         hexadecimal: String(repeating: "1a", count: 32)
     )
     let mediaKeyBytes = Data(repeating: 0x42, count: 32)
 
-    init(suffix: String, namespace: String = "apps.nine4.ledger.runtime-tests") throws {
+    init(suffix: String, namespace: String = "apps.nine4.ledger.runtime-tests",
+         accountId: AccountID = try! AccountID(validating: "account-runtime"),
+         principalId: PrincipalID = try! PrincipalID(validating: "principal-runtime")) throws {
+        self.accountId = accountId
+        self.principalId = principalId
         root =
             FileManager.default.temporaryDirectory
             .appendingPathComponent(
@@ -2985,6 +4899,64 @@ private final class WeakVaultRecorder: @unchecked Sendable {
         lock.lock()
         storage = vault
         lock.unlock()
+    }
+}
+
+private actor RuntimeLocalCategoryApplier: CategoryManagementCommandApplying {
+    let rpc: SupabaseCategoryManagementRPC
+    let loseFirstResponse: Bool
+    private(set) var responses: [CategoryManagementServerResult] = []
+
+    init(rpc: SupabaseCategoryManagementRPC, loseFirstResponse: Bool) {
+        self.rpc = rpc
+        self.loseFirstResponse = loseFirstResponse
+    }
+
+    func apply(_ command: CategoryManagementCommand) async throws -> CategoryManagementServerResult {
+        let result = try await rpc.apply(command)
+        responses.append(result)
+        if loseFirstResponse && responses.count == 1 { throw URLError(.networkConnectionLost) }
+        return result
+    }
+}
+
+private struct RuntimeCategoryApplier: CategoryManagementCommandApplying {
+    let rejected: Bool
+    func apply(_ command: CategoryManagementCommand) async throws -> CategoryManagementServerResult {
+        let e = command.envelope
+        let hash = try command.fingerprint.sha256
+        return CategoryManagementServerResult(operation_id: e.operationId.rawValue,
+            account_id: e.accountId.rawValue, actor_principal_id: e.actorPrincipalId.rawValue,
+            command_type: "manage_categories", contract_version: "category-management-v1",
+            command_fingerprint: hash, envelope_sha256: hash, request_sha256: nil,
+            subject_id: e.accountId.rawValue, phase: rejected ? "rejected" : "applied",
+            result_code: rejected ? nil : "categories_updated",
+            error_code: rejected ? "category_name_unavailable" : nil,
+            client_created_at_ms: 1_788_600_000_000, server_received_at_ms: 1_788_600_000_100,
+            completed_at_ms: 1_788_600_000_200)
+    }
+}
+
+private struct RuntimeReportingClientApplier: ClientCreationCommandApplying {
+    let coordinator: LedgerWorkspaceAccessCoordinator
+    let identity: String
+    let gate: ManualGate
+    let cancelled: AsyncStream<Void>.Continuation
+    let persistenceFails: Bool
+
+    func apply(_ request: ClientCreationUploadRequest) async throws -> ClientCreationServerResult {
+        do {
+            try await coordinator.reportRemoval(identity: identity) {
+                if persistenceFails { throw RuntimeInjectedFailure() }
+            }
+            #expect(!persistenceFails)
+        } catch {
+            #expect(persistenceFails)
+            #expect(error as? LedgerOfflineClientRuntimeFailure == .removalPersistenceFailed)
+        }
+        await withTaskCancellationHandler { await gate.wait() }
+            onCancel: { cancelled.yield(()) }
+        throw SupabaseWorkspaceAuthorization.Failure.accessDenied
     }
 }
 

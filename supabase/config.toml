@@ -411,3 +411,20 @@ enabled = true
 # declarative_schema_path = "./schemas"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+[functions.verify-transaction-attachment]
+enabled = true
+verify_jwt = true
+import_map = "./functions/verify-transaction-attachment/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/verify-transaction-attachment/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/verify-transaction-attachment/*.html" ]
+
+[functions.verify-expense-attachment]
+enabled = true
+verify_jwt = true
+import_map = "./functions/verify-expense-attachment/deno.json"
+entrypoint = "./functions/verify-expense-attachment/index.ts"

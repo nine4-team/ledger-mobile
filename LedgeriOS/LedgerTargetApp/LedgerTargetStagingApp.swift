@@ -11,18 +11,51 @@ struct LedgerTargetStagingApp: App {
 
     init() {
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-capture-batch") {
+            rootView = AnyView(MediaCaptureBatchUITestFixture())
+            return
+        }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-transaction-card") {
+            rootView = AnyView(TransactionCardUITestFixture())
+            return
+        }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-transaction-browser") {
+            rootView = AnyView(TransactionBrowserUITestFixture(projectPayment:
+                ProcessInfo.processInfo.arguments.contains("--project-payment")))
+            return
+        }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-transaction-audit") {
+            rootView = AnyView(TransactionAuditPanelUITestFixture())
+            return
+        }
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-workspace-checklist") {
             rootView = AnyView(ActiveWorkspaceChecklistUITestFixtureView())
             return
         }
         #endif
         do {
+            guard !TargetSupabaseConfiguration.isLocal
+                || TargetSupabaseConfiguration.publishableKey.hasPrefix("sb_publishable_") else {
+                throw LedgerEnvironmentValidationFailure.unsafeResourceIdentifier(.auth)
+            }
             let dependencies = try TargetAppBootstrap.start(
                 manifest: TargetStagingProjection.manifest,
                 policy: TargetStagingProjection.policy
             ) { environment in
                 TargetAppDependencies(environment: environment)
             }
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-transaction-capture"),
+               let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--capture-fixture-id=") }),
+               let fixtureID = UUID(uuidString: String(argument.dropFirst("--capture-fixture-id=".count))) {
+                rootView = AnyView(TransactionCaptureUITestFixture(environment: dependencies.environment, fixtureID: fixtureID))
+                return
+            }
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-offline-entry") {
+                rootView = AnyView(OfflineAccountEntryUITestFixture(environment: dependencies.environment))
+                return
+            }
+            #endif
             rootView = AnyView(TargetStagingRootView(
                 environment: dependencies.environment,
                 failureCode: nil
@@ -61,7 +94,7 @@ private struct TargetStagingRootView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("LOCAL SPIKE • NO HOSTED SERVICES")
+            Text("SUPABASE IMPLEMENTATION • NOT RELEASE READY")
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -72,30 +105,22 @@ private struct TargetStagingRootView: View {
             Group {
                 if let environment {
                     let diagnostics = environment.diagnostics
-                    ScrollView {
                       VStack(alignment: .leading, spacing: 16) {
-                        Section("Target Environment") {
-                            LabeledContent("Environment", value: diagnostics.environment.rawValue)
+                        LabeledContent("Environment", value: diagnostics.environment.rawValue)
+                        DisclosureGroup("Build diagnostics") {
                             LabeledContent("Build profile", value: diagnostics.buildProfile.rawValue)
                             LabeledContent("Bundle", value: diagnostics.bundleIdentifier)
-                        }
-
-                        Section("Contract Versions") {
                             LabeledContent("Schema", value: diagnostics.contractVersions.schema)
                             LabeledContent("Query", value: diagnostics.contractVersions.query)
                             LabeledContent("Operation", value: diagnostics.contractVersions.operation)
                             LabeledContent("Sync", value: diagnostics.contractVersions.sync)
+                            Text("Sign-in is configured for Ledger's Supabase project. Hosted database setup, live sync and offline startup are not complete. Do not use this build for real work.")
                         }
 
-                        Section("Provisioning") {
-                            Text("This build uses encrypted PowerSync storage and an isolated local Supabase schema. Hosted sync and production access are disabled.")
+                        TargetOnlineAccountEntryView(environment: environment) { selection, entry in
+                            AnyView(OfflineProviderSpikeView(environment: environment, selection: selection, entry: entry))
                         }
-
-                        OfflineProviderSpikeView(environment: environment)
-                      }.frame(maxWidth: .infinity, alignment: .leading).padding()
-                    }
-                    .itemThumbnailViewport()
-                    .accessibilityIdentifier("target-workspace-scroll")
+                      }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding()
                 } else {
                     ContentUnavailableView(
                         "Target Startup Refused",
@@ -110,12 +135,43 @@ private struct TargetStagingRootView: View {
 
 private struct OfflineProviderSpikeView: View {
     let environment: ValidatedLedgerEnvironment
-    @State private var model = OfflineClientSpikeModel()
+    @State private var model: OfflineClientSpikeModel
+
+    init(environment: ValidatedLedgerEnvironment, selection: TargetWorkspaceSelection, entry: SupabaseOnlineSignIn) {
+        self.environment = environment
+        let authorization = selection.authorization
+        _model = State(initialValue: OfflineClientSpikeModel(authorization: authorization, prepareWorkspace: { runtime in
+            if let admission = selection.offlineAdmission {
+                try entry.requireOfflineAdmission(admission)
+                try await runtime.requireMatchingDownloadedMembership(authorization)
+                if let endpoint = TargetSupabaseConfiguration.powerSyncURL, entry.hasStoredSession {
+                    try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: endpoint)
+                }
+            } else {
+                guard let endpoint = TargetSupabaseConfiguration.powerSyncURL else {
+                    throw SupabaseOnlineSignIn.Failure.syncNotConfigured
+                }
+                try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: endpoint)
+                try await entry.rememberDownloadedWorkspace(authorization, account: selection.account, runtime: runtime)
+            }
+        }, finishRemoval: {
+            try await entry.finishReportedWorkspaceRemoval(authorization)
+        }))
+    }
 
     var body: some View {
         WorkspaceAccessGate(access: model.access) {
+        NavigationStack {
+        ScrollView {
+        VStack {
             workspaceContent
         }
+        }
+        .itemThumbnailViewport()
+        .accessibilityIdentifier("target-workspace-scroll")
+        }
+        }
+        .task { await model.start(validatedEnvironment: environment) }
         .onChange(of: model.access.isLocked) { _, locked in
             if locked { model.activeWorkspaceToSpaceChecklist.closeVendorDocumentReview() }
         }
@@ -174,9 +230,6 @@ private struct OfflineProviderSpikeView: View {
             archive: model.projectArchive,
             projectSetup: model.projectSetup
         )
-        .task {
-            await model.start(validatedEnvironment: environment)
-        }
         if let pendingWork = model.pendingWork {
             AccountPendingWorkStagingExerciseView(model: pendingWork)
         }
@@ -198,6 +251,10 @@ private final class OfflineClientSpikeModel {
     private var startInProgress = false
     private let accountId: AccountID
     private let principalId: PrincipalID
+    private let authorization: WorkspaceMembershipAuthorization
+    private let prepareWorkspace: @MainActor (LedgerOfflineClientRuntime) async throws -> Void
+    private let finishRemoval: @MainActor () async throws -> Void
+    private var removalCleanup: Task<Void, Never>?
     let clientBrowser: ClientBrowsingStagingExercise
     let clientArchive: ClientArchiveBrowserStagingExercise
     let projectBrowser: ProjectBrowsingStagingExercise
@@ -209,12 +266,15 @@ private final class OfflineClientSpikeModel {
     let spaceChecklistEditor: SpaceChecklistEditorStagingExercise
     let activeWorkspaceToSpaceChecklist: ActiveWorkspaceToSpaceChecklistStagingExercise
     let transferDestinations: TransferDestinationSelectionStagingExercise
-    private let stagingProjectId: ProjectID
-    private let syntheticTransferSource: ProjectSummary
 
-    init() {
-        let accountId = try! AccountID(validating: "account-primary")
-        let principalId = try! PrincipalID(validating: "principal-owner")
+    init(authorization: WorkspaceMembershipAuthorization,
+         prepareWorkspace: @escaping @MainActor (LedgerOfflineClientRuntime) async throws -> Void,
+         finishRemoval: @escaping @MainActor () async throws -> Void) {
+        self.authorization = authorization
+        self.prepareWorkspace = prepareWorkspace
+        self.finishRemoval = finishRemoval
+        let accountId = authorization.accountId
+        let principalId = authorization.principalId
         let projectBrowser = ProjectBrowsingStagingExercise(accountId: accountId)
         let activeWorkspaceProjectBrowser = ProjectBrowsingStagingExercise(accountId: accountId)
 
@@ -320,25 +380,6 @@ private final class OfflineClientSpikeModel {
         transferDestinations = TransferDestinationSelectionStagingExercise(
             accountId: accountId
         )
-        stagingProjectId = try! ProjectID(validating: "project-primary")
-        let syntheticClientId = try! ClientID(validating: "client-primary")
-        let syntheticClient = try! ClientSummary(
-            id: syntheticClientId,
-            accountId: accountId,
-            displayName: ClientDisplayName(validating: "Synthetic Client"),
-            lifecycle: .active,
-            createdAt: Date(timeIntervalSince1970: 1_788_600_000),
-            updatedAt: Date(timeIntervalSince1970: 1_788_600_000)
-        )
-        syntheticTransferSource = try! ProjectSummary(
-            id: ProjectID(validating: "project-primary"),
-            accountId: accountId,
-            clientId: syntheticClientId,
-            client: syntheticClient,
-            displayName: ProjectDisplayName(validating: "Synthetic Source Project"),
-            description: nil,
-            lifecycle: .active
-        )
     }
 
     var canCreate: Bool {
@@ -360,7 +401,23 @@ private final class OfflineClientSpikeModel {
                 accountId: accountId
             )
             openedRuntime = runtime
-            access.observe(runtime.watchAccessRemoval())
+            databaseState = "Opening authorized workspace…"
+            // Subscribe before sync startup: denial can arrive while the first
+            // download is still pending. Never drain from an SDK callback.
+            let removals = runtime.watchAccessRemoval()
+            let finishRemoval = self.finishRemoval
+            removalCleanup = Task { [weak self] in
+                for await _ in removals {
+                    guard !Task.isCancelled else { return }
+                    self?.access.showRemoval()
+                    do { try await finishRemoval() }
+                    catch {
+                        self?.diagnostic = "Account access is locked, but removal cleanup could not finish. Pending work is retained."
+                    }
+                    return
+                }
+            }
+            try await prepareWorkspace(runtime)
             let cipher = try await runtime.encryptionCipher()
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
@@ -372,7 +429,7 @@ private final class OfflineClientSpikeModel {
             )
             await projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
             await spaceDestinations.open(
-                scope: .project(stagingProjectId),
+                scope: .businessInventory,
                 runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
             )
             await spaceBrowser.start(
@@ -386,10 +443,6 @@ private final class OfflineClientSpikeModel {
                 runtime: ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter.adapt(runtime)
             )
             await spaceChecklistEditor.start()
-            await transferDestinations.open(
-                source: syntheticTransferSource,
-                runtime: TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)
-            )
             await clientBrowser.start(
                 runtime: ClientBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
@@ -421,6 +474,7 @@ private final class OfflineClientSpikeModel {
             await transferDestinations.stop()
             openedRuntime = nil
             try await runtime.close()
+            await stopRemovalCleanup()
             self.runtime = nil
             databaseState = "Closed"
         } catch is CancellationError {
@@ -432,10 +486,18 @@ private final class OfflineClientSpikeModel {
             await closeAfterFailedStart(openedRuntime)
             databaseState = "Access removed"
             diagnostic = failure.diagnosticCode
+        } catch SupabaseOnlineSignIn.Failure.syncNotConfigured {
+            await closeAfterFailedStart(openedRuntime)
+            databaseState = "Sync not configured"
+            diagnostic = "The PowerSync service still needs setup. No downloaded data or pending work was deleted."
+        } catch LedgerOfflineClientRuntimeFailure.workspaceMembershipNotReady {
+            await closeAfterFailedStart(openedRuntime)
+            databaseState = "Waiting for access data"
+            diagnostic = "Account data must finish syncing or access reconciliation before this workspace can open. Existing data and pending work are retained."
         } catch {
             await closeAfterFailedStart(openedRuntime)
-            databaseState = "Unavailable"
-            diagnostic = "local_runtime_failed"
+            databaseState = access.isLocked ? "Access removed" : "Unavailable"
+            diagnostic = diagnostic ?? "local_runtime_failed"
         }
     }
 
@@ -457,7 +519,15 @@ private final class OfflineClientSpikeModel {
         if let openedRuntime {
             try? await openedRuntime.close()
         }
+        await stopRemovalCleanup()
         runtime = nil
+    }
+
+    private func stopRemovalCleanup() async {
+        let task = removalCleanup
+        removalCleanup = nil
+        task?.cancel()
+        await task?.value
     }
 
     func openProjectSpaces(_ projectId: ProjectID) async {
@@ -536,10 +606,10 @@ private enum TargetStagingProjection {
     )
 
     static let resources: [LedgerTargetComponent: String] = [
-        .auth: "unprovisioned-auth-staging",
-        .structuredData: "unprovisioned-supabase-staging",
-        .powerSync: "unprovisioned-powersync-staging",
-        .storage: "unprovisioned-storage-staging",
+        .auth: TargetSupabaseConfiguration.projectId,
+        .structuredData: TargetSupabaseConfiguration.projectId,
+        .powerSync: TargetSupabaseConfiguration.isLocal ? "ledger_powersync_local" : "unprovisioned-powersync-staging",
+        .storage: TargetSupabaseConfiguration.projectId,
         .mcp: "unprovisioned-mcp-staging",
         .telemetry: "unprovisioned-telemetry-staging",
         .externalRoutes: "unprovisioned-routes-staging",
@@ -547,24 +617,24 @@ private enum TargetStagingProjection {
     ]
 
     static let manifest = LedgerEnvironmentManifest(
-        environment: .targetStaging,
-        buildProfile: .targetStaging,
+        environment: TargetSupabaseConfiguration.environment,
+        buildProfile: TargetSupabaseConfiguration.buildProfile,
         bundleIdentifier: "apps.nine4.ledger.staging",
-        displayName: "Ledger STAGING",
-        localDataNamespacePrefix: "apps.nine4.ledger.target",
+        displayName: TargetSupabaseConfiguration.isLocal ? "Ledger LOCAL" : "Ledger STAGING",
+        localDataNamespacePrefix: TargetSupabaseConfiguration.isLocal ? "apps.nine4.ledger.target.local" : "apps.nine4.ledger.target",
         contractVersions: versions,
         resources: LedgerTargetComponent.allCases.map { component in
             LedgerEnvironmentResource(
                 component: component,
-                environment: .targetStaging,
+                environment: TargetSupabaseConfiguration.environment,
                 publicIdentifier: resources[component]!
             )
         }
     )
 
     static let policy = LedgerEnvironmentPolicy(
-        expectedEnvironment: .targetStaging,
-        expectedBuildProfile: .targetStaging,
+        expectedEnvironment: TargetSupabaseConfiguration.environment,
+        expectedBuildProfile: TargetSupabaseConfiguration.buildProfile,
         expectedBundleIdentifier: "apps.nine4.ledger.staging",
         expectedContractVersions: versions,
         allowedResourceIdentifiers: resources.mapValues { [$0] },

@@ -39,24 +39,10 @@ public enum ItemCardThumbnailGenerator {
             throw ItemCardThumbnailGenerationFailure.sourceMismatch
         }
         #if canImport(ImageIO)
-        guard let source = CGImageSourceCreateWithData(originalBytes as CFData,
-                [kCGImageSourceShouldCache: false] as CFDictionary),
-              CGImageSourceGetCount(source) > 0,
-              CGImageSourceGetStatus(source) == .statusComplete,
-              CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let sourceWidth = properties[kCGImagePropertyPixelWidth] as? Int,
-              let sourceHeight = properties[kCGImagePropertyPixelHeight] as? Int,
-              sourceWidth > 0, sourceHeight > 0 else { throw ItemCardThumbnailGenerationFailure.invalidImage }
-        // ImageIO can report complete and synthesize pixels for a truncated
-        // JPEG. This recipe requires its explicit end marker, rather than
-        // publishing that partial decode as a verified derivative.
-        if CGImageSourceGetType(source) as String? == "public.jpeg",
-           !originalBytes.suffix(2).elementsEqual([UInt8(0xff),UInt8(0xd9)]) {
-            throw ItemCardThumbnailGenerationFailure.invalidImage
-        }
-        let orientation = properties[kCGImagePropertyOrientation] as? Int ?? 1
-        guard (1...8).contains(orientation) else { throw ItemCardThumbnailGenerationFailure.invalidImage }
+        let original = try OriginalImageSource(bytes: originalBytes)
+        let source = original.source
+        let sourceWidth = original.width, sourceHeight = original.height
+        let orientation = original.orientation
         let limit = min(maximumDimension,max(sourceWidth,sourceHeight))
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -91,3 +77,34 @@ public enum ItemCardThumbnailGenerator {
         #endif
     }
 }
+
+#if canImport(ImageIO)
+/// The same original-file checks for capture and thumbnail generation. Keeps
+/// compressed bytes intact and avoids allocating full-resolution decoded pixels.
+struct OriginalImageSource {
+    let source: CGImageSource
+    let width: Int
+    let height: Int
+    let orientation: Int
+
+    init(bytes: Data) throws {
+        guard let source = CGImageSourceCreateWithData(bytes as CFData,
+                [kCGImageSourceShouldCache: false] as CFDictionary),
+              CGImageSourceGetCount(source) > 0,
+              CGImageSourceGetStatus(source) == .statusComplete,
+              CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int,
+              width > 0, height > 0 else { throw ItemCardThumbnailGenerationFailure.invalidImage }
+        // ImageIO can otherwise synthesize pixels for a truncated JPEG.
+        if CGImageSourceGetType(source) as String? == "public.jpeg",
+           !bytes.suffix(2).elementsEqual([UInt8(0xff), UInt8(0xd9)]) {
+            throw ItemCardThumbnailGenerationFailure.invalidImage
+        }
+        let orientation = properties[kCGImagePropertyOrientation] as? Int ?? 1
+        guard (1...8).contains(orientation) else { throw ItemCardThumbnailGenerationFailure.invalidImage }
+        self.source = source; self.width = width; self.height = height; self.orientation = orientation
+    }
+}
+#endif

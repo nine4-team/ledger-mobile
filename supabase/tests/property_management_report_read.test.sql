@@ -81,8 +81,8 @@ update spike_account_memberships set financial_access='full'
 update ledger_private.item_client_payment_connections set ended_at='2026-09-03',ended_by_principal_id='principal-owner'
  where id in ('report-link-a','report-link-b');
 set local role authenticated;
-select is((select count(id) from ledger_private.item_client_payment_connections where account_id='account-primary'),0::bigint,
- 'Closed relationship history is retained but excluded from current read policy');
+select is((select count(id) from ledger_private.item_client_payment_connections where account_id='account-primary'),2::bigint,
+ 'Full financial reader retains closed relationship history for payment details');
 select is(spike_read_property_management_report('account-primary','report-read-project','USD')#>'{items,0,accounting}',
  'null'::jsonb,'Closed links cannot keep an Item eligible');
 reset role;
@@ -93,8 +93,10 @@ values ('report-link-departed','account-primary','report-read-project','client-e
 update public.spike_item_placements set ended_at='2026-09-03',ended_by_principal_id='principal-owner'
  where id='report-read-p2';
 set local role authenticated;
-select is((select count(id) from ledger_private.item_client_payment_connections where account_id='account-primary'),0::bigint,
- 'Open link on a departed placement is not current read evidence');
+select is((select count(link.id) from ledger_private.item_client_payment_connections link
+ join public.spike_item_placements placement on placement.account_id=link.account_id and placement.id=link.placement_id
+ where link.account_id='account-primary' and link.ended_at is null and placement.ended_at is null),0::bigint,
+ 'Open link on a departed placement is retained history, not current report evidence');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
 reset role;
 update spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';

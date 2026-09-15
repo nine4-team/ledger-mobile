@@ -122,6 +122,28 @@ Private media is rendered through an authenticated request or short-lived
 access URL resolved at use time. That access URL is not stored as attachment
 identity in synchronized data.
 
+### User-Initiated Image Transfer
+
+Image transfer actions operate on the selected authorized image bytes, not a
+storage URL, bearer token or local path. **Copy Image** places those bytes on the
+platform clipboard only after revalidating the live Account and parent
+reference. **Paste Image** is an explicit platform-authorized user action in
+supported Item, lightweight capture, Space and Transaction media-add flows; it
+creates a new destination attachment relationship and reports success only
+after the durable local capture receipt exists. The UI must not read the
+clipboard merely to decide whether to render the Paste action.
+
+**Save to Device** writes through the iOS Photos add-only flow on iOS and a
+user-selected file destination on macOS. Cancellation is silent; denied access,
+unavailable bytes and failed writes remain visible and retryable. Share remains
+a separate action.
+
+Every copy, paste and save attempt revalidates scope, permitted media kind,
+capacity, in-flight operation state and learned revocation. Paste follows the
+same retention and eventual deletion policy as any other new attachment under
+O-023. Once authorized bytes have been copied or saved to an external
+destination, Ledger cannot recall that external copy.
+
 ### Offline Display
 
 - If protected local source bytes exist, display them immediately.

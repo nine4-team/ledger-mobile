@@ -844,56 +844,11 @@ struct TransactionDetailView: View {
     // MARK: - Hero Card
 
     private var heroCard: some View {
-        Card {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
-                    .font(Typography.h2)
-                    .foregroundStyle(BrandColors.textPrimary)
-
-                HStack(spacing: Spacing.xs) {
-                    Text("Amount:")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textPrimary)
-                }
-
-                HStack(spacing: Spacing.xs) {
-                    Text("Date:")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textPrimary)
-                }
-
-                HStack(spacing: Spacing.xs) {
-                    Text("Project:")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    FindableText(TransactionDisplayCalculations.projectLabel(
-                        for: currentTransaction,
-                        projects: accountContext.allProjects
-                    ))
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textPrimary)
-                }
-
-                let displayCategoryName = selectedCategory?.name
-                    ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : nil)
-                if let displayCategoryName, !displayCategoryName.isEmpty {
-                    HStack(spacing: Spacing.xs) {
-                        Text("Budget Category:")
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
-                        FindableText(displayCategoryName)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textPrimary)
-                    }
-                }
-            }
-        }
+        TransactionHeroPresentation(title: TransactionDisplayCalculations.displayName(for: currentTransaction),
+            amount: TransactionDisplayCalculations.formattedAmount(for: currentTransaction),
+            date: TransactionCardCalculations.formattedDate(currentTransaction.transactionDate),
+            project: TransactionDisplayCalculations.projectLabel(for: currentTransaction, projects: accountContext.allProjects),
+            category: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : nil))
     }
 
     // MARK: - Next Steps Card

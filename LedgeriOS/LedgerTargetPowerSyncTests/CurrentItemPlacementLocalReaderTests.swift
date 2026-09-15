@@ -469,6 +469,25 @@ struct CurrentItemPlacementLocalReaderTests {
         }
     }
 
+    @Test("Imported location observation is not displayed as a dated move")
+    func importedStartEvidence() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET start_evidence='import_observation' WHERE id='project-now'", parameters: nil)
+            let history = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(history.intervals[0].startEvidence == .importObservation)
+            #expect(history.intervals[0].startDescription.contains("move date unknown"))
+            #expect(!history.intervals[0].startDescription.hasPrefix("From:"))
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET start_evidence=NULL WHERE id='project-now'", parameters: nil)
+            let legacy = try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            #expect(legacy.intervals[0].startEvidence == .unknown)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET start_evidence='invented' WHERE id='project-now'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair"))
+            }
+        }
+    }
+
     @Test("Physical history compares submillisecond boundaries without rounding or reordering")
     func preciseHistoryIntervals() async throws {
         try await withDatabase { db in

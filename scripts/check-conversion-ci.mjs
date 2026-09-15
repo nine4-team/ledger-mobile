@@ -12,6 +12,7 @@ const conversionCommands = Object.freeze([
   "node scripts/check-conversion-current-state.mjs --self-test",
   "node scripts/ledger-product-checklist.mjs --self-test",
   "node scripts/supabase-conversion-ledger.mjs source-self-test",
+  "node --test scripts/tests/source-baseline.test.mjs",
   "npm run conversion:ci:test",
   "npm run conversion:check",
   "npm run conversion:capabilities:check",
@@ -302,6 +303,10 @@ function validateTargetJob(lines) {
   requireExactLine(target, "    runs-on: macos-26", "target macOS runner");
   requireCondition(target.join("\n").includes(nativeUIClipboardStep),
     "native UI Copy verification requires its exact isolated test-runner flag");
+  const sharedLogic = commandsForNamedStep(target, "Test reused export logic without UI").join("\n");
+  requireCondition(sharedLogic.includes("-only-testing:LedgerTargetSharedLogicTests test")
+    && sharedLogic.includes("-parallel-testing-enabled NO") && !sharedLogic.includes("-skip-testing:"),
+  "shared export unit tests must run the complete hostless test target");
   const iosUI = commandsForNamedStep(ios, "Exercise iOS workspace and report UI").join("\n");
   const iosSelections = iosUI.match(/-only-testing:[^\s\\]+/g) ?? [];
   requireCondition(iosSelections.length === 1
@@ -311,7 +316,7 @@ function validateTargetJob(lines) {
   requireCondition(iosUI.includes("TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild"),
     "iOS UI Copy verification requires its isolated test-runner flag");
   for (const fragment of [
-    "-parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO",
+    "-parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-",
     '-destination "platform=iOS Simulator,id=$report_device_id"',
     '-resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult"',
     "-test-timeouts-enabled YES -default-test-execution-time-allowance 300",

@@ -1,0 +1,21 @@
+{
+  "accountId": "account", "principalId": "principal", "transactionId": "payment",
+  "projectId": "project", "clientId": "client",
+  "items": [
+    {"itemId":"direct-item","name":"Current lamp","sku":"LAMP","source":"Original vendor","currentSource":"Current vendor","currentSpaceName":"Other Project room","imageCount":"1"},
+    {"itemId":"invoiced-item","name":"Current chair","sku":null,"source":null,"currentSource":null,"currentSpaceName":null,"imageCount":"0"}
+  ],
+  "connections": [
+    {"id": "old-link", "itemId": "direct-item", "placementId": "old-placement", "endedAt": "2026-09-01"},
+    {"id": "new-link", "itemId": "direct-item", "placementId": "new-placement", "endedAt": null}
+  ],
+  "invoice": {
+    "invoice_id": "invoice", "invoice_revision": "3", "account_id": "account",
+    "project_id": "project", "client_id": "client", "purchase_id": "payment", "currency": "USD",
+    "total_minor_units": "125",
+    "lines": [{"id": "frozen-line", "line_position": 0, "source_kind": "item", "source_id": "occurrence",
+      "item_id": "invoiced-item", "source_revision": "2", "category_id": "old-category",
+      "signed_amount_minor_units": "125", "description": "Frozen description",
+      "source_snapshot_json": "{\"item\":{\"itemId\":\"invoiced-item\",\"occurrenceId\":\"occurrence\",\"price\":{\"basis\":{\"projectPrice\":{}},\"amount\":{\"minorUnits\":125,\"currency\":\"USD\"}}}}"}]
+  }
+}

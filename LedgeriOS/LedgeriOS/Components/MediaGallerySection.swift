@@ -25,14 +25,9 @@ struct MediaGallerySection: View {
     @State private var showAttachmentMenu = false
     @State private var selectedAttachment: AttachmentRef?
     @State private var menuPendingAction: (() -> Void)?
-    @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isUploading = false
     @State private var uploadError: String?
     @State private var showAddSourceMenu = false
-    @State private var showCamera = false
-    @State private var showPhotoPicker = false
-    @State private var showDocumentPicker = false
-    @State private var showFileImporter = false
     @State private var showPDFViewer = false
     @State private var selectedPDFAttachment: AttachmentRef?
     @State private var showSourceImagePicker = false
@@ -151,12 +146,13 @@ struct MediaGallerySection: View {
                 attachmentMenu(for: attachment)
             }
         }
-        .adaptivePresentation(isPresented: $showAddSourceMenu, style: .quickMenu, onDismiss: {
-            menuPendingAction?()
-            menuPendingAction = nil
-        }) {
-            addSourceMenu
-        }
+        .modifier(MediaCapturePresentation(showAddSourceMenu: $showAddSourceMenu,
+            isUploading: $isUploading, uploadError: $uploadError, remainingSlots: remainingSlots,
+            allowedKinds: allowedKinds, onUploadAttachment: onUploadAttachment,
+            onUploadAttachmentFile: onUploadAttachmentFile, onUploadDocument: onUploadDocument,
+            sourceImagesTitle: sourceImagesTitle,
+            onSelectSourceImages: onAddSourceImages != nil && !availableSourceImages.isEmpty
+                ? { showSourceImagePicker = true } : nil))
         .adaptivePresentation(isPresented: $showSourceImagePicker, style: .fullSheet) {
             SourceImagePickerModal(
                 title: sourceImagesTitle,
@@ -169,71 +165,6 @@ struct MediaGallerySection: View {
                 }
             )
         }
-        #if canImport(UIKit)
-        .fullScreenCover(isPresented: $showCamera) {
-            CameraCapture { imageData in
-                Task {
-                    await handlePickedImageData(imageData)
-                }
-            } onDismiss: {
-                showCamera = false
-            }
-        }
-        #endif
-        #if canImport(UIKit)
-        .fullScreenCover(isPresented: $showDocumentPicker) {
-            DocumentPicker { data, fileName in
-                Task {
-                    await handlePickedDocumentData(data, fileName: fileName)
-                }
-            } onDismiss: {
-                showDocumentPicker = false
-            }
-        }
-        #endif
-        .photosPicker(
-            isPresented: $showPhotoPicker,
-            selection: $pickerItems,
-            maxSelectionCount: remainingSlots,
-            matching: .images,
-            preferredItemEncoding: .current,
-            photoLibrary: .shared()
-        )
-        .onChange(of: pickerItems) { _, newItems in
-            guard !newItems.isEmpty else { return }
-            Task {
-                for item in newItems {
-                    await handlePickedItem(item)
-                }
-                pickerItems = []
-            }
-        }
-        .fileImporter(
-            isPresented: $showFileImporter,
-            allowedContentTypes: allowedFileImportTypes,
-            allowsMultipleSelection: remainingSlots > 1
-        ) { result in
-            Task {
-                await handleImportedFiles(result)
-            }
-        }
-        #if os(macOS)
-        .onDrop(of: acceptedDropTypeIdentifiers, isTargeted: nil) { providers in
-            guard canAdd else { return false }
-            Task {
-                await handleDroppedItemProviders(providers)
-            }
-            return true
-        }
-        #else
-        .dropDestination(for: URL.self) { urls, _ in
-            guard canAdd else { return false }
-            Task {
-                await handleDroppedFileURLs(urls)
-            }
-            return true
-        } isTargeted: { _ in }
-        #endif
         .alert("Image", isPresented: .init(
             get: { saveAlertMessage != nil },
             set: { if !$0 { saveAlertMessage = nil } }
@@ -258,133 +189,6 @@ struct MediaGallerySection: View {
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.destructive)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-    }
-
-    // MARK: - Photo Picker Handling
-
-    private func handlePickedItem(_ item: PhotosPickerItem) async {
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            let contentType = item.supportedContentTypes.first(where: { $0.conforms(to: .image) })
-            await handlePickedImageUpload(.image(data: data, contentType: contentType))
-        } catch {
-            uploadError = error.localizedDescription
-        }
-    }
-
-    private func handlePickedImageData(_ data: Data) async {
-        await handlePickedImageUpload(.image(data: data))
-    }
-
-    private func handlePickedImageUpload(_ upload: AttachmentUpload) async {
-        guard canUploadImages else { return }
-        isUploading = true
-        uploadError = nil
-        defer { isUploading = false }
-
-        do {
-            if let onUploadAttachmentFile {
-                try await onUploadAttachmentFile(upload)
-            } else {
-                try await onUploadAttachment?(upload.data)
-            }
-        } catch {
-            uploadError = error.localizedDescription
-        }
-    }
-
-    private func handlePickedDocumentData(_ data: Data, fileName: String) async {
-        guard let onUploadDocument else { return }
-        isUploading = true
-        uploadError = nil
-        defer {
-            isUploading = false
-            showDocumentPicker = false
-        }
-
-        do {
-            try await onUploadDocument(data, fileName)
-        } catch {
-            uploadError = error.localizedDescription
-        }
-    }
-
-    private func handleImportedFiles(_ result: Result<[URL], Error>) async {
-        do {
-            let urls = try result.get()
-            await handleFileURLs(urls)
-        } catch {
-            uploadError = error.localizedDescription
-        }
-    }
-
-    private func handleDroppedFileURLs(_ urls: [URL]) async {
-        await handleFileURLs(urls)
-    }
-
-    #if os(macOS)
-    private var acceptedDropTypeIdentifiers: [String] {
-        var types: [String] = [UTType.fileURL.identifier]
-        if allowedKinds.contains(.image), canUploadImages {
-            types.append(UTType.image.identifier)
-        }
-        if allowedKinds.contains(.pdf), onUploadDocument != nil {
-            types.append(UTType.pdf.identifier)
-        }
-        return types
-    }
-
-    private func handleDroppedItemProviders(_ providers: [NSItemProvider]) async {
-        let limitedProviders = Array(providers.prefix(remainingSlots))
-        guard !limitedProviders.isEmpty else { return }
-
-        for provider in limitedProviders {
-            do {
-                if let droppedUpload = try await provider.loadAttachmentUploadIfAvailable(allowedKinds: allowedKinds) {
-                    if droppedUpload.contentType.conforms(to: .pdf), allowedKinds.contains(.pdf), onUploadDocument != nil {
-                        let upload = droppedUpload.upload
-                        await handlePickedDocumentData(upload.data, fileName: upload.displayFileName)
-                    } else if droppedUpload.contentType.conforms(to: .image), canUploadImages {
-                        await handlePickedImageUpload(droppedUpload.upload)
-                    }
-                } else if let url = try await provider.loadFileURLIfAvailable() {
-                    await handleFileURLs([url])
-                }
-            } catch {
-                uploadError = error.localizedDescription
-            }
-        }
-    }
-    #endif
-
-    private func handleFileURLs(_ urls: [URL]) async {
-        let limitedUrls = Array(urls.prefix(remainingSlots))
-        guard !limitedUrls.isEmpty else { return }
-
-        for url in limitedUrls {
-            let didAccess = url.startAccessingSecurityScopedResource()
-            defer {
-                if didAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
-            }
-
-            do {
-                let resourceValues = try url.resourceValues(forKeys: [.contentTypeKey, .localizedTypeDescriptionKey])
-                let type = resourceValues.contentType ?? UTType(filenameExtension: url.pathExtension)
-
-                guard let type else { continue }
-                let data = try Data(contentsOf: url)
-
-                if type.conforms(to: .image) {
-                    await handlePickedImageUpload(.file(data: data, fileName: url.lastPathComponent, contentType: type))
-                } else if type.conforms(to: .pdf), allowedKinds.contains(.pdf), onUploadDocument != nil {
-                    await handlePickedDocumentData(data, fileName: url.lastPathComponent)
-                }
-            } catch {
-                uploadError = error.localizedDescription
             }
         }
     }
@@ -454,91 +258,6 @@ struct MediaGallerySection: View {
                 showAddSourceMenu = true
             }
         )
-    }
-
-    // MARK: - Add Source Menu
-
-    private var addSourceMenu: some View {
-        ActionMenuSheet(
-            title: "Add Attachment",
-            items: addSourceMenuItems,
-            onSelectAction: { action in
-                menuPendingAction = action
-            }
-        )
-    }
-
-    private var addSourceMenuItems: [ActionMenuItem] {
-        var items = [
-            ActionMenuItem(
-                id: "camera",
-                label: "Camera",
-                icon: "camera.fill",
-                onPress: {
-                    showCamera = true
-                }
-            ),
-            ActionMenuItem(
-                id: "photo-library",
-                label: "Photo Library",
-                icon: "photo.on.rectangle",
-                onPress: {
-                    showPhotoPicker = true
-                }
-            ),
-        ]
-
-        if onAddSourceImages != nil, !availableSourceImages.isEmpty {
-            items.append(
-                ActionMenuItem(
-                    id: "source-images",
-                    label: sourceImagesTitle,
-                    icon: "photo.stack",
-                    onPress: {
-                        showSourceImagePicker = true
-                    }
-                )
-            )
-        }
-
-        items.append(
-            ActionMenuItem(
-                id: "files",
-                label: "Files",
-                icon: "folder",
-                onPress: {
-                    showFileImporter = true
-                }
-            )
-        )
-
-        #if canImport(UIKit)
-        if allowedKinds.contains(.pdf), onUploadDocument != nil {
-            items.append(
-                ActionMenuItem(
-                    id: "pdf",
-                    label: "PDF",
-                    icon: "doc.richtext",
-                    onPress: {
-                        showDocumentPicker = true
-                    }
-                )
-            )
-        }
-        #endif
-
-        return items
-    }
-
-    private var allowedFileImportTypes: [UTType] {
-        var types: [UTType] = []
-        if allowedKinds.contains(.image) {
-            types.append(.image)
-        }
-        if allowedKinds.contains(.pdf), onUploadDocument != nil {
-            types.append(.pdf)
-        }
-        return types.isEmpty ? [.data] : types
     }
 
     // MARK: - Attachment Menu
@@ -710,123 +429,6 @@ private struct SourceImagePickerModal: View {
     }
 }
 
-#if os(macOS)
-@MainActor
-private extension NSItemProvider {
-    func loadFileURLIfAvailable() async throws -> URL? {
-        guard hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) else {
-            return nil
-        }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                if let url = item as? URL {
-                    continuation.resume(returning: url)
-                    return
-                }
-
-                if let data = item as? Data,
-                   let url = URL(dataRepresentation: data, relativeTo: nil) {
-                    continuation.resume(returning: url)
-                    return
-                }
-
-                continuation.resume(returning: nil)
-            }
-        }
-    }
-
-    func loadAttachmentUploadIfAvailable(allowedKinds: [AttachmentKind]) async throws -> (upload: AttachmentUpload, contentType: UTType)? {
-        guard let type = preferredAttachmentType(allowedKinds: allowedKinds) else {
-            return nil
-        }
-
-        let data = try await loadFileBackedData(forTypeIdentifier: type.identifier)
-        let fileName = suggestedFileName(for: type)
-        return (
-            AttachmentUpload.file(data: data, fileName: fileName, contentType: type),
-            type
-        )
-    }
-
-    private func preferredAttachmentType(allowedKinds: [AttachmentKind]) -> UTType? {
-        let registeredTypes = registeredTypeIdentifiers.compactMap(UTType.init)
-
-        if allowedKinds.contains(.image),
-           let imageType = registeredTypes.first(where: { $0.conforms(to: .image) }) {
-            return imageType
-        }
-
-        if allowedKinds.contains(.pdf),
-           let pdfType = registeredTypes.first(where: { $0.conforms(to: .pdf) }) {
-            return pdfType
-        }
-
-        return nil
-    }
-
-    private func loadFileBackedData(forTypeIdentifier typeIdentifier: String) async throws -> Data {
-        do {
-            return try await loadDataFromFileRepresentation(forTypeIdentifier: typeIdentifier)
-        } catch {
-            return try await loadDataRepresentationAsync(forTypeIdentifier: typeIdentifier)
-        }
-    }
-
-    private func loadDataFromFileRepresentation(forTypeIdentifier typeIdentifier: String) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                guard let url else {
-                    continuation.resume(throwing: CocoaError(.fileReadNoSuchFile))
-                    return
-                }
-
-                do {
-                    continuation.resume(returning: try Data(contentsOf: url))
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    private func loadDataRepresentationAsync(forTypeIdentifier typeIdentifier: String) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let data {
-                    continuation.resume(returning: data)
-                } else {
-                    continuation.resume(throwing: CocoaError(.fileReadUnknown))
-                }
-            }
-        }
-    }
-
-    private func suggestedFileName(for type: UTType) -> String {
-        let fallbackName = type.conforms(to: .pdf) ? "Document" : "Screenshot"
-        let trimmedSuggestedName = suggestedName?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let baseName = trimmedSuggestedName?.isEmpty == false ? trimmedSuggestedName! : fallbackName
-
-        if !URL(fileURLWithPath: baseName).pathExtension.isEmpty {
-            return baseName
-        }
-
-        return "\(baseName).\(type.preferredFilenameExtension ?? "dat")"
-    }
-}
-#endif
 
 // MARK: - Previews
 

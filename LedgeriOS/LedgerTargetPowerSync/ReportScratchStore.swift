@@ -5,6 +5,8 @@ import LedgerTargetCore
 public enum ReportScratchFailure: Error, Equatable, Sendable {
     case unsafePath
     case io(Int32)
+    case operationFailed(String, Int, Int32)
+    case protectionUnavailable(Int32)
     case closed
     case foreignArtifact
     case artifactsPending
@@ -76,16 +78,21 @@ public actor ReportScratchStore {
         if rootFD >= 0 { Darwin.close(rootFD) }
     }
 
-    public func create(data: Data, format: ReportScratchFormat = .pdf, snapshotReference: ProtectedArtifactSnapshotReference) throws -> ReportScratchArtifact {
-        try create(data: data, format: format, snapshotReference: snapshotReference, writeBytes: Self.writeBytes)
+    public func create(data: Data, format: ReportScratchFormat = .pdf, snapshotReference: ProtectedArtifactSnapshotReference, nameHint: String? = nil) throws -> ReportScratchArtifact {
+        try create(data: data, format: format, snapshotReference: snapshotReference, nameHint: nameHint, writeBytes: Self.writeBytes)
     }
 
     // Internal seam exercises partial-write cleanup without changing process limits.
     func create(data: Data, format: ReportScratchFormat = .pdf, snapshotReference: ProtectedArtifactSnapshotReference,
-                writeBytes: @Sendable (Int32, Data) throws -> Void) throws -> ReportScratchArtifact {
+                nameHint: String? = nil, writeBytes: @Sendable (Int32, Data) throws -> Void) throws -> ReportScratchArtifact {
         guard sessionFD >= 0 else { throw ReportScratchFailure.closed }
         guard !data.isEmpty else { throw ReportScratchFailure.emptyContent }
-        let name = UUID().uuidString.lowercased() + "." + format.rawValue
+        let prefix = nameHint.map { hint in
+            String(hint.unicodeScalars.prefix(60).map { scalar -> Character in
+                Self.isNameCharacter(scalar) ? Character(String(scalar)) : "-"
+            })
+        }.flatMap { $0.isEmpty ? nil : $0 + "--" } ?? ""
+        let name = prefix + UUID().uuidString.lowercased() + "." + format.rawValue
         let fd = openat(sessionFD, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0o600)
         guard fd >= 0 else { throw Self.ioError() }
         var complete = false
@@ -116,6 +123,62 @@ public actor ReportScratchStore {
                 offset += count
             }
         }
+    }
+
+    /// Native writers may atomically replace their destination. Keep the session
+    /// locked until they finish, then validate the resulting file before cleanup.
+    /// A process crash leaves a UUID.pdf for the existing startup recovery.
+    public func generatePDF(using writer: @Sendable (URL) async throws -> Data) async throws -> Data {
+        guard sessionFD >= 0 else { throw ReportScratchFailure.closed }
+        let name = UUID().uuidString.lowercased() + ".pdf"
+        let fd = openat(sessionFD, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard fd >= 0 else { throw Self.ioError() }
+        do {
+            try Self.protect(fd)
+            artifacts[name] = try Self.info(fd, directory: false).st_ino
+        } catch {
+            Darwin.close(fd); unlinkat(sessionFD, name, 0); throw error
+        }
+        Darwin.close(fd)
+        let url = rootURL.appendingPathComponent(sessionName).appendingPathComponent(name)
+        let result: Result<Data, Error>
+        do { result = .success(try await writer(url)) }
+        catch { result = .failure(error) }
+
+        let output = openat(sessionFD, name, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
+        if output >= 0 {
+            defer { Darwin.close(output) }
+            var info = stat()
+            guard fstat(output, &info) == 0, info.st_uid == getuid(),
+                  info.st_mode & S_IFMT == S_IFREG, info.st_nlink == 1 else {
+                throw ReportScratchFailure.unsafePath
+            }
+            // A native atomic replacement can reset file permissions. The
+            // parent remains 0700 throughout; normalize before later recovery.
+            guard fchmod(output, 0o600) == 0 else { throw Self.ioError() }
+            try Self.protect(output)
+            guard unlinkat(sessionFD, name, 0) == 0 else { throw Self.ioError() }
+        } else if errno != ENOENT {
+            throw ReportScratchFailure.unsafePath
+        }
+        artifacts.removeValue(forKey: name)
+        let bytes = try result.get()
+        guard !bytes.isEmpty else { throw ReportScratchFailure.emptyContent }
+        return bytes
+    }
+
+    private static func isNameCharacter(_ scalar: Unicode.Scalar) -> Bool {
+        let value = scalar.value
+        return (48...57).contains(value) || (65...90).contains(value) ||
+            (97...122).contains(value) || value == 45
+    }
+
+    private static func isOwnedStem(_ stem: String) -> Bool {
+        if UUID(uuidString: stem) != nil { return true }
+        guard stem.count >= 39, UUID(uuidString: String(stem.suffix(36))) != nil else { return false }
+        let prefix = stem.dropLast(36)
+        return prefix.hasSuffix("--") && (3...62).contains(prefix.count) &&
+            prefix.unicodeScalars.allSatisfy(isNameCharacter)
     }
 
     public func remove(_ artifact: ReportScratchArtifact) throws {
@@ -157,13 +220,16 @@ public actor ReportScratchStore {
             for file in files {
                 let parts = file.split(separator: ".", omittingEmptySubsequences: false)
                 guard parts.count == 2, ReportScratchFormat(rawValue: String(parts[1])) != nil,
-                      UUID(uuidString: String(parts[0])) != nil else {
+                      Self.isOwnedStem(String(parts[0])) else {
                     throw ReportScratchFailure.unsafePath
                 }
                 let child = openat(fd, file, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
                 guard child >= 0 else { throw ReportScratchFailure.unsafePath }
                 defer { Darwin.close(child) }
-                _ = try Self.info(child, directory: false)
+                // Native atomic writers may leave 0644 on a crash. The parent
+                // is already verified private and unlocked; permit read bits
+                // only for deletion, never writable/executable-by-others files.
+                _ = try Self.info(child, directory: false, recoveringNativeOutput: true)
             }
             for file in files {
                 guard unlinkat(fd, file, 0) == 0 else { throw Self.ioError() }
@@ -185,27 +251,35 @@ public actor ReportScratchStore {
         // Keep the root descriptor until deinit; defer must unlock a live fd.
     }
 
-    private static func ioError() -> ReportScratchFailure { .io(errno) }
+    private static func ioError(operation: String = #function, line: Int = #line) -> ReportScratchFailure {
+        .operationFailed(operation, line, errno)
+    }
     private static func lock(_ fd: Int32) throws {
         while flock(fd, LOCK_EX) != 0 {
             if errno != EINTR { throw ioError() }
         }
     }
-    private static func info(_ fd: Int32, directory: Bool) throws -> stat {
+    private static func info(_ fd: Int32, directory: Bool, recoveringNativeOutput: Bool = false) throws -> stat {
         var value = stat()
         guard fstat(fd, &value) == 0 else { throw ioError() }
         guard value.st_uid == getuid(), value.st_mode & S_IFMT == (directory ? S_IFDIR : S_IFREG),
-              value.st_mode & 0o077 == 0, directory || value.st_nlink == 1 else {
+              value.st_mode & (recoveringNativeOutput && !directory ? 0o033 : 0o077) == 0,
+              directory || value.st_nlink == 1 else {
             throw ReportScratchFailure.unsafePath
         }
         return value
     }
     private static func protect(_ fd: Int32) throws {
-        #if os(iOS)
+        #if os(iOS) && !targetEnvironment(simulator)
         // Darwin protection class A (NSFileProtectionComplete). Use the owned
         // descriptor, so protection does not resolve a replaceable pathname.
-        guard fcntl(fd, F_SETPROTECTIONCLASS, 1) == 0 else { throw ioError() }
+        guard fcntl(fd, F_SETPROTECTIONCLASS, 1) == 0 else { throw ReportScratchFailure.protectionUnavailable(errno) }
         #endif
+        // Simulator's host filesystem cannot supply iOS Data Protection. Its
+        // fcntl can accept a directory class but then reject file creation with
+        // EPERM; setting the class on a regular file also fails. Simulator uses
+        // the same 0700/0600 ownership and cleanup, but is NOT protection evidence.
+        // Physical iOS devices must pass the class-A call above; no fallback.
     }
     private static func openRoot(_ url: URL) throws -> Int32 {
         let parts = url.pathComponents.filter { $0 != "/" }

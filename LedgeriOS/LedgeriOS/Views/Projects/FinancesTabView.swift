@@ -16,8 +16,7 @@ struct BillingTabView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.md) {
+        BillingWorkspacePresentation {
                 CollapsibleSection(
                     title: "Overview",
                     isExpanded: $overviewExpanded,
@@ -37,10 +36,6 @@ struct BillingTabView: View {
                     isExpanded: $invoicesExpanded,
                     onCreateInvoice: { showingCreateInvoice = true }
                 )
-            }
-            .padding(Spacing.screenPadding)
-            .frame(maxWidth: Dimensions.contentMaxWidth)
-            .frame(maxWidth: .infinity)
         }
         .adaptivePresentation(isPresented: $showingCreateInvoice, style: .form) {
             if let accountId = accountContext.currentAccountId,
@@ -52,39 +47,6 @@ struct BillingTabView: View {
 }
 
 // MARK: - Candidate Receivables
-
-private enum CandidateAvailabilityFilter: String, CaseIterable {
-    case available, created, sent, paid, all
-
-    var label: String {
-        switch self {
-        case .available: "Available"
-        case .created: "On Created Invoice"
-        case .sent: "Sent"
-        case .paid: "Paid"
-        case .all: "All"
-        }
-    }
-}
-
-private enum CandidateSourceFilter: String, CaseIterable {
-    case all, fees, expenses, items
-
-    var label: String {
-        switch self {
-        case .all: "All Sources"
-        case .fees: "Fees"
-        case .expenses: "Expenses"
-        case .items: "Items"
-        }
-    }
-}
-
-private extension CandidateSourceFilter {
-    var segmentOption: SegmentOption<CandidateSourceFilter> {
-        SegmentOption(id: self, label: label)
-    }
-}
 
 private enum CandidateMembershipState: Equatable {
     case available
@@ -540,95 +502,13 @@ private struct BillingSubsectionLabel: View {
     }
 }
 
-private struct BillingReceivablesToolbar: View {
-    @Binding var searchText: String
-    let filtersAreActive: Bool
-    var onFilter: () -> Void
-
-    var body: some View {
-        HStack(spacing: Spacing.sm) {
-            SearchField(text: $searchText, placeholder: "Search receivables...")
-
-            Button(action: onFilter) {
-                Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(filtersAreActive ? BrandColors.primary : BrandColors.textSecondary)
-            }
-            .buttonStyle(CircleBarButtonStyle())
-            .background(BrandColors.surface, in: Circle())
-            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-            .accessibilityLabel("Filter receivables")
-        }
-    }
-}
-
-private struct BillingEmptyRow: View {
-    let message: String
-
-    init(_ message: String) {
-        self.message = message
-    }
-
-    var body: some View {
-        Text(message)
-            .font(Typography.small)
-            .foregroundStyle(BrandColors.textSecondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, Spacing.md)
-    }
-}
-
-private struct BillingRowSurface<Content: View>: View {
-    var padding: CGFloat = Spacing.md
-    var isMuted = false
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        content()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(padding)
-            .opacity(isMuted ? 0.58 : 1)
-            .background((isMuted ? BrandColors.surface.opacity(0.62) : BrandColors.surface))
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
-            )
-            .shadow(color: .black.opacity(isMuted ? 0.015 : 0.035), radius: isMuted ? 2 : 4, x: 0, y: 1)
-    }
-}
-
 private struct CandidateRow: View {
     let row: CandidateSourceRow
 
     var body: some View {
-        BillingRowSurface {
-            HStack(alignment: .center, spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(row.title)
-                        .font(Typography.body.weight(.semibold))
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .lineLimit(1)
-                    HStack(spacing: Spacing.xs) {
-                        Text(metadataLabel)
-                            .font(Typography.caption)
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .lineLimit(1)
-                        Badge(text: row.state.label, color: row.state.color)
-                        if let invoiceName = row.state.invoiceName, !invoiceName.isEmpty {
-                            Text(invoiceName)
-                                .font(Typography.caption)
-                                .foregroundStyle(BrandColors.textSecondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                Spacer(minLength: Spacing.md)
-                Text(CurrencyFormatting.formatCents(row.amountCents))
-                    .font(Typography.small.weight(.semibold))
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .monospacedDigit()
-            }
-        }
+        BillingCandidateRowPresentation(title: row.title, metadata: metadataLabel,
+            amountText: CurrencyFormatting.formatCents(row.amountCents), statusLabel: row.state.label,
+            statusColor: row.state.color, invoiceName: row.state.invoiceName)
     }
 
     private var metadataLabel: String {
@@ -893,19 +773,7 @@ private struct FeeInstallmentFormSheet: View {
 
 // MARK: - Invoice Row
 
-private enum InvoicePipelineFilter: String, CaseIterable {
-    case all, created, sent, paid, canceled
-
-    var label: String {
-        switch self {
-        case .all: "All"
-        case .created: "Created"
-        case .sent: "Sent"
-        case .paid: "Paid"
-        case .canceled: "Canceled"
-        }
-    }
-
+private extension InvoicePipelineFilter {
     var status: InvoiceStatus? {
         switch self {
         case .all: nil
@@ -916,9 +784,6 @@ private enum InvoicePipelineFilter: String, CaseIterable {
         }
     }
 
-    var segmentOption: SegmentOption<InvoicePipelineFilter> {
-        SegmentOption(id: self, label: label)
-    }
 }
 
 private struct InvoiceListSection: View {
@@ -1222,46 +1087,14 @@ private struct InvoiceRow: View {
     }
 
     private var invoiceSummary: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: Spacing.sm) {
-                Text(invoice.invoiceNumber ?? "Invoice")
-                    .font(Typography.body.weight(.semibold))
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .lineLimit(1)
-            }
-            HStack(spacing: Spacing.sm) {
-                Text(CurrencyFormatting.formatCents(displayedTotalCents))
-                    .font(Typography.small.weight(.semibold))
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .monospacedDigit()
-                if let date = invoice.datePaid ?? invoice.dateSent ?? invoice.dateIssued {
-                    Text(date.formatted(date: .abbreviated, time: .omitted))
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        BillingInvoiceSummaryPresentation(title: invoice.invoiceNumber ?? "Invoice",
+            amountText: CurrencyFormatting.formatCents(displayedTotalCents),
+            date: invoice.datePaid ?? invoice.dateSent ?? invoice.dateIssued)
     }
 
     private var statusControl: some View {
-        HStack(spacing: Spacing.xs) {
-            if isWorking {
-                ProgressView()
-                    .controlSize(.small)
-            }
-            Text(status.displayLabel)
-                .font(Typography.caption.weight(.semibold))
-            if !statusTargets.isEmpty {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-        }
-        .foregroundStyle(statusColor)
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.xs)
-        .background(statusColor.opacity(0.10), in: Capsule())
-        .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
+        BillingInvoiceStatusPresentation(label: status.displayLabel, color: statusColor,
+            isWorking: isWorking, hasActions: !statusTargets.isEmpty)
     }
 
     private func statusActionLabel(for targetStatus: InvoiceStatus) -> String {

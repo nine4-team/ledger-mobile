@@ -1,5 +1,6 @@
 import SwiftUI
 
+#if canImport(FirebaseFirestore)
 struct TransactionCard: View {
     // Core data
     let transaction: Transaction
@@ -60,11 +61,97 @@ struct TransactionCard: View {
     }
 
     var body: some View {
-        cardView
+        TransactionCardPresentation(
+            id: transaction.id,
+            title: TransactionDisplayCalculations.displayName(for: transaction),
+            source: source,
+            amountText: TransactionCardCalculations.formattedAmount(amountCents: transaction.amountCents, transactionType: transaction.transactionType),
+            dateText: TransactionCardCalculations.formattedDate(transaction.transactionDate),
+            itemCount: itemCount,
+            budgetCategoryName: budgetCategoryName,
+            assignmentLabel: assignmentLabel,
+            projectName: projectName,
+            matchingTransactionID: matchingTransactionID,
+            notesPreview: TransactionCardCalculations.truncatedNotes(transaction.notes),
+            badges: badges,
+            isSelected: isSelected,
+            bookmarked: bookmarked,
+            onBookmarkPress: onBookmarkPress,
+            menuItems: menuItems,
+            onPress: onPress
+        )
     }
+}
+#endif
+
+/// The original card layout receives display values and actions, not a backend
+/// model or Account context. Callers own authorized data and accounting meaning.
+/// Original grouped Transaction filter shell. Options and selections are inputs.
+struct TransactionFilterMenuPresentation: View {
+    @Binding var isPresented: Bool
+    let items: [ActionMenuItem]
+    @State private var expandedFilterGroup: String?
+    var body: some View {
+        // Keep a concrete presentation anchor when this shell is embedded in a
+        // list. EmptyView can leave macOS with a disabled window and no sheet.
+        Color.clear.frame(width: 0, height: 0).adaptivePresentation(isPresented: $isPresented, style: .selectionMenu,
+            onDismiss: { expandedFilterGroup = nil }) {
+                ActionMenuSheet(title: "Filter", items: items, closeOnItemPress: false,
+                    persistentExpandedItemKey: $expandedFilterGroup)
+            }
+    }
+}
+
+/// Original Transaction detail hero, with display values supplied by its owner.
+struct TransactionHeroPresentation: View {
+    let title: String
+    let amount: String
+    let date: String
+    let project: String
+    var category: String?
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                FindableText(title)
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                row("Amount:", amount)
+                row("Date:", date)
+                row("Project:", project)
+                if let category, !category.isEmpty { row("Budget Category:", category) }
+            }
+        }
+    }
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Text(label).font(Typography.small).foregroundStyle(BrandColors.textSecondary)
+            FindableText(value).font(Typography.small).foregroundStyle(BrandColors.textPrimary)
+        }
+    }
+}
+
+struct TransactionCardPresentation: View {
+    let id: String?
+    let title: String
+    let source: String
+    let amountText: String
+    let dateText: String
+    var itemCount: Int?
+    var budgetCategoryName: String?
+    var assignmentLabel: String?
+    var projectName: String?
+    var matchingTransactionID: String?
+    var notesPreview: String?
+    var badges: [CardBadge] = []
+    var isSelected: Binding<Bool>?
+    var bookmarked = false
+    var onBookmarkPress: (() -> Void)?
+    var menuItems: [ActionMenuItem] = []
+    var onPress: (() -> Void)?
 
     @ViewBuilder
-    private var cardView: some View {
+    var body: some View {
         let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false) {
             VStack(alignment: .leading, spacing: 0) {
                 CardHeader(
@@ -80,7 +167,7 @@ struct TransactionCard: View {
             }
         }
         .contentShape(Rectangle())
-        .findEntity(id: transaction.id)
+        .findEntity(id: id)
         .findMatchHighlight()
 
         if let onPress {
@@ -97,14 +184,14 @@ struct TransactionCard: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Source + Amount row
             HStack(alignment: .firstTextBaseline) {
-                FindableText(TransactionDisplayCalculations.displayName(for: transaction))
+                FindableText(title)
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(2)
 
                 Spacer(minLength: Spacing.md)
 
-                FindableText(TransactionCardCalculations.formattedAmount(amountCents: transaction.amountCents, transactionType: transaction.transactionType))
+                FindableText(amountText)
                     .font(Typography.body.weight(.bold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
@@ -120,7 +207,7 @@ struct TransactionCard: View {
                 Text("Date: ")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                FindableText(dateText)
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
@@ -156,7 +243,7 @@ struct TransactionCard: View {
                 Text("Date: ")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                FindableText(dateText)
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
@@ -220,7 +307,7 @@ struct TransactionCard: View {
 
             // Notes
             Group {
-                if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
+                if let truncated = notesPreview {
                     FindableText(truncated)
                         .font(Typography.small)
                         .italic()
@@ -294,6 +381,7 @@ private struct FlowLayout: Layout {
 
 // MARK: - Previews
 
+#if canImport(FirebaseFirestore)
 #Preview("Minimal") {
     TransactionCard(
         transaction: Transaction(
@@ -348,3 +436,4 @@ private struct FlowLayout: Layout {
     .padding(Spacing.screenPadding)
     .preferredColorScheme(.dark)
 }
+#endif

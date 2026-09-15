@@ -62,7 +62,19 @@ proceeding. Continue independent authorized work. Follow already-resolved choice
 without repeating the investigation for every task. This boundary neither approves
 existing duplicate implementations nor authorizes their deletion or rollback.
 
+The September 11 implemented-work review resolves the current choices in the
+unified checklist's `implementationGuidance` and affected execution records'
+`reusePlan`. Follow those choices, including justified report/PDF replacements
+and the freeze on unused generic infrastructure. The linked assessment is
+one-time supporting evidence, not another catalog to maintain. Do not remove
+behavior acceptance requirements when stopping a redundant implementation path.
+
 ### Workflow boundary
+
+Workflow boundaries do not require routine approval to continue. Work through
+approved dependencies under their own checklist records, retaining incomplete
+acceptance in the earlier workflow. Ask only when the affected action needs a
+genuine product decision, unapproved replacement, or additional external authority.
 
 One user-meaningful workflow is the implementation unit. UI, app model, MCP,
 domain, Postgres/RLS, PowerSync/offline, media, and migration pieces are layers
@@ -101,6 +113,14 @@ the last green run. Starting a new batch does not waive unfinished verification
 or authorize declaring earlier work complete. The active outcome must match the
 checklist record so the resume pointer cannot silently redefine its scope.
 
+For an accumulated integration checkpoint, `activeWorkflow.integrationWorkflowIds`
+explicitly names the existing participating records, including the active one.
+The changed-file guard checks their combined declared components, without moving
+acceptance checks into the active workflow. This is only an omission guard:
+directory coverage does not prove ownership, review, or completion. Each record
+retains its own layer/risk checks, failures and acceptance evidence; the fixed base
+and conservative UI selection still cover the entire integration diff.
+
 ### Product Behavior Catalog
 
 This compatibility heading remains for historical links. Method v4 folds the
@@ -130,9 +150,12 @@ affected implementation outcomes. Audit completion also does not require a
 premature command, table, schema, RLS, Sync rule, or test design for every
 Markdown heading. Design those details when the approved workflow needs them.
 
-Source inventory remains a passive omission check: newly discovered source UI,
-background, or MCP behavior must enter the unified checklist before the audit
-can stay complete. It is not an implementation queue or progress metric.
+Source inventory remains a passive omission check against the saved source/audit
+snapshot in local Git history. Selecting a different snapshot requires reviewing
+new original-app behavior before the audit can stay complete. Target extraction
+or refactoring is not a source-baseline change: cover its behavior in the active
+workflow without inventing original-app surface IDs or changing baseline counts.
+The inventory is not an implementation queue or progress metric.
 
 The background/MCP area closes only when its `capabilityDispositions` account
 for the finite product-source scope and bind it to the reviewed source digest
@@ -238,7 +261,6 @@ behavior. Add missing tests when implementing that behavior.
   sync projection changes warrant the existing actual-stream and MCP/native parity
   tests. Record the normal result once. A broken local prerequisite must be named,
   not silently treated as passing or repeatedly rediscovered in CI.
-- After failure, diagnose the relevant output and verify a fix narrowly before
 - Name required checks in the existing batch record before launching them. An
   inherited workflow's extra jobs do not automatically become requirements of a
   backend-only task. If an overbroad run is already running, preserve completed
@@ -249,15 +271,21 @@ behavior. Add missing tests when implementing that behavior.
   before the next push: written guidance alone does not change GitHub behavior.
   Do not push documentation-only policy tweaks just to launch another feature run.
 - After failure, diagnose the relevant output and verify a fix narrowly before
-  broader verification. Do not rerun unchanged passing suites during each edit or
+  broader verification. When a helper or assertion assumption is demonstrably
+  wrong, inspect its related uses in the affected tests and correct the same
+  diagnosed issue together before rerunning. Do not assume every failure shares
+  that cause or weaken behavioral assertions merely to get a pass.
+  Do not rerun unchanged passing suites during each edit or
   retry until green. A retry for a suspected flake needs a stated diagnostic reason;
   preserve the failure. Confirm a narrowed run actually executed matching tests.
 
 Commands below run from the Supabase worktree unless noted. Substitute an existing
 suite/test/file name for placeholders; no production credentials or Firebase app
 launches. Do not use `--skip-build` after source changes.
-For the PowerSync service parser/environment checks use Node 24.14.0, matching
-native CI. The current default shell Node 20 cannot parse that dependency. If the
+For MCP and PowerSync service parser/environment checks use Node 24.14.0, matching
+native CI. MCP frozen Invoice validation also needs original JSON numeric tokens
+to preserve exact Int64 amounts. The current default shell Node 20 cannot parse
+the PowerSync service dependency. If the
 shell has the older runtime, invoke the existing command through
 `npx --yes --package=node@24.14.0 node ...`; do not treat a runtime syntax error as
 a product failure or repeatedly retry with the same incompatible runtime.
@@ -283,14 +311,25 @@ TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild \
   -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging \
   -configuration Debug -destination 'platform=macOS' \
   CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- -parallel-testing-enabled NO \
-  '-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/<testMethod>' test
+  '-only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests/<testMethod>()' test
 ```
 
 For iOS, select an available supported simulator using `xcrun simctl list devices
 available`, replace the destination with `platform=iOS Simulator,id=<UDID>`, use
-`CODE_SIGNING_ALLOWED=NO`, and omit `CODE_SIGN_IDENTITY=-`. Keep the single-method
+`CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` for UI scenarios that use Keychain
+(including the offline Account-entry scenario and full UI class). Unsigned iOS
+builds fail Keychain access with `errSecMissingEntitlement` (-34018); do not
+replace protected storage with a mock to bypass that failure. Keep the single-method
 selector (repeat it for multiple affected scenarios); do not also pass the broad
 class selector. Use a fresh `-resultBundlePath` when native evidence is needed.
+Verify that the named test actually ran: Xcode can report success with zero tests.
+The September 13 category-withdrawal test required the trailing `()` in its
+enumerated identifier. If selection is empty, use `test-without-building
+-enumerate-tests -test-enumeration-style flat -test-enumeration-format text
+-test-enumeration-output-path -` with the same project/scheme/destination, then
+rerun that exact identifier; do not broaden to the whole class to hide the mismatch.
+The offline-entry method selected with `()` on macOS but without `()` on iOS;
+the zero-test iOS run is not passing evidence.
 If the target project is absent or its project spec changed, generate it using
 `npm run target:project:generate`; ordinary source edits do not require regeneration.
 Use the isolated `LedgerTargetStaging` scheme, never the production launch workflow.
@@ -388,7 +427,16 @@ them with the unified checklist, promote individual surfaces, or use their stage
 as product gates.
 
 `npm run conversion:check` validates the unified checklist and runs the passive
-source-omission check. M3-M5 are cumulative product gates:
+source-omission check. Both use the inventory frozen at
+`conversion-manifest.json` → `sourceBaseline.inventoryCommit` and its matching
+source tree, read directly from local Git objects. That snapshot descends from
+the recorded product baseline and also captures later audit-support tools.
+No checkout, backend access, fetch or baseline update is part of this check.
+Missing/invalid snapshot pointers or omitted baseline sources fail; there is no
+fallback to mutable worktree files. Target behavior/ownership checks and normal
+tests still apply to changed implementation files, regardless of directory.
+`node --test scripts/tests/source-baseline.test.mjs` exercises this boundary.
+M3-M5 are cumulative product gates:
 
 - M3: finite product audit complete and every required target behavior through
   M3 implemented, reviewed, and verified or explicitly retired by authority;

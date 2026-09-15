@@ -35,7 +35,7 @@ select throws_ok($$update public.spike_account_business_profiles set revision=2 
 select throws_ok($$delete from public.spike_account_business_profiles where id='account-primary'$$,'42501',null,'Member has no profile deletion grant');
 select throws_ok($$insert into public.spike_account_business_profiles(id,account_id) values ('profile-unknown','profile-unknown')$$,'42501',null,'Member has no profile creation grant');
 select set_config('storage.operation','storage.object.get_authenticated',true);
-select is((select count(*) from storage.objects where bucket_id='ledger-attachments'),1::bigint,'Authenticated GET exposes only exact current authorized logo');
+select is((select count(*) from storage.objects where bucket_id='ledger-attachments' and name like '%/logo-%'),1::bigint,'Authenticated GET exposes only exact current authorized logo');
 select is((select count(*) from storage.objects where name='accounts/account-primary/attachments/logo-primary/'||repeat('c',64)),0::bigint,'Superseded or orphan bytes are not readable');
 select is((select count(*) from storage.objects where name='accounts/account-other/attachments/logo-other/'||repeat('b',64)),0::bigint,'Cross-Account object is denied');
 select set_config('storage.operation','storage.object.sign',true);
@@ -61,7 +61,7 @@ select is((select count(*) from public.spike_account_business_profiles where id=
 select is((select count(*) from storage.objects where bucket_id='ledger-attachments'),0::bigint,'Same JWT loses logo after membership removal');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((select count(*) from public.spike_account_business_profiles where id='account-primary'),1::bigint,'Owner retains profile access');
-select is((select count(*) from storage.objects where bucket_id='ledger-attachments'),1::bigint,'Owner retains exact current logo access');
+select is((select count(*) from storage.objects where bucket_id='ledger-attachments' and name like '%/logo-%'),1::bigint,'Owner retains exact current logo access');
 select throws_ok($$update public.spike_account_business_profiles set revision=2 where id='account-primary'$$,'42501',null,'Owner profile editing also remains gated');
 reset role;
 set local role anon;

@@ -10,6 +10,38 @@ Users frequently need to reference receipt photos, invoice scans, or item images
 
 A single image can be pinned at a time. Pinning places it in a persistent panel that coexists with the current editing context. The panel supports zoom and pan so the user can inspect fine details (e.g. small text on a receipt). Unpinning removes the panel and restores the normal layout.
 
+### PDF support — confirmed 2026-09-14 (D-032)
+
+PDF attachments are also pinnable from the existing PDF viewer's Pin action.
+Reuse the existing reference panel, layout and PDFKit renderer; PDF navigation
+and zoom remain PDFKit behavior, not image gestures or photo matching. Pin state
+is view-local, and withdrawn attachment access clears the reference. This
+supersedes the former PDF exclusion below; generic files remain unpinnable.
+
+## Native text interaction in displayed images — confirmed 2026-09-14
+
+Ledger's existing image viewer must support native Live Text-style interaction:
+detect text in the displayed image, visually highlight detected text through the
+system interaction, and let users select/copy text and invoke other supported
+system actions where available. Background OCR alone does not meet this requirement.
+
+Integrate with the existing `ZoomableScrollView` (`UIImageView` inside
+`UIScrollView` on iOS; `NSImageView` inside `NSScrollView` on macOS). Evaluate
+VisionKit `ImageAnalyzer` and `ImageAnalysisInteraction`, using the appropriate
+platform-supported interaction/overlay APIs. Verify SDK, OS and device support
+during implementation; unsupported environments retain the functioning viewer.
+This authorizes an enhancement of the reused viewer, not a replacement viewer,
+gesture implementation, backend OCR service or revived invoice importer.
+
+Preserve pinch/magnify zoom, pan, double-tap, gallery navigation, annotation
+interaction and pinned-panel behavior. Text interaction must align with the
+displayed image during zoom/pan and coexist with those gestures. Discard stale
+analysis when the image changes or access is withdrawn; do not show the prior
+image's text. Analyze already-authorized displayed bytes without requiring a new
+backend request. Cover supported iOS/macOS text selection/copy and gesture
+coexistence with targeted interaction checks, plus replacement/withdrawal and
+unsupported-device fallback checks. Existing PDFKit text behavior is separate.
+
 ## Where Pinning is Available
 
 Pinning can be triggered from any image-viewing context within a transaction or item:
@@ -170,4 +202,4 @@ struct AttachmentRef: Codable, Hashable {
 - **Multi-image pinning:** Only one image at a time. Multi-pin would add complexity without clear user value.
 - **Pinning across screens:** Pin state does not carry between TransactionDetail → ItemDetail or vice versa.
 - **Persistence:** Pin state is ephemeral. No Firestore writes, no UserDefaults.
-- **PDF pinning:** Only `AttachmentKind.image` is pinnable. PDFs and generic files are not.
+- **Generic file pinning:** Only images and PDFs are pinnable.

@@ -2,9 +2,13 @@ import ImageIO
 import LedgerTargetAppModel
 import LedgerTargetCore
 import SwiftUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
-/// Reads one selected original at a time. No list-wide eager image downloads,
-/// signed-URL identity, or fallback from missing metadata to an empty gallery.
+/// Authorization/catalog/export adapter for the original shared gallery.
 struct DownloadedItemImagesView: View {
     let accountId: AccountID
     let itemId: ItemID
@@ -17,9 +21,7 @@ struct DownloadedItemImagesView: View {
     @State private var model = DownloadedItemImagesModel()
     @State private var selection: EntityID?
     @State private var refresh = UUID()
-    @State private var controlsVisible = true
-    @State private var controlsActivity = UUID()
-    @State private var imageScale: CGFloat = 1
+    @State private var pinnedZoom: CGFloat = 1
     @State private var exportNotice: String?
     private struct Request: Equatable {
         let accountId: AccountID
@@ -28,101 +30,91 @@ struct DownloadedItemImagesView: View {
     }
 
     var body: some View {
-        VStack(spacing: isPinned ? 2 : 12) {
-            HStack {
-                Text(isPinned ? "Pinned reference image" : "Item images")
-                    .font(isPinned ? .caption : .headline).lineLimit(1)
-                Spacer()
-                if let onUnpin {
-                    Button("Unpin image", action: onUnpin)
-                        .accessibilityIdentifier("target-item-image-unpin")
-                } else {
-                    Button("Done") { dismiss() }.accessibilityIdentifier("target-item-images-done")
-                }
-            }
+        Group {
             switch model.state {
-            case .idle, .loading: ProgressView("Loading image information…")
+            case .idle, .loading:
+                statusPane { ProgressView("Loading image information…") }
             case .unavailable:
-                Text("Images are unavailable. Reconnect and try again.")
-                    .accessibilityIdentifier("target-item-images-unavailable")
+                statusPane {
+                    Text("Images are unavailable. Reconnect and try again.")
+                        .accessibilityIdentifier("target-item-images-unavailable")
+                }
             case .downloaded(let catalog):
                 if catalog.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8),
                    catalog.itemId.rawValue.utf8.elementsEqual(itemId.rawValue.utf8) {
-                    if !catalog.isComplete {
-                        Text("Image information is not fully downloaded. More images may be missing.")
-                            .font(.caption).accessibilityIdentifier("target-item-images-incomplete")
+                    VStack(spacing: 0) {
+                        if !catalog.isComplete {
+                            Text("Image information is not fully downloaded. More images may be missing.")
+                                .font(.caption).accessibilityIdentifier("target-item-images-incomplete")
+                        }
+                        if catalog.images.isEmpty {
+                            statusPane {
+                                Text(catalog.isComplete ? "No images" : "No image references downloaded yet")
+                                    .accessibilityIdentifier("target-item-images-empty")
+                            }
+                        } else {
+                            let selected = catalog.images.first {
+                                $0.id.rawValue.utf8.elementsEqual((selection?.rawValue ?? "").utf8)
+                            } ?? catalog.primaryImage!
+                            let index = catalog.images.firstIndex { $0 == selected } ?? 0
+                            if isPinned {
+                                PinnedImagePresentation(imageCount: catalog.images.count,
+                                    currentIndex: Binding(get: { index }, set: { selection = catalog.images[$0].id }),
+                                    zoomScale: $pinnedZoom, onClose: close,
+                                    onChangeImage: { selection = catalog.images[$0].id },
+                                    accessibilityPrefix: "target-pinned",
+                                    closeAccessibilityIdentifier: "target-item-image-unpin",
+                                    allowsSwipePaging: true) {
+                                        DownloadedItemPhotoView(accountId: accountId, itemId: itemId,
+                                            image: selected, reader: reader, compact: true,
+                                            scale: $pinnedZoom)
+                                            .id(identity(selected))
+                                    } actions: { EmptyView() }
+                                    .accessibilityElement(children: .contain)
+                                    .accessibilityIdentifier("target-pinned-image-viewer")
+                            } else {
+                                ImageGalleryPresentation(
+                                    imageIDs: catalog.images.map(identity),
+                                    initialIndex: index,
+                                    isPresented: Binding(get: { true }, set: { if !$0 { close() } }),
+                                    onPinImage: onPin.map { action in { action(catalog.images[$0].id) } },
+                                    onShareImage: { export(catalog.images[$0], saveToDevice: false) },
+                                    onRequestSave: saveAction(catalog.images),
+                                    caption: { catalog.images[$0].isPrimary ? "Primary image" : nil },
+                                    onSelectionChange: { selection = catalog.images[$0].id },
+                                    actionsDisabled: model.isExporting,
+                                    accessibilityPrefix: "target-item",
+                                    showsZoomLevel: true
+                                ) { context in
+                                    DownloadedItemPhotoView(accountId: accountId, itemId: itemId,
+                                        image: catalog.images[context.index], reader: reader,
+                                        onTap: context.onTap, scale: context.zoom)
+                                }
+                            }
+                        }
                     }
-                    if catalog.images.isEmpty {
-                        Text(catalog.isComplete ? "No images" : "No image references downloaded yet")
-                            .accessibilityIdentifier("target-item-images-empty")
-                    } else {
-                        let selected = catalog.images.first {
-                            $0.id.rawValue.utf8.elementsEqual((selection?.rawValue ?? "").utf8)
-                        } ?? catalog.primaryImage!
-                        let index = catalog.images.firstIndex { $0 == selected } ?? 0
-                        DownloadedItemPhotoView(accountId: accountId, itemId: itemId, image: selected,
-                            reader: reader, compact: isPinned,
-                            onPage: catalog.images.count > 1 ? { direction in
-                                selection = catalog.images[(index + direction + catalog.images.count) % catalog.images.count].id
-                            } : nil,
-                            onDismiss: isPinned ? nil : { dismiss() },
-                            controlsVisible: controlsVisible,
-                            onTap: isPinned ? nil : {
-                                controlsVisible.toggle()
-                                controlsActivity = UUID()
-                            },
-                            onZoomChange: { scale in
-                                imageScale = scale
-                                revealControls()
-                            })
-                            .id([accountId.rawValue, itemId.rawValue, selected.referenceId.rawValue,
-                                 String(selected.setRevision), selected.object.attachmentId.rawValue,
-                                 selected.object.contentSHA256.rawValue])
-                        if catalog.images.count > 1 { HStack {
-                            Button("Previous") { selection = catalog.images[(index + catalog.images.count - 1) % catalog.images.count].id }
-                                .accessibilityIdentifier(isPinned ? "target-pinned-images-previous" : "target-item-images-previous")
-                            Text("\(index + 1) of \(catalog.images.count)")
-                                .accessibilityIdentifier(isPinned ? "target-pinned-images-counter" : "target-item-images-counter")
-                            Button("Next") { selection = catalog.images[(index + 1) % catalog.images.count].id }
-                                .accessibilityIdentifier(isPinned ? "target-pinned-images-next" : "target-item-images-next")
-                        }
-                        .modifier(ImageControlsVisibility(visible: isPinned || controlsVisible))
-                        }
-                        if !isPinned {
-                            if selected.isPrimary { Text("Primary image").font(.caption) }
-                            if let onPin {
-                                Button("Pin image for reference") { onPin(selected.id); dismiss() }
-                                    .accessibilityIdentifier("target-item-image-pin")
-                            }
-                            HStack {
-                                Button("Share image") { export(selected, saveToPhotos: false) }
-                                    .accessibilityIdentifier("target-item-image-share")
-                                #if os(iOS)
-                                Button("Save image to Photos") { export(selected, saveToPhotos: true) }
-                                    .accessibilityIdentifier("target-item-image-save")
-                                #endif
-                            }.disabled(model.isExporting)
-                            if model.isExporting {
-                                ProgressView("Preparing or delivering image…")
-                                    .accessibilityIdentifier("target-item-image-exporting")
-                            }
-                        }
+                } else {
+                    statusPane {
+                        Text("Images are unavailable. Refresh and try again.")
+                            .accessibilityIdentifier("target-item-images-unavailable")
                     }
                 }
             }
+        }
+        .frame(minWidth: 280, minHeight: isPinned ? 80 : 360)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaInset(edge: .bottom) {
             if !isPinned {
-                Button("Refresh images") { refresh = UUID() }
-                    .accessibilityIdentifier("target-item-images-refresh")
+                HStack {
+                    Button("Refresh images") { refresh = UUID() }
+                        .accessibilityIdentifier("target-item-images-refresh")
+                    if model.isExporting {
+                        ProgressView("Preparing or delivering image…")
+                            .accessibilityIdentifier("target-item-image-exporting")
+                    }
+                }
             }
         }
-        .padding(isPinned ? 8 : 16).frame(minWidth: 280, minHeight: isPinned ? 80 : 360)
-        #if os(iOS)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        #endif
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier(isPinned ? "target-pinned-image-viewer" : "target-item-image-viewer")
-        .accessibilityValue(isPinned ? "Pinned reference" :
-            (controlsVisible ? "Image controls visible" : "Image controls hidden"))
         .alert("Image", isPresented: Binding(get: { exportNotice != nil }, set: { if !$0 { exportNotice = nil } })) {
             Button("OK") { exportNotice = nil }
         } message: { Text(exportNotice ?? "") }
@@ -132,40 +124,79 @@ struct DownloadedItemImagesView: View {
         .task(id: Request(accountId: accountId, itemId: itemId, refresh: refresh)) {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
-        .task(id: controlsActivity) {
-            guard !isPinned, controlsVisible, imageScale <= 1.01 else { return }
-            do { try await Task.sleep(for: .milliseconds(2200)) } catch { return }
-            guard !Task.isCancelled else { return }
-            controlsVisible = false
-        }
-        .onChange(of: selection?.rawValue.utf8.map { $0 }) { _, _ in
-            imageScale = 1
-            revealControls()
-        }
-        .onDisappear { model.clear(); selection = nil }
+        .onDisappear { model.clear(); selection = nil; pinnedZoom = 1 }
     }
 
-    private func revealControls() {
-        controlsVisible = true
-        controlsActivity = UUID()
+    private func identity(_ image: DownloadedItemImage) -> AnyHashable {
+        AnyHashable([accountId.rawValue, itemId.rawValue, image.referenceId.rawValue,
+            String(image.setRevision), image.object.attachmentId.rawValue,
+            image.object.contentSHA256.rawValue].map { Data($0.utf8) })
     }
 
-    private func export(_ image: DownloadedItemImage, saveToPhotos: Bool) {
+    private func close() {
+        if let onUnpin { onUnpin() } else { dismiss() }
+    }
+
+    private func saveAction(_ images: [DownloadedItemImage]) -> ((Int) -> Void)? {
+        #if os(iOS) || os(macOS)
+        { export(images[$0], saveToDevice: true) }
+        #else
+        nil
+        #endif
+    }
+
+    private func statusPane<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack {
+            HStack {
+                Text(isPinned ? "Pinned reference image" : "Item images")
+                Spacer()
+                Button(isPinned ? "Unpin image" : "Done", action: close)
+                    .accessibilityIdentifier(isPinned ? "target-item-image-unpin" : "target-item-images-done")
+            }
+            content()
+        }.padding()
+    }
+
+    private func export(_ image: DownloadedItemImage, saveToDevice: Bool) {
         guard !model.isExporting else { return }
         Task { @MainActor in
+            #if os(macOS)
+            var destination: URL?
+            #endif
             do {
                 try await model.exportImage(accountId: accountId, itemId: itemId, image: image,
                     reader: reader, prepareDestination: {
                         #if os(iOS)
-                        if saveToPhotos { try await DownloadedImagePhotoSaving.requestPermission() }
+                        if saveToDevice { try await DownloadedImagePhotoSaving.requestPermission() }
+                        #elseif os(macOS)
+                        if saveToDevice {
+                            destination = try await PropertyManagementReportSystemDelivery.imageSaveDestination(
+                                fileName: nil, mediaType: image.object.mediaType)
+                        }
                         #endif
                     }, handoff: { bytes in
                         #if os(iOS)
-                        if saveToPhotos { try await DownloadedImagePhotoSaving.save(bytes); return }
+                        if saveToDevice { try await DownloadedImagePhotoSaving.save(bytes); return }
+                        #elseif os(macOS)
+                        if saveToDevice {
+                            guard let destination, destination.isFileURL else {
+                                throw PropertyManagementReportSystemDelivery.Failure.unavailablePresenter
+                            }
+                            try await PropertyManagementReportSystemDelivery.saveImage(bytes, to: destination)
+                            return
+                        }
                         #endif
                         try await PropertyManagementReportSystemDelivery.handoffImage(bytes)
                     })
-                if saveToPhotos { exportNotice = "Image saved to Photos." }
+                if saveToDevice {
+                    #if os(macOS)
+                    exportNotice = "Image saved."
+                    #else
+                    exportNotice = "Image saved to Photos."
+                    #endif
+                }
+            } catch is CancellationError {
+                return
             } catch {
                 if let failure = error as? DownloadedItemImagesModel.ExportFailure {
                     switch failure {
@@ -180,7 +211,7 @@ struct DownloadedItemImagesView: View {
                     exportNotice = permission.localizedDescription
                     return
                 }
-                if saveToPhotos {
+                if saveToDevice {
                     exportNotice = "The image could not be saved. \(error.localizedDescription)"
                     return
                 }
@@ -197,71 +228,58 @@ private struct DownloadedItemPhotoView: View {
     let image: DownloadedItemImage
     let reader: any DownloadedItemImageReading
     var compact = false
-    var onPage: ((Int) -> Void)? = nil
-    var onDismiss: (() -> Void)? = nil
-    var controlsVisible = true
     var onTap: (() -> Void)? = nil
-    var onZoomChange: ((CGFloat) -> Void)? = nil
+    @Binding var scale: CGFloat
+    var body: some View {
+        DownloadedMediaPhotoView(identity: AnyHashable([accountId.rawValue, itemId.rawValue,
+            image.referenceId.rawValue, String(image.setRevision), image.object.storagePath].map { Data($0.utf8) }),
+            load: { try await reader.loadDownloadedItemImage(accountId: accountId, itemId: itemId,
+                image: image, allowDownload: true) }, onTap: onTap, scale: $scale)
+    }
+}
+
+/// Shared decoded-image adapter; the caller supplies its live authorized bytes.
+/// Original zoom/paging remain in ZoomableScrollView/ImageGalleryPresentation.
+struct DownloadedMediaPhotoView: View {
+    let identity: AnyHashable
+    let load: @Sendable () async throws -> Data?
+    var thumbnail = false
+    var onTap: (() -> Void)? = nil
+    @Binding var scale: CGFloat
     @State private var rendered: CGImage?
     @State private var message = "Loading image…"
     @State private var refresh = UUID()
-    @State private var scale: CGFloat = 1
     private struct Request: Equatable {
-        let image: DownloadedItemImage
+        let identity: AnyHashable
         let refresh: UUID
     }
 
     var body: some View {
-        VStack {
+        Group {
             if let rendered {
-                DownloadedImageZoomSurface(image: rendered, zoomScale: $scale,
-                    onPage: onPage, onDismiss: onDismiss, onTap: onTap)
-                    #if os(macOS)
-                    // Let the image yield space before the fixed-size controls
-                    // in a short sheet; the native surface fits these bounds.
-                    .frame(minHeight: 0)
-                    .layoutPriority(compact ? 0 : -1)
-                    #else
-                    .frame(minHeight: compact ? 0 : 200)
-                    #endif
-                if !compact { VStack(spacing: 8) { HStack {
-                    Button("Zoom out") { scale = max(1, scale - 0.5) }
-                        .disabled(scale <= 1).accessibilityIdentifier("target-item-image-zoom-out")
-                    Text(Double(scale).formatted(.number.precision(.fractionLength(1))) + "×")
-                        .accessibilityIdentifier("target-item-image-zoom-level")
-                    Button("Zoom in") { scale = min(5, scale + 0.5) }
-                        .disabled(scale >= 5).accessibilityIdentifier("target-item-image-zoom-in")
-                }
-                // Keep the image viewport stable when Reset appears. A real
-                // viewport resize intentionally resets the native surface to fit.
-                ZStack {
-                    Color.clear
-                    if scale > 1.01 {
-                        Button("Reset zoom") { scale = 1 }
-                            .accessibilityIdentifier("target-item-image-zoom-reset")
-                    }
-                }.frame(height: 32)
-                }
-                .modifier(ImageControlsVisibility(visible: controlsVisible))
+                if thumbnail {
+                    Image(decorative: rendered, scale: 1).resizable().scaledToFill()
+                } else {
+                    ZoomableScrollView(source: GalleryImageSource(
+                    identity: AnyHashable(ObjectIdentifier(rendered)),
+                    image: platformImage(rendered)),
+                    zoomScale: $scale, onSingleTap: onTap,
+                    imageAccessibilityIdentifier: "target-item-image-rendered")
                 }
             } else {
-                Text(message).accessibilityIdentifier("target-item-image-state")
-                Button("Retry image") { refresh = UUID() }
-                    .accessibilityIdentifier("target-item-image-retry")
+                VStack {
+                    Text(message).accessibilityIdentifier("target-item-image-state")
+                    Button("Retry image") { refresh = UUID() }
+                        .accessibilityIdentifier("target-item-image-retry")
+                }
             }
         }
-        #if os(iOS)
-        .frame(maxWidth: .infinity, minHeight: compact ? 0 : 240, maxHeight: .infinity)
-        #else
-        .frame(maxWidth: .infinity, minHeight: 0, maxHeight: compact ? .infinity : 400)
-        .layoutPriority(compact ? 0 : -1)
-        #endif
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-        .task(id: Request(image: image, refresh: refresh)) {
+        .task(id: Request(identity: identity, refresh: refresh)) {
             rendered = nil; message = "Loading image…"; scale = 1
             do {
-                guard let bytes = try await reader.loadDownloadedItemImage(accountId: accountId,
-                    itemId: itemId, image: image, allowDownload: true) else {
+                guard let bytes = try await load() else {
                     try Task.checkCancellation(); message = "Image not downloaded. Reconnect and retry."; return
                 }
                 try Task.checkCancellation()
@@ -273,25 +291,15 @@ private struct DownloadedItemPhotoView: View {
                       ] as CFDictionary) else { throw DownloadedItemImageFailure.malformed }
                 try Task.checkCancellation()
                 rendered = decoded
-                onZoomChange?(scale)
             } catch { if !Task.isCancelled { message = "Image unavailable. Retry when connected." } }
         }
-        .onChange(of: scale) { _, value in onZoomChange?(value) }
         .onDisappear { rendered = nil }
     }
-}
-
-/// Unlike transparent controls, hidden controls cannot remain tappable or
-/// accessible. SwiftUI still reserves their layout, keeping image zoom stable.
-private struct ImageControlsVisibility: ViewModifier {
-    let visible: Bool
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if visible {
-            content
-        } else {
-            content.hidden().allowsHitTesting(false).accessibilityHidden(true)
-        }
+    private func platformImage(_ image: CGImage) -> GalleryPlatformImage {
+        #if os(iOS)
+        UIImage(cgImage: image)
+        #else
+        NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        #endif
     }
 }

@@ -7,6 +7,41 @@
 
 ## Supabase/PowerSync redesign continuity
 
+- User authorization (2026-09-15): cursor/keyboard control is permitted when
+  needed for Ledger testing; this supersedes the earlier session-approval
+  restriction. Prefer non-disruptive checks when sufficient, and announce when
+  desktop control is needed. Do not run unnecessary UI tests merely because
+  desktop control is permitted.
+- User authorization (2026-09-14): create Ledger in the existing PowerSync
+  nine4-team account and connect it to hosted Ledger Supabase. Leave Boards
+  untouched; stop before any additional charge or paid upgrade.
+- User authorization (2026-09-14): retain the PowerSync deployment CLI token
+  for ongoing Ledger deployments, despite the available account-wide Owner scope.
+  Use it only for Ledger; keep it in secure credential storage, never source/app.
+  The retained CLI token is in macOS Keychain service `PowerSync CLI`, account
+  `auth-token`. Ledger's rotated replication password is in service
+  `Ledger PowerSync replication`, account `ybwviepljilrkrjoahbl`. Never print either.
+- User authorization (2026-09-14): change configuration of the existing hosted
+  Ledger Supabase project `ybwviepljilrkrjoahbl`; do not create a separate dev
+  project. If needed, read/copy one real active Firebase project and its required
+  relationships/media into isolated target test data, leaving the source unchanged.
+  Keep copied data private and prevent test notifications to real users. This is
+  not authority for a production migration, source freeze, release, or cutover;
+  new paid resources still need approval. Do not edit the Firebase checkout.
+- Standing user permission: restart Docker Desktop whenever it is hung or needs
+  restarting for this work. Do not ask again or stop solely to request restart
+  approval. This does not authorize resetting/deleting databases or volumes,
+  production access, or switching local checks to hosted services.
+- Start local Supabase with `node scripts/start-local-supabase-private.cjs`, not
+  bare `supabase start`. Real test-copy data requires verified loopback-only
+  service ports; the default Docker publication exposes local development ports
+  to the LAN. Keep data volumes when restarting. PowerSync uses the same
+  `ledger_target_local_loopback` network. Never load real source data when the
+  binding check fails.
+- On this workstation's loopback stack, Supabase CLI test containers also need
+  `--network-id ledger_target_local_loopback` (for example append it to
+  `npm run target:supabase:test:db --`). CI retains its own configured network;
+  do not hard-code this workstation network into CI commands.
 - Resume from
   `docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json`,
   `git status`, and the current diff. Treat conversation summaries as advisory
@@ -33,6 +68,11 @@
   evidence. Preserve their exact commits and CI references, but do not keep them
   synchronized, promote individual surfaces, or create replacement tracking
   documents.
+- The original-app inventory is frozen at `sourceBaseline.inventoryCommit` in
+  local Git history. Target refactoring, including reused original UI files,
+  does not require source hash/count updates or original-app catalog maintenance.
+  Keep target behavior covered by the active workflow and its tests. Selecting a
+  different source snapshot is explicit review work, not a routine batch step.
 - Finish the finite product audit before expanding implementation: review every
   inventoried UI and background/MCP surface plus every redesign/spec/decision
   area; disposition every known behavior; and link every unresolved decision to
@@ -44,6 +84,19 @@
   abstraction only for a concrete shared problem. Do not create comment-only
   scaffolds, slice dossiers, evidence essays, READY commits, or promotion-only
   commits for ordinary work.
+- Conversion scope means reachable workflows in the latest Swift app plus
+  explicitly approved redesign changes. Dead code, unreferenced screens and old
+  specs are not features to port. The checklist must distinguish those during
+  scope review; do not equate a source-inventory entry with product scope.
+  Invoice importers are retired by D-029 and must not be resumed.
+  The checklist's completed `scopeReview` governs selection: uncertain entries
+  are not authorized work, retired entries are excluded, and reachable/redesign
+  entries retain their existing policy blockers and reuse plans. Do not repeat
+  this scope audit for each batch or treat historical discovery prose as scope.
+- Edit source directly with `apply_patch`; after a failed patch, inspect the
+  affected lines and correct it. Use existing formatters/generators for mechanical
+  changes when appropriate; do not build custom patch-generation scripts for the
+  current edit.
 - Conversion boundary: preserve existing UI and backend-independent utilities;
   adapt/extract their backend dependencies inside this worktree, not the Firebase
   checkout. Follow reuse choices and justified replacement exceptions in the
@@ -111,6 +164,9 @@
 - Continue autonomously between bounded checkpoints. Pause only for an affected
   unresolved decision, unavailable authority/resource, production-impacting
   action, or a blocker that cannot be resolved safely from repository evidence.
+- Workflow boundaries are tracking boundaries, not approval stops. Continue into
+  approved dependent workflows under their own checklist records; do not expand
+  an earlier record into a catch-all or waive its unfinished integration checks.
 - Do not implement redesigned behavior in Firebase or touch the Firebase
   checkout. Production/hosted access, source freeze, migration, release, and
   cutover require explicit user authorization.

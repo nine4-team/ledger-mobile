@@ -2,6 +2,159 @@
 
 Date: 2026-09-10. Original assessment only; the separately requested process repair is recorded in the addendum below.
 
+## September 11 — original-gallery reuse integration (locally completed)
+
+Reported-goal counter created1789167117, starting0. Updates can lag; cached/uncached split unavailable. Not subscription usage. Mixed intervals remain mixed. Verification includes model reasoning, result review and diagnosis—not tokens consumed by dormant tests. No subagents or GitHub CI ran for this trial.
+
+| Activity | Counter range | Tokens | Result |
+|---|---|---:|---|
+| Context recovery and bounded implementation setup | 0 → 5256 | 5256 | Loaded prior decisions/current state, selected four existing gallery checks and inspected overlapping dirty test patch; pre-goal user reply/initial read excluded. |
+| Mixed implementation and context/checkpoint work | 5256 → 48856 | 43600 | Extracted original native zoom loading adapter and pure gallery math; added target source membership. Includes rejected patch-generation attempts; no UI reconstruction. Earlier context/checkpoint work was not separately measured; this is not pure implementation cost. |
+| Verification | 48856 → 51381 | 2525 | macOS isolated Swift6 typecheck failed: native annotation coordinates also require original PinnedImageCalculations. No tests/CI launched. |
+| Implementation / dependency repair | 51381 → 63428 | 12047 | Extracted original pinned-coordinate helpers required by the native view; added build membership. Includes failed output-truncated patch attempt. No feature scope expansion. |
+| Verification | 63428 → 66422 | 2994 | Shared native macOS Swift6 typecheck passed. iOS typecheck found duplicate existing teardown method after extraction; runtime integration not tested. |
+| Rework | 66422 → 68668 | 2246 | Removed duplicate UIKit teardown; retained cancellation, load-identity invalidation and pixel clearing. |
+| Verification | 68668 → 68668 | 0 | Retried only affected iOS shared-view Swift6 typecheck after removing duplicate teardown. |
+| Implementation | 68668 → 79075 | 10407 | Moved original full-gallery controls/pager into shared presentation with injected content/identity/actions; original URL wrapper delegates. Target wiring and pinned chrome still pending. Includes one overbroad source-guard retry. |
+| Verification | 79075 → 80049 | 974 | Shared gallery typecheck found Typography's existing BrandColors dependency on both platforms. |
+| Implementation | 80049 → 85478 | 5429 | Added original theme dependency and explicit original-project source membership for extracted files. Shared native and gallery source now separated; target adapter/pinned chrome not yet switched. |
+| Implementation (including reporting checkpoint) | 85478 → 106833 | 21355 | Extracted original pinned chrome and wired target catalog/protected pixels/export callbacks to shared gallery/native views. Superseded target zoom source excluded from YAML. Includes checkpoint/reporting and patch-output retries; mixed interval, no claimed pure implementation attribution. |
+| Verification | 106833 → 112608 | 5775 | Typechecked shared original gallery/pinned/native presentation with all theme/math dependencies on both platforms; result logs retained. Target app build/runtime still pending. |
+| Implementation | 112608 → 118949 | 6341 | Finished target gallery/pinned callback wiring, accessibility controls and original pinned paging adaptation; regenerated target Xcode project. Old target zoom code excluded, not deleted. Runtime verification pending. |
+| Verification | 118949 → 121678 | 2729 | Actual target macOS app build passed (log /tmp/ledger-gallery-reuse-target-macos-build.log). Reviewed existing gallery/Photos test entry points and disposable-simulator guard. |
+| Environment/setup + verification selection (mixed) | 121678 → 132161 | 10483 | Created owned disposable iPhone simulator81EE3ADB-136B-4DFA-BC80-4EAA2962F18C for isolated gallery/Photos tests; selected existing test suites and guards. Includes two unsuccessful filename/search attempts. |
+| Verification / environment diagnosis / build bookkeeping (mixed) | 132161 → 150021 | 17860 | 43 tests/5 suites passed1.650s; Mac UI failed before assertions (automation initialization timeout, developer mode disabled); permission requested. Added extracted pinned file to original project. iOS four selected tests running on owned simulator, session90051. |
+| Measurement/reporting + verification (mixed) | 150021 → 156841 | 6820 | Flushed resume/usage checkpoint, then observed iOS session90051 terminal65:4tests2failed,91.575s. Photos success/denial passed; gallery/gesture failures need exact diagnosis. No automatic rerun. |
+| Verification | 156841 → 157840 | 999 | Diagnosed iOS failures: gallery case failed in pre-gallery Project navigation; gesture case reached successful Share cancellation then failed paging counter assertion. Source review found hidden controls were not revealed on page/zoom and synchronous pixels can arrive before initial layout. |
+| Rework | 157840 → 176848 | 19008 | Adapted original controls to reveal after page/zoom; fit supplied pixels on viewport layout with stale-callback protection, rather than relying on network delay. Preserved Primary image caption and denied-scope close controls. No model/storage changes. |
+| Verification | 176848 → 297984 | 121136 | Original app simulator build passed without launching Firebase. Narrow iOS rerun reached gallery in both cases but failed same helper's hidden-control existence assertion; original opacity-based controls can remain instantiated. No new storage/Photos failure. |
+| Rework | 297984 → 304466 | 6482 | Changed only shared reveal helper's visibility check from element existence to hit-testing for original faded overlay, preserving actual hide/reveal gestures and failure diagnostics. |
+| Mixed verification, context recovery and test repair | 304466 → 355387 | 50921 | Single-gallery run19015 failed: gallery reports hidden but XCTest reports faded button hittable. Test now observes existing viewer visibility state; focused rerun8230 active. |
+| Mixed verification, test repair and documentation | 355387 → 390105 | 34718 | Visibility helper passed; corrected remaining same-assumption checks. Single-gallery6880 active. Added shared source ownership and architecture note. conversion:check continuity passed but passive source hashes/new extraction files require reconciliation; no full pass. |
+| Mixed focused verification and source-omission diagnosis | 390105 → 399504 | 9399 | Gallery6880 passed143.797s. Gesture-only test launched. Identified11changed/new original-source surfaces from approved extraction; historical catalogs not synchronized. |
+| Mixed source bookkeeping, macOS verification and repair | 399504 → 438758 | 39254 | Reconciled approved extracted source inventory/checklist (including correcting misplaced generated patch); conversion gate passed before latest Mac fix. Gesture test passed70.203s. Mac build passed, CUA fixture launch exposed NSInvalidArgumentException minMagnification360 > max5; corrected macOS-only range setter order. Rebuild60931 active. No security-setting change. |
+| Mixed macOS interaction verification and zoom feedback repair | 438758 → 471380 | 32622 | Mac CUA verified zoom/pan/page/wrap/pin/resize/unpin/share cancellation. Found programmatic zoom feedback left Reset slightly enlarged; guarded animation KVO and routed double-click reset through binding. Rebuilt single fixture proves2.5→1.0 exact fit with disabled zoom-out, both reset paths; close removes pixels. Owned duplicate fixtures terminated; no security setting changed. Original Mac wrapper build now running. |
+| Final review, compatibility and reporting | 471380 → 487090 | 15710 | Original Mac app build passed without launch. Reviewed shared/target diff, target-only protected pixels and unchanged export, scope ownership and actual log evidence; recorded four local passes without broad Item/CI promotion. conversion:check and diff whitespace check passed. Source snapshot recorded; owned Mac fixtures terminated, owned iPhone simulator already shut down. |
+
+Closure/reporting interval: 487090 → 492669 (5579 reported tokens). Final completed-goal total: 492669 reported tokens over3894seconds (about65minutes). All intervals are contiguous and sum to that total. This final accounting write and user handoff occur after the counter closes and are excluded. This is not evidence of subscription savings; no comparable baseline was measured, and mixed intervals limit attribution. Patch-generation repairs, platform-specific defects, UI automation assumptions, context recovery and bookkeeping all contributed—not just test execution.
+
+Result: target uses original shared gallery/pinned/zoom components, with legacy URL/cache loading excluded.43native tests passed1.650s; iOS gallery143.797s, gestures70.203s and Photos denied/saved23.422s/17.823s passed. Original iOS and Mac wrappers and target Mac build passed without Firebase launch. Mac XCTest could not initialize; direct CUA on an in-memory fixture verified gallery interactions, native share cancellation and exact reset/close after fixing the reproduced AppKit range crash and animation feedback. No security setting changed. Both previous failures and subsequent passes remain in the four existing Item-image acceptance entries. No whole Item, CI, hosted or release completion claimed.
+
+Uncommitted implementation at base ca68d793f193463fd191d272891d02cf85b7c5c4, source snapshot 9433e986cd3c68e4413e394b1b9192e3eabf977801ae1d8b1b7d6cf8d475269d. Snapshot is SHA256(JSON of sorted [path,SHA256(file)] pairs for the15changed/new LedgeriOS source/project/test files). No commit/push, production or hosted access. The superseded zoom file remains on disk but is excluded from the target build. conversion:check passed; unrelated historical missing-source warnings remain warnings. Owned Mac fixtures stopped; disposable iPhone simulator is shut down and retained with its test data. Concrete logs and detailed scoped results are in the unified checklist; current state is only the resume pointer.
+
+## September 11 — bounded process correction
+
+### Follow-on sample: PDF row/list reuse (withdrawn by user)
+
+Counter: live goal created `1789174075`, `reported_goal_tokens`; not subscription
+consumption and no cache/input/output split available. Initial pre-goal setup is
+outside this counter. Boundary: shared original PDF row/list controls with target
+bindings, exact edits/inclusion, cancellation and source evidence; no accounting
+import, parser rewrite, schema or inherited gallery work.
+
+| Activity / concrete task | Start → end | Tokens | Result |
+|---|---:|---:|---|
+| Context recovery / select unfinished planned integration | 0 → 33,216 | 33,216 | Existing tracker had no single next task; candidate reads included oversized historical evidence. Avoidable discovery overhead, not implementation. |
+| Mixed: implementation + initial scope/measurement records | 33,216 → 75,202 | 41,986 | Shared row/list extraction and adapters/tests; one rejected patch corrected directly. Cannot reliably split documentation from coding. |
+| Verification: model tests, builds, UI launch, diff/continuity review | 75,202 → 87,824 | 12,622 | 9 model tests pass; native checks running. Continuity requires accounting risk for InvoiceImport paths. |
+| Measurement/reporting | 87,824 → 88,905 | 1,081 | Scope evidence and initial measurement table. |
+| Verification | 88,905 → 95,562 | 6,657 | Both original builds, target builds and continuity pass; first iOS runner crashes before assertions. |
+| Environment/setup | 95,562 → 102,381 | 6,819 | Crash inspection: Apple bundle/defaults initialization; created owned iOS26.5 simulator matching Xcode. |
+| Verification | 102,381 → 112,365 | 9,984 | Retry same iOS scenarios; Mac direct QA reached Project but CUA pipe failed at PDF open. Started existing focused Mac XCTest as alternative. |
+| Environment/setup | 112,365 → 114,365 | 2,000 | One CUA session reset failed to restore native connection; stopped CUA attempts. |
+| Verification | 114,365 → 122,665 | 8,300 | New iOS runner works; error/empty scenario passes. Reviewed unchanged identity/evidence policy. |
+| Measurement/reporting | 122,665 → 123,694 | 1,029 | Saved test sessions and activity rows. |
+| Verification | 123,694 → 125,748 | 2,054 | Both iOS scenarios pass (47.194s and54.452s); user then withdrew the importer scope. |
+| Mixed: user discussion, rollback and scope correction | 125,748 → 149,280 | 23,532 | Stopped Mac run, undid only this batch's app changes, recorded D-029 retirement. No feature-completion claim. |
+| Mixed: withdrawal reporting and documentation validation | 149,280 → 162,176 | 12,896 | Retirement/checkpoint records, source-hash updates for changed product authority, rollback verification and conversion checks. |
+
+The sample ended because the user explicitly does not want invoice importers in
+the redesigned app. Inspection found a source modal definition and helper code
+but no call site opening it; the earlier plan/spec had treated source presence as
+shipped behavior without established reachability. This finding is limited to the
+inspected tree, not a verified audit of the latest released binary or all features.
+Both target outcomes are retired. Pre-existing importer code/tests remain historical;
+removing their old target wiring is separate from undoing this turn's changes.
+No push, GitHub CI or production access. The measurements do not establish
+whole-batch savings; startup discovery and invalid scope selection were material
+waste. A precise coding-only share is unavailable because its interval included
+bookkeeping. Intervals reconcile to162,176reported goal tokens at this checkpoint;
+the final handoff is outside that total. No subscription-consumption percentage
+or savings claim is supported. Conversion and diff checks passed after retirement.
+
+First two intervals checked: same monotonic live counter, contiguous readings.
+The implementation/recording interval is explicitly mixed, not a precise coding
+cost. Remaining intervals will separate reporting from verification/rework.
+
+Kept the existing diagnose-before-retry rule, removed its broken duplicate, and
+added related-use review only after a helper/assumption is demonstrably wrong.
+AGENTS.md now requires direct patches or existing mechanical tools, not custom
+patch generators. No new tracking system or app implementation change.
+
+The source checker and checklist audit views now read the inventory/source tree
+at exact local Git snapshot ca68d793, descended from product baseline fe018501.
+This preserves the reviewed original-app coverage without making target reuse
+update original source hashes, IDs or counts. The gallery-only catalog additions
+were removed; target reuse choices, implementation files and test evidence remain.
+No Firebase checkout/backend, fetch, original-app maintenance, push or CI run is
+needed. The new focused snapshot tests are included in the existing CI check step
+for the next normal push, not dispatched now. Savings remain unmeasured.
+
+Local verification passed: `node --test scripts/tests/source-baseline.test.mjs`
+(5 tests), `npm run conversion:ci:test` (18 configuration tests),
+`npm run conversion:check`, and `git diff --check`. The conversion check retains
+three pre-existing missing-source warnings in the saved inventory. No app/UI
+tests were run for this correction. This bounded process correction is complete.
+
+## September 11 — completed implemented-work reuse review
+
+The one-time review resolves the remaining reuse choices and updates 11 existing
+workflow records plus shared checklist guidance. No behavior, acceptance, status,
+product blocker or historical verification evidence was removed. All 43 target-app
+files remain accounted for; non-UI responsibilities are classified by family, not
+certified line by line. Seven generic infrastructure files have only test consumers
+found; freeze expansion rather than adopting or deleting them automatically.
+See [reuse decisions](implemented-work-reuse-audit-2026-09-11.md#completed-review-and-implementation-decisions).
+No app implementation/deletion, tests, CI, push or production/hosted access occurred.
+Next proposed batch: original gallery presentation with protected target image inputs.
+
+Measurement source: same active goal created at Unix 1789165663, starting at zero;
+units are **reported goal tokens**, not subscription consumption. Cached input,
+uncached input and output breakdowns are unavailable. No subagents. The first two
+intervals were checked for contiguous counters/source identity; the interval that
+crossed compaction is explicitly mixed, not retrospectively assigned to CI or code.
+
+| Activity / concrete work | Counter range | Tokens | Result |
+|---|---|---:|---|
+| Context recovery / prior assessment and scope | 0 → 1,759 | 1,759 | Loaded existing assessment and latest isolated worktree state; no CI inspection. |
+| Verification / implemented-work review plus compaction recovery (mixed) | 1,759 → 15,629 | 13,870 | Reviewed existing assessment, plan and original/target Item/checklist dependencies; boundary crossed context compaction. |
+| Verification | 15,629 → 91,767 | 76,138 | Resolved remaining UI/provider boundaries and generic-helper consumers against code and existing decisions. No test/CI execution. |
+| Process/tooling | 91,767 → 117,749 | 25,982 | Wrote finite review decisions and reuse plans for 11 existing records plus shared guidance/method link; includes one rejected documentation patch, then successful correction. |
+| Verification | 117,749 → 125,497 | 7,748 | JSON/source-link and historical-content comparison: all 43 target-app files covered; 11 reuse plans; all prior behavior/acceptance/evidence unchanged. One read-only comparison retried with sufficient output buffer. No tests or CI. |
+
+| Measurement/reporting | 125,497 → 130,891 | 5,394 | Resume/checkpoint, reporting and final document checks. |
+
+**Closed:** 130,891 reported goal tokens; 842 seconds (about 14 minutes).
+The closing interval includes final preparation, not final post-closure
+bookkeeping. Same source and denominator throughout:
+
+| Activity | Tokens | Share |
+|---|---:|---:|
+| Context recovery | 1,759 | 1.34% |
+| Mixed review/context recovery | 13,870 | 10.60% |
+| Verification / code and document review | 83,886 | 64.09% |
+| Process/tooling / plan correction | 25,982 | 19.85% |
+| Measurement/reporting | 5,394 | 4.12% |
+| **Total** | **130,891** | **100.00%** |
+
+The intervals sum exactly to 130,891; no arithmetic gap. The 13,870-token mixed
+interval cannot be split between review and compaction recovery. No implementation,
+test execution, environment setup or CI monitoring interval occurred. This is
+not a subscription-usage distribution or evidence of implementation savings.
+This review is not an implementation-efficiency sample or evidence of savings.
+Avoidable overhead observed here included overly broad/truncated read output and
+one output-buffer retry. No ongoing test or CI waiting contributed to this task.
+
 ## Conclusion
 
 ### September 11 Purchase-read process trial — finished

@@ -44,6 +44,17 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BCF0D9FDF85937A53B702C0F"
+               BuildableName = "LedgerTargetSharedLogicTests.xctest"
+               BlueprintName = "LedgerTargetSharedLogicTests"
+               ReferencedContainer = "container:LedgerTarget.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "9F8508EDD0E0D476B462B342"
                BuildableName = "LedgerTargetStagingUITests.xctest"
                BlueprintName = "LedgerTargetStagingUITests"

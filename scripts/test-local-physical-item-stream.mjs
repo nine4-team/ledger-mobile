@@ -19,17 +19,22 @@ const yaml = readFileSync("powersync/sync-streams.yaml", "utf8");
 const block = yaml.match(/^  physical_account_items:\n([\s\S]*?)(?=^  \S|$(?![\s\S]))/m)?.[1];
 assert.ok(block, "physical_account_items stream exists");
 assert.match(block, /^    queries:\n/);
-const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
+const allQueries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)]
   .map((match) => match[1].replace(/^        /gm, "").trim());
+const priceQueries = allQueries.filter(sql => sql.includes('FROM ledger_private.item_project_prices'));
+assert.equal(priceQueries.length, 1);
+const acquisitionQueries = allQueries.filter(sql => sql.includes('FROM ledger_private.item_acquisition_reviews'));
+assert.equal(acquisitionQueries.length, 1);
+const queries = allQueries.filter(sql => !priceQueries.includes(sql) && !acquisitionQueries.includes(sql));
 assert.equal(queries.length, 4, "Review changes to the physical stream projections");
 assert.equal(block.replace(/^    queries:\n/, "")
   .replace(/^      - \|\n((?:        .*(?:\n|$))+)/gm, "").trim(), "", "No unparsed stream configuration");
-for (const [index, sql] of queries.entries()) {
+for (const sql of allQueries) {
   assert.match(sql, /^SELECT /);
   assert.ok(!sql.split(/\bFROM\b/)[0].includes("*"), "Projection must name columns explicitly");
   assert.ok(!sql.includes(";"), "Expected one SELECT per stream query");
   assert.equal(sql.match(/auth\.user_id\(\)/g)?.length, 1);
-  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, index === 3 ? 2 : 1);
+  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, queries.includes(sql) ? 1 : 2);
 }
 const quote = (value) => `'${value.replaceAll("'", "''")}'`;
 const suffix = randomUUID();
@@ -42,6 +47,8 @@ const userB = "10000000-0000-0000-0000-000000000003";
 const statements = ["begin; set local standard_conforming_strings=on; set local statement_timeout='5s';"];
 for (const [index, account, principal] of [[0, "account-primary", "principal-restricted"], [1, "account-other", "principal-other"]]) {
   statements.push(`insert into public.spike_items(id,account_id,description,workflow_status,bookmark,source,current_source,notes,created_by_principal_id) values (${quote(fixtureIDs[0][index])},${quote(account)},'Synthetic physical stream test','legacy sold',${index === 0 ? 'true' : 'null'},'Original vendor','Design Inventory','  Descriptive notes  ',${quote(principal)});`);
+  statements.push(`insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
+    values (${quote(account)},${quote(fixtureIDs[0][index])},9223372036854775807,'USD',now(),${quote(principal)});`);
   statements.push(`insert into public.item_image_sets values (${quote(fixtureIDs[0][index])},${quote(account)},${quote(fixtureIDs[0][index])},1,0);`);
   statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,display_name) values (${quote(fixtureIDs[2][index])},${quote(account)},'business_inventory','Synthetic stream space');`);
   statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id) values (${quote(fixtureIDs[1][index])},${quote(account)},${quote(fixtureIDs[0][index])},'business_inventory',${quote(fixtureIDs[2][index])},'2026-09-01',${quote(principal)});`);
@@ -52,7 +59,7 @@ statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,displa
 statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id) values
   (${quote(`stream-ended-placement-${suffix}`)},'account-primary',${quote(fixtureIDs[0][0])},'business_inventory',${quote(endedArchivedSpace)},'2026-08-01','principal-restricted','2026-08-02','principal-restricted');`);
 function capture(label, user, account) {
-  for (const [index, source] of queries.entries()) {
+  for (const [index, source] of [...queries.entries(), [5, priceQueries[0]], [6, acquisitionQueries[0]]]) {
     // Only the two PowerSync parameter functions are translated; the real
     // projection, joins and predicates remain exactly those in the YAML.
     const sql = source.replace("auth.user_id()", `${quote(user)}::uuid`)
@@ -99,11 +106,11 @@ statements.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: statements.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map((line) => JSON.parse(line));
-assert.equal(results.length, 36);
+assert.equal(results.length, 52);
 const columns = [
   ["id", "account_id", "item_id", "revision", "expected_count"],
   ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "source", "current_source", "notes", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
-  ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id"],
+  ["id", "account_id", "item_id", "scope_kind", "project_id", "space_id", "started_at", "started_by_principal_id", "ended_at", "ended_by_principal_id", "start_evidence"],
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
 ];
 for (const { label, index, rows } of results) {
@@ -121,6 +128,31 @@ for (const { label, index, rows } of results) {
   }
   const fixtureIndex = label === "other-member" ? 1 : 0;
   const account = fixtureIndex === 0 ? "account-primary" : "account-other";
+  if (index === 6) {
+    const fixture = rows.find(row => row.id === fixtureIDs[0][fixtureIndex]);
+    assert.ok(fixture, `${label}: complete absence marker for newly created Item`);
+    assert.equal(fixture.state, 'absent');
+    assert.equal(fixture.amount_minor_units, null);
+    assert.equal(fixture.currency, null);
+    for (const row of rows) {
+      assert.equal(row.account_id, account);
+      assert.deepEqual(Object.keys(row).sort(), ['id','account_id','state','amount_minor_units','currency'].sort());
+    }
+    continue;
+  }
+  if (index === 5) {
+    const fixture = rows.find(row => row.id === fixtureIDs[0][fixtureIndex]);
+    assert.ok(fixture, `${label}: expected Item price`);
+    assert.equal(fixture.amount_minor_units, '9223372036854775807');
+    assert.equal(fixture.revision, '1');
+    assert.equal(fixture.currency, 'USD');
+    for (const row of rows) {
+      assert.equal(row.account_id, account, 'No cross-Account Item prices');
+      assert.equal(row.id, row.item_id);
+      assert.deepEqual(Object.keys(row).sort(), ['id', 'account_id', 'item_id', 'amount_minor_units', 'currency', 'revision'].sort());
+    }
+    continue;
+  }
   assert.ok(rows.some((row) => row.id === fixtureIDs[Math.max(0,index-1)][fixtureIndex]), `${label}: expected fixture in projection ${index}`);
   for (const row of rows) {
     assert.equal(row.account_id, account, "No cross-Account physical facts");
@@ -145,4 +177,4 @@ for (const { label, index, rows } of results) {
     }
   }
 }
-console.log("local-physical-item-stream: 36 actual SQL captures pass member, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");
+console.log("local-physical-item-stream: 52 actual SQL captures pass member, acquisition absence markers, exact Int64 Item prices, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");

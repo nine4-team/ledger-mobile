@@ -567,6 +567,31 @@ final class ClientProjectDirectoryPowerSyncQuery:
         ORDER BY client.id
         """
 
+    /// Transactional counterpart of the directory watch, sharing its pending
+    /// creation and archive interpretation rather than inventing another reader.
+    static func readProject(_ id: ProjectID, account: AccountID, principal: PrincipalID,
+                            in local: any Transaction) throws -> ProjectSummary? {
+        let a = account.rawValue, p = principal.rawValue
+        let rows = try local.getAll(sql: projectDirectorySQL,
+            parameters: [a,p,p,a,a,p,p,a,a,p,p], mapper: PowerSyncDirectoryProjectRow.init)
+        guard let row = rows.first(where: { $0.projectId == id.rawValue }), row.scopeIsActive else { return nil }
+        for (operation, family, subject) in [
+            (row.projectPendingOperationId, LocalOperationCommandFamily.createProject, row.projectId),
+            (row.clientPendingOperationId, LocalOperationCommandFamily.createClient, row.clientId)
+        ] {
+            guard let operation else { continue }
+            let fingerprint = try local.getOptional(sql: """
+                SELECT fingerprint FROM spike_local_operations WHERE id=? AND account_id=?
+                  AND actor_principal_id=? AND subject_id=? AND local_state IN ('queued','applying','applied')
+                """, parameters: [operation,a,p,subject]) { try $0.getString(name: "fingerprint") }
+            guard let fingerprint,
+                  try LocalOperationIdentityGuard.inspect(transaction: local,
+                    operationId: .init(validating: operation), expectedFamily: family,
+                    expectedFingerprint: fingerprint) == .matchingOwner else { return nil }
+        }
+        return try row.projectSummary(expectedPrincipalId: p)
+    }
+
     private static let projectDirectorySQL = """
         WITH scope AS (
           SELECT EXISTS (

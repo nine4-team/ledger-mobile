@@ -10,6 +10,7 @@
   "sourceBaseline": {
     "branch": "firebase",
     "commit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
+    "inventoryCommit": "ca68d793f193463fd191d272891d02cf85b7c5c4",
     "workingTree": "clean-committed-baseline",
     "productionExportId": null
   },
@@ -79,6 +80,196 @@
     }
   ],
   "surfaces": [
+    {
+      "id": "SWIFT-2DA1EE54629D",
+      "kind": "swift_ui_component",
+      "name": "LedgeriOS/LedgeriOS/Components/LegacyGalleryImageLoading.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Components/LegacyGalleryImageLoading.swift"
+        }
+      ],
+      "observedSourceHash": "a451654aff5720a8b245de2c040f8d548c9aff7b39f0d9762986868ade8c7454",
+      "acknowledgedSourceHash": null,
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "",
+      "disposition": "unclassified",
+      "target": {
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
+      },
+      "migration": {
+        "rule": "",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": []
+      },
+      "status": "discovered",
+      "blockers": [],
+      "evidence": [],
+      "notes": "September11 approved original-gallery extraction, not a new feature. Existing downloaded-item-browsing-and-detail reusePlan and architecture-decisions.md own target implementation/evidence. Historical baseline retained in Git; no production change.",
+      "classificationBatch": null
+    },
+    {
+      "id": "SWIFT-6CBB4E2C7CE6",
+      "kind": "swift_logic",
+      "name": "LedgeriOS/LedgeriOS/Logic/MediaGalleryPresentationCalculations.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Logic/MediaGalleryPresentationCalculations.swift"
+        }
+      ],
+      "observedSourceHash": "7b483b72d074acc2337c1827c92eb5d350ce06d83dbd3247117ebe97cf6b3507",
+      "acknowledgedSourceHash": null,
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "",
+      "disposition": "unclassified",
+      "target": {
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
+      },
+      "migration": {
+        "rule": "",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": []
+      },
+      "status": "discovered",
+      "blockers": [],
+      "evidence": [],
+      "notes": "September11 approved original-gallery extraction, not a new feature. Existing downloaded-item-browsing-and-detail reusePlan and architecture-decisions.md own target implementation/evidence. Historical baseline retained in Git; no production change.",
+      "classificationBatch": null
+    },
+    {
+      "id": "SWIFT-A2658054FD25",
+      "kind": "swift_logic",
+      "name": "LedgeriOS/LedgeriOS/Logic/PinnedImageGeometry.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Logic/PinnedImageGeometry.swift"
+        }
+      ],
+      "observedSourceHash": "e611b9002b0bed5edbec0e36ec4258e93a2aac184969eb9c079e153bdce8751a",
+      "acknowledgedSourceHash": null,
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "",
+      "disposition": "unclassified",
+      "target": {
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
+      },
+      "migration": {
+        "rule": "",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": []
+      },
+      "status": "discovered",
+      "blockers": [],
+      "evidence": [],
+      "notes": "September11 approved original-gallery extraction, not a new feature. Existing downloaded-item-browsing-and-detail reusePlan and architecture-decisions.md own target implementation/evidence. Historical baseline retained in Git; no production change.",
+      "classificationBatch": null
+    },
+    {
+      "id": "SWIFT-CB0D0A90EA88",
+      "kind": "swift_ui_component",
+      "name": "LedgeriOS/LedgeriOS/Components/ImageGalleryPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Components/ImageGalleryPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "31331896d46b4d7ae0d2d1edaeea6e9baa61013b25c891d2716fe40ff9138761",
+      "acknowledgedSourceHash": null,
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "",
+      "disposition": "unclassified",
+      "target": {
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
+      },
+      "migration": {
+        "rule": "",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": []
+      },
+      "status": "discovered",
+      "blockers": [],
+      "evidence": [],
+      "notes": "September11 approved original-gallery extraction, not a new feature. Existing downloaded-item-browsing-and-detail reusePlan and architecture-decisions.md own target implementation/evidence. Historical baseline retained in Git; no production change.",
+      "classificationBatch": null
+    },
+    {
+      "id": "SWIFT-CC8B63F964DC",
+      "kind": "swift_ui_component",
+      "name": "LedgeriOS/LedgeriOS/Components/PinnedImagePresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Components/PinnedImagePresentation.swift"
+        }
+      ],
+      "observedSourceHash": "b08ecd79e310d8ad97a6a0d9f8b6567be324531178fcb4d28b8c9aeea88e86f4",
+      "acknowledgedSourceHash": null,
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "",
+      "disposition": "unclassified",
+      "target": {
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
+      },
+      "migration": {
+        "rule": "",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [],
+        "acceptance": []
+      },
+      "status": "discovered",
+      "blockers": [],
+      "evidence": [],
+      "notes": "September11 approved original-gallery extraction, not a new feature. Existing downloaded-item-browsing-and-detail reusePlan and architecture-decisions.md own target implementation/evidence. Historical baseline retained in Git; no production change.",
+      "classificationBatch": null
+    },
     {
       "id": "CONFIG-00C8635E9EF9",
       "kind": "release_or_build_tool",
@@ -3359,8 +3550,8 @@
           "path": "LedgeriOS/LedgeriOS.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "4e76faa4c550a27638b41c69b630ca9d742fa675de68d35d8c9306ee1080d5c4",
-      "acknowledgedSourceHash": "4e76faa4c550a27638b41c69b630ca9d742fa675de68d35d8c9306ee1080d5c4",
+      "observedSourceHash": "28d81007d100e8305e9ff5ad9d6a8fa314c337ab24a81c31a41a386737ed43b2",
+      "acknowledgedSourceHash": "28d81007d100e8305e9ff5ad9d6a8fa314c337ab24a81c31a41a386737ed43b2",
       "metadata": {},
       "currentBehavior": "Defines app/test targets, build settings, versions, signing, resources, and SDK dependencies.",
       "disposition": "replace",
@@ -21729,8 +21920,8 @@
           "path": "LedgeriOS/LedgeriOS/Logic/PinnedImageCalculations.swift"
         }
       ],
-      "observedSourceHash": "8a41b3344eaf9152cf99a6f12bc67ee7f616b1b0ce759f838a97bd900eaf8990",
-      "acknowledgedSourceHash": "8a41b3344eaf9152cf99a6f12bc67ee7f616b1b0ce759f838a97bd900eaf8990",
+      "observedSourceHash": "7ac0f5132a424643812628a366626046fe68659499686c2251ec4b1c5b90178d",
+      "acknowledgedSourceHash": "7ac0f5132a424643812628a366626046fe68659499686c2251ec4b1c5b90178d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -25798,8 +25989,8 @@
           "path": "LedgeriOS/LedgeriOS/Components/PinnedImagePanel.swift"
         }
       ],
-      "observedSourceHash": "00332f92b96b08a777370ef1139e864ffc338ec1edc4a3c4cf1f511cdd95cbbc",
-      "acknowledgedSourceHash": "00332f92b96b08a777370ef1139e864ffc338ec1edc4a3c4cf1f511cdd95cbbc",
+      "observedSourceHash": "37dcb843a3741011c54228d430aa8009f84874d6e50e246c48d56b7638bb1f69",
+      "acknowledgedSourceHash": "37dcb843a3741011c54228d430aa8009f84874d6e50e246c48d56b7638bb1f69",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -26401,8 +26592,8 @@
           "path": "LedgeriOS/LedgeriOS/Logic/MediaGalleryCalculations.swift"
         }
       ],
-      "observedSourceHash": "17c92f8f8fa8b95c65065ec883455a1f0dc2964b6f90bbf365a5acb0092fc149",
-      "acknowledgedSourceHash": "17c92f8f8fa8b95c65065ec883455a1f0dc2964b6f90bbf365a5acb0092fc149",
+      "observedSourceHash": "d02da2a98f5aeeb30cfa9cd60c5919293a78bde976d8084df79498d93a168874",
+      "acknowledgedSourceHash": "d02da2a98f5aeeb30cfa9cd60c5919293a78bde976d8084df79498d93a168874",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -27415,8 +27606,8 @@
           "path": "LedgeriOS/LedgeriOS/Components/ImageGallery.swift"
         }
       ],
-      "observedSourceHash": "7160db80141c37127adfc61d7419d510a4a4a2d5e7b2d6fae4046fe61805e0c6",
-      "acknowledgedSourceHash": "7160db80141c37127adfc61d7419d510a4a4a2d5e7b2d6fae4046fe61805e0c6",
+      "observedSourceHash": "d25df66f699bd7a19a407c4539efe58b8d062c8bfd3613a102356ba2c9a3d270",
+      "acknowledgedSourceHash": "d25df66f699bd7a19a407c4539efe58b8d062c8bfd3613a102356ba2c9a3d270",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -41791,8 +41982,8 @@
           "path": "LedgeriOS/LedgeriOS/Components/ZoomableScrollView.swift"
         }
       ],
-      "observedSourceHash": "1ac98532096bb57bf8ea1c6425c57947b4d6742ef612d0f7750a36b6f8b0398b",
-      "acknowledgedSourceHash": "1ac98532096bb57bf8ea1c6425c57947b4d6742ef612d0f7750a36b6f8b0398b",
+      "observedSourceHash": "4deefb95a12a05ffd7bba2acffb69cc34086b7ade487b76dc9c98208c6a643b9",
+      "acknowledgedSourceHash": "4deefb95a12a05ffd7bba2acffb69cc34086b7ade487b76dc9c98208c6a643b9",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },

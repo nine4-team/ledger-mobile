@@ -4,6 +4,7 @@ struct ActionMenuSheet: View {
     let title: String?
     let items: [ActionMenuItem]
     var closeOnItemPress: Bool = true
+    var onClear: (() -> Void)? = nil
     var onSelectAction: ((@escaping () -> Void) -> Void)?
     var persistentExpandedItemKey: Binding<String?>?
 
@@ -71,6 +72,7 @@ struct ActionMenuSheet: View {
                             .font(.title2)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Close menu")
                 }
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.top, Spacing.screenPadding)
@@ -223,6 +225,7 @@ struct ActionMenuSheet: View {
     }
 
     private func clearAllFilters() {
+        if let onClear { onClear(); return }
         for item in items {
             if let subactions = item.subactions,
                let allOption = subactions.first(where: { $0.id == "all" }) {

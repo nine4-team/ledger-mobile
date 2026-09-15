@@ -304,6 +304,15 @@ public struct CreateProjectCommand: Codable, Equatable, Sendable {
     public let fingerprint: OperationFingerprint
 
     public init(operationId: OperationID, draft: ProjectSetupDraft) throws {
+        // Normalize only newly authored commands, not decoded historical bytes.
+        let milliseconds = (draft.capturedAt.timeIntervalSince1970 * 1000).rounded(.down)
+        guard milliseconds.isFinite, abs(milliseconds) < 1_000_000_000_000_000 else {
+            throw ProjectSetupFailure.invalidProjectCreatedAt
+        }
+        let draft = try ProjectSetupDraft(accountId: draft.accountId, actorPrincipalId: draft.actorPrincipalId,
+            operationContractVersion: draft.operationContractVersion, projectId: draft.projectId,
+            clientSelection: draft.clientSelection, displayName: draft.displayName, description: draft.description,
+            categoryAllocations: draft.categoryAllocations, capturedAt: Date(timeIntervalSince1970: milliseconds / 1000))
         let payload = Self.makePayload(from: draft)
         let envelope = OperationEnvelope(
             operationId: operationId,

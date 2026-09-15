@@ -23,6 +23,29 @@ struct LedgerPowerSyncKeychain: Sendable {
         try decode(loadOrCreateKeyBytes(principalNamespace: principalNamespace))
     }
 
+    // Small protected metadata records use the same device-unlock policy as
+    // database keys. Keep them in a separate service from the encryption keys.
+    func loadRecord(key: String) throws -> Data? {
+        try read(principalNamespace: key)
+    }
+
+    func storeRecord(key: String, value: Data) throws {
+        let query = baseQuery(principalNamespace: key)
+        let attributes: [String: Any] = [
+            kSecValueData as String: value,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+        let updated = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if updated == errSecSuccess { return }
+        guard updated == errSecItemNotFound else {
+            throw LedgerPowerSyncKeychainFailure.keychainWriteFailed(updated)
+        }
+        let added = SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil)
+        guard added == errSecSuccess else {
+            throw LedgerPowerSyncKeychainFailure.keychainWriteFailed(added)
+        }
+    }
+
     func loadOrCreateKeyBytes(principalNamespace: String) throws -> Data {
         guard !principalNamespace.isEmpty, principalNamespace.utf8.count <= 256 else {
             throw LedgerPowerSyncKeychainFailure.invalidNamespace

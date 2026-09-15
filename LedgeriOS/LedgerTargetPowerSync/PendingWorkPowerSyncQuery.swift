@@ -120,7 +120,8 @@ actor PendingWorkPowerSyncQuery {
                     queuedOperationCount: final.counts.queued,
                     applyingOperationCount: final.counts.applying,
                     unresolvedRejectedOperationCount: final.counts.rejected,
-                    unverifiedAttachmentCount: final.counts.attachments
+                    unverifiedAttachmentCount: final.counts.attachments,
+                    unfinishedEntryCount: final.counts.unfinishedEntries
                 )
             } catch {
                 throw PendingWorkPowerSyncQueryFailure.summaryConstructionFailed
@@ -188,15 +189,18 @@ actor PendingWorkPowerSyncQuery {
     private func stableEvidence() async throws -> CompositeEvidence? {
         let firstOperations = try await structuredOperationEvidence()
         let firstAttachments = try await attachmentEvidence()
+        let firstEntries = try await unfinishedEntryEvidence()
         let secondOperations = try await structuredOperationEvidence()
         let secondAttachments = try await attachmentEvidence()
+        let secondEntries = try await unfinishedEntryEvidence()
         guard firstOperations == secondOperations,
-              firstAttachments == secondAttachments else {
+              firstAttachments == secondAttachments, firstEntries == secondEntries else {
             return nil
         }
         return try CompositeEvidence(
             operations: secondOperations,
             attachments: secondAttachments,
+            unfinishedEntries: secondEntries,
             environment: environment,
             principalId: principalId,
             accountId: accountId
@@ -241,6 +245,31 @@ actor PendingWorkPowerSyncQuery {
             throw failure
         } catch {
             throw PendingWorkPowerSyncQueryFailure.attachmentObservationFailed
+        }
+    }
+
+    private func unfinishedEntryEvidence() async throws -> [String] {
+        try await database.readTransaction { transaction in
+            try transaction.getAll(sql: """
+                SELECT d.id,d.account_id,d.actor_principal_id,d.project_id,d.entry_json
+                FROM spike_expense_entry_recovery d
+                WHERE NOT EXISTS(SELECT 1 FROM spike_local_operations o WHERE o.account_id=d.account_id
+                    AND o.command_type='create_expense' AND o.subject_id=d.id)
+                  AND NOT EXISTS(SELECT 1 FROM expenses e WHERE e.account_id=d.account_id AND e.id=d.id)
+                ORDER BY d.id
+                """, parameters: nil) { c in
+                    guard try c.getString(name: "account_id") == self.accountId.rawValue,
+                          try c.getString(name: "actor_principal_id") == self.principalId.rawValue else {
+                        throw PendingWorkPowerSyncQueryFailure.operationScopeMismatch
+                    }
+                    let json = try c.getString(name: "entry_json")
+                    let entry = try OperationContractCodec.decode(ExpenseEntryRecovery.self, from: Data(json.utf8))
+                    guard entry.accountId == self.accountId, entry.expenseId.rawValue == (try c.getString(name: "id")),
+                          entry.projectId.rawValue == (try c.getString(name: "project_id")) else {
+                        throw PendingWorkPowerSyncQueryFailure.malformedOperationEvidence
+                    }
+                    return json
+                }
         }
     }
 
@@ -426,6 +455,7 @@ private struct CompositeEvidenceBasis: Codable {
     let operations: [StructuredOperationEvidence]
     let attachments: [AttachmentEvidenceBasis]
     let attachmentOrphans: [AttachmentOrphanBasis]
+    let unfinishedEntries: [String]
 }
 
 private struct AttachmentEvidenceBasis: Codable, Equatable {
@@ -443,6 +473,7 @@ private struct PendingCounts: Equatable {
     var applying: UInt64 = 0
     var rejected: UInt64 = 0
     var attachments: UInt64 = 0
+    var unfinishedEntries: UInt64 = 0
 
     mutating func increment(_ keyPath: WritableKeyPath<Self, UInt64>) throws {
         let (value, overflow) = self[keyPath: keyPath].addingReportingOverflow(1)
@@ -459,6 +490,7 @@ private struct CompositeEvidence {
     init(
         operations: [StructuredOperationEvidence],
         attachments: AttachmentPendingWorkObservation,
+        unfinishedEntries: [String],
         environment: LedgerEnvironmentKind,
         principalId: PrincipalID,
         accountId: AccountID
@@ -482,7 +514,8 @@ private struct CompositeEvidence {
             accountId: accountId,
             operations: operations,
             attachments: attachmentBasis,
-            attachmentOrphans: orphanBasis
+            attachmentOrphans: orphanBasis,
+            unfinishedEntries: unfinishedEntries
         )
         let encoded: Data
         do {
@@ -504,6 +537,7 @@ private struct CompositeEvidence {
             }
         }
         for _ in attachmentBasis { try result.increment(\.attachments) }
+        for _ in unfinishedEntries { try result.increment(\.unfinishedEntries) }
         counts = result
         attachmentOrphans = orphanBasis
     }

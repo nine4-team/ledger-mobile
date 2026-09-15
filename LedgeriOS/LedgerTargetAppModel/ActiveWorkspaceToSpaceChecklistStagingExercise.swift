@@ -10,6 +10,8 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
     public let reportWatcher: (any PropertyManagementReportWatching)?
     public let reportReader: (any PropertyManagementReportReading)?
     public let categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)?
+    public let categoryManagement: CategoryManagementRuntime?
+    public let transactionBrowser: (any TransactionBrowsing)?
 
     public init(
         projectBrowsing: ProjectBrowsingStagingRuntime,
@@ -18,7 +20,9 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
         itemReader: (any DownloadedItemPlacementReading)? = nil,
         reportWatcher: (any PropertyManagementReportWatching)? = nil,
         reportReader: (any PropertyManagementReportReading)? = nil,
-        categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? = nil
+        categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? = nil,
+        categoryManagement: CategoryManagementRuntime? = nil,
+        transactionBrowser: (any TransactionBrowsing)? = nil
     ) {
         self.projectBrowsing = projectBrowsing
         self.spaceBrowsing = spaceBrowsing
@@ -27,6 +31,8 @@ public struct ActiveWorkspaceToSpaceChecklistStagingRuntime: Sendable {
         self.reportWatcher = reportWatcher
         self.reportReader = reportReader
         self.categoryWatch = categoryWatch
+        self.categoryManagement = categoryManagement
+        self.transactionBrowser = transactionBrowser
     }
 }
 
@@ -35,6 +41,7 @@ public enum ActiveWorkspaceToSpaceChecklistRoute: Equatable, Sendable {
     case businessInventory
     case inventorySpaceDetail(SpaceID)
     case projectWorkspace(ProjectID)
+    case projectTransactions(ProjectID)
     case projectNotes(ProjectID)
     case projectSpaces(ProjectID)
     case spaceDetail(projectId: ProjectID, spaceId: SpaceID)
@@ -142,7 +149,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public var representedProjectId: ProjectID? {
         switch route {
-        case .projectWorkspace(let projectId), .projectSpaces(let projectId), .projectNotes(let projectId):
+        case .projectWorkspace(let projectId), .projectTransactions(let projectId), .projectSpaces(let projectId), .projectNotes(let projectId):
             projectId
         case .spaceDetail(let projectId, _):
             projectId
@@ -163,6 +170,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
 
     public let accountId: AccountID
     public var itemReader: (any DownloadedItemPlacementReading)? { runtime?.itemReader }
+    public var transactionBrowser: (any TransactionBrowsing)? { runtime?.transactionBrowser }
     public var referencedSpaceRuntime: (any SpaceCoreDetailsStagingRuntime)? {
         runtime?.spaceBrowsing.detailRuntime(accountId: accountId)
     }
@@ -170,6 +178,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
     public var reportWatcher: (any PropertyManagementReportWatching)? { runtime?.reportWatcher }
     public var reportReader: (any PropertyManagementReportReading)? { runtime?.reportReader }
     public var categoryWatch: (@Sendable () -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>)? { runtime?.categoryWatch }
+    public var categoryManagement: CategoryManagementRuntime? { runtime?.categoryManagement }
     private var runtime: ActiveWorkspaceToSpaceChecklistStagingRuntime?
     private var generation: UInt64 = 0
     private var inventorySelectionGeneration: UInt64 = 0
@@ -238,6 +247,15 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
               projectBrowser.selectedProject?.projectLifecycle == lifecycle else { return }
         route = .projectWorkspace(projectId)
         isChecklistsExpanded = true
+    }
+
+    public func openTransactionsTab() {
+        guard runtime?.transactionBrowser != nil,
+              case .projectWorkspace(let projectId) = route,
+              isRepresentedProject(projectId, segment: directorySegment),
+              projectBrowser.selectedClientId != nil else { return }
+        generation &+= 1
+        route = .projectTransactions(projectId)
     }
 
     public func openSpacesTab() async {
@@ -374,7 +392,7 @@ public final class ActiveWorkspaceToSpaceChecklistStagingExercise {
             guard generation == activeGeneration else { return }
             await spaceBrowser.stop()
 
-        case .projectNotes(let projectId):
+        case .projectNotes(let projectId), .projectTransactions(let projectId):
             route = .projectWorkspace(projectId)
 
         case .spaceDetail(let projectId, _):

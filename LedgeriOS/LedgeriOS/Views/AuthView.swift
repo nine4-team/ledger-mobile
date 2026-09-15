@@ -1,8 +1,28 @@
 import SwiftUI
+#if canImport(FirebaseAuth)
 import FirebaseAuth
 
 struct AuthView: View {
     @Environment(AuthManager.self) private var authManager
+
+    var body: some View {
+        AuthFormPresentation(
+            errorDetail: authManager.errorDetail,
+            onSignIn: { try await authManager.signIn(email: $0, password: $1) },
+            onSignUp: { try await authManager.signUp(email: $0, password: $1) },
+            onGoogleSignIn: { try await authManager.signInWithGoogle() }
+        )
+    }
+}
+#endif
+
+/// Original sign-in form; providers supply actions and safe diagnostic text.
+/// A successful action does not select an Account or grant local-data access.
+struct AuthFormPresentation: View {
+    var errorDetail: String? = nil
+    let onSignIn: (String, String) async throws -> Void
+    let onSignUp: (String, String) async throws -> Void
+    let onGoogleSignIn: () async throws -> Void
 
     enum AuthMode: String, CaseIterable {
         case signIn = "Sign In"
@@ -54,7 +74,7 @@ struct AuthView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                if let detail = authManager.errorDetail {
+                if let detail = errorDetail {
                     Text(detail)
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(.secondary)
@@ -214,7 +234,7 @@ struct AuthView: View {
 
         Task {
             do {
-                try await authManager.signIn(email: email, password: password)
+                try await onSignIn(email, password)
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -233,7 +253,7 @@ struct AuthView: View {
 
         Task {
             do {
-                try await authManager.signUp(email: email, password: password)
+                try await onSignUp(email, password)
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -247,7 +267,7 @@ struct AuthView: View {
 
         Task {
             do {
-                try await authManager.signInWithGoogle()
+                try await onGoogleSignIn()
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -256,7 +276,9 @@ struct AuthView: View {
     }
 }
 
+#if canImport(FirebaseAuth)
 #Preview {
     AuthView()
         .environment(AuthManager())
 }
+#endif

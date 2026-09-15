@@ -86,9 +86,10 @@ struct PinnedImagePanel: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-
+        PinnedImagePresentation(imageCount: allImages.count,
+            currentIndex: $currentIndex, zoomScale: $zoomScale,
+            onClose: onClose, onChangeImage: { onChangeImage(allImages[$0]) },
+            isInteractionDisabled: groupPlacementSession != nil) {
             if currentAttachment.kind == .pdf {
                 pdfContent
             } else if onUpdateCheckmarks != nil {
@@ -119,9 +120,7 @@ struct PinnedImagePanel: View {
                 )
             }
 
-            // Close button — top trailing
-            VStack {
-                HStack {
+        } actions: {
                     if currentAttachment.kind == .image, onAddReviewNote != nil {
                         addReviewNoteButton
                     }
@@ -131,14 +130,9 @@ struct PinnedImagePanel: View {
                             checkmarkActionsMenu
                         }
                     }
-                    Spacer()
-                    closeButton
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.top, Spacing.sm)
-                Spacer()
-            }
-
+        }
+        .overlay {
+            ZStack {
             if isMatchingItems {
                 VStack {
                     matchingInstruction
@@ -169,17 +163,6 @@ struct PinnedImagePanel: View {
                 .padding(.horizontal, Spacing.md)
             }
 
-            // Image counter — bottom center
-            if allImages.count > 1 {
-                VStack {
-                    Spacer()
-                    HStack {
-                        imageCounter
-                        Spacer()
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.bottom, Spacing.sm)
-                }
             }
         }
         .onAppear {
@@ -456,18 +439,7 @@ struct PinnedImagePanel: View {
         return "\(itemIds.count) linked items"
     }
 
-    private var closeButton: some View {
-        Button(action: onClose) {
-            Image(systemName: "xmark")
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
-                .frame(width: 40, height: 40)
-                .background(.black.opacity(0.5))
-                .clipShape(Circle())
-        }
-        .accessibilityLabel("Unpin image")
-    }
+
 
     private var pinnedImageZoomControls: some View {
         HStack(spacing: 0) {
@@ -505,43 +477,7 @@ struct PinnedImagePanel: View {
 
     // MARK: - Image Counter
 
-    private var imageCounter: some View {
-        HStack(spacing: Spacing.md) {
-            Button {
-                let prev = MediaGalleryCalculations.previousIndex(current: currentIndex, total: allImages.count)
-                currentIndex = prev
-                zoomScale = 1.0
-                onChangeImage(allImages[prev])
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-            }
 
-            Text(MediaGalleryCalculations.imageCounterLabel(currentIndex: currentIndex, total: allImages.count))
-                .font(Typography.small)
-                .foregroundStyle(.white)
-
-            Button {
-                let next = MediaGalleryCalculations.nextIndex(current: currentIndex, total: allImages.count)
-                currentIndex = next
-                zoomScale = 1.0
-                onChangeImage(allImages[next])
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-            }
-        }
-        .padding(.vertical, Spacing.xs)
-        .padding(.horizontal, Spacing.lg)
-        .background(.black.opacity(0.7))
-        .clipShape(Capsule())
-        .disabled(groupPlacementSession != nil)
-        .opacity(groupPlacementSession == nil ? 1 : 0.55)
-    }
 }
 
 #if false // Retired: checkmark editing now extends the existing native ZoomableScrollView.

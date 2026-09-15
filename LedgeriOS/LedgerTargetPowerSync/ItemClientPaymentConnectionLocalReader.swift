@@ -7,7 +7,7 @@ enum ItemClientPaymentConnectionLocalReader {
     /// Missing relationships never establish that an Item is unaccounted.
     static func read(transaction: any Transaction, accountId: AccountID,
         principalId: PrincipalID, projectId: ProjectID,
-        placementId: EntityID? = nil) throws -> [EntityID: ProjectItemAccountingRow] {
+        placementId: EntityID? = nil, includeHistoricalPlacements: Bool = false) throws -> [EntityID: ProjectItemAccountingRow] {
         let allowed = try transaction.get(sql: """
             SELECT EXISTS(SELECT 1 FROM spike_account_memberships
               WHERE account_id=? AND principal_id=? AND state='active' AND financial_access='full') AS allowed
@@ -20,10 +20,10 @@ enum ItemClientPaymentConnectionLocalReader {
             FROM item_client_payment_connections link
             LEFT JOIN spike_item_placements placement ON placement.id=link.placement_id
             LEFT JOIN spike_projects project ON project.id=link.project_id AND project.account_id=link.account_id
-            WHERE link.project_id=? AND link.ended_at IS NULL AND placement.ended_at IS NULL
+            WHERE link.project_id=? AND link.ended_at IS NULL AND (?=1 OR placement.ended_at IS NULL)
               AND (? IS NULL OR link.placement_id=?)
             ORDER BY link.placement_id, link.id
-            """, parameters: [projectId.rawValue, placementId?.rawValue, placementId?.rawValue]) { cursor in
+            """, parameters: [projectId.rawValue, includeHistoricalPlacements ? 1 : 0, placementId?.rawValue, placementId?.rawValue]) { cursor in
                 let item = try cursor.getString(name: "item_id")
                 let client = try cursor.getString(name: "client_id")
                 guard try cursor.getString(name: "account_id") == accountId.rawValue,
@@ -69,10 +69,10 @@ enum ItemClientPaymentConnectionLocalReader {
             LEFT JOIN collected_invoice_lines line ON line.account_id=charge.account_id
               AND line.source_kind='item' AND line.source_id=charge.id
             LEFT JOIN collected_invoices invoice ON invoice.account_id=line.account_id AND invoice.id=line.invoice_id
-            WHERE charge.project_id=? AND charge.withdrawn_at IS NULL AND placement.ended_at IS NULL
+            WHERE charge.project_id=? AND charge.withdrawn_at IS NULL AND (?=1 OR placement.ended_at IS NULL)
               AND (? IS NULL OR charge.placement_id=?)
             ORDER BY charge.placement_id, charge.id, line.id
-            """, parameters: [projectId.rawValue, placementId?.rawValue, placementId?.rawValue]) { cursor in
+            """, parameters: [projectId.rawValue, includeHistoricalPlacements ? 1 : 0, placementId?.rawValue, placementId?.rawValue]) { cursor in
               do {
                 let item = try cursor.getString(name: "item_id")
                 let client = try ClientID(validating: cursor.getString(name: "client_id"))

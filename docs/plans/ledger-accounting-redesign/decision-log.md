@@ -1,7 +1,7 @@
 # Ledger Accounting Redesign — Decision Log
 
 Status: active
-Last updated: 2026-09-07
+Last updated: 2026-09-15
 Program index: [README.md](README.md)
 
 This file is the central decision register. Canonical specs contain the full
@@ -9,6 +9,19 @@ behavior. This log distinguishes user-confirmed direction from derived proposals
 that still need approval.
 
 ## Confirmed Decisions
+
+### Collection and Expense clarification (2026-09-15)
+
+The user confirmed that collection is a **manual action prompting for payment
+amount**, not automatic detection or automatic marking as paid. Partial-payment
+handling is out of scope for this release. Expenses remain editable until the
+Invoice is collected. Invoices are sent outside Ledger.
+
+This partially resolves O-006/O-033; it does not approve the combined packet's
+entire field matrix, unmatched-payment review subsystem, or mandatory resend/
+delivered-revision gate. The user requested clarification of the resend proposal,
+not its implementation. O-034 remains open. See the canonical
+[collection clarification](../../specs/invoice-centered-project-accounting.md#manual-collection-and-external-delivery).
 
 | ID | Date | Decision | Canonical detail |
 |---|---|---|---|
@@ -40,6 +53,14 @@ that still need approval.
 | D-026 | 2026-08-31 | Redesign database work must not break or delete functioning production behavior for pre-update users. Destructive removals and restrictive authority changes wait for an explicit compatibility cutover. | [Production compatibility plan](production-compatibility-plan.md) |
 | D-027 | 2026-08-31 | The complete redesign and its database migrations must be testable before hard cutover without mutating or interfering with production users. | [Isolated testing requirement](pre-cutover-testing-plan.md) |
 | D-028 | 2026-09-07 | Preserve intended behavior, meaningful relationships and useful history, not legacy storage structures. Engineers may improve Item acquisition, placement, billing, payment and history representation where correctness, simplicity or maintainability benefits are concrete. Explicit relational facts and derived history are the accepted direction; O-007/O-015 no longer require separate technical-design approval. This does not approve loss of information, changed business behavior or unresolved financial/permission policies. | [Item relationship preservation and source evidence](decision-packets/O-007-O-015-item-accounting-and-provenance.md#relationship-preservation-clarification-2026-09-07) |
+
+| D-029 | 2026-09-11 | Do not bring invoice importers, including Amazon/Wayfair PDF review or accounting-import confirmation, into the redesigned app. Conversion scope is reachable behavior in the latest Swift app plus explicitly approved redesign changes; code/spec presence alone does not establish an active feature. Retain historical evidence without treating it as an implementation queue. This does not retire ordinary receipt attachments or manual Item/Invoice workflows. | User direction in implementation task; [retired importer scope](../../specs/invoice-import.md#target-import-contract) |
+
+| D-030 | 2026-09-13 | Preserve all-member category management and explicit category-type edits. Current category controls Transaction audit applicability, using D-016's redesigned exact-total calculation, not the old tax/subtotal audit. Keep the same Transactions and Items with no extra conversion/review workflow. Visibility follows current category classification: Fee -> General makes affected Transactions visible to members allowed General Transactions; do not retain a sticky Fee restriction solely because the category used to be Fee. Frozen paid Invoice contents and payment amounts remain unchanged. Category names allow punctuation, trim surrounding spaces, reject empty/control text and are case-insensitively unique including archived names. | User decisions and subsequent audit clarification in category-management implementation conversation; Category Editing Clarification below. |
+
+| D-031 | 2026-09-13 | Preserve Item-image continuity in the redesigned app. When Item creation quantity is greater than one, every resulting physical Item receives the complete selected image set, including while bytes are locally queued and across retry or restart. Preserve explicit Copy Image and Paste Image actions in supported Item, lightweight capture, Space and Transaction media flows. Preserve Save to Device through iOS Photos and a user-selected file destination on macOS. These actions operate on authorized image bytes and remain subject to durable attachment scope, capacity and retention rules. This settles creation-time quantity propagation only; it does not settle later Make Copies inheritance under O-066 or byte deletion under O-023. | User-confirmed continuity requirement; [Item physical copies](../../specs/items.md#target-physical-copies) and [user-initiated image transfer](../../specs/offline-first.md#user-initiated-image-transfer). |
+
+| D-032 | 2026-09-14 | PDF pinning is included. Reuse the existing panel, layout and PDFKit rendering; do not build a second pinning UI. User confirmation supersedes the old PDF exclusion. | [Image Pinning](../../specs/ui/image-pinning.md#pdf-support--confirmed-2026-09-14-d-032) |
 
 ## Derived Implementation Proposals
 
@@ -87,13 +108,13 @@ decisions.
 | O-023 | When removing an attachment reference, when may Ledger permanently delete the underlying bytes? | Current Item tools distinguish detach/delete, while Space, Transaction, and iOS paths can immediately attempt deletion even when URLs are shared or represent financial/history evidence. | Review the [O-023 decision packet](decision-packets/O-023-attachment-reference-and-retention.md), which recommends reference detach/supersession, retained evidence holds, a recoverable 30-day zero-reference quarantine, and trusted background purge with no immediate uploaded-byte delete in app/MCP; product approval is still required. |
 | O-024 | May a persisted Project ever be physically deleted, and under what dependency/history conditions? | The current app deletes only the Project document and knowingly orphans children. The target must define whether an empty draft may be discarded and whether any synchronized Project is archive-only. | Review the [combined O-024/O-025 decision packet](decision-packets/O-024-O-025-project-and-client-lifecycle.md), which recommends archive-only after server acceptance and physical discard only for a dependency-free never-synchronized local draft; product approval is still required. |
 | O-025 | When may a Project change its authoritative Client, and how are mistaken/duplicate Clients merged or corrected? | Changing `clientId` changes ownership, Transfer eligibility, reporting and possibly accounting provenance; it cannot remain an ordinary Project text edit. | Review the [combined O-024/O-025 decision packet](decision-packets/O-024-O-025-project-and-client-lifecycle.md), which recommends pre-history dependency-safe Project correction plus owner-authorized duplicate Client survivor/alias merge that preserves frozen history and money; product approval is still required. |
-| O-026 | Which account roles or capabilities may create, edit, archive and reorder shared categories, Space templates and vendor suggestions? | Current rules allow every account member to mutate all presets, while category changes can alter financial meaning. Final RLS/Sync/command authorization cannot be written safely without this policy. | Review the [O-026 decision packet](decision-packets/O-026-shared-reference-data-authorization.md), which recommends protected category/budget capabilities, server-only system categories, delegable template management, and member vendor suggestion with administrator curation; product approval is still required. |
+| O-026 | Which account roles or capabilities may create, edit, archive and reorder shared categories, Space templates and vendor suggestions? | Category portion resolved by D-030: retain all-member management and explicit type editing; normal visibility follows current classification and paid evidence stays frozen. | Template/vendor policies remain open and outside the category batch. The older packet's Owner/Admin-only category recommendation is not accepted authority. No special Fee-to-General visibility transition rule: General Transactions are visible under their normal access rules automatically. |
 | O-027 | What is the unified Item wizard's exact minimum identifying-evidence rule among name, photo, and note? | The current full form accepts name or image, while Quick Add accepts image or note. One target writer cannot retain contradictory hard-validation rules. | Review the [combined Item capture packet](decision-packets/O-016-O-017-O-027-item-capture-and-acquisition-readiness.md), which recommends any one trimmed name, durably retained photo, or trimmed note with identical app/MCP/import/offline validation; product approval is still required. |
 | O-028 | How does Ledger record a vendor cancellation or vendor account credit when the scope owner has not actually received money? | D-001 prohibits a fourth Credit Transaction type and D-007 prohibits calling a non-cash event Return, while the older Vendor Credit proposal captured a real product need. | Review the [O-028 decision packet](decision-packets/O-028-vendor-adjustment-and-credit-balance.md), which recommends a typed non-Transaction adjustment and conserved vendor balance, exact application to a later purchase, and a scope-relative Return only when actual money is received; product approval is still required. |
 | O-029 | When may a Transaction be voided, canceled, or physically deleted? | Current iOS allows deletion after only an `itemIds` check and field-level cancellation, while MCP deletion has a broad dependency preflight/tombstone and MCP cancellation lacks equivalent dependency checks. Paid, Invoice, Item, lineage and attachment evidence cannot be made inconsistent. | Review the [combined O-029/O-032 decision packet](decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md), which recommends no ordinary deletion after atomic posting, typed append-only correction/void evidence, and physical deletion only for never-posted drafts; product approval is still required. |
-| O-030 | How should a source receipt that is arithmetically off by one cent reconcile? | D-016 removes percentage tolerance, but the accepted receipt-line design still leaves a choice between a one-cent source tolerance and an explicit rounding line. | Review the [combined O-008/O-030 decision packet](decision-packets/O-008-O-030-receipt-line-treatment-and-rounding.md), which recommends exact canonical arithmetic plus a visible one-cent source-rounding or unexplained-variance line, never hidden tolerance or inferred tax/discount; product approval is still required. |
+| O-030 | How should a source receipt that is arithmetically off by one cent reconcile? | On 2026-09-13 the user confirmed exact matching for completeness; a nonzero residual is not complete. Silent tolerance is excluded. | Explicit rounding/variance-line treatment remains subject to O-008; the decision packet is a proposal, not authorization to create adjustments automatically. |
 | O-031 | Does Ledger retain or derive per-Item tax rate/amount from a Transaction after receipt tax becomes a `NonItemReceiptLine`? | Current movement pricing and completeness inherit/use Item tax rates, but receipt evidence can contain mixed tax treatment and must not be allocated silently. | Review the [O-031 decision packet](decision-packets/O-031-item-tax-and-acquisition-basis.md), which recommends separate merchandise/landed/billing amounts, exact source or explicitly confirmed allocations, no inherited header rate, and visible partial-basis readiness; product approval is still required. |
-| O-032 | What minimum evidence makes a target Purchase/Return canonical, and what happens to incomplete source Transactions? | Current creation can save a type-only canonical Transaction and rely on later `isComplete`; the target must know when money evidence may affect accounting and how incomplete Firebase rows import. | Review the [combined O-029/O-032 decision packet](decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md), which recommends a durable nonfinancial capture draft, story-specific minimum evidence, atomic posting, and separate migration review for incomplete source rows; product approval is still required. |
+| O-032 | What minimum money evidence is needed to record a redesigned Purchase/Return, and how do incomplete source rows migrate? | Source type-only saving was already discovered. Receipt-audit completeness is distinct from saving details and from proving a real payment. D-016/D-030's exact-match audit does not introduce a save rejection, new draft entity or posting UI. | Preserve saving incomplete receipt details; do not reopen that behavior as a category-batch decision. The [combined packet](decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md) remains an unapproved proposal, not implementation authority. Resolve only concrete missing-money-evidence, lifecycle or import conflicts for the affected redesigned command; category edits and audit recomputation do not depend on approving the packet. |
 | O-033 | At whole-Invoice collection, may the actual positive Client payment differ from the Invoice's authoritative positive total? | Current Swift accepts an amount and ignores it, while current MCP derives settlement from selected lines. The target cannot silently invent a fee, discount, underpayment, overpayment, or allocation rule. | Review the [combined O-006/O-033 decision packet](decision-packets/O-006-O-033-expense-locks-and-collection-payment.md), which recommends exact positive payment equality, atomic mismatch rejection, and noncanonical review capture for real unmatched evidence rather than fabricated variance accounting; product approval is still required. |
 | O-034 | What may change after an Invoice is sent, and how are revised sent contents delivered and audited? | D-011 keeps source values live until collection, but it does not decide whether membership may change silently, whether a revision must be resent, or which rendered versions the Client received. | Review the [combined O-009/O-034 decision packet](decision-packets/O-009-O-034-invoice-adjustments-and-sent-revisions.md), which recommends live working sources, monotonic immutable delivered revisions, revise-and-resend after any post-send financial/membership change, and collection only from the current delivered revision; product approval is still required. |
 | O-035 | What does the Client Summary report's “Total Spent” and category breakdown represent? | Current code sums active physical Item project prices, including values that may be open/uncollected, while the label implies actual Client payment and ignores Expenses, Fees, credits, collections, and Transfers. | Review the [combined O-035/O-036 decision packet](decision-packets/O-035-O-036-client-summary-and-shared-evidence.md), which recommends Client paid, Open charges & credits, and Recognized project value from canonical signed contributions, with physical Item value separate; product approval is still required. |
@@ -117,21 +138,143 @@ decisions.
 | O-053 | Which Account roles or capabilities may edit Space details/checklists, assign or clear Items, manage Space media/review notes/photo markers, archive Spaces, and set manual completion? | O-045 covers direct creation and O-026 shared templates only. Broad source member writes and isolated target grants do not approve this command matrix. Financial visibility remains separate. | User input requested for Employee versus Owner/Admin actions. No policy selected; apply the approved matrix consistently in app, MCP, handlers, RLS and offline admission. |
 | O-054 | Should manual Space complete/incomplete remain an independent reconciliation flag in the redesigned app? | The source exposes this control separately from checklist progress and green photo matching; the target checklist spec explicitly excludes it but does not retire or define its target meaning. | User input requested whether to preserve the independent manual flag. Until resolved, retain source evidence and do not infer completion from checklist or photo-match counts. |
 | O-055 | What portable validation and matching rules govern Space checklist/template text and Space-name search? | O-044 covers direct Space names/notes, not template/checklist fields or search. Current Foundation text handling and name matching do not by themselves define an identical Swift/MCP/Postgres contract; PostgreSQL cannot store NUL and the spec forbids invented checklist limits. | Unresolved: define shared accepted text, outer trimming/control handling, any explicit bounds and case-insensitive search matching, with cross-runtime fixtures and lossless legacy quarantine where necessary. Preserve interior text, duplicate checklist names/items and the existing name-containment search capability; no new limit or normalization policy is approved. |
-| O-056 | What exact category-name validation and uniqueness rule should the redesigned app enforce? | Budget spec allows only letters/numbers/spaces/hyphens/ampersands, while the shipped form allows other non-control text, counts Swift characters and checks only loaded active names. A trusted cross-runtime writer must agree on trimming, length units, case comparison and whether archived names reserve identity. | Unresolved; preserve legacy display text and stable IDs without silently merging names. Define one app/MCP/database rule and explicit duplicate/archive collisions before category create/rename is verified. O-026 separately governs permissions and used-category semantic changes. |
-| O-057 | Which target identity/onboarding and recovery approach should launch? | A-007 remains proposed; preserving email/Google entry, invitations and existing identities requires an explicit provider/linking/recovery choice. A backup online password does not solve offline unlock. | Cross-reference the same unresolved [A-007 choice](../../architecture/redesign/architecture-decisions.md#a-007--target-authentication-choice) and [auth spec](../../specs/authentication-offline-access.md). Preserve existing entry capabilities; do not choose a bridge, fallback credential, identity migration or hosted resource without approval. |
+| O-056 | What exact category-name validation and uniqueness rule should the redesigned app enforce? | User accepted ordinary names including punctuation, surrounding-space trimming, rejection of empty/control-character names, and case-insensitive uniqueness including archived categories. | On 2026-09-13 the user delegated the length choice: use at most 100 Unicode code points after trimming across app/MCP/database. No legacy-name merge or rewrite is authorized. O-026 separately governs type-change effects. |
+| O-057 | Which target identity/onboarding and recovery approach should launch? | Provider resolved by the user on 2026-09-13: Supabase Auth at launch, no temporary Firebase Auth bridge. Existing-user migration/linking, invitations and recovery still need a verified implementation; provider selection alone does not resolve them. A backup online password does not solve offline unlock. | Follow accepted [A-007](../../architecture/redesign/architecture-decisions.md#a-007--target-authentication-choice) and the [auth spec](../../specs/authentication-offline-access.md). Preserve email/password and Google entry capabilities. Do not reopen the provider choice or build a Firebase contingency. Hosted provisioning, production identity access/migration and cutover remain separately unauthorized. |
 | O-058 | What financial access-reduction and retained-work recovery procedure completes offline access? | User approved on 2026-09-07: no offline expiry; normal device unlock without extra Ledger prompt; learned Account removal immediately locks normal access and stops removed-user uploads while retaining unsynced operations/media encrypted. Disconnected devices cannot learn immediate revocation. | [A-016](../../architecture/redesign/architecture-decisions.md#a-016--offline-access-lease) and the [auth spec](../../specs/authentication-offline-access.md) own these approved rules. Financial-scope reduction short of Account removal and the recovery procedure remain open. Retention does not authorize recovery access, export, reassignment or automatic upload; no new downloads, server-access bypass, cross-Account disclosure or silent deletion is approved. |
 | O-059 | Who may view/manage members and invitations or change role and financial access? | Source Owner/Admin grants and UI self-lockout checks do not define safe target ownership changes, last-Owner protection, or allowed role/access combinations. | Resolve the matrix in [financial access](../../specs/financial-access-controls.md#target-visibility-and-management-contract), including own/other Owner/Admin, invite defaults and role-change coercion, and whether permission changes require online authoritative application. No broader source privilege is implicitly approved. |
 | O-060 | What is the complete target financial-visibility matrix for Invoicing and collected accounting evidence? | A collected Purchase can combine visible costs with hidden Fees; the source single-category classifier cannot safely govern frozen allocations, Item provenance, refunds, Transfers or derived totals. | Preserve no-leak and whole-Invoice rules. Approve mixed-payment propagation, no-revenue Invoice visibility, archived allowed Fee IDs and account-wide versus Project overrides in the [financial spec](../../specs/financial-access-controls.md#target-visibility-and-management-contract). O-009 owns manual adjustment types; O-058 owns stale local access. No partial Invoice redaction is approved. |
-| O-061 | What import capabilities and physical quantity/duplicate-document semantics ship in the target release? | The shipped flow locally parses Amazon/Wayfair PDFs and stores a quantity on each Item; the old spec also proposes camera/OCR and additional review editing. Canonical import cannot guess unit identity/value or treat a new duplicate document submission as a retry. | User asked about baseline PDF versus expanded capture/review scope. Preserve existing local parse/review independently. Resolve quantity representation and amount basis plus new-document duplicate warning/handling; one accepted operation's idempotent retry is required regardless. |
 | O-062 | Is a separate Project Closeout report part of this release, and what exact narrative/data contract applies? | The proposed report is not the shipped Client Summary. It leaves format/images, direct-client-paid goods, paid/open value, original-budget evidence, outstanding inclusion and no-balance presentation unsettled. | User asked whether to include it. Preserve existing report types while deciding; if included, use O-035 financial semantics, O-036 evidence delivery, O-060 visibility and canonical non-additive accounting. Do not label current prices as collected cash or current allocations as original budget. |
 | O-063 | Which typed reasons, grouping and contextual resolution/navigation define the target Review queue? | Source Review uses incomplete Transaction buckets; the old proposal describes a flat mixed ProtoItem list and new breadcrumbs. Real-Item/Link redesign does not automatically decide queue membership or destinations. | Preserve Review, query/eight sorts, stable detail and honest count/empty states. Choose reasons, archived/Inventory/unassigned scope, group order/interleaving and breadcrumb destinations; use owning commands rather than generic Assign or proto conversion. O-032 governs Transaction readiness and O-051 rejected-operation recovery remains separate. |
 | O-064 | When may an Item be deleted, by whom, and what happens to its accounting, occurrence and media evidence? | Shipped Item deletion exists, but O-029 governs Transaction deletion only. One physical identity and frozen Invoice history prohibit inferring that every Item may be hard-deleted. | Decide eligibility for unaccounted versus accounted/collected Items, actor permissions, tombstone/restore behavior and reference/media retention. Preserve the discovered control as an unresolved parity obligation; Search and other entry points use the eventual owning Item lifecycle command, never a separate delete writer. |
-| O-065 | Which roles and financial capabilities authorize ordinary Item and Transaction commands? | Project/Client administration (O-052), Space changes (O-053) and financial read visibility (O-060) do not decide who may create/copy/edit Items, change prices/status/bookmarks, or record/edit/cancel/delete/correct Transactions. Source broad member writes are not target grant authority. | Approve one command-role matrix, including Project/Inventory scope, financial-field versus descriptive edits, creation/copy, bulk operations and paid-history restrictions. App and MCP use the same grants; no unrelated read capability or provisional handler grants permission. O-029/O-032/O-064 still govern lifecycle/evidence/retention separately. |
+| O-065 | Which redesigned financial actions require permissions beyond preserved Item/Transaction editing? | Source Account-member Transaction editing was already discovered. Preserve that capability for carried-over edit actions, subject to existing financial visibility and applicable field/history locks; do not introduce an Owner/Admin-only requirement. This does not grant unrestricted writes to every redesigned accounting command. | Map each affected action to preserved behavior and approved redesign restrictions. Ask only about a concrete conflict or genuinely new action, not who can edit Transactions in general. D-030 already authorizes category management; it does not depend on resolving this entire entry. App and MCP must enforce the same scoped permissions. O-029/O-032/O-064 retain their distinct lifecycle, money-evidence and deletion questions. |
 | O-066 | What does Make Copies inherit for each new physical Item? | Source clones the mutable Item, including media and an optional Transaction association. The redesigned one-Item/occurrence model cannot silently duplicate acquisition, charge, Invoice or paid-history membership. | Preserve 1–20 additional copies, exact unsuffixed names and distinct IDs. Choose descriptive/price defaults, media-reference reuse and placement/accounting inheritance; require explicit accounting intent and no duplicated historical cash. O-065 governs actors; O-023 governs shared media retention. |
 | O-067 | Does Sold remain an Item filter state, and what canonical evidence does it represent? | Source filters include Sold but the user-editable picker has only To Purchase, Purchased, To Return and Returned; target placement, billing and collection are separate facts. | Decide retain/redesign/retire the Sold facet without silently equating it to Accounted, placed or paid. Preserve the four editable labels and supported clear-status control; normalize spelling aliases at typed write/import boundaries with raw migration evidence retained. |
 | O-068 | Who may edit the Account business profile, and what are valid name/save semantics? | Shipped Settings is Owner-only but checked-in rules reject saves. Source trims spaces, accepts empty/unbounded/control/NUL text and dismisses immediately; these behaviors are not portable target authority. | Confirm Owner-only versus Owners/Admins separately from trimming, empty/control/NUL handling, UTF-8 length bound and unchanged-name/save semantics. Preserve name/logo controls with visible durable save/error behavior and O-023 media retention; no currency or ownership change is implied. |
 | O-069 | Should caller-supplied MCP ingestion metadata and triage be preserved, redesigned or retired? | Source MCP accepts origin/status/email/matching metadata, reads it back, filters by status and updates triage status, but no email intake/matching/deduplication service exists in the inspected source. O-063's Review reasons do not approve these caller-controlled metadata fields. | Decide supported metadata, status transitions, actors and retention/read visibility. Preserve raw migration evidence regardless; distinguish manual receiptEmailed, approved review reasons and canonical relationships. Do not invent an email intake pipeline. |
 | O-070 | What is the uncollected Invoice cancellation policy? | Source MCP void_invoice sets canceled without lifecycle guards; target paid history is immutable and existing revision/zero-dollar decisions do not settle ordinary cancellation. | Decide created/sent eligibility, actors, confirmation, source-membership release and repeat behavior. Paid Invoice/payment correction remains a separate workflow; cancellation cannot erase settlement evidence. |
+
+## Category Editing Clarification
+
+Conversation follow-up to the category batch (2026-09-12): the user accepted
+current all-member category management and the O-056 name rules above. They
+explicitly rejected removing the current ability to change category type.
+The subsequent clarification is confirmed in D-030: retain existing
+category-dependent Transaction audit behavior and current-classification
+visibility. No extra conversion workflow or sticky Fee access rule is wanted.
+
+### What the existing switch actually does
+
+- `LedgeriOS/LedgeriOS/Views/Settings/BudgetCategoryManagementView.swift`
+  writes `metadata.categoryType` from the existing form; it does not convert
+  underlying Item or Transaction records into different entities.
+- `Models/BudgetCategory.swift` drives item-entry versus non-itemized behavior
+  and Fee labels. Its `TransactionTaxonomy.resolve` also interprets stored
+  Purchases through the current category for financial/report readers.
+- `Views/Creation/NewTransactionView.swift` uses the type for eligible
+  Transaction/category choices and item/tax/subtotal entry.
+- `firebase/functions/src/index.ts`, `onAccountBudgetCategoryWritten` and
+  `recomputeCompletenessForBudgetCategory`, recompute matching Transaction audits
+  and Project budget summaries. This source loop does not use Invoice
+  collection as its boundary. The budget summation uses Transaction amounts
+  and signs; a category-type change alone does not rewrite their cash amounts.
+
+Swift paths above are under `LedgeriOS/LedgeriOS`. These are source-code
+findings from the separate worktree, not production execution results.
+
+### Redesign consequences and proposed treatment
+
+The redesign explicitly distinguishes physical Item charges, vendor-paid
+Expenses and planned Fees (D-009/D-010/D-013/D-022). Category editing cannot
+silently manufacture/delete physical Items, vendor payments or Fee demand.
+Already-collected Invoice lines, allocations and payments stay frozen under
+D-010/D-011, and a category rename/type change cannot bypass restricted Fee
+visibility (`docs/specs/financial-access-controls.md`).
+
+| Type change | Concrete effect to preserve or resolve |
+| --- | --- |
+| General -> Itemized | Apply D-016's exact final-total audit under the changed category. The old source subtotal/tax calculation is replaced; preserve Items, qualifying historical membership and Transaction links. This is not a new item-detail workflow. |
+| Itemized -> General | Stop applying that category-dependent item audit where the current eligibility rule no longer calls for it. Preserve the Transaction, Items and links. Existing special cases remain explicit; do not infer a new universal paid/unpaid cutoff. |
+| General/Itemized -> Fee | The current type resolver can classify existing stored Purchases as Fee for financial/report readers; it does not rewrite their stored Transaction type or amount. Target reporting and access consequences need an explicit rule, not a claim that a category edit necessarily creates a new Fee object. |
+| Fee -> General/Itemized | D-030 explicitly makes affected Transactions visible according to the new category, not their previous category type. Update authorization and sync/read projections consistently; preserve frozen paid contents and payment amounts. Source explicit paymentToBusiness behavior is historical, not a target write type. |
+
+User terminology correction: call the object a **Transaction**, not a receipt.
+The assistant's phrases “requiring item detail,” “missing detail becomes review
+work,” and discussion of generating Items were misleading and are withdrawn.
+Preserve category-dependent audit applicability, using D-016's redesigned
+calculation rather than the old audit (confirmed below). Editing a shared category applies to matching Transactions;
+reassigning one Transaction to another category is a different action.
+
+Resolved Fee question: the user explicitly requires visibility to follow the
+new category. The assistant's proposed lasting restriction was rejected.
+`Logic/FinancialAccessPolicy.swift:isCompanyFee` demonstrates the existing
+category-dependent classification; no new grandfathered restriction is allowed.
+`Logic/ReportAggregationCalculations.swift:computeInvoiceReport` also filters
+using the resolved type, so reporting consequences are real, not just labels.
+
+Furnishings is a special case under D-013, not an arbitrary custom category.
+Changing its type must not disable or recategorize the required Item accounting.
+
+This replaces the assistant's vague “all unpaid entries adopt the type” wording
+with the specific D-030 behavior. No new correction UI, entity-versioning
+framework or category-edit restriction is authorized.
+
+### Audit-calculation clarification confirmed (2026-09-13)
+
+The user explicitly rejected the old audit and confirmed D-016's redesigned
+calculation: Item amounts plus signed non-Item receipt lines must match the final
+Transaction total before it is complete. Do not restore the old tax/subtotal
+calculation, percentage tolerance or blanket source `isComplete` behavior.
+The source-behavior table above documents history, not target calculation authority.
+Current category classification controls audit applicability; category edits keep
+the same Transactions, Items and history, without an extra conversion workflow.
+
+O-030 has no silent numerical tolerance under this clarification. A nonzero
+residual is not complete; any explicit adjustment/rounding line must still follow
+the approved receipt-line treatment rules. O-008 treatment and O-031 Item tax policy
+are not otherwise resolved by this instruction.
+
+The user delegated the minor category-name length choice. Use at most 100 Unicode
+code points consistently in Swift, MCP and Postgres, after surrounding whitespace
+trimming; retain display bytes and existing case-insensitive uniqueness.
+
+Implementation reconciliation (2026-09-13): source edit/save behavior is preserved
+where the approved redesign does not replace it. Frozen Git product baseline
+`fe018501d67cc84b6f140b2645b8a8149ea5c4f6` establishes the following, without
+consulting mutable source copies or production:
+- `firebase/firestore.rules:226` allows Account-member Transaction updates with
+  specific inventory-accounting field locks; it does not require an admin.
+  Existing Fee visibility still applies and must be enforced at the target
+  backend, not merely hidden in the UI.
+- `Logic/TransactionFormValidation.swift` permits type-only creation;
+  `Modals/EditTransactionDetailsModal.swift:166` saves editable fields without
+  requiring receipt totals to match. Receipt-detail mismatch remains an audit
+  result, not a new save restriction. This is not permission to create a
+  zero-evidence payment or alter frozen collected accounting.
+- The category batch changes shared definitions and their dependent reads. It
+  does not need a new ordinary Transaction-editing flow to change a category or
+  recalculate an existing Transaction's audit. Missing target Transaction
+  storage/read/UI integration is implementation work, not missing permission to
+  manage categories. Keep that integration gap visible until verified.
+
+O-032/O-065 above therefore retain only their distinct redesign questions. The
+unapproved draft/posting recommendation cannot be used to replace preserved
+behavior or stall all category work. This reconciliation does not approve new
+deletion/correction rules, expand Fee access, or treat incomplete local download
+evidence as an empty receipt.
+
+The user authorized hosted Supabase development instead of requiring a local Docker
+backend. This does not retire offline-first app behavior or authorize production
+access, migration, cutover, paid resources, or reuse of an unrelated project.
+Resolve the isolated project/organization and any cost before provisioning.
+
+## Resolved Scope Questions
+
+**O-061 — closed by D-029 (2026-09-11).** Baseline and expanded invoice
+importers are excluded: no PDF review, camera/OCR/text capture or accounting
+import confirmation. The earlier claim that PDF review was shipped/reachable
+was not established by a live Swift entry point. Preserve already-stored receipt
+evidence in migration. Manual Item quantities/copies and retry semantics remain
+under their owning workflows, not an importer requirement.
 
 ## Clarification: “No Inventory Hop”
 

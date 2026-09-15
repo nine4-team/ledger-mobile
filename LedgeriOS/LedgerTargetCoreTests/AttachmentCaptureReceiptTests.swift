@@ -4,6 +4,60 @@ import Testing
 
 @Suite("Attachment Capture and Local-Durability Receipt Contracts")
 struct AttachmentCaptureReceiptTests {
+    @Test("Capture metadata survives restart and is bound to the receipt fingerprint", arguments: TransactionAttachmentSection.allCases)
+    func metadataRestart(section: TransactionAttachmentSection) throws {
+        let originalScope = try Self.scope
+        let scope = AttachmentCaptureScope(environment: originalScope.environment,
+            principalId: originalScope.principalId, accountId: originalScope.accountId,
+            parent: .init(kind: .transaction, id: try EntityID(validating: "transaction-media")))
+        let metadata = try AttachmentCaptureMetadata(mediaType: "application/pdf",
+            fileName: "Reçu original.pdf", transactionSection: section)
+        let capture = try LocalAttachmentCapture(attachmentId: Self.attachmentID, scope: scope,
+            capturedAt: Self.capturedAt, bytes: Self.captureBytes, metadata: metadata)
+        let receipt = try AttachmentLocalDurabilityReceipt(accepting: capture, persistedEvidence: Self.evidence(for: capture))
+        let encoded = try OperationContractCodec.encode(receipt)
+        let restored = try OperationContractCodec.decode(AttachmentLocalDurabilityReceipt.self, from: encoded)
+        #expect(restored.metadata == metadata)
+        #expect(restored == receipt)
+        let mutations: [Any] = [NSNull(), ["mediaType": "image/png", "fileName": "Reçu original.pdf", "transactionSection": section.rawValue],
+            ["mediaType": "application/pdf", "fileName": "changed.pdf", "transactionSection": section.rawValue],
+            ["mediaType": "application/pdf", "fileName": "Reçu original.pdf", "transactionSection": section == .receipts ? "other" : "receipts"]]
+        for value in mutations {
+            let tampered = try Self.mutatedJSON(encoded, key: "metadata", value: value)
+            #expect(throws: AttachmentCaptureReceiptFailure.self) {
+                try OperationContractCodec.decode(AttachmentLocalDurabilityReceipt.self, from: tampered)
+            }
+        }
+        #expect(throws: AttachmentCaptureReceiptFailure.self) {
+            try LocalAttachmentCapture(attachmentId: Self.attachmentID, scope: Self.scope,
+                capturedAt: Self.capturedAt, bytes: Self.captureBytes, metadata: metadata)
+        }
+        #expect(throws: AttachmentCaptureReceiptFailure.self) {
+            try LocalAttachmentCapture(attachmentId: Self.attachmentID, scope: scope,
+                capturedAt: Self.capturedAt, bytes: Self.captureBytes,
+                metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: nil))
+        }
+    }
+
+    @Test("Byte-only receipts retain the original v1 fingerprint; invalid media metadata is rejected")
+    func legacyMetadataCompatibility() throws {
+        let capture = try Self.capture()
+        let receipt = try AttachmentLocalDurabilityReceipt(accepting: capture, persistedEvidence: Self.evidence(for: capture))
+        let encoded = try OperationContractCodec.encode(receipt)
+        var originalMaterial = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        #expect(originalMaterial["metadata"] == nil)
+        originalMaterial.removeValue(forKey: "fingerprint")
+        originalMaterial["contract"] = "attachment_capture_receipt_v1"
+        let originalBytes = try JSONSerialization.data(withJSONObject: originalMaterial, options: [.sortedKeys, .withoutEscapingSlashes])
+        #expect(try AttachmentContentSHA256.make(bytes: originalBytes).rawValue == receipt.fingerprint.rawValue)
+        #expect(try OperationContractCodec.decode(AttachmentLocalDurabilityReceipt.self, from: encoded).metadata == nil)
+        for mediaType in ["text/html", "application/octet-stream", "image/", "image/png; charset=utf8"] {
+            #expect(throws: AttachmentCaptureReceiptFailure.self) {
+                try AttachmentCaptureMetadata(mediaType: mediaType, fileName: nil)
+            }
+        }
+    }
+
     @Test("Matching byte evidence produces one scoped path-free receipt")
     func matchingEvidenceProducesReceipt() throws {
         let capture = try Self.capture()

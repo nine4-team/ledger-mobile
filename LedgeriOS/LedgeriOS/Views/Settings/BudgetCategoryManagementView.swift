@@ -1,4 +1,5 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
 import FirebaseFirestore
 
 struct BudgetCategoryManagementView: View {
@@ -23,72 +24,17 @@ struct BudgetCategoryManagementView: View {
     }
 
     var body: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    // Add button
-                    Button {
-                        showingCreateSheet = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Category")
-                        }
-                        .font(Typography.button)
-                        .foregroundStyle(BrandColors.primary)
-                    }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.top, Spacing.sm)
-
-                    // Active categories
-                    if activeCategories.isEmpty {
-                        Text("No categories yet. Add one to get started.")
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .padding(.horizontal, Spacing.screenPadding)
-                    } else {
-                        List {
-                            ForEach(activeCategories) { category in
-                                CategoryManagementRow(
-                                    category: category,
-                                    onEdit: { editingCategory = category },
-                                    onArchive: { archiveTarget = category }
-                                )
-                                .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                            }
-                            .onMove(perform: moveCategories)
-                        }
-                        .listStyle(.plain)
-                        #if canImport(UIKit)
-                        .environment(\.editMode, .constant(.active))
-                        #endif
-                        .frame(minHeight: CGFloat(activeCategories.count) * 72)
-                    }
-
-                    // Archived section
-                    if !archivedCategories.isEmpty {
-                        VStack(alignment: .leading, spacing: Spacing.md) {
-                            Text("Archived")
-                                .sectionLabelStyle()
-                                .padding(.horizontal, Spacing.screenPadding)
-
-                            LazyVStack(spacing: Spacing.cardListGap) {
-                                ForEach(archivedCategories) { category in
-                                    ArchivedCategoryRow(category: category) {
-                                        unarchiveCategory(category)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, Spacing.screenPadding)
-                        }
-                    }
-                }
-                .padding(.bottom, Spacing.xl)
-            }
-        }
-        .background(BrandColors.background)
+        CategoryManagementListPresentation(
+            activeCategories: activeCategories,
+            archivedCategories: archivedCategories,
+            name: { $0.name },
+            typeLabel: { CategoryDisplay.pillLabel(for: $0) },
+            onCreate: { showingCreateSheet = true },
+            onEdit: { editingCategory = $0 },
+            onArchive: { archiveTarget = $0 },
+            onRestore: unarchiveCategory,
+            onMove: moveCategories
+        )
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
         .adaptivePresentation(isPresented: $showingCreateSheet, style: .form) {
@@ -184,58 +130,139 @@ struct BudgetCategoryManagementView: View {
         Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
     }
 }
+#endif
+
+/// The existing list, with data and actions supplied by its owning screen.
+/// Neither category storage nor an operation queue belongs in presentation.
+struct CategoryManagementListPresentation<Category: Identifiable>: View {
+    let activeCategories: [Category]
+    let archivedCategories: [Category]
+    let name: (Category) -> String
+    let typeLabel: (Category) -> String
+    let onCreate: () -> Void
+    let onEdit: (Category) -> Void
+    let onArchive: (Category) -> Void
+    let onRestore: (Category) -> Void
+    let onMove: (IndexSet, Int) -> Void
+
+    var body: some View {
+        ScrollView {
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    Button(action: onCreate) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Category")
+                        }
+                        .font(Typography.button)
+                        .foregroundStyle(BrandColors.primary)
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.top, Spacing.sm)
+
+                    if activeCategories.isEmpty {
+                        Text("No categories yet. Add one to get started.")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .padding(.horizontal, Spacing.screenPadding)
+                    } else {
+                        List {
+                            ForEach(activeCategories) { category in
+                                CategoryManagementRow(
+                                    name: name(category), typePill: typeLabel(category),
+                                    onEdit: { onEdit(category) },
+                                    onArchive: { onArchive(category) }
+                                )
+                                .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                            .onMove(perform: onMove)
+                        }
+                        .listStyle(.plain)
+                        #if canImport(UIKit)
+                        .environment(\.editMode, .constant(.active))
+                        #endif
+                        .frame(minHeight: CGFloat(activeCategories.count) * 72)
+                    }
+
+                    if !archivedCategories.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
+                            Text("Archived")
+                                .sectionLabelStyle()
+                                .padding(.horizontal, Spacing.screenPadding)
+
+                            LazyVStack(spacing: Spacing.cardListGap) {
+                                ForEach(archivedCategories) { category in
+                                    ArchivedCategoryRow(name: name(category)) {
+                                        onRestore(category)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, Spacing.screenPadding)
+                        }
+                    }
+                }
+                .padding(.bottom, Spacing.xl)
+            }
+        }
+        .background(BrandColors.background)
+    }
+}
 
 // MARK: - Category Row
 
 private struct CategoryManagementRow: View {
-    let category: BudgetCategory
+    let name: String
+    let typePill: String
     let onEdit: () -> Void
     let onArchive: () -> Void
-
-    private var typePill: String {
-        CategoryDisplay.pillLabel(for: category)
-    }
 
     var body: some View {
         Card {
             HStack {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(category.name)
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textPrimary)
-                    Badge(text: typePill)
+                Button(action: onEdit) {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(name)
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textPrimary)
+                        Badge(text: typePill)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-
-                Spacer()
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("category-name-\(name)")
 
                 HStack(spacing: Spacing.md) {
                     Button { onEdit() } label: {
                         Image(systemName: "pencil")
                             .foregroundStyle(BrandColors.textSecondary)
                     }
+                    .accessibilityLabel("Edit \(name)")
 
                     Button { onArchive() } label: {
                         Image(systemName: "archivebox")
                             .foregroundStyle(BrandColors.textSecondary)
                     }
+                    .accessibilityLabel("Archive \(name)")
                 }
+                .buttonStyle(.borderless)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture { onEdit() }
     }
 }
 
 // MARK: - Archived Category Row
 
 private struct ArchivedCategoryRow: View {
-    let category: BudgetCategory
+    let name: String
     let onUnarchive: () -> Void
 
     var body: some View {
         Card {
             HStack {
-                Text(category.name)
+                Text(name)
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textSecondary)
 

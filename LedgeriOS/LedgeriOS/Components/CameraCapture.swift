@@ -126,7 +126,8 @@ final class CameraEngine: NSObject, @unchecked Sendable {
         }
     }
 
-    func capturePhoto(completion: @escaping @MainActor (UIImage, Data) -> Void) {
+    func capturePhoto(completion: @escaping @MainActor (UIImage, Data) -> Void,
+        onFailure: @escaping @MainActor (Error) -> Void = { _ in }) {
         sessionQueue.async { [self] in
             let settings = AVCapturePhotoSettings()
             settings.photoQualityPrioritization = .speed
@@ -134,6 +135,7 @@ final class CameraEngine: NSObject, @unchecked Sendable {
                 settings: settings,
                 onWillCapture: { [weak self] in self?.onWillCapture?() },
                 completion: completion,
+                onFailure: onFailure,
                 onFinished: { [weak self] uniqueID in
                     self?.sessionQueue.async { [weak self] in
                         self?.captureProcessors[uniqueID] = nil
@@ -239,17 +241,22 @@ private final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelega
     private let requestTime = ProcessInfo.processInfo.systemUptime
     private let onWillCapture: @MainActor () -> Void
     private let completion: @MainActor (UIImage, Data) -> Void
+    private let onFailure: @MainActor (Error) -> Void
+    private let deliveryLock = NSLock()
+    private var delivered = false
     private let onFinished: @Sendable (Int64) -> Void
 
     init(
         settings: AVCapturePhotoSettings,
         onWillCapture: @escaping @MainActor () -> Void,
         completion: @escaping @MainActor (UIImage, Data) -> Void,
+        onFailure: @escaping @MainActor (Error) -> Void,
         onFinished: @escaping @Sendable (Int64) -> Void
     ) {
         uniqueID = settings.uniqueID
         self.onWillCapture = onWillCapture
         self.completion = completion
+        self.onFailure = onFailure
         self.onFinished = onFinished
     }
 
@@ -271,7 +278,7 @@ private final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelega
               let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data),
               let jpegData = image.jpegData(compressionQuality: 0.85) else {
-            if let error { print("[Camera] processing failed id=\(uniqueID): \(error)") }
+            fail(error ?? CocoaError(.fileReadCorruptFile))
             return
         }
 
@@ -281,6 +288,7 @@ private final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelega
         let latency = Int((ProcessInfo.processInfo.systemUptime - requestTime) * 1_000)
         print("[Camera] processing latency=\(latency)ms id=\(uniqueID)")
 
+        guard claimDelivery() else { return }
         Task { @MainActor [completion] in completion(thumbnail, jpegData) }
     }
 
@@ -289,8 +297,23 @@ private final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelega
         didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings,
         error: Error?
     ) {
-        if let error { print("[Camera] capture failed id=\(uniqueID): \(error)") }
+        // Processing normally delivered already. Missing/failed processing must
+        // also release the UI's in-flight state, exactly once.
+        fail(error ?? CocoaError(.fileReadUnknown))
         onFinished(uniqueID)
+    }
+
+    private func claimDelivery() -> Bool {
+        deliveryLock.withLock {
+            guard !delivered else { return false }
+            delivered = true
+            return true
+        }
+    }
+
+    private func fail(_ error: Error) {
+        guard claimDelivery() else { return }
+        Task { @MainActor [onFailure] in onFailure(error) }
     }
 }
 
@@ -374,13 +397,34 @@ final class CameraManager {
         }
     }
 
-    func capturePhoto(onCapture: @escaping (Data) -> Void) {
-        engine.capturePhoto { [weak self] thumbnail, data in
+    var isAcceptingCapture = false
+    var captureError: String?
+
+    func capturePhoto(onCapture: @escaping (Data) -> Void,
+        onCaptureAccepted: ((Data) async throws -> Void)? = nil) {
+        guard !isAcceptingCapture else { return }
+        captureError = nil
+        if onCaptureAccepted != nil { isAcceptingCapture = true }
+        engine.capturePhoto(completion: { [weak self] thumbnail, data in
             guard let self else { return }
-            lastThumbnail = thumbnail
-            captureCount += 1
-            onCapture(data)
-        }
+            if let onCaptureAccepted {
+                Task { @MainActor in
+                    defer { self.isAcceptingCapture = false }
+                    do {
+                        try await onCaptureAccepted(data)
+                        self.lastThumbnail = thumbnail
+                        self.captureCount += 1
+                    } catch { self.captureError = error.localizedDescription }
+                }
+            } else {
+                lastThumbnail = thumbnail
+                captureCount += 1
+                onCapture(data)
+            }
+        }, onFailure: { [weak self] error in
+            self?.isAcceptingCapture = false
+            self?.captureError = error.localizedDescription
+        })
     }
 
     func focus(at devicePoint: CGPoint) {
@@ -487,6 +531,9 @@ private struct FocusIndicator: View {
 struct CameraCapture: View {
     var onCapture: (Data) -> Void
     var onDismiss: () -> Void
+    var isCaptureEnabled = true
+    var captureDisabledMessage: String?
+    var onCaptureAccepted: ((Data) async throws -> Void)?
 
     @State private var manager = CameraManager()
     /// Tap location in UIKit/layer coordinate space (from UITapGestureRecognizer on PreviewView).
@@ -552,6 +599,10 @@ struct CameraCapture: View {
         .overlay(alignment: .bottom) {
             if manager.isSessionRunning {
                 VStack(spacing: Spacing.md) {
+                    if manager.isAcceptingCapture { ProgressView("Saving attachment…").tint(.white).foregroundStyle(.white) }
+                    if let message = manager.captureError ?? captureDisabledMessage {
+                        Text(message).font(Typography.caption).foregroundStyle(.white).multilineTextAlignment(.center)
+                    }
                     if manager.zoomPresets.count > 1 { zoomBar }
                     bottomBar
                 }
@@ -589,6 +640,7 @@ struct CameraCapture: View {
         }
         .padding(.horizontal, Spacing.lg)
         .padding(.top, Spacing.sm)
+        .disabled(manager.isAcceptingCapture)
     }
 
     // MARK: - Zoom Bar
@@ -650,8 +702,9 @@ struct CameraCapture: View {
 
             ShutterButton {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                manager.capturePhoto { data in onCapture(data) }
+                manager.capturePhoto(onCapture: onCapture, onCaptureAccepted: onCaptureAccepted)
             }
+            .disabled(!isCaptureEnabled || manager.isAcceptingCapture)
 
             Spacer()
 

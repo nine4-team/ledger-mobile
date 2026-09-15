@@ -1,6 +1,8 @@
 import Foundation
 import UniformTypeIdentifiers
 
+enum AttachmentKind: String, Codable, Sendable { case image, pdf, file }
+
 struct AttachmentUpload: Sendable {
     let data: Data
     let originalFileName: String?

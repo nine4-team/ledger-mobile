@@ -14,7 +14,9 @@ enum ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter {
             itemReader: runtime,
             reportWatcher: runtime,
             reportReader: runtime,
-            categoryWatch: { runtime.watchBudgetCategories() }
+            categoryWatch: { runtime.watchBudgetCategories() },
+            categoryManagement: CategoryManagementRuntimeAdapter.adapt(runtime),
+            transactionBrowser: runtime
         )
     }
 }
@@ -25,6 +27,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @State private var showingPropertyReport = false
     @State private var showingClientReport = false
     @State private var showingSettings = false
+    @State private var showingInvoicing = false
 
     private var itemSpaceNavigation: ItemSpaceNavigation? {
         guard let detailRuntime = model.referencedSpaceRuntime,
@@ -43,6 +46,20 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
             spaceDetail(scope: .businessInventory, spaceId: spaceId)
         case .projectWorkspace(let projectId):
             projectWorkspace(projectId)
+        case .projectTransactions(let projectId):
+            Section("Transactions") {
+                backButton
+                if model.representedProjectIsAvailable,
+                   model.projectBrowser.selectedProjectId == projectId,
+                   let reader = model.transactionBrowser,
+                   let clientId = model.projectBrowser.selectedClientId {
+                    TargetTransactionBrowserView(scope: .project(accountId: model.accountId,
+                        projectId: projectId, clientId: clientId),
+                        scopeName: model.projectBrowser.selectedProjectName ?? "Project", reader: reader,
+                        itemReader: model.itemReader as? any DownloadedItemPlacementHistoryReading,
+                        spaceNavigation: itemSpaceNavigation)
+                } else { Text("Project Transactions are unavailable.") }
+            }
         case .projectNotes(let projectId):
             Section("Project Notes") {
                 backButton
@@ -75,6 +92,12 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .sheet(isPresented: $showingSettings) {
                         NavigationStack {
                             Form {
+                                if let categories = model.categoryManagement {
+                                    NavigationLink("Budget Categories") {
+                                        TargetCategoryManagementView(accountId: model.accountId, runtime: categories)
+                                    }
+                                    .accessibilityIdentifier("target-settings-budget-categories")
+                                }
                                 Section("Business profile") {
                                     AccountBusinessProfileView(accountId: model.accountId, reader: profileReader)
                                 }
@@ -181,8 +204,14 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     Text("Item data is unavailable.")
                 }
             case .transactions:
-                Text("Inventory Transactions are unavailable. The authorized financial download is not implemented yet.")
-                    .accessibilityIdentifier("target-inventory-transactions-unavailable")
+                if let reader = model.transactionBrowser {
+                    TargetTransactionBrowserView(scope: .businessInventory(accountId: model.accountId),
+                        scopeName: "Business Inventory", reader: reader,
+                        itemReader: model.itemReader as? any DownloadedItemPlacementHistoryReading, spaceNavigation: itemSpaceNavigation)
+                } else {
+                    Text("Inventory Transactions are unavailable. The authorized financial download is not implemented yet.")
+                        .accessibilityIdentifier("target-inventory-transactions-unavailable")
+                }
             case .spaces:
                 LabeledContent("Space data", value: spaceDirectoryStatus)
                 SpaceBrowserSearchControls(model: model.spaceBrowser)
@@ -232,7 +261,28 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 }
                 LabeledContent("Project data", value: model.projectBrowser.detailStateLabel)
                     .accessibilityIdentifier("target-active-project-workspace-status")
+                if model.transactionBrowser != nil, model.projectBrowser.selectedClientId != nil {
+                    Button("Transactions") { model.openTransactionsTab() }
+                    .accessibilityIdentifier("target-project-transactions")
+                }
                 if model.representedProjectIsActive {
+                    if let runtime = model.itemReader as? any ProjectInvoicingReading {
+                        Button("Invoicing") { showingInvoicing = true }
+                            .accessibilityIdentifier("target-project-invoicing")
+                            .sheet(isPresented: $showingInvoicing) {
+                                NavigationStack {
+                                    ProjectInvoicingWorkspaceView(runtime: runtime, accountId: model.accountId, projectId: projectId, currency: accountCurrency,
+                                        projectName: model.projectBrowser.selectedProjectName ?? "Project name unavailable",
+                                        clientName: model.projectBrowser.selectedClientName ?? "")
+                                        .toolbar {
+                                            ToolbarItem(placement: .cancellationAction) {
+                                                Button("Close") { showingInvoicing = false }
+                                                    .accessibilityIdentifier("target-invoicing-close")
+                                            }
+                                        }
+                                }
+                            }
+                    }
                     Button("Spaces") {
                         Task { await model.openSpacesTab() }
                     }
@@ -423,10 +473,19 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     }
 
     private var backButton: some View {
-        Button("Back") {
-            Task { await model.back() }
+        HStack {
+            Button("Back") { Task { await model.back() } }
+                .accessibilityIdentifier("target-active-workspace-back")
+            Spacer()
+            if model.representedProjectIsAvailable,
+               let projectId = model.projectBrowser.selectedProjectId,
+               model.route != .projectTransactions(projectId),
+               let clientId = model.projectBrowser.selectedClientId,
+               let reader = model.transactionBrowser {
+                ProjectTransactionExportButton(scope: .project(accountId: model.accountId,
+                    projectId: projectId, clientId: clientId), reader: reader)
+            }
         }
-        .accessibilityIdentifier("target-active-workspace-back")
     }
 
     @ViewBuilder

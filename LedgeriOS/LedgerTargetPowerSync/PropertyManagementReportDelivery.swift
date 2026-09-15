@@ -43,7 +43,7 @@ public enum PropertyManagementReportDelivery {
 /// and exact source revalidation; callers cannot omit that required callback.
 enum ProtectedReportDelivery {
     @MainActor static func deliver(data: Data, format: ReportScratchFormat,
-        reference: ProtectedArtifactSnapshotReference, scratchRoot: URL?,
+        reference: ProtectedArtifactSnapshotReference, scratchRoot: URL?, nameHint: String? = nil,
         revalidate: @MainActor () async throws -> Void,
         handoff: @MainActor (URL) async throws -> Void) async throws {
         let store = try ReportScratchStore(rootDirectory: scratchRoot)
@@ -51,7 +51,7 @@ enum ProtectedReportDelivery {
         do {
             try await store.recoverAbandonedSessions()
             try Task.checkCancellation()
-            artifact = try await store.create(data: data, format: format, snapshotReference: reference)
+            artifact = try await store.create(data: data, format: format, snapshotReference: reference, nameHint: nameHint)
         } catch {
             try? await store.close()
             throw error

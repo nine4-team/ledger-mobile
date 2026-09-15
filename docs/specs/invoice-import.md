@@ -1,16 +1,25 @@
 # Invoice Import
 
-> **Target/source boundary:** Preserve the shipped local PDF import capability,
-> not the Firebase writer. The source UI locally extracts Amazon/Wayfair PDFs,
-> reviews included rows and quantities/prices, shows vendor summaries/debug
-> information, and captures receipt/thumbnail evidence. It does not call a
-> Cloud Function to parse those supported text PDFs. The broader camera/OCR/
-> editor features described below were not all implemented; O-061 owns their
-> target scope and quantity/duplicate-import rules. Canonical Item/Invoice and
-> receipt-line specs replace the old unconditional Purchase writer and amount
-> model. No target Firebase implementation is authorized.
+> **Retired target scope — September 11, D-029:** The user explicitly excluded
+> invoice importers from the redesigned app. Do not implement, port or polish
+> the PDF review/import flows described below. Ordinary receipt attachments and
+> manual Item/Invoice workflows are separate and are not retired.
+> Earlier claims that this was shipped behavior were not supported by a verified
+> reachable entry point: the inspected Swift tree contains `ImportInvoiceModal`
+> and helper code, but no call site opening the modal was found. Source presence
+> is not proof of use in the latest released app.
+
+The retirement includes expanded camera/OCR/text import and runtime parser
+preservation. It does not remove manual vendor presets/suggestions: Settings
+opens `VendorDefaultsView`, and live Transaction/Item forms use vendor pickers.
+Nor does it remove the registered structured MCP `apply_contract_setup` action;
+that action does not establish a Swift document-upload or parsing feature.
+Existing imported data remains subject to migration/reconciliation preservation.
 
 ## Target Import Contract
+
+**Superseded by D-029.** The following requirements remain historical evidence,
+not target acceptance criteria or permission to build an importer.
 
 - Preserve local PDF selection/cancel, Amazon/Wayfair detection and local
   parsing without requiring a new network dependency. Distinguish extracting,

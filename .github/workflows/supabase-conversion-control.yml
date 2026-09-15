@@ -31,6 +31,7 @@ jobs:
           node scripts/check-conversion-current-state.mjs --self-test
           node scripts/ledger-product-checklist.mjs --self-test
           node scripts/supabase-conversion-ledger.mjs source-self-test
+          node --test scripts/tests/source-baseline.test.mjs
           npm run conversion:ci:test
           npm run conversion:check
           npm run conversion:capabilities:check
@@ -126,6 +127,12 @@ jobs:
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos
 
+      - name: Test reused export logic without UI
+        run: |
+          xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging \
+            -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- \
+            -parallel-testing-enabled NO -only-testing:LedgerTargetSharedLogicTests test
+
       - name: Exercise target workspace checklist UI
         if: needs.conversion-control.outputs.ui-required == 'true'
         env:
@@ -200,7 +207,7 @@ jobs:
             process.stdout.write(device.udid);
           ')"
           TEST_RUNNER_LEDGER_ISOLATED_CI_CLIPBOARD=true xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug \
-            -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            -destination "platform=iOS Simulator,id=$report_device_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- \
             -resultBundlePath "$RUNNER_TEMP/ledger-report-ios.xcresult" \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
             -only-testing:LedgerTargetStagingUITests/WorkspaceChecklistUITests test

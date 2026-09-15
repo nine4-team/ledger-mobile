@@ -6,6 +6,54 @@ import Testing
 
 @Suite("Owned reactive physical Item watch", .serialized)
 struct DownloadedItemPlacementWatchTests {
+    @Test("Item history switches financial subscriptions and drains cancellation", .timeLimit(.minutes(1)))
+    func financialSubscriptionSwitchAndCleanup() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("history-financial-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: root.appendingPathComponent("ledger.sqlite").path,
+            encryptionKey: LedgerPowerSyncEncryptionKey(hexadecimal: String(repeating: "4a", count: 32)))
+        let account = try AccountID(validating: "watch-account"), principal = try PrincipalID(validating: "watch-principal")
+        for sql in [
+            "INSERT INTO spike_account_memberships(id,account_id,principal_id,state) VALUES('member','watch-account','watch-principal','active')",
+            "INSERT INTO spike_items(id,account_id,description,revision) VALUES('chair','watch-account','Chair',1)",
+            "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at) VALUES('placement','watch-account','chair','project','first','2026-09-01')"
+        ] { _ = try await db.execute(sql: sql, parameters: nil) }
+        let physicalGate = PhysicalWatchGate(); await physicalGate.release()
+        let oldGate = PhysicalWatchGate(), newGate = PhysicalWatchGate()
+        let old = PhysicalWatchSubscription(cleanup: oldGate), next = PhysicalWatchSubscription(cleanup: newGate)
+        let subscriptions = AsyncStream<String>.makeStream()
+        let completed = PhysicalWatchCompletion()
+        let task = Task {
+            do {
+                try await DownloadedItemPlacementWatch(database: db, subscribe: { _ in
+                    PhysicalWatchSubscription(cleanup: physicalGate)
+                }, subscribeProject: { requested, project in
+                    #expect(requested == account)
+                    subscriptions.continuation.yield(project.rawValue)
+                    return project.rawValue == "first" ? old : next
+                }).runHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair")) { _ in true }
+            } catch is CancellationError { }
+            catch { Issue.record(error) }
+            await completed.mark()
+        }
+        var iterator = subscriptions.stream.makeAsyncIterator()
+        #expect(await iterator.next() == "first")
+        _ = try await db.execute(sql: "UPDATE spike_item_placements SET project_id='second' WHERE id='placement'", parameters: nil)
+        await oldGate.waitUntilEntered()
+        #expect(await old.unsubscribeCount == 1)
+        await oldGate.release()
+        #expect(await iterator.next() == "second")
+        task.cancel()
+        await newGate.waitUntilEntered()
+        #expect(await completed.value == false)
+        await newGate.release()
+        await task.value
+        #expect(await next.unsubscribeCount == 1)
+        subscriptions.continuation.finish()
+        try await db.close()
+    }
+
     @Test("Real offline SDK subscription binds Account and membership removal terminates rows")
     func realSubscriptionAndRemoval() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("physical-sdk-\(UUID().uuidString)")
@@ -61,6 +109,54 @@ struct DownloadedItemPlacementWatchTests {
         while !spaces.spaces.isEmpty { spaces = try #require(await iterator.next()) }
         _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE id='member'", parameters: nil)
         await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) { try await task.value }
+        try await db.close()
+    }
+
+    @Test("Direct Item history owns its physical subscription and drains late cleanup")
+    func historySubscriptionCleanup() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("history-watch-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: root.appendingPathComponent("ledger.sqlite").path,
+            encryptionKey: LedgerPowerSyncEncryptionKey(hexadecimal: String(repeating: "4a", count: 32)))
+        let account = try AccountID(validating: "watch-account")
+        let principal = try PrincipalID(validating: "watch-principal")
+        for sql in [
+            "INSERT INTO spike_account_memberships(id,account_id,principal_id,state) VALUES('member','watch-account','watch-principal','active')",
+            "INSERT INTO spike_items(id,account_id,description,revision) VALUES('chair','watch-account','Chair',1)"
+        ] { _ = try await db.execute(sql: sql, parameters: nil) }
+        let subscriptionGate = PhysicalWatchGate()
+        let cleanupGate = PhysicalWatchGate()
+        let subscription = PhysicalWatchSubscription(cleanup: cleanupGate)
+        let completed = PhysicalWatchCompletion()
+        let values = AsyncStream<DownloadedItemPlacementHistory>.makeStream()
+        let task = Task {
+            defer { values.continuation.finish() }
+            do {
+                try await DownloadedItemPlacementWatch(database: db, subscribe: { requested in
+                    #expect(requested == account)
+                    await subscriptionGate.wait()
+                    return subscription
+                }).runHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair")) {
+                    values.continuation.yield($0)
+                    return true
+                }
+            } catch is CancellationError { }
+            catch { Issue.record(error) }
+            await completed.mark()
+        }
+        await subscriptionGate.waitUntilEntered()
+        var iterator = values.stream.makeAsyncIterator()
+        let history = try #require(await iterator.next())
+        #expect(history.description == "Chair" && history.isPartial)
+        #expect(history.intervals.isEmpty, "Missing placement evidence is not invented")
+        task.cancel()
+        await subscriptionGate.release()
+        await cleanupGate.waitUntilEntered()
+        #expect(await completed.value == false)
+        await cleanupGate.release()
+        await task.value
+        #expect(await subscription.unsubscribeCount == 1)
         try await db.close()
     }
 

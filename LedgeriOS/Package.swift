@@ -31,6 +31,8 @@ let package = Package(
         )
     ],
     dependencies: [
+        // A-007: use the provider SDK for session persistence and token refresh.
+        .package(url: "https://github.com/supabase/supabase-swift.git", exact: "2.55.2"),
         // A-022: pinned upstream SDK with a tracked cancellation deadlock fix.
         .package(path: "../vendor/powersync-swift"),
         .package(
@@ -70,6 +72,7 @@ let package = Package(
             name: "LedgerTargetPowerSync",
             dependencies: [
                 "LedgerTargetCore",
+                .product(name: "Auth", package: "supabase-swift"),
                 .product(name: "PowerSync", package: "powersync-swift"),
                 .product(name: "CSQLite", package: "CSQLite")
             ],

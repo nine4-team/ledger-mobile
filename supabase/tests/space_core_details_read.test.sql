@@ -12,8 +12,8 @@ select is(
     where table_schema = 'public'
       and table_name = 'spike_spaces'
   ),
-  'id:text:NO,account_id:text:NO,scope_kind:text:NO,project_id:text:YES,display_name:text:NO,lifecycle:text:NO,revision:bigint:NO,placement_project_key:text:YES',
-  'Space retains its fields plus the generated exact-placement foreign-key key'
+  'id:text:NO,account_id:text:NO,scope_kind:text:NO,project_id:text:YES,display_name:text:NO,lifecycle:text:NO,revision:bigint:NO,placement_project_key:text:YES,sync_current_item_count:bigint:NO',
+  'Space retains its fields, exact-placement key and derived sync predicate'
 );
 
 select ok(
@@ -35,8 +35,7 @@ select is(
     from pg_policies
     where schemaname = 'public' and tablename = 'spike_spaces'
   ),
-  array['spike_spaces_report_current_parent_read:SELECT:{authenticated}',
-        'spike_spaces_select_active_member:SELECT:{authenticated}'],
+  array['spike_spaces_select_active_member:SELECT:{authenticated}'],
   'Space policies remain restricted to authenticated destination and report-parent reads'
 );
 
@@ -52,7 +51,7 @@ select ok(
       and qual like '%lifecycle%active%'
       and qual like '%has_active_membership%account_id%'
   ),
-  'the existing Space policy remains active-Space plus active-membership only'
+  'the combined Space policy retains active-Space and active-membership checks'
 );
 
 select ok(

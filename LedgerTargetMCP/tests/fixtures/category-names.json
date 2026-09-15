@@ -1,0 +1,17 @@
+[
+  { "input": "  Art & Décor / 🪑  ", "normalized": "Art & Décor / 🪑" },
+  { "input": "\u0085\u200bLighting\u202f", "normalized": "Lighting" },
+  { "input": "\u2028Lighting\u3000", "normalized": "Lighting" },
+  { "input": "e\u0301", "normalized": "e\u0301" },
+  { "input": "\ufeffLighting", "normalized": null },
+  { "input": "Light\u200bing", "normalized": null },
+  { "input": "Light\u0001ing", "normalized": null },
+  { "input": "\u0085\u200b", "normalized": null },
+  { "input": "Soft\u00adhyphen", "normalized": null },
+  { "input": "Arabic\u061cmark", "normalized": null },
+  { "input": "Format\ud804\udcbd", "normalized": null },
+  { "input": "Tag\udb40\udc20", "normalized": null },
+  { "input": "Variation\udb40\udd01", "normalized": "Variation\udb40\udd01" },
+  { "input": "ΟΣ", "normalized": "ΟΣ", "sameKeyAs": "ος" },
+  { "input": "İ", "normalized": "İ", "sameKeyAs": "i\u0307" }
+]

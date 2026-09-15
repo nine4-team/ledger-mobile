@@ -141,6 +141,26 @@ public struct CurrencyCode: Codable, Hashable, Comparable, Sendable {
 }
 
 public struct Money: Codable, Hashable, Sendable {
+    public enum EntryFailure: Error { case invalidPositiveAmount }
+
+    /// Shared exact two-decimal form parser, extracted from the existing sale form.
+    public static func parsePositiveEntry(_ text: String, currency: CurrencyCode) throws -> Money {
+        var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.hasPrefix("$") { cleaned.removeFirst(); cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let parts = cleaned.split(separator: ".", omittingEmptySubsequences: false)
+        guard !cleaned.isEmpty, cleaned.count <= 64, (1...2).contains(parts.count) else { throw EntryFailure.invalidPositiveAmount }
+        let groups = parts[0].split(separator: ",", omittingEmptySubsequences: false)
+        guard groups.count == 1 || ((1...3).contains(groups[0].count) && groups.dropFirst().allSatisfy({ $0.count == 3 })),
+              groups.allSatisfy({ $0.utf8.allSatisfy({ (48...57).contains($0) }) }),
+              parts.count == 1 || (parts[1].count <= 2 && parts[1].utf8.allSatisfy({ (48...57).contains($0) })),
+              let whole = Int64(parts[0].isEmpty ? "0" : groups.joined()) else { throw EntryFailure.invalidPositiveAmount }
+        let fraction = parts.count == 1 ? "00" : String(parts[1]) + String(repeating: "0", count: 2-parts[1].count)
+        let (scaled, overflow) = whole.multipliedReportingOverflow(by: 100)
+        let (amount, additionOverflow) = scaled.addingReportingOverflow(Int64(fraction)!)
+        guard !overflow, !additionOverflow, amount > 0 else { throw EntryFailure.invalidPositiveAmount }
+        return Money(minorUnits: amount, currency: currency)
+    }
+
     public let minorUnits: Int64
     public let currency: CurrencyCode
 

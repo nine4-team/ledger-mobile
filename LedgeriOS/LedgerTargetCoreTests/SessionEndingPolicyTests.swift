@@ -4,6 +4,22 @@ import Testing
 
 @Suite("Session Ending and Pending-Work Contracts")
 struct SessionEndingPolicyTests {
+    @Test func unfinishedFormBlocksLogoutWithoutPretendingToBeAQueuedOperation() throws {
+        let clean = try Self.summary()
+        let summary = try PendingLocalWorkSummary(environment: clean.environment, principalId: clean.principalId,
+            accountId: clean.accountId, snapshotRevision: clean.snapshotRevision, observedAt: clean.observedAt,
+            queuedOperationCount: 0, applyingOperationCount: 0, unresolvedRejectedOperationCount: 0,
+            unverifiedAttachmentCount: 0, unfinishedEntryCount: 1)
+        #expect(summary.hasBlockingWork)
+        #expect(summary.queuedOperationCount == 0)
+        #expect(summary.fingerprint != clean.fingerprint)
+        #expect(try OperationContractCodec.decode(PendingLocalWorkSummary.self,
+            from: OperationContractCodec.encode(summary)) == summary)
+        #expect(Self.failure {
+            try SessionEndPolicy.makeRequest(choice: .ordinaryCleanLogout, summary: summary, requestedAt: Self.t2)
+        } == .pendingWorkRequiresDisposition)
+    }
+
     @Test("Exact pending classes drive clean, sync-first, destructive, and cancel choices")
     func exactCountsAndChoices() throws {
         let pending = try Self.summary(

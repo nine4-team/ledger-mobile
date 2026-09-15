@@ -17,6 +17,7 @@ struct DownloadedItemsView: View {
     @State private var model = DownloadedItemsModel()
     @State private var refresh = UUID()
     @State private var selectedItem: ItemSelection?
+    @State private var saleSelection: SaleSelection?
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
     @State private var filters = DownloadedItemFilters()
@@ -32,6 +33,12 @@ struct DownloadedItemsView: View {
         var id: String { itemId.rawValue }
     }
 
+    private struct SaleSelection: Identifiable {
+        let id = UUID()
+        let accountId: AccountID
+        let names: [ItemID: String]
+    }
+
     private struct GroupExpansionID: Hashable {
         let group: DownloadedItemGroup.ID
         let section: ProjectItemAccountingResolution?
@@ -45,7 +52,7 @@ struct DownloadedItemsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        LazyVStack(alignment: .leading, spacing: 8) {
             Text("Items").font(.headline)
             Text(partialNotice)
                 .font(.caption).foregroundStyle(.secondary)
@@ -184,6 +191,13 @@ struct DownloadedItemsView: View {
         .alert("Could not copy Item IDs", isPresented: $copyFailed) {
             Button("OK", role: .cancel) {}
         } message: { Text("Try copying the Item IDs again.") }
+        .sheet(item: $saleSelection) { selected in
+            if selected.accountId == accountId, scope == .businessInventory,
+               let service = reader as? any InventorySaleWorkflowServing {
+                InventorySaleForm(accountId: accountId, itemNames: selected.names,
+                    currency: try! CurrencyCode(validating: "USD"), service: service)
+            }
+        }
         .onChange(of: accountId) { _, _ in resetContext() }
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
@@ -217,6 +231,20 @@ struct DownloadedItemsView: View {
             Text("\(selection.ids.intersection(ids).count) selected")
                 .accessibilityIdentifier("target-items-selected-count")
             if !selection.ids.intersection(ids).isEmpty {
+                if scope == .businessInventory, reader is any InventorySaleWorkflowServing {
+                    Button("Sell to Project") {
+                        guard let current = selectionEvidence,
+                              case .downloaded(let snapshot) = model.state,
+                              snapshot.accountId == accountId, snapshot.scope == scope else { return }
+                        let selected = selection.ids.intersection(current)
+                        guard !selected.isEmpty else { return }
+                        let names = Dictionary(uniqueKeysWithValues: snapshot.rows
+                            .filter { selected.contains($0.itemId) }
+                            .map { ($0.itemId, $0.displayName) })
+                        guard names.count == selected.count else { return }
+                        saleSelection = SaleSelection(accountId: accountId, names: names)
+                    }.accessibilityIdentifier("target-items-sell")
+                }
                 Button("Copy IDs") {
                     // Re-read eligibility at the actual click, not from the
                     // snapshot that happened to render this button.
@@ -413,6 +441,11 @@ struct DownloadedItemsView: View {
                 Text("Workflow: \(row.workflowStatus.displayLabel)")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-item-workflow-status-\(row.itemId.rawValue)")
+                if let sale = row.pendingSale {
+                    Text("Sale pending sync · \(sale.projectName)")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .accessibilityIdentifier("target-item-pending-sale-\(row.itemId.rawValue)")
+                }
                 itemSourceAndSKU(row)
                 Text(row.imageCount.map { $0 == 0 ? "No Image" : "\($0) image\($0 == 1 ? "" : "s")" }
                     ?? "Image information unavailable")
@@ -442,6 +475,7 @@ struct DownloadedItemsView: View {
     }
 
     private func resetContext() {
+        saleSelection = nil
         selectedItem = nil
         search = ""
         order = .newest
@@ -469,12 +503,13 @@ struct DownloadedItemsView: View {
     #endif
 }
 
-private struct DownloadedItemDetailView: View {
+struct DownloadedItemDetailView: View {
     let accountId: AccountID
     let itemId: ItemID
     let reader: any DownloadedItemPlacementHistoryReading
     var spaceNavigation: ItemSpaceNavigation? = nil
     @State private var selectedSpace: ReferencedSpaceSelection?
+    @State private var showingInventorySale = false
     private struct ReferencedSpaceSelection: Identifiable {
         let id: SpaceID
         let scope: SpaceCreationScope
@@ -545,6 +580,15 @@ private struct DownloadedItemDetailView: View {
         #endif
         // Pinning is route-local State. Covering the route with its gallery is
         // not navigation away and must not discard the existing reference panel.
+        .sheet(isPresented: $showingInventorySale) {
+            if let service = reader as? any InventorySaleWorkflowServing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId {
+                InventorySaleForm(accountId: accountId,
+                    itemNames: [itemId: history.details?.displayName ?? history.description],
+                    currency: try! CurrencyCode(validating: "USD"),service: service)
+            }
+        }
     }
 
     private var historyContent: some View {
@@ -554,6 +598,13 @@ private struct DownloadedItemDetailView: View {
                 Spacer()
                 if hasCurrentItem {
                     Menu("Item actions") {
+                        if reader is any InventorySaleWorkflowServing,
+                           case .downloaded(let history) = model.state,
+                           history.pendingSale == nil,
+                           history.intervals.first(where: { $0.endedAt == nil })?.scope == .businessInventory {
+                            Button("Sell to Project") { showingInventorySale = true }
+                                .accessibilityIdentifier("target-item-detail-sell")
+                        }
                         Button("Copy ID") {
                             guard hasCurrentItem else { return }
                             copyFailed = !copyItemIDsToClipboard(itemId.rawValue)
@@ -615,7 +666,13 @@ private struct DownloadedItemDetailView: View {
         let name = history.details?.displayName ?? history.description
         Text(name.isEmpty ? "Untitled Item" : name).font(.title3)
             .accessibilityIdentifier("target-item-detail-name")
-        if let current = history.intervals.first(where: { $0.endedAt == nil }) {
+        if let sale = history.pendingSale {
+            detailField("Current location", "\(sale.projectName) · Sale pending sync", id: "target-item-detail-current-location")
+            detailField("Space", "Not assigned to a Space", id: "target-item-detail-space")
+            Text("Sale saved on this device. Recorded location history below is unchanged until the server update downloads.")
+                .font(.caption).foregroundStyle(.secondary)
+                .accessibilityIdentifier("target-item-detail-pending-sale")
+        } else if let current = history.intervals.first(where: { $0.endedAt == nil }) {
             detailField("Current location", location(current), id: "target-item-detail-current-location")
             if case .project = current.scope {
                 detailField("Budget category", history.currentBudgetCategoryName ?? "Category unavailable",
@@ -696,7 +753,7 @@ private struct DownloadedItemDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(location(interval)).font(.subheadline)
                         if interval.spaceId != nil { Text(interval.spaceDisplayName ?? "Space name not downloaded") }
-                        Text("From: \(interval.startedAt)")
+                        Text(interval.startDescription)
                         Text(interval.endedAt.map { "Until: \($0)" } ?? "Current downloaded location")
                     }.accessibilityIdentifier("target-item-history-\(interval.placementId.rawValue)")
                 }

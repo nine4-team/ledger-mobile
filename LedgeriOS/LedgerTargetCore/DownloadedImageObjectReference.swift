@@ -1,10 +1,15 @@
 import Foundation
 
-public enum DownloadedImageObjectReferenceFailure: Error { case malformed }
+public enum DownloadedMediaObjectReferenceFailure: Error { case malformed }
+public typealias DownloadedImageObjectReferenceFailure = DownloadedMediaObjectReferenceFailure
+// Existing image consumers retain their strict default initializer. This is a
+// shared identity implementation, not a separate PDF cache or download path.
+public typealias DownloadedImageObjectReference = DownloadedMediaObjectReference
 
 /// Immutable byte identity within an Account. This is not authority to read an
 /// Item or profile; callers must authorize their current reference separately.
-public struct DownloadedImageObjectReference: Equatable, Sendable {
+public struct DownloadedMediaObjectReference: Equatable, Sendable {
+    public enum Kind: Sendable { case image, pdf }
     public let accountId: AccountID
     public let attachmentId: AttachmentID
     public let contentSHA256: AttachmentContentSHA256
@@ -20,20 +25,22 @@ public struct DownloadedImageObjectReference: Equatable, Sendable {
     }
 
     public init(accountId: AccountID, attachmentId: String, sha256: String,
-                byteCount: String, mediaType: String, storagePath: String) throws {
+                byteCount: String, mediaType: String, storagePath: String, kind: Kind = .image) throws {
         self.accountId = accountId
         self.attachmentId = try AttachmentID(validating: attachmentId)
         contentSHA256 = try AttachmentContentSHA256(validating: sha256)
         guard let count = Int64(byteCount), count > 0, String(count) == byteCount,
               storagePath.utf8.elementsEqual(
                 "accounts/\(accountId.rawValue)/attachments/\(attachmentId)/\(sha256)".utf8),
-              Self.isImageMediaType(mediaType) else { throw DownloadedImageObjectReferenceFailure.malformed }
+              (kind == .image ? Self.isImageMediaType(mediaType) : mediaType == "application/pdf") else {
+            throw DownloadedMediaObjectReferenceFailure.malformed
+        }
         self.byteCount = count
         self.mediaType = mediaType
         self.storagePath = storagePath
     }
 
-    private static func isImageMediaType(_ value: String) -> Bool {
+    static func isImageMediaType(_ value: String) -> Bool {
         guard value.hasPrefix("image/") else { return false }
         let subtype = Array(value.utf8.dropFirst(6))
         func alphanumeric(_ byte: UInt8) -> Bool {

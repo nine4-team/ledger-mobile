@@ -10,6 +10,97 @@ struct DownloadedProjectItemsTests {
     private let principal = try! PrincipalID(validating: "principal")
     private let project = try! ProjectID(validating: "project")
 
+    @Test("Invoicing retains a charge after its physical placement ends and denies restricted access")
+    func historicalInvoicingCharge() async throws {
+        try await withDatabase { db in
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-09-15' WHERE id='charged-placement'", parameters: nil)
+            let rows = try await db.readTransaction { transaction in
+                try ProjectInvoicingItemLocalReader.readCharges(transaction: transaction, accountId: account, principalId: principal, projectId: project)
+            }
+            #expect(rows.count == 1 && rows[0].id.rawValue == "charge" && rows[0].amount.minorUnits == 100)
+            let current = try await db.readTransaction { transaction in
+                try ItemClientPaymentConnectionLocalReader.read(transaction: transaction, accountId: account, principalId: principal, projectId: project)
+            }
+            #expect(current[try EntityID(validating: "charged-placement")] == nil)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+            await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) {
+                try await db.readTransaction { transaction in
+                    try ProjectInvoicingItemLocalReader.readCharges(transaction: transaction, accountId: account, principalId: principal, projectId: project)
+                }
+            }
+        }
+    }
+
+    @Test("Invoicing uses frozen paid contents after a move and rejects inconsistent evidence")
+    func frozenInvoicingCharge() async throws {
+        try await withDatabase { db in
+            for sql in [
+                "UPDATE spike_item_placements SET ended_at='2026-09-15' WHERE id='charged-placement'",
+                "UPDATE spike_items SET name='Renamed after payment' WHERE id='charged'",
+                "INSERT INTO spike_budget_categories(id,account_id,display_name) VALUES('category','account','Renamed category')",
+                "INSERT INTO collected_invoices(id,account_id,project_id,client_id,sealed) VALUES('invoice','account','project','client',1)",
+                "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,category_id,source_revision,signed_amount_minor_units,currency,description) VALUES('line','account','invoice','item','charge','charged','category',1,'100','USD','Original client description')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            let rows = try await db.readTransaction { transaction in
+                try ProjectInvoicingItemLocalReader.readCharges(transaction: transaction, accountId: account, principalId: principal, projectId: project)
+            }
+            let row = try #require(rows.first)
+            #expect(rows.count == 1 && row.availability == .paid && row.amount.minorUnits == 100)
+            #expect(row.title == "Original client description" && row.categoryName == nil)
+            #expect(row.occurrence.phase.invoiceId?.rawValue == "invoice")
+            _ = try await db.execute(sql: "UPDATE collected_invoice_lines SET signed_amount_minor_units='101' WHERE id='line'", parameters: nil)
+            await #expect(throws: PropertyManagementReportLocalReadFailure.malformedEvidence) {
+                try await db.readTransaction { transaction in
+                    try ProjectInvoicingItemLocalReader.readCharges(transaction: transaction, accountId: account, principalId: principal, projectId: project)
+                }
+            }
+        }
+    }
+
+    @Test("Invoicing readiness requires its exact historical and physical downloads")
+    func invoicingCheckpointScope() async throws {
+        try await withDatabase { db in
+            let query = ProjectInvoicingChargePowerSyncQuery(database: db)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_invoicing_item_charges',1,0,'{\"account_id\":\"account\",\"project_id\":\"other\"}',1000000)", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET local_params='{\"account_id\":\"account\",\"project_id\":\"project\"}' WHERE stream_name='project_invoicing_item_charges'", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,'{\"account_id\":\"account\"}',1000000)", parameters: nil)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).rows.count == 1)
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET active=0 WHERE stream_name='project_invoicing_item_charges'", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+        }
+    }
+
+    @Test("Invoicing watch emits incomplete offline and terminates on access removal", .timeLimit(.minutes(1)))
+    func invoicingWatchRemoval() async throws {
+        try await withDatabase { db in
+            let values = AsyncStream<Bool>.makeStream()
+            let task = Task {
+                defer { values.continuation.finish() }
+                try await ProjectInvoicingChargePowerSyncQuery(database: db).run(accountId: account,
+                    principalId: principal, projectId: project) { snapshot in
+                        values.continuation.yield(snapshot == nil)
+                        return true
+                    }
+            }
+            var iterator = values.stream.makeAsyncIterator()
+            #expect(await iterator.next() == true)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) { try await task.value }
+            // withDatabase closes only after both owned subscription tasks drain.
+        }
+    }
+
     @Test("Combined Project snapshot reacts to marker-only changes and revocation")
     func imageMarkerWatch() async throws {
         try await withDatabase { db in

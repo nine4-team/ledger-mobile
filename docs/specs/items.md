@@ -86,6 +86,12 @@ additional-copy control, exact unsuffixed resolved name, count-aware Create,
 Cancel and visible pending/error/retry. Every new physical object gets a distinct
 stable ID; duplicate submission/restart must not produce extra objects.
 
+Creation-time quantity is a separate confirmed rule: when the unified Item
+wizard creates quantity N, it creates N distinct physical Items and gives every
+result the complete selected image set. Locally queued or retrying bytes remain
+associated with all intended Item/attachment relationships across restart; the
+writer must not finish with images attached only to the first Item.
+
 O-066 must settle which descriptive/media/placement/acquisition/accounting
 relationships are inherited. Copying the source mutable Item wholesale is not
 approved: it may accidentally inherit a Transaction or paid history. This is
@@ -186,6 +192,14 @@ The canonical display name is `name ?? description ?? ""`. The `description` fie
 ### Physical Copies and Quantity Expansion
 
 When one source item, proto item, or receipt line is materialized as multiple physical `Item` documents, every created document preserves the resolved source `name` exactly, byte-for-byte. Duplicate names are valid because document IDs distinguish physical records. Writers must not append unit counts, copy/duplicate labels, parenthetical numbers, or other generated sequence/quantity suffixes. A unit may have a different name only when the user explicitly supplies it or source evidence names that unit differently.
+
+For creation-time quantity expansion, each distinct Item also receives the full
+selected image set. Attachment IDs and parent relationships may differ per Item,
+but every relationship must reference the same selected image content and pass
+the durable attachment lifecycle. Offline queueing, retry, replay and restart
+must be idempotent and may not leave later Items without images. This rule does
+not decide which media a later **Make Copies** action inherits; O-066 still owns
+that separate policy.
 
 Inventory movements update the existing item documents and do not change `name`. This invariant applies prospectively to creation/copy workflows; it does not trigger a migration or automatic rename of existing records.
 
@@ -440,6 +454,11 @@ Item cards display the normalized project price. During the legacy-data transiti
 
 ## Image Management
 
+For the redesigned target, image capture, Copy Image, Paste Image and Save to
+Device follow [User-Initiated Image Transfer](offline-first.md#user-initiated-image-transfer)
+and the durable attachment lifecycle. The mechanics below document the current
+Firebase implementation and are not target storage architecture.
+
 ### On Detail View
 
 - **Upload:** Camera capture or photo library picker. Placeholder-first pattern — a Firestore record with empty URL is written before upload begins, then updated with the real URL on completion.
@@ -471,7 +490,7 @@ Items can move between scopes via sell and reassign operations (see separate spe
 ## Edge Cases
 
 1. **Item with no name and no image** — cannot be created (validation prevents it)
-2. **Item with quantity > 1** — single document with quantity field, not multiple documents
+2. **Item with quantity > 1** — distinct physical Item documents; every result receives the complete selected image set
 3. **Orphaned items** — items whose `projectId` references a deleted project remain in Firestore but don't appear in any project view
 4. **Image upload failure** — item is created without images; placeholder record may remain with empty URL and `isUploading: true`
 5. **Returned status** — no special restrictions; all actions remain available so mistakes can be corrected

@@ -9,7 +9,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { backgroundAuditScope } from "./supabase-conversion-ledger.mjs";
+import { backgroundAuditScope, loadSourceInventory } from "./supabase-conversion-ledger.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const repositoryRoot = resolve(scriptDirectory, "..");
@@ -529,7 +529,7 @@ if (isMainModule()) {
     }));
   } else if (command === "--audit") {
     const checklist = loadProductChecklist();
-    const scope = backgroundAuditScope(readJson(join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json")));
+    const scope = backgroundAuditScope(loadSourceInventory());
     console.log(JSON.stringify({
       status: projectLegacyStructures(checklist).catalog.completeness.status,
       backgroundSourceCount: scope.sources.length,
@@ -544,7 +544,7 @@ if (isMainModule()) {
       unreviewedDecisions: Object.values(checklist.decisionReviews).flat().filter((review) => review.auditStatus === "pending").map((review) => review.decisionId),
     }, null, 2));
   } else if (command === "--audit-sources") {
-    const scope = backgroundAuditScope(readJson(join(repositoryRoot, "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json")));
+    const scope = backgroundAuditScope(loadSourceInventory());
     const kind = process.argv[3];
     console.log(JSON.stringify(kind
       ? scope.sources.filter((surface) => surface.kind === kind).map((surface) => ({ id: surface.id, name: surface.name, sourceRefs: surface.sourceRefs }))

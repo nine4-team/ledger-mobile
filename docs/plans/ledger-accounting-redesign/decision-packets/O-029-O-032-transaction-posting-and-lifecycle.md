@@ -1,6 +1,15 @@
 # Decision Packet — O-029/O-032 Transaction Posting and Lifecycle
 
 Status: proposed recommendation; product decision not yet approved
+
+> **Scope correction (2026-09-13):** This packet is not an instruction to build
+> a draft/posting workflow or reject saves with incomplete receipt details.
+> Follow the central decision log's O-032 and Category Editing Clarification:
+> preserve incomplete-detail saving and apply the approved exact-total audit.
+> Missing payment evidence, destructive lifecycle and source migration remain
+> separate questions. Approval of this whole packet does not block category
+> editing or audit recomputation. The recommendations below remain unapproved.
+
 Last reviewed: 2026-08-31
 Owners: Transaction Capture, Accounting, Offline Operations, Migration
 Unlocks: 36 unique residual surfaces (O-032: 23; O-029: 20; overlap: 7)

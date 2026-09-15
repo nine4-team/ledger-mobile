@@ -6,6 +6,286 @@ import Testing
 
 @Suite("LedgerPowerSync attachment local byte durability provider", .serialized)
 struct LedgerPowerSyncAttachmentDurabilityProviderTests {
+    @Test("Expense publication survives interruption and restart without losing bytes or project binding")
+    func expensePublicationRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let capture = try LocalAttachmentCapture(attachmentId: Fixture.attachmentID,
+            scope: .init(environment: Fixture.scope.environment, principalId: Fixture.scope.principalId,
+                accountId: Fixture.scope.accountId, parent: .init(kind: .expense,
+                    id: EntityID(validating: "expense-upload"))), capturedAt: Fixture.capturedAt,
+            bytes: Fixture.bytes, metadata: .init(mediaType: "image/png", fileName: "Receipt.png"))
+        let project = try EntityID(validating: "expense-project")
+        let checkpoint = TransactionAttachmentUploadCheckpoint(
+            uploadURL: URL(string: "https://example.test/storage/v1/upload/resumable/expense")!, offset: 1)
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(capture)
+        await #expect(throws: InjectedFailure.self) {
+            try await store.publishExpenseAttachment(receipt, projectId: project) { candidate, prior, save in
+                #expect(candidate.bytes == Fixture.bytes && prior == nil)
+                try await save(checkpoint)
+                throw InjectedFailure()
+            }
+        }
+        try await database.close()
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
+            try await restored.publishExpenseAttachment(receipt, projectId: EntityID(validating: "different-project")) { _, _, _ in
+                Issue.record("A changed project must not reach publication")
+                return .verified
+            }
+        }
+        let published = try await restored.publishExpenseAttachment(receipt, projectId: project) { candidate, prior, _ in
+            #expect(candidate.bytes == Fixture.bytes && prior == checkpoint)
+            return .verified
+        }
+        #expect(published == .verified)
+        try await reopened.close()
+        let finalDB = try fixture.openDatabase()
+        let finalStore = fixture.makeStore(database: finalDB, vault: try fixture.makeVault())
+        let retained = try await finalStore.publishExpenseAttachment(receipt, projectId: project) { _, _, _ in
+            Issue.record("Verified retry must not upload again")
+            throw InjectedFailure()
+        }
+        #expect(retained == .verified)
+        #expect(try await finalStore.nextVerifiedCandidate() == nil)
+        #expect(try await finalStore.pendingCount() == 1)
+        #expect(try await finalStore.resolveLocalAttachmentBytes(for: receipt) == Fixture.bytes)
+        let draft = try BusinessPaidExpenseDraft(accountId: receipt.scope.accountId,
+            projectId: .init(validating: project.rawValue), expenseId: .init(validating: receipt.scope.parent.id.rawValue),
+            vendor: "Vendor", date: "2026-09-15", finalAmount: .init(minorUnits: 12, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "general"), notes: "", receiptAttachmentIds: [receipt.attachmentId])
+        let command = try CreateExpenseCommand(operationId: ExpenseCreationOperationIdentity.make(accountId: receipt.scope.accountId, uuid: UUID()),
+            actorPrincipalId: receipt.scope.principalId, capturedAt: Date(timeIntervalSince1970: 1_789_459_200), draft: draft)
+        #expect(try await finalStore.verifiedExpenseReceipts(for: command) == [receipt.attachmentId])
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
+            try await finalStore.saveUploadProgress(.init(checkpoint: checkpoint, publication: nil), for: receipt)
+        }
+        let object = try DownloadedMediaObjectReference(accountId: receipt.scope.accountId,
+            attachmentId: receipt.attachmentId.rawValue, sha256: receipt.contentSHA256.rawValue,
+            byteCount: String(receipt.byteCount), mediaType: "image/png",
+            storagePath: "accounts/\(receipt.scope.accountId.rawValue)/attachments/\(receipt.attachmentId.rawValue)/\(receipt.contentSHA256.rawValue)")
+        #expect(try await finalStore.reconcileExpenseAttachment(receipt, projectId: .init(validating: "wrong-project"), object: object) == false)
+        #expect(try await finalStore.pendingCount() == 1)
+        #expect(try await finalStore.reconcileExpenseAttachment(receipt, projectId: project, object: object))
+        #expect(try await finalStore.pendingCount() == 0)
+        #expect(try await finalStore.cachedDownloadedImage(object) == Fixture.bytes)
+        try await finalDB.close()
+    }
+
+    @Test("Transaction publisher resumes saved progress after interruption and retains confirmed bytes")
+    func publicationRunnerRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let capture = try LocalAttachmentCapture(attachmentId: Fixture.attachmentID,
+            scope: .init(environment: Fixture.scope.environment, principalId: Fixture.scope.principalId,
+                accountId: Fixture.scope.accountId, parent: .init(kind: .transaction,
+                    id: EntityID(validating: "transaction-upload"))), capturedAt: Fixture.capturedAt,
+            bytes: Fixture.bytes, metadata: .init(mediaType: "image/png", fileName: "Receipt.png",
+                transactionSection: .receipts, placement: .init(localPosition: 0, makePrimaryIfEmpty: true)))
+        let checkpoint = TransactionAttachmentUploadCheckpoint(
+            uploadURL: URL(string: "https://example.test/storage/v1/upload/resumable/session")!, offset: 1)
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(capture)
+        await #expect(throws: InjectedFailure.self) {
+            try await store.publishTransactionAttachment(receipt) { candidate, prior, save in
+                #expect(candidate.receipt == receipt && candidate.bytes == Fixture.bytes)
+                #expect(prior == nil)
+                try await save(checkpoint)
+                throw InjectedFailure()
+            }
+        }
+        try await database.close()
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        let result = try await restored.publishTransactionAttachment(receipt) { _, prior, save in
+            #expect(prior == checkpoint)
+            try await save(.init(uploadURL: checkpoint.uploadURL, offset: receipt.byteCount))
+            return .applied(revision: 3, position: 0)
+        }
+        #expect(result == .applied(revision: 3, position: 0))
+        #expect(try await restored.uploadProgress(for: receipt)?.checkpoint?.offset == receipt.byteCount)
+        #expect(try await restored.publishTransactionAttachment(receipt) { _, _, _ in
+            Issue.record("Confirmed result must not invoke transport again")
+            throw InjectedFailure()
+        } == result)
+        #expect(try await restored.resolveLocalAttachmentBytes(for: receipt) == Fixture.bytes)
+        #expect(try await restored.pendingCount() == 1)
+        // Publication committed, but no synced reference has arrived. Reopen in
+        // that exact gap; neither a second transfer nor queue drainage is allowed.
+        try await reopened.close()
+        let waitingDB = try fixture.openDatabase()
+        let waiting = fixture.makeStore(database: waitingDB, vault: try fixture.makeVault())
+        #expect(try await waiting.publishTransactionAttachment(receipt) { _, _, _ in
+            Issue.record("Delayed sync must not restart a confirmed upload")
+            throw InjectedFailure()
+        } == result)
+        #expect(try await waiting.resolveLocalAttachmentBytes(for: receipt) == Fixture.bytes)
+        let object = try DownloadedMediaObjectReference(accountId: receipt.scope.accountId,
+            attachmentId: receipt.attachmentId.rawValue, sha256: receipt.contentSHA256.rawValue,
+            byteCount: String(receipt.byteCount), mediaType: "image/png",
+            storagePath: "accounts/\(receipt.scope.accountId.rawValue)/attachments/\(receipt.attachmentId.rawValue)/\(receipt.contentSHA256.rawValue)")
+        func catalog(revision: Int64 = 3, complete: Bool = true, pending: Bool = false,
+                     section: TransactionAttachmentSection = .receipts) throws -> DownloadedTransactionAttachments {
+            try .init(scope: .businessInventory(accountId: receipt.scope.accountId),
+                transactionId: TransactionID(validating: receipt.scope.parent.id.rawValue), section: section,
+                revision: revision, isComplete: complete,
+                attachments: [.init(id: EntityID(validating: receipt.attachmentId.rawValue), object: object,
+                    position: 0, isPrimary: true, fileName: "Receipt.png", localReceipt: pending ? receipt : nil)])
+        }
+        let empty = try DownloadedTransactionAttachments(scope: .businessInventory(accountId: receipt.scope.accountId),
+            transactionId: TransactionID(validating: receipt.scope.parent.id.rawValue), section: .receipts,
+            revision: 3, isComplete: true, attachments: [])
+        for invalid in [empty, try catalog(revision: 2), try catalog(complete: false),
+                        try catalog(pending: true), try catalog(section: .other)] {
+            #expect(try await waiting.reconcileTransactionAttachment(receipt, catalog: invalid) == false)
+            #expect(try await waiting.pendingCount() == 1)
+            #expect(try await waiting.resolveLocalAttachmentBytes(for: receipt) == Fixture.bytes)
+        }
+        #expect(try await waiting.reconcileTransactionAttachment(receipt, catalog: catalog()))
+        #expect(try await waiting.pendingCount() == 0)
+        #expect(try await waiting.cachedDownloadedImage(object) == Fixture.bytes)
+        #expect(try await waiting.orphanInventory().isEmpty)
+        try await waitingDB.close()
+        let finalDB = try fixture.openDatabase()
+        let finalStore = fixture.makeStore(database: finalDB, vault: try fixture.makeVault())
+        #expect(try await finalStore.cachedDownloadedImage(object) == Fixture.bytes)
+        let observation = try await finalStore.pendingWorkObservation()
+        #expect(observation.queue.isEmpty && observation.orphans.isEmpty)
+        try await finalDB.close()
+    }
+
+    @Test("Upload checkpoint and terminal result survive restart without losing pending bytes",
+          arguments: [TransactionAttachmentPublication.applied(revision: 12, position: 0), .rejected(code: "access_removed")])
+    func uploadProgressRestart(publication: TransactionAttachmentPublication) async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(fixture.capture())
+        #expect(try await store.uploadProgress(for: receipt) == nil)
+        let checkpoint = TransactionAttachmentUploadCheckpoint(
+            uploadURL: URL(string: "https://example.test/storage/v1/upload/resumable/session")!, offset: 1)
+        let pending = AttachmentUploadProgress(checkpoint: checkpoint, publication: nil)
+        try await store.saveUploadProgress(pending, for: receipt)
+        try await database.close()
+        #expect(!(try Data(contentsOf: fixture.databaseURL)).contains(Data("example.test".utf8)))
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.uploadProgress(for: receipt) == pending)
+        #expect(try await restored.nextVerifiedCandidate()?.receipt == receipt)
+        let terminal = AttachmentUploadProgress(checkpoint: checkpoint, publication: publication)
+        try await restored.saveUploadProgress(terminal, for: receipt)
+        try await restored.saveUploadProgress(terminal, for: receipt)
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
+            try await restored.saveUploadProgress(pending, for: receipt)
+        }
+        try await reopened.close()
+        let finalDB = try fixture.openDatabase()
+        let finalStore = fixture.makeStore(database: finalDB, vault: try fixture.makeVault())
+        #expect(try await finalStore.uploadProgress(for: receipt) == terminal)
+        let rejections = try await finalStore.pendingCaptureRejections(parent: receipt.scope.parent)
+        if case let .rejected(code) = publication {
+            #expect(rejections == [receipt.attachmentId: code])
+        } else { #expect(rejections.isEmpty) }
+        #expect(try await finalStore.pendingCaptureRejections(parent: .init(kind: .transaction,
+            id: EntityID(validating: "unrelated-parent"))).isEmpty)
+        #expect(try await finalStore.nextVerifiedCandidate() == nil)
+        #expect(try await finalStore.pendingCount() == 1)
+        #expect(try await finalStore.pendingWorkObservation().queue.count == 1)
+        #expect(try await finalStore.resolveLocalAttachmentBytes(for: receipt) == Fixture.bytes)
+        let second = try await finalStore.enqueue(fixture.capture(id: "attachment-next-upload"))
+        #expect(try await finalStore.nextVerifiedCandidate()?.receipt == second)
+        await #expect(throws: SupabaseTransactionAttachmentUploadFailure.invalidCheckpoint) {
+            try await finalStore.saveUploadProgress(.init(checkpoint: .init(uploadURL: checkpoint.uploadURL,
+                offset: receipt.byteCount + 1), publication: nil), for: receipt)
+        }
+        try await finalDB.close()
+    }
+
+    @Test("Learned denial after byte staging prevents receipt acceptance; retry retains the original")
+    func authorizationBeforeCaptureCommit() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let gate = LogoMutationGate()
+        let authority = CaptureTestAuthority()
+        let store = AttachmentCapturePowerSyncStore(database: database, vault: try fixture.makeVault(),
+            scope: Fixture.scope, enqueueCommitCheckpoint: { await gate.pauseOnce() })
+        let capture = try fixture.capture()
+        let task = Task { try await store.enqueue(capture, authorize: { try await authority.requireAccess() }) }
+        await gate.waitForPause()
+        await authority.setAllowed(false)
+        await gate.release()
+        await #expect(throws: InjectedFailure.self) { try await task.value }
+        #expect(try await store.pendingCount() == 0)
+        #expect(try await store.pendingCaptureReceipts(parent: capture.scope.parent).isEmpty)
+        #expect(!(try await store.orphanInventory()).isEmpty)
+        await authority.setAllowed(true)
+        let accepted = try await store.enqueue(capture, authorize: { try await authority.requireAccess() })
+        #expect(try await store.pendingCaptureReceipts(parent: capture.scope.parent) == [accepted])
+        #expect(try await store.resolveLocalAttachmentBytes(for: accepted) == Fixture.bytes)
+        try await database.close()
+    }
+
+    @Test("Concurrent capture with changed metadata cannot borrow an in-flight receipt")
+    func concurrentMetadataConflict() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let gate = LogoMutationGate()
+        let store = AttachmentCapturePowerSyncStore(database: database, vault: try fixture.makeVault(),
+            scope: Fixture.scope, enqueueCommitCheckpoint: { await gate.pauseOnce() })
+        let capture = try LocalAttachmentCapture(attachmentId: Fixture.attachmentID, scope: Fixture.captureScope,
+            capturedAt: Fixture.capturedAt, bytes: Fixture.bytes,
+            metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Original.png"))
+        let first = Task { try await store.enqueue(capture) }
+        await gate.waitForPause()
+        let changed = try LocalAttachmentCapture(attachmentId: capture.attachmentId, scope: capture.scope,
+            capturedAt: capture.capturedAt, bytes: capture.bytes,
+            metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Changed.png"))
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
+            try await store.enqueue(changed)
+        }
+        await gate.release()
+        let receipt = try await first.value
+        #expect(receipt.metadata == capture.metadata)
+        #expect(try await store.enqueue(capture) == receipt)
+        try await database.close()
+    }
+
+    @Test("Capture metadata and original bytes survive encrypted queue restart; conflicting metadata cannot replay")
+    func captureMetadataRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let metadata = try AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Original image.png")
+        let capture = try LocalAttachmentCapture(attachmentId: Fixture.attachmentID, scope: Fixture.captureScope,
+            capturedAt: Fixture.capturedAt, bytes: Fixture.bytes, metadata: metadata)
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(capture)
+        #expect(receipt.metadata == metadata)
+        try await database.close()
+        #expect(!(try Data(contentsOf: fixture.databaseURL)).contains(Data("Original image.png".utf8)))
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.enqueue(capture) == receipt)
+        let candidate = try #require(try await restored.nextVerifiedCandidate())
+        #expect(candidate.receipt.metadata == metadata)
+        #expect(candidate.bytes == Fixture.bytes)
+        #expect(try await restored.pendingCount() == 1)
+        let changed = try LocalAttachmentCapture(attachmentId: capture.attachmentId, scope: capture.scope,
+            capturedAt: capture.capturedAt, bytes: capture.bytes,
+            metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Different.png"))
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
+            try await restored.enqueue(changed)
+        }
+        try await reopened.close()
+    }
+
     @Test("Upload and logo mutation exclude each other across suspended commit", arguments: [false, true])
     func downloadedLogoMutationExclusion(uploadFirst: Bool) async throws {
         let fixture = try Fixture()
@@ -68,6 +348,40 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
         #expect(try await restored.cachedAccountLogo(reference) == Fixture.bytes)
         #expect(try await restored.cachedDownloadedImage(reference.downloadedImageReference) == Fixture.bytes)
+        #expect(try await restored.pendingCount() == 0)
+        #expect(try await restored.orphanInventory().isEmpty)
+        try await reopened.close()
+    }
+
+    @Test("Receipt PDF uses existing encrypted cache and survives restart without becoming a pending upload")
+    func downloadedPDFRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let bytes = Data("%PDF-1.4\nRetained receipt bytes\n%%EOF".utf8)
+        let hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+        func reference(_ account: AccountID) throws -> DownloadedMediaObjectReference {
+            try .init(accountId: account, attachmentId: "receipt-pdf", sha256: hash,
+                byteCount: String(bytes.count), mediaType: "application/pdf",
+                storagePath: "accounts/\(account.rawValue)/attachments/receipt-pdf/\(hash)", kind: .pdf)
+        }
+        let expected = try reference(Fixture.scope.accountId)
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.cacheDownloadedImage(Data("wrong".utf8), reference: expected)
+        }
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.self) {
+            try await store.cacheDownloadedImage(bytes, reference: reference(AccountID(validating: "foreign")))
+        }
+        try await store.cacheDownloadedImage(bytes, reference: expected)
+        try await store.cacheDownloadedImage(bytes, reference: expected)
+        #expect(try await store.pendingCount() == 0)
+        #expect(try await store.orphanInventory().isEmpty)
+        try await database.close()
+        #expect(!(try Data(contentsOf: fixture.databaseURL)).contains(bytes))
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.cachedDownloadedImage(expected) == bytes)
         #expect(try await restored.pendingCount() == 0)
         #expect(try await restored.orphanInventory().isEmpty)
         try await reopened.close()
@@ -1103,6 +1417,12 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
 }
 
 private struct InjectedFailure: Error {}
+
+private actor CaptureTestAuthority {
+    private var allowed = true
+    func setAllowed(_ value: Bool) { allowed = value }
+    func requireAccess() throws { if !allowed { throw InjectedFailure() } }
+}
 
 private actor LogoMutationGate {
     private var paused = false

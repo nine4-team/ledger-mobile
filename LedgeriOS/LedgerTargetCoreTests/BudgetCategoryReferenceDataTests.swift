@@ -4,6 +4,18 @@ import Testing
 
 @Suite("Budget Category Reference Read Contracts")
 struct BudgetCategoryReferenceDataTests {
+    @Test("Category names allow 100 Unicode code points after trimming")
+    func nameLengthCountsCodePoints() throws {
+        for name in [String(repeating: "a", count: 100),
+                     String(repeating: "🪑", count: 100),
+                     String(repeating: "e\u{0301}", count: 50)] {
+            #expect(try BudgetCategoryName(validating: "  " + name + "  ").rawValue == name)
+            #expect(Self.referenceFailure {
+                try BudgetCategoryName(validating: name + "a")
+            } == .invalidName)
+        }
+    }
+
     @Test("Visible category definitions preserve exact kind, order, and eligibility")
     func definitionsAndEligibilityAreExact() throws {
         let fixture = try Self.fixture()

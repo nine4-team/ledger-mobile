@@ -78,7 +78,8 @@ public struct PendingLocalWorkFingerprint: Codable, Equatable, Hashable, Sendabl
         queuedOperationCount: UInt64,
         applyingOperationCount: UInt64,
         unresolvedRejectedOperationCount: UInt64,
-        unverifiedAttachmentCount: UInt64
+        unverifiedAttachmentCount: UInt64,
+        unfinishedEntryCount: UInt64 = 0
     ) throws -> Self {
         let basis = PendingLocalWorkFingerprintBasis(
             environment: environment,
@@ -89,7 +90,8 @@ public struct PendingLocalWorkFingerprint: Codable, Equatable, Hashable, Sendabl
             queuedOperationCount: queuedOperationCount,
             applyingOperationCount: applyingOperationCount,
             unresolvedRejectedOperationCount: unresolvedRejectedOperationCount,
-            unverifiedAttachmentCount: unverifiedAttachmentCount
+            unverifiedAttachmentCount: unverifiedAttachmentCount,
+            unfinishedEntryCount: unfinishedEntryCount == 0 ? nil : unfinishedEntryCount
         )
         return try Self(validating: Self.hexDigest(
             try OperationContractCodec.encode(basis)
@@ -113,6 +115,7 @@ private struct PendingLocalWorkFingerprintBasis: Codable {
     let applyingOperationCount: UInt64
     let unresolvedRejectedOperationCount: UInt64
     let unverifiedAttachmentCount: UInt64
+    let unfinishedEntryCount: UInt64?
 }
 
 public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
@@ -125,6 +128,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
     public let applyingOperationCount: UInt64
     public let unresolvedRejectedOperationCount: UInt64
     public let unverifiedAttachmentCount: UInt64
+    public let unfinishedEntryCount: UInt64
     public let fingerprint: PendingLocalWorkFingerprint
 
     public init(
@@ -136,7 +140,8 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
         queuedOperationCount: UInt64,
         applyingOperationCount: UInt64,
         unresolvedRejectedOperationCount: UInt64,
-        unverifiedAttachmentCount: UInt64
+        unverifiedAttachmentCount: UInt64,
+        unfinishedEntryCount: UInt64 = 0
     ) throws {
         guard observedAt.timeIntervalSinceReferenceDate.isFinite else {
             throw SessionEndingFailure.invalidObservedAt
@@ -150,6 +155,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
         self.applyingOperationCount = applyingOperationCount
         self.unresolvedRejectedOperationCount = unresolvedRejectedOperationCount
         self.unverifiedAttachmentCount = unverifiedAttachmentCount
+        self.unfinishedEntryCount = unfinishedEntryCount
         self.fingerprint = try PendingLocalWorkFingerprint.make(
             environment: environment,
             principalId: principalId,
@@ -159,7 +165,8 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
             queuedOperationCount: queuedOperationCount,
             applyingOperationCount: applyingOperationCount,
             unresolvedRejectedOperationCount: unresolvedRejectedOperationCount,
-            unverifiedAttachmentCount: unverifiedAttachmentCount
+            unverifiedAttachmentCount: unverifiedAttachmentCount,
+            unfinishedEntryCount: unfinishedEntryCount
         )
     }
 
@@ -173,6 +180,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
         applyingOperationCount: UInt64,
         unresolvedRejectedOperationCount: UInt64,
         unverifiedAttachmentCount: UInt64,
+        unfinishedEntryCount: UInt64,
         fingerprint: PendingLocalWorkFingerprint
     ) throws {
         let validated = try Self(
@@ -184,7 +192,8 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
             queuedOperationCount: queuedOperationCount,
             applyingOperationCount: applyingOperationCount,
             unresolvedRejectedOperationCount: unresolvedRejectedOperationCount,
-            unverifiedAttachmentCount: unverifiedAttachmentCount
+            unverifiedAttachmentCount: unverifiedAttachmentCount,
+            unfinishedEntryCount: unfinishedEntryCount
         )
         guard fingerprint == validated.fingerprint else {
             throw SessionEndingFailure.summaryFingerprintMismatch
@@ -211,6 +220,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
                     UInt64.self,
                     forKey: .unverifiedAttachmentCount
                 ),
+                unfinishedEntryCount: container.decodeIfPresent(UInt64.self, forKey: .unfinishedEntryCount) ?? 0,
                 fingerprint: container.decode(
                     PendingLocalWorkFingerprint.self,
                     forKey: .fingerprint
@@ -227,7 +237,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
         queuedOperationCount > 0 ||
             applyingOperationCount > 0 ||
             unresolvedRejectedOperationCount > 0 ||
-            unverifiedAttachmentCount > 0
+            unverifiedAttachmentCount > 0 || unfinishedEntryCount > 0
     }
 
     fileprivate func hasSameScope(as other: Self) -> Bool {
@@ -243,6 +253,7 @@ public struct PendingLocalWorkSummary: Codable, Equatable, Sendable {
         case snapshotRevision
         case observedAt
         case queuedOperationCount
+        case unfinishedEntryCount
         case applyingOperationCount
         case unresolvedRejectedOperationCount
         case unverifiedAttachmentCount

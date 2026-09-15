@@ -82,6 +82,97 @@ func envelope(_ source: FirebaseSourceDocument) -> FirebaseSourceValue {
 
 func run() throws {
     let args = Array(CommandLine.arguments.dropFirst())
+    if (args.count == 2 || (args.count == 4 && args[2] == "--receipt-media")), ["--check-project-copy", "--apply-partial-qa-copy"].contains(args[0]) {
+        try loadRealProjectCopy(path: args[1], apply: args[0] == "--apply-partial-qa-copy",
+            mediaDirectory: args.count == 4 ? args[3] : nil)
+        return
+    }
+    if args.count == 2, args[0] == "--review-source" {
+        let url = URL(fileURLWithPath: args[1]).standardizedFileURL
+        try require(url.deletingLastPathComponent().path == "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase/tmp/real-project-copy",
+            "Review requires the private source-copy directory")
+        try require(try regularFile(url.path), "Missing source snapshot")
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        try require((attributes[.size] as? NSNumber)?.intValue ?? Int.max <= 10_000_000, "Source snapshot too large")
+        let documents = try FirebaseRESTSnapshotReader.read(Data(contentsOf: url), accountPath:
+            "projects/ledger-nine4/databases/(default)/documents/accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94")
+        let review = FirebaseLineageSourceReview.review(documents: documents, accountScopeID: "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94")
+        var issueCounts: [String: Int] = [:]
+        var sourceIssueCounts: [String: Int] = [:]
+        for record in review.lineage { for issue in record.source.issues {
+            let kind: String
+            switch issue {
+            case .missingRequiredField(let field): kind = "missing:" + field
+            case .nullRequiredField(let field): kind = "null:" + field
+            case .invalidField(let field): kind = "invalid:" + field
+            default: kind = String(describing: issue).split(separator: "(", maxSplits: 1).first.map(String.init) ?? "unknown"
+            }
+            sourceIssueCounts[kind, default: 0] += 1
+        } }
+        for record in review.lineage { for issue in record.issues {
+            let kind = String(describing: issue).split(separator: "(", maxSplits: 1).first.map(String.init) ?? "unknown"
+            issueCounts[kind, default: 0] += 1
+        } }
+        // Preview only. These IDs do not assert a reconciled target Client or
+        // authorize an import; the purpose is to expose unsupported source meaning.
+        let sourceProjectID = "5abd46c9-9886-4b3e-b2b1-19f6cf995a44"
+        let previewScope = TransactionScope.project(accountId: try AccountID(validating: "preview-account"),
+            projectId: try ProjectID(validating: "preview-project"), clientId: try ClientID(validating: "preview-client"))
+        var paymentPreview: [String: Int] = [:]
+        var acquisitionPreview: [String: Int] = [:]
+        var acquisitionLinks: [String: Int] = [:]
+        var acquisitionPlans: [String: Int] = [:]
+        var receiptPriceEvidence: [String: Int] = [:]
+        var placementEvidence: [String: Int] = [:]
+        for item in documents where item.documentPathSegments.count == 4 && item.documentPathSegments[2] == "items" {
+            let placement = FirebaseCurrentItemPlacement.read(item, accountID: "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94", documents: documents)
+            if placement.isResolved { placementEvidence[placement.projectID == nil ? "inventory" : "project", default: 0] += 1 }
+            for issue in placement.issues { placementEvidence[issue, default: 0] += 1 }
+        }
+        for document in documents where document.documentPathSegments.count == 4 && document.documentPathSegments[2] == "transactions" {
+            guard case .map(let fields) = document.fields,
+                  fields.contains(where: { $0.key == "projectId" && $0.value == .string(sourceProjectID) }) else { continue }
+            let acquisition = FirebaseAcquisitionSourceReview.review(document, accountID: "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94")
+            switch FirebaseAcquisitionConversion.convert(document, sourceAccountID: "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+                sourceProjectID: sourceProjectID, targetProjectScope: previewScope, documents: documents, lineage: review.lineage) {
+            case .planned(let plan):
+                acquisitionPlans[plan.classification.scope.ownerKind.rawValue, default: 0] += 1
+                for itemID in plan.sourceItemIDs {
+                    guard let item = documents.first(where: { $0.documentPathSegments == ["accounts", document.accountScopeID, "items", itemID] }) else {
+                        receiptPriceEvidence["missingItem", default: 0] += 1; continue
+                    }
+                    let price = FirebaseReceiptItemPriceEvidence.read(item, sourceAccountID: document.accountScopeID,
+                        sourceTransactionID: document.documentPathSegments[3])
+                    receiptPriceEvidence[price.purchasePriceCents == nil ? "unknownPrice" : "exactRecordedPrice", default: 0] += 1
+                    if price.explicitlyRecordedTaxCents != nil { receiptPriceEvidence["separateRecordedTax", default: 0] += 1 }
+                    for issue in price.issues { receiptPriceEvidence[issue, default: 0] += 1 }
+                }
+            case .unresolved(let reason): acquisitionPlans[reason.rawValue, default: 0] += 1
+            }
+            if acquisition.canReconcileAcquisition {
+                acquisitionPreview["reconcile_" + (acquisition.payer?.rawValue ?? "unknown"), default: 0] += 1
+                let links = FirebaseAcquisitionSourceReview.reconcileItems(acquisition, documents: documents, lineage: review.lineage)
+                if links.canMapCurrentMembership { acquisitionLinks["matchingCurrentMembership", default: 0] += 1 }
+                for issue in links.issues { acquisitionLinks[issue, default: 0] += 1 }
+            } else {
+                for issue in acquisition.issues { acquisitionPreview[issue.rawValue, default: 0] += 1 }
+            }
+            switch FirebaseClientPaymentConversion.convert(document,
+                sourceAccountID: "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94", sourceProjectID: sourceProjectID, targetScope: previewScope) {
+            case .mapped: paymentPreview["explicitClientPayment", default: 0] += 1
+            case .unresolved(_, let reason): paymentPreview[String(describing: reason), default: 0] += 1
+            }
+        }
+        let summary: [String: Any] = ["documents": documents.count, "lineage": review.lineage.count,
+            "eligibleForSemanticReview": review.lineage.filter(\.canAttemptMapping).count,
+            "lineageWithIssues": review.lineage.filter { !$0.canAttemptMapping }.count,
+            "documentIssues": review.issues.count, "issueCounts": issueCounts, "sourceIssueCounts": sourceIssueCounts,
+            "paymentMappingPreviewOnly": paymentPreview, "acquisitionReviewOnly": acquisitionPreview,
+            "acquisitionItemLinksReviewOnly": acquisitionLinks, "acquisitionPlansNotImported": acquisitionPlans,
+            "receiptItemPriceEvidenceOnly": receiptPriceEvidence, "currentPlacementEvidenceOnly": placementEvidence]
+        print(String(decoding: try JSONSerialization.data(withJSONObject: summary, options: [.sortedKeys]), as: UTF8.self))
+        return // Read-only: never reach local database setup or payment import.
+    }
     try require(args.count == 2 || args.count == 3,
         "Usage: LedgerLocalPaymentImport --run-directory <existing absolute directory> [--interrupt-before-commit|--interrupt-after-commit]")
     try require(args[0] == "--run-directory" && args[1].hasPrefix("/"), "An absolute run directory is required")

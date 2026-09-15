@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
+private typealias InvoiceReportPlatformImage = UIImage
+#else
+private typealias InvoiceReportPlatformImage = NSImage
+#endif
 
 struct InvoiceReportView: View {
     let data: InvoiceReportData
@@ -11,8 +16,15 @@ struct InvoiceReportView: View {
     var invoiceDate: Date? = nil
     var notes: String? = nil
     var showsDownloadAction: Bool = true
+    var currencyCode: String = "USD"
+    var usesCurrentDateWhenMissing: Bool = true
+    var loadLogo: (() async throws -> Data)? = nil
+    var onDownload: (() -> Void)? = nil
+    var suppliedLogo: Image? = nil
+    var provenance: String? = nil
+    var totalLabel: String = "Net Amount Due"
 
-    @State private var logoImage: PlatformImage?
+    @State private var logoImage: InvoiceReportPlatformImage?
 
     var body: some View {
         Group {
@@ -33,7 +45,7 @@ struct InvoiceReportView: View {
                                 .font(Typography.small)
                                 .foregroundStyle(BrandColors.textSecondary)
                             Spacer()
-                            Text(CurrencyFormatting.formatCentsWithDecimals(data.chargesSubtotalCents))
+                            Text(formatAmount(data.chargesSubtotalCents))
                                 .font(Typography.body)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(BrandColors.textPrimary)
@@ -43,19 +55,19 @@ struct InvoiceReportView: View {
                                 .font(Typography.small)
                                 .foregroundStyle(BrandColors.textSecondary)
                             Spacer()
-                            Text("(\(CurrencyFormatting.formatCentsWithDecimals(data.creditsSubtotalCents)))")
+                            Text("(\(formatAmount(data.creditsSubtotalCents)))")
                                 .font(Typography.body)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(BrandColors.textPrimary)
                         }
                         Divider()
                         HStack {
-                            Text("Net Amount Due")
+                            Text(totalLabel)
                                 .font(Typography.body)
                                 .fontWeight(.bold)
                                 .foregroundStyle(BrandColors.primary)
                             Spacer()
-                            Text(CurrencyFormatting.formatCentsWithDecimals(data.netDueCents))
+                            Text(formatAmount(data.netDueCents))
                                 .font(Typography.body)
                                 .fontWeight(.bold)
                                 .foregroundStyle(BrandColors.primary)
@@ -95,6 +107,13 @@ struct InvoiceReportView: View {
                     )
                 }
 
+                if let provenance {
+                    Text(provenance)
+                        .accessibilityIdentifier("invoice-report-provenance")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .textSelection(.enabled)
+                }
                 if let notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Notes").sectionLabelStyle()
@@ -111,9 +130,13 @@ struct InvoiceReportView: View {
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
         .task {
-            if let urlString = businessLogoUrl, let url = URL(string: urlString) {
+            if let loadLogo {
+                if let data = try? await loadLogo(), !Task.isCancelled {
+                    logoImage = InvoiceReportPlatformImage(data: data)
+                }
+            } else if let urlString = businessLogoUrl, let url = URL(string: urlString) {
                 if let (data, _) = try? await URLSession.shared.data(from: url),
-                   let image = PlatformImage(data: data) {
+                   let image = InvoiceReportPlatformImage(data: data) {
                     logoImage = image
                 }
             }
@@ -122,7 +145,10 @@ struct InvoiceReportView: View {
             if showsDownloadAction {
                 ToolbarItem(placement: .trailingNavBar) {
                     Button {
+                        if let onDownload { onDownload(); return }
+                        #if canImport(FirebaseFirestore)
                         downloadPDF()
+                        #endif
                     } label: {
                         Image(systemName: "arrow.down.circle")
                     }
@@ -135,20 +161,12 @@ struct InvoiceReportView: View {
 
     private var invoiceHeader: some View {
         HStack(alignment: .top, spacing: Spacing.md) {
-            if let logoImage {
-                #if canImport(UIKit)
-                Image(uiImage: logoImage)
+            if let image = displayedLogo {
+                image
                     .resizable()
                     .scaledToFit()
                     .frame(height: 80)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
-                #elseif canImport(AppKit)
-                Image(nsImage: logoImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
-                #endif
             }
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 if let businessName, !businessName.isEmpty {
@@ -169,7 +187,11 @@ struct InvoiceReportView: View {
                     if !clientName.isEmpty {
                         metaRow(label: "Client:", value: clientName)
                     }
-                    metaRow(label: "Date:", value: formattedDate(invoiceDate) ?? currentDateFormatted)
+                    if let date = formattedDate(invoiceDate) {
+                        metaRow(label: "Date:", value: date)
+                    } else if usesCurrentDateWhenMissing {
+                        metaRow(label: "Date:", value: currentDateFormatted)
+                    }
                     if let invoiceStatusLabel, !invoiceStatusLabel.isEmpty {
                         metaRow(label: "Status:", value: invoiceStatusLabel)
                     }
@@ -196,23 +218,38 @@ struct InvoiceReportView: View {
         }
     }
 
+    private var displayedLogo: Image? {
+        if let suppliedLogo { return suppliedLogo }
+        guard let logoImage else { return nil }
+        #if canImport(UIKit)
+        return Image(uiImage: logoImage)
+        #else
+        return Image(nsImage: logoImage)
+        #endif
+    }
+
     private func invoiceSection(
         title: String,
         lines: [InvoiceLineEntry],
-        totalCents: Int,
+        totalCents: Decimal,
         totalLabel: String
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(title)
                 .sectionLabelStyle()
 
-            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+            ForEach(Array(InvoiceReportData.groups(lines).enumerated()), id: \.offset) { _, group in
+                if group.categoryId != nil {
+                    Text(group.categoryName ?? "Category name unavailable")
+                        .font(Typography.body).fontWeight(.semibold).padding(.top, Spacing.sm)
+                }
+                ForEach(Array(group.lines.enumerated()), id: \.offset) { _, line in
                 HStack {
                     FindableText(line.name)
                         .font(Typography.body)
                         .foregroundStyle(BrandColors.textPrimary)
                     Spacer()
-                    Text(CurrencyFormatting.formatCentsWithDecimals(line.priceCents))
+                    Text(formatAmount(line.priceCents))
                         .font(Typography.body)
                         .foregroundStyle(
                             line.isMissingPrice ? .orange : BrandColors.textPrimary
@@ -221,6 +258,14 @@ struct InvoiceReportView: View {
                 .padding(.vertical, Spacing.xs)
 
                 Divider()
+                }
+                if group.categoryId != nil {
+                    HStack {
+                        Text("Category Total")
+                        Spacer()
+                        Text(formatAmount(group.subtotalCents))
+                    }.font(Typography.small).fontWeight(.semibold).padding(.vertical, Spacing.xs)
+                }
             }
 
             // Section total
@@ -230,7 +275,7 @@ struct InvoiceReportView: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
-                Text(CurrencyFormatting.formatCentsWithDecimals(totalCents))
+                Text(formatAmount(totalCents))
                     .font(Typography.body)
                     .fontWeight(.semibold)
                     .foregroundStyle(BrandColors.textPrimary)
@@ -254,6 +299,11 @@ struct InvoiceReportView: View {
 
     // MARK: - PDF Sharing
 
+    private func formatAmount(_ cents: Decimal) -> String {
+        (cents / 100).formatted(.currency(code: currencyCode))
+    }
+
+    #if canImport(FirebaseFirestore)
     private func downloadPDF() {
         let html = ReportHTMLBuilder.invoice(
             data: data,
@@ -272,4 +322,5 @@ struct InvoiceReportView: View {
             fileName: "invoice-\(label).pdf"
         )
     }
+    #endif
 }

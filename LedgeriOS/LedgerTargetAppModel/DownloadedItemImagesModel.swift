@@ -2,11 +2,31 @@ import Foundation
 import LedgerTargetCore
 import Observation
 
-@MainActor @Observable
-public final class DownloadedItemImagesModel {
-    public enum ExportFailure: Error, Equatable, Sendable {
+/// Shared ordering for Item and Transaction media export. Destination completion
+/// owns the bytes after handoff; cancellation must not release them prematurely.
+public enum AuthorizedMediaExport {
+    public enum Failure: Error, Equatable, Sendable {
         case alreadyExporting, unavailable, missingBytes
     }
+    @MainActor public static func perform(validate: () throws -> Void,
+        prepareDestination: () async throws -> Void, load: () async throws -> Data?,
+        handoff: (Data) async throws -> Void) async throws {
+        try Task.checkCancellation()
+        try validate()
+        try await prepareDestination()
+        try Task.checkCancellation()
+        try validate()
+        let bytes = try await load()
+        try Task.checkCancellation()
+        try validate()
+        guard let bytes, !bytes.isEmpty else { throw Failure.missingBytes }
+        try await handoff(bytes)
+    }
+}
+
+@MainActor @Observable
+public final class DownloadedItemImagesModel {
+    public typealias ExportFailure = AuthorizedMediaExport.Failure
     public enum State: Equatable, Sendable {
         case idle, loading, unavailable
         case downloaded(DownloadedItemImageCatalog)
@@ -45,15 +65,12 @@ public final class DownloadedItemImagesModel {
         try validateExport(accountId: accountId,itemId: itemId,image: image,generation: request)
         isExporting = true
         defer { isExporting = false }
-        try await prepareDestination()
-        try validateExport(accountId: accountId,itemId: itemId,image: image,generation: request)
-        let bytes = try await reader.loadDownloadedItemImage(accountId: accountId,itemId: itemId,
-            image: image,allowDownload: true)
-        try validateExport(accountId: accountId,itemId: itemId,image: image,generation: request)
-        guard let bytes, !bytes.isEmpty else { throw ExportFailure.missingBytes }
-        // The native destination owns the copy from this point. Its handoff
-        // continuation must await actual completion, including after cancellation.
-        try await handoff(bytes)
+        try await AuthorizedMediaExport.perform(validate: {
+            try validateExport(accountId: accountId,itemId: itemId,image: image,generation: request)
+        }, prepareDestination: prepareDestination, load: {
+            try await reader.loadDownloadedItemImage(accountId: accountId,itemId: itemId,
+                image: image,allowDownload: true)
+        }, handoff: handoff)
     }
 
     private func validateExport(accountId: AccountID,itemId: ItemID,image: DownloadedItemImage,

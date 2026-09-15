@@ -66,6 +66,7 @@ struct CollapsibleSection<Content: View>: View {
                             .frame(minWidth: 44, minHeight: 44)
                             .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Add \(title)")
                     .buttonStyle(.plain)
                 }
 

@@ -134,7 +134,19 @@ function relative(filePath) {
   return path.relative(ROOT, filePath).split(path.sep).join("/");
 }
 
+// Used only during baseline discovery; never checks out or edits source files.
+let sourceSnapshot = null;
+
+function exists(filePath) {
+  return sourceSnapshot ? sourceSnapshot.has(relative(filePath)) : fs.existsSync(filePath);
+}
+
 function read(filePath) {
+  if (sourceSnapshot) {
+    const contents = sourceSnapshot.get(relative(filePath));
+    if (contents === undefined) throw new Error(`Missing baseline file: ${relative(filePath)}`);
+    return contents;
+  }
   return fs.readFileSync(filePath, "utf8");
 }
 
@@ -147,6 +159,11 @@ function stableId(prefix, key) {
 }
 
 function walk(directory, predicate = () => true) {
+  if (sourceSnapshot) {
+    const prefix = relative(directory) + "/";
+    return [...sourceSnapshot.keys()].filter((name) => name.startsWith(prefix))
+      .map((name) => path.join(ROOT, name)).filter(predicate).sort();
+  }
   if (!fs.existsSync(directory)) return [];
   const files = [];
   const visit = (current) => {
@@ -1162,7 +1179,7 @@ function discoverSwiftTests() {
 
 function discoverFirestoreRules() {
   const filePath = path.join(ROOT, "firebase/firestore.rules");
-  if (!fs.existsSync(filePath)) return [];
+  if (!exists(filePath)) return [];
   const rel = relative(filePath);
   const text = read(filePath);
   const lines = text.split("\n");
@@ -1208,7 +1225,7 @@ function discoverCloudFunctionModules() {
 
 function discoverCloudFunctions() {
   const filePath = path.join(ROOT, "firebase/functions/src/index.ts");
-  if (!fs.existsSync(filePath)) return [];
+  if (!exists(filePath)) return [];
   const rel = relative(filePath);
   const text = read(filePath);
   const surfaces = [];
@@ -1418,7 +1435,7 @@ function discoverConfiguration() {
   ];
   return candidates.flatMap((rel) => {
     const filePath = path.join(ROOT, rel);
-    if (!fs.existsSync(filePath)) return [];
+    if (!exists(filePath)) return [];
     const text = read(filePath);
     return [
       makeSurface({
@@ -1460,6 +1477,67 @@ function discoverAll() {
 
 function loadManifest() {
   return JSON.parse(read(MANIFEST_PATH));
+}
+
+function requireCommit(commit) {
+  if (!/^[0-9a-f]{40}$/.test(commit ?? "")) throw new Error("Source baseline requires an exact local Git commit");
+  return commit;
+}
+
+export function loadSourceInventory(recorded = loadManifest(), repository = ROOT) {
+  const { commit, inventoryCommit } = recorded.sourceBaseline ?? {};
+  requireCommit(commit);
+  requireCommit(inventoryCommit);
+  execFileSync("git", ["merge-base", "--is-ancestor", commit, inventoryCommit],
+    { cwd: repository, stdio: ["pipe", "pipe", "pipe"] });
+  const inventory = JSON.parse(execFileSync("git", ["show",
+    `${inventoryCommit}:docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json`],
+  { cwd: repository, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 }));
+  if (inventory.sourceBaseline?.commit !== commit) {
+    throw new Error("Saved source inventory belongs to a different baseline; explicit review is required");
+  }
+  return inventory;
+}
+
+export function discoverSourceBaseline(commit, repository = ROOT) {
+  requireCommit(commit);
+  const entries = execFileSync("git", ["ls-tree", "-rz", commit],
+    { cwd: repository, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 })
+    .split("\0").filter(Boolean).map((entry) => entry.match(/^\d+ blob ([0-9a-f]+)\t(.+)$/s))
+    .filter(Boolean).filter(([, , name]) =>
+      !name.split("/").some((part) => ["node_modules", "DerivedData", "build", ".git"].includes(part)) &&
+      (/\.(swift|ts|js|mjs|json|rules|md|sh|plist|entitlements|pbxproj|xcscheme|resolved|toml|yaml|yml|sql|ready)$/.test(name) ||
+       /(^|\/)(Dockerfile|\.firebaserc)$/.test(name)));
+  const blobs = entries.length ? execFileSync("git", ["cat-file", "--batch"], {
+    cwd: repository, input: entries.map(([, oid]) => oid).join("\n") + "\n",
+    maxBuffer: 128 * 1024 * 1024,
+  }) : Buffer.alloc(0);
+  const snapshot = new Map();
+  let offset = 0;
+  for (const [, oid, name] of entries) {
+    const headerEnd = blobs.indexOf(10, offset);
+    const header = blobs.subarray(offset, headerEnd).toString("utf8").split(" ");
+    const size = Number(header[2]);
+    if (headerEnd < 0 || header[0] !== oid || header[1] !== "blob" ||
+        !Number.isSafeInteger(size) || size < 0 || headerEnd + size + 1 >= blobs.length) {
+      throw new Error(`Cannot read baseline blob: ${name}`);
+    }
+    offset = headerEnd + 1;
+    snapshot.set(name, blobs.subarray(offset, offset + size).toString("utf8"));
+    offset += size + 1;
+  }
+  const previous = sourceSnapshot;
+  sourceSnapshot = snapshot;
+  try { return discoverAll().filter(isProductSourceSurface); }
+  finally { sourceSnapshot = previous; }
+}
+
+export function checkSourceBaseline(recorded = loadManifest(), repository = ROOT) {
+  const inventory = loadSourceInventory(recorded, repository);
+  // The saved audit also contains supporting tools added after the product
+  // baseline. Compare it to its own immutable snapshot, not today's checkout.
+  const discovered = discoverSourceBaseline(recorded.sourceBaseline.inventoryCommit, repository);
+  return { ...validate(inventory, discovered, [], { sourceOnly: true }), count: discovered.length };
 }
 
 function mergeDiscovery(manifest, discovered) {
@@ -1855,18 +1933,18 @@ function main() {
   if (!fs.existsSync(MANIFEST_PATH)) {
     throw new Error(`Missing manifest: ${relative(MANIFEST_PATH)}`);
   }
-  const discovered = discoverAll();
   if (command === "source-check" ||
       (command === "gate" && new Set(["M3", "M4", "M5"]).has(process.argv[3]))) {
-    const validation = validate(loadManifest(), discovered, [], { sourceOnly: true });
+    const validation = checkSourceBaseline();
     printValidation(validation);
     if (validation.errors.length) process.exit(1);
-    console.log(`Source omission check: ${discovered.filter(isProductSourceSurface).length} product-source surfaces; no unrecorded or changed source. Target and tracking edits use tests/checklist evidence.`);
+    console.log(`Saved-baseline omission check: ${validation.count} product-source surfaces from local Git history. Target refactors use workflow coverage and tests, not inventory synchronization.`);
     if (command === "gate") {
       execFileSync(process.execPath, [path.join(ROOT, "scripts/check-conversion-current-state.mjs"), "--gate", process.argv[3]], { cwd: ROOT, stdio: "inherit" });
     }
     return;
   }
+  const discovered = discoverAll();
   const batches = loadClassificationBatches();
   const productAuthorityCrosswalk = loadProductAuthorityCrosswalk();
   const implementationSlices = loadImplementationSlices();

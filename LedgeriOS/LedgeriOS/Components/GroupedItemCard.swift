@@ -25,6 +25,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     let name: String
     var thumbnailUrl: String?
     var thumbnailSmUrl: String?
+    var thumbnailContent: AnyView?
     var countLabel: String?
     var totalLabel: String?
     var sku: String?
@@ -50,6 +51,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         name: String,
         thumbnailUrl: String? = nil,
         thumbnailSmUrl: String? = nil,
+        thumbnailContent: AnyView? = nil,
         countLabel: String? = nil,
         totalLabel: String? = nil,
         sku: String? = nil,
@@ -72,6 +74,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         self.name = name
         self.thumbnailUrl = thumbnailUrl
         self.thumbnailSmUrl = thumbnailSmUrl
+        self.thumbnailContent = thumbnailContent
         self.countLabel = countLabel
         self.totalLabel = totalLabel
         self.sku = sku
@@ -262,6 +265,17 @@ struct GroupedItemCard<ExpandedContent: View>: View {
 
     @ViewBuilder
     private var thumbnail: some View {
+        if let thumbnailContent {
+            thumbnailContent
+                .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
+                .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+        } else {
+            legacyThumbnail
+        }
+    }
+
+    @ViewBuilder private var legacyThumbnail: some View {
+        #if canImport(FirebaseFirestore)
         if let thumbnailUrl, !thumbnailUrl.isEmpty {
             FirebaseImage(url: thumbnailUrl, thumbnailUrl: thumbnailSmUrl, contentMode: .fill) {
                 ProgressView()
@@ -277,6 +291,9 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         } else {
             thumbnailPlaceholder
         }
+        #else
+        thumbnailPlaceholder
+        #endif
     }
 
     private var thumbnailPlaceholder: some View {
@@ -328,6 +345,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     .padding(Spacing.screenPadding)
 }
 
+#if canImport(FirebaseFirestore)
 #Preview("Expanded") {
     @Previewable @State var expanded = true
 
@@ -349,6 +367,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     }
     .padding(Spacing.screenPadding)
 }
+
+#endif
 
 #Preview("With Selection") {
     @Previewable @State var selected = false

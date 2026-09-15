@@ -5,8 +5,35 @@ import PowerSync
 /// Byte cache only. Parent reference authorization belongs to the calling runtime
 /// and must be checked before and after awaiting cached or downloaded bytes.
 protocol DownloadedImageCaching: Sendable {
-    func cachedDownloadedImage(_ reference: DownloadedImageObjectReference) async throws -> Data?
-    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedImageObjectReference) async throws
+    // Compatibility method names; PDFs use the same verified byte path. The
+    // caller must still authorize its Transaction reference, not an Item/logo.
+    func cachedDownloadedImage(_ reference: DownloadedMediaObjectReference) async throws -> Data?
+    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedMediaObjectReference) async throws
+}
+
+/// Shared by Item images and Transaction attachments. Authorization belongs to
+/// their live parent relationship, not to the fact that these bytes are cached.
+func loadAuthorizedDownloadedMedia(_ reference: DownloadedMediaObjectReference,
+    cache: any DownloadedImageCaching,
+    download: (@Sendable (DownloadedMediaObjectReference) async throws -> Data)?,
+    authorize: @Sendable () async throws -> Void) async throws -> Data? {
+    try await authorize()
+    var bytes: Data?
+    do { bytes = try await cache.cachedDownloadedImage(reference) }
+    catch AttachmentLocalByteVaultFailure.missingObject { }
+    catch AttachmentLocalByteVaultFailure.corruptObject { }
+    try await authorize()
+    if bytes == nil, let download {
+        let downloaded = try await download(reference)
+        try await authorize()
+        // The shared cache independently verifies length/hash, including when
+        // an injected transport does not. Never admit a stale reference.
+        try await cache.cacheDownloadedImage(downloaded, reference: reference)
+        try await authorize()
+        bytes = downloaded
+    }
+    try await authorize()
+    return bytes
 }
 
 extension AccountBusinessLogoReference {
@@ -49,7 +76,8 @@ public enum AttachmentCapturePowerSyncSchema {
                 .text("parent_kind"), .text("parent_id"), .text("local_object_id"),
                 .integer("captured_at_ms"), .integer("persisted_at_ms"),
                 .integer("byte_count"), .text("content_sha256"),
-                .text("receipt_fingerprint"), .text("receipt_json"), .text("state")
+                .text("receipt_fingerprint"), .text("receipt_json"), .text("state"),
+                .text("upload_progress_json")
             ],
             indexes: [
                 .ascending(
@@ -58,7 +86,8 @@ public enum AttachmentCapturePowerSyncSchema {
                         "environment", "principal_id", "account_id",
                         "persisted_at_ms"
                     ]
-                )
+                ),
+                .ascending(name: "attachment_queue_parent", columns: ["parent_kind", "parent_id", "persisted_at_ms"])
             ],
             localOnly: true
         ),
@@ -147,6 +176,29 @@ public struct AttachmentVerifiedUploadCandidate: Equatable, Sendable {
     public let bytes: Data
 }
 
+/// Local transport evidence only; even an applied result cannot authorize queue
+/// deletion until the current synced parent reference is independently observed.
+struct AttachmentUploadProgress: Codable, Equatable, Sendable {
+    var checkpoint: TransactionAttachmentUploadCheckpoint?
+    var publication: TransactionAttachmentPublication?
+    var expense: ExpenseReceiptUploadProgress? = nil
+}
+
+struct ExpenseReceiptUploadProgress: Codable, Equatable, Sendable {
+    let projectId: EntityID
+    let publication: ExpenseAttachmentPublication
+}
+
+typealias ExpenseAttachmentPublisher = @Sendable (
+    AttachmentVerifiedUploadCandidate, TransactionAttachmentUploadCheckpoint?,
+    @escaping SupabaseTransactionAttachmentUpload.CheckpointHandler
+) async throws -> ExpenseAttachmentPublication
+
+typealias TransactionAttachmentPublisher = @Sendable (
+    AttachmentVerifiedUploadCandidate, TransactionAttachmentUploadCheckpoint?,
+    @escaping SupabaseTransactionAttachmentUpload.CheckpointHandler
+) async throws -> TransactionAttachmentPublication
+
 public enum AttachmentStoreCheckpoint: String, CaseIterable, Sendable {
     case beforeQueueCommit
     case afterQueueCommit
@@ -182,8 +234,8 @@ public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
     }
 }
 
-/// Local-only acceptance adapter. There is intentionally no API here to mark an
-/// item uploaded, detach it, delete it, discard it, clean it up, or evict it.
+/// Protected capture/cache ownership and upload progress. Queue drainage requires
+/// publication plus synced reference evidence; no detach, discard or byte eviction.
 actor AttachmentCapturePowerSyncStore:
     AttachmentCaptureStoring,
     AttachmentPendingWorkObserving,
@@ -201,6 +253,7 @@ actor AttachmentCapturePowerSyncStore:
     private let enqueueCommitCheckpoint: @Sendable () async throws -> Void
     private var inFlight: [String: InFlightCapture] = [:]
     private var cachingAttachmentIDs: Set<String> = []
+    private var publishingAttachmentIDs: Set<String> = []
 
     init(
         database: any PowerSyncDatabaseProtocol,
@@ -230,10 +283,17 @@ actor AttachmentCapturePowerSyncStore:
     public func enqueue(
         _ capture: LocalAttachmentCapture
     ) async throws -> AttachmentLocalDurabilityReceipt {
+        try await enqueue(capture, authorize: {})
+    }
+
+    func enqueue(_ capture: LocalAttachmentCapture,
+        authorize: @Sendable @escaping () async throws -> Void
+    ) async throws -> AttachmentLocalDurabilityReceipt {
         guard scope.contains(capture.scope) else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
         }
         try await ensureScopeBinding()
+        try await authorize()
         let identity = CaptureIdentity(capture)
         guard !cachingAttachmentIDs.contains(capture.attachmentId.rawValue) else {
             throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
@@ -244,7 +304,7 @@ actor AttachmentCapturePowerSyncStore:
             }
             return try await existing.task.value
         }
-        let task = Task { try await self.performEnqueue(capture) }
+        let task = Task { try await self.performEnqueue(capture, authorize: authorize) }
         inFlight[capture.attachmentId.rawValue] = InFlightCapture(
             identity: identity,
             task: task
@@ -260,7 +320,8 @@ actor AttachmentCapturePowerSyncStore:
     }
 
     private func performEnqueue(
-        _ capture: LocalAttachmentCapture
+        _ capture: LocalAttachmentCapture,
+        authorize: @Sendable () async throws -> Void
     ) async throws -> AttachmentLocalDurabilityReceipt {
 
         if let existing = try await existingRow(attachmentIdentifier: capture.attachmentId.rawValue) {
@@ -273,6 +334,7 @@ actor AttachmentCapturePowerSyncStore:
                   record.receipt.attachmentId == capture.attachmentId,
                   record.receipt.scope == capture.scope,
                   record.receipt.capturedAt == capture.capturedAt,
+                  record.receipt.metadata == capture.metadata,
                   record.receipt.byteCount == capture.byteCount,
                   record.receipt.contentSHA256 == capture.contentSHA256 else {
                 try? await setState(.corrupt, rowID: existing.id)
@@ -303,8 +365,9 @@ actor AttachmentCapturePowerSyncStore:
             as: UTF8.self
         )
 
+        try await enqueueCommitCheckpoint()
+        try await authorize()
         do {
-            try await enqueueCommitCheckpoint()
             try invoke(.beforeQueueCommit)
             _ = try await database.execute(
                 sql: """
@@ -361,6 +424,62 @@ actor AttachmentCapturePowerSyncStore:
         }
     }
 
+    /// Metadata-only query for capacity and local pending relationships. Do not
+    /// decrypt every queued original or perform orphan reconciliation for an Add.
+    func pendingCaptureReceipts(parent: LedgerEntityReference) async throws -> [AttachmentLocalDurabilityReceipt] {
+        try await ensureScopeBinding()
+        let rows = try await database.getAll(sql: """
+            SELECT * FROM \(AttachmentCapturePowerSyncTable.queue)
+            WHERE parent_kind=? AND parent_id=? ORDER BY persisted_at_ms,id
+            """, parameters: [parent.kind.rawValue, parent.id.rawValue], mapper: QueueRow.init(cursor:))
+        return try rows.map { row in
+            guard let record = row.validatedRecord, scope.contains(record.receipt.scope),
+                  record.receipt.scope.parent == parent else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            return record.receipt
+        }
+    }
+
+    func pendingTransactionUploads() async throws -> [AttachmentLocalDurabilityReceipt] {
+        try await ensureScopeBinding()
+        return try await scopedRows().compactMap { row in
+            guard row.parentKind == "transaction" else { return nil }
+            guard let record = row.validatedRecord, scope.contains(record.receipt.scope) else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            if case .rejected = try row.uploadProgress?.publication { return nil }
+            return record.receipt // Applied entries still need authoritative readback.
+        }
+    }
+
+    func pendingExpenseReconciliations() async throws -> [(AttachmentLocalDurabilityReceipt, EntityID)] {
+        try await ensureScopeBinding()
+        return try await scopedRows().compactMap { row in
+            guard row.parentKind == "expense", let record = row.validatedRecord,
+                  let progress = try row.uploadProgress?.expense, progress.publication == .verified else { return nil }
+            return (record.receipt, progress.projectId)
+        }
+    }
+
+    func pendingCaptureRejections(parent: LedgerEntityReference) async throws -> [AttachmentID: String] {
+        try await ensureScopeBinding()
+        let rows = try await database.getAll(sql: """
+            SELECT * FROM \(AttachmentCapturePowerSyncTable.queue) WHERE parent_kind=? AND parent_id=?
+            """, parameters: [parent.kind.rawValue, parent.id.rawValue], mapper: QueueRow.init(cursor:))
+        var rejections: [AttachmentID: String] = [:]
+        for row in rows {
+            guard let record = row.validatedRecord, scope.contains(record.receipt.scope),
+                  record.receipt.scope.parent == parent else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            if case let .rejected(code) = try row.uploadProgress?.publication {
+                rejections[record.receipt.attachmentId] = code
+            }
+        }
+        return rejections
+    }
+
     public func pendingEvidence() async throws -> [AttachmentPendingEvidence] {
         try await ensureScopeBinding()
         let rows = try await scopedRows()
@@ -398,6 +517,10 @@ actor AttachmentCapturePowerSyncStore:
                 try? await setState(.corrupt, rowID: row.id)
                 continue
             }
+            if let publication = try row.uploadProgress?.publication, publication != .incomplete {
+                continue // Retain applied/rejected bytes, but do not upload them again.
+            }
+            if try row.uploadProgress?.expense?.publication == .verified { continue }
             do {
                 let bytes = try await vault.verifiedBytes(for: record.persistedEvidence)
                 if row.state != .pending { try? await setState(.pending, rowID: row.id) }
@@ -407,6 +530,190 @@ actor AttachmentCapturePowerSyncStore:
             }
         }
         return nil
+    }
+
+    func publishTransactionAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        publish: TransactionAttachmentPublisher) async throws -> TransactionAttachmentPublication {
+        guard receipt.scope.parent.kind == .transaction else {
+            throw SupabaseTransactionAttachmentUploadFailure.unsupportedReceipt
+        }
+        guard publishingAttachmentIDs.insert(receipt.attachmentId.rawValue).inserted else {
+            throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
+        }
+        defer { publishingAttachmentIDs.remove(receipt.attachmentId.rawValue) }
+        let progress = try await uploadProgress(for: receipt)
+        if let result = progress?.publication, result != .incomplete { return result }
+        let bytes = try await resolveLocalAttachmentBytes(for: receipt)
+        let result = try await publish(.init(receipt: receipt, bytes: bytes), progress?.checkpoint) { checkpoint in
+            try await self.saveUploadProgress(.init(checkpoint: checkpoint, publication: nil), for: receipt)
+        }
+        let latest = try await uploadProgress(for: receipt)
+        try await saveUploadProgress(.init(checkpoint: latest?.checkpoint, publication: result), for: receipt)
+        return result
+    }
+
+    func verifiedExpenseReceipts(for command: CreateExpenseCommand) async throws -> Set<AttachmentID> {
+        let e = command.envelope
+        guard e.accountId == scope.accountId, e.actorPrincipalId == scope.principalId else {
+            throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+        }
+        try await ensureScopeBinding()
+        var verified: Set<AttachmentID> = []
+        for id in e.payload.receiptAttachmentIds {
+            guard let row = try await existingRow(attachmentIdentifier: id.rawValue) else { continue }
+            guard let record = row.validatedRecord, scope.contains(record.receipt.scope),
+                  record.receipt.scope.parent.kind == .expense,
+                  record.receipt.scope.parent.id.rawValue == e.payload.expenseId.rawValue else {
+                throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+            }
+            if let progress = try row.uploadProgress?.expense,
+               progress.projectId.rawValue == e.payload.projectId.rawValue, progress.publication == .verified {
+                verified.insert(id)
+            }
+        }
+        return verified
+    }
+
+    func publishExpenseAttachment(_ receipt: AttachmentLocalDurabilityReceipt, projectId: EntityID,
+        publish: ExpenseAttachmentPublisher) async throws -> ExpenseAttachmentPublication {
+        guard receipt.scope.parent.kind == .expense else {
+            throw SupabaseTransactionAttachmentUploadFailure.unsupportedReceipt
+        }
+        guard publishingAttachmentIDs.insert(receipt.attachmentId.rawValue).inserted else {
+            throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
+        }
+        defer { publishingAttachmentIDs.remove(receipt.attachmentId.rawValue) }
+        let progress = try await uploadProgress(for: receipt)
+        guard progress?.publication == nil,
+              progress?.expense == nil || progress?.expense?.projectId == projectId else {
+            throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+        }
+        if progress?.expense?.publication == .verified { return .verified }
+        // Persist project binding before network admission, including interruptions
+        // before the first TUS checkpoint. The same Expense cannot silently move.
+        try await saveUploadProgress(.init(checkpoint: progress?.checkpoint, publication: nil,
+            expense: .init(projectId: projectId, publication: .incomplete)), for: receipt)
+        let bytes = try await resolveLocalAttachmentBytes(for: receipt)
+        let result = try await publish(.init(receipt: receipt, bytes: bytes), progress?.checkpoint) { checkpoint in
+            try await self.saveUploadProgress(.init(checkpoint: checkpoint, publication: nil,
+                expense: .init(projectId: projectId, publication: .incomplete)), for: receipt)
+        }
+        let latest = try await uploadProgress(for: receipt)
+        try await saveUploadProgress(.init(checkpoint: latest?.checkpoint, publication: nil,
+            expense: .init(projectId: projectId, publication: result)), for: receipt)
+        return result
+    }
+
+    func uploadProgress(for receipt: AttachmentLocalDurabilityReceipt) async throws -> AttachmentUploadProgress? {
+        guard scope.contains(receipt.scope) else { throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch }
+        try await ensureScopeBinding()
+        guard let row = try await existingRow(attachmentIdentifier: receipt.attachmentId.rawValue),
+              row.validatedRecord?.receipt == receipt else {
+            throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+        }
+        return try row.uploadProgress
+    }
+
+    /// Caller supplies an authorized synced-only catalog, never its pending overlay.
+    /// Move ownership of the SAME protected file in one local transaction; no
+    /// deletion, re-encryption or window where the bytes become an orphan.
+    func reconcileTransactionAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        catalog: DownloadedTransactionAttachments) async throws -> Bool {
+        let progress = try await uploadProgress(for: receipt)
+        guard case let .applied(revision, _) = progress?.publication,
+              receipt.scope.parent.kind == .transaction,
+              catalog.scope.accountId == receipt.scope.accountId,
+              catalog.transactionId.rawValue == receipt.scope.parent.id.rawValue,
+              catalog.section == receipt.metadata?.transactionSection,
+              catalog.isComplete, let currentRevision = catalog.revision, currentRevision >= revision,
+              let attachment = catalog.attachments.first(where: { $0.id.rawValue == receipt.attachmentId.rawValue }),
+              attachment.localReceipt == nil,
+              attachment.object.attachmentId == receipt.attachmentId,
+              attachment.object.contentSHA256 == receipt.contentSHA256,
+              UInt64(attachment.object.byteCount) == receipt.byteCount,
+              attachment.object.mediaType == receipt.metadata?.mediaType else { return false }
+        return try await retainReconciledBytes(receipt, progress: progress)
+    }
+
+    func reconcileExpenseAttachment(_ receipt: AttachmentLocalDurabilityReceipt, projectId: EntityID,
+                                    object: DownloadedMediaObjectReference) async throws -> Bool {
+        let progress = try await uploadProgress(for: receipt)
+        guard receipt.scope.parent.kind == .expense, progress?.expense?.projectId == projectId,
+              progress?.expense?.publication == .verified, object.accountId == receipt.scope.accountId,
+              object.attachmentId == receipt.attachmentId, object.contentSHA256 == receipt.contentSHA256,
+              UInt64(object.byteCount) == receipt.byteCount, object.mediaType == receipt.metadata?.mediaType else { return false }
+        return try await retainReconciledBytes(receipt, progress: progress)
+    }
+
+    private func retainReconciledBytes(_ receipt: AttachmentLocalDurabilityReceipt,
+                                      progress: AttachmentUploadProgress?) async throws -> Bool {
+        _ = try await resolveLocalAttachmentBytes(for: receipt)
+        try await database.writeTransaction { transaction in
+            guard let row = try transaction.getOptional(
+                sql: "SELECT * FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id=?",
+                parameters: [receipt.attachmentId.rawValue], mapper: QueueRow.init(cursor:)),
+                  let record = row.validatedRecord, record.receipt == receipt,
+                  try row.uploadProgress == progress else {
+                throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+            }
+            let json = String(decoding: try OperationContractCodec.encode(record.persistedEvidence), as: UTF8.self)
+            let existing = try transaction.getOptional(
+                sql: "SELECT evidence_json FROM \(AttachmentCapturePowerSyncTable.downloadedLogos) WHERE id=?",
+                parameters: [receipt.attachmentId.rawValue]) { try $0.getString(name: "evidence_json") }
+            if let existing, existing != json { throw AttachmentCapturePowerSyncStoreFailure.replayMismatch }
+            if existing == nil {
+                try transaction.execute(sql: "INSERT INTO \(AttachmentCapturePowerSyncTable.downloadedLogos)(id,evidence_json) VALUES(?,?)",
+                    parameters: [receipt.attachmentId.rawValue, json])
+            }
+            try transaction.execute(sql: "DELETE FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id=?",
+                parameters: [receipt.attachmentId.rawValue])
+        }
+        return true
+    }
+
+    func saveUploadProgress(_ progress: AttachmentUploadProgress,
+                            for receipt: AttachmentLocalDurabilityReceipt) async throws {
+        guard scope.contains(receipt.scope) else { throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch }
+        if progress.expense != nil && (receipt.scope.parent.kind != .expense || progress.publication != nil) {
+            throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+        }
+        if let checkpoint = progress.checkpoint, checkpoint.offset > receipt.byteCount {
+            throw SupabaseTransactionAttachmentUploadFailure.invalidCheckpoint
+        }
+        if case let .applied(revision, position) = progress.publication,
+           revision <= 0 || !(0..<50).contains(position) {
+            throw SupabaseTransactionAttachmentUploadFailure.invalidResponse
+        }
+        if case let .rejected(code) = progress.publication, code.isEmpty {
+            throw SupabaseTransactionAttachmentUploadFailure.invalidResponse
+        }
+        try await ensureScopeBinding()
+        let json = String(decoding: try JSONEncoder().encode(progress), as: UTF8.self)
+        try await database.writeTransaction { transaction in
+            guard let row = try transaction.getOptional(
+                sql: "SELECT * FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id=?",
+                parameters: [receipt.attachmentId.rawValue], mapper: QueueRow.init(cursor:)),
+                  row.validatedRecord?.receipt == receipt else {
+                throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+            }
+            if let existing = try row.uploadProgress?.publication, existing != .incomplete,
+               existing != progress.publication {
+                throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+            }
+            if let existing = try row.uploadProgress?.expense {
+                guard existing.projectId == progress.expense?.projectId,
+                      existing.publication != .verified || progress.expense?.publication == .verified else {
+                    throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
+                }
+            }
+            try transaction.execute(
+                sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET upload_progress_json=? WHERE id=?",
+                parameters: [json, receipt.attachmentId.rawValue])
+            let saved = try transaction.getOptional(
+                sql: "SELECT upload_progress_json FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id=?",
+                parameters: [receipt.attachmentId.rawValue]) { try $0.getString(name: "upload_progress_json") }
+            guard saved == json else { throw AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed }
+        }
     }
 
     func resolveLocalAttachmentBytes(
@@ -504,7 +811,7 @@ actor AttachmentCapturePowerSyncStore:
         try await cachedDownloadedImage(reference.downloadedImageReference)
     }
 
-    func cachedDownloadedImage(_ reference: DownloadedImageObjectReference) async throws -> Data? {
+    func cachedDownloadedImage(_ reference: DownloadedMediaObjectReference) async throws -> Data? {
         try await ensureScopeBinding()
         guard reference.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8) else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
@@ -527,7 +834,7 @@ actor AttachmentCapturePowerSyncStore:
         try await cacheDownloadedImage(bytes, reference: reference.downloadedImageReference)
     }
 
-    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedImageObjectReference) async throws {
+    func cacheDownloadedImage(_ bytes: Data, reference: DownloadedMediaObjectReference) async throws {
         let id = reference.attachmentId.rawValue
         guard inFlight[id] == nil, !cachingAttachmentIDs.contains(id) else {
             throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
@@ -591,8 +898,9 @@ actor AttachmentCapturePowerSyncStore:
         guard evidence.scope.environment == scope.environment,
               evidence.scope.principalId.rawValue.utf8.elementsEqual(scope.principalId.rawValue.utf8),
               evidence.scope.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8),
-              evidence.scope.parent.kind == .account,
-              evidence.scope.parent.id.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8) else {
+              (evidence.scope.parent.kind == .transaction || evidence.scope.parent.kind == .expense ||
+               (evidence.scope.parent.kind == .account &&
+                evidence.scope.parent.id.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8))) else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
         }
         return evidence
@@ -862,12 +1170,14 @@ private struct CaptureIdentity: Equatable, Sendable {
     let scope: AttachmentCaptureScope
     let capturedAt: AttachmentEpochMilliseconds
     let bytes: Data
+    let metadata: AttachmentCaptureMetadata?
 
     init(_ capture: LocalAttachmentCapture) {
         attachmentID = capture.attachmentId
         scope = capture.scope
         capturedAt = capture.capturedAt
         bytes = capture.bytes
+        metadata = capture.metadata
     }
 }
 
@@ -915,6 +1225,18 @@ private struct QueueRow: Sendable {
     let receiptFingerprint: String?
     let receiptJSON: String?
     let rawState: String?
+    let uploadProgressJSON: String?
+
+    var uploadProgress: AttachmentUploadProgress? {
+        get throws {
+            guard let uploadProgressJSON else { return nil }
+            guard let value = try? JSONDecoder().decode(AttachmentUploadProgress.self,
+                from: Data(uploadProgressJSON.utf8)) else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            return value
+        }
+    }
 
     var state: AttachmentPendingState {
         rawState.flatMap(AttachmentPendingState.init(rawValue:)) ?? .corrupt
@@ -935,6 +1257,7 @@ private struct QueueRow: Sendable {
         receiptFingerprint = try cursor.getStringOptional(name: "receipt_fingerprint")
         receiptJSON = try cursor.getStringOptional(name: "receipt_json")
         rawState = try cursor.getStringOptional(name: "state")
+        uploadProgressJSON = try cursor.getStringOptional(name: "upload_progress_json")
     }
 
     var validatedRecord: QueueRecord? {

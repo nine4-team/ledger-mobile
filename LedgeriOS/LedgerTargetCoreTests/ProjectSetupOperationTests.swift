@@ -4,6 +4,36 @@ import Testing
 
 @Suite("Project Setup Operation Contracts")
 struct ProjectSetupOperationTests {
+    @Test("New Project timestamps match the RPC without rewriting stored envelopes")
+    func submillisecondTimestampAndLegacyBytes() throws {
+        let baseline = try Self.command()
+        let fractional = Date(timeIntervalSince1970: 1_800_000_000.12375)
+        let source = baseline.draft
+        let draft = try ProjectSetupDraft(accountId: source.accountId, actorPrincipalId: source.actorPrincipalId,
+            operationContractVersion: source.operationContractVersion, projectId: source.projectId,
+            clientSelection: source.clientSelection, displayName: source.displayName, description: source.description,
+            categoryAllocations: source.categoryAllocations, capturedAt: fractional)
+        let command = try CreateProjectCommand(operationId: baseline.envelope.operationId, draft: draft)
+        let body = try Self.jsonObject(OperationContractCodec.encode(command.envelope))
+        #expect(body["clientCreatedAt"] as? Double == 1_800_000_000_123)
+        #expect(command.draft.capturedAt == command.envelope.clientCreatedAt)
+        let bytes = try OperationContractCodec.encode(command)
+        #expect(try OperationContractCodec.encode(OperationContractCodec.decode(CreateProjectCommand.self, from: bytes)) == bytes)
+
+        let envelope = OperationEnvelope(operationId: baseline.envelope.operationId,
+            contractVersion: source.operationContractVersion, accountId: source.accountId,
+            actorPrincipalId: source.actorPrincipalId, clientCreatedAt: fractional, payload: baseline.envelope.payload)
+        var legacy = try Self.jsonObject(bytes)
+        legacy["draft"] = try Self.jsonObject(OperationContractCodec.encode(draft))
+        legacy["envelope"] = try Self.jsonObject(OperationContractCodec.encode(envelope))
+        legacy["fingerprint"] = try OperationFingerprint.make(for: envelope).sha256
+        let stored = try JSONSerialization.data(withJSONObject: legacy, options: [.sortedKeys])
+        let restored = try OperationContractCodec.decode(CreateProjectCommand.self, from: stored)
+        #expect(restored.envelope.clientCreatedAt == fractional)
+        #expect(try OperationContractCodec.encode(restored.envelope) == OperationContractCodec.encode(envelope))
+        #expect(restored.fingerprint == (try OperationFingerprint.make(for: envelope)))
+    }
+
     @Test("Existing and new Client setup preserves stable identity and exact category state")
     func typedSetupPreservesIdentityAndCategoryState() throws {
         let existing = try Self.command()

@@ -30,11 +30,15 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
     public let scope: ItemPlacementScope
     public let spaceId: SpaceID?
 
+    /// Accepted local sale, until the matching destination downloads. Not paid evidence.
+    public let pendingSale: InventorySalePendingPlacement?
+
     public init(itemId: ItemID, description: String, itemRevision: Int64,
                 placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?,
                 name: String? = nil, sku: String? = nil, createdAt: Date? = nil,
                 workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil,
-                source: String? = nil, currentSource: String? = nil, imageCount: Int64? = nil) throws {
+                source: String? = nil, currentSource: String? = nil, imageCount: Int64? = nil,
+                pendingSale: InventorySalePendingPlacement? = nil) throws {
         guard itemRevision > 0 else { throw DownloadedItemPlacementsFailure.invalidRevision }
         guard createdAt?.timeIntervalSinceReferenceDate.isFinite != false else {
             throw DownloadedItemPlacementsFailure.invalidTimestamp
@@ -46,6 +50,7 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
         self.workflowStatusRaw = workflowStatusRaw; self.isBookmarked = isBookmarked
         self.source = source; self.currentSource = currentSource
         self.imageCount = imageCount
+        self.pendingSale = pendingSale
     }
 }
 
@@ -205,10 +210,7 @@ private func normalizedItemGroupingValue(_ value: String?) -> String {
 /// A presentation group never replaces its permanent physical Item identities.
 /// Structured keys avoid collisions when vendor names/SKUs contain separators.
 public struct DownloadedItemGroup: Equatable, Sendable, Identifiable {
-    public enum ID: Hashable, Sendable {
-        case sku(source: String, sku: String)
-        case name(source: String, name: String)
-    }
+    public typealias ID = ItemGrouping.Key
     public let id: ID
     public let representative: PhysicalItemPlacement
     public let rows: [PhysicalItemPlacement]
@@ -286,37 +288,9 @@ public struct DownloadedItemPlacements: Equatable, Sendable {
     /// filtered rows: hiding a competing SKU must not silently merge identities.
     /// Only this snapshot's exact Items can enter a group; caller order is kept.
     public func groups(for itemIds: [ItemID], in spaceId: SpaceID? = nil) -> [DownloadedItemGroup] {
-        let context = rows(in: spaceId)
-        var candidates: [DownloadedItemGroup.ID: Set<DownloadedItemGroup.ID>] = [:]
-        for row in context {
-            let source = normalizedItemGroupingValue(row.source)
-            let name = normalizedItemGroupingValue(row.displayName)
-            let sku = normalizedItemGroupingValue(row.sku)
-            if !name.isEmpty, !sku.isEmpty {
-                candidates[.name(source: source, name: name), default: []].insert(.sku(source: source, sku: sku))
-            }
-        }
-        let byId = Dictionary(uniqueKeysWithValues: context.map { ($0.itemId, $0) })
-        var seen = Set<ItemID>()
-        var order: [DownloadedItemGroup.ID] = []
-        var grouped: [DownloadedItemGroup.ID: [PhysicalItemPlacement]] = [:]
-        for itemId in itemIds {
-            guard seen.insert(itemId).inserted, let row = byId[itemId] else { continue }
-            let source = normalizedItemGroupingValue(row.source)
-            let sku = normalizedItemGroupingValue(row.sku)
-            let nameKey = DownloadedItemGroup.ID.name(source: source, name: normalizedItemGroupingValue(row.displayName))
-            let key: DownloadedItemGroup.ID
-            if !sku.isEmpty { key = .sku(source: source, sku: sku) }
-            else if let matches = candidates[nameKey], matches.count == 1, let match = matches.first { key = match }
-            else { key = nameKey }
-            if grouped[key] == nil { order.append(key) }
-            grouped[key, default: []].append(row)
-        }
-        return order.compactMap { key in
-            guard let members = grouped[key], let first = members.first else { return nil }
-            let representative = members.first { !normalizedItemGroupingValue($0.sku).isEmpty } ?? first
-            return .init(id: key, representative: representative, rows: members)
-        }
+        ItemGrouping.groups(in: rows(in: spaceId), selectedIDs: itemIds, id: \.itemId,
+            name: \.displayName, sku: \.sku, source: \.source)
+            .map { .init(id: $0.id, representative: $0.representative, rows: $0.rows) }
     }
 
     /// A Space filter narrows an already Account/scope-bound download; it does
@@ -379,13 +353,27 @@ public struct PhysicalItemPlacementHistoryInterval: Equatable, Sendable {
     public let spaceDisplayName: String?
     public let startedAt: String
     public let endedAt: String?
+    public enum StartEvidence: String, Sendable {
+        case recordedMove = "recorded_move"
+        case importObservation = "import_observation"
+        case unknown
+    }
+    public let startEvidence: StartEvidence
+    public var startDescription: String {
+        switch startEvidence {
+        case .recordedMove: "From: \(startedAt)"
+        case .importObservation: "Source location imported: \(startedAt) — move date unknown"
+        case .unknown: "Recorded: \(startedAt) — move date unknown"
+        }
+    }
 
     public init(placementId: EntityID, scope: ItemPlacementScope, spaceId: SpaceID?,
                 projectDisplayName: String? = nil, spaceDisplayName: String? = nil,
-                startedAt: String, endedAt: String?) {
+                startedAt: String, endedAt: String?, startEvidence: StartEvidence = .recordedMove) {
         self.placementId = placementId; self.scope = scope; self.spaceId = spaceId
         self.projectDisplayName = projectDisplayName; self.spaceDisplayName = spaceDisplayName
         self.startedAt = startedAt; self.endedAt = endedAt
+        self.startEvidence = startEvidence
     }
 }
 
@@ -452,13 +440,15 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     /// Available full-payment facts, not per-Item allocations or a complete
     /// payment ledger. Empty does not mean unpaid; missing bytes stay unknown.
     public let currentClientPaidPurchases: [DownloadedItemClientPurchase]
+    public let pendingSale: InventorySalePendingPlacement?
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
                 intervals: [PhysicalItemPlacementHistoryInterval], details: DownloadedItemDescriptiveDetails? = nil,
                 currentBudgetCategoryName: String? = nil,
                 currentAccountingResolution: ProjectItemAccountingResolution? = nil,
-                currentClientPaidPurchases: [DownloadedItemClientPurchase] = []) throws {
+                currentClientPaidPurchases: [DownloadedItemClientPurchase] = [],
+                pendingSale: InventorySalePendingPlacement? = nil) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
@@ -475,6 +465,10 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
                       })
               }) else { throw ProjectItemAccountingSectionFailure.scopeMismatch }
         self.currentClientPaidPurchases = currentClientPaidPurchases
+        guard pendingSale == nil || (pendingSale?.accountId == accountId && pendingSale?.item.itemId == itemId) else {
+            throw DownloadedItemPlacementsFailure.scopeMismatch
+        }
+        self.pendingSale = pendingSale
     }
 }
 

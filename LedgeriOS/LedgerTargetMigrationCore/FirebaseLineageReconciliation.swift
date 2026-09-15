@@ -71,7 +71,9 @@ public enum FirebaseLineageReconciler {
             let key = SourceKey(account: Data(record.sourceAccountScopeID.utf8), document: Data(record.lineageDocumentID.utf8))
             if let issue = duplicateIssues[key] { issues.append(issue) }
             // Do not cross-resolve a mismatched Account against this index.
-            if sameEnvelope && sameEmbeddedAccount == true {
+            // The validated source path establishes Account scope. Older edges
+            // omit accountId; a conflicting embedded value is still rejected.
+            if sameEnvelope && sameEmbeddedAccount != false {
                 if let id = record.itemID, !index.itemIDs.contains(Data(id.utf8)) {
                     issues.append(.missingItem(id))
                 }

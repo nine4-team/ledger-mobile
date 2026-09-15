@@ -4,6 +4,35 @@ import Testing
 
 @Suite("Client Creation Operation Contracts")
 struct ClientCreationOperationTests {
+    @Test("New Client timestamps match the RPC without rewriting stored envelopes")
+    func submillisecondTimestampAndLegacyBytes() throws {
+        let baseline = try Self.command()
+        let fractional = Date(timeIntervalSince1970: 1_800_000_000.12375)
+        let source = baseline.draft
+        let draft = try ClientCreationDraft(accountId: source.accountId, actorPrincipalId: source.actorPrincipalId,
+            operationContractVersion: source.operationContractVersion, clientId: source.clientId,
+            displayName: source.displayName, capturedAt: fractional)
+        let command = try CreateClientCommand(operationId: baseline.envelope.operationId, draft: draft)
+        let body = try Self.jsonObject(OperationContractCodec.encode(command.envelope))
+        #expect(body["clientCreatedAt"] as? Double == 1_800_000_000_123)
+        #expect(command.draft.capturedAt == command.envelope.clientCreatedAt)
+        let bytes = try OperationContractCodec.encode(command)
+        #expect(try OperationContractCodec.encode(OperationContractCodec.decode(CreateClientCommand.self, from: bytes)) == bytes)
+
+        let envelope = OperationEnvelope(operationId: baseline.envelope.operationId,
+            contractVersion: source.operationContractVersion, accountId: source.accountId,
+            actorPrincipalId: source.actorPrincipalId, clientCreatedAt: fractional, payload: baseline.envelope.payload)
+        var legacy = try Self.jsonObject(bytes)
+        legacy["draft"] = try Self.jsonObject(OperationContractCodec.encode(draft))
+        legacy["envelope"] = try Self.jsonObject(OperationContractCodec.encode(envelope))
+        legacy["fingerprint"] = try OperationFingerprint.make(for: envelope).sha256
+        let stored = try JSONSerialization.data(withJSONObject: legacy, options: [.sortedKeys])
+        let restored = try OperationContractCodec.decode(CreateClientCommand.self, from: stored)
+        #expect(restored.envelope.clientCreatedAt == fractional)
+        #expect(try OperationContractCodec.encode(restored.envelope) == OperationContractCodec.encode(envelope))
+        #expect(restored.fingerprint == (try OperationFingerprint.make(for: envelope)))
+    }
+
     @Test("A typed command preserves stable Client identity independent of display text")
     func typedCommandPreservesIdentity() throws {
         let first = try Self.command(clientID: "client-north")

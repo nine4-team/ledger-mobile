@@ -29,14 +29,16 @@ struct ReportScratchStoreTests {
         let store = try ReportScratchStore(rootDirectory: root)
         let bytes = Data("%PDF-first".utf8)
         let first = try await store.create(data: bytes, snapshotReference: reference())
-        let second = try await store.create(data: Data("%PDF-second".utf8), snapshotReference: reference())
+        let second = try await store.create(data: Data("%PDF-second".utf8), snapshotReference: reference(), nameHint: "Invoice-42/../test")
+        #expect(second.url.lastPathComponent.hasPrefix("Invoice-42----test--"))
+        #expect(second.url.pathExtension == "pdf")
         #expect(first.url != second.url)
         #expect(first.snapshotReference == (try reference()))
         #expect(first.outputHash == (try .make(bytes: bytes)))
         #expect(try Data(contentsOf: first.url) == bytes)
         let attributes = try FileManager.default.attributesOfItem(atPath: first.url.path)
         #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600)
-        #if os(iOS)
+        #if os(iOS) && !targetEnvironment(simulator)
         #expect(attributes[.protectionKey] as? FileProtectionType == .complete)
         #endif
         await #expect(throws: ReportScratchFailure.artifactsPending) { try await store.close() }
@@ -68,6 +70,28 @@ struct ReportScratchStoreTests {
         try await store.close()
     }
 
+    @Test("Native PDF generation retains ownership through replacement and failure")
+    func nativeGeneration() async throws {
+        let root = try root()
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        let store = try ReportScratchStore(rootDirectory: root)
+        let bytes = Data("%PDF-native".utf8)
+        let result = try await store.generatePDF { url in
+            await #expect(throws: ReportScratchFailure.artifactsPending) { try await store.close() }
+            try bytes.write(to: url, options: .atomic)
+            return try Data(contentsOf: url)
+        }
+        #expect(result == bytes)
+        await #expect(throws: CancellationError.self) {
+            try await store.generatePDF { url in
+                try bytes.write(to: url)
+                throw CancellationError()
+            }
+        }
+        try await store.close()
+        #expect(try FileManager.default.contentsOfDirectory(atPath: root.path).isEmpty)
+    }
+
     @Test("Recovery retains other active stores and removes abandoned sessions")
     func recovery() async throws {
         let root = try root()
@@ -75,8 +99,11 @@ struct ReportScratchStoreTests {
         let active = try ReportScratchStore(rootDirectory: root)
         let activeFile = try await active.create(data: Data("%PDF-active".utf8), snapshotReference: reference())
         var abandoned: ReportScratchStore? = try ReportScratchStore(rootDirectory: root)
-        let abandonedFile = try await abandoned!.create(data: Data("row,value\r\n".utf8), format: .csv, snapshotReference: reference())
+        let abandonedFile = try await abandoned!.create(data: Data("row,value\r\n".utf8), format: .csv, snapshotReference: reference(), nameHint: "Invoice-42")
         #expect(abandonedFile.url.pathExtension == "csv")
+        // Simulate the mode a native atomic replacement can leave if the
+        // process dies before normal post-generation normalization.
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: abandonedFile.url.path)
         let recovery = try ReportScratchStore(rootDirectory: root)
         try await recovery.recoverAbandonedSessions()
         #expect(FileManager.default.fileExists(atPath: activeFile.url.path))
@@ -125,5 +152,19 @@ struct ReportScratchStoreTests {
         await #expect(throws: ReportScratchFailure.unsafePath) { try await store.recoverAbandonedSessions() }
         #expect(try Data(contentsOf: unknown) == Data("user".utf8))
         try await store.close()
+    }
+
+    @Test("Recovery still rejects writable or executable replacement files", arguments: [0o666, 0o655])
+    func unsafeNativeReplacementMode(mode: Int) async throws {
+        let root = try root()
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        var abandoned: ReportScratchStore? = try ReportScratchStore(rootDirectory: root)
+        let artifact = try await abandoned!.create(data: Data("untrusted".utf8), snapshotReference: reference())
+        try FileManager.default.setAttributes([.posixPermissions: mode], ofItemAtPath: artifact.url.path)
+        abandoned = nil
+        let recovery = try ReportScratchStore(rootDirectory: root)
+        await #expect(throws: ReportScratchFailure.unsafePath) { try await recovery.recoverAbandonedSessions() }
+        #expect(try Data(contentsOf: artifact.url) == Data("untrusted".utf8))
+        try await recovery.close()
     }
 }

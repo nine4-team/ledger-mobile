@@ -7,6 +7,8 @@ struct ProjectSetupStagingExerciseView: View {
     @Bindable var model: ProjectSetupStagingExercise
     let onCancel: () -> Void
     let onDone: () -> Void
+    @State private var showingCreateCategory = false
+    @State private var creationId = UUID()
 
     var body: some View {
         NavigationStack {
@@ -39,8 +41,22 @@ struct ProjectSetupStagingExerciseView: View {
                 operationResult
                 actions
             }
+            #if os(macOS)
+            // A grouped Form keeps the changing wizard sections in a bounded
+            // scroll layout instead of the automatic form's intrinsic columns.
+            .formStyle(.grouped)
+            #endif
             .navigationTitle("New Project")
             .interactiveDismissDisabled(model.isSubmitting)
+            .adaptivePresentation(isPresented: $showingCreateCategory, style: .form) {
+                CategoryFormPresentation(mode: .create,
+                    existingNames: model.categoryManagementSession?.categories.map(\.name.rawValue) ?? []) {
+                    name, kind, excluded in
+                    try await model.createCategory(id: BudgetCategoryID(validating: creationId.uuidString.lowercased()),
+                        name: BudgetCategoryName(validating: name), kind: kind.categoryKind,
+                        excluded: excluded)
+                }
+            }
         }
     }
 
@@ -75,6 +91,19 @@ struct ProjectSetupStagingExerciseView: View {
         Section("Select budget categories") {
             LabeledContent("Category data", value: model.categoryStatus)
                 .accessibilityIdentifier("target-project-category-readiness")
+
+            if let session = model.categoryManagementSession {
+                if let status = session.syncMessage {
+                    Text(status).font(.caption)
+                        .accessibilityIdentifier("target-project-category-sync-status")
+                }
+                Button("Add Category", systemImage: "plus.circle.fill") {
+                    creationId = UUID()
+                    showingCreateCategory = true
+                }
+                .disabled(!session.canSave)
+                .accessibilityIdentifier("target-project-add-category")
+            }
 
             if model.categories.isEmpty {
                 Text("No budget categories yet.")
@@ -225,9 +254,10 @@ struct ProjectSetupStagingExerciseView: View {
                 } else {
                     Button("Next") { _ = model.next() }
                         .disabled(!model.canAdvance)
-                        .accessibilityIdentifier("target-project-next")
+                    .accessibilityIdentifier("target-project-next")
                 }
             }
+            .buttonStyle(.borderless)
         }
     }
 

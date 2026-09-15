@@ -1,18 +1,34 @@
 import SwiftUI
 
-struct ThumbnailGrid: View {
-    let attachments: [AttachmentRef]
+/// Shared original upload-state treatment; a clock means queued, not uploading.
+struct AttachmentUploadStatusOverlay: View {
+    let icon: String?
+    var body: some View {
+        RoundedRectangle(cornerRadius: Dimensions.cardRadius / 2)
+            .fill(.black.opacity(0.35))
+            .overlay {
+                if let icon { Image(systemName: icon).font(.title2).foregroundStyle(.white) }
+                else { ProgressView().tint(.white) }
+            }
+    }
+}
+
+/// Original grid layout; its owner supplies authorized thumbnails and upload state.
+struct ThumbnailGridPresentation<Thumbnail: View, Upload: View>: View {
+    let count: Int
     var columns: Int = 3
     var showPrimaryBadge: Bool = true
     var showOptionsButton: Bool = false
     var showAddTile: Bool = false
-    var uploadStatuses: [String: UploadStatus] = [:]
+    var isPrimary: (Int) -> Bool
+    @ViewBuilder var thumbnail: (Int) -> Thumbnail
+    @ViewBuilder var upload: (Int) -> Upload
     var onThumbnailTap: ((Int) -> Void)?
     var onOptionsButtonTap: ((Int) -> Void)?
     var onAddTap: (() -> Void)?
 
     private var totalItemCount: Int {
-        attachments.count + (showAddTile ? 1 : 0)
+        count + (showAddTile ? 1 : 0)
     }
 
     private var gridItems: [GridItem] {
@@ -29,8 +45,8 @@ struct ThumbnailGrid: View {
 
     var body: some View {
         LazyVGrid(columns: gridItems, spacing: Spacing.sm) {
-            ForEach(Array(attachments.enumerated()), id: \.offset) { index, attachment in
-                thumbnailCell(attachment: attachment, index: index)
+            ForEach(0..<count, id: \.self) { index in
+                thumbnailCell(index: index)
             }
 
             if showAddTile {
@@ -56,22 +72,17 @@ struct ThumbnailGrid: View {
                 }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Add Attachment")
     }
 
     @ViewBuilder
-    private func thumbnailCell(attachment: AttachmentRef, index: Int) -> some View {
-        let isPrimary = showPrimaryBadge && attachment.isPrimary == true
+    private func thumbnailCell(index: Int) -> some View {
+        let isPrimary = showPrimaryBadge && isPrimary(index)
 
         Color(BrandColors.surfaceTertiary)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                if attachment.kind == .pdf {
-                    PDFThumbnailTile(fileName: attachment.fileName)
-                } else {
-                    FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
-                        ProgressView()
-                    }
-                }
+                thumbnail(index)
             }
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius / 2))
@@ -109,21 +120,7 @@ struct ThumbnailGrid: View {
             }
         }
         .overlay {
-            if let status = uploadStatuses[attachment.url],
-               MediaGalleryCalculations.shouldShowUploadOverlay(status: status) {
-                RoundedRectangle(cornerRadius: Dimensions.cardRadius / 2)
-                    .fill(.black.opacity(0.35))
-                    .overlay {
-                        if let icon = MediaGalleryCalculations.uploadOverlayIcon(status: status) {
-                            Image(systemName: icon)
-                                .font(.title2)
-                                .foregroundStyle(.white)
-                        } else {
-                            ProgressView()
-                                .tint(.white)
-                        }
-                    }
-            }
+            upload(index)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -131,6 +128,38 @@ struct ThumbnailGrid: View {
         }
     }
 
+}
+
+#if canImport(FirebaseFirestore)
+struct ThumbnailGrid: View {
+    let attachments: [AttachmentRef]
+    var columns: Int = 3
+    var showPrimaryBadge: Bool = true
+    var showOptionsButton: Bool = false
+    var showAddTile: Bool = false
+    var uploadStatuses: [String: UploadStatus] = [:]
+    var onThumbnailTap: ((Int) -> Void)?
+    var onOptionsButtonTap: ((Int) -> Void)?
+    var onAddTap: (() -> Void)?
+
+    var body: some View {
+        ThumbnailGridPresentation(count: attachments.count, columns: columns,
+            showPrimaryBadge: showPrimaryBadge, showOptionsButton: showOptionsButton, showAddTile: showAddTile,
+            isPrimary: { attachments[$0].isPrimary == true }, thumbnail: { index in
+                let attachment = attachments[index]
+                if attachment.kind == .pdf { PDFThumbnailTile(fileName: attachment.fileName) }
+                else {
+                    FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
+                        ProgressView()
+                    }
+                }
+            }, upload: { index in
+                if let status = uploadStatuses[attachments[index].url],
+                   MediaGalleryCalculations.shouldShowUploadOverlay(status: status) {
+                    AttachmentUploadStatusOverlay(icon: MediaGalleryCalculations.uploadOverlayIcon(status: status))
+                }
+            }, onThumbnailTap: onThumbnailTap, onOptionsButtonTap: onOptionsButtonTap, onAddTap: onAddTap)
+    }
 }
 
 #Preview("1 Image") {
@@ -164,3 +193,4 @@ struct ThumbnailGrid: View {
     ThumbnailGrid(attachments: [])
         .padding()
 }
+#endif

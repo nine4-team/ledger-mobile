@@ -58,6 +58,7 @@ public final class AccountPendingWorkStagingExercise {
         countLabel(\.unresolvedRejectedOperationCount)
     }
     public var unverifiedAttachmentCountLabel: String { countLabel(\.unverifiedAttachmentCount) }
+    public var unfinishedEntryCountLabel: String { countLabel(\.unfinishedEntryCount) }
 
     public var diagnosticCode: String? {
         guard case .failed(let diagnostic) = presentation else { return nil }

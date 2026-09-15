@@ -5,8 +5,44 @@ final class LedgerWorkspaceAccessFence: @unchecked Sendable {
     private let lock = NSLock()
     private var removed = false
     private var commandUploadInProgress = false
+    private var syncConnectionInUse = false
+    private var openRuntimeCount = 0
     private var observers: [UUID: AsyncStream<Void>.Continuation] = [:]
     var isRemoved: Bool { lock.withLock { removed } }
+
+    // Count pending opens too: database initialization/close in another handle
+    // can alter the SDK coordinator shared by the physical database filename.
+    func beginRuntimeOpen() throws {
+        try lock.withLock {
+            guard !removed else {
+                throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)
+            }
+            guard !syncConnectionInUse else { throw LedgerOfflineClientRuntimeFailure.syncAlreadyStarted }
+            openRuntimeCount += 1
+        }
+    }
+
+    func endRuntimeOpen() {
+        lock.withLock {
+            precondition(openRuntimeCount > 0)
+            openRuntimeCount -= 1
+        }
+    }
+
+    func beginSyncConnection() throws {
+        try lock.withLock {
+            guard !removed else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            guard !syncConnectionInUse else { throw LedgerOfflineClientRuntimeFailure.syncAlreadyStarted }
+            guard openRuntimeCount == 1 else {
+                throw LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace
+            }
+            syncConnectionInUse = true
+        }
+    }
+
+    func endSyncConnection() {
+        lock.withLock { syncConnectionInUse = false }
+    }
 
     func beginCommandUpload() throws {
         try lock.withLock {
@@ -72,7 +108,15 @@ actor LedgerWorkspaceAccessCoordinator {
         guard !fence.isRemoved else {
             throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)
         }
-        let runtime = try await body(fence)
+        try fence.beginRuntimeOpen()
+        let runtime: LedgerOfflineClientRuntime
+        do {
+            runtime = try await body(fence)
+        } catch {
+            fence.endRuntimeOpen()
+            throw error
+        }
+        await runtime.lifecycleOwner.adoptOpenRegistration()
         // The actor is reentrant while opening databases. Removal wins even
         // when that opening ignores cancellation or has already passed a check.
         if fence.isRemoved {
@@ -88,13 +132,28 @@ actor LedgerWorkspaceAccessCoordinator {
         return runtime
     }
 
+    /// Safe inside an SDK callback: fence and persist, but never await drainage
+    /// of the callback that is reporting removal. The workspace owner observes
+    /// the existing removal stream and completes cleanup outside that callback.
+    func reportRemoval(identity: String, persist: @Sendable () throws -> Void) throws {
+        fence(for: identity).markRemoved()
+        do { try persist() }
+        catch { throw LedgerOfflineClientRuntimeFailure.removalPersistenceFailed }
+    }
+
+    func finishReportedRemoval(identity: String, persist: @Sendable () throws -> Void) async throws {
+        guard fences[identity]?.isRemoved == true else {
+            throw LedgerOfflineClientRuntimeFailure.workspaceMembershipNotReady
+        }
+        try await remove(identity: identity, persist: persist)
+    }
+
     func remove(
         identity: String,
         persist: @Sendable () throws -> Void
     ) async throws {
-        fence(for: identity).markRemoved()
         var persistenceFailed = false
-        do { try persist() } catch { persistenceFailed = true }
+        do { try reportRemoval(identity: identity, persist: persist) } catch { persistenceFailed = true }
         let active = runtimes[identity, default: []].compactMap(\.lifecycleOwner)
         // Do not retain closed workspaces or wait for one handle's drain before
         // asking the other handles to lock. Each lifecycle owns its own drain.

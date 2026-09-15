@@ -23,12 +23,12 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  assert.equal(count, 48);
+  assert.equal(count, 78);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 26);
+  assert.equal(outputs.length, 34);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('service parser proves primary aliases change the downloaded table', () => {
@@ -42,12 +42,86 @@ streams:
   assert.deepEqual(Object.keys(result.config.debugGetOutputTables()), ['item']);
 });
 
+test('Item image-set joins explicitly constrain the subscription before expansion', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const images = yaml.split('  item_images:')[1].split('  account_business_profile:')[0];
+  // Equivalent relational joins alone expanded beyond 1000 parameter results
+  // on hosted real data. Explicit joined-side predicates keep all four lookups
+  // Item-scoped. Hosted replay additionally proves 8 buckets / 2 references.
+  assert.equal((images.match(/JOIN item_image_sets AS image_set/g) ?? []).length, 4);
+  for (const field of ['account_id', 'item_id']) {
+    assert.equal((images.match(new RegExp(`AND image_set\\.${field}=subscription.parameter\\('${field}'\\)`, 'g')) ?? []).length, 4);
+  }
+});
+
+test('project Item and accounting buckets do not grow per physical Item', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const { config, errors } = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
+  assert.deepEqual(errors.map(error => error.message), []);
+  const stream = config.bucketSources.find(source => source.name === 'property_management_report');
+  // Inspect actual compiler inputs, not SQL spelling: an IN/placement join
+  // compiled successfully but created hundreds of parameter results per query.
+  const expected = {
+    spike_items: ['account_id', 'sync_project_id'],
+    item_image_sets: ['account_id', 'sync_project_id'],
+    item_client_payment_connections: ['account_id', 'project_id'],
+    item_charge_occurrences: ['account_id', 'project_id'],
+    collected_invoice_lines: ['account_id', 'sync_project_id'],
+    spike_item_project_categories: ['category_id', 'account_id', 'project_id'],
+  };
+  for (const [table, parameters] of Object.entries(expected)) {
+    const sources = stream.dataSources.flatMap(source => source.source.sources)
+      .filter(source => source.sourceTable.tablePattern === table);
+    assert.ok(sources.length > 0);
+    for (const source of sources) {
+      assert.deepEqual(source.parameters.map(parameter => parameter.expr.source?.column),
+        parameters);
+    }
+  }
+});
+
+test('receipt and physical Item streams provide identical overlapping Item fields', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const receipt = yaml.split('  transaction_receipts:')[1].split('  physical_account_items:')[0];
+  const physical = yaml.split('  physical_account_items:')[1].split('  spike_account_bootstrap:')[0];
+  const projection = block => block.match(/SELECT spike_items\.id,([\s\S]*?)FROM spike_items/)?.[1].replace(/\s+/g, ' ').trim();
+  assert.ok(projection(receipt));
+  assert.equal(projection(receipt), projection(physical));
+});
+
+test('Transaction current relationships reuse the physical report projections', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const receipt = yaml.split('  transaction_receipts:')[1].split('  physical_account_items:')[0];
+  const physical = yaml.split('  property_management_report:')[1].split('  transaction_receipts:')[0];
+  for (const table of ['spike_item_placements', 'spike_item_project_categories', 'item_client_payment_connections', 'spike_spaces', 'item_image_sets', 'collected_invoices', 'collected_invoice_lines']) {
+    const projections = block => [...block.matchAll(new RegExp(`SELECT ${table}\\.id,([\\s\\S]*?)FROM (?:ledger_private\\.)?${table}`, 'g'))]
+      .map(match => match[1].replace(/\s+/g, ' ').trim());
+    assert.ok(projections(receipt).length);
+    for (const projection of projections(receipt)) assert.equal(projection, projections(physical)[0]);
+  }
+});
+
 test('Item-linked Purchase local schema contains only canonical read facts with exact text cents', () => {
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   assert.match(nativeSchema, /static let transactions = "spike_transactions"/);
   const columns = nativeSchema.match(/Table\(name: LedgerPowerSyncTable.transactions,\s*columns: \[([\s\S]*?)\]/)?.[1];
   assert.ok(columns);
   assert.deepEqual([...columns.matchAll(/\.text\("([a-z_]+)"\)/g)].map(match => match[1]),
-    ['account_id', 'project_id', 'client_id', 'type', 'role', 'amount_minor_units', 'currency', 'origin']);
-  assert.ok(!columns.includes('.integer'));
+    ['account_id', 'project_id', 'client_id', 'type', 'role', 'amount_minor_units', 'currency', 'origin',
+      'scope_kind', 'category_id', 'non_item_receipt_lines', 'source', 'transaction_date', 'created_at_ms',
+      'notes', 'payment_method', 'legacy_subtotal_minor_units', 'legacy_tax_rate_pct']);
+  assert.deepEqual([...columns.matchAll(/\.integer\("([a-z_]+)"\)/g)].map(match => match[1]), ['has_email_receipt']);
+});
+
+test('overlapping Transaction streams preserve the same exact metadata projection', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const projections = [...yaml.matchAll(/SELECT spike_transactions\.id,([\s\S]*?)FROM spike_transactions/g)]
+    .map(match => match[1].replace(/\s+/g, ' ').trim());
+  assert.equal(projections.length, 3);
+  assert.equal(projections[1], projections[0]); // Imported payments overlap.
+  // Vendor rows are disjoint by origin and additionally own category/receipt
+  // facts; their common display metadata must still have the same projection.
+  assert.equal(projections[2].replace('spike_transactions.category_id, spike_transactions.non_item_receipt_lines, ', ''), projections[0]);
+  assert.match(projections[0], /legacy_subtotal_minor_units::text AS legacy_subtotal_minor_units/);
+  assert.match(projections[0], /legacy_tax_rate_pct::text AS legacy_tax_rate_pct/);
 });

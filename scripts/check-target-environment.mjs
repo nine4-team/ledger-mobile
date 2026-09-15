@@ -305,6 +305,7 @@ if (failures.length === 0) {
 
 if (description) {
   const expectedExternalDependencies = new Map([
+    ["supabase-swift", ["2.55.2"]], // A-007: reviewed native Auth SDK.
     ["powersync-swift", null], // A-022: checked-in 1.16.1 cancellation correction.
     ["csqlite", ["3.51.2"]],
   ]);
@@ -312,7 +313,7 @@ if (description) {
   if (externalDependencies.length !== expectedExternalDependencies.size) {
     fail(
       "target_provider_dependency_set",
-      "The target package must resolve only the reviewed PowerSync and encrypted CSQLite direct dependencies.",
+      "The target package must resolve only the reviewed Supabase Auth, PowerSync and encrypted CSQLite direct dependencies.",
     );
   }
   for (const dependency of externalDependencies) {
@@ -497,13 +498,14 @@ if (description) {
     if (
       dependencies.size !== 1 ||
       !dependencies.has("LedgerTargetCore") ||
-      products.size !== 2 ||
+      products.size !== 3 ||
+      !products.has("Auth") ||
       !products.has("PowerSync") ||
       !products.has("CSQLite")
     ) {
       fail(
         "target_powersync_dependency_boundary",
-        "LedgerTargetPowerSync must depend only on LedgerTargetCore, PowerSync, and encrypted CSQLite.",
+        "LedgerTargetPowerSync must depend only on LedgerTargetCore, Auth, PowerSync, and encrypted CSQLite.",
       );
     }
   }
@@ -625,11 +627,17 @@ if (
     "readDownloadedItemPlacements",
     "readDownloadedPropertyManagementReport",
     "rejectedOperations",
+    "requireMatchingDownloadedMembership",
     "resolveLocalAttachmentBytes",
     "reviseChecklists",
+    "startSync",
+    "submit",
+    "submitCategoryChange",
+    "waitForCategoryWorkspaceReady",
     "watchAccessRemoval",
     "watchAccountBusinessProfile",
     "watchBudgetCategories",
+    "watchCategoryOperations",
     "watchClient",
     "watchClientArchiveOperation",
     "watchClientSummaryPhysicalReport",
@@ -916,7 +924,7 @@ if (
   if (!scheme.includes('BlueprintName = "LedgerTargetStaging"')) {
     fail("target_staging_scheme_invalid", relative(targetScheme));
   }
-  if (!targetAppSource.includes("LOCAL SPIKE • NO HOSTED SERVICES")) {
+  if (!targetAppSource.includes("SUPABASE IMPLEMENTATION • NOT RELEASE READY")) {
     fail("target_staging_banner_missing", relative(targetAppRoot));
   }
   if (!targetAppSource.includes("unprovisioned-powersync-staging")) {
@@ -1026,7 +1034,7 @@ if (
       fail("target_space_destination_boundary_escape", "Picker presentation leaves cross a forbidden provider boundary.");
     }
     if (!stagingAppSource.includes("SpaceAssignmentDestinationStagingExerciseView") ||
-        !stagingAppSource.includes('ProjectID(validating: "project-primary")')) {
+        !stagingAppSource.includes("SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)")) {
       fail("target_space_destination_staging_missing", relative(stagingAppPath));
     }
   }
@@ -1166,8 +1174,7 @@ if (
     }
     for (const required of [
       "TransferDestinationSelectionStagingExerciseView",
-      "syntheticTransferSource",
-      "TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)",
+      "TransferDestinationSelectionStagingExercise(",
     ]) {
       if (!stagingAppSource.includes(required)) {
         fail("target_transfer_destination_staging_missing", required);
@@ -1182,6 +1189,19 @@ if (
       if (!project.includes(required)) {
         fail("target_transfer_destination_project_membership_missing", required);
       }
+    }
+  }
+
+  // Real startup must receive checked identity, not revive the old diagnostic
+  // Account/Project fixtures. Transfer source selection remains a behavior gate
+  // in its workflow, not a requirement to open a made-up source at app launch.
+  for (const fixedIdentity of [
+    'AccountID(validating: "account-primary")',
+    'PrincipalID(validating: "principal-owner")',
+    'ProjectID(validating: "project-primary")',
+  ]) {
+    if (stagingAppSource.includes(fixedIdentity)) {
+      fail("target_startup_fixed_fixture_identity", fixedIdentity);
     }
   }
 
@@ -2609,6 +2629,7 @@ const localOperationAcceptingStores = [
   ["ItemSpaceAssignmentPowerSyncStore", "ItemSpaceAssignmentPowerSyncStore.swift", "assignItemsToSpace"],
   ["ItemSpaceClearingPowerSyncStore", "ItemSpaceClearingPowerSyncStore.swift", "clearItemSpaceAssignments"],
   ["SpaceChecklistRevisionPowerSyncStore", "SpaceChecklistRevisionPowerSyncStore.swift", "reviseSpaceChecklists"],
+  ["CategoryManagementPowerSyncStore", "CategoryManagementPowerSyncStore.swift", "manageCategories"],
 ];
 if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
   fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
@@ -2648,7 +2669,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,
@@ -3033,8 +3054,9 @@ if (
     ],
     [
       path.join(powerSyncRoot, "LedgerPowerSyncUploadConnector.swift"),
-      // Reviewed Account-removal admission/ownership; clearing dispatch remains unchanged.
-      "85c6a327a0f3073c3223843302300dfe8a006d55e96a795cc731f26df205452a",
+      // Reviewed category dispatch and owned SDK scheduling. Existing clearing/
+      // assignment behavior verified with the 109-test workspace/provider run.
+      "d6f9509f9d46b1834afb46e74056be2a90d43b6f01eace16561045082b58e748",
     ],
     [
       path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),
@@ -3085,7 +3107,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,CategoryManaging,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
     )
   ) {
     fail(
@@ -3397,7 +3419,7 @@ if (
   }
   if (
     !(runtimeCode ?? "").includes(
-      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,SpaceChecklistRevising,CategoryManaging,RejectedOperationRecoveryQuerying,DownloadedItemPlacementReading,DownloadedItemPlacementHistoryReading,PropertyManagementReportReading,PropertyManagementReportWatching,ClientSummaryPhysicalReportReading,ClientSummaryPhysicalReportWatching,AccountBusinessProfileReading,DownloadedProjectItemsReading,DownloadedItemImageReading,Sendable",
     )
   ) {
     fail(

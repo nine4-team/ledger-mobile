@@ -19,6 +19,84 @@ targets:
       - macOS
     sources:
       - path: LedgerTargetApp
+        excludes:
+          - DownloadedImageZoomSurface.swift
+      # Shared original presentation; legacy URL/cache adapter is excluded.
+      - path: LedgeriOS/Components/ZoomableScrollView.swift
+      - path: LedgeriOS/Components/ImageGalleryPresentation.swift
+      - path: LedgeriOS/Components/ThumbnailGrid.swift
+      - path: LedgeriOS/Components/MediaCapturePresentation.swift
+      - path: LedgeriOS/Components/CameraCapture.swift
+      - path: LedgeriOS/Components/DocumentPicker.swift
+      - path: LedgeriOS/Models/Shared/AttachmentUpload.swift
+      - path: LedgeriOS/Components/PDFThumbnailTile.swift
+      - path: LedgeriOS/Components/PDFViewerSheet.swift
+      - path: LedgeriOS/Platform/PDFDownloadHelper.swift
+      - path: LedgeriOS/Components/PinnedImagePresentation.swift
+      - path: LedgeriOS/Components/PinnedImageLayout.swift
+      - path: LedgeriOS/Theme/Spacing.swift
+      - path: LedgeriOS/Theme/Typography.swift
+      - path: LedgeriOS/Theme/BrandColors.swift
+      # Reuse the original category form and its backend-independent controls.
+      - path: LedgeriOS/Components/Modals/CategoryFormModal.swift
+      - path: LedgeriOS/Views/AuthView.swift
+      - path: LedgeriOS/Views/AccountGateView.swift
+      - path: LedgeriOS/Components/SegmentedControl.swift
+      - path: LedgeriOS/Views/Settings/BudgetCategoryManagementView.swift
+      - path: LedgeriOS/Modals/ProjectPickerList.swift
+      - path: LedgeriOS/Modals/SellToProjectModal.swift
+      - path: LedgeriOS/Components/BillingRowPresentation.swift
+      - path: LedgeriOS/Views/Reports/InvoiceReportView.swift
+      - path: LedgeriOS/Views/Reports/ReportHTMLBuilder.swift
+      - path: LedgeriOS/Views/Reports/ReportPDFSharing.swift
+      - path: LedgeriOS/Logic/InvoiceReportData.swift
+      - path: LedgeriOS/Views/Projects/TransactionAuditPanel.swift
+      # Original Transaction card and its backend-independent shared controls.
+      - path: LedgeriOS/Components/TransactionCard.swift
+      - path: LedgeriOS/Components/ItemCard.swift
+      - path: LedgeriOS/Components/GroupedItemCard.swift
+      - path: LedgeriOS/Components/CardHeader.swift
+      - path: LedgeriOS/Components/CardBadge.swift
+      - path: LedgeriOS/Components/CardActionButtons.swift
+      - path: LedgeriOS/Components/SelectorCircle.swift
+      - path: LedgeriOS/Components/ActionMenuSheet.swift
+      - path: LedgeriOS/Models/Shared/ActionMenuItem.swift
+      - path: LedgeriOS/Logic/ActionMenuCalculations.swift
+      - path: LedgeriOS/Logic/PerformanceDiagnostics.swift
+      - path: LedgeriOS/Components/FindableText.swift
+      - path: LedgeriOS/Components/FindMatchHighlight.swift
+      - path: LedgeriOS/State/FindStateManager.swift
+      - path: LedgeriOS/Logic/FindMatchCalculations.swift
+      - path: LedgeriOS/Components/ProgressBar.swift
+      - path: LedgeriOS/Logic/ProgressBarCalculations.swift
+      - path: LedgeriOS/Components/AdaptiveContentWidth.swift
+      - path: LedgeriOS/Components/NativeListControlBar.swift
+      - path: LedgeriOS/Components/SearchField.swift
+      - path: LedgeriOS/Logic/CurrencyFormatting.swift
+      - path: LedgeriOS/Logic/TransactionExportCalculations.swift
+      - path: LedgeriOS/Logic/ExportFieldConfig.swift
+      - path: LedgeriOS/Modals/ExportTransactionsModal.swift
+      - path: LedgeriOS/Logic/BudgetDisplayCalculations.swift
+      - path: LedgeriOS/Platform/Clipboard.swift
+      - path: LedgeriOS/Components/BulkSelectionBar.swift
+      - path: LedgeriOS/Components/CollapsibleSection.swift
+      - path: LedgeriOS/Components/DetailRow.swift
+      - path: LedgeriOS/Components/NotesContent.swift
+      - path: LedgeriOS/Components/SelectableNoteText.swift
+      - path: LedgeriOS/Components/Card.swift
+      - path: LedgeriOS/Components/Badge.swift
+      - path: LedgeriOS/Components/FormSheet.swift
+      - path: LedgeriOS/Components/FormDateField.swift
+      - path: LedgeriOS/Models/Shared/FormSheetAction.swift
+      - path: LedgeriOS/Components/FormField.swift
+      - path: LedgeriOS/Components/InlineOptionPicker.swift
+      - path: LedgeriOS/Components/AppButton.swift
+      - path: LedgeriOS/Theme/Dimensions.swift
+      - path: LedgeriOS/Theme/StatusColors.swift
+      - path: LedgeriOS/Theme/SheetStyle.swift
+      - path: LedgeriOS/Platform/PlatformModifiers.swift
+      - path: LedgeriOS/Logic/MediaGalleryPresentationCalculations.swift
+      - path: LedgeriOS/Logic/PinnedImageGeometry.swift
       # Pure local extraction only; legacy import/writer helpers are excluded.
       - path: LedgeriOS/Logic/AmazonInvoiceParser.swift
       - path: LedgeriOS/Logic/WayfairInvoiceParser.swift
@@ -32,6 +110,12 @@ targets:
         product: LedgerTargetAppModel
       - package: LedgerTargetCore
         product: LedgerTargetPowerSync
+    info:
+      path: LedgerTargetInfo.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LedgerLocalPublishableKey: "$(LEDGER_LOCAL_PUBLISHABLE_KEY)"
     settings:
       base:
         CODE_SIGNING_ALLOWED: NO
@@ -40,6 +124,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Ledger STAGING
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Save selected Ledger images to your photo library.
+        INFOPLIST_KEY_NSCameraUsageDescription: Take photos to attach to your Ledger records.
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]":
           - "$(inherited)"
@@ -50,6 +135,31 @@ targets:
         PRODUCT_NAME: Ledger STAGING
         SWIFT_STRICT_CONCURRENCY: complete
         SWIFT_VERSION: 6.0
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) $(LEDGER_TARGET_COMPILATION_CONDITIONS)"
+
+  LedgerTargetSharedLogicTests:
+    type: bundle.unit-test
+    platform: auto
+    supportedDestinations:
+      - iOS
+      - macOS
+    sources:
+      - path: LedgerTargetSharedLogicTests
+      - path: LedgerTargetPowerSync/ReportScratchStore.swift
+      - path: LedgeriOS/Logic/InvoiceReportData.swift
+      - path: LedgeriOS/Views/Reports/ReportHTMLBuilder.swift
+      - path: LedgeriOS/Logic/TransactionExportCalculations.swift
+      - path: LedgeriOS/Logic/ExportFieldConfig.swift
+      - path: LedgeriOS/Views/Reports/ReportPDFSharing.swift
+    dependencies:
+      - package: LedgerTargetCore
+        product: LedgerTargetCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: apps.nine4.ledger.staging.sharedlogictests
+        SWIFT_VERSION: 6.0
+        CODE_SIGNING_ALLOWED: NO
 
   LedgerTargetStagingUITests:
     type: bundle.ui-testing
@@ -78,6 +188,7 @@ schemes:
     test:
       config: Debug
       targets:
+        - LedgerTargetSharedLogicTests
         - LedgerTargetStagingUITests
     archive:
       config: Release

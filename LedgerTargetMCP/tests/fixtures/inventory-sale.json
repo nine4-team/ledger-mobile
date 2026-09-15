@@ -1,0 +1,14 @@
+{
+  "accountId": "sale-account",
+  "principalId": "sale-member",
+  "input": {
+    "operationUUID": "11111111-2222-3333-4444-555555555555",
+    "clientCreatedAtMilliseconds": 1800000000123,
+    "payload": {
+      "projectId": "destination", "currency": "USD",
+      "items": [{"itemId":"item","placementId":"old","priceRevision":"0","reviewedPriceMinorUnits":"9223372036854775807","newPlacementId":"new","occurrenceId":"charge"}]
+    }
+  },
+  "operationId": "inventory-sale-4e583d58ee7d2a1b670bd124616f1acab8e1e503f58bcfc6cb5de8bd59595fe4-11111111-2222-3333-4444-555555555555",
+  "fingerprint": "6bd2290019faae1dd7c284885b8be7f058868788857ace9eaf56c806107d4fa6"
+}
