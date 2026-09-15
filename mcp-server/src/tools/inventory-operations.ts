@@ -392,19 +392,6 @@ async function loadCurrentTransactions(
   );
 }
 
-async function inventoryReturnCandidateIds(
-  db: Firestore,
-  items: (Item & { id: string })[]
-): Promise<string[]> {
-  const transactionsById = await loadCurrentTransactions(db, items);
-  return items
-    .filter((item) => {
-      const transactionId = normalizedString(item.transactionId);
-      return Boolean(transactionId && isInventoryEntryMovement(item, transactionsById.get(transactionId)));
-    })
-    .map((item) => item.id);
-}
-
 function inventoryCreditPreviews(items: (Item & { id: string })[]) {
   return items.map((item) => {
     const totals = computeProjectToInventoryTotals([item]);
@@ -810,8 +797,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "LEGACY SAFETY: a pre-snapshot item is accepted only when its inventory-entry transaction has " +
       "exactly one active item and stores both subtotalCents and amountCents. Ambiguous legacy amounts " +
       "are rejected rather than recalculated.\n\n" +
-      "Use sell_items_from_inventory_to_project only for ordinary inventory that does not have " +
-      "return provenance. Cap: 100 items per call. Use dryRun first to inspect the locked result.",
+      "Use sell_items_from_inventory_to_project for a new sale to a chosen project, including items " +
+      "eligible for this return. Cap: 100 items per call. Use dryRun first to inspect the locked result.",
     {
       itemIds: z
         .array(z.string())
@@ -937,7 +924,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     "[event] Sell items from business inventory into a project. Creates ONE new Purchase " +
       "transaction (source: Business Inventory) against destinationProjectId, increasing that " +
       "project's budget under budgetCategoryId. Every item must currently be in business inventory " +
-      "(projectId == null).\n\n" +
+      "(projectId == null). Project-origin items acquired through Sale-to-Inventory are also sellable, " +
+      "including batches with different origins or source projects. Return eligibility never blocks " +
+      "a new sale; use return_items_from_inventory_to_project only for an explicit locked reversal.\n\n" +
       "REAL EVENT vs CORRECTION: This records a real business event (money changes hands, budgets " +
       "move). Do NOT use it merely because a categorized project item has no transaction; that is a " +
       "valid correction/work-queue state until the proper transaction exists. Inventing fake transactions " +
@@ -1000,14 +989,6 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           return validation(
             `${notInInventory.length} item(s) are not in business inventory: ${notInInventory.map((i) => i.id).join(", ")}`,
             "For items currently in a project, use sell_items_from_project_to_project or sell_items_from_project_to_inventory."
-          );
-        }
-
-        const returnCandidates = await inventoryReturnCandidateIds(db, items);
-        if (returnCandidates.length > 0) {
-          return validation(
-            `${returnCandidates.length} item(s) are held through Sale-to-Inventory and must return to their original project: ${returnCandidates.join(", ")}.`,
-            "Use return_items_from_inventory_to_project. Its project, budget category, price, and amount are locked from the Sale-to-Inventory movement."
           );
         }
 

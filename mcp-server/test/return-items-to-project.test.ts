@@ -371,7 +371,7 @@ describe("return_items_from_inventory_to_project", () => {
     expect(payload.totals).toMatchObject({ subtotalCents: 18_000, amountCents: 18_000 });
   });
 
-  test("generic Sell rejects a return candidate without writing", async () => {
+  test("generic Sell accepts a return candidate as an independent new sale", async () => {
     await seedProject(db, {
       id: "project_home",
       budgetCategories: [{ id: "cat_original" }, { id: "cat_other" }],
@@ -406,12 +406,20 @@ describe("return_items_from_inventory_to_project", () => {
       budgetCategoryId: "cat_other",
       dryRun: false,
     });
-    expect(isError(result)).toBe(true);
-    expect(responseJson(result).error.message).toContain("must return to their original project");
-    expect(await listTransactionsOfType(db, "Purchase")).toHaveLength(0);
+    expect(isError(result)).toBe(false);
+    expect(await listTransactionsOfType(db, "Purchase")).toHaveLength(1);
     expect(await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`)).toMatchObject({
-      projectId: null,
-      transactionId: "inventory_sale",
+      projectId: "project_home",
+      budgetCategoryId: "cat_other",
+      projectPriceCents: 10_000,
+      transactionId: responseJson(result).purchaseTransactionId,
+    });
+    expect(await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/inventory_sale`)).toMatchObject({
+      projectId: "project_home",
+      budgetCategoryId: "cat_original",
+      subtotalCents: 4_000,
+      amountCents: 4_000,
+      itemIds: [],
     });
   });
 
