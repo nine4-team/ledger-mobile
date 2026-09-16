@@ -1445,10 +1445,20 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             #expect(expected[0].total == source.finalAmount)
             #expect(expected[0].lines[0].selection.source == .expense(source.expenseId))
             #expect(expected[0].name == "Live sync Invoice")
+            for try await expenses in invoiceRuntime.watchExpenses(accountId: context.accountId, projectId: projectId) {
+                guard let row = expenses?.expenses.first(where: { $0.id == source.expenseId }),
+                      row.availability == .created else { continue }
+                #expect(row.liveInvoice == expected[0])
+                break
+            }
             try await invoiceRuntime.close()
             liveStage("first runtime closed")
             let offline = try await context.openRuntime()
             #expect(try await offline.readLiveInvoices(accountId: context.accountId, projectId: projectId) == expected)
+            let offlineExpense = try #require(try await offline.readExpenses(accountId: context.accountId,
+                projectId: projectId).expenses.first(where: { $0.id == source.expenseId }))
+            #expect(offlineExpense.availability == .created)
+            #expect(offlineExpense.liveInvoice == expected[0])
             liveStage("offline reopened contents match")
             if env["LEDGER_INVOICE_LOCAL_REVISE"] == "1" {
                 let current = expected[0]
