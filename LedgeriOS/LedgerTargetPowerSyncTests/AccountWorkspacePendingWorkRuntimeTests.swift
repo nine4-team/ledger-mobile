@@ -1376,7 +1376,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max))
         #expect(source.receiptLines.count == 1)
         if env["LEDGER_FEE_LOCAL_CREATE"] == "1" {
-            guard !hostedQA, let category = env["LEDGER_FEE_LOCAL_CATEGORY"] else { throw RuntimeInjectedFailure() }
+            guard let category = env["LEDGER_FEE_LOCAL_CATEGORY"], !category.isEmpty else { throw RuntimeInjectedFailure() }
             for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
                 if invoices != nil { break }
             }
@@ -1410,7 +1410,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             return
         }
         if env["LEDGER_LIVE_INVOICE_LOCAL"] == "1" {
-            guard !hostedQA else { throw RuntimeInjectedFailure() }
+            // Hosted runs retain the exact private QA Account/principal/project
+            // guards above and exercise the same offline command path.
             var invoiceRuntime = first
             if env["LEDGER_INVOICE_LOCAL_CREATE"] == "1" {
                 for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {

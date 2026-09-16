@@ -263,11 +263,10 @@ struct InvoicingInvoicePreview: View {
                                 throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
                             }
                         } else if let live, let reader = runtime as? any ProjectLiveInvoiceReading {
-                            guard self.liveInvoice == live,
-                                  try await reader.readLiveInvoices(accountId: accountId, projectId: projectId)
-                                    .first(where: { $0.invoiceId == invoiceId }) == live else {
+                            guard self.liveInvoice == live else {
                                 throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
                             }
+                            try await CollectedInvoiceReportDelivery.revalidate(live, reader: reader)
                         } else { throw CollectedInvoiceReportDeliveryFailure.snapshotChanged }
                     }
                 }

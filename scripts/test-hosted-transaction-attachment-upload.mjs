@@ -7,12 +7,17 @@ import {spawnSync} from 'node:child_process';
 
 assert.equal(process.cwd(),'/Users/benjaminmackenzie/Dev/ledger_mobile_supabase');
 const expenseEditFlow=process.argv.includes('--expense-edit-flow');
-const expenseFlow=expenseEditFlow||process.argv.includes('--expense-flow');
+const invoiceFlow=process.argv.includes('--invoice-flow');
+const feeFlow=process.argv.includes('--fee-flow');
+const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),expenseMode?['--apply',expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
+const invoiceAPI=invoiceFlow?await import('../LedgerTargetMCP/src/liveInvoiceRead.ts'):null;
+const feeAPI=feeFlow?await import('../LedgerTargetMCP/src/feeRead.ts'):null;
+const categoryAPI=feeFlow?await import('../LedgerTargetMCP/src/categoryManagement.ts'):null;
 const auth=JSON.parse(fs.readFileSync('tmp/ledger-hosted-qa/auth.json'));
 assert.equal(auth.userId,'5cb9aa33-337a-4fd4-a33f-121119e04c4e');
 assert.equal(auth.principalId,'upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64');
@@ -34,15 +39,25 @@ try {
     assert.equal(memberships[0].financial_access,'full','Positive Expense flow requires financial access');
     assert.equal(memberships[0].can_manage_projects,true,'QA Project setup requires project management');
     assert.equal(memberships[0].can_manage_project_budgets,true,'QA Project setup requires category assignment permission');
+    const context={accountId:account,principalId:auth.principalId,accessToken:session.access_token};
     const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
     const categories=await read('/rest/v1/spike_budget_categories?account_id=eq.'+account+'&lifecycle=eq.active&kind=eq.general&select=id&order=id&limit=1');
     assert.equal(clients.length,1);assert.equal(categories.length,1);
+    const feeCategories=feeFlow?await read('/rest/v1/spike_budget_categories?account_id=eq.'+account+'&lifecycle=eq.active&kind=eq.fee&select=id&order=id&limit=1'):[];
+    if(feeFlow && feeCategories.length===0) {
+      const categoryId='hosted-fee-qa-'+crypto.randomUUID();
+      const command=categoryAPI.makeCategoryManagementRequest({operationUUID:crypto.randomUUID(),
+        clientCreatedAtMilliseconds:Date.now(),payload:{action:'create',categoryId,
+          name:'QA Hosted Fee '+categoryId.slice(-8),kind:'fee',excludesFromOverallBudget:false}},context);
+      const raw=await new categoryAPI.SupabaseCategoryManagementApplier(new URL(base),apikey).apply(command,context);
+      assert.equal(categoryAPI.validateCategoryManagementResult(raw,command).phase,'applied');
+      feeCategories.push({id:categoryId});
+    }
     const id='hosted-expense-flow-'+crypto.randomUUID(),project=id+'-project',expense=id+'-expense';
-    const context={accountId:account,principalId:auth.principalId,accessToken:session.access_token};
     const projectRequest=projectAPI.makeProjectCreationRPCRequest({operationId:id+'-create-project',projectId:project,
       clientSelection:{kind:'existing',clientId:clients[0].id},displayName:'QA — hosted Expense offline sync',
       description:'Synthetic QA only; safe to distinguish from copied source projects.',
-      categoryAllocations:[{categoryId:categories[0].id}],projectCreatedAtMilliseconds:Date.now()},context);
+      categoryAllocations:[{categoryId:categories[0].id},...feeCategories.map(c=>({categoryId:c.id}))],projectCreatedAtMilliseconds:Date.now()},context);
     const projectResult=await new projectAPI.SupabaseProjectCreationApplier(new URL(base),apikey).apply(projectRequest,context);
     assert.equal(projectResult.phase,'applied');
     const service=new expenseAPI.SupabaseExpenseCreationService(new URL(base),apikey);
@@ -61,11 +76,30 @@ try {
       'AccountWorkspacePendingWorkRuntimeTests/expenseLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
         LEDGER_EXPENSE_HOSTED_QA:'1',LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,
         LEDGER_EXPENSE_LOCAL_EDIT:expenseEditFlow?'1':'0',LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:expenseEditFlow?'1':'0',
+        LEDGER_LIVE_INVOICE_LOCAL:invoiceFlow?'1':'0',LEDGER_INVOICE_LOCAL_CREATE:invoiceFlow?'1':'0',
+        LEDGER_INVOICE_LOCAL_REVISE:invoiceFlow?'1':'0',
+        LEDGER_FEE_LOCAL_CREATE:feeFlow?'1':'0',LEDGER_FEE_LOCAL_CATEGORY:feeCategories[0]?.id??'',
         LEDGER_SALE_LOCAL_ITEM:expense,LEDGER_SALE_LOCAL_PROJECT:project,LEDGER_SALE_LOCAL_KEY:apikey,
         LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password}});
     process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
     assert.equal(run.status,0,'Hosted native Expense creation/sync/restart failed');
     assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/,'Native flow must execute');
+    if(invoiceFlow) {
+      const invoice=await new invoiceAPI.SupabaseLiveInvoiceReader(new URL(base),apikey)
+        .read({projectId:project,invoiceId:expense+'-invoice'},context);
+      assert.equal(invoice.revision,'2');assert.equal(invoice.name,'Revised offline Invoice');
+      assert.equal(invoice.notes,'Offline edit');assert.equal(invoice.totalMinorUnits,'12345');
+      assert.equal(invoice.lines.length,1);assert.equal(invoice.lines[0].sourceId,expense);
+      console.log(JSON.stringify({hostedInvoiceFlow:true,project,invoice:invoice.invoiceId,
+        nativeOfflineCreateAndRevise:true,restartReplay:true,mcpReadback:true}));
+    } else if(feeFlow) {
+      const result=await new feeAPI.SupabaseFeeReader(new URL(base),apikey).read({projectId:project},context);
+      assert.equal(result.fees.length,1);const fee=result.fees[0];
+      assert.equal(fee.id,expense+'-fee');assert.equal(fee.amountMinorUnits,'12345');
+      assert.equal(fee.label,'Design fee');assert.equal(fee.categoryId,feeCategories[0].id);
+      assert.equal(fee.status,'available');assert.equal(fee.invoiceId,null);
+      console.log(JSON.stringify({hostedFeeFlow:true,project,fee:fee.id,offlineRestart:true,mcpReadback:true}));
+    } else {
     const created=await service.read({projectId:project,expenseId:expenseEditFlow?expense:expense+'-native'},context);
     assert.equal(created.amountMinorUnits,'12345');assert.equal(created.notes,expenseEditFlow?'Offline edit':'Offline native creation');
     assert.equal(created.revision,expenseEditFlow?'2':'1');
@@ -74,10 +108,11 @@ try {
       attachmentId:created.receiptAttachmentIds[0]},context);
     assert.equal(Buffer.from(receipt.bytes).toString(),expenseEditFlow?'%PDF-1.4\nOffline added Expense receipt\n%%EOF\n':'%PDF-1.4\nOffline Expense receipt\n%%EOF\n');
     assert.equal((await service.invoice({projectId:project,expenseId:created.expenseId},context)).invoice,null);
+    }
     const transactions=await read('/rest/v1/spike_transactions?account_id=eq.'+account+'&project_id=eq.'+project+'&select=id');
     assert.deepEqual(transactions,[],'Expense creation must not invent a payment');
-    console.log(JSON.stringify({hostedExpenseFlow:true,expenseEditFlow,project,expense:created.expenseId,
-      nativeOfflineRestart:true,realPowerSync:true,mcpReadback:true,receiptBytes:true,noPayment:true}));
+    console.log(JSON.stringify({hostedExpenseFlow:true,expenseEditFlow,invoiceFlow,feeFlow,project,
+      nativeOfflineRestart:true,realPowerSync:true,mcpReadback:true,receiptBytes:!invoiceFlow&&!feeFlow,noPayment:true}));
   } else if(expenseMode) {
     assert.equal(memberships[0].financial_access,'full','Positive Expense test requires financial access; do not weaken authorization');
     const projects=await read('/rest/v1/spike_projects?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');

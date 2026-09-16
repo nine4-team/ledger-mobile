@@ -6,6 +6,17 @@ public enum CollectedInvoiceReportDeliveryFailure: Error { case snapshotChanged 
 /// Reuses the report scratch lifetime; frozen Invoice data still needs a fresh
 /// authorized read before handing financial bytes to an external destination.
 public enum CollectedInvoiceReportDelivery {
+    /// The same authorized snapshot check is used before OS handoff and after
+    /// choosing a Mac save destination. A header revision alone is insufficient.
+    @MainActor public static func revalidate(_ invoice: LiveInvoiceContents,
+        reader: any ProjectLiveInvoiceReading) async throws {
+        guard let project = invoice.selection.scope.projectId,
+              try await reader.readLiveInvoices(accountId: invoice.selection.scope.accountId, projectId: project)
+                .first(where: { $0.invoiceId == invoice.invoiceId }) == invoice else {
+            throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
+        }
+    }
+
     /// Live reports use the same protected handoff lifetime, but compare every
     /// current source fact, not just the header revision (source edits are live).
     @MainActor public static func deliver(data: Data, invoice: LiveInvoiceContents,
@@ -19,11 +30,7 @@ public enum CollectedInvoiceReportDelivery {
             authorityVersion: .init(validating: "live-invoice-v1"))
         try await ProtectedReportDelivery.deliver(data: data, format: .pdf, reference: reference,
             scratchRoot: scratchRoot, nameHint: "Invoice-" + invoice.invoiceId.rawValue, revalidate: {
-                guard let project = invoice.selection.scope.projectId,
-                      try await reader.readLiveInvoices(accountId: invoice.selection.scope.accountId, projectId: project)
-                        .first(where: { $0.invoiceId == invoice.invoiceId }) == invoice else {
-                    throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
-                }
+                try await revalidate(invoice, reader: reader)
             }, handoff: handoff)
     }
 

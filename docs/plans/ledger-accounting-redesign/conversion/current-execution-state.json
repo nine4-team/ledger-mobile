@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1034,
+  "stateVersion": 1039,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -61,8 +61,8 @@
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter CollectedInvoiceReportDeliveryTests","Focused iPhone testCollectedInvoiceDownloadCancellation; actual PDF visual/content verification."],
     "lastResult": "Historical CI35039310979 on41b0f5e7 failed Mac UI; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
-    "desktopPrerequisite": "Mac locked, confirmed CUA; unlock requested asynchronously. No UI retry before unlock. Native45097 PASS5; details in invoice-report-readback.liveExportContentGuardReview.",
-    "immediateFollowup": "Dirty live-PDF iPhone live+paid save65768 PASS2/42.630s /tmp/ledger-iphone-live-paid-save.log; actual live PDF text and rendered page inspected correct, evidence invoice-report-readback. Native5/build/cancel passed earlier. Mac7846 runner authentication failure before assertions remains, no unchanged retry. NEXT finish Mac save-time source-change proof/review; review CI35078916886 ccfa1bd3 failures when terminal (conversion/provider passed, Mac failed, iOS running lastcheck), no duplicate dispatch. iOS transfers copy at picker presentation, so revalidation correctly precedes picker rather than Save. No hosted deployment; private .native-pdf files untouched.",
-    "nextVerification": "CI35078916886 Mac job104738902620 failed stale environment expectations BEFORE native tests/build. Fixed scripts/check-target-environment.mjs for Invoice/Fee APIs, fee queue/provider and shared create/revise guarded writer. Local Node24 environment69756 PASS11+boundary; conversion check PASS. Evidence invoice-report-readback.integrationBoundaryCorrection. Review remaining iOS job when terminal; don't redispatch tiny fix. Historical35039310979 UI failures remain separate."
+    "desktopPrerequisite": "Mac locked; unlock requested. No UI retry before unlock. ce42269c checkpoint plus dirty shared save validator: native37712 PASS5, Mac build49887 PASS; invoice-report-readback.liveExportContentGuardReview.",
+    "immediateFollowup": "Hosted Invoice76471 and Fee92392 PASS: offline/restart/replay/real sync/readback plus MCP and no payment. Evidence invoice-build-edit.hostedInvoiceFlowEvidence and fee-demand-lifecycle.hostedFeeFlowEvidence; QA permissions restored none/false/false. Hosted SQL99, PowerSync deployment6aaa65c602481fb31b96f38c config7/37tables active and no errors. NEXT integration review including terminal CI35078916886 (iOS running lastcheck; Mac boundary failure fixed locally), Mac final-save interaction after unlock, then next approved workflow. Do not repeat hosted tests for context. Private .native-pdf files untouched.",
+    "nextVerification": "CI35078916886 Mac failed before build/tests; boundary fix locally passed (invoice-report-readback.integrationBoundaryCorrection). Review iOS when terminal, no duplicate dispatch. Historical UI failures remain separate."
   }
 }

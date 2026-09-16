@@ -36,6 +36,11 @@ struct CollectedInvoiceReportDeliveryTests {
             [invoice(amount: 100, accountId: "other-account")], [], nil,
         ]
         for available in unavailable {
+            // The native save callback invokes this same validator after its
+            // destination is chosen, not only before presenting the dialog.
+            await #expect(throws: (any Error).self) {
+                try await CollectedInvoiceReportDelivery.revalidate(rendered, reader: LiveReader(invoices: available))
+            }
             await #expect(throws: (any Error).self) {
                 try await CollectedInvoiceReportDelivery.deliver(data: Data("%PDF-live".utf8), invoice: rendered,
                     reader: LiveReader(invoices: available)) { _ in Issue.record("Stale or unauthorized live export") }
