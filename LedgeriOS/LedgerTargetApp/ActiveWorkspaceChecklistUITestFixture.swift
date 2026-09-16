@@ -843,13 +843,36 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         }
     }
     func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
-        throw ProjectExpenses.Failure.invalidEvidence // Read-only fixture; never simulate a successful save.
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-invoice"), expenseAccess.hasAccess,
+              let projectId = payload.selection.scope.projectId else { throw ProjectExpenses.Failure.invalidEvidence }
+        let review = try await readInvoiceCreationReview(accountId: payload.selection.scope.accountId, projectId: projectId)
+        guard payload.selection.scope == review.scope, payload.selection.lines == review.candidates.map(\.selection) else {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        let id = try OperationID(validating: "ui-invoice-" + operationUUID.uuidString)
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoice-create-retry"),
+           !expenseAccess.isExactInvoiceRetry(operationUUID, date: capturedAt, payload: payload) {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        expenseAccess.saveInvoiceCreation(.init(id: id, payload: payload, state: .queued))
+        expenseAccess.publishExpenses(try await readExpenses(accountId: payload.selection.scope.accountId, projectId: projectId))
+        return .init(operationId: id, localState: .queued)
     }
     func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview {
-        throw ProjectExpenses.Failure.invalidEvidence // This fixture currently exercises pending/list reads only.
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-invoice") else { throw ProjectExpenses.Failure.invalidEvidence }
+        guard let expense = try await readExpenses(accountId: accountId, projectId: projectId).expenses.first else {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        let changed = expenseAccess.invoiceSourceHasChanged
+        return try .init(scope: .project(accountId: accountId, projectId: projectId, clientId: .init(validating: "client-ui-test")),
+            candidates: [.init(selection: .init(source: .expense(expense.entry.expenseId), expectedRevision: changed ? 2 : expense.revision,
+                reviewedAmount: changed ? .init(minorUnits: 12551, currency: expense.entry.finalAmount.currency) : expense.entry.finalAmount),
+                categoryId: expense.entry.categoryId, description: expense.entry.vendor)],
+            categoryNames: [expense.entry.categoryId: "Example budget category"])
     }
     func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {
         let expenses = try await readExpenses(accountId: accountId, projectId: projectId)
+        if let pending = expenseAccess.pendingInvoiceCreation { return [pending] }
         guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-pending-invoice"),
               let expense = expenses.expenses.first else { return [] }
         return try [LocalOperationState.queued, .rejected].map { state in
@@ -892,6 +915,11 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                         for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
                             expenseAccess.withdraw()
                             continuation.yield(nil)
+                        }
+                    } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoice-source-change") {
+                        for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
+                            expenseAccess.changeInvoiceSource()
+                            continuation.yield(try await readExpenses(accountId: accountId, projectId: projectId))
                         }
                     }
                     #endif

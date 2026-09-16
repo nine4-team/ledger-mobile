@@ -45,6 +45,7 @@ targets:
       - path: LedgeriOS/Views/Settings/BudgetCategoryManagementView.swift
       - path: LedgeriOS/Modals/ProjectPickerList.swift
       - path: LedgeriOS/Modals/SellToProjectModal.swift
+      - path: LedgeriOS/Modals/CreateInvoiceModal.swift
       - path: LedgeriOS/Components/BillingRowPresentation.swift
       - path: LedgeriOS/Views/Reports/InvoiceReportView.swift
       - path: LedgeriOS/Views/Reports/ReportHTMLBuilder.swift
@@ -86,6 +87,7 @@ targets:
       - path: LedgeriOS/Components/Card.swift
       - path: LedgeriOS/Components/Badge.swift
       - path: LedgeriOS/Components/FormSheet.swift
+      - path: LedgeriOS/Components/MultiStepFormSheet.swift
       - path: LedgeriOS/Components/FormDateField.swift
       - path: LedgeriOS/Models/Shared/FormSheetAction.swift
       - path: LedgeriOS/Components/FormField.swift

@@ -89,7 +89,11 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                 account: accountId, principal: principalId, in: local), project.lifecycle == .active,
                 project.client.lifecycle == .active else { throw Failure.incomplete }
             return try InvoiceCreationReview(scope: .project(accountId: accountId, projectId: projectId, clientId: project.clientId),
-                candidates: Self.creationCandidatesAuthorized(transaction: local, accountId: accountId, projectId: projectId))
+                candidates: Self.creationCandidatesAuthorized(transaction: local, accountId: accountId, projectId: projectId),
+                categoryNames: Dictionary(uniqueKeysWithValues: local.getAll(sql:
+                    "SELECT id,display_name FROM spike_budget_categories WHERE account_id=?", parameters: [accountId.rawValue]) {
+                        (try BudgetCategoryID(validating: $0.getString(name: "id")), try $0.getString(name: "display_name"))
+                    }))
         }
     }
 

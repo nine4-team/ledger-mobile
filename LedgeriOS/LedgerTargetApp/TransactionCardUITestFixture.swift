@@ -368,6 +368,19 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     private var withdrawn = false
     private var invoiceReportReadCount = 0
     private var expenseEdit: ProjectExpenses.PendingEdit?
+    private var invoiceCreation: PendingInvoiceCreation?
+    private var changedInvoiceSource = false
+    var invoiceSourceHasChanged: Bool { lock.withLock { changedInvoiceSource } }
+    func changeInvoiceSource() { lock.withLock { changedInvoiceSource = true } }
+    private var firstInvoiceAttempt: (UUID, Date, CreateInvoiceCommand.Payload)?
+    func isExactInvoiceRetry(_ id: UUID, date: Date, payload: CreateInvoiceCommand.Payload) -> Bool {
+        lock.withLock {
+            guard let firstInvoiceAttempt else { firstInvoiceAttempt = (id, date, payload); return false }
+            return firstInvoiceAttempt.0 == id && firstInvoiceAttempt.1 == date && firstInvoiceAttempt.2 == payload
+        }
+    }
+    var pendingInvoiceCreation: PendingInvoiceCreation? { lock.withLock { invoiceCreation } }
+    func saveInvoiceCreation(_ value: PendingInvoiceCreation) { lock.withLock { invoiceCreation = value } }
     private var expenseObservers: [UUID: AsyncThrowingStream<ProjectExpenses?, Error>.Continuation] = [:]
     var pendingExpenseEdit: ProjectExpenses.PendingEdit? { lock.withLock { expenseEdit } }
     func saveExpenseEdit(_ edit: ProjectExpenses.PendingEdit) { lock.withLock { expenseEdit = edit } }

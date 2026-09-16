@@ -14,8 +14,9 @@ public protocol ProjectInvoiceCreating: ProjectLiveInvoiceReading {
 public struct InvoiceCreationReview: Equatable, Sendable {
     public let scope: TransactionScope
     public let candidates: [LiveInvoiceContents.Line]
-    public init(scope: TransactionScope, candidates: [LiveInvoiceContents.Line]) {
-        self.scope = scope; self.candidates = candidates
+    public let categoryNames: [BudgetCategoryID: String]
+    public init(scope: TransactionScope, candidates: [LiveInvoiceContents.Line], categoryNames: [BudgetCategoryID: String] = [:]) {
+        self.scope = scope; self.candidates = candidates; self.categoryNames = categoryNames
     }
 }
 

@@ -29,6 +29,8 @@ struct ProjectInvoicingWorkspaceView: View {
     @State private var feesExpanded = false
     @State private var invoicesExpanded = false
     @State private var creatingExpense = false
+    @State private var creatingInvoice = false
+    @State private var invoiceFormState = InvoiceCreationFormState()
     @State private var recoveringExpense: ExpenseEntryRecovery?
     @State private var saveNotice: String?
 
@@ -114,7 +116,10 @@ struct ProjectInvoicingWorkspaceView: View {
                 BillingEmptyRow("Canonical Fee browsing is not connected yet.")
             }
             }
-            CollapsibleSection(title: "Invoices", isExpanded: $invoicesExpanded) {
+            CollapsibleSection(title: "Invoices", isExpanded: $invoicesExpanded,
+                onAdd: runtime is any ProjectInvoiceCreating && liveInvoices != nil ? {
+                    invoiceFormState = InvoiceCreationFormState(); creatingInvoice = true
+                } : nil) {
                 VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                     SegmentedControl(selection: $invoiceFilter,
                         options: InvoicePipelineFilter.allCases.map(\.segmentOption))
@@ -179,6 +184,17 @@ struct ProjectInvoicingWorkspaceView: View {
             }
         }
         .navigationTitle("Invoicing")
+        .adaptivePresentation(isPresented: $creatingInvoice, style: .form) {
+            if let creator = runtime as? any ProjectInvoiceCreating {
+                CreateInvoiceModal(accountId: accountId, projectId: projectId, service: creator, state: invoiceFormState) { receipt in
+                    saveNotice = "Invoice saved on this device (\(receipt.localState.rawValue))."
+                    invoicesExpanded = true
+                }
+            }
+        }
+        .onChange(of: liveInvoiceError) { _, error in
+            if error != nil { creatingInvoice = false; invoiceFormState = InvoiceCreationFormState() }
+        }
         .onChange(of: expenses == nil) { _, unavailable in
             if unavailable, creatingExpense || recoveringExpense != nil {
                 creatingExpense = false

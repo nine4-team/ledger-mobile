@@ -709,6 +709,39 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
+    func testCreateInvoiceReusesSelectionAndReviewForm() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-invoice", "--ledger-ui-test-invoice-create-retry"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let add = app.buttons["Add Invoices"]
+        reveal(add, in: app); add.tap()
+        let source = app.buttons["invoice-source-expense-expense-ui-test"]
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Next"].isEnabled)
+        let search = app.textFields["Search items, project costs, and charges..."]
+        search.tap(); search.typeText("Example budget category")
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        source.tap(); app.buttons["Next"].tap()
+        let name = app.textFields["Phase 1 — Furnishings"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5)); name.tap(); name.typeText("Client Invoice")
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Back", "target-active-workspace-back")).firstMatch.tap()
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        app.buttons["Next"].tap()
+        app.buttons["Create Invoice"].tap()
+        XCTAssertTrue(app.staticTexts["Invoice was not accepted on this device. Check the current billable records and try again."].waitForExistence(timeout: 5))
+        app.buttons["Create Invoice"].tap()
+        XCTAssertTrue(app.staticTexts["Invoice saved on this device (queued)."].waitForExistence(timeout: 5))
+        let saved = app.staticTexts["Client Invoice"].firstMatch
+        reveal(saved, in: app)
+        XCTAssertTrue(saved.exists)
+        XCTAssertTrue(app.staticTexts["Saved on device — pending sync"].exists)
+    }
+
     func testLiveInvoiceUsesExistingListAndReport() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -734,6 +767,42 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCUIDevice.shared.press(.home); app.activate()
         XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Invoice Total"].exists)
+        #endif
+    }
+
+    func testInvoiceReviewRespondsToSourceChangeAndAccessLoss() throws {
+        #if os(iOS)
+        continueAfterFailure = false
+        for withdrawal in [false, true] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-invoice",
+                withdrawal ? "--ledger-ui-test-expense-withdrawal" : "--ledger-ui-test-invoice-source-change"]
+            app.launch(); defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+            let invoicing = app.buttons["target-project-invoicing"]
+            reveal(invoicing, in: app); invoicing.tap()
+            let add = app.buttons["Add Invoices"]
+            reveal(add, in: app); add.tap()
+            let source = app.buttons["invoice-source-expense-expense-ui-test"]
+            XCTAssertTrue(source.waitForExistence(timeout: 5)); source.tap()
+            XCTAssertTrue(app.staticTexts["$125.50"].firstMatch.exists, app.debugDescription)
+            app.buttons["Next"].tap()
+            XCTAssertTrue(app.textFields["Phase 1 — Furnishings"].waitForExistence(timeout: 5))
+            XCUIDevice.shared.press(.home); app.activate()
+            if withdrawal {
+                XCTAssertTrue(app.textFields["Phase 1 — Furnishings"].waitForNonExistence(timeout: 5))
+                XCTAssertFalse(app.buttons["Create Invoice"].exists)
+                let invoices = app.buttons["Invoices"].firstMatch
+                reveal(invoices, in: app); invoices.tap()
+                XCTAssertTrue(app.staticTexts["Live Invoices are unavailable."].waitForExistence(timeout: 5), app.debugDescription)
+            } else {
+                XCTAssertTrue(app.staticTexts["Billable records changed. Review your selection before saving."].waitForExistence(timeout: 5), app.debugDescription)
+                XCTAssertTrue(app.buttons["Next"].exists)
+                XCTAssertTrue(app.staticTexts["$125.51"].firstMatch.exists)
+                XCTAssertFalse(app.textFields["Phase 1 — Furnishings"].exists)
+            }
+        }
         #endif
     }
 

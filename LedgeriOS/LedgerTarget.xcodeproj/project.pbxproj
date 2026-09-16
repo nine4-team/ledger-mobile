@@ -22,6 +22,7 @@
 		0B61FBC9BFAE05DF52FFC659 /* ReportPDFRenderSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C58468B3CB410C3584888F4 /* ReportPDFRenderSessionTests.swift */; };
 		0C3CBB08A1FE7803EF63053F /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9D46DF596A1EA6F014D08F /* ProgressBar.swift */; };
 		0D0638B6BF48C773D00FD564 /* PlatformModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FC8ECFC405B9E57DE6A49A /* PlatformModifiers.swift */; };
+		1187CCA166E257C5763AA254 /* MultiStepFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00F48174B1AE91B6B12C82B0 /* MultiStepFormSheet.swift */; };
 		14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */; };
 		19C05197C75072B767CBCB00 /* ReportPDFSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C66A8C602BD14B02C57641 /* ReportPDFSharing.swift */; };
 		1B658DDA0F6021E59B356F29 /* GroupedItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE36D2DC2F36DCBBC9CB787 /* GroupedItemCard.swift */; };
@@ -135,6 +136,7 @@
 		DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */; };
 		DAFFF2EBBE0C391347BC86BF /* TransactionCardUITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CDE9C1C90F4F11BA4E3C78 /* TransactionCardUITestFixture.swift */; };
 		DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */; };
+		E5296904A98B41DE5CF2EF1C /* CreateInvoiceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51CBDF4982AA2F704B281A8D /* CreateInvoiceModal.swift */; };
 		E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */; };
 		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */ = {isa = PBXBuildFile; productRef = 9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */; };
 		EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */; };
@@ -165,6 +167,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		00F48174B1AE91B6B12C82B0 /* MultiStepFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiStepFormSheet.swift; sourceTree = "<group>"; };
 		059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVendorDocumentReviewView.swift; sourceTree = "<group>"; };
 		0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonInvoiceParser.swift; sourceTree = "<group>"; };
 		0C10D7E0C83536FA60734114 /* InvoiceReportData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceReportData.swift; sourceTree = "<group>"; };
@@ -203,6 +206,7 @@
 		4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBrowsingStagingExerciseView.swift; sourceTree = "<group>"; };
 		4DAFFC8D8628F02118410645 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
 		4FC436333F756D58FDC56B4F /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
+		51CBDF4982AA2F704B281A8D /* CreateInvoiceModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateInvoiceModal.swift; sourceTree = "<group>"; };
 		52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAccessGate.swift; sourceTree = "<group>"; };
 		5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCreationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		5D1F13A6F19C8E0674D52935 /* CategoryFormModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryFormModal.swift; sourceTree = "<group>"; };
@@ -508,6 +512,7 @@
 				4244524B9444C76CBEE85BB4 /* InlineOptionPicker.swift */,
 				76AC4682757637403328805B /* ItemCard.swift */,
 				39D577B8BBCE3AB118232585 /* MediaCapturePresentation.swift */,
+				00F48174B1AE91B6B12C82B0 /* MultiStepFormSheet.swift */,
 				4DAFFC8D8628F02118410645 /* NativeListControlBar.swift */,
 				145E020913688BA29A14A040 /* NotesContent.swift */,
 				C85B708A862290B6C22B9D2F /* PDFThumbnailTile.swift */,
@@ -551,6 +556,7 @@
 		A1CA0194D28EE61CD35D7ACD /* Modals */ = {
 			isa = PBXGroup;
 			children = (
+				51CBDF4982AA2F704B281A8D /* CreateInvoiceModal.swift */,
 				6DEAE4E6D3A005338567A90C /* ExportTransactionsModal.swift */,
 				9B36273A29AE52FDAA6F37FD /* ProjectPickerList.swift */,
 				7846BBA459A0493D9FED5460 /* SellToProjectModal.swift */,
@@ -782,6 +788,7 @@
 				9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */,
 				371B0D17821A67F71C3FDAD9 /* Clipboard.swift in Sources */,
 				1D69B1F0952D1296EBDF4C0F /* CollapsibleSection.swift in Sources */,
+				E5296904A98B41DE5CF2EF1C /* CreateInvoiceModal.swift in Sources */,
 				3664C7AE237245EA7B6C06AB /* CurrencyFormatting.swift in Sources */,
 				08477D6F5A4AC111EAC29CF8 /* DetailRow.swift in Sources */,
 				288726FB4C4F84EB0C3E20E3 /* Dimensions.swift in Sources */,
@@ -816,6 +823,7 @@
 				CFAA005D5025A6350AD9080C /* LocalVendorPDFThumbnailExtractor.swift in Sources */,
 				F5274A216EFEA9E87EDED6DE /* MediaCapturePresentation.swift in Sources */,
 				2907DFB1AD69599A251E4DA2 /* MediaGalleryPresentationCalculations.swift in Sources */,
+				1187CCA166E257C5763AA254 /* MultiStepFormSheet.swift in Sources */,
 				6E2471991975A3C9F6CB2478 /* NativeListControlBar.swift in Sources */,
 				C2FC1EDF4F1BA89D27C4E267 /* NotesContent.swift in Sources */,
 				96212E334A0E0101D6F12437 /* PDFDownloadHelper.swift in Sources */,
