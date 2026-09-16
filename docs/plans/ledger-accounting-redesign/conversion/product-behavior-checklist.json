@@ -26884,6 +26884,7 @@
     {
       "schemaVersion": 1,
       "workflowId": "local-vendor-pdf-review",
+      "capturedOpeningTestRepair": "2026-09-16 after84773e29: CI35094251669 Mac unreadable-PDF scenario failed historical2300 before selection, button target-vendor-pdf-open at y520 explicitly not hittable. Only direct unscrolled tap remained; added existing reveal before tap, no parser/view change. Its error/diagnostic assertions still require targeted interaction verification. Separately iOS build-for-testing66284 at84773e29 PASS /tmp/ledger-ios-captured-ui-repair-build.log for accumulated shared-PDF/selector changes; not UI execution and predates this final reveal edit.",
       "reusePlan": {
         "decision": "Retired by user D-029. Do not resume this workflow or reuse integration. Prior records below are historical, not remaining build requirements.",
         "sourceComponents": [
@@ -30013,6 +30014,8 @@
     {
       "schemaVersion": 1,
       "workflowId": "item-history-source-reconciliation",
+      "reviewedCategoryIsolatedVerification": "2026-09-16: extracted copier's exact source check into FirebaseReviewedFurnishingsSource (caller supplies explicitly reviewed identity, no name discovery). Native39120 PASS2tests/0.001s /tmp/ledger-reviewed-furnishings-unit.log covers rename, same-name competing category, missing/duplicate/wrongAccount/wrongScope/wrongID/general/fee rejection. Existing local SQL89519 PASS6assertions /tmp/ledger-reviewed-furnishings-sql.log proves exact binding, cross-Account FK denial, no clearing/reassignment and no ordinary-client assignment. No schema changes or QA destination reset. Full copier rehearsal still incomplete due existing vendor-source collision; these isolated passes do not waive it.",
+      "reviewedQACanonicalCategoryRepair": "2026-09-16 dirty after84773e29: RealProjectCopy now assigns canonical Furnishings using previously reviewed exact sourceID da556858-1df8-40be-b10c-b15710d7cc9a for its already fixed source Account, validates unique source/itemized kind/imported target category and reconciles assigned identity before commit. No name-based inference or generic production mapping policy. Swift build8559 PASS /tmp/ledger-reviewed-furnishings-copy-build.log. Rollback verification incomplete: receipt run3508 rejected media-uW9OgI from older snapshot; no-media run77572 passed new source guards but SQL rejected existing imported vendor source identity/bytes, transaction rolled back. Preserve destination and source uniqueness, do not reset or bypass. NEXT synthetic isolated mapping/SQL test including missing/changed source and no reassignment; no new source reads/hosted writes performed. Not production migration readiness.",
       "title": "Preserve and reconcile source Item history",
       "kind": "migration",
       "status": "implementation",

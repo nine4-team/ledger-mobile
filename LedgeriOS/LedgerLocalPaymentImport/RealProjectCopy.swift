@@ -325,6 +325,16 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         excludedTransactions.removeValue(forKey: payments[0].documentPathSegments[3])
         for source in review.lines.compactMap(\.source) { excludedTransactions.removeValue(forKey: source.documentPathSegments.last!) }
     }
+    // This partial copier already targets one explicitly reviewed source Account.
+    // Preserve its reviewed Furnishings identity, never infer it from a display name
+    // or from the presence of another itemized category (for example Additional Requests).
+    let furnishingsSourceID = "da556858-1df8-40be-b10c-b15710d7cc9a"
+    try require(FirebaseReviewedFurnishingsSource.matches(documents, accountID: sourceAccount,
+        categoryID: furnishingsSourceID), "Reviewed Furnishings source missing, ambiguous or changed; mapping review required")
+    let furnishingsID = try id("category", furnishingsSourceID)
+    try require(categories.contains(furnishingsID), "Reviewed Furnishings category was not imported")
+    sql += "update public.spike_accounts set furnishings_category_id=\(q(furnishingsID)) where id=\(q(account)) and furnishings_category_id is null;\n"
+    sql += "do $$ begin if (select furnishings_category_id from public.spike_accounts where id=\(q(account))) is distinct from \(q(furnishingsID)) then raise exception 'Furnishings identity reconciliation mismatch'; end if; end $$;\n"
     unresolved = excludedTransactions.count
     unresolvedReasons = Dictionary(grouping: excludedTransactions.values, by: { $0 }).mapValues(\.count)
     // A labeled QA dataset is not a migrated Account. Retain the exact source

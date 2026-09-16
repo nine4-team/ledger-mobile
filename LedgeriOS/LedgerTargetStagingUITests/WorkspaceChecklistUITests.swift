@@ -2312,7 +2312,9 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10))
         project.tap()
-        app.buttons["target-vendor-pdf-open"].tap()
+        let reviewPDF = app.buttons["target-vendor-pdf-open"]
+        reveal(reviewPDF, in: app, fullyInsideScrollView: true)
+        reviewPDF.tap()
         let select = app.buttons["target-vendor-pdf-select"]
         XCTAssertTrue(select.waitForExistence(timeout: 5))
         selectVendorPDF(file, in: app)
