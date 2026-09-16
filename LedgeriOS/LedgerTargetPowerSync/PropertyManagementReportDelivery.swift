@@ -8,6 +8,16 @@ public enum PropertyManagementReportDeliveryFailure: Error, Equatable {
 /// Owns one export's scratch lifetime. The system adapter must return only when
 /// sharing/printing completes, fails, or is canceled—not when its picker opens.
 public enum PropertyManagementReportDelivery {
+    /// Live target readers own a workspace; pure fixture readers do not. Keep
+    /// the complete generation/handoff inside that workspace's existing drain.
+    @MainActor public static func withActivity(reader: any Sendable,
+        operation: @escaping @MainActor @Sendable () async throws -> Void) async throws {
+        if let runtime = reader as? LedgerOfflineClientRuntime {
+            try await runtime.withProtectedReportActivity(operation)
+        } else {
+            try await operation()
+        }
+    }
     /// Startup recovery is independent of opening or exporting a report.
     /// Store locks preserve any other window/process's active handoff.
     public static func recoverStartupScratch(scratchRoot: URL? = nil,

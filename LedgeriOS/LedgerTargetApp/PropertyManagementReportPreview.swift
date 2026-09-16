@@ -112,6 +112,7 @@ struct PropertyManagementReportPreview: View {
         Task { @MainActor in
             defer { exporting = false }
             do {
+                try await PropertyManagementReportDelivery.withActivity(reader: reader) {
                 let bytes = try await Task.detached {
                     switch format {
                     case .pdf: try PropertyManagementReportPDF.render(snapshot, profile: profile)
@@ -130,6 +131,7 @@ struct PropertyManagementReportPreview: View {
                         }
                     }
                     try await PropertyManagementReportSystemDelivery.handoff(url, action: action)
+                }
                 }
             } catch PropertyManagementReportDeliveryFailure.snapshotChanged {
                 exportError = "The report changed. Refresh and try sharing or printing again."

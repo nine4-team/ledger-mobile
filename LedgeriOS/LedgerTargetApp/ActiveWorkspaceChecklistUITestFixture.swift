@@ -132,6 +132,7 @@ struct OfflineAccountEntryUITestFixture: View {
 struct ActiveWorkspaceChecklistUITestFixtureView: View {
     @State private var fixture = ActiveWorkspaceChecklistUITestFixture()
     @State private var signOutCalled = false
+    @State private var syncPendingWork: AccountPendingWorkStagingExercise?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -180,9 +181,24 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                         onSignOut: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-settings-signout") ? {
                             signOutCalled = true
                             throw SessionEndingFailure.pendingWorkRequiresDisposition
-                        } : nil)
+                        } : nil, pendingWork: syncPendingWork, onEndSession: { request in
+                            let staleDiscard = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-stale-discard")
+                            guard request.disposition == (staleDiscard ? .removeFromDeviceDiscardingPendingWork : .synchronizeThenLogout),
+                                  request.expectedSummary.hasBlockingWork,
+                                  case .readyForTeardown = try SessionEndPolicy.evaluate(request,
+                                    against: fixture.syncProbeSummary()) else {
+                                throw SessionEndingFailure.synchronizationIncomplete
+                            }
+                            signOutCalled = true
+                            await fixture.model.stop()
+                        })
                 }
                 if signOutCalled { Text("Sign-out boundary called").accessibilityIdentifier("target-ui-signout-called") }
+                if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-sync-signout-dismiss") {
+                    Text("Summary reads: \(fixture.syncProbeReads)")
+                        .accessibilityIdentifier("target-ui-summary-reads")
+                        .accessibilityValue(String(fixture.syncProbeReads))
+                }
               }.frame(maxWidth: .infinity, alignment: .leading).padding()
             }
             .itemThumbnailViewport()
@@ -190,7 +206,18 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
             }
             }
         }
-        .task { await fixture.start() }
+        .task {
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-sync-signout-completion") ||
+                ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-sync-signout-dismiss") ||
+                ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-stale-discard") {
+                let source = fixture
+                syncPendingWork = AccountPendingWorkStagingExercise(expectedEnvironment: .targetStaging,
+                    expectedPrincipalId: try! PrincipalID(validating: "principal-ui-test"),
+                    expectedAccountId: try! AccountID(validating: "account-ui-test"),
+                    runtime: .init(pendingWorkSummary: { try await source.syncProbeSummary() }))
+            }
+            await fixture.start()
+        }
         .onChange(of: fixture.access.isLocked) { _, locked in
             if locked { fixture.model.closeVendorDocumentReview() }
         }
@@ -240,6 +267,15 @@ private final class ActiveWorkspaceChecklistUITestFixture {
         removals.continuation.finish()
     }
     private static let observedAt = Date(timeIntervalSince1970: 1_789_500_000)
+    private(set) var syncProbeReads: UInt64 = 0
+    func syncProbeSummary() throws -> PendingLocalWorkSummary {
+        syncProbeReads += 1
+        return try PendingLocalWorkSummary(environment: .targetStaging, principalId: principalId,
+            accountId: accountId, snapshotRevision: syncProbeReads,
+            observedAt: Self.observedAt.addingTimeInterval(Double(syncProbeReads)),
+            queuedOperationCount: syncProbeReads < 3 || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-sync-signout-dismiss") ? 1 : 0, applyingOperationCount: 0,
+            unresolvedRejectedOperationCount: 0, unverifiedAttachmentCount: 0)
+    }
 
     private let accountId = try! AccountID(validating: "account-ui-test")
     private let principalId = try! PrincipalID(validating: "principal-ui-test")

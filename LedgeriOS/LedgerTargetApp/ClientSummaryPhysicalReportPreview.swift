@@ -103,6 +103,7 @@ struct ClientSummaryPhysicalReportPreview: View {
         Task { @MainActor in
             defer { exporting = false }
             do {
+                try await PropertyManagementReportDelivery.withActivity(reader: reader) {
                 let bytes = try await Task.detached { try ClientSummaryPhysicalReportPDF.render(snapshot, profile: profile) }.value
                 try await ClientSummaryPhysicalReportDelivery.deliver(data: bytes, snapshot: snapshot, reader: reader) { url in
                     guard case .ready(let visible) = model.state, visible.reference == snapshot.reference,
@@ -111,6 +112,7 @@ struct ClientSummaryPhysicalReportPreview: View {
                         throw ClientSummaryPhysicalReportDeliveryFailure.snapshotChanged
                     }
                     try await PropertyManagementReportSystemDelivery.handoff(url, action: .share)
+                }
                 }
             } catch {
                 exportError = "The report could not be shared. Data or access may have changed. Refresh and try again."

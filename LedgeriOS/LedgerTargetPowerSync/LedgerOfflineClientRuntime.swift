@@ -43,6 +43,11 @@ public final class LedgerOfflineClientRuntime:
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     let location: LedgerWorkspaceRuntimeLocation
+    /// Covers generation and OS handoff, not just the source query. Shutdown
+    /// drains admitted activities before deleting data or report scratch files.
+    public func withProtectedReportActivity(_ body: @escaping @MainActor @Sendable () async throws -> Void) async throws {
+        try await lifecycleOwner.withProtectedReportActivity(body)
+    }
     public func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
         try await lifecycleOwner.readInvoicingCharges(accountId: accountId, projectId: projectId)
     }

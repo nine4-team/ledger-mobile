@@ -1696,6 +1696,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 XCTAssertTrue(item.waitForExistence(timeout: 5))
                 XCTAssertTrue(app.staticTexts["Client: Report Client"].exists)
                 XCTAssertTrue(waitUntil { share.isEnabled })
+                #if os(iOS)
+                share.tap()
+                let activity = app.otherElements["ActivityListView"].firstMatch
+                let dismiss = app.otherElements["PopoverDismissRegion"].firstMatch
+                XCTAssertTrue(activity.waitForExistence(timeout: 10))
+                XCTAssertTrue(waitUntil { dismiss.isHittable })
+                dismiss.tap()
+                XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+                XCTAssertTrue(waitUntil { share.isEnabled })
+                #endif
             }
             app.buttons["target-client-report-refresh"].tap()
             XCTAssertTrue(share.waitForExistence(timeout: 5))
@@ -1935,6 +1945,69 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.alerts.buttons["Discard and Sign Out"].tap()
         XCTAssertTrue(app.buttons["Sign In"].waitForExistence(timeout: 10))
         XCTAssertFalse(account.exists)
+    }
+
+    func testSyncFirstUIEndsOnlyAfterFreshSummaryClears() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-sync-signout-completion"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let sync = app.buttons["target-pending-sync-sign-out"]
+        reveal(sync, in: app, within: app.descendants(matching: .any)["target-settings-form"].firstMatch)
+        XCTAssertTrue(sync.isEnabled)
+        sync.tap()
+        XCTAssertTrue(app.staticTexts["target-ui-signout-called"].waitForExistence(timeout: 10))
+        XCTAssertFalse(settings.exists)
+    }
+
+    func testStaleDiscardConfirmationRequiresFreshReview() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-stale-discard"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let discard = app.buttons["target-pending-discard-sign-out"]
+        let form = app.descendants(matching: .any)["target-settings-form"].firstMatch
+        reveal(discard, in: app, within: form)
+        discard.tap()
+        XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+        app.alerts.buttons["Discard and Sign Out"].tap()
+        XCTAssertTrue(app.staticTexts["target-pending-session-error"].waitForExistence(timeout: 5))
+        XCTAssertTrue(discard.isEnabled)
+        XCTAssertFalse(app.staticTexts["target-ui-signout-called"].exists)
+        app.buttons["target-account-settings-done"].tap()
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+    }
+
+    func testLeavingSettingsCancelsSyncFirstWaiting() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-sync-signout-dismiss"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let sync = app.buttons["target-pending-sync-sign-out"]
+        reveal(sync, in: app, within: app.descendants(matching: .any)["target-settings-form"].firstMatch)
+        sync.tap()
+        XCTAssertTrue(app.buttons["Cancel Sign Out"].waitForExistence(timeout: 5))
+        app.buttons["target-account-settings-done"].tap()
+        let reads = app.staticTexts["target-ui-summary-reads"]
+        XCTAssertTrue(reads.waitForExistence(timeout: 5))
+        let count = try XCTUnwrap(reads.value as? String)
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in reads.value as? String != count }, object: nil)
+        changed.isInverted = true
+        wait(for: [changed], timeout: 3)
+        XCTAssertFalse(app.staticTexts["target-ui-signout-called"].exists)
+        XCTAssertTrue(settings.exists)
     }
 
     func testDownloadedAccountEntryBlocksIncompleteLogoutRecovery() throws {

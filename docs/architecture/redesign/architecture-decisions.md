@@ -2285,6 +2285,18 @@ This avoids declaring cache cleanup complete merely because active files were
 skipped. It does not forcibly cancel OS sharing or delete its in-use files.
 ReportScratchStoreTests covers refusal, byte preservation, and later success.
 
+Late export generation is now covered by the runtime's existing finite-operation
+drain: Property, Client Summary and Invoice previews hold one report activity
+from generation through completed OS handoff. Shutdown refuses new activities
+and waits for admitted ones before cleanup. This is not a new job registry.
+The tradeoff is that sign-out may wait for a sharing/printing interaction to end;
+it must not delete files the OS still uses. The delivery helper recognizes the
+live LedgerOfflineClientRuntime reader; pure fixture readers have no runtime to
+drain. Any future live reader wrapper/provider must carry this lifetime too,
+not silently rely on the fixture path. Native drain and late-admission tests
+cover the live helper. Targeted iPhone Property/Client Summary/Invoice handoff
+regression and both platform builds pass; macOS interaction evidence remains.
+
 Real multi-Account owner tests exposed unconditional iOS file protection in the
 database directory creator: on this macOS host the resulting directory rejected
 file creation (SQLite CANTOPEN). It now follows the attachment vault's platform

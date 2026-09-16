@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1216,
+  "stateVersion": 1225,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Session Settings/startup checkpoint: committing current accumulated work after native82806 PASS135/5suites46.450s; session-clean-logout.integratedSessionVerification owns evidence/review. UI62333 covers real pending wait/cancel/confirmed discard; clean/recovery68259/47952 passed. NEXT authoritative sync completion->automatic logout, stale-confirmation/lifecycle and export interleavings. Existing core policy, owner and protected scratch mechanisms only; no new framework or repeated passing checks for context. Locate checkpoint by latest git log (message Wire guarded session ending into Settings and startup recovery). No full session/app/CI acceptance; no push. No live processes. Preserve private .native-pdf files."
+    "nextWorkflowDecision": "Reviewed follow-up to4760315b; committing as Guard report lifetimes during sign-out and verify hosted session cleanup. Includes hosted82850 PASS, UI lifecycle/stale/sync/report tests, native report lifetime/recovery proof; all evidence in owning stories. Session implementation is not full platform acceptance: macOS UI had earlier runner authentication failure, physical iOS protection/release evidence remain. NEXT inspect remaining session story acceptance/spec requirements, identify any functional omissions, otherwise keep platform gaps visible and continue next approved product workflow. Do not invent new audits or repeat passing tests. Hosted QA Client retained in copy, no source edits. Never print auth.json. No live processes. Preserve private .native-pdf files."
   }
 }

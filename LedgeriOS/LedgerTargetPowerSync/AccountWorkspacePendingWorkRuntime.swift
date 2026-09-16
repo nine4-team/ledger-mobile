@@ -207,6 +207,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case pendingWorkSummary
     case readDownloadedItemPlacements
     case readDownloadedPropertyManagementReport
+    case protectedReportDelivery
     case readTransactionExport
     case readTransactionAttachments
     case loadTransactionAttachment
@@ -2833,6 +2834,13 @@ actor AccountWorkspacePendingWorkRuntime {
             throw SessionEndingFailure.synchronizationIncomplete
         }
         try await teardown()
+    }
+
+    func withProtectedReportActivity(_ body: @escaping @MainActor @Sendable () async throws -> Void) async throws {
+        try await withFiniteLease(.protectedReportDelivery) { _ in
+            try Task.checkCancellation()
+            try await body()
+        }
     }
 
     func close() async throws {

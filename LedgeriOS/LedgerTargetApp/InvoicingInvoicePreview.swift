@@ -207,6 +207,7 @@ struct InvoicingInvoicePreview: View {
         exportTask = Task { @MainActor in
             defer { exporting = false; exportTask = nil }
             do {
+                try await PropertyManagementReportDelivery.withActivity(reader: runtime) {
                 let logoBase64: String?
                 if case .downloaded(let bytes) = profile.logo,
                    let image = AccountBusinessLogoImage.decode(bytes) {
@@ -275,6 +276,7 @@ struct InvoicingInvoicePreview: View {
                 } else if let live, let reader = runtime as? any ProjectLiveInvoiceReading {
                     try await CollectedInvoiceReportDelivery.deliver(data: bytes, invoice: live, reader: reader, handoff: handoff)
                 } else { throw CollectedInvoiceReportDeliveryFailure.snapshotChanged }
+                }
             } catch is CancellationError { }
             catch let error as ReportPDFSharing.RenderFailure {
                 switch error {

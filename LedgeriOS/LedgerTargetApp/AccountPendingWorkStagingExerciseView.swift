@@ -89,7 +89,10 @@ struct AccountPendingWorkStagingExerciseView: View {
                     confirmingDiscard = confirmedSummary != nil
                 }.disabled(ending || model.presentation.summary == nil)
                 .accessibilityIdentifier("target-pending-discard-sign-out")
-                if let endFailure { Text(endFailure).foregroundStyle(.red) }
+                if let endFailure {
+                    Text(endFailure).foregroundStyle(.red)
+                        .accessibilityIdentifier("target-pending-session-error")
+                }
             }
         }
         .alert("Discard pending work from this device?", isPresented: $confirmingDiscard) {

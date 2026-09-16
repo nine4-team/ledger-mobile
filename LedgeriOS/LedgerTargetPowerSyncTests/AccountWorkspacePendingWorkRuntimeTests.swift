@@ -993,6 +993,134 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await reopened.close()
     }
 
+    @Test("Sync-first permits shutdown only after an in-flight upload records its applied result")
+    func sessionSyncAfterAppliedUpload() async throws {
+        let context = try RuntimeTestContext(suffix: "session-sync-applied")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        _ = try await runtime.createClient(context.clientCommand(id: "before-sync-logout"))
+        let pending = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .synchronizeThenLogout,
+            expectedSummary: pending, requestedAt: pending.observedAt)
+        let gate = ManualGate()
+        let cancelled = AsyncStream<Void>.makeStream()
+        let upload = Task {
+            try await runtime.uploadPendingCommands(using: .init(clientCreation:
+                RuntimeGatedClientApplier(gate: gate, cancelled: cancelled.continuation)))
+        }
+        await gate.waitUntilEntered()
+        await #expect(throws: SessionEndingFailure.synchronizationIncomplete) {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(request) {
+                Issue.record("An in-flight operation is not synced work")
+            }
+        }
+        #expect(try await runtime.pendingWorkSummary().hasBlockingWork)
+        await gate.release()
+        try await upload.value
+        let applied = try await runtime.pendingWorkSummary()
+        #expect(!applied.hasBlockingWork)
+        #expect(applied.snapshotRevision >= pending.snapshotRevision)
+        let closed = LockedRecorder<Bool>()
+        try await runtime.lifecycleOwner.withSessionEndShutdown(request) { closed.append(true) }
+        #expect(closed.values == [true])
+        // Real queue/result/drain path, injected server result. Hosted behavior
+        // and the UI polling transition are separate evidence obligations.
+    }
+
+    @Test("Hosted QA sync then logout", .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SESSION_HOSTED_QA"] == "1"))
+    @MainActor func hostedSessionSyncThenLogout() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let email = try #require(env["LEDGER_SESSION_QA_EMAIL"])
+        let password = try #require(env["LEDGER_SESSION_QA_PASSWORD"])
+        guard email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "hosted-session",
+            namespace: "apps.nine4.ledger.session-qa.\(UUID().uuidString.lowercased())",
+            accountId: AccountID(validating: "realcopy-b9d236394770-account"),
+            principalId: PrincipalID(validating: "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64"))
+        defer { context.remove() }
+        let url = URL(string: "https://ybwviepljilrkrjoahbl.supabase.co")!
+        let key = "sb_publishable_oAx8Wobv1rd1OZ9m_nrE1A_bOuo1T-H"
+        let sync = URL(string: "https://6aa8966802481fb31b96942c.powersync.journeyapps.com")!
+        let storage = CategoryAuthTestStorage()
+        let admissions = OfflineWorkspaceAdmissionStore(read: { storage.retrieve(key: "admissions") },
+            write: { storage.store(key: "admissions", value: $0) }, requireNotRemoved: { _ in })
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key, offlineAdmissions: admissions)
+        try await entry.signIn(email: email, password: password)
+        #expect(auth.currentSession?.user.id.uuidString.lowercased() == "5cb9aa33-337a-4fd4-a33f-121119e04c4e")
+        let directory = try await entry.accounts(environment: .targetLocal)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let account = try #require(directory.snapshot.accounts.first { $0.id == context.accountId })
+        let initial = try await context.openRuntime(dependencies: .live)
+        try await entry.startWorkspaceSync(initial, authorization: authorization, powerSyncURL: sync)
+        try await entry.rememberDownloadedWorkspace(authorization, account: account, runtime: initial)
+        try await initial.close()
+        let runtime = try await context.openRuntime(dependencies: .live)
+        do {
+            let command = try context.clientCommand(id: "hosted-session-\(UUID())")
+            _ = try await runtime.createClient(command)
+            let pending = try await runtime.pendingWorkSummary()
+            #expect(pending.queuedOperationCount == 1)
+            let request = try SessionEndRequest(disposition: .synchronizeThenLogout,
+                expectedSummary: pending, requestedAt: Date())
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: sync)
+            let deadline = Date().addingTimeInterval(60)
+            while try await runtime.pendingWorkSummary().hasBlockingWork {
+                guard Date() < deadline else { throw RuntimeInjectedFailure() }
+                try await Task.sleep(for: .milliseconds(200))
+            }
+            var read = URLRequest(url: url.appendingPathComponent("rest/v1/spike_clients")
+                .appending(queryItems: [.init(name: "account_id", value: "eq.\(context.accountId.rawValue)"),
+                    .init(name: "id", value: "eq.\(command.draft.clientId.rawValue)"), .init(name: "select", value: "id")]))
+            read.setValue(key, forHTTPHeaderField: "apikey")
+            read.setValue("Bearer \(try #require(auth.currentSession).accessToken)", forHTTPHeaderField: "Authorization")
+            let (bytes, response) = try await URLSession.shared.data(for: read)
+            #expect((response as? HTTPURLResponse)?.statusCode == 200)
+            let rows = try JSONSerialization.jsonObject(with: bytes) as? [[String: String]]
+            #expect(rows?.first?["id"] == command.draft.clientId.rawValue)
+            let ender = entry.sessionEnding(runtime: runtime, authorization: authorization,
+                environment: context.environment, clearCaches: {})
+            try await ender.endSession(request)
+            #expect(!entry.hasStoredSession)
+            #expect(try entry.downloadedWorkspaces(environment: .targetLocal).isEmpty)
+            #expect(!FileManager.default.fileExists(atPath: runtime.location.structuredDatabaseURL.path))
+            #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: runtime.location) == nil)
+        } catch { try? await runtime.close(); throw error }
+    }
+
+    @Test("Shutdown drains admitted report activity and refuses late export admission")
+    func sessionReportActivityDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "report-activity-drain")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let summary = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        let gate = ManualGate()
+        let report = Task { try await PropertyManagementReportDelivery.withActivity(reader: runtime) { await gate.wait() } }
+        await gate.waitUntilEntered()
+        let finished = LockedRecorder<Bool>()
+        let close = Task {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(request) { finished.append(true) }
+        }
+        // Wait for the existing runtime state, not a timing guess.
+        while true {
+            do { _ = try await runtime.pendingWorkSummary(); await Task.yield() }
+            catch LedgerOfflineClientRuntimeFailure.runtimeClosed { break }
+        }
+        #expect(finished.values.isEmpty)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await PropertyManagementReportDelivery.withActivity(reader: runtime) { Issue.record("Late export cannot start") }
+        }
+        await gate.release()
+        try await report.value
+        try await close.value
+        #expect(finished.values == [true])
+    }
+
     @Test("Cleanup failure propagates and does not permanently revoke workspace access")
     func sessionShutdownCleanupFailure() async throws {
         let context = try RuntimeTestContext(suffix: "session-cleanup-failure")
@@ -1242,12 +1370,24 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
             publishableKey: "sb_publishable_fixture", offlineAdmissions: admissions)
         var cleared = false
-        var interruptOnce = recovering
+        let canonicalRoot = try #require(realpath(context.root.path, nil))
+        defer { free(canonicalRoot) }
+        let reportRoot = URL(fileURLWithPath: String(cString: canonicalRoot))
+            .appendingPathComponent(ReportScratchStore.directoryName)
+        let activeReport: ReportScratchStore? = recovering ? try ReportScratchStore(rootDirectory: reportRoot) : nil
+        let reportReference = try ProtectedArtifactSnapshotReference(
+            snapshotID: .init(validating: String(repeating: "a", count: 32)),
+            snapshotHash: .make(bytes: Data("snapshot".utf8)),
+            visibilityScopeID: .make(bytes: Data("scope".utf8)),
+            profileVersion: .init(validating: "property-report-v1"), authorityVersion: .init(validating: "authority-v1"))
+        let reportBytes = Data("%PDF-session-export".utf8)
+        let activeArtifact = try await activeReport?.create(data: reportBytes, snapshotReference: reportReference)
         let adapter = entry.sessionEnding(runtime: runtime, authorization: workspaces[0].authorization,
             environment: context.environment, clearCaches: {
                 #expect(!FileManager.default.fileExists(atPath: runtime.location.structuredDatabaseURL.path))
                 #expect(auth.currentSession?.user.id == user)
-                if interruptOnce { interruptOnce = false; throw RuntimeInjectedFailure() }
+                try await PropertyManagementReportDelivery.recoverStartupScratch(scratchRoot: reportRoot,
+                    requireNoActiveSessions: true)
                 cleared = true
             })
         let summary = try await adapter.pendingWorkSummary()
@@ -1275,14 +1415,32 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             try? LedgerWorkspaceSessionCleanup.complete(request, location: runtime.location)
         }
         if recovering {
-            await #expect(throws: RuntimeInjectedFailure.self) { try await adapter.endSession(request) }
+            await #expect(throws: ReportScratchFailure.artifactsPending) { try await adapter.endSession(request) }
+            let artifact = try #require(activeArtifact)
+            #expect(try Data(contentsOf: artifact.url) == reportBytes)
+            await #expect(throws: SupabaseOnlineSignIn.Failure.sessionRecoveryFailed) {
+                try await entry.recoverPendingSessionEnd(environment: context.environment,
+                    applicationSupportDirectory: context.root, accessCoordinator: context.accessCoordinator,
+                    clearCaches: {
+                        try await PropertyManagementReportDelivery.recoverStartupScratch(scratchRoot: reportRoot,
+                            requireNoActiveSessions: true)
+                    })
+            }
+            #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: runtime.location) != nil)
+            #expect(try Data(contentsOf: artifact.url) == reportBytes)
+            try await activeReport?.remove(artifact)
+            try await activeReport?.close()
             if preserveNewIdentity {
                 _ = try await auth.signIn(email: "another@example.invalid", password: "fixture")
                 try admissions.selectIdentity(replacementUser)
             }
             let recovered = try await entry.recoverPendingSessionEnd(environment: context.environment,
                 applicationSupportDirectory: context.root, accessCoordinator: context.accessCoordinator,
-                clearCaches: { cleared = true })
+                clearCaches: {
+                    try await PropertyManagementReportDelivery.recoverStartupScratch(scratchRoot: reportRoot,
+                        requireNoActiveSessions: true)
+                    cleared = true
+                })
             #expect(recovered)
         } else { try await adapter.endSession(request) }
         #expect(cleared)

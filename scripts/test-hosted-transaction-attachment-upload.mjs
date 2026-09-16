@@ -11,9 +11,10 @@ const invoiceFlow=process.argv.includes('--invoice-flow');
 const feeFlow=process.argv.includes('--fee-flow');
 const returnFlow=process.argv.includes('--return-flow');
 const historyFlow=process.argv.includes('--history-flow');
+const sessionFlow=process.argv.includes('--session-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -42,7 +43,13 @@ try {
   const memberships=await read('/rest/v1/spike_account_memberships?account_id=eq.'+account+'&select=principal_id,role,state,financial_access,can_manage_projects,can_manage_project_budgets');
   assert.deepEqual(memberships.map(({principal_id,role,state})=>({principal_id,role,state})),
     [{principal_id:auth.principalId,role:'owner',state:'active'}]);
-  if(historyFlow) {
+  if(sessionFlow) {
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter','AccountWorkspacePendingWorkRuntimeTests/hostedSessionSyncThenLogout'],{
+      encoding:'utf8',timeout:180000,env:{...process.env,LEDGER_SESSION_HOSTED_QA:'1',
+        LEDGER_SESSION_QA_EMAIL:auth.email,LEDGER_SESSION_QA_PASSWORD:auth.password}});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted session sync/logout check failed');
+  } else if(historyFlow) {
     if(memberships[0].financial_access==='none') {
       restoreHistoryAccess=true;
       const changed=historySQL(`update public.spike_account_memberships set financial_access='full'
