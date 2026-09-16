@@ -184,6 +184,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readLiveInvoices
     case createInvoice
     case createFeeInstallment
+    case readPendingFeeCreations
     case createClient
     case createProject
     case archiveProject
@@ -1555,6 +1556,30 @@ actor AccountWorkspacePendingWorkRuntime {
             return try await ProjectExpensePowerSyncQuery(database: resources.structuredDatabase)
                 .readCollectedInvoiceReport(accountId: accountId, principalId: resources.principalId,
                     projectId: projectId, invoiceId: invoiceId, asOf: asOf)
+        }
+    }
+
+    func readFeeCreationCategories(accountId: AccountID, projectId: ProjectID) async throws -> [FeeCreationCategory] {
+        try await withFiniteLease(.readPendingFeeCreations) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await FeeCreationPowerSyncStore(database: resources.structuredDatabase, accountId: resources.accountId,
+                principalId: resources.principalId, accessFence: resources.accessFence).readCreationCategories(projectId: projectId)
+        }
+    }
+
+    func readFeeBrowsingReview(accountId: AccountID, projectId: ProjectID) async throws -> FeeBrowsingReview {
+        try await withFiniteLease(.readLiveInvoices) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase)
+                .readFeeBrowsingReview(accountId: accountId, principalId: resources.principalId, projectId: projectId)
+        }
+    }
+
+    func readPendingFeeCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingFeeCreation] {
+        try await withFiniteLease(.readPendingFeeCreations) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await FeeCreationPowerSyncStore(database: resources.structuredDatabase, accountId: resources.accountId,
+                principalId: resources.principalId, accessFence: resources.accessFence).readPending(projectId: projectId)
         }
     }
 

@@ -661,7 +661,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
@@ -858,8 +858,45 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         expenseAccess.publishExpenses(try await readExpenses(accountId: payload.selection.scope.accountId, projectId: projectId))
         return .init(operationId: id, localState: .queued)
     }
+    func readFeeCreationCategories(accountId: AccountID, projectId: ProjectID) async throws -> [FeeCreationCategory] {
+        _ = try await readExpenses(accountId: accountId, projectId: projectId)
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-fee") else { return [] }
+        let categories: [FeeCreationCategory] = try [.init(id: .init(validating: "fee-category-ui-test"), name: "Design Fee",
+            configuredTotal: .init(minorUnits: 30000, currency: .init(validating: "USD")))]
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-fee-retry") {
+            return categories + [try .init(id: .init(validating: "retainer-ui-test"), name: "Retainer",
+                configuredTotal: .init(minorUnits: 30000, currency: .init(validating: "USD")))]
+        }
+        return categories
+    }
+
+    func readFeeBrowsingReview(accountId: AccountID, projectId: ProjectID) async throws -> FeeBrowsingReview {
+        try await FeeBrowsingReview(sources: readInvoiceCreationReview(accountId: accountId, projectId: projectId),
+            canCreate: !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-archived-fees"))
+    }
+    func readPendingFeeCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingFeeCreation] {
+        _ = try await readExpenses(accountId: accountId, projectId: projectId)
+        return expenseAccess.pendingFeeCreation.map { [$0] } ?? []
+    }
+    func createFeeInstallment(_ draft: FeeInstallmentDraft, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        let categories = try await readFeeCreationCategories(accountId: draft.accountId, projectId: draft.projectId)
+        guard let category = categories.first(where: { $0.id == draft.categoryId }) else { throw ProjectExpenses.Failure.invalidEvidence }
+        try draft.validateBudget(configuredTotal: category.configuredTotal, alreadyAllocated: .zero(currency: draft.amount.currency))
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-fee-retry"),
+           !expenseAccess.isExactFeeRetry(operationUUID, date: capturedAt, draft: draft) {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        let id = try OperationID(validating: "ui-fee-" + operationUUID.uuidString)
+        expenseAccess.saveFeeCreation(.init(id: id, draft: draft, state: .queued))
+        expenseAccess.publishExpenses(try await readExpenses(accountId: draft.accountId, projectId: draft.projectId))
+        return .init(operationId: id, localState: .queued)
+    }
     func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview {
-        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-invoice") else { throw ProjectExpenses.Failure.invalidEvidence }
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-invoice") else {
+            _ = try await readExpenses(accountId: accountId, projectId: projectId)
+            return .init(scope: .project(accountId: accountId, projectId: projectId,
+                clientId: try .init(validating: "client-ui-test")), candidates: [])
+        }
         guard let expense = try await readExpenses(accountId: accountId, projectId: projectId).expenses.first else {
             throw ProjectExpenses.Failure.invalidEvidence
         }

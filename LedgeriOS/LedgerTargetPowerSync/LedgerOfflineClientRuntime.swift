@@ -292,6 +292,18 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.readLiveInvoices(accountId: accountId, projectId: projectId)
     }
 
+    public func readFeeCreationCategories(accountId: AccountID, projectId: ProjectID) async throws -> [FeeCreationCategory] {
+        try await lifecycleOwner.readFeeCreationCategories(accountId: accountId, projectId: projectId)
+    }
+
+    public func readPendingFeeCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingFeeCreation] {
+        try await lifecycleOwner.readPendingFeeCreations(accountId: accountId, projectId: projectId)
+    }
+
+    public func readFeeBrowsingReview(accountId: AccountID, projectId: ProjectID) async throws -> FeeBrowsingReview {
+        try await lifecycleOwner.readFeeBrowsingReview(accountId: accountId, projectId: projectId)
+    }
+
     public func createFeeInstallment(_ draft: FeeInstallmentDraft, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
         try await lifecycleOwner.createFeeInstallment(draft, operationUUID: operationUUID, capturedAt: capturedAt)
     }

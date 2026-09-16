@@ -29,6 +29,73 @@ actor FeeCreationPowerSyncStore {
         self.accessFence = accessFence; self.now = now; self.afterOperationWrite = afterOperationWrite
     }
 
+    func readCreationCategories(projectId: ProjectID) async throws -> [FeeCreationCategory] {
+        let account = accountId, principal = principalId, fence = accessFence
+        return try await database.readTransaction { local in
+            try Task.checkCancellation()
+            guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
+                accountId: account, principalId: principal, projectId: projectId)
+            _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
+                identity: ProjectConfigurationStream())
+            _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
+                identity: LiveInvoiceStreamIdentity(accountId: account, projectId: projectId))
+            guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(projectId,
+                account: account, principal: principal, in: local), project.lifecycle == .active,
+                project.client.lifecycle == .active else { throw Failure.unavailable }
+            return try local.getAll(sql: """
+                SELECT c.id,c.display_name,a.allocation_minor_units,a.allocation_currency
+                FROM spike_budget_categories c LEFT JOIN spike_project_category_allocations a
+                  ON a.account_id=c.account_id AND a.category_id=c.id AND a.project_id=?
+                WHERE c.account_id=? AND c.kind='fee' AND c.lifecycle='active'
+                ORDER BY c.presentation_order,c.id
+                """, parameters: [projectId.rawValue,account.rawValue]) { row in
+                    let total: Money?
+                    if let text = try row.getStringOptional(index: 2) {
+                        guard let value = Int64(text), value >= 0 else { throw Failure.unavailable }
+                        total = try Money(minorUnits: value, currency: .init(validating: row.getString(index: 3)))
+                    } else {
+                        guard try row.getStringOptional(index: 3) == nil else { throw Failure.unavailable }
+                        total = nil
+                    }
+                    return try FeeCreationCategory(id: .init(validating: row.getString(index: 0)),
+                        name: row.getString(index: 1), configuredTotal: total)
+                }
+        }
+    }
+
+    func readPending(projectId: ProjectID) async throws -> [PendingFeeCreation] {
+        let account = accountId, principal = principalId, fence = accessFence
+        return try await database.readTransaction { local in
+            try Task.checkCancellation()
+            guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
+                accountId: account, principalId: principal, projectId: projectId)
+            return try local.getAll(sql: """
+                SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations o
+                WHERE account_id=? AND actor_principal_id=? AND command_type='create_fee_installment'
+                  AND local_state IN ('queued','applying','applied','rejected')
+                  AND NOT (local_state='applied' AND EXISTS(
+                    SELECT 1 FROM fee_installments f WHERE f.account_id=o.account_id AND f.id=o.subject_id))
+                ORDER BY accepted_at_ms,id
+                """, parameters: [account.rawValue, principal.rawValue]) { row in
+                    let json = try row.getString(name: "command_envelope_json")
+                    let command = try OperationContractCodec.decode(CreateFeeInstallmentCommand.self,
+                        from: Data("{\"envelope\":\(json)}".utf8))
+                    let e = command.envelope
+                    guard e.accountId == account, e.actorPrincipalId == principal,
+                          e.operationId.rawValue == (try row.getString(name: "id")),
+                          e.payload.installmentId.rawValue == (try row.getString(name: "subject_id")),
+                          AccountBoundOperationIdentity.isValid(e.operationId, family: .feeCreation, accountId: account),
+                          try CreateFeeInstallmentUploadRequest(command).fingerprint == row.getString(name: "fingerprint"),
+                          let state = LocalOperationState(rawValue: try row.getString(name: "local_state")) else {
+                        throw LocalOperationIdentityGuardFailure.malformedEvidence
+                    }
+                    return PendingFeeCreation(id: e.operationId, draft: e.payload, state: state)
+                }.filter { $0.draft.projectId == projectId }
+        }
+    }
+
     func submit(_ command: CreateFeeInstallmentCommand) async throws -> OperationReceipt {
         let e = command.envelope, p = e.payload
         guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.unavailable }

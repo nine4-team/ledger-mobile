@@ -369,6 +369,16 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     private var invoiceReportReadCount = 0
     private var expenseEdit: ProjectExpenses.PendingEdit?
     private var invoiceCreation: PendingInvoiceCreation?
+    private var feeCreation: PendingFeeCreation?
+    var pendingFeeCreation: PendingFeeCreation? { lock.withLock { feeCreation } }
+    func saveFeeCreation(_ value: PendingFeeCreation) { lock.withLock { feeCreation = value } }
+    private var firstFeeAttempt: (UUID, Date, FeeInstallmentDraft)?
+    func isExactFeeRetry(_ id: UUID, date: Date, draft: FeeInstallmentDraft) -> Bool {
+        lock.withLock {
+            guard let firstFeeAttempt else { firstFeeAttempt = (id, date, draft); return false }
+            return firstFeeAttempt.0 == id && firstFeeAttempt.1 == date && firstFeeAttempt.2 == draft
+        }
+    }
     private var changedInvoiceSource = false
     var invoiceSourceHasChanged: Bool { lock.withLock { changedInvoiceSource } }
     func changeInvoiceSource() { lock.withLock { changedInvoiceSource = true } }

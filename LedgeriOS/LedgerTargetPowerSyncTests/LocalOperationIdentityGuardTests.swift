@@ -2048,6 +2048,29 @@ struct LocalOperationIdentityGuardTests {
         }
     }
 
+    @Test("Fee category selection preserves absent and zero totals and denies withdrawn access")
+    func feeCreationCategoryOptions() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: db)
+        _ = try await db.execute(sql: "UPDATE spike_budget_categories SET display_name='Design Fee' WHERE id='fee-category'", parameters: nil)
+        let reader = FeeCreationPowerSyncStore(database: db, accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, accessFence: .init())
+        let project = try ProjectID(validating: "project")
+        let absent = try await reader.readCreationCategories(projectId: project)
+        #expect(absent.count == 1 && absent[0].name == "Design Fee" && absent[0].configuredTotal == nil)
+        _ = try await db.execute(sql: "INSERT INTO spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency) VALUES ('cap',?,'project','fee-category','0','USD')", parameters: [Self.guardAccountId.rawValue])
+        #expect(try await reader.readCreationCategories(projectId: project).first?.configuredTotal?.minorUnits == 0)
+        _ = try await db.execute(sql: "UPDATE spike_budget_categories SET lifecycle='archived'", parameters: nil)
+        #expect(try await reader.readCreationCategories(projectId: project).isEmpty)
+        _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await reader.readCreationCategories(projectId: project)
+        }
+        try await db.close()
+    }
+
     @Test("Fee creation does not treat incomplete downloads as an absent budget")
     func feeCreationRequiresCompleteDownloads() async throws {
         let fixture = try LocalOperationGuardDatabaseFixture()
@@ -2160,6 +2183,10 @@ struct LocalOperationIdentityGuardTests {
         while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
         let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: rejected ? 913 : 912)
         _ = try await Self.submitFee(id, changed: false, database: db)
+        let project = try ProjectID(validating: "project")
+        let reader = FeeCreationPowerSyncStore(database: db, accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, accessFence: .init())
+        #expect(try await reader.readPending(projectId: project).first?.state == .queued)
         let transaction = try #require(try await db.getNextCrudTransaction())
         let entry = try #require(transaction.crud.first)
         #expect(transaction.crud.count == 1)
@@ -2168,6 +2195,7 @@ struct LocalOperationIdentityGuardTests {
                 applier: FeeReply(rejected: rejected, transportFailure: true))
         }
         #expect(try await Self.submitFee(id, changed: false, database: db).localState == .applying)
+        #expect(try await reader.readPending(projectId: project).first?.state == .applying)
         await #expect(throws: CreateFeeInstallmentServerResult.Failure.receiptMismatch) {
             try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(),
                 applier: FeeReply(rejected: rejected, wrongSubject: true))
@@ -2180,6 +2208,16 @@ struct LocalOperationIdentityGuardTests {
         try await db.close()
         let reopened = try fixture.open()
         #expect(try await Self.submitFee(id, changed: false, database: reopened).localState == (rejected ? .rejected : .applied))
+        let reopenedReader = FeeCreationPowerSyncStore(database: reopened, accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, accessFence: .init())
+        #expect(try await reopenedReader.readPending(projectId: project).first?.state == (rejected ? .rejected : .applied))
+        _ = try await reopened.execute(sql: "INSERT INTO fee_installments(id,account_id,project_id) VALUES ('fee',?,'project')", parameters: [Self.guardAccountId.rawValue])
+        #expect(try await reopenedReader.readPending(projectId: project).count == (rejected ? 1 : 0),
+            "Only successful work is hidden by authoritative arrival; rejection stays visible")
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await reopenedReader.readPending(projectId: project)
+        }
         try await reopened.close()
     }
 

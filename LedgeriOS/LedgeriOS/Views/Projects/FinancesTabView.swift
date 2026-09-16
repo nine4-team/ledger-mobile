@@ -705,28 +705,10 @@ private struct FeeInstallmentFormSheet: View {
     }
 
     var body: some View {
-        FormSheet(
-            title: "Add \(group.name) Installment",
-            description: "Create one billable portion of this fee.",
-            primaryAction: FormSheetAction(
-                title: "Add Installment",
-                isLoading: isSaving,
-                isDisabled: !canSave,
-                action: { save() }
-            ),
-            secondaryAction: FormSheetAction(title: "Cancel") { dismiss() },
-            error: errorMessage
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                FormField(label: "Label", text: $label, placeholder: "Design fee 1 of 3")
-                FormField(label: "Amount", text: $amount, placeholder: "$2,500")
-                if let total = group.totalCents {
-                    Text("Total fee: \(CurrencyFormatting.formatCents(total))")
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-        }
+        FeeInstallmentFormPresentation(categoryName: group.name,
+            totalText: group.totalCents.map(CurrencyFormatting.formatCents),
+            label: $label, amount: $amount, isSaving: isSaving, canSave: canSave,
+            errorMessage: errorMessage, onSave: save)
     }
 
     private func save() {

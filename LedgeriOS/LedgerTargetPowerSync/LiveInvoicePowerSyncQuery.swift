@@ -39,6 +39,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                         let updates = try database.watch(sql: """
                             SELECT EXISTS(SELECT 1 FROM spike_account_memberships)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_projects)
+                            UNION ALL SELECT EXISTS(SELECT 1 FROM spike_clients)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoices)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoice_memberships)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM expenses)
@@ -46,6 +47,8 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                             UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines)
+                            UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices)
+                            UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_local_operations)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
                             """, parameters: nil) { try $0.getInt(index: 0) }
@@ -83,17 +86,24 @@ struct LiveInvoicePowerSyncQuery: Sendable {
     }
 
     func readCreationReview(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> InvoiceCreationReview {
+        let review = try await readFeeBrowsingReview(accountId: accountId, principalId: principalId, projectId: projectId)
+        guard review.canCreate else { throw Failure.incomplete }
+        return review.sources
+    }
+
+    func readFeeBrowsingReview(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> FeeBrowsingReview {
         try await database.readTransaction { local in
             try Self.requireReady(local, accountId: accountId, principalId: principalId, projectId: projectId)
             guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(projectId,
-                account: accountId, principal: principalId, in: local), project.lifecycle == .active,
-                project.client.lifecycle == .active else { throw Failure.incomplete }
-            return try InvoiceCreationReview(scope: .project(accountId: accountId, projectId: projectId, clientId: project.clientId),
+                account: accountId, principal: principalId, in: local) else { throw Failure.incomplete }
+            let sources = try InvoiceCreationReview(scope: .project(accountId: accountId, projectId: projectId, clientId: project.clientId),
                 candidates: Self.creationCandidatesAuthorized(transaction: local, accountId: accountId, projectId: projectId),
                 categoryNames: Dictionary(uniqueKeysWithValues: local.getAll(sql:
                     "SELECT id,display_name FROM spike_budget_categories WHERE account_id=?", parameters: [accountId.rawValue]) {
                         (try BudgetCategoryID(validating: $0.getString(name: "id")), try $0.getString(name: "display_name"))
                     }))
+            return FeeBrowsingReview(sources: sources,
+                canCreate: project.lifecycle == .active && project.client.lifecycle == .active)
         }
     }
 

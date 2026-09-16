@@ -867,6 +867,99 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
     #endif
 
+    func testFeeCreationUsesExistingFormAndShowsPendingResult() throws {
+        try exerciseFeeCreation(retry: false)
+    }
+
+    func testFeeCategorySelectionAndExactRetry() throws {
+        try exerciseFeeCreation(retry: true)
+    }
+
+    func testFeeCreationClosesOnFinancialAccessLoss() throws {
+        #if os(iOS)
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-fee",
+                               "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let add = app.buttons["Add Fees"]
+        reveal(add, in: app); add.tap()
+        let label = app.textFields["Design fee 1 of 3"]
+        XCTAssertTrue(label.waitForExistence(timeout: 5))
+        label.tap(); label.typeText("Unsaved private installment")
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(label.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Add Installment"].exists)
+        XCTAssertFalse(app.buttons["Add Fees"].exists)
+        XCTAssertFalse(app.staticTexts["Unsaved private installment"].exists)
+        #endif
+    }
+
+    private func exerciseFeeCreation(retry: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-fee"]
+        if retry { app.launchArguments.append("--ledger-ui-test-fee-retry") }
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let add = app.buttons["Add Fees"]
+        reveal(add, in: app); add.tap()
+        if retry {
+            let retainer = app.buttons["Retainer"]
+            XCTAssertTrue(retainer.waitForExistence(timeout: 5)); retainer.tap()
+        }
+        let save = app.buttons["Add Installment"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5)); XCTAssertFalse(save.isEnabled)
+        let label = app.textFields["Design fee 1 of 3"]
+        label.tap(); label.typeText("First design installment")
+        let amount = app.textFields["$2,500"]
+        amount.tap(); amount.typeText("100")
+        XCTAssertTrue(save.isEnabled); save.tap()
+        if retry {
+            XCTAssertTrue(app.staticTexts["Installment exceeds the fee total or could not be saved."].waitForExistence(timeout: 5))
+            #if os(iOS)
+            XCUIDevice.shared.press(.home); app.activate()
+            #endif
+            XCTAssertTrue(save.waitForExistence(timeout: 5)); save.tap()
+        }
+        XCTAssertTrue(app.staticTexts["First design installment"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Saved on device — pending sync"].firstMatch.exists)
+    }
+
+    func testFeesBrowseUsesFrozenInvoiceRows() throws {
+        try exerciseFeeBrowsing(archived: false)
+    }
+
+    func testArchivedFeesRemainVisibleWithoutCreation() throws {
+        try exerciseFeeBrowsing(archived: true)
+    }
+
+    private func exerciseFeeBrowsing(archived: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense", "--ledger-ui-test-long-invoice"]
+        if archived { app.launchArguments.append("--ledger-ui-test-archived-fees") }
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        // The first Fees button is the source filter; the second opens the section.
+        let fees = app.buttons.matching(identifier: "Fees").element(boundBy: 1)
+        reveal(fees, in: app); fees.tap()
+        XCTAssertTrue(app.staticTexts["Invoice row 000 <original>"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Paid"].firstMatch.exists)
+        XCTAssertFalse(app.staticTexts["Canonical Fee browsing is not connected yet."].exists)
+        if archived { XCTAssertFalse(app.buttons["Add Fees"].exists) }
+    }
+
     private func exerciseCollectedInvoiceDownload(save: Bool, retry: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()

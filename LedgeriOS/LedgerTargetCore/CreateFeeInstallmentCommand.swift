@@ -1,7 +1,37 @@
 import Foundation
 
 public protocol ProjectFeeInstallmentCreating: Sendable {
+    func readFeeBrowsingReview(accountId: AccountID, projectId: ProjectID) async throws -> FeeBrowsingReview
     func createFeeInstallment(_ draft: FeeInstallmentDraft, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt
+    func readPendingFeeCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingFeeCreation]
+    func readFeeCreationCategories(accountId: AccountID, projectId: ProjectID) async throws -> [FeeCreationCategory]
+}
+
+/// Existing billing facts plus current creation eligibility, not a separate Fee ledger.
+public struct FeeBrowsingReview: Sendable {
+    public let sources: InvoiceCreationReview
+    public let canCreate: Bool
+    public init(sources: InvoiceCreationReview, canCreate: Bool) {
+        self.sources = sources; self.canCreate = canCreate
+    }
+}
+
+public struct FeeCreationCategory: Identifiable, Equatable, Sendable {
+    public let id: BudgetCategoryID
+    public let name: String
+    public let configuredTotal: Money?
+    public init(id: BudgetCategoryID, name: String, configuredTotal: Money?) {
+        self.id = id; self.name = name; self.configuredTotal = configuredTotal
+    }
+}
+
+public struct PendingFeeCreation: Identifiable, Equatable, Sendable {
+    public let id: OperationID
+    public let draft: FeeInstallmentDraft
+    public let state: LocalOperationState
+    public init(id: OperationID, draft: FeeInstallmentDraft, state: LocalOperationState) {
+        self.id = id; self.draft = draft; self.state = state
+    }
 }
 
 /// Planned Fee demand, not client cash or a Transaction. The server resolves

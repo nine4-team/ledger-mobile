@@ -66,6 +66,38 @@ struct LiveInvoiceLocalReaderTests {
             return try LiveInvoicePowerSyncQuery.readAuthorized(transaction: local, accountId: account, projectId: project)
         }
     }
+    @Test func archivedFeeBrowsingPreservesSourcesButDeniesCreationAndWithdrawal() async throws {
+        try await withDatabase { db in
+            for sql in [
+                "INSERT INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES('client','account','Client','active',1,1,1)",
+                "UPDATE spike_projects SET display_name='Project',lifecycle='active',revision=1",
+                "INSERT INTO fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency,revision) VALUES('fee','account','project','category','Design fee','50','USD','1')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            let identities: [any SyncStreamDescription] = [
+                LiveInvoiceStreamIdentity(accountId: account, projectId: project),
+                ProjectExpenseStreamIdentity(accountId: account, projectId: project),
+                ProjectInvoicingChargeStreamIdentity(accountId: account, projectId: project)
+            ]
+            for identity in identities {
+                _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES(?,1,0,?,1000000)",
+                    parameters: [identity.name, "{\"account_id\":\"account\",\"project_id\":\"project\"}"])
+            }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,'{\"account_id\":\"account\"}',1000000)", parameters: nil)
+            let query = LiveInvoicePowerSyncQuery(database: db)
+            #expect(try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project).canCreate)
+            _ = try await db.execute(sql: "UPDATE spike_projects SET lifecycle='archived',revision=2", parameters: nil)
+            let archived = try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project)
+            #expect(!archived.canCreate)
+            #expect(archived.sources.candidates.map(\.description) == ["Design fee"])
+            await #expect(throws: (any Error).self) {
+                try await query.readCreationReview(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+            await #expect(throws: (any Error).self) {
+                try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project)
+            }
+        }
+    }
     @Test func creationReviewExcludesReservedPaidWithdrawnAndForeignSources() async throws {
         try await withDatabase { db in
             func candidates() async throws -> [LiveInvoiceContents.Line] {
@@ -110,6 +142,35 @@ struct LiveInvoiceLocalReaderTests {
             #expect(try await read(db).count == 1)
         }
     }
+    @Test(.timeLimit(.minutes(1))) func watchInvalidatesForCategoryAndCollectedHeaderChanges() async throws {
+        try await withDatabase { db in
+            let emissions = AsyncStream<String>.makeStream()
+            let watcher = Task {
+                defer { emissions.continuation.finish() }
+                try await LiveInvoicePowerSyncQuery(database: db).run(accountId: account, principalId: principal, projectId: project) { _ in
+                    do {
+                        let evidence = try await db.get(sql: "SELECT (SELECT count(*) FROM spike_budget_categories),(SELECT count(*) FROM collected_invoices)", parameters: nil) {
+                            try "\($0.getInt(index: 0)):\($0.getInt(index: 1))"
+                        }
+                        emissions.continuation.yield(evidence)
+                        return true
+                    } catch { return false }
+                }
+            }
+            var iterator = emissions.stream.makeAsyncIterator()
+            #expect(await iterator.next() == "0:0")
+            _ = try await db.execute(sql: "INSERT INTO spike_budget_categories(id,account_id,display_name) VALUES('category','account','Renamed')", parameters: nil)
+            var observed: String?
+            repeat { observed = await iterator.next() } while observed != nil && observed != "1:0"
+            #expect(observed == "1:0")
+            _ = try await db.execute(sql: "INSERT INTO collected_invoices(id,account_id,project_id,sealed) VALUES('collected','account','project',1)", parameters: nil)
+            repeat { observed = await iterator.next() } while observed != nil && observed != "1:1"
+            #expect(observed == "1:1")
+            watcher.cancel()
+            _ = await watcher.result
+        }
+    }
+
     private func withDatabase(_ body: (any PowerSyncDatabaseProtocol) async throws -> Void) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("live-invoice-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

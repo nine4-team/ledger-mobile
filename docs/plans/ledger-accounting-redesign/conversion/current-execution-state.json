@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1003,
+  "stateVersion": 1009,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Fee backend/app runtime now passed real local offline-create/reopen/upload/PowerSync/readback8596 /tmp/ledger-fee-live-sync.log (1.058s test). SQL one Fee, one operation, zero payments. Existing form located FinancesTabView.swift:684; replace Firebase save glue, retain controls. NEXT Fee browse/pending + existing form + MCP. Not user-ready. Evidence fee-demand-lifecycle. SQL1763 passed32828; advisors clean14570; full guard18 passed3845. Endpoint20260916071547 LOCAL direct/no history; no hosted Invoice/Fee deploy. Preserve absent-total vs zero, collected/pending cap and completed stream readiness. No context reruns. Invoice watch passed73068; MCP discovery/live PDF/integration/editing/manual/credit remain.37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
+    "immediateFollowup": "5917c561 saved Fee backend. Dirty reused form/browse/pending and archived read eligibility tested; evidence fee-demand-lifecycle. MCP create_fee_installment now wired: typecheck/focused4/full128 pass, real local HTTP39279 proves creation/replay/cap/denial/no Transaction. Script needs Node24 --import ./LedgerTargetMCP/node_modules/tsx/dist/loader.mjs with --expense --financial --fee-mcp. NEXT standalone Fee discovery/read MCP parity, integrated diff review/checkpoint; Fee editing remains unfinished. Previous real native sync/SQL1763/advisors/global guard passed; no context reruns. No whole Fee workflow completion. Endpoint20260916071547 LOCAL direct/no history; no hosted Invoice/Fee deploy. Invoice watch73068; MCP discovery/live PDF/integration/editing/manual/credit remain.37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
     "nextVerification": "CI35039310979 failed: Mac14/57/3skips, iOS cancelled. Existing workflow owners retain failures and unverified UI fixes. No duplicate dispatch."
   }
 }

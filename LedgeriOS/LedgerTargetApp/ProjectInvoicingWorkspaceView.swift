@@ -15,6 +15,16 @@ struct ProjectInvoicingWorkspaceView: View {
     @State private var invoices: [FrozenInvoiceContents]?
     @State private var liveInvoices: [LiveInvoiceContents]?
     @State private var pendingInvoices: [PendingInvoiceCreation] = []
+    @State private var feeReview: FeeBrowsingReview?
+    @State private var pendingFees: [PendingFeeCreation] = []
+    @State private var feeError: String?
+    private struct FeeCategoryChoice: Identifiable {
+        let id = UUID()
+        let categories: [FeeCreationCategory]
+    }
+    @State private var feeCategoryChoice: FeeCategoryChoice?
+    @State private var selectedFeeCategory: FeeCreationCategory?
+    @State private var feeFormState = FeeInstallmentEntryState()
     @State private var liveInvoiceError: String?
     @State private var invoiceError: String?
     @State private var invoiceFilter: InvoicePipelineFilter = .all
@@ -112,8 +122,33 @@ struct ProjectInvoicingWorkspaceView: View {
             }
             }
             if sourceFilter == .all || sourceFilter == .fees {
-            CollapsibleSection(title: "Fees", isExpanded: $feesExpanded) {
-                BillingEmptyRow("Canonical Fee browsing is not connected yet.")
+            CollapsibleSection(title: "Fees", isExpanded: $feesExpanded,
+                onAdd: feeReview?.canCreate == true ? { beginFeeCreation() } : nil) {
+                if let liveInvoiceError { BillingEmptyRow(liveInvoiceError) }
+                else if let feeError { BillingEmptyRow(feeError) }
+                else {
+                    ForEach(pendingFees.filter { search.isEmpty || $0.draft.label.localizedStandardContains(search) }) { pending in
+                        BillingCandidateRowPresentation(title: pending.draft.label, metadata: "Fee",
+                            amountText: amount(pending.draft.amount),
+                            statusLabel: pending.state == .rejected ? "Not saved to server — needs review"
+                                : pending.state == .applied ? "Saved — waiting for download" : "Saved on device — pending sync",
+                            statusColor: BrandColors.textSecondary, invoiceName: nil)
+                    }
+                    if let feeReview, let liveInvoices, let invoices {
+                        if let rows = try? ProjectFeeRow.compose(review: feeReview.sources, live: liveInvoices, paid: invoices) {
+                            let matching = rows.filter { $0.matches(search: search,
+                                availability: InvoicingAvailability(rawValue: availabilityFilter.rawValue)) }
+                            if matching.isEmpty && pendingFees.isEmpty { BillingEmptyRow("No matching Fees in downloaded data.") }
+                            ForEach(matching) { row in
+                                BillingCandidateRowPresentation(title: row.title, metadata: row.categoryName ?? "Fee",
+                                    amountText: amount(row.amount), statusLabel: row.availability.rawValue.capitalized,
+                                    statusColor: row.availability == .paid ? StatusColors.metText : BrandColors.textSecondary,
+                                    invoiceName: row.invoiceName)
+                            }
+                        } else { BillingEmptyRow("Fee history is unavailable. Please retry after sync.") }
+                    } else if let invoiceError { BillingEmptyRow(invoiceError) }
+                    else { ProgressView("Downloading Fees") }
+                }
             }
             }
             CollapsibleSection(title: "Invoices", isExpanded: $invoicesExpanded,
@@ -193,7 +228,28 @@ struct ProjectInvoicingWorkspaceView: View {
             }
         }
         .onChange(of: liveInvoiceError) { _, error in
-            if error != nil { creatingInvoice = false; invoiceFormState = InvoiceCreationFormState() }
+            if error != nil {
+                creatingInvoice = false; invoiceFormState = InvoiceCreationFormState()
+                feeCategoryChoice = nil; selectedFeeCategory = nil
+                feeFormState = FeeInstallmentEntryState()
+                feeReview = nil; pendingFees = []
+            }
+        }
+        .adaptivePresentation(item: $feeCategoryChoice, style: .selectionMenu) { choice in
+            ActionMenuSheet(title: "Choose Budget Category", items: choice.categories.map { category in
+                ActionMenuItem(id: category.id.rawValue, label: category.name, onPress: {
+                    feeCategoryChoice = nil; feeFormState = FeeInstallmentEntryState(); selectedFeeCategory = category
+                })
+            })
+        }
+        .adaptivePresentation(item: $selectedFeeCategory, style: .form) { category in
+            if let service = runtime as? any ProjectFeeInstallmentCreating {
+                FeeInstallmentEntry(service: service, accountId: accountId, projectId: projectId,
+                    category: category, currency: currency, state: feeFormState) { receipt in
+                    saveNotice = "Fee saved on this device (\(receipt.localState.rawValue))."
+                    feesExpanded = true
+                }
+            }
         }
         .onChange(of: expenses == nil) { _, unavailable in
             if unavailable, creatingExpense || recoveringExpense != nil {
@@ -248,7 +304,7 @@ struct ProjectInvoicingWorkspaceView: View {
             } catch { if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." } }
         }
         .task(id: projectId) {
-            liveInvoices = nil; pendingInvoices = []; liveInvoiceError = nil
+            liveInvoices = nil; pendingInvoices = []; feeReview = nil; pendingFees = []; feeError = nil; liveInvoiceError = nil
             guard let reader = runtime as? any ProjectLiveInvoiceReading else {
                 liveInvoiceError = "Live Invoices are not connected in this build."; return
             }
@@ -256,14 +312,39 @@ struct ProjectInvoicingWorkspaceView: View {
                 // Saved local intent is readable before network streams finish downloading.
                 pendingInvoices = try await (reader as? any ProjectInvoiceCreating)?
                     .readPendingInvoiceCreations(accountId: accountId, projectId: projectId) ?? []
+                pendingFees = try await (runtime as? any ProjectFeeInstallmentCreating)?
+                    .readPendingFeeCreations(accountId: accountId, projectId: projectId) ?? []
                 for try await value in reader.watchLiveInvoices(accountId: accountId, projectId: projectId) {
                     let pending = try await (reader as? any ProjectInvoiceCreating)?
                         .readPendingInvoiceCreations(accountId: accountId, projectId: projectId) ?? []
+                    let feePending = try await (runtime as? any ProjectFeeInstallmentCreating)?
+                        .readPendingFeeCreations(accountId: accountId, projectId: projectId) ?? []
+                    var review: FeeBrowsingReview?
+                    do {
+                        review = value == nil ? nil : try await (runtime as? any ProjectFeeInstallmentCreating)?
+                            .readFeeBrowsingReview(accountId: accountId, projectId: projectId)
+                        feeError = nil
+                    } catch { feeError = "Fee sources are unavailable." }
                     guard !Task.isCancelled else { return }
-                    liveInvoices = value; pendingInvoices = pending
+                    liveInvoices = value; pendingInvoices = pending; feeReview = review; pendingFees = feePending
                 }
                 if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." }
             } catch { if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." } }
+        }
+    }
+
+    private func beginFeeCreation() {
+        guard let service = runtime as? any ProjectFeeInstallmentCreating else { return }
+        Task { @MainActor in
+            do {
+                let categories = try await service.readFeeCreationCategories(accountId: accountId, projectId: projectId)
+                guard !Task.isCancelled, liveInvoiceError == nil else { return }
+                if let category = categories.first, categories.count == 1 {
+                    feeFormState = FeeInstallmentEntryState(); selectedFeeCategory = category
+                } else if categories.isEmpty {
+                    saveNotice = "No active Fee budget categories are available."
+                } else { feeCategoryChoice = FeeCategoryChoice(categories: categories) }
+            } catch { saveNotice = "Fee categories are unavailable. Wait for download or check access." }
         }
     }
 

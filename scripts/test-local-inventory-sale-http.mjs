@@ -48,6 +48,9 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
 const expenseMCP=process.argv.includes('--expense-mcp') ? await import('../LedgerTargetMCP/src/expenseCreation.ts') : null;
 const invoiceCreationMCP=process.argv.includes('--invoice-mcp') ? await import('../LedgerTargetMCP/src/invoiceCreation.ts') : null;
+const feeMCP=process.argv.includes('--fee-mcp') ? await import('../LedgerTargetMCP/src/feeCreation.ts') : null;
+assert.ok(!feeMCP || (process.argv.includes('--expense') && process.argv.includes('--financial')
+    && !process.argv.includes('--native-fee-create')), 'Fee MCP requires its own financial Expense fixture');
 assert.ok(!invoiceCreationMCP || (process.argv.includes('--expense') && process.argv.includes('--financial')
     && !process.argv.includes('--native-invoice-create')), 'Invoice MCP requires the separate financial Expense fixture');
 const invoiceMCP=process.argv.includes('--expense-mcp') && process.argv.includes('--expense-paid')
@@ -271,12 +274,32 @@ try {
             assert.equal(response.status,200);
             assert.equal((await response.json()).totalMinorUnits,intent.amountMinorUnits);
         }
-        if(process.argv.includes('--native-fee-create')) {
+        if(process.argv.includes('--native-fee-create') || feeMCP) {
             sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
               values(${q(key+'-fee-category')},${q(account)},'Design Fee','fee',2,1,1);
               insert into public.spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency,
                 created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
               values(${q(key+'-fee-cap')},${q(account)},${q(project)},${q(key+'-fee-category')},12345,'USD',now(),now(),1,1,${q(principal)});`);
+        }
+        if(feeMCP) {
+            const input={operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
+                payload:{projectId:project,installmentId:key+'-fee',categoryId:key+'-fee-category',
+                    label:'Design installment',amountMinorUnits:'12345',currency:'USD'}};
+            const request=feeMCP.makeFeeCreationRequest(input,context);
+            const service=new feeMCP.SupabaseFeeCreationService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+            const applied=await service.apply(request,context);
+            assert.equal(feeMCP.validateFeeCreationResult(applied,request).phase,'applied');
+            assert.deepEqual(await service.apply(request,context),applied);
+            await assert.rejects(service.apply(feeMCP.makeFeeCreationRequest({...input,
+                payload:{...input.payload,label:'Changed retry'}},context),context));
+            const excess=feeMCP.makeFeeCreationRequest({...input,operationUUID:randomUUID(),
+                payload:{...input.payload,installmentId:key+'-excess',amountMinorUnits:'1'}},context);
+            assert.equal(feeMCP.validateFeeCreationResult(await service.apply(excess,context),excess).errorCode,'fee_total_exceeded');
+            assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_create_fee_installment',{p_command:request.commandJSON})).status));
+            const foreign={...context,accountId:key+'-foreign-account'};
+            await assert.rejects(service.apply(feeMCP.makeFeeCreationRequest(input,foreign),foreign));
+            assert.equal(sql(`select count(*) from ledger_private.fee_installments where account_id=${q(account)}`),'1');
+            assert.equal(sql(`select amount_minor_units from ledger_private.fee_installments where id=${q(key+'-fee')}`),'12345');
         }
         if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
@@ -298,6 +321,13 @@ try {
         const anonymous=await call('/rest/v1/rpc/spike_create_expense',body);
         assert.ok([401,403].includes(anonymous.status));
         sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
+        if(feeMCP) {
+            const service=new feeMCP.SupabaseFeeCreationService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+            const request=feeMCP.makeFeeCreationRequest({operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
+                payload:{projectId:project,installmentId:key+'-removed',categoryId:key+'-fee-category',
+                    label:'Removed member',amountMinorUnits:'1',currency:'USD'}},context);
+            await assert.rejects(service.apply(request,context),error=>error.statusCode===403);
+        }
         assert.equal((await call('/rest/v1/rpc/spike_create_expense',body,token)).status,403);
         if(editRequest) await assert.rejects(expenseService.edit(editRequest,context),error=>error.statusCode===403);
         if(expenseRequest) await assert.rejects(expenseService.apply(expenseRequest,context),
@@ -315,7 +345,7 @@ try {
             const removed=await call('/functions/v1/verify-expense-attachment',{attachmentId:receiptAttachmentIds[0]},token);
             assert.equal(removed.status,404,'removed member cannot reuse verifier admission');
         }
-        console.log(JSON.stringify({authenticatedExpense:true,nativeFeeCreation:process.argv.includes('--native-fee-create'),invoiceCreationMCP:!!invoiceCreationMCP,exactInt64:true,replay:true,changedReplayDenied:true,
+        console.log(JSON.stringify({authenticatedExpense:true,feeCreationMCP:!!feeMCP,nativeFeeCreation:process.argv.includes('--native-fee-create'),invoiceCreationMCP:!!invoiceCreationMCP,exactInt64:true,replay:true,changedReplayDenied:true,
             noPayment:!process.argv.includes('--expense-paid'),anonymousDenied:true,removedMemberDenied:true,verifiedReceiptBytes:receiptAttachmentIds.length>0,
             nativeScheduledReceipt:process.argv.includes('--native-expense'),nativeOfflineEdit:process.argv.includes('--native-expense-edit'),mcpCommand:!!expenseRequest,
             seededPaidInvoice:process.argv.includes('--expense-paid'),directInvoiceMCP:!!invoiceReader,
