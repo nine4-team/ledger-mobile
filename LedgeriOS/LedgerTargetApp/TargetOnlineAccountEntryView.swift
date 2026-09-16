@@ -55,6 +55,23 @@ struct TargetOnlineAccountEntryView: View {
         self.workspace = workspace
     }
 
+    private func signOutFromEntry() async {
+        guard let entry, !loading else { return }
+        loading = true
+        defer { loading = false }
+        do {
+            try await entry.signOutWithoutDownloadedWork {
+                try await PropertyManagementReportDelivery.recoverStartupScratch(requireNoActiveSessions: true)
+            }
+            directory = nil
+            downloaded = nil
+            hasDownloadedAccounts = false
+            failure = nil
+        } catch {
+            failure = error.localizedDescription
+        }
+    }
+
     private struct Choice: Identifiable {
         let account: AccountSummary
         var id: AccountID { account.id }
@@ -101,8 +118,8 @@ struct TargetOnlineAccountEntryView: View {
                     AccountGatePresentation(accounts: directory.accounts.map(Choice.init),
                         isDiscovering: false, name: { $0.account.displayName.rawValue },
                         onSelect: { choice in Task { await select(choice.id, from: directory) } },
-                        onCreate: {}, onSignOut: {}, canCreateAccount: false, canSignOut: false)
-                    Text("Account creation is not available in this build. To sign out, open an Account and use Settings.")
+                        onCreate: {}, onSignOut: { Task { await signOutFromEntry() } }, canCreateAccount: false, canSignOut: true)
+                    Text("Account creation is not available in this build. Downloaded Account data must be reviewed in Settings before signing out.")
                         .font(.caption).foregroundStyle(.secondary).padding()
                 }
             } else if let entry {

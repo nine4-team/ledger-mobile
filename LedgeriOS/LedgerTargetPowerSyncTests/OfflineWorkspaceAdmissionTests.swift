@@ -162,6 +162,50 @@ struct OfflineWorkspaceAdmissionTests {
         }
     }
 
+    @Test func emptySessionCleanupRequiresExplicitPlanAndRecovers() async throws {
+        let memory = CategoryAuthTestStorage()
+        let store = makeStore(memory)
+        let user = UUID()
+        try store.selectIdentity(user)
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.unavailable) {
+            try await LedgerSessionEndCoordinator.end(targets: [], admissions: store, userId: user,
+                expectedWorkspaces: [], clearCachesAndEndProviderSession: {
+                    throw OfflineWorkspaceAdmissionStore.Failure.unavailable
+                })
+        }
+        let reopened = makeStore(memory)
+        #expect(try reopened.approvedSessionEndingRequests(user).isEmpty)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try reopened.requireIdentityAvailable(user)
+        }
+        try await LedgerSessionEndCoordinator.recover(admissions: reopened, userId: user,
+            locations: [], clearCachesAndEndProviderSession: {})
+        #expect(try reopened.pendingSessionEndingUsers().isEmpty)
+
+        try reopened.selectIdentity(user)
+        try reopened.beginSessionEnding(user, expectedWorkspaces: [])
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try await LedgerSessionEndCoordinator.recover(admissions: reopened, userId: user,
+                locations: [], clearCachesAndEndProviderSession: {
+                    Issue.record("A missing plan is not approved empty cleanup")
+                })
+        }
+    }
+
+    @Test func emptySessionCleanupCannotOmitDownloadedWork() async throws {
+        let store = makeStore(CategoryAuthTestStorage())
+        let grant = try admission()
+        try store.selectIdentity(grant.authorization.authUserId)
+        try store.remember(grant.authorization, account: grant.account)
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try await LedgerSessionEndCoordinator.end(targets: [], admissions: store,
+                userId: grant.authorization.authUserId, expectedWorkspaces: [],
+                clearCachesAndEndProviderSession: { Issue.record("Must not sign out with omitted work") })
+        }
+        #expect(try store.workspacesForSessionEnding(grant.authorization.authUserId) == [grant])
+        #expect(try store.pendingSessionEndingUsers().isEmpty)
+    }
+
     @Test func approvedWholeSessionIntentIsAtomicCompleteAndCannotBeReplaced() throws {
         let memory = CategoryAuthTestStorage()
         var rejectSave = false

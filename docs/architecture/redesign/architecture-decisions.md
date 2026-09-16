@@ -2266,6 +2266,17 @@ deployment, or new Project allocation policy was required.
 
 ### Session-ending shutdown boundary (2026-09-16, implementation in progress)
 
+Account-entry follow-up: the existing coordinator also accepts an explicitly
+persisted empty workspace plan for an identity with no downloaded Accounts.
+The admission store checks its complete local directory before saving that plan;
+an empty server membership response is not evidence of no local work. Recovery
+distinguishes an approved empty plan from a missing plan, performs cache/provider
+cleanup without database fences, and clears the identity marker last. The entry
+action refuses downloaded (including removed) Accounts and directs review through
+Settings; it does not authorize discarding retained work. This reuses the original
+Account gate and sign-out coordinator, not a second Auth-only bypass. Targeted
+native and UI verification are required before accepting this entry path.
+
 The existing target Settings now binds ordinary Sign Out to the live workspace's
 `SupabaseOnlineSignIn.sessionEnding` adapter. The workspace owner reuses its
 presentation stop path and the existing report scratch cleanup; successful

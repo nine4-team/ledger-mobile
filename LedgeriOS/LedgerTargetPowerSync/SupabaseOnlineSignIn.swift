@@ -9,7 +9,7 @@ import PowerSync
 @MainActor
 public final class SupabaseOnlineSignIn {
     public enum Failure: Error, LocalizedError, Equatable {
-        case busy, signInFailed, signUpFailed, accountLookupFailed, noSession, syncNotConfigured, sessionRecoveryFailed
+        case busy, signInFailed, signUpFailed, accountLookupFailed, noSession, syncNotConfigured, sessionRecoveryFailed, downloadedWorkRequiresReview
         public var errorDescription: String? {
             switch self {
             case .busy: "Please wait for the current sign-in attempt to finish."
@@ -19,6 +19,7 @@ public final class SupabaseOnlineSignIn {
             case .noSession: "Please sign in again."
             case .syncNotConfigured: "The PowerSync service is not configured for this build yet."
             case .sessionRecoveryFailed: "Ledger could not finish the previous sign-out. Retry before opening downloaded Accounts."
+            case .downloadedWorkRequiresReview: "This device has downloaded Account data. Open an Account and use Settings to review local work before signing out."
             }
         }
     }
@@ -81,6 +82,29 @@ public final class SupabaseOnlineSignIn {
     }
 
     public var hasStoredSession: Bool { client.currentSession != nil }
+
+    /// Entry-only logout must prove there is no downloaded work, including
+    /// removed Accounts. Never equate an empty server directory with that proof.
+    public func signOutWithoutDownloadedWork(
+        clearCaches: @escaping @MainActor @Sendable () async throws -> Void
+    ) async throws {
+        guard !inFlight else { throw Failure.busy }
+        guard let user = client.currentSession?.user else { throw Failure.noSession }
+        guard let offlineAdmissions else { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
+        try offlineAdmissions.requireIdentityAvailable(user.id)
+        guard try offlineAdmissions.workspacesForSessionEnding(user.id).isEmpty else {
+            throw Failure.downloadedWorkRequiresReview
+        }
+        inFlight = true
+        defer { inFlight = false }
+        let identity = boundIdentity(user.id)
+        try await LedgerSessionEndCoordinator.end(targets: [], admissions: offlineAdmissions,
+            userId: user.id, expectedWorkspaces: [], clearCachesAndEndProviderSession: {
+                try await clearCaches()
+                _ = try await identity.signOutThisDevice()
+            })
+        selectedDirectory = nil
+    }
 
     @discardableResult
     public func recoverPendingSessionEnd(environment: ValidatedLedgerEnvironment,

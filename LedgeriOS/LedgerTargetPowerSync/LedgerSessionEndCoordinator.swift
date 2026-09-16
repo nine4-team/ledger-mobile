@@ -21,8 +21,7 @@ enum LedgerSessionEndCoordinator {
         expectedWorkspaces: [OfflineWorkspaceAdmission],
         clearCachesAndEndProviderSession: @escaping @Sendable () async throws -> Void
     ) async throws {
-        guard !targets.isEmpty,
-              targets.allSatisfy({ $0.request.expectedSummary.principalId == targets[0].request.expectedSummary.principalId }),
+        guard targets.allSatisfy({ $0.request.expectedSummary.principalId == targets[0].request.expectedSummary.principalId }),
               Set(targets.map { $0.runtime.location.sessionScopeIdentity }).count == targets.count else {
             throw SessionEndingFailure.scopeMismatch
         }
@@ -51,7 +50,7 @@ enum LedgerSessionEndCoordinator {
                         accessCoordinator: LedgerWorkspaceAccessCoordinator = .shared,
                         clearCachesAndEndProviderSession: @escaping @Sendable () async throws -> Void) async throws {
         let requests = try await admissions.approvedSessionEndingRequests(userId)
-        guard !locations.isEmpty, locations.count == requests.count,
+        guard locations.count == requests.count,
               Set(locations.map(\.sessionScopeIdentity)).count == locations.count else {
             throw SessionEndingFailure.scopeMismatch
         }
@@ -69,6 +68,16 @@ enum LedgerSessionEndCoordinator {
             prepared.append(.init(request: request, location: location))
         }
         let targets = prepared
+        if targets.isEmpty {
+            // Explicitly persisted empty plan: there are no database fences or
+            // files to acquire/remove. Missing plans still fail above.
+            guard try await admissions.workspacesForSessionEnding(userId).isEmpty else {
+                throw SessionEndingFailure.summaryChanged
+            }
+            try await finishCleanup([], admissions: admissions, userId: userId,
+                finishProvider: clearCachesAndEndProviderSession)
+            return
+        }
         try await accessCoordinator.withClosedWorkspaces(locations.map(\.sessionScopeIdentity)) {
             // A competing completion cannot turn stale recovery state into new
             // deletion authority while this task was acquiring its fences.

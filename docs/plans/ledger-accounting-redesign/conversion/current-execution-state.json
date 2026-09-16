@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1226,
+  "stateVersion": 1229,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -61,10 +61,10 @@
     "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
     "activeProcesses": {},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Follow nextWorkflowDecision; leave private .native-pdf files untouched.",
+    "immediateFollowup": "Account-entry signout checkpoint after a2eb29f9:39 native +15 real-runtime tests and iPhone build PASS. Actual QA UI refuses downloaded work and returns to retained Account; entrySignOutInteraction owns evidence. Empty-local successful UI and macOS interaction still unverified, not waived. No test processes. NEXT implement approved zero-membership Account creation via existing gate: inspect source frozen behavior and current target schema, design idempotent ownership command; no new screen. Preserve private .native-pdf files; running target simulator remains at downloaded QA picker.",
     "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Committed session follow-up18208576: hosted82850 PASS, UI lifecycle/stale/sync/report tests, native report lifetime/recovery proof in owning stories. Read session-ending spec; do not promote whole-platform acceptance: macOS interaction and physical iOS protection remain unproven. Corrected stale Account-gate copy to direct users to Settings for sign-out; no control or behavior changed. NEXT review remaining Account-entry/onboarding outcome in existing checklist: Account creation is disabled, and gate-level sign-out is unavailable when no Account can be opened. Determine existing approved implementation/reuse path before implementing those gaps; do not create a replacement screen or another audit. No new API changes or tests launched this turn. Hosted QA Client retained in copy, no source edits; never print auth.json. No live processes. Preserve private .native-pdf files."
+    "nextWorkflowDecision": "Follow immediateFollowup for dirty Account-entry signout. Earlier session/report work committed18208576; evidence in owning stories. macOS interaction and physical-device protection remain unproven. Hosted QA Client retained only in isolated copy; never print auth.json. Account creation is next approved missing capability, not permission to rebuild its UI."
   }
 }

@@ -23,6 +23,46 @@ struct SupabaseCategoryManagementRPCTests {
         #expect(reopened.currentSession == nil)
     }
 
+    @Test @MainActor func entrySignOutUsesExplicitEmptyLocalDirectory() async throws {
+        let user = UUID()
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: user)
+        let memory = CategoryAuthTestStorage()
+        let admissions = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") },
+            write: { memory.store(key: "records", value: $0) }, requireNotRemoved: { _ in })
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", offlineAdmissions: admissions)
+        try await entry.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        try await entry.signOutWithoutDownloadedWork {
+            #expect(auth.currentSession != nil)
+            let pendingUsers = try admissions.pendingSessionEndingUsers()
+            #expect(pendingUsers == [user])
+        }
+        #expect(auth.currentSession == nil)
+        #expect(try admissions.pendingSessionEndingUsers().isEmpty)
+    }
+
+    @Test @MainActor func entrySignOutRefusesDownloadedAccountBeforeCacheCleanup() async throws {
+        let user = UUID()
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: user)
+        let memory = CategoryAuthTestStorage()
+        let admissions = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") },
+            write: { memory.store(key: "records", value: $0) }, requireNotRemoved: { _ in })
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", offlineAdmissions: admissions)
+        try await entry.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let access = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: user,
+            principalId: .init(validating: "principal"), accountId: .init(validating: "account"),
+            role: .employee, financialAccess: .full)
+        let account = try AccountSummary(id: access.accountId, displayName: .init(validating: "Downloaded"))
+        try admissions.remember(access, account: account)
+        await #expect(throws: SupabaseOnlineSignIn.Failure.downloadedWorkRequiresReview) {
+            try await entry.signOutWithoutDownloadedWork { Issue.record("Must not clear downloaded work") }
+        }
+        #expect(auth.currentSession?.user.id == user)
+        #expect(try admissions.pendingSessionEndingUsers().isEmpty)
+        #expect(try admissions.workspacesForSessionEnding(user).count == 1)
+    }
+
     @Test func localSignOutCannotEndAChangedIdentity() async throws {
         let original = UUID()
         let auth = authClient(storage: CategoryAuthTestStorage(), userId: original, nextUserId: UUID())

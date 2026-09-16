@@ -112,7 +112,7 @@ final class OfflineWorkspaceAdmissionStore {
               workspaceBindings.values.allSatisfy({ $0.count == 64 && $0.allSatisfy(\.isHexDigit) }) else {
             throw Failure.invalidRecord
         }
-        guard !requests.isEmpty, requests.count == expectedWorkspaces.count,
+        guard requests.count == expectedWorkspaces.count,
               expectedWorkspaces.allSatisfy({ workspace in
                   requests.filter { request in
                       let summary = request.expectedSummary
@@ -128,7 +128,7 @@ final class OfflineWorkspaceAdmissionStore {
     func approvedSessionEndingRequests(_ userId: UUID) throws -> [SessionEndRequest] {
         let record = try load()
         guard (record.endingUserIds ?? []).contains(userId),
-              let requests = record.endingPlans?[userId.uuidString]?.requests, !requests.isEmpty else {
+              let requests = record.endingPlans?[userId.uuidString]?.requests else {
             throw Failure.invalidRecord
         }
         return requests
