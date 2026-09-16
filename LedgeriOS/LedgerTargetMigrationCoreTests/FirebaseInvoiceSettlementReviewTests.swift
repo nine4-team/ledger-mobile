@@ -326,6 +326,12 @@ struct FirebaseInvoiceSettlementReviewTests {
             invoiceID: .init(validating: "target-mixed"), payment: mixedParameters,
             invoiceRevision: 1, sourceRevision: 1, historicalCategories: historicalCategories, currency: .init(validating: "USD"))
         #expect(mixedImport.p_expenses.count == 1 && mixedImport.p_fees.count == 1)
+        let orderedJSON = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(mixedImport.p_sources)) as? [[String: Any]])
+        #expect(orderedJSON.count == 2)
+        #expect((orderedJSON[0]["record"] as? [String: Any])?["id"] as? String == "target-expense")
+        #expect((orderedJSON[1]["record"] as? [String: Any])?["id"] as? String == "target-fee")
+        #expect(orderedJSON[1]["source_project_id"] as? String == "source-project")
+        #expect(orderedJSON.allSatisfy { $0["expense"] == nil && $0["fee"] == nil })
         #expect(mixedImport.p_fees[0].record.amount_minor_units == "50")
         #expect(mixedImport.p_fees[0].record.created_at == nil && mixedImport.p_fees[0].record.created_by_principal_id == nil)
         #expect(mixedImport.p_fees[0].source_bytes == "\\x" + (try feeSource.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())

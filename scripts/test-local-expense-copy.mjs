@@ -19,6 +19,8 @@ const m = fields => ({ mapValue: { fields } });
 const doc = (id, fields) => ({ name: `${account}/${id}`, fields });
 const snapshot = { account, sourceProject: 'ledger-nine4', documents: [
   doc(`projects/${project}`, { name: s('Synthetic Expense project'), clientName: s('Synthetic Client') }),
+  doc('presets/default/budgetCategories/da556858-1df8-40be-b10c-b15710d7cc9a',
+    { name: s('Synthetic Furnishings'), metadata: m({ categoryType: s('itemized') }) }),
   doc(`presets/default/budgetCategories/${category}`, { name: s('Synthetic category'), metadata: m({ categoryType: s('general') }) }),
   doc(`transactions/${expense}`, { projectId: s(project), type: s('purchase'), purchasedBy: s('design-business'),
     budgetCategoryId: s(category), amountCents: n('9007199254740993'), transactionDate: s('2024-02-29'),
@@ -45,6 +47,27 @@ try {
   const count = execFileSync('docker', ['exec', 'supabase_db_ledger_target_supabase_local', 'psql', '-U', 'postgres', '-d', 'postgres', '-Atc',
     `select count(*) from ledger_private.imported_expense_invoice_sources where source_invoice_id='${invoice}';`], { encoding: 'utf8' }).trim();
   assert.equal(count, '0', 'Rollback leaves no imported source');
+  const fee = `fee-${suffix}`, feeCategory = `fee-category-${suffix}`;
+  const paymentFields = snapshot.documents.find(row => row.name.endsWith(`/transactions/${payment}`)).fields;
+  const invoiceFields = snapshot.documents.find(row => row.name.endsWith(`/invoices/${invoice}`)).fields;
+  snapshot.documents.push(
+    doc(`presets/default/budgetCategories/${feeCategory}`, { name: s('Synthetic Fee category'), metadata: m({ categoryType: s('fee') }) }),
+    doc(`projects/${project}/feeInstallments/${fee}`, { label: s('Current Fee'), budgetCategoryId: s(feeCategory), amountCents: n(50) }));
+  paymentFields.amountCents = n('9007199254741043');
+  paymentFields.settlementInvoiceLineIds.arrayValue.values.push(s(`fee-line-${suffix}`));
+  invoiceFields.totalCents = n('9007199254741043');
+  invoiceFields.lines.arrayValue.values.push(m({ id: s(`fee-line-${suffix}`), amountCents: n(50), sign: n(1),
+    sourceType: s('feeInstallment'), sourceId: s(fee), snapshotName: s('Historical Fee'), budgetCategoryId: s(feeCategory) }));
+  writeFileSync(file, JSON.stringify(snapshot), { mode: 0o600 });
+  const mixed = execFileSync(path.join(binDir, 'LedgerLocalPaymentImport'), ['--check-project-copy', file], { encoding: 'utf8', timeout: 30000 });
+  assert.match(mixed, /Expense Invoices 1, Expenses 1, unresolved Transactions 0, unresolved Invoices 0/);
+  assert.equal(execFileSync('docker', ['exec', 'supabase_db_ledger_target_supabase_local', 'psql', '-U', 'postgres', '-d', 'postgres', '-Atc',
+    `select count(*) from ledger_private.imported_fee_sources where source_document_id='${fee}';`], { encoding: 'utf8' }).trim(), '0', 'Mixed Fee import rolls back');
+  snapshot.documents.splice(-2);
+  paymentFields.amountCents = n('9007199254740993');
+  paymentFields.settlementInvoiceLineIds.arrayValue.values.pop();
+  invoiceFields.totalCents = n('9007199254740993');
+  invoiceFields.lines.arrayValue.values.pop();
   snapshot.documents.find(row => row.name.endsWith(`/transactions/${expense}`)).fields.receiptImages =
     a([m({ url: s('https://example.invalid/private-receipt.jpg') })]);
   writeFileSync(file, JSON.stringify(snapshot), { mode: 0o600 });
@@ -100,7 +123,7 @@ try {
   assert.equal(remaining,'0','Receipt catalog and financial import both roll back');
   writeFileSync(path.join(mediaDirectory,hash(originals[0].object)),'corrupt');
   assert.throws(run,/Command failed/,'Changed local source bytes cannot be substituted by already-uploaded bytes');
-  console.log('PASS: actual Swift conversion → verified PDF/image Storage bytes → ordered receipt/Expense/Invoice SQL reconciliation → rollback; >2^53 amount, original timestamp, missing/corrupt media rejection.');
+  console.log('PASS: actual Swift Expense-only and mixed Fee/Expense conversion → verified PDF/image Storage bytes → source/receipt/Invoice SQL reconciliation → rollback; >2^53 amount, original timestamp, missing/corrupt media rejection.');
 } finally {
   if(uploaded.length) {
     const removed=await fetch('http://127.0.0.1:54321/storage/v1/object/ledger-attachments',{method:'DELETE',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({prefixes:uploaded}),signal:AbortSignal.timeout(10000)});

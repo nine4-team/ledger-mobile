@@ -3861,3 +3861,29 @@ The same three client table shapes are retained, so app behavior is unchanged.
 The 10×700 evaluator now passes (six parameter rows per query); 48 focused SQL
 checks pass. Actual replication, concurrent refresh, source truncation handling,
 fresh migration and category-withdrawal checks remain required before acceptance.
+
+## 2026-09-16 — Imported Fee creation metadata
+
+Extend the existing Expense import-evidence pattern to Fees: preserve unknown
+creation time/creator as null rather than inventing an operator identity or time.
+Normal Fee creation still supplies both fields. A deferred constraint permits
+missing metadata only with an immutable, operator-only source-evidence row linked
+to the imported Invoice in the same target Account/Project. Original Fee identity
+is scoped by source Account, Project and document, because Fee documents are
+Project-nested. Raw source bytes retain unknown fields and timestamp precision.
+
+This does not expose another app API, change Fee billing or waive paid locks.
+The local migration and ordinary-write denial checks pass the 59-file SQL suite
+(1874 assertions). The mixed atomic importer, positive evidence/retry/rollback
+tests, clean replay and advisors remain required; no hosted deployment occurred.
+
+The shared `import_invoice_sources` writer now accepts ordered complete Expense
+and Fee records. The legacy Expense entry point delegates to it, preserving its
+stored retry payload; there is one implementation of payment binding, insertion
+and freezing. Fee identity retains its original Project namespace. Mapping does
+not run live collection or create new payment evidence. Unsupported Item/manual
+and unresolved settlement histories remain excluded, not silently subtotaled.
+The synthetic Swift-to-SQL rollback bridge, duplicate-source denial, three
+observed concurrent retry/rollback cases and 104-migration clean replay pass;
+local advisors report no issues. These are local evidence, not production
+migration approval or full historical migration coverage.

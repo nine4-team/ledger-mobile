@@ -25,9 +25,19 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
             let created_at, created_by_principal_id: String?
         }
         let record: Record
-        let source_document_id, source_bytes: String
+        let source_document_id, source_project_id, source_bytes: String
     }
     package let p_fees: [Fee]
+    package enum Source: Encodable, Sendable {
+        case expense(Expense), fee(Fee)
+        package func encode(to encoder: Encoder) throws {
+            switch self {
+            case .expense(let value): try value.encode(to: encoder)
+            case .fee(let value): try value.encode(to: encoder)
+            }
+        }
+    }
+    package let p_sources: [Source]
     package let p_payment: FirebaseClientPaymentImportParameters
     package let p_source_account, p_source_invoice, p_invoice_bytes: String
 
@@ -71,7 +81,8 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
         }
         let fees = try mappedSources.compactMap { mapped -> Fee? in
             guard case .feeSourceMapped(let draft, let source, _, _) = mapped else { return nil }
-            guard case .map(let fields) = source.fields, let sourceID = source.documentPathSegments.last else {
+            guard case .map(let fields) = source.fields, source.documentPathSegments.count == 6,
+                  let sourceID = source.documentPathSegments.last else {
                 throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
             }
             let creator: String?
@@ -89,9 +100,19 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
                 amount_minor_units: String(draft.amount.minorUnits), currency: currency.rawValue,
                 revision: String(sourceRevision), sort_order: draft.sortOrder,
                 created_at: try creationTime(fields), created_by_principal_id: creator),
-                source_document_id: sourceID, source_bytes: bytes(try source.canonicalEvidenceData()))
+                source_document_id: sourceID, source_project_id: source.documentPathSegments[3],
+                source_bytes: bytes(try source.canonicalEvidenceData()))
         }
-        return Self(p_invoice: invoice, p_expenses: expenses, p_fees: fees, p_payment: payment,
+        var expenseIndex = 0, feeIndex = 0
+        let sources: [Source] = mappedSources.map { mapped in
+            if case .feeSourceMapped = mapped {
+                defer { feeIndex += 1 }
+                return .fee(fees[feeIndex])
+            }
+            defer { expenseIndex += 1 }
+            return .expense(expenses[expenseIndex])
+        }
+        return Self(p_invoice: invoice, p_expenses: expenses, p_fees: fees, p_sources: sources, p_payment: payment,
             p_source_account: review.settlement.invoice.accountScopeID,
             p_source_invoice: review.settlement.invoice.documentPathSegments.last!,
             p_invoice_bytes: bytes(try review.settlement.invoice.canonicalEvidenceData()))

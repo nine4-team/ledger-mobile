@@ -33,6 +33,79 @@ create function pg_temp.run_import(i jsonb default pg_temp.invoice_record(), e j
   p jsonb default pg_temp.payment_record(), b bytea default '\x01ff') returns jsonb language sql as $$
   select ledger_private.import_expense_invoice(i,e,p,'source-account','source-invoice',b)
 $$;
+select ledger_private.import_client_payment('mixed-payment','account-primary','expense-import-project','client-existing',
+  150,'USD','source-account','mixed-payment-source','\x02ff');
+create function pg_temp.mixed_invoice() returns jsonb language sql as $$
+  select pg_temp.invoice_record() || jsonb_build_object('invoice_id','mixed-invoice','purchase_id','mixed-payment',
+    'total_minor_units','150','lines',jsonb_build_array(
+      jsonb_build_object('id','mixed-fee-line','line_position',0,'source_kind','fee_installment','source_id','mixed-fee',
+        'item_id',null,'source_revision','1','category_id','category-design-fee','signed_amount_minor_units','50',
+        'description','Historical Fee','source_snapshot_json','{"feeInstallment":{"installmentId":"mixed-fee"}}'),
+      (pg_temp.invoice_record()->'lines'->0)||jsonb_build_object('id','mixed-expense-line','line_position',1,
+        'source_id','mixed-expense','signed_amount_minor_units','100',
+        'source_snapshot_json','{"expense":{"expenseId":"mixed-expense"}}')))
+$$;
+create function pg_temp.mixed_sources() returns jsonb language sql as $$
+  select jsonb_build_array(jsonb_build_object('source_document_id','mixed-fee-source','source_project_id','source-project',
+    'source_bytes','\x03ff','record',jsonb_build_object('id','mixed-fee','account_id','account-primary',
+      'project_id','expense-import-project','category_id','category-design-fee','label','Current Fee',
+      'amount_minor_units','50','currency','USD','revision','1','created_at',null,'created_by_principal_id',null)),
+    (pg_temp.expense_record()->0)||jsonb_build_object('source_document_id','mixed-expense-source',
+      'record',(pg_temp.expense_record()->0->'record')||jsonb_build_object('id','mixed-expense','final_amount_minor_units','100')))
+$$;
+create function pg_temp.run_mixed(s jsonb default pg_temp.mixed_sources(), b bytea default '\x04ff') returns jsonb language sql as $$
+  select ledger_private.import_invoice_sources(pg_temp.mixed_invoice(),s,
+    pg_temp.payment_record()||jsonb_build_object('p_id','mixed-payment','p_amount','150',
+      'p_source_document','mixed-payment-source','p_source_bytes','\x02ff'),'source-account','mixed-source-invoice',b)
+$$;
+select throws_ok($$select pg_temp.run_mixed(jsonb_set(pg_temp.mixed_sources(),'{1,record,account_id}','"account-other"'))$$,
+  '22023',null,'Invalid second source rejects complete mixed import');
+select is((select count(*) from ledger_private.fee_installments where id='mixed-fee'),0::bigint,
+  'Earlier Fee insertion rolls back when Expense fails');
+select throws_ok($$select pg_temp.run_mixed(b=>'\x')$$,'23514',null,'Late Invoice evidence failure rejects mixed import');
+select is((select count(*) from ledger_private.expenses where id='mixed-expense'),0::bigint,
+  'Late failure leaves no new Expense demand');
+select is((select count(*) from ledger_private.collected_invoices where id='mixed-invoice'),0::bigint,
+  'Late failure leaves no frozen Invoice');
+select lives_ok('select pg_temp.run_mixed()','Complete Fee and Expense import succeeds');
+select lives_ok('set constraints all immediate','Mixed source provenance satisfies deferred metadata guards');
+set constraints all deferred;
+select lives_ok('select pg_temp.run_mixed()','Exact mixed retry succeeds');
+select throws_ok($$select pg_temp.run_mixed(jsonb_set(pg_temp.mixed_sources(),'{0,record,label}','"Changed"'))$$,
+  '22000','Invoice import conflicts with retained evidence','Changed mixed retry is rejected');
+select is((select count(*) from ledger_private.collected_invoice_lines where invoice_id='mixed-invoice'),2::bigint,
+  'Mixed retry preserves exactly two lines');
+select is((select sum(signed_amount_minor_units) from ledger_private.collected_invoice_lines where invoice_id='mixed-invoice'),
+  150::numeric,'Mixed frozen amounts reconcile to the original payment');
+select is((select source_project_id from ledger_private.imported_fee_sources where fee_id='mixed-fee'),
+  'source-project','Fee provenance retains nested source Project');
+select ledger_private.import_client_payment('duplicate-mixed-payment','account-primary','expense-import-project','client-existing',
+  150,'USD','source-account','duplicate-payment-source','\x05ff');
+create function pg_temp.duplicate_mixed_source() returns jsonb language plpgsql as $$
+declare i jsonb:=pg_temp.mixed_invoice(); s jsonb:=pg_temp.mixed_sources();
+begin
+  i:=i||jsonb_build_object('invoice_id','duplicate-mixed-invoice','purchase_id','duplicate-mixed-payment');
+  i:=jsonb_set(i,'{lines,0}',(i->'lines'->0)||jsonb_build_object('id','duplicate-fee-line','source_id','duplicate-fee',
+    'source_snapshot_json','{"feeInstallment":{"installmentId":"duplicate-fee"}}'));
+  i:=jsonb_set(i,'{lines,1}',(i->'lines'->1)||jsonb_build_object('id','duplicate-expense-line','source_id','duplicate-expense',
+    'source_snapshot_json','{"expense":{"expenseId":"duplicate-expense"}}'));
+  s:=jsonb_set(s,'{0,record,id}','"duplicate-fee"');
+  s:=jsonb_set(s,'{1,record,id}','"duplicate-expense"');
+  return ledger_private.import_invoice_sources(i,s,pg_temp.payment_record()||jsonb_build_object(
+    'p_id','duplicate-mixed-payment','p_amount','150','p_source_document','duplicate-payment-source','p_source_bytes','\x05ff'),
+    'source-account','duplicate-source-invoice','\x06ff');
+end;
+$$;
+select throws_ok('select pg_temp.duplicate_mixed_source()','23505',null,
+  'Original Fee cannot be reimported under a new target identity and payment');
+select is((select count(*) from ledger_private.fee_installments where id='duplicate-fee'),0::bigint,
+  'Duplicate source rejects new Fee atomically');
+select is((select count(*) from ledger_private.expenses where id='duplicate-expense'),0::bigint,
+  'Duplicate Fee source also rolls back the accompanying Expense');
+select is((select count(*) from ledger_private.collected_invoices where id='duplicate-mixed-invoice'),0::bigint,
+  'Duplicate source leaves no second paid Invoice');
+select ok(not has_function_privilege(r,'ledger_private.import_invoice_sources(jsonb,jsonb,jsonb,text,text,bytea)','EXECUTE'),
+  r||' cannot invoke operator mixed import') from unnest(array['anon','authenticated','service_role']) r;
 select throws_ok($$select pg_temp.run_import(p=>jsonb_set(pg_temp.payment_record(),'{p_source_bytes}','"\\x00"'))$$,
   '22000',null,'Wrong payment evidence rejected before any Expense');
 select throws_ok($$select pg_temp.run_import(e=>'[]')$$,'22023',null,'Partial source mapping rejected');
@@ -47,6 +120,43 @@ select throws_ok($$select pg_temp.run_import(i=>jsonb_set(pg_temp.invoice_record
   '22023',null,'Typed source cannot disagree with Expense link');
 select lives_ok('select pg_temp.run_import()','Expense and paid Invoice import together');
 select lives_ok('select pg_temp.run_import()','Exact retry succeeds without duplication');
+create function pg_temp.unrelated_fee_evidence() returns void language plpgsql as $$
+begin
+  insert into ledger_private.fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency)
+    values('unrelated-fee','account-primary','expense-import-project','category-design-fee','Fee',50,'USD');
+  insert into ledger_private.imported_fee_sources values
+    ('unrelated-fee','expense-import-invoice','source-account','source-project','source-fee','\x00ff');
+  set constraints all immediate;
+end;
+$$;
+select throws_ok('select pg_temp.unrelated_fee_evidence()',
+  '23514','Unknown Fee creation metadata requires retained import evidence',
+  'Unrelated paid Invoice cannot justify unknown Fee metadata');
+select is((select count(*) from ledger_private.fee_installments where id='unrelated-fee'),0::bigint,
+  'Rejected evidence rolls back Fee insertion');
+select is((select count(*) from ledger_private.imported_fee_sources where fee_id='unrelated-fee'),0::bigint,
+  'Rejected evidence rolls back provenance insertion');
+select ledger_private.import_client_payment('fee-import-payment','account-primary','expense-import-project','client-existing',
+  50,'USD','source-account','source-fee-payment','\x01ff');
+insert into ledger_private.fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency)
+  values('fee-import-source','account-primary','expense-import-project','category-design-fee','Fee',50,'USD');
+select ledger_private.store_collected_invoice(jsonb_build_object(
+  'invoice_id','fee-import-invoice','invoice_revision','1','account_id','account-primary',
+  'project_id','expense-import-project','client_id','client-existing','purchase_id','fee-import-payment',
+  'currency','USD','total_minor_units','50','lines',jsonb_build_array(jsonb_build_object(
+    'id','fee-import-line','line_position',0,'source_kind','fee_installment','source_id','fee-import-source',
+    'item_id',null,'source_revision','1','category_id','category-design-fee','signed_amount_minor_units','50',
+    'description','Historical Fee','source_snapshot_json','{"feeInstallment":{"installmentId":"fee-import-source"}}'))));
+insert into ledger_private.imported_expense_invoice_sources values
+  ('fee-import-invoice','source-account','source-fee-invoice','\x01ff','{}');
+insert into ledger_private.imported_fee_sources values
+  ('fee-import-source','fee-import-invoice','source-account','source-project','source-fee','\x00ff');
+select lives_ok('set constraints all immediate','Matching frozen Fee and retained evidence permit unknown creator/time');
+set constraints all deferred;
+select throws_ok($$update ledger_private.imported_fee_sources set source_bytes='\x01' where fee_id='fee-import-source'$$,
+  '55000','Imported Invoice evidence is immutable','Fee provenance cannot be rewritten');
+select throws_ok($$delete from ledger_private.imported_fee_sources where fee_id='fee-import-source'$$,
+  '55000','Imported Invoice evidence is immutable','Fee provenance cannot be deleted');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((ledger_private.edit_expense(jsonb_build_object('operationId','edit-collected-expense',
   'accountId','account-primary','actorPrincipalId','principal-owner','projectId','expense-import-project',

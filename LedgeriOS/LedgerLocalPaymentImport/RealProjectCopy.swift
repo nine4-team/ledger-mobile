@@ -203,7 +203,7 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         sql += "update public.spike_transactions set source=\(q(try text(transaction,"source"))),notes=\(q(try text(transaction,"notes"))),payment_method=\(q(try text(transaction,"paymentMethod"))),transaction_date=\(q(date))::date,created_at_ms=\(try timestampMillisecondsSQL(transaction,"createdAt")),has_email_receipt=\(email),legacy_subtotal_minor_units=\(try integerSQL(transaction,"subtotalCents")),legacy_tax_rate_pct=\(try legacyTaxSQL(transaction)) where id=\(q(p.p_id));\n"
         eligible += 1
     }
-    var expenseInvoices = 0, importedExpenses = 0
+    var expenseInvoices = 0, importedExpenses = 0, importedFees = 0
     var excludedInvoices: [String:String] = [:]
     for invoice in records("invoices") where field(invoice,"projectId") == .string(selectedProject) {
         let sourceInvoiceID = invoice.documentPathSegments[3]
@@ -231,6 +231,17 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
                   case .string(let currentID) = field(source,"budgetCategoryId"),
                   let historical = categorySource(historicalID), let current = categorySource(currentID) else {
                 issue = "sourceOrHistoricalCategoryRequiresMapping"; break
+            }
+            if reviewed.issues == [.feeNotMapped] {
+                do {
+                    let fee = try review.mapFee(lineID: lineID, targetScope: scope,
+                        installmentID: .init(validating: id("fee", selectedProject + ":" + source.documentPathSegments.last!)),
+                        categories: [currentID: .init(validating: id("category", currentID))], currency: .init(validating: "USD"))
+                    mapped.append(.feeSourceMapped(fee.draft, original: source, invoice: review.settlement.invoice, line: reviewed.line))
+                    historicalCategories[historicalID] = try .init(validating: id("category", historicalID))
+                    requiredCategories[currentID] = current; requiredCategories[historicalID] = historical
+                    continue
+                } catch { issue = "feeSourceRequiresMapping"; break }
             }
             var receiptMappings: [FirebaseExpenseConversion.ReceiptMapping] = []
             if let copied = receiptPlan?.receipts.first(where: { $0.sourceID == source.documentPathSegments.last! }) {
@@ -315,15 +326,19 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         sql += "select ledger_private.import_client_payment(" + [payment.p_id,payment.p_account_id,payment.p_project_id,
             payment.p_client_id,payment.p_amount,payment.p_currency,payment.p_source_account,payment.p_source_document,payment.p_source_bytes]
             .map { q($0) }.joined(separator: ",") + ");\n"
-        sql += "select ledger_private.import_expense_invoice(\(q(String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(parameters.p_expenses),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(payment),as: UTF8.self)))::jsonb,\(q(parameters.p_source_account)),\(q(parameters.p_source_invoice)),\(q(parameters.p_invoice_bytes))::bytea);\n"
+        sql += "select ledger_private.import_invoice_sources(\(q(String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(parameters.p_sources),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(payment),as: UTF8.self)))::jsonb,\(q(parameters.p_source_account)),\(q(parameters.p_source_invoice)),\(q(parameters.p_invoice_bytes))::bytea);\n"
         let expenseJSON = String(decoding: try canonical(parameters.p_expenses),as: UTF8.self)
         let invoiceJSON = String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)
         sql += "do $$ begin if ledger_private.read_collected_invoice(\(q(account)),\(q(try id("invoice",sourceInvoiceID))))->'display_metadata' is distinct from (\(q(invoiceJSON))::jsonb)->'display_metadata' then raise exception 'Invoice display metadata reconciliation mismatch'; end if; end $$;\n"
         sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(expenseJSON))::jsonb) expected left join ledger_private.expenses e on e.id=expected->'record'->>'id' where to_jsonb(e) is distinct from to_jsonb(jsonb_populate_record(null::ledger_private.expenses,expected->'record'))) then raise exception 'Imported Expense field reconciliation mismatch'; end if; end $$;\n"
         sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(expenseJSON))::jsonb) expected where coalesce((select jsonb_agg(r.attachment_id order by r.position) from ledger_private.expense_receipt_attachments r where r.expense_id=expected->'record'->>'id'),'[]'::jsonb) is distinct from expected->'receipt_attachment_ids') then raise exception 'Expense receipt reconciliation mismatch'; end if; end $$;\n"
-        expenseInvoices += 1; importedExpenses += mapped.count
+        let feeJSON = String(decoding: try canonical(parameters.p_fees), as: UTF8.self)
+        sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(feeJSON))::jsonb) expected left join ledger_private.fee_installments f on f.id=expected->'record'->>'id' where to_jsonb(f) is distinct from to_jsonb(jsonb_populate_record(null::ledger_private.fee_installments,expected->'record'))) then raise exception 'Imported Fee field reconciliation mismatch'; end if; end $$;\n"
+        expenseInvoices += 1; importedExpenses += parameters.p_expenses.count; importedFees += parameters.p_fees.count
         excludedTransactions.removeValue(forKey: payments[0].documentPathSegments[3])
-        for source in review.lines.compactMap(\.source) { excludedTransactions.removeValue(forKey: source.documentPathSegments.last!) }
+        for source in review.lines.compactMap(\.source) where source.documentPathSegments.count == 4 && source.documentPathSegments[2] == "transactions" {
+            excludedTransactions.removeValue(forKey: source.documentPathSegments.last!)
+        }
     }
     // This partial copier already targets one explicitly reviewed source Account.
     // Preserve its reviewed Furnishings identity, never infer it from a display name
@@ -332,7 +347,13 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
     try require(FirebaseReviewedFurnishingsSource.matches(documents, accountID: sourceAccount,
         categoryID: furnishingsSourceID), "Reviewed Furnishings source missing, ambiguous or changed; mapping review required")
     let furnishingsID = try id("category", furnishingsSourceID)
-    try require(categories.contains(furnishingsID), "Reviewed Furnishings category was not imported")
+    if !categories.contains(furnishingsID) {
+        let definition = documents.first { $0.documentPathSegments == ["accounts", sourceAccount, "presets", "default", "budgetCategories", furnishingsSourceID] }!
+        let name = try text(definition, "name")
+        try require(!(name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, "Reviewed Furnishings name missing")
+        sql += "insert into public.spike_budget_categories(id,account_id,display_name,kind,visibility_class,presentation_order,lifecycle,is_system,excludes_from_overall_budget,created_at_ms,updated_at_ms) values(\(q(furnishingsID)),\(q(account)),\(q(name)),'itemized','company_financial',\(categories.count + 1),'active',false,false,1,1);\n"
+        categories.insert(furnishingsID)
+    }
     sql += "update public.spike_accounts set furnishings_category_id=\(q(furnishingsID)) where id=\(q(account)) and furnishings_category_id is null;\n"
     sql += "do $$ begin if (select furnishings_category_id from public.spike_accounts where id=\(q(account))) is distinct from \(q(furnishingsID)) then raise exception 'Furnishings identity reconciliation mismatch'; end if; end $$;\n"
     unresolved = excludedTransactions.count
@@ -340,6 +361,7 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
     // A labeled QA dataset is not a migrated Account. Retain the exact source
     // and exclusions before committing; never imply accounting completeness.
     sql += "do $$ begin if (select count(*) from public.spike_items where account_id=\(q(account)))<>\(items.count) or (select count(*) from public.spike_item_placements where account_id=\(q(account)) and start_evidence='import_observation')<>\(items.count) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='vendor_payment')<>\(eligible) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='firebase_client_payment')<>\(expenseInvoices) or (select count(*) from ledger_private.collected_invoices where account_id=\(q(account)))<>\(expenseInvoices) or (select count(*) from ledger_private.expenses where account_id=\(q(account)))<>\(importedExpenses) then raise exception 'Real copy reconciliation mismatch'; end if; end $$;\n"
+    sql += "do $$ begin if (select count(*) from ledger_private.fee_installments where account_id=\(q(account)))<>\(importedFees) then raise exception 'Imported Fee count reconciliation mismatch'; end if; end $$;\n"
     sql += apply ? "commit;\n" : "rollback;\n"
     let env = ProcessInfo.processInfo.environment
     try require((env["DOCKER_HOST"] ?? "").isEmpty && (env["DOCKER_CONTEXT"] ?? "").isEmpty, "No remote Docker overrides")
@@ -387,12 +409,12 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
             "accountID":account, "qaPrincipalID":owner, "selectedSourceProject":selectedProject,
             "projects":projects.count,"spaces":spaces.count,"items":items.count,"vendorPurchases":eligible,
             "excludedTransactions":excludedTransactions,"excludedInvoices":excludedInvoices,
-            "expenseInvoices":expenseInvoices,"expenses":importedExpenses,
+            "expenseInvoices":expenseInvoices,"expenses":importedExpenses,"fees":importedFees,
             "verifiedExpenseReceiptObjects":acceptedReceiptObjects.count,
             "limitations":["Not accounting/migration acceptance evidence",
                 "Related Projects use separate QA Client identities, not approved production Client mappings",
                 "Category visibility is restricted to company financial access for this QA copy",
-                "Only explicitly verified Expense receipts are loaded here; other media, full historical relationships, mixed-source/unresolved billing histories and remaining metadata are not loaded",
+                "Only explicitly verified Expense receipts are loaded here; other media, full historical relationships, Item/manual Invoice sources, unresolved settlements and remaining metadata are not loaded",
                 "Physical record timestamps currently describe target creation; original timestamps remain in source.json",
                 "No balance adjustment or tax allocation invented; nonphysical receipt lines await source mapping"]]
         try retain(JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys]),

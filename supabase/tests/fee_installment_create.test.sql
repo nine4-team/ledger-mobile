@@ -20,7 +20,19 @@ select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-00000000
 set local role authenticated;
 select is((public.spike_create_fee_installment(pg_temp.fee_command('fee-first'))).phase,'applied','Authenticated endpoint permits creation without cap');
 select is((public.spike_create_fee_installment(pg_temp.fee_command('fee-first'))).phase,'applied','Identical retry returns original');
+set constraints ledger_private.fee_creation_evidence immediate;
 reset role;
+select ok(not has_table_privilege('authenticated','ledger_private.imported_fee_sources','SELECT,INSERT,UPDATE,DELETE')
+  and not has_table_privilege('service_role','ledger_private.imported_fee_sources','SELECT,INSERT,UPDATE,DELETE'),
+  'Import evidence remains operator-only');
+select throws_ok($$insert into ledger_private.fee_installments
+  (id,account_id,project_id,category_id,label,amount_minor_units,currency,created_at,created_by_principal_id)
+  values('fee-unknown-time','account-primary','fee-create-project','category-design-fee','Fee',1,'USD',null,'principal-owner')$$,
+  '23514','Unknown Fee creation metadata requires retained import evidence','Missing creation time requires import evidence');
+select throws_ok($$insert into ledger_private.fee_installments
+  (id,account_id,project_id,category_id,label,amount_minor_units,currency,created_at,created_by_principal_id)
+  values('fee-unknown-creator','account-primary','fee-create-project','category-design-fee','Fee',1,'USD',now(),null)$$,
+  '23514','Unknown Fee creation metadata requires retained import evidence','Missing creator requires import evidence');
 select is((select count(*) from ledger_private.fee_installments where project_id='fee-create-project'),1::bigint,'Retry inserts once');
 select throws_ok($$select ledger_private.create_fee_installment(pg_temp.fee_command('fee-first','101'))$$,
   '23505','Operation identity conflict','Changed retry rejected');
