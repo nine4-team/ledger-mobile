@@ -28,6 +28,8 @@ struct ProjectInvoicingChargePowerSyncQuery: Sendable {
                 identity: ProjectInvoicingChargeStreamIdentity(accountId: accountId, projectId: projectId))
             _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: transaction,
                 identity: PhysicalIdentity(accountId: accountId))
+            _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: transaction,
+                identity: LiveInvoiceStreamIdentity(accountId: accountId, projectId: projectId))
             let rows = try ProjectInvoicingItemLocalReader.readAuthorizedCharges(transaction: transaction,
                 accountId: accountId, principalId: principalId, projectId: projectId)
             return try ProjectInvoicingItems(accountId: accountId, projectId: projectId, rows: rows)
@@ -35,6 +37,16 @@ struct ProjectInvoicingChargePowerSyncQuery: Sendable {
     }
 
     func run(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
+             receive: @Sendable @escaping (ProjectInvoicingItems?) async -> Bool) async throws {
+        let live = LiveInvoiceStreamIdentity(accountId: accountId, projectId: projectId)
+        try await withOwnedSyncStreamWatch(subscribe: {
+            try await database.syncStream(name: live.name, params: live.parameters).subscribe()
+        }, observe: {
+            try await runCharges(accountId: accountId, principalId: principalId, projectId: projectId, receive: receive)
+        })
+    }
+
+    private func runCharges(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
              receive: @Sendable @escaping (ProjectInvoicingItems?) async -> Bool) async throws {
         let financial = ProjectInvoicingChargeStreamIdentity(accountId: accountId, projectId: projectId)
         let physical = PhysicalIdentity(accountId: accountId)
@@ -55,6 +67,8 @@ struct ProjectInvoicingChargePowerSyncQuery: Sendable {
                     UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
+                    UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoice_memberships)
+                    UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoices)
                     """, parameters: Array(repeating: accountId.rawValue, count: 9)) { try $0.getInt(index: 0) }
                 for try await _ in changes {
                     try Task.checkCancellation()

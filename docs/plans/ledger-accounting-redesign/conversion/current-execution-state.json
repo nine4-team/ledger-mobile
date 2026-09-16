@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1158,
+  "stateVersion": 1165,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "58103 Sent Expense actual sync/reopen PASS1/.700s; Created74369 PASS saved a957d159. Both results under project-invoicing-workspace.expenseStatusActualSync. NEXT remaining approved Invoicing integration (mixed sources), not repeated single-Expense tests. Sent action O-034, collection O-033 and cancellation O-070 remain policy-gated. No hosted changes/push; no live process."
+    "nextWorkflowDecision": "Item/Expense status batch verified locally:21533 iPhone PASS1/34.912s;14281 Item actual sync/history/reopen PASS1/.739s;88451 mixed Expense/Fee actual sync/reopen PASS. Owner project-invoicing-workspace.itemStatusIntegrationProgress has commands and exact evidence. NEXT remaining canonical Item credit/Invoicing source integration, checking owning policy blockers before changes; no repeated status test passes. No live processes, hosted changes or push."
   }
 }

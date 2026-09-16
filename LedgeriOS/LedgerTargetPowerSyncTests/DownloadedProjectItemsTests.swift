@@ -73,7 +73,29 @@ struct DownloadedProjectItemsTests {
                 try await query.read(accountId: account, principalId: principal, projectId: project)
             }
             _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,'{\"account_id\":\"account\"}',1000000)", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_live_invoices',1,0,'{\"account_id\":\"account\",\"project_id\":\"project\"}',1000000)", parameters: nil)
             #expect(try await query.read(accountId: account, principalId: principal, projectId: project).rows.count == 1)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).rows.first?.availability == .available)
+            _ = try await db.execute(sql: "INSERT INTO live_invoice_memberships(id,account_id,invoice_id,source_kind,source_id,position) VALUES('member','account','live','item','charge',0)", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "INSERT INTO live_invoices(id,account_id,project_id,status,name,revision) VALUES('live','account','project','created','INV-ITEM',1)", parameters: nil)
+            let created = try #require(try await query.read(accountId: account, principalId: principal, projectId: project).rows.first)
+            #expect(created.availability == .created && created.invoiceName == "INV-ITEM")
+            #expect(created.occurrence.phase.invoiceId?.rawValue == "live")
+            #expect(created.id.rawValue == "charge" && created.occurrence.itemId.rawValue == "charged")
+            _ = try await db.execute(sql: "UPDATE live_invoices SET status='sent' WHERE id='live'", parameters: nil)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).rows.first?.availability == .sent)
+            _ = try await db.execute(sql: "INSERT INTO live_invoice_memberships(id,account_id,invoice_id,source_kind,source_id,position) VALUES('duplicate','account','live','item','charge',1)", parameters: nil)
+            await #expect(throws: ProjectInvoicingItemsFailure.duplicateOccurrence) {
+                try await query.read(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "DELETE FROM live_invoice_memberships", parameters: nil)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).rows.first?.availability == .available)
             _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET active=0 WHERE stream_name='project_invoicing_item_charges'", parameters: nil)
             await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
                 try await query.read(accountId: account, principalId: principal, projectId: project)

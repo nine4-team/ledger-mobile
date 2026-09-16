@@ -722,12 +722,22 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         return []
     }
     func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
-        try ProjectInvoicingItems(accountId: accountId, projectId: projectId, rows: [])
+        let rows: [ProjectInvoicingItem] = try ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-invoice-statuses")
+            ? [InvoicingAvailability.available, .created, .sent].map { status in
+                try .init(occurrence: .init(id: .init(validating: "charge-\(status.rawValue)"), accountId: accountId,
+                    projectId: projectId, itemId: .init(validating: "item-\(status.rawValue)"), polarity: .charge,
+                    phase: status == .available ? .availableToInvoice : .onLiveInvoice(invoiceId: .init(validating: "invoice-\(status.rawValue)"))),
+                    amount: .init(minorUnits: 100, currency: .init(validating: "USD")), availability: status,
+                    title: "\(status.rawValue.capitalized) chair", invoiceName: status == .available ? nil : "INV-\(status.rawValue)")
+            } : []
+        return try ProjectInvoicingItems(accountId: accountId, projectId: projectId, rows: rows)
     }
     func watchInvoicingCharges(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectInvoicingItems?, Error> {
         AsyncThrowingStream { continuation in
-            do { continuation.yield(try ProjectInvoicingItems(accountId: accountId, projectId: projectId, rows: [])) }
-            catch { continuation.finish(throwing: error) }
+            Task {
+                do { continuation.yield(try await readInvoicingCharges(accountId: accountId, projectId: projectId)) }
+                catch { continuation.finish(throwing: error) }
+            }
         }
     }
     func readExpenses(accountId: AccountID, projectId: ProjectID) async throws -> ProjectExpenses {

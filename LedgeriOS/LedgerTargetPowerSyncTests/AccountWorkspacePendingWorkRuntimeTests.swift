@@ -1295,12 +1295,17 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             if Set(snapshot.local.rows.map { $0.id.rawValue }).isSuperset(of: [source, destination]) { break }
         }
         var originals: [ProjectInvoicingItems] = []
-        for (project, expected, amount) in [(source, InvoicingAvailability.paid, Int64(900)), (destination, .available, Int64(200))] {
+        let currentStatus: InvoicingAvailability = env["LEDGER_HISTORY_LIVE_INVOICE"] == "1" ? .sent : .available
+        for (project, expected, amount) in [(source, InvoicingAvailability.paid, Int64(900)), (destination, currentStatus, Int64(200))] {
             var found = false
             let projectId = try ProjectID(validating: project)
             for try await snapshot in runtime.watchInvoicingCharges(accountId: context.accountId, projectId: projectId) {
                 guard let snapshot, let row = snapshot.rows.first(where: { $0.occurrence.itemId.rawValue == item }) else { continue }
                 #expect(row.amount.minorUnits == amount && row.availability == expected)
+                if expected == .sent {
+                    #expect(row.invoiceName == "Current sale Invoice")
+                    #expect(row.occurrence.phase.kind == .onLiveInvoice)
+                }
                 originals.append(snapshot); found = true; break
             }
             #expect(found)
@@ -1373,7 +1378,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         let source = try #require(original)
         liveStage("Expense downloaded")
-        #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max))
+        #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max - (env["LEDGER_INVOICE_LOCAL_MIXED"] == "1" ? 1 : 0)))
         #expect(source.receiptLines.count == 1)
         if env["LEDGER_FEE_LOCAL_CREATE"] == "1" {
             guard let category = env["LEDGER_FEE_LOCAL_CATEGORY"], !category.isEmpty else { throw RuntimeInjectedFailure() }
@@ -1442,7 +1447,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             let expected = try #require(downloaded)
             liveStage("live Invoice downloaded")
             #expect(expected.count == 1)
-            #expect(expected[0].total == source.finalAmount)
+            if env["LEDGER_INVOICE_LOCAL_MIXED"] == "1" {
+                #expect(expected[0].total.minorUnits == Int64.max)
+                #expect(expected[0].lines.count == 2)
+                #expect(expected[0].lines[1].selection.reviewedAmount.minorUnits == 1)
+            } else { #expect(expected[0].total == source.finalAmount) }
             #expect(expected[0].lines[0].selection.source == .expense(source.expenseId))
             #expect(expected[0].name == "Live sync Invoice")
             let expectedAvailability: InvoicingAvailability = env["LEDGER_INVOICE_LOCAL_SENT"] == "1" ? .sent : .created

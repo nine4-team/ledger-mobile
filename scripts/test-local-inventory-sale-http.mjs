@@ -15,6 +15,9 @@ const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
 assert.ok(!process.argv.includes('--native-return') || process.argv.includes('--native'), '--native-return requires --native');
 const returnScale=process.argv.includes('--return-scale')?700:1;
+const mixedInvoice = process.argv.includes('--invoice-mixed');
+assert.ok(!mixedInvoice || (process.argv.includes('--native-live-invoice') && !process.argv.includes('--native-invoice-create')
+    && !process.argv.includes('--invoice-revise')), 'Mixed read fixture requires seeded live Invoice');
 assert.ok(!process.argv.includes('--invoice-sent') || (process.argv.includes('--native-live-invoice')
     && !process.argv.includes('--native-invoice-create') && !process.argv.includes('--invoice-revise')),
     'Sent read fixture requires a seeded live Invoice, not creation/revision testing');
@@ -130,6 +133,8 @@ try {
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--invoice-sent')?{LEDGER_INVOICE_LOCAL_SENT:'1'}:{}),
+                ...(mixedInvoice?{LEDGER_INVOICE_LOCAL_MIXED:'1'}:{}),
+                ...(process.argv.includes('--native-history-invoice')?{LEDGER_HISTORY_LIVE_INVOICE:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
@@ -180,7 +185,7 @@ try {
           values(${q(expenseCategory)},${q(account)},'Delivery','general',1,1,1)`);
         const intent={operationId:key+'-expense-op',accountId:account,actorPrincipalId:principal,
           projectId:project,expenseId:expense,contractVersion:'expense-create-v1',createdAtMs:'1788523200000',
-          vendor:'Original vendor',date:'2024-02-29',amountMinorUnits:'9223372036854775807',currency:'USD',
+          vendor:'Original vendor',date:'2024-02-29',amountMinorUnits:mixedInvoice?'9223372036854775806':'9223372036854775807',currency:'USD',
           categoryId:expenseCategory,notes:'Source notes',receiptAttachmentIds,receiptLines:[
             {id:key+'-line',description:'Delivery',magnitudeMinorUnits:'25',currency:'USD',effect:'increase',quantity:null}]};
         let expenseRequest, expenseService;
@@ -287,6 +292,14 @@ try {
                 createdAtMs:'1788523200000',name:'Live sync Invoice',notes:'External delivery',
                 sources:[{kind:'expense',sourceId:expense,expectedRevision:'1',amountMinorUnits:intent.amountMinorUnits,currency:intent.currency}]};
             const createBody = {p_command:JSON.stringify(command)};
+            if(mixedInvoice) {
+                sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
+                  values(${q(key+'-mixed-category')},${q(account)},'Design Fee','fee',2,1,1);
+                  insert into ledger_private.fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency,created_at,created_by_principal_id)
+                  values(${q(key+'-mixed-fee')},${q(account)},${q(project)},${q(key+'-mixed-category')},'Design fee',1,'USD',now(),${q(principal)});`);
+                command.sources.push({kind:'fee_installment',sourceId:key+'-mixed-fee',expectedRevision:'1',amountMinorUnits:'1',currency:'USD'});
+                createBody.p_command=JSON.stringify(command);
+            }
             let mcpResult;
             if (invoiceCreationMCP) {
                 const request = invoiceCreationMCP.makeInvoiceCreationRequest({operationUUID:randomUUID(),
@@ -312,7 +325,7 @@ try {
             const response = await call('/rest/v1/rpc/spike_read_live_invoice',
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
             assert.equal(response.status,200);
-            assert.equal((await response.json()).totalMinorUnits,intent.amountMinorUnits);
+            assert.equal((await response.json()).totalMinorUnits,mixedInvoice?'9223372036854775807':intent.amountMinorUnits);
             if (process.argv.includes('--invoice-revise')) {
                 const edit = {...command, operationId:key+'-invoice-revision', contractVersion:'invoice-revise-created-v1',
                     expectedRevision:'1', name:'Revised Invoice'};
@@ -490,6 +503,17 @@ try {
         assert.equal(history(),before);
         if(process.argv.includes('--native-history')) {
             assert.ok(process.argv.includes('--financial'),'Historical financial read requires authorized fixture');
+            if(process.argv.includes('--native-history-invoice')) {
+                const command={operationId:key+'-history-invoice-op',accountId:account,actorPrincipalId:principal,
+                    projectId:project,clientId:client,invoiceId:key+'-history-live',contractVersion:'invoice-create-v1',
+                    createdAtMs:'1788523200000',name:'Current sale Invoice',notes:'Synthetic Sent read fixture',
+                    sources:[{kind:'item',sourceId:originItem+'-charge',expectedRevision:'1',amountMinorUnits:'200',currency:'USD'}]};
+                const response=await call('/rest/v1/rpc/spike_create_invoice',{p_command:JSON.stringify(command)},token);
+                assert.equal(response.status,200,await response.clone().text());
+                assert.equal((await response.json()).result_code,'invoice_created');
+                sql(`update ledger_private.live_invoices set status='sent' where id=${q(command.invoiceId)}`);
+                assert.equal(history(),before,'Live membership must not rewrite earlier paid history');
+            }
             runNative('invoicingHistoricalLiveReplication',sourceProject,originItem);
             assert.equal(history(),before);
         }

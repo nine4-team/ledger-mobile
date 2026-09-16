@@ -1274,7 +1274,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testExpenseInvoiceStatusFilters() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-statuses"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-statuses", "--ledger-ui-test-item-invoice-statuses"]
         app.launch(); defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
@@ -1295,6 +1295,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
                 } else {
                     XCTAssertFalse(row.exists)
                 }
+            }
+        }
+        app.buttons["Items"].firstMatch.tap()
+        for status in ["Available", "Created", "Sent"] {
+            app.buttons["Filter receivables"].tap()
+            app.buttons[status == "Created" ? "On Created Invoice" : status].tap()
+            app.buttons["Close menu"].tap()
+            for candidate in ["Available", "Created", "Sent"] {
+                let title = app.staticTexts["\(candidate) chair"]
+                if candidate == status { XCTAssertTrue(title.waitForExistence(timeout: 5)) }
+                else { XCTAssertFalse(title.exists) }
             }
         }
     }
