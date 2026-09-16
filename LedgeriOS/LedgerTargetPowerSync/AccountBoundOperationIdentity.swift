@@ -10,6 +10,7 @@ enum AccountBoundOperationFamily: String, Sendable {
     case spaceChecklistRevision = "space-checklist-revision"
     case categoryManagement = "category-management"
     case inventorySale = "inventory-sale"
+    case itemPriceEdit = "item-price-edit"
     case uninvoicedReturn = "uninvoiced-return"
     case expenseCreation = "expense-create"
     case expenseEdit = "expense-edit"

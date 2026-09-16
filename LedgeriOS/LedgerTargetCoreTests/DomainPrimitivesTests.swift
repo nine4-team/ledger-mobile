@@ -4,6 +4,17 @@ import Testing
 
 @Suite("Exact Money and Domain Identity")
 struct DomainPrimitivesTests {
+    @Test func nonnegativePriceEntryPreservesZeroAndExactAmounts() throws {
+        let usd = try CurrencyCode(validating: "USD")
+        for value in ["0", "0.00", "$0.00", ".0"] {
+            #expect(try Money.parseNonnegativeEntry(value, currency: usd).minorUnits == 0)
+            #expect(throws: Money.EntryFailure.self) { try Money.parsePositiveEntry(value, currency: usd) }
+        }
+        #expect(try Money.parseNonnegativeEntry("92233720368547758.07", currency: usd).minorUnits == Int64.max)
+        for value in ["", ".", "$", "-1", "1.001", "92233720368547758.08", "1,23"] {
+            #expect(throws: Money.EntryFailure.self) { try Money.parseNonnegativeEntry(value, currency: usd) }
+        }
+    }
     @Test("Typed IDs and exact same-currency Money remain deterministic")
     func validPrimitivesAndArithmetic() throws {
         let identifiers = try Self.identifiers()

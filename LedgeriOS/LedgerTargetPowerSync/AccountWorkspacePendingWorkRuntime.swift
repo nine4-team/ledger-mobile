@@ -191,6 +191,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case archiveProject
     case manageCategories
     case sellInventoryItems
+    case editItemPrice
     case returnUninvoicedItems
     case createExpense
     case editExpense
@@ -238,6 +239,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case budgetCategories
     case categoryOperations
     case inventorySaleOperation
+    case itemPriceEditOperation
     case uninvoicedReturnOperation
     case spaceAssignmentDestinations
     case transferDestinations
@@ -583,6 +585,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
     let categoryManagementStore: CategoryManagementPowerSyncStore
     let inventorySaleStore: InventorySalePowerSyncStore
+    let itemPriceEditStore: ItemPriceEditPowerSyncStore
     let uninvoicedReturnStore: ReturnUninvoicedItemsPowerSyncStore
     let spaceChecklistRevisionStore:
         any AccountWorkspaceSpaceChecklistRevisionStoring
@@ -674,6 +677,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             accessFence: accessFence, isDirectoryComplete: categoryDirectoryIsComplete, now: now
         )
         inventorySaleStore = InventorySalePowerSyncStore(database: structuredDatabase,
+            accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
+        itemPriceEditStore = ItemPriceEditPowerSyncStore(database: structuredDatabase,
             accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
         uninvoicedReturnStore = ReturnUninvoicedItemsPowerSyncStore(database: structuredDatabase,
             accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
@@ -798,6 +803,27 @@ actor AccountWorkspacePendingWorkRuntime {
     func inventorySaleStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
         try await withFiniteLease(.sellInventoryItems) { resources in
             try await resources.inventorySaleStore.status(operationId)
+        }
+    }
+
+    func itemPriceEditStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await withFiniteLease(.editItemPrice) { try await $0.itemPriceEditStore.status(operationId) }
+    }
+
+    func reviewItemPrice(project: ProjectID, item: ItemID, requested: Money) async throws -> EditUncollectedItemPriceCommand.Payload {
+        try await withFiniteLease(.editItemPrice) {
+            try await $0.itemPriceEditStore.review(project: project, item: item, requested: requested)
+        }
+    }
+
+    func editItemPrice(_ payload: EditUncollectedItemPriceCommand.Payload, operationUUID: UUID,
+                       capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.editItemPrice) { resources in
+            let command = try EditUncollectedItemPriceCommand(
+                operationId: ItemPriceEditOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                accountId: resources.accountId, actorPrincipalId: resources.principalId,
+                capturedAt: capturedAt, payload: payload)
+            return try await resources.itemPriceEditStore.submit(command)
         }
     }
 
@@ -2483,6 +2509,18 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in }, makeStream: { $0.inventorySaleStore.watch(operationId) })
     }
 
+    func startItemPriceEditWatch(id: UUID, operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot?, Error>.Continuation) {
+        startStream(id: id, operation: .itemPriceEditOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.itemPriceEditStore.watch(operationId) })
+    }
+
+    func startItemPriceReviewWatch(id: UUID, project: ProjectID, item: ItemID,
+        continuation: AsyncThrowingStream<ItemPriceEditReview?, Error>.Continuation) {
+        startStream(id: id, operation: .itemPriceEditOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.itemPriceEditStore.watchReview(project: project, item: item) })
+    }
+
     func startInventorySaleReviewWatch(id: UUID, itemIds: [ItemID],
         continuation: AsyncThrowingStream<InventorySaleReview?, Error>.Continuation) {
         startStream(id: id, operation: .inventorySaleOperation, continuation: continuation,
@@ -2703,6 +2741,7 @@ actor AccountWorkspacePendingWorkRuntime {
             spaceChecklistRevisionApplier: appliers.spaceChecklistRevision,
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
+            itemPriceEditApplier: appliers.itemPriceEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
@@ -2769,6 +2808,7 @@ actor AccountWorkspacePendingWorkRuntime {
             spaceChecklistRevisionApplier: appliers.spaceChecklistRevision,
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
+            itemPriceEditApplier: appliers.itemPriceEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
@@ -2981,6 +3021,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
         await resources.categoryManagementStore.cancelAndDrainWatches()
         await resources.inventorySaleStore.cancelAndDrainWatches()
+        await resources.itemPriceEditStore.cancelAndDrainWatches()
         await resources.uninvoicedReturnStore.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
         await resources.projectNoteQuery.cancelAndDrainWatches()

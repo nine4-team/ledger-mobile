@@ -2052,6 +2052,67 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await offline.close()
     }
 
+    @Test("Item price edit survives offline restart and converges through actual services",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_PRICE_LOCAL"] == "1"), .timeLimit(.minutes(1)))
+    func itemPriceLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
+              let item = env["LEDGER_SALE_LOCAL_ITEM"], let project = env["LEDGER_SALE_LOCAL_PROJECT"],
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"],
+              [account, principal, item, project].allSatisfy({ $0.hasPrefix("sale-http-") }) else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "price-live", accountId: .init(validating: account), principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!, sync = URL(string: "http://127.0.0.1:5590")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "price-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let first = try await context.openRuntime()
+        let projectId = try ProjectID(validating: project), itemId = try ItemID(validating: item)
+        try await entry.startWorkspaceSync(first, authorization: authorization, powerSyncURL: sync)
+        var initial: ItemPriceEditReview?
+        for try await value in first.watchItemPriceReview(project: projectId, item: itemId) {
+            if let value { initial = value; break }
+        }
+        #expect(try #require(initial).currentPrice?.minorUnits == 12346)
+        try await first.close()
+        let offline = try await context.openRuntime()
+        let amount = Money(minorUnits: 12347, currency: try .init(validating: "USD"))
+        let payload = try await offline.reviewItemPrice(project: projectId, item: itemId, requested: amount)
+        let uuid = UUID(), capturedAt = Date()
+        let receipt = try await offline.editItemPrice(payload, operationUUID: uuid, capturedAt: capturedAt)
+        #expect(receipt.localState == .queued)
+        try await offline.close()
+        let resumed = try await context.openRuntime()
+        #expect(try await resumed.editItemPrice(payload, operationUUID: uuid, capturedAt: capturedAt) == receipt)
+        try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+        var applied = false
+        for try await status in resumed.watchItemPriceEdit(receipt.operationId) {
+            if status?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+            if status?.state.phase == .applied { applied = true; break }
+        }
+        #expect(applied)
+        var readback = false
+        for try await value in resumed.watchItemPriceReview(project: projectId, item: itemId) {
+            if let value, value.currentPrice == amount, value.chargeRevision == payload.expectedChargeRevision + 1 {
+                readback = true; break
+            }
+        }
+        #expect(readback)
+        try await resumed.close()
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.itemPriceEditStatus(receipt.operationId)?.state.phase == .applied)
+        let persisted = try await reopened.reviewItemPrice(project: projectId, item: itemId, requested: amount)
+        #expect(persisted.expectedPriceRevision == payload.expectedPriceRevision + 1)
+        #expect(persisted.expectedChargeRevision == payload.expectedChargeRevision + 1)
+        try await reopened.close()
+    }
+
     @Test("Expense offline commands converge through actual Auth, RPC and PowerSync",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func expenseLiveReplication() async throws {
@@ -3324,6 +3385,52 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await closeCaller.value
         try await closeRuntime.close()
         closeContext.remove()
+    }
+
+    @Test("Price review and operation watches drain on close and Account removal", .timeLimit(.minutes(1)), arguments: [false, true])
+    func itemPriceWatchLifecycle(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "price-watch-\(removing)")
+        defer { context.remove() }
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            try await database.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "project"), item = try ItemID(validating: "item")
+        let operation = try ItemPriceEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
+        let ready = AsyncStream<Void>.makeStream()
+        let review = Task {
+            do {
+                for try await value in runtime.watchItemPriceReview(project: project, item: item) {
+                    #expect(value == nil)
+                    ready.continuation.yield(())
+                }
+            } catch is CancellationError {} catch let failure as LedgerOfflineClientRuntimeFailure {
+                #expect(failure == .runtimeClosed)
+            } catch { Issue.record("Unexpected price review failure: \(error)") }
+        }
+        let status = Task {
+            do {
+                for try await value in runtime.watchItemPriceEdit(operation) {
+                    #expect(value == nil)
+                    ready.continuation.yield(())
+                }
+            } catch is CancellationError {} catch let failure as LedgerOfflineClientRuntimeFailure {
+                #expect(failure == .runtimeClosed)
+            } catch { Issue.record("Unexpected price status failure: \(error)") }
+        }
+        var signals = ready.stream.makeAsyncIterator()
+        #expect(await signals.next() != nil)
+        #expect(await signals.next() != nil)
+        if removing { try await runtime.lockAccessPreservingPendingWork() }
+        else { try await runtime.close() }
+        await review.value
+        await status.value
+        try await Self.expectClosed(runtime.watchItemPriceReview(project: project, item: item))
+        try await Self.expectClosed(runtime.watchItemPriceEdit(operation))
+        ready.continuation.finish()
     }
 
     @Test("Invoicing charge interface rejects foreign scope and drains on close")

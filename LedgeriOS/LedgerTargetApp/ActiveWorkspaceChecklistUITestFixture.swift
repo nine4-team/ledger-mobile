@@ -752,7 +752,50 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing {
+    private actor PriceRetry {
+        var accepted: (EditUncollectedItemPriceCommand.Payload, UUID, Date)?
+        func firstAttempt(_ payload: EditUncollectedItemPriceCommand.Payload, _ id: UUID, _ date: Date) throws -> Bool {
+            if let accepted {
+                guard accepted.0 == payload, accepted.1 == id, accepted.2 == date else {
+                    throw InventorySaleReview.Failure.invalidEvidence
+                }
+                return false
+            }
+            accepted = (payload, id, date)
+            return true
+        }
+    }
+    private let priceRetry = PriceRetry()
+    func watchItemPriceReview(project: ProjectID, item: ItemID) -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
+        AsyncThrowingStream { continuation in
+            do {
+                continuation.yield(try .init(projectId: project, itemId: item,
+                    placementId: .init(validating: "history-current"), occurrenceId: .init(validating: "price-charge"),
+                    priceRevision: 1, chargeRevision: 1,
+                    currentPrice: Money(minorUnits: 250, currency: .init(validating: "USD")),
+                    purchaseCost: .known(Money(minorUnits: 200, currency: .init(validating: "USD")))))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    func editItemPrice(_ payload: EditUncollectedItemPriceCommand.Payload,
+                       operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        guard payload.projectId.rawValue == "project-ui-test", payload.itemId.rawValue == "physical-ui-chair",
+              payload.placementId.rawValue == "history-current", payload.expectedPriceRevision == 1,
+              payload.requestedPrice.minorUnits == 100, payload.reviewedPrice.minorUnits == 200 else {
+            throw InventorySaleReview.Failure.invalidEvidence
+        }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-price-retry") {
+            if try await priceRetry.firstAttempt(payload, operationUUID, capturedAt) {
+                await saleAccepted?()
+                throw InventorySaleReview.Failure.invalidEvidence
+            }
+        } else { await saleAccepted?() }
+        return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+    }
+    func watchItemPriceEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { $0.yield(nil) }
+    }
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",

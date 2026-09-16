@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -49,6 +49,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
         let result: TransactionReceiptSnapshot = try await call("spike_read_transaction_receipt", body: body)
         try result.validate(accountId: authorization.accountId, principalId: authorization.principalId,
             transactionId: transactionId)
+        return result
+    }
+
+    func apply(_ command: EditUncollectedItemPriceCommand) async throws -> EditUncollectedItemPriceServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try EditUncollectedItemPriceUploadRequest(command)
+        let result: EditUncollectedItemPriceServerResult = try await call("spike_edit_uncollected_item_price", body: request.rpcBody)
+        try result.validate(for: command)
         return result
     }
 

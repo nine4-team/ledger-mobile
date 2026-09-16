@@ -1,7 +1,8 @@
 import Foundation
 
-/// Destination sale review only; never use this to calculate a return or credit.
-/// The owning sale command persists the result atomically with placement/charge.
+/// Project-price normalization for sale review and uncollected price edits;
+/// never use this to calculate a return or credit. The owning command persists
+/// the result atomically with the corresponding charge.
 public enum InventorySalePrice {
     public enum Failure: Error, Equatable, Sendable {
         case currencyMismatch

@@ -1,0 +1,16 @@
+{
+  "accountId": "account",
+  "principalId": "actor",
+  "input": {
+    "operationUUID": "11111111-2222-3333-4444-555555555555",
+    "clientCreatedAtMilliseconds": 123001,
+    "payload": {
+      "projectId": "project", "itemId": "item", "placementId": "placement", "occurrenceId": "charge",
+      "expectedPriceRevision": "0", "expectedChargeRevision": "9223372036854775806",
+      "requestedPriceMinorUnits": "9223372036854775807", "reviewedPriceMinorUnits": "9223372036854775807",
+      "currency": "USD"
+    }
+  },
+  "operationId": "item-price-edit-9af211329b2fc82e5efe906062c730082819b23fe8394bc435e0b1bf0458eb54-11111111-2222-3333-4444-555555555555",
+  "fingerprint": "e38997d3d675497a3ac95f327a7f983fba99df46899b4f1bcf7ba8794400c810"
+}

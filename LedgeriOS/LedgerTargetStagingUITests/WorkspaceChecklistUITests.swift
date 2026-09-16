@@ -3784,6 +3784,63 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testItemPriceEditorCancelUnchangedAndNormalizedSave() throws {
+        try exerciseItemPriceEditor(retry: false)
+    }
+
+    func testItemPriceEditorRetriesSameAcceptedEdit() throws {
+        try exerciseItemPriceEditor(retry: true)
+    }
+
+    private func exerciseItemPriceEditor(retry: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        if retry { app.launchArguments.append("--ledger-ui-test-price-retry") }
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        let scroll = app.scrollViews["target-item-detail-scroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5))
+        let edit = app.buttons["target-item-edit-price"]
+        func openEditor() {
+            reveal(edit, in: app, fullyInsideScrollView: true, within: scroll); edit.tap()
+            XCTAssertTrue(app.textFields["0.00"].waitForExistence(timeout: 5))
+            XCTAssertEqual(app.textFields["0.00"].value as? String, "2.50")
+        }
+        openEditor()
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor()
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor()
+        let field = app.textFields["0.00"]
+        field.tap()
+        #if os(macOS)
+        field.typeKey("a", modifierFlags: .command)
+        #else
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
+        #endif
+        field.typeText("1.00")
+        XCTAssertTrue(app.staticTexts["The project price will be raised to 2.00 to match the purchase cost."].waitForExistence(timeout: 5))
+        app.buttons["Save Changes"].tap()
+        if retry {
+            XCTAssertTrue(app.staticTexts["The edit could not be confirmed. Save Changes retries the same edit."].waitForExistence(timeout: 5))
+            XCTAssertFalse(field.isEnabled)
+            XCTAssertTrue(app.buttons["Save Changes"].isEnabled)
+            app.buttons["Save Changes"].tap()
+        }
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        app.buttons["Close"].firstMatch.tap()
+        // The existing fixture counter detects accidental writes on Cancel/no-op.
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
     func testItemOpensAssignedProjectSpaceAndReturns() throws {
         try exerciseItemSpaceLink(inventory: false, archived: false)
     }

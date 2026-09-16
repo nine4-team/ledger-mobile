@@ -10,6 +10,60 @@ struct InventorySalePowerSyncStoreTests {
     private let principal = try! PrincipalID(validating: "sale-member")
     private struct InjectedFailure: Error {}
 
+    @Test(.timeLimit(.minutes(1))) func priceEditReviewAllowsLiveInvoiceButRequiresCompleteUncollectedEvidence() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        do {
+            let account = account, principal = principal
+            let requested = Money(minorUnits: 100, currency: try .init(validating: "USD"))
+            func read() async throws -> EditUncollectedItemPriceCommand.Payload {
+                try await db.readTransaction { local in
+                    try ItemPriceEditLocalReview.read(local, account: account, principal: principal,
+                        project: .init(validating: "destination"), item: .init(validating: "item"), requested: requested)
+                }
+            }
+            await #expect(throws: (any Error).self) { try await read() }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,?,1000000)",
+                parameters: [#"{"account_id":"sale-account"}"#])
+            await #expect(throws: ItemPriceEditLocalReview.Failure.unavailable) { try await read() }
+            _ = try await db.execute(sql: "INSERT INTO item_acquisition_reviews(id,account_id,state,amount_minor_units,currency) VALUES('item',?,'known','200','USD')", parameters: [account.rawValue])
+            _ = try await db.execute(sql: "INSERT INTO return_live_memberships(id,account_id,source_id) VALUES('charge',?,'charge')", parameters: [account.rawValue])
+            let review = try await read()
+            #expect(review.reviewedPrice.minorUnits == 200)
+            #expect(review.expectedPriceRevision == 0 && review.expectedChargeRevision == 1)
+            #expect(review.placementId.rawValue == "old" && review.occurrenceId.rawValue == "charge")
+            let store = ItemPriceEditPowerSyncStore(database: db, accountId: account,
+                principalId: principal, accessFence: .init())
+            var updates = store.watchReview(project: try .init(validating: "destination"),
+                item: try .init(validating: "item")).makeAsyncIterator()
+            let initial = try #require(await updates.next() ?? nil)
+            #expect(initial.currentPrice == nil)
+            #expect(try initial.payload(requested: requested).reviewedPrice.minorUnits == 200)
+            _ = try await db.execute(sql: "INSERT INTO item_project_prices(id,account_id,item_id,amount_minor_units,currency,revision) VALUES('item',?,'item','9223372036854775807','USD','1')", parameters: [account.rawValue])
+            var exactCurrentPrice = false
+            while let update = try await updates.next() {
+                if let update, update.currentPrice?.minorUnits == Int64.max {
+                    #expect(update.priceRevision == 1)
+                    exactCurrentPrice = true; break
+                }
+            }
+            #expect(exactCurrentPrice)
+            _ = try await db.execute(sql: "INSERT INTO return_paid_memberships(id,account_id,source_id) VALUES('charge',?,'charge')", parameters: [account.rawValue])
+            await #expect(throws: ItemPriceEditLocalReview.Failure.unavailable) { try await read() }
+            var withdrawn = false
+            while let update = try await updates.next() {
+                if update == nil { withdrawn = true; break }
+            }
+            #expect(withdrawn)
+            await store.cancelAndDrainWatches()
+            _ = try await db.execute(sql: "DELETE FROM return_paid_memberships", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=NULL WHERE stream_name='item_return_review'", parameters: nil)
+            await #expect(throws: (any Error).self) { try await read() }
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
     @Test func uninvoicedReturnRequiresMatchingInventoryOrigin() async throws {
         let fixture = try Fixture(); defer { fixture.remove() }
         let db = try fixture.open(); try await seedReturn(db)

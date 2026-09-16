@@ -237,6 +237,33 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.inventorySaleStatus(operationId)
     }
 
+    public func itemPriceEditStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await lifecycleOwner.itemPriceEditStatus(operationId)
+    }
+
+    public func reviewItemPrice(project: ProjectID, item: ItemID, requested: Money) async throws -> EditUncollectedItemPriceCommand.Payload {
+        try await lifecycleOwner.reviewItemPrice(project: project, item: item, requested: requested)
+    }
+
+    public func editItemPrice(_ payload: EditUncollectedItemPriceCommand.Payload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.editItemPrice(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func watchItemPriceEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startItemPriceEditWatch(id: id, operationId: operationId, continuation: continuation)
+        }
+    }
+
+    public func watchItemPriceReview(project: ProjectID, item: ItemID)
+        -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startItemPriceReviewWatch(id: id, project: project, item: item,
+                continuation: continuation)
+        }
+    }
+
     public func readInventorySaleReview(itemIds: [ItemID]) async throws -> InventorySaleReview {
         try await lifecycleOwner.readInventorySaleReview(itemIds: itemIds)
     }
@@ -744,5 +771,6 @@ public final class LedgerOfflineClientRuntime:
 extension LedgerOfflineClientRuntime: SpaceListQuerying {}
 extension LedgerOfflineClientRuntime: InventorySaleReviewReading {}
 extension LedgerOfflineClientRuntime: InventorySaleWorkflowServing {}
+extension LedgerOfflineClientRuntime: ItemPriceEditing {}
 extension LedgerOfflineClientRuntime: UninvoicedReturnWorkflowServing {}
 extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

@@ -535,6 +535,7 @@ struct DownloadedItemDetailView: View {
     @State private var selectedSpace: ReferencedSpaceSelection?
     @State private var showingInventorySale = false
     @State private var showingInventoryReturn = false
+    @State private var showingPriceEdit = false
     private struct ReferencedSpaceSelection: Identifiable {
         let id: SpaceID
         let scope: SpaceCreationScope
@@ -620,6 +621,15 @@ struct DownloadedItemDetailView: View {
                history.accountId == accountId, history.itemId == itemId,
                case .project(let projectId) = history.intervals.first(where: { $0.endedAt == nil })?.scope {
                 UninvoicedReturnForm(accountId: accountId, projectId: projectId, itemIds: [itemId], service: service)
+            }
+        }
+        .sheet(isPresented: $showingPriceEdit) {
+            if let service = reader as? any ItemPriceEditing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               case .project(let projectId) = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                ItemPriceEditForm(projectId: projectId, itemId: itemId,
+                    currency: try! CurrencyCode(validating: "USD"), service: service)
             }
         }
     }
@@ -778,7 +788,12 @@ struct DownloadedItemDetailView: View {
                     detailField("Workflow status", details.workflowStatus.displayLabel, id: "target-item-detail-workflow")
                     detailField("Bookmarked", details.isBookmarked.map { $0 ? "Yes" : "No" }, id: "target-item-detail-bookmark")
                     detailField("Created", details.createdAt, id: "target-item-detail-created")
-                    Text("Editing and financial details are not available here yet.").font(.caption).foregroundStyle(.secondary)
+                    if reader is any ItemPriceEditing,
+                       case .project = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                        Button("Edit Project Price") { showingPriceEdit = true }
+                            .accessibilityIdentifier("target-item-edit-price")
+                    }
+                    Text("Other Item editing is not available here yet.").font(.caption).foregroundStyle(.secondary)
                 }
             } else { Text("Descriptive details not downloaded").accessibilityIdentifier("target-item-detail-unavailable") }
         }

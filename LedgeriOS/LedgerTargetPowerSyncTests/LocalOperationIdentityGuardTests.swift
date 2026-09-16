@@ -34,6 +34,7 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.spaceChecklistRevisionCommands,
             LedgerPowerSyncTable.categoryCommands,
             LedgerPowerSyncTable.inventorySaleCommands,
+            LedgerPowerSyncTable.itemPriceEditCommands,
             LedgerPowerSyncTable.uninvoicedReturnCommands,
             LedgerPowerSyncTable.expenseCommands,
             LedgerPowerSyncTable.invoiceCommands,
@@ -475,7 +476,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -961,6 +962,11 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
+        case .editUncollectedItemPrice:
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_item_price_edit_commands(id,account_id,actor_principal_id,item_id,contract_version,fingerprint,envelope_json)
+                VALUES (?, 'account', 'principal', 'item', 'contract', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .createFeeInstallment:
             _ = try await database.execute(sql: """
                 INSERT INTO spike_fee_commands(id,account_id,actor_principal_id,installment_id,contract_version,fingerprint,envelope_json)
@@ -1056,7 +1062,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
+        case .sellInventoryItems, .editUncollectedItemPrice, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1221,6 +1227,7 @@ struct LocalOperationIdentityGuardTests {
 
     private static func subject(_ family: LocalOperationCommandFamily) -> String {
         switch family {
+        case .editUncollectedItemPrice: "item"
         case .createFeeInstallment: "fee"
         case .createInvoice, .reviseCreatedInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
@@ -1803,6 +1810,9 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         index: Int
     ) throws -> OperationID {
+        if families.contains(.editUncollectedItemPrice) {
+            return try ItemPriceEditOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.reviseCreatedInvoice) {
             return try InvoiceRevisionOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1852,6 +1862,13 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         database: any PowerSyncDatabaseProtocol
     ) async throws {
+        if families.contains(.editUncollectedItemPrice) {
+            try await seedAuthorityIfNeeded(for: families.filter { $0 != .editUncollectedItemPrice } + [.returnUninvoicedItems], database: database)
+            _ = try await database.execute(sql: "INSERT OR REPLACE INTO item_acquisition_reviews(id,account_id,state) VALUES('return-item',?,'absent')", parameters: [guardAccountId.rawValue])
+            let params = String(decoding: try OperationContractCodec.encode(["account_id":guardAccountId.rawValue]), as: UTF8.self)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,?,1000000)", parameters: [params])
+            return
+        }
         if families.contains(.returnUninvoicedItems) {
             try await seedAuthorityIfNeeded(for: families.filter { $0 != .returnUninvoicedItems } + [.sellInventoryItems], database: database)
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_budget_categories(id,account_id,kind,visibility_class) VALUES('return-category',?,'itemized','ordinary')", parameters: [guardAccountId.rawValue])
@@ -1908,6 +1925,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .editUncollectedItemPrice:
+            return try await submitPriceEdit(operationId, changed: false, database: database)
         case .createFeeInstallment:
             return try await submitFee(operationId, changed: false, database: database)
         case .createInvoice:
@@ -2040,6 +2059,140 @@ struct LocalOperationIdentityGuardTests {
                     newPlacementId: .init(validating: "sale-new"), occurrenceId: .init(validating: "sale-charge"))]))
         return try await InventorySalePowerSyncStore(database: database, accountId: guardAccountId,
             principalId: guardPrincipalId, accessFence: LedgerWorkspaceAccessFence(), now: { guardAcceptedAt }).submit(command)
+    }
+
+    private static func submitPriceEdit(_ operationId: OperationID, changed: Bool,
+                                       database: any PowerSyncDatabaseProtocol,
+                                       afterOperationWrite: @escaping @Sendable () throws -> Void = {}) async throws -> OperationReceipt {
+        let price = Money(minorUnits: changed ? 200 : 100, currency: try .init(validating: "USD"))
+        let command = try EditUncollectedItemPriceCommand(operationId: operationId, accountId: guardAccountId,
+            actorPrincipalId: guardPrincipalId, capturedAt: guardAcceptedAt,
+            payload: .init(projectId: .init(validating: "project"), itemId: .init(validating: "return-item"),
+                placementId: .init(validating: "return-old"), occurrenceId: .init(validating: "return-charge"),
+                expectedPriceRevision: 0, expectedChargeRevision: 1, requestedPrice: price, reviewedPrice: price))
+        return try await ItemPriceEditPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt },
+            afterOperationWrite: afterOperationWrite).submit(command)
+    }
+
+    @Test("Price edit rollback, encrypted restart, interrupted upload and terminal replay", arguments: [false, true])
+    func priceEditAcceptanceAndUpload(rejected: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture(); defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.editUncollectedItemPrice], database: db)
+        while let pending = try await db.getNextCrudTransaction() { try await pending.complete() }
+        let id = try ItemPriceEditOperationIdentity.make(accountId: Self.guardAccountId, uuid: UUID())
+        await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+            try await Self.submitPriceEdit(id, changed: false, database: db,
+                afterOperationWrite: { throw LocalOperationGuardInjectedFailure() })
+        }
+        #expect(try await Self.count("spike_local_operations", db) == 0)
+        #expect(try await db.getNextCrudTransaction() == nil)
+        #expect(try await Self.submitPriceEdit(id, changed: false, database: db).localState == .queued)
+        try await db.close()
+        let reopened = try fixture.open()
+        do {
+            _ = try await reopened.execute(sql: "UPDATE return_charge_sources SET revision='2'", parameters: nil)
+            let store = ItemPriceEditPowerSyncStore(database: reopened, accountId: Self.guardAccountId,
+                principalId: Self.guardPrincipalId, accessFence: .init())
+            #expect(try await store.status(id)?.state.phase == .queued)
+            var updates = store.watch(id).makeAsyncIterator()
+            #expect(try await updates.next()??.state.phase == .queued)
+            #expect(try await Self.submitPriceEdit(id, changed: false, database: reopened).localState == .queued)
+            let queue = try #require(await reopened.getNextCrudTransaction())
+            let entry = try #require(queue.crud.first)
+            await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+                try await ItemPriceEditUpload.apply(entry, database: reopened, accessFence: .init(),
+                    applier: PriceEditTestApplier(fail: true))
+            }
+            #expect(try await Self.submitPriceEdit(id, changed: false, database: reopened).localState == .applying)
+            #expect(try await store.status(id)?.state.phase == .applying)
+            _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+            await #expect(throws: LocalOperationIdentityGuardFailure.malformedEvidence) {
+                try await ItemPriceEditUpload.apply(entry, database: reopened, accessFence: .init(),
+                    applier: PriceEditTestApplier(fail: false))
+            }
+            #expect(try await reopened.getNextCrudTransaction() != nil)
+            _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+            try await ItemPriceEditUpload.apply(entry, database: reopened, accessFence: .init(),
+                applier: PriceEditTestApplier(fail: false, rejected: rejected))
+            try await ItemPriceEditUpload.apply(entry, database: reopened, accessFence: .init(),
+                applier: PriceEditTestApplier(fail: false, rejected: rejected))
+            try await queue.complete()
+            #expect(try await Self.submitPriceEdit(id, changed: false, database: reopened).localState == (rejected ? .rejected : .applied))
+            #expect(try await store.status(id)?.state.phase == (rejected ? .rejected : .applied))
+            await store.cancelAndDrainWatches()
+            // Fixture updates to downloaded authority tables also generate SDK
+            // CRUD. Only the accepted price command is owned by this uploader.
+            #expect(try await reopened.get("SELECT count(*) FROM ps_crud WHERE json_extract(data,'$.type')='spike_item_price_edit_commands'") {
+                try $0.getInt(index: 0)
+            } == 0)
+            #expect(try await Self.count("item_project_prices", reopened) == 0)
+            try await reopened.close()
+        } catch { try? await reopened.close(); throw error }
+    }
+
+    private struct PriceEditTestApplier: EditUncollectedItemPriceApplying {
+        let fail: Bool
+        var rejected = false
+        var beforeReply: @Sendable () async throws -> Void = {}
+        func apply(_ command: EditUncollectedItemPriceCommand) async throws -> EditUncollectedItemPriceServerResult {
+            if fail { throw LocalOperationGuardInjectedFailure() }
+            try await beforeReply()
+            let e = command.envelope, request = try EditUncollectedItemPriceUploadRequest(command)
+            var fields: [String: Any] = [
+                "operation_id": e.operationId.rawValue, "account_id": e.accountId.rawValue,
+                "actor_principal_id": e.actorPrincipalId.rawValue, "command_type": "edit_uncollected_item_price",
+                "contract_version": e.contractVersion.rawValue, "command_fingerprint": request.fingerprint,
+                "envelope_sha256": request.fingerprint, "subject_id": e.payload.itemId.rawValue,
+                "phase": "applied", "result_code": "item_price_updated",
+                "client_created_at_ms": Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded()),
+                "server_received_at_ms": 1_800_000_000_000, "completed_at_ms": 1_800_000_000_001
+            ]
+            if rejected {
+                fields["phase"] = "rejected"; fields.removeValue(forKey: "result_code")
+                fields["error_code"] = "price_charge_collected"
+            }
+            return try JSONDecoder().decode(EditUncollectedItemPriceServerResult.self,
+                from: JSONSerialization.data(withJSONObject: fields))
+        }
+    }
+
+    @Test("Price upload retains intent when access changes before response", arguments: [false, true])
+    func priceEditInFlightWithdrawal(closeFence: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture(); defer { fixture.remove() }
+        let db = try fixture.open()
+        do {
+            try await Self.seedAuthorityIfNeeded(for: [.editUncollectedItemPrice], database: db)
+            while let pending = try await db.getNextCrudTransaction() { try await pending.complete() }
+            let id = try ItemPriceEditOperationIdentity.make(accountId: Self.guardAccountId, uuid: UUID())
+            _ = try await Self.submitPriceEdit(id, changed: false, database: db)
+            let queue = try #require(await db.getNextCrudTransaction())
+            let entry = try #require(queue.crud.first)
+            let fence = LedgerWorkspaceAccessFence()
+            let applier = PriceEditTestApplier(fail: false, beforeReply: {
+                if closeFence { fence.markRemoved() }
+                else {
+                    _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+                }
+            })
+            if closeFence {
+                await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                    try await ItemPriceEditUpload.apply(entry, database: db, accessFence: fence, applier: applier)
+                }
+            } else {
+                await #expect(throws: LocalOperationIdentityGuardFailure.malformedEvidence) {
+                    try await ItemPriceEditUpload.apply(entry, database: db, accessFence: fence, applier: applier)
+                }
+            }
+            let local = try await db.get(sql: "SELECT local_state,terminal_phase FROM spike_local_operations WHERE id=?",
+                parameters: [id.rawValue]) { (try $0.getString(index: 0),try $0.getStringOptional(index: 1)) }
+            #expect(local.0 == "applying" && local.1 == nil)
+            #expect(try await db.get("SELECT count(*) FROM ps_crud WHERE json_extract(data,'$.type')='spike_item_price_edit_commands'") {
+                try $0.getInt(index: 0)
+            } == 1)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
     }
 
     @Test("Expense edit is atomic, survives encrypted reopen, and drains with a terminal receipt")
@@ -2580,6 +2733,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .editUncollectedItemPrice:
+            return try await submitPriceEdit(operationId, changed: true, database: database)
         case .createFeeInstallment:
             return try await submitFee(operationId, changed: true, database: database)
         case .createInvoice:

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1240,
+  "stateVersion": 1274,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -61,7 +61,7 @@
     "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
     "activeProcesses": {},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Dirty onboarding after a0ccb668. No live tests. UI1247 FAILED before signout: recording /tmp/ledger-empty-signout-final-20260916.png shows Save Password still covering app; interruption handling cleared an Apple notification, not password dialog. Do not classify as signout defect or retry unchanged. --ui-signout scenario exists; needs reliable system-dialog interaction/manual proof. UI11566 creation PASS;4304 concurrency PASS;41060 SQL1942 PASS. NEXT checkpoint reviewed onboarding with explicit remaining UI/parity gaps, continue independent authorized workflow. Migration parity87611 host DNS failure after replay; no unchanged retry; parity/history unverified, no hosted change. Preserve private .native-pdf files and QA data.",
+    "immediateFollowup": "78162 empty-schema111migration replay+all races PASS /tmp/ledger-price-final-replay-races-20260916.log;27691 security advisors no warn/error. Architecture evidence updated; editor unavailable prose corrected (no Invoice prerequisite). NEXT final integrated diff/commit and justified hosted migration verification; four migrations local/not deployed/history-recorded. No live processes.65717 lifecycle,15522 iPhone retry,72652 SQL1977,98007 live sync/restart/retry,64020 native/MCP parity,59653 MCP146,45956e conversion PASS. Prior fixture/build failures retained. Last UI build predates text-only correction. Owner item-everyday-editing;226b2bf6 gaps/private files preserved; no unchanged broad UI retry.",
     "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},

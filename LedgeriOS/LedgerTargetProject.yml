@@ -46,6 +46,7 @@ targets:
       - path: LedgeriOS/Modals/ProjectPickerList.swift
       - path: LedgeriOS/Modals/SellToProjectModal.swift
       - path: LedgeriOS/Modals/CreateInvoiceModal.swift
+      - path: LedgeriOS/Modals/EditItemDetailsModal.swift
       - path: LedgeriOS/Components/BillingRowPresentation.swift
       - path: LedgeriOS/Views/Reports/InvoiceReportView.swift
       - path: LedgeriOS/Views/Reports/ReportHTMLBuilder.swift

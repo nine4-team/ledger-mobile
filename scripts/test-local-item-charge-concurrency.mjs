@@ -371,6 +371,49 @@ try {
     'rejected:fee_total_exceeded');
   assert.equal(sql("select sum(amount_minor_units) from ledger_private.fee_installments where project_id='fee-cap-race'"), '60');
   console.log('PASS competing Fee creators cannot jointly exceed configured total');
+  const priceEdit = (name, amount='12346') => {
+    const id=source(name);
+    const command=JSON.stringify({operationId:'edit-'+id,accountId:'account-primary',actorPrincipalId:'principal-owner',
+      projectId:'race-project',itemId:id,placementId:id,occurrenceId:id,
+      contractVersion:'item-uncollected-price-edit-v1',createdAtMs:'1000',expectedPriceRevision:'0',
+      expectedChargeRevision:'1',requestedPriceMinorUnits:amount,reviewedPriceMinorUnits:amount,currency:'USD'});
+    return `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+      select (ledger_private.edit_uncollected_item_price('${command}')).phase;`;
+  };
+  for(const name of ['price-first','price-paid-first','price-paid-rollback']) prepare(name);
+  await race('price-first',priceEdit('price-first'),collect('price-first'),'commit','23514');
+  assert.equal(sql("select amount_minor_units from ledger_private.item_project_prices where item_id='race-price-first'"),'12346');
+  await race('price-paid-first',collect('price-paid-first'),priceEdit('price-paid-first'),'commit');
+  assert.equal(sql("select phase||':'||error_code from public.spike_operation_results where operation_id='edit-race-price-paid-first'"),
+    'rejected:price_charge_collected');
+  assert.equal(sql("select count(*) from ledger_private.item_project_prices where item_id='race-price-paid-first'"),'0');
+  await race('price-paid-rollback',collect('price-paid-rollback'),priceEdit('price-paid-rollback'),'rollback');
+  assert.equal(sql("select phase from public.spike_operation_results where operation_id='edit-race-price-paid-rollback'"),'applied');
+  console.log('PASS 3 price-command/collection races, including collection rollback');
+  for(const [name,expenseFirst,release] of [['total-price-first',false,'commit'],['total-expense-first',true,'commit'],['total-rollback',false,'rollback']]) {
+    prepare(name); prepareExpense(name);
+    const id=source(name), invoice='live-'+id;
+    sql(`insert into ledger_private.live_invoices(id,account_id,project_id,name,status,created_at,created_by_principal_id)
+      values('${invoice}','account-primary','race-project','Concurrent sources','created',now(),'principal-owner');
+      insert into ledger_private.live_invoice_memberships(account_id,invoice_id,source_kind,source_id,position)
+      values('account-primary','${invoice}','item','${id}',0),('account-primary','${invoice}','expense','${id}',1);`);
+    const command=JSON.stringify({operationId:'expense-'+id,accountId:'account-primary',actorPrincipalId:'principal-owner',
+      projectId:'race-project',expenseId:id,contractVersion:'expense-edit-v1',createdAtMs:'1000',vendor:'Synthetic',
+      date:'2026-01-01',amountMinorUnits:'12346',currency:'USD',categoryId:'category-system',notes:'',
+      receiptLines:[],receiptAttachmentIds:[],expectedRevision:'1'});
+    const expense=`select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+      select (ledger_private.edit_expense('${command}')).phase;`;
+    const price=priceEdit(name,'9223372036854763462'); // Int64.max minus original Expense12345.
+    await race(name,expenseFirst?expense:price,expenseFirst?price:expense,release);
+    const waiterOperation=expenseFirst?'edit-'+id:'expense-'+id;
+    assert.equal(sql(`select phase from public.spike_operation_results where operation_id='${waiterOperation}'`),
+      release==='rollback'?'applied':'rejected');
+    const total=sql(`select c.amount_minor_units::numeric+e.final_amount_minor_units::numeric
+      from ledger_private.item_charge_occurrences c join ledger_private.expenses e on e.id=c.id where c.id='${id}'`);
+    assert.ok(BigInt(total)<=9223372036854775807n,'Committed mixed-source total must remain representable');
+    if(release==='rollback') assert.equal(total,'24691');
+  }
+  console.log('PASS mixed Item/Expense Invoice edits serialize in both orders and recover after rollback');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

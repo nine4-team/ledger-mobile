@@ -1,5 +1,48 @@
 import SwiftUI
 
+/// Shared original form shell. Backend adapters own validation and submission;
+/// the shell never dismisses a failed or merely in-flight save.
+struct ItemDetailsFormPresentation<Content: View>: View {
+    var title = "Edit Details"
+    var isSaving = false
+    var isSaveDisabled = false
+    var error: String? = nil
+    var hint: String? = nil
+    var closeTitle = "Cancel"
+    let onSave: () -> Void
+    @ViewBuilder let content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        FormSheet(title: title, showDismissButton: !isSaving,
+            primaryAction: FormSheetAction(title: "Save Changes", isLoading: isSaving,
+                isDisabled: isSaveDisabled || isSaving, action: onSave),
+            secondaryAction: FormSheetAction(title: closeTitle, isDisabled: isSaving, action: { dismiss() }),
+            actionHint: hint, error: error) {
+                VStack(spacing: Spacing.md) { content }
+            }
+        .interactiveDismissDisabled(isSaving)
+    }
+}
+
+struct ItemProjectPriceField: View {
+    @Binding var text: String
+    var isLocked = false
+    var body: some View {
+        FormField(label: "Project Price", text: $text, placeholder: "0.00")
+            .platformKeyboardType(.decimalPad)
+            .disabled(isLocked)
+            .opacity(isLocked ? 0.55 : 1)
+        if isLocked {
+            Text("Project price is locked because this item is on a paid invoice.")
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+#if canImport(FirebaseFirestore)
 /// Bottom sheet for editing item fields.
 /// Field order (FR-8.1): Name, Source, SKU, Purchase Price, Project Price, Market Value.
 struct EditItemDetailsModal: View {
@@ -34,34 +77,15 @@ struct EditItemDetailsModal: View {
     }
 
     var body: some View {
-        FormSheet(
-            title: "Edit Details",
-            primaryAction: FormSheetAction(title: "Save Changes") {
-                saveChanges()
-            },
-            secondaryAction: FormSheetAction(title: "Cancel") {
-                dismiss()
-            }
-        ) {
-            VStack(spacing: Spacing.md) {
+        ItemDetailsFormPresentation(onSave: saveChanges) {
                 FormField(label: "Name", text: $name, placeholder: "Item name")
                 VendorPickerField(value: $source, showPicker: $showVendorPicker)
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
                 FormField(label: "Purchase Price", text: $purchasePrice, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
-                FormField(label: "Project Price", text: $projectPrice, placeholder: "0.00")
-                    .platformKeyboardType(.decimalPad)
-                    .disabled(isProjectPriceLocked)
-                    .opacity(isProjectPriceLocked ? 0.55 : 1)
-                if isProjectPriceLocked {
-                    Text("Project price is locked because this item is on a paid invoice.")
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                ItemProjectPriceField(text: $projectPrice, isLocked: isProjectPriceLocked)
                 FormField(label: "Market Value", text: $marketValue, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
-            }
         }
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
             VendorPickerModal(selectedValue: source, onSelect: { source = $0 })
@@ -128,3 +152,4 @@ struct EditItemDetailsModal: View {
 #Preview {
     EditItemDetailsModal(item: Item(name: "Test Item", source: "Ross", sku: "123456")) { _ in }
 }
+#endif

@@ -13,6 +13,9 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
+if(process.argv.includes('--price-edit')) assert.ok(process.argv.includes('--financial') &&
+    !process.argv.some(flag=>flag !== '--native-price-edit' && /^(--native.*|--expense.*|--mixed|--return.*|--resale.*)$/.test(flag)),
+    'Price edit uses the standalone financial sale fixture');
 assert.ok(!process.argv.includes('--native-return') || process.argv.includes('--native'), '--native-return requires --native');
 const returnScale=process.argv.includes('--return-scale')?700:1;
 const mixedInvoice = process.argv.includes('--invoice-mixed');
@@ -38,7 +41,8 @@ if (process.argv.includes('--native-fee-create')) {
         !['--native-live-invoice','--native-invoice-create','--expense-paid','--expense-edit','--native-expense','--native-expense-edit'].some(flag => process.argv.includes(flag)),
         'Fee replication uses the separate uncollected financial fixture');
 }
-if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
+assert.ok(!process.argv.includes('--native-price-edit') || process.argv.includes('--price-edit'));
+if (process.argv.includes('--native-price-edit') || process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
     const ready = await fetch('http://127.0.0.1:5590/probes/readiness', {
         redirect:'error', signal:AbortSignal.timeout(3000),
     }).catch(() => null);
@@ -57,6 +61,8 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 // Resolve optional test adapters before provisioning a synthetic user. A loader
 // failure must not leave a signed-in fixture outside the cleanup block.
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
+const priceMCP=process.argv.includes('--price-edit') ? await import('../LedgerTargetMCP/src/itemPriceEdit.ts') : null;
+const priceTransport=priceMCP ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
 const returnMCP=process.argv.includes('--return-mcp') ? await import('../LedgerTargetMCP/src/uninvoicedReturn.ts') : null;
 assert.ok(!process.argv.includes('--return-withdrawal') || (returnMCP && !process.argv.includes('--financial')),
     '--return-withdrawal requires --return-mcp with the ordinary no-financial-access fixture');
@@ -122,6 +128,7 @@ try {
             env:{...process.env,LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:principal,
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
+                ...(process.argv.includes('--native-price-edit')?{LEDGER_PRICE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale')?{LEDGER_RESALE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale-other-project')?{LEDGER_RESALE_PROJECT:key+'-native-project'}:{}),
@@ -572,6 +579,54 @@ try {
     assert.equal(sql(`select amount_minor_units::text from ledger_private.item_charge_occurrences where id=${q(key+'-charge')}`),'9223372036854775807');
     assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
     let returnInput, returnService;
+    let priceEditBody;
+    if(process.argv.includes('--price-edit')) {
+        const invoiceCommand={operationId:key+'-invoice-op',accountId:account,actorPrincipalId:principal,
+            projectId:project,clientId:client,invoiceId:key+'-invoice',contractVersion:'invoice-create-v1',
+            createdAtMs:'1788523200000',name:'Price edit Invoice',notes:'',sources:[{kind:'item',sourceId:key+'-charge',
+                expectedRevision:'1',amountMinorUnits:'9223372036854775807',currency:'USD'}]};
+        const invoiceResponse=await call('/rest/v1/rpc/spike_create_invoice',{p_command:JSON.stringify(invoiceCommand)},token);
+        assert.equal(invoiceResponse.status,200); assert.equal((await invoiceResponse.json()).phase,'applied');
+        const service=new priceTransport.SupabaseInventorySaleService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+        const priceContext={accountId:account,principalId:principal,accessToken:token};
+        const reviewed=await priceMCP.itemPriceEditReviewTool({projectId:project,itemId:item},priceContext,service);
+        assert.equal(reviewed.currentPrice.amountMinorUnits,'9223372036854775807');
+        assert.equal(reviewed.chargeRevision,'1');
+        const priceInput={operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
+            payload:{projectId:project,itemId:item,placementId:reviewed.placementId,occurrenceId:reviewed.occurrenceId,
+                expectedPriceRevision:reviewed.priceRevision,expectedChargeRevision:reviewed.chargeRevision,
+                requestedPriceMinorUnits:'12346',reviewedPriceMinorUnits:'12346',currency:'USD'}};
+        const priceRequest=priceMCP.makeItemPriceEditRequest(priceInput,priceContext);
+        priceEditBody={p_command:priceRequest.commandJSON};
+        const path='/rest/v1/rpc/spike_edit_uncollected_item_price';
+        assert.ok([401,403].includes((await call(path,priceEditBody)).status));
+        const edited=await call(path,priceEditBody,token);
+        assert.equal(edited.status,200); const receipt=await edited.json(); assert.equal(receipt.phase,'applied');
+        assert.equal(receipt.command_fingerprint,createHash('sha256').update(priceEditBody.p_command).digest('hex'));
+        const replay=await call(path,priceEditBody,token); assert.equal(replay.status,200);
+        assert.deepEqual(await replay.json(),receipt);
+        assert.equal((await priceMCP.itemPriceEditTool(priceInput,priceContext,service)).phase,'applied');
+        const refreshed=await priceMCP.itemPriceEditReviewTool({projectId:project,itemId:item},priceContext,service);
+        assert.equal(refreshed.currentPrice.amountMinorUnits,'12346');
+        assert.equal(refreshed.chargeRevision,'2');
+        const invoice=await call('/rest/v1/rpc/spike_read_live_invoice',
+            {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
+        assert.equal(invoice.status,200); assert.equal((await invoice.json()).totalMinorUnits,'12346');
+        assert.equal(sql(`select revision||':'||amount_minor_units from ledger_private.item_charge_occurrences where id=${q(key+'-charge')}`),'2:12346');
+        assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+        console.log('PASS actual HTTP price edit: live Invoice readback, exact receipt/replay, no payment');
+        if(process.argv.includes('--native-price-edit')) {
+            runNative('itemPriceLiveReplication');
+            const afterNative=await service.reviewItemPriceEdit({projectId:project,itemId:item},priceContext);
+            assert.equal(afterNative.currentPrice.amountMinorUnits,'12347');
+            assert.equal(afterNative.chargeRevision,'3');
+            const invoiceAfterNative=await call('/rest/v1/rpc/spike_read_live_invoice',
+                {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
+            assert.equal(invoiceAfterNative.status,200);
+            assert.equal((await invoiceAfterNative.json()).totalMinorUnits,'12347');
+            assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+        }
+    }
     if(returnMCP) {
         returnService=new returnMCP.SupabaseUninvoicedReturnService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
         const reviewInput={projectId:project,itemIds:[item]};
@@ -684,6 +739,7 @@ try {
     const removed=await call(endpoint,body,token);
     assert.equal(removed.status,403,'Removed member must not replay a former result');
     assert.equal((await call(reviewEndpoint,reviewBody,token)).status,403,'Removed member must not read a sale review');
+    if(priceEditBody) assert.equal((await call('/rest/v1/rpc/spike_edit_uncollected_item_price',priceEditBody,token)).status,403);
     if(mcp) {
         await assert.rejects(mcp.inventorySaleTool(input,context,service),error=>error.statusCode===403);
         await assert.rejects(mcp.inventorySaleReviewTool({itemIds:[item]},context,service),error=>error.statusCode===403);

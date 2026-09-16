@@ -56,6 +56,7 @@ public enum LedgerPowerSyncTable {
     public static let localOperations = "spike_local_operations"
     public static let categoryCommands = "spike_category_commands"
     public static let inventorySaleCommands = "spike_inventory_sale_commands"
+    public static let itemPriceEditCommands = "spike_item_price_edit_commands"
     public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
     public static let expenseCommands = "spike_expense_commands"
     public static let expenseEntryRecovery = "spike_expense_entry_recovery"
@@ -575,6 +576,14 @@ public enum LedgerPowerSyncSchema {
             name: LedgerPowerSyncTable.categoryCommands,
             columns: [
                 .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.itemPriceEditCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"), .text("item_id"),
                 .text("contract_version"), .text("fingerprint"), .text("envelope_json")
             ],
             insertOnly: true

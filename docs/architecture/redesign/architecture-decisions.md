@@ -2264,6 +2264,24 @@ Client/Project storage and Project form tests also pass in2.385s
 (`/tmp/ledger-client-project-timestamp-consumers.log`). No schema change, hosted
 deployment, or new Project allocation policy was required.
 
+### Live Invoice source-edit serialization (2026-09-16)
+
+Current Item-price and Expense edits lock an existing live Invoice before its
+source, then recheck membership after obtaining the source lock. This matches
+Invoice revision ordering and prevents accepted source edits from independently
+validating the same old total. Live totals remain derived, not duplicated in a
+new stored aggregate. Validation runs inside the mutation's rollback boundary;
+failure retains the existing durable rejected-operation response. Expense
+receipt handling, source identity and frozen accounting are unchanged. The
+Expense overflow regression failed before the change and passes afterward.
+The final empty-application-schema migration replay and concurrency run passed,
+including competing Item/Expense edits in both orders, collection races, and
+rollback recovery (`/tmp/ledger-price-final-replay-races-20260916.log`). The local
+security advisor reported no warning/error issues. Native offline restart,
+upload, and PowerSync readback also passed; see the existing Item-editing
+checklist evidence. These are local results, not hosted deployment or cutover
+authorization.
+
 ### Account onboarding boundary (2026-09-16, implementation in progress)
 
 Account creation requires READ COMMITTED, matching existing transactional
