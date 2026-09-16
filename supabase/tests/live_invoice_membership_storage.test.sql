@@ -53,6 +53,12 @@ select is((ledger_private.create_live_invoice(pg_temp.invoice_command('create-in
 select is((select count(*) from ledger_private.live_invoice_memberships where invoice_id='created-invoice'),1::bigint,'Replay does not duplicate membership');
 select is((select final_amount_minor_units from ledger_private.expenses where id='invoice-expense'),9007199254740993::bigint,'Creation preserves exact source money');
 select is((select count(*) from public.spike_transactions where project_id='invoice-membership-project'),0::bigint,'Invoice demand creates no payment');
+set local role authenticated;
+select is(public.spike_read_live_invoice('account-primary','invoice-membership-project','created-invoice')->>'totalMinorUnits',
+  '9007199254740993','Live read retains exact amount beyond JS integer precision');
+select throws_ok($$select public.spike_read_live_invoice('account-other','invoice-membership-project','created-invoice')$$,
+  '42501','invoice_not_available','Cross-account Invoice read denied');
+reset role;
 select throws_ok($$select ledger_private.create_live_invoice(pg_temp.invoice_command('create-invoice','other-invoice'))$$,
   '23505','Operation identity conflict','Changed replay cannot overwrite Invoice');
 select is((ledger_private.create_live_invoice(pg_temp.invoice_command('competing','other-invoice'))).error_code,
@@ -96,8 +102,17 @@ select is((select string_agg(source_kind,',' order by position) from ledger_priv
   'item,expense','Lock ordering does not reorder visible lines');
 select is((select scope_kind||':'||project_id from public.spike_item_placements where id='invoice-placement'),
   'project:invoice-membership-project','Invoice creation does not relocate Item');
+select is(public.spike_read_live_invoice('account-primary','invoice-membership-project','mixed-invoice')->>'totalMinorUnits',
+  '12400','Live mixed total resolves both sources');
+update ledger_private.expenses set final_amount_minor_units=100,vendor='Updated delivery',revision=revision+1 where id='mixed-expense';
+select is(public.spike_read_live_invoice('account-primary','invoice-membership-project','mixed-invoice')->>'totalMinorUnits',
+  '12445','Source edit changes live Invoice total without copying money');
+select is(public.spike_read_live_invoice('account-primary','invoice-membership-project','mixed-invoice')->'lines'->1->>'description',
+  'Updated delivery','Source description remains live');
 update ledger_private.item_charge_occurrences set revision=2,withdrawn_at='2026-02-01',withdrawn_by_principal_id='principal-owner'
 where id='invoice-charge';
+select throws_ok($$select public.spike_read_live_invoice('account-primary','invoice-membership-project','mixed-invoice')$$,
+  '55000','invoice_sources_incomplete','Withdrawn Item cannot silently disappear from live total');
 select is((ledger_private.create_live_invoice((pg_temp.mixed_invoice('withdrawn-charge')::jsonb ||
   jsonb_build_object('sources',jsonb_build_array(pg_temp.mixed_invoice('withdrawn-charge')::jsonb->'sources'->0)))::text)).error_code,
   'invoice_source_unavailable','Withdrawn source is not eligible for new membership');
@@ -110,6 +125,8 @@ select (pg_temp.invoice_command(op,'fee-invoice')::jsonb || jsonb_build_object('
 select is((ledger_private.create_live_invoice(pg_temp.fee_invoice('fee-create'))).phase,'applied','Fee source creates live demand');
 select is((select source_kind from ledger_private.live_invoice_memberships where invoice_id='fee-invoice'),
   'fee_installment','Fee is not converted to Expense or Transaction');
+select is(public.spike_read_live_invoice('account-primary','invoice-membership-project','fee-invoice')->>'totalMinorUnits',
+  '250000','Live Fee reads its source amount');
 select ok(not has_table_privilege('authenticated','ledger_private.fee_installments','SELECT,INSERT,UPDATE,DELETE'),
   'Fee storage has no unvalidated direct client access');
 select throws_ok($$update ledger_private.fee_installments set amount_minor_units=250001 where id='planned-fee'$$,
@@ -126,6 +143,8 @@ insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line
  source_kind,source_id,source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
 values('fee-line','account-primary','fee-invoice',0,'USD','fee_installment','planned-fee',1,'category-design-fee',250000,'Frozen fee','{}');
 update ledger_private.collected_invoices set sealed=true where id='fee-invoice';
+select throws_ok($$select public.spike_read_live_invoice('account-primary','invoice-membership-project','fee-invoice')$$,
+  '55000','invoice_sources_incomplete','Collected source cannot be reported as live demand');
 select throws_ok($$update ledger_private.fee_installments set amount_minor_units=250001,revision=2 where id='planned-fee'$$,
  '23514','Collected Fee is immutable','Collection locks Fee amount');
 select throws_ok($$delete from ledger_private.fee_installments where id='planned-fee'$$,
@@ -135,5 +154,11 @@ select is((ledger_private.create_live_invoice(pg_temp.fee_invoice('fee-rebill'))
 update public.spike_account_memberships set financial_access='none' where account_id='account-primary' and principal_id='principal-owner';
 select throws_ok($$select ledger_private.create_live_invoice(pg_temp.invoice_command('create-invoice'))$$,
   '42501','Invoice access required','Even replay requires current access');
+set local role authenticated;
+select throws_ok($$select public.spike_read_live_invoice('account-primary','invoice-membership-project','created-invoice')$$,
+  '42501','invoice_not_available','Financial withdrawal denies complete Invoice read');
+reset role;
+select ok(not has_function_privilege('anon','public.spike_read_live_invoice(text,text,text)','EXECUTE'),
+  'Anonymous role cannot call read endpoint');
 select * from finish();
 rollback;
