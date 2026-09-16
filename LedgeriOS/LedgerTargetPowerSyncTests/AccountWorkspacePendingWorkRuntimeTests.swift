@@ -1320,8 +1320,22 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
             #expect(found)
         }
+        let itemId = try ItemID(validating: item)
+        var savedHistory: DownloadedItemPlacementHistory?
+        for try await history in runtime.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+            guard let paidLine = history.invoiceLines.first else { continue }
+            #expect(history.itemId == itemId)
+            #expect(paidLine.line.signedAmount.minorUnits == 900)
+            #expect(paidLine.line.description == "Previous collected sale")
+            #expect(Set(history.intervals.compactMap { interval -> ProjectID? in
+                if case .project(let id) = interval.scope { return id }; return nil
+            }) == Set([try ProjectID(validating: source), try ProjectID(validating: destination)]))
+            savedHistory = history; break
+        }
+        let originalHistory = try #require(savedHistory)
         try await runtime.close()
         let offline = try await context.openRuntime()
+        #expect(try await offline.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) == originalHistory)
         for original in originals {
             #expect(try await offline.readInvoicingCharges(accountId: context.accountId, projectId: original.projectId) == original)
         }

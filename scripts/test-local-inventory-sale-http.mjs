@@ -474,7 +474,9 @@ try {
           insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,item_id,
             source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
             values(${q(line)},${q(account)},${q(invoice)},0,'USD','item',${q(paidCharge)},${q(originItem)},
-              1,${q(category)},900,'Previous collected sale','{}');
+              1,${q(category)},900,'Previous collected sale',
+              jsonb_build_object('item',jsonb_build_object('itemId',${q(originItem)},'occurrenceId',${q(paidCharge)},
+                'price',jsonb_build_object('basis',jsonb_build_object('projectPrice','{}'::jsonb),'amount',jsonb_build_object('minorUnits',900,'currency','USD')))));
           update ledger_private.collected_invoices set sealed=true where id=${q(invoice)};
           commit;`);
         const history=()=>sql(`select jsonb_build_object('purchase',(select to_jsonb(t) from public.spike_transactions t where id=${q(purchase)}),

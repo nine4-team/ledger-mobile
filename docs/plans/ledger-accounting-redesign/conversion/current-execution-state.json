@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1187,
+  "stateVersion": 1189,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Hosted history native29819 PASS1/3.758s; QA access restored none. Evidence item-history-source-reconciliation.hostedHistoricalNativeVerification. SQL106/PS9 verified. NEXT implement approved dependency; Transfer/credit questions pending, do not guess policy or repeat questions/tests. Mac UI auth blocked. No active processes."
+    "nextWorkflowDecision": "Hosted Item detail history23897 PASS3.396s; QA access restored none. Local shared scenario52178 PASS. Evidence item-history-source-reconciliation.hostedItemDetailHistoryVerification; no repeat. SQL106/PS9 verified. NEXT unblocked implementation dependency, not more history test expansion. Transfer/credit questions pending; Mac UI auth blocked. No active processes."
   }
 }

@@ -78,7 +78,9 @@ try {
       insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
         values(${q(id+'-invoice')},${q(account)},${q(source)},${q(clients[0].id)},${q(id+'-payment')},1,'USD',900);
       insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
-        values(${q(id+'-line')},${q(account)},${q(id+'-invoice')},0,'USD','item',${q(id+'-paid-charge')},${q(item)},1,${q(category)},900,'Previous collected sale','{}');
+        values(${q(id+'-line')},${q(account)},${q(id+'-invoice')},0,'USD','item',${q(id+'-paid-charge')},${q(item)},1,${q(category)},900,'Previous collected sale',
+          jsonb_build_object('item',jsonb_build_object('itemId',${q(item)},'occurrenceId',${q(id+'-paid-charge')},
+            'price',jsonb_build_object('basis',jsonb_build_object('projectPrice','{}'::jsonb),'amount',jsonb_build_object('minorUnits',900,'currency','USD')))));
       update ledger_private.collected_invoices set sealed=true where id=${q(id+'-invoice')};
       commit; select true as seeded;`);
     const history=()=>sql(`select (select to_jsonb(i) from ledger_private.collected_invoices i where id=${q(id+'-invoice')}) as invoice,
