@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1098,
+  "stateVersion": 1100,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -22,6 +22,7 @@
   },
   "activeWorkflow": {
     "id": "inventory-to-project-sale",
+    "integrationWorkflowIds": ["inventory-to-project-sale", "item-remove-before-invoice", "transaction-browser-and-detail", "project-invoicing-workspace", "invoice-report-readback", "downloaded-item-browsing-and-detail"],
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
@@ -64,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Hosted Return PASS saved87f8e777. Test-only corrections: PDF uppercase, history disclaimer, bulkSale picker and positive Item-row scrolling. Owners retain captured evidence and incomplete UI acceptance. Desktop rechecked locked: do not launch UI unchanged. NEXT targeted Mac Return/PDF/detail and iOS five Item scenarios after unlock; other CI failures remain. Latest compile log /tmp/ledger-item-visibility-test-build-fixed.log; initial61505 failed argument ordering, corrected directly. conversion:check PASS. No push or CI dispatch. Preserve private .native-pdf files."
+    "nextWorkflowDecision": "Hosted Return PASS87f8e777; test-only repairs committed6de92eef. Dirty: Transaction Close menu selectors, AuthorizedPDFViewer AX page count/loading, and Mac Expense card label assertions. Builds69281/93285 PASS. Evidence owners transaction-browser-and-detail and project-invoicing-workspace. NEXT targeted Return/PDF/detail/browser/Expense and iOS Item UI after unlock; remaining failures include gallery controls and Invoicing navigation. Do not infer all failures repaired from compilation. No renderer/gesture replacement, push or CI dispatch. Preserve private .native-pdf files."
   }
 }

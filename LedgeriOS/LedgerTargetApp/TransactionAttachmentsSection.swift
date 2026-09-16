@@ -426,6 +426,9 @@ struct AuthorizedPDFViewer: View {
         PDFViewerPresentation(fileName: fileName, pdfDocument: document,
             isLoading: loading, isPresented: $isPresented,
             onPinImage: document == nil ? nil : onPin, onShare: document == nil ? nil : onShare)
+            .accessibilityElement(children: .contain)
+            .accessibilityValue(document.map { "\($0.pageCount) PDF pages" }
+                ?? (loading ? "Loading PDF" : "PDF unavailable"))
             .task {
                 document = nil; loading = true
                 do {

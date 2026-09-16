@@ -469,11 +469,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["Receipt Audit"].tap()
         XCTAssertTrue(app.buttons["Mismatch"].waitForExistence(timeout: 5))
         app.buttons["Mismatch"].tap()
-        app.buttons["Close"].tap()
+        app.buttons["Close menu"].tap()
         XCTAssertTrue(app.staticTexts["target-transactions-no-match"].waitForExistence(timeout: 5))
         app.buttons["Filter Transactions"].tap()
         app.buttons["Reset Filters"].tap()
-        app.buttons["Close"].tap()
+        app.buttons["Close menu"].tap()
         XCTAssertTrue(app.staticTexts["Receipt balanced"].waitForExistence(timeout: 5))
         app.buttons["Search"].tap()
         let search = app.textFields["Search transactions..."]
@@ -1243,13 +1243,23 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(invoicing, in: app); invoicing.tap()
         XCTAssertTrue(app.buttons["Expenses"].firstMatch.waitForExistence(timeout: 5))
         app.buttons["Expenses"].firstMatch.tap()
+        #if os(macOS)
+        let paidExpense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        XCTAssertTrue(waitUntil { paidExpense.label.contains(", Paid,") })
+        XCTAssertFalse(paidExpense.label.contains("Invoice status unavailable"))
+        #else
         XCTAssertTrue(app.staticTexts["Paid"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Invoice status unavailable"].exists)
+        #endif
         app.buttons["Filter receivables"].tap()
         XCTAssertTrue(app.buttons["Paid"].waitForExistence(timeout: 5)); app.buttons["Paid"].tap()
         app.buttons["Close menu"].tap()
         XCTAssertTrue(app.buttons["target-invoicing-expense-expense-ui-test"].waitForExistence(timeout: 5))
+        #if os(macOS)
+        XCTAssertTrue(paidExpense.label.contains(", Paid,"))
+        #else
         XCTAssertTrue(app.staticTexts["Paid"].exists)
+        #endif
     }
 
     func testInvoicingReusesSourceAndSearchControls() throws {
@@ -1265,15 +1275,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(invoicing, in: app)
         XCTAssertTrue(invoicing.waitForExistence(timeout: 5))
         invoicing.tap()
-        let vendor = app.staticTexts["Receipt vendor"]
         #if os(macOS)
+        let vendor = app.buttons["target-invoicing-expense-expense-ui-test"]
         let expenseRow = app.buttons["target-invoicing-expense-expense-ui-test"]
         let invoicingScroll = app.sheets.firstMatch.scrollViews.firstMatch
         XCTAssertTrue(invoicingScroll.waitForExistence(timeout: 5))
         reveal(expenseRow, in: app, fullyInsideScrollView: true, within: invoicingScroll)
+        XCTAssertTrue(expenseRow.label.contains("Receipt vendor"))
+        XCTAssertTrue(expenseRow.label.contains("Invoice status unavailable"))
+        #else
+        let vendor = app.staticTexts["Receipt vendor"]
+        XCTAssertTrue(app.staticTexts["Invoice status unavailable"].exists)
         #endif
         XCTAssertTrue(vendor.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Invoice status unavailable"].exists)
         app.buttons["target-invoicing-expense-expense-ui-test"].tap()
         XCTAssertTrue(app.staticTexts["Shipping"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Delivery"].exists)
