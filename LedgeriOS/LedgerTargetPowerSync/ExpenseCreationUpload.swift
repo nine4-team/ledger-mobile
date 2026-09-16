@@ -44,12 +44,52 @@ enum ExpenseCreationUpload {
         let result = try await applier.apply(command)
         try requireAccess(accessFence)
         try result.validate(for: command)
-        try await database.writeTransaction { local in
+        try await persist(result, id: entry.id, database: database) { local in
             try requireOwner(local, command: command, fingerprint: request.fingerprint, fence: accessFence)
+        }
+    }
+
+    static func applyEdit(_ entry: CrudEntry, database: any PowerSyncDatabaseProtocol,
+                          accessFence: LedgerWorkspaceAccessFence,
+                          applier: any EditExpenseCommandApplying) async throws {
+        guard entry.op == .put, entry.table == LedgerPowerSyncTable.expenseCommands,
+              let data = entry.opData, let json = data["envelope_json"] ?? nil,
+              Set(data.keys) == Set(["account_id", "actor_principal_id", "expense_id", "contract_version", "fingerprint", "envelope_json"]) else {
+            throw LocalOperationIdentityGuardFailure.malformedEvidence
+        }
+        let command = try OperationContractCodec.decode(EditExpenseCommand.self, from: Data("{\"envelope\":\(json)}".utf8))
+        let e = command.envelope, request = try EditExpenseUploadRequest(command)
+        guard entry.id == e.operationId.rawValue, data["account_id"] == e.accountId.rawValue,
+              data["actor_principal_id"] == e.actorPrincipalId.rawValue, data["expense_id"] == e.payload.entry.expenseId.rawValue,
+              data["contract_version"] == e.contractVersion.rawValue, data["fingerprint"] == request.fingerprint,
+              json == String(decoding: try OperationContractCodec.encode(e), as: UTF8.self),
+              AccountBoundOperationIdentity.isValid(e.operationId, family: .expenseEdit, accountId: e.accountId) else {
+            throw LocalOperationIdentityGuardFailure.malformedEvidence
+        }
+        let owner: @Sendable (any Transaction) throws -> Void = { local in
+            try requireOwner(local, account: e.accountId, principal: e.actorPrincipalId, operation: e.operationId,
+                family: .editExpense, fingerprint: request.fingerprint, fence: accessFence)
+        }
+        try await database.writeTransaction { local in
+            try owner(local)
+            _ = try local.execute(sql: "UPDATE spike_local_operations SET local_state='applying' WHERE id=? AND local_state='queued'", parameters: [entry.id])
+        }
+        try requireAccess(accessFence)
+        let result = try await applier.apply(command)
+        try requireAccess(accessFence)
+        try result.validate(for: command)
+        try await persist(result, id: entry.id, database: database, owner: owner)
+    }
+
+    private static func persist(_ result: ExpenseServerResult, id: String,
+                                database: any PowerSyncDatabaseProtocol,
+                                owner: @escaping @Sendable (any Transaction) throws -> Void) async throws {
+        try await database.writeTransaction { local in
+            try owner(local)
             let prior = try local.get(sql: """
                 SELECT local_state,terminal_result_code,terminal_error_code,
                   terminal_server_received_at_ms,terminal_completed_at_ms FROM spike_local_operations WHERE id=?
-                """, parameters: [entry.id]) {
+                """, parameters: [id]) {
                     (try $0.getString(index: 0), try $0.getStringOptional(index: 1), try $0.getStringOptional(index: 2),
                      try $0.getInt64Optional(index: 3), try $0.getInt64Optional(index: 4))
                 }
@@ -65,7 +105,7 @@ enum ExpenseCreationUpload {
                   terminal_envelope_sha256=?,terminal_server_received_at_ms=?,terminal_completed_at_ms=?,
                   updated_at_ms=MAX(updated_at_ms,?) WHERE id=? AND local_state IN ('queued','applying')
                 """, parameters: [result.phase,result.phase,result.result_code,result.error_code,result.envelope_sha256,
-                    result.server_received_at_ms,result.completed_at_ms,result.completed_at_ms,entry.id])
+                    result.server_received_at_ms,result.completed_at_ms,result.completed_at_ms,id])
         }
     }
 
@@ -77,12 +117,19 @@ enum ExpenseCreationUpload {
                                      fence: LedgerWorkspaceAccessFence) throws {
         try requireAccess(fence)
         let e = command.envelope
-        _ = try CategoryManagementLocalProjection.requireMembership(local, account: e.accountId, principal: e.actorPrincipalId)
+        try requireOwner(local, account: e.accountId, principal: e.actorPrincipalId, operation: e.operationId,
+            family: .createExpense, fingerprint: fingerprint, fence: fence)
+    }
+    private static func requireOwner(_ local: any Transaction, account: AccountID, principal: PrincipalID,
+                                     operation: OperationID, family: LocalOperationCommandFamily,
+                                     fingerprint: String, fence: LedgerWorkspaceAccessFence) throws {
+        try requireAccess(fence)
+        _ = try CategoryManagementLocalProjection.requireMembership(local, account: account, principal: principal)
         let financial = try local.getOptional(sql: "SELECT financial_access FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='active'",
-            parameters: [e.accountId.rawValue, e.actorPrincipalId.rawValue]) { try $0.getString(index: 0) }
+            parameters: [account.rawValue, principal.rawValue]) { try $0.getString(index: 0) }
         guard financial == "full" else { throw Failure.unavailable }
-        guard try LocalOperationIdentityGuard.inspect(transaction: local, operationId: e.operationId,
-            expectedFamily: .createExpense, expectedFingerprint: fingerprint) == .matchingOwner else {
+        guard try LocalOperationIdentityGuard.inspect(transaction: local, operationId: operation,
+            expectedFamily: family, expectedFingerprint: fingerprint) == .matchingOwner else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
         }
     }

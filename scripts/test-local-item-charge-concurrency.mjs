@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync, readdirSync, realpathSync } from 'node:fs';
 
 // Only this generated database is mutated. Copy schema, not local user/test data;
 // the committed synthetic seed supplies the race's independent prerequisites.
@@ -101,6 +101,24 @@ async function race(name, holderSQL, waiterSQL, release, expectedCode) {
     await Promise.allSettled([holder.closed, waiter.closed]);
   }
 }
+function prepareExpense(name) {
+  sql(`insert into ledger_private.expenses(id,account_id,project_id,category_id,vendor,expense_date,
+    final_amount_minor_units,currency,notes,created_at,created_by_principal_id)
+    values('${source(name)}','account-primary','race-project','category-system','Synthetic','2026-01-01',
+      12345,'USD','',now(),'principal-owner');`);
+}
+const editExpense = name => `update ledger_private.expenses set final_amount_minor_units=12346,revision=revision+1 where id='${source(name)}';`;
+function collectExpense(name) {
+  const id = source(name);
+  return `select ledger_private.import_client_payment('payment-${id}','account-primary','race-project','client-existing',
+    12345,'USD','synthetic-expense-race','${id}','\\x01'::bytea);
+    insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
+    values('invoice-${id}','account-primary','race-project','client-existing','payment-${id}',1,'USD',12345);
+    insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,
+      source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
+    values('line-${id}','account-primary','invoice-${id}',0,'USD','expense','${id}',1,'category-system',12345,'Synthetic','{}');
+    update ledger_private.collected_invoices set sealed=true where id='invoice-${id}'; set constraints all immediate;`;
+}
 let created = false;
 try {
   // Realtime's server-owned functions require administrative GUC privileges;
@@ -111,6 +129,18 @@ try {
   sql(`create database ${database};`, 'postgres'); created = true;
   execFileSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'postgres', '-d', database,
     '--no-owner', '--no-privileges', '--exit-on-error'], { input: dump, timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
+  if (process.argv.includes('--replay-migrations')) {
+    // Retain the schema-only Supabase platform, but remove every Ledger object.
+    // This is only the generated disposable database, never the working database.
+    sql(`drop schema ledger_private cascade; drop schema public cascade;
+      create schema public authorization pg_database_owner;
+      grant usage on schema public to postgres,anon,authenticated,service_role;
+      grant all on schema public to postgres,service_role;`);
+    const migrations = readdirSync(`${root}/supabase/migrations`).filter(name => name.endsWith('.sql')).sort();
+    assert.ok(migrations.length > 0);
+    sql(migrations.map(name => readFileSync(`${root}/supabase/migrations/${name}`, 'utf8')).join('\n'));
+    console.log(`Replayed ${migrations.length} Ledger migrations on empty application schemas; Supabase platform schema retained, no source records copied.`);
+  }
   sql(readFileSync(`${root}/supabase/seed.sql`, 'utf8'));
   if (sql("select to_regclass('ledger_private.item_charge_occurrences') is null") === 't') {
     sql(`begin; ${readFileSync(`${root}/supabase/migrations/20260909060126_item_charge_occurrence_source.sql`, 'utf8')} commit;`);
@@ -156,6 +186,15 @@ try {
     }
   }
   console.log('PASS 9 observed two-session races and 6 unsupported-isolation checks; no public writer or hosted behavior claimed.');
+  for (const name of ['expense-edit-first', 'expense-collection-first', 'expense-rollback']) prepareExpense(name);
+  await race('expense-edit-first', editExpense('expense-edit-first'), collectExpense('expense-edit-first'), 'commit', '23514');
+  assert.equal(sql("select revision||':'||final_amount_minor_units from ledger_private.expenses where id='race-expense-edit-first'"), '2:12346');
+  assert.equal(sql("select count(*) from ledger_private.collected_invoices where id='invoice-race-expense-edit-first'"), '0');
+  await race('expense-collection-first', collectExpense('expense-collection-first'), editExpense('expense-collection-first'), 'commit', '23514');
+  assert.equal(sql("select revision||':'||final_amount_minor_units from ledger_private.expenses where id='race-expense-collection-first'"), '1:12345');
+  await race('expense-rollback', collectExpense('expense-rollback'), editExpense('expense-rollback'), 'rollback');
+  assert.equal(sql("select revision from ledger_private.expenses where id='race-expense-rollback'"), '2');
+  console.log('PASS 3 observed Expense edit/collection races; rollback releases the source without a paid lock.');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

@@ -36,6 +36,17 @@ public extension ProjectInvoicingReading {
 }
 
 public struct ProjectExpenses: Equatable, Sendable {
+    public struct PendingEdit: Equatable, Sendable, Identifiable {
+        public let id: OperationID
+        public let entry: BusinessPaidExpenseDraft
+        public let expectedRevision: Int64
+        public let state: LocalOperationState
+        public init(id: OperationID, entry: BusinessPaidExpenseDraft, expectedRevision: Int64, state: LocalOperationState) throws {
+            guard expectedRevision > 0, expectedRevision < Int64.max,
+                  [.queued, .applying, .applied, .rejected].contains(state) else { throw Failure.invalidEvidence }
+            self.id = id; self.entry = entry; self.expectedRevision = expectedRevision; self.state = state
+        }
+    }
     /// Accepted local intent, kept separate from authoritative accounting facts.
     public struct PendingCreation: Equatable, Sendable, Identifiable {
         public let id: OperationID
@@ -79,14 +90,19 @@ public struct ProjectExpenses: Equatable, Sendable {
     public let projectId: ProjectID
     public let expenses: [Expense]
     public let pendingCreations: [PendingCreation]
+    public let pendingEdits: [PendingEdit]
     public let unfinishedEntries: [ExpenseEntryRecovery]
-    public init(accountId: AccountID, projectId: ProjectID, expenses: [Expense], pendingCreations: [PendingCreation] = [], unfinishedEntries: [ExpenseEntryRecovery] = []) throws {
+    public init(accountId: AccountID, projectId: ProjectID, expenses: [Expense], pendingCreations: [PendingCreation] = [], pendingEdits: [PendingEdit] = [], unfinishedEntries: [ExpenseEntryRecovery] = []) throws {
         guard expenses.allSatisfy({ $0.entry.accountId == accountId && $0.entry.projectId == projectId }),
               Set(expenses.map(\.id)).count == expenses.count,
               pendingCreations.allSatisfy({ $0.entry.accountId == accountId && $0.entry.projectId == projectId }),
               Set(pendingCreations.map(\.id)).count == pendingCreations.count else { throw Failure.invalidEvidence }
         self.accountId = accountId; self.projectId = projectId; self.expenses = expenses
         self.pendingCreations = pendingCreations
+        guard pendingEdits.allSatisfy({ $0.entry.accountId == accountId && $0.entry.projectId == projectId }),
+              Set(pendingEdits.map(\.id)).count == pendingEdits.count,
+              Set(pendingCreations.map(\.id)).isDisjoint(with: pendingEdits.map(\.id)) else { throw Failure.invalidEvidence }
+        self.pendingEdits = pendingEdits
         guard unfinishedEntries.allSatisfy({ $0.accountId == accountId && $0.projectId == projectId }) else { throw Failure.invalidEvidence }
         self.unfinishedEntries = unfinishedEntries
     }

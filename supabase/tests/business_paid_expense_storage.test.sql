@@ -82,5 +82,73 @@ select set_config('request.jwt.claims','{}',true);
 select throws_ok($$select ledger_private.read_expense('account-primary','expense-project','expense-test')$$,'42501','expense_not_available','Missing authenticated identity denied even with privileged caller');
 select ok(not has_function_privilege('anon','public.spike_read_expense(text,text,text)','EXECUTE'),'Anonymous cannot invoke endpoint');
 select ok(not has_function_privilege('service_role','public.spike_read_expense(text,text,text)','EXECUTE'),'No service-role endpoint bypass');
+update public.spike_account_memberships set state='active',financial_access='full'
+  where account_id='account-primary' and principal_id='principal-owner';
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+create function pg_temp.edit_command(op text,revision text default '1') returns text language sql as $$
+  select (pg_temp.expense_command(op,'expense-created')::jsonb || jsonb_build_object(
+    'contractVersion','expense-edit-v1','expectedRevision',revision,'notes','Edited notes'))::text
+$$;
+select is((ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op'))).phase,'applied','Expense edit applies');
+select is((select revision from ledger_private.expenses where id='expense-created'),2::bigint,'Revision advances once');
+select is((select notes from ledger_private.expenses where id='expense-created'),'Edited notes','Entry edit persisted');
+select is((ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op'))).phase,'applied','Exact edit replay returns success');
+select is((select revision from ledger_private.expenses where id='expense-created'),2::bigint,'Replay cannot apply twice');
+select throws_ok($$select ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op','2'))$$,
+  '23505','Operation identity conflict','Changed retry is refused');
+select is((ledger_private.edit_expense(pg_temp.edit_command('expense-edit-stale'))).error_code,
+  'expense_revision_conflict','Stale edit receives durable rejection');
+select is((ledger_private.edit_expense((pg_temp.edit_command('expense-edit-media','2')::jsonb ||
+  '{"receiptAttachmentIds":["unverified"]}'::jsonb)::text)).error_code,
+  'expense_receipt_change_unavailable','Bare receipt IDs cannot bypass verified media');
+select is((ledger_private.edit_expense((pg_temp.edit_command('expense-edit-invalid','2')::jsonb ||
+  '{"date":"2025-02-29"}'::jsonb)::text)).phase,'rejected','Invalid date rejects atomically');
+select is((select revision from ledger_private.expenses where id='expense-created'),2::bigint,'Rejected edits preserve revision');
+select throws_ok($$select ledger_private.edit_expense((pg_temp.edit_command('edit-other-actor','2')::jsonb ||
+  '{"actorPrincipalId":"principal-other"}'::jsonb)::text)$$,'42501','Authenticated actor required','Actor cannot be forged');
+select throws_ok($$select ledger_private.edit_expense((pg_temp.edit_command('edit-other-account','2')::jsonb ||
+  '{"accountId":"account-other"}'::jsonb)::text)$$,'42501','Expense access required','Cross-account command denied');
+select is((ledger_private.edit_expense((pg_temp.edit_command('edit-other-project','2')::jsonb ||
+  '{"projectId":"missing-project"}'::jsonb)::text)).error_code,'expense_project_unavailable','Unknown Project cannot edit source');
+select is((ledger_private.edit_expense((pg_temp.edit_command('edit-other-source','2')::jsonb ||
+  '{"expenseId":"missing-expense"}'::jsonb)::text)).error_code,'expense_unavailable','Missing Expense is not created');
+select is((ledger_private.edit_expense((pg_temp.edit_command('edit-currency','2')::jsonb ||
+  '{"currency":"EUR"}'::jsonb)::text)).error_code,'expense_integrity_conflict','Currency cannot be rewritten');
+select is((ledger_private.edit_expense((pg_temp.edit_command('edit-category','2')::jsonb ||
+  '{"categoryId":"missing-category"}'::jsonb)::text)).error_code,'expense_category_unavailable','Unavailable category denied');
+select throws_ok($$select ledger_private.edit_expense((pg_temp.edit_command('edit-extra','2')::jsonb ||
+  '{"unexpected":"value"}'::jsonb)::text)$$,'22023','Invalid Expense edit command','Unknown fields rejected');
+select throws_ok($$select ledger_private.edit_expense(pg_temp.edit_command('edit-zero','0'))$$,
+  '22023','Invalid Expense edit command','Invalid revision rejected');
+select is((ledger_private.edit_expense((pg_temp.edit_command('edit-bad-lines','2')::jsonb ||
+  '{"receiptLines":[{"id":"invalid"}]}'::jsonb)::text)).error_code,'expense_receipt_invalid','Malformed lines rejected before mutation');
+select is((select count(*) from ledger_private.expense_receipt_lines where expense_id='expense-created'),1::bigint,
+  'Rejected line replacement preserves existing lines');
+select set_config('request.jwt.claims','{}',true);
+select throws_ok($$select ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op'))$$,
+  '42501','Authenticated actor required','Anonymous caller cannot replay accepted edit');
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+update public.spike_account_memberships set financial_access='none'
+  where account_id='account-primary' and principal_id='principal-owner';
+select throws_ok($$select ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op'))$$,
+  '42501','Expense access required','Access withdrawal blocks accepted edit replay');
+select ok(not has_function_privilege(r,'ledger_private.edit_expense(text)','EXECUTE'),r||' cannot call edit writer')
+  from unnest(array['anon','service_role']) r;
+select ok(not has_function_privilege(r,'public.spike_edit_expense(text)','EXECUTE'),r||' cannot call edit endpoint')
+  from unnest(array['anon','service_role']) r;
+set local role authenticated;
+select throws_ok($$select public.spike_edit_expense(pg_temp.edit_command('expense-edit-op'))$$,
+  '42501','Expense access required','Actual endpoint denies withdrawn financial access');
+reset role;
+update public.spike_account_memberships set financial_access='full'
+  where account_id='account-primary' and principal_id='principal-owner';
+set local role authenticated;
+select is((public.spike_edit_expense(pg_temp.edit_command('expense-edit-endpoint','2'))).phase,
+  'applied','Authenticated endpoint applies allowed edit');
+select is((public.spike_edit_expense(pg_temp.edit_command('expense-edit-endpoint','2'))).phase,
+  'applied','Authenticated endpoint supports exact replay');
+select throws_ok($$select public.spike_edit_expense((pg_temp.edit_command('edit-endpoint-cross','3')::jsonb ||
+  '{"accountId":"account-other"}'::jsonb)::text)$$,'42501','Expense access required','Actual endpoint denies cross Account');
+reset role;
 select * from finish();
 rollback;

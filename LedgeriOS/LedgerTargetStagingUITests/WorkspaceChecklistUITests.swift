@@ -10,6 +10,25 @@ import UIKit
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
     private nonisolated let failureScreenshotLock = NSLock()
+    #if os(macOS)
+    private var isolatedPermissionMonitor: NSObjectProtocol?
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        // The CI failure screenshot proves report/print discovery can interrupt
+        // later, unrelated fixtures. Reuse the narrowly scoped existing handler;
+        // do not grant permission or change a developer's desktop preferences.
+        if ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" {
+            isolatedPermissionMonitor = installOfflinePDFPermissionHandler()
+        }
+    }
+
+    override func tearDownWithError() throws {
+        if let isolatedPermissionMonitor { removeUIInterruptionMonitor(isolatedPermissionMonitor) }
+        isolatedPermissionMonitor = nil
+        try super.tearDownWithError()
+    }
+    #endif
 
     override func record(_ issue: XCTIssue) {
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true",
@@ -663,6 +682,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
         section.tap()
         let row = app.descendants(matching: .any)["target-invoicing-invoice-paid-expense-invoice"].firstMatch
+        #if os(macOS)
+        // In the CI-sized sheet, expanding Invoices does not bring its lazy
+        // rows into the viewport. Scroll the foreground sheet, not the project.
+        reveal(row, in: app, fullyInsideScrollView: true, within: invoiceScroll)
+        #endif
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["INV-UI-001"].exists)
         let sent = app.buttons["Sent"].firstMatch
@@ -810,6 +834,48 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
+    func testExpenseEditingReusesFormAndKeepsPendingSeparate() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        reveal(expense, in: app); XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
+        let edit = app.buttons["target-expense-edit"]
+        reveal(edit, in: app); XCTAssertTrue(edit.waitForExistence(timeout: 5)); edit.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertEqual(vendor.value as? String, "Receipt vendor")
+        vendor.tap(); vendor.typeText(" updated")
+        XCTAssertEqual(vendor.value as? String, "Receipt vendor updated")
+        XCTAssertEqual(app.textFields["0.00"].value as? String, "125.50")
+        app.buttons["Save"].tap()
+        let pending = app.staticTexts["Edit saved on this device — waiting to sync"]
+        reveal(pending, in: app); XCTAssertTrue(pending.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Receipt vendor updated"].exists)
+        XCTAssertTrue(app.staticTexts["Receipt vendor"].exists)
+        XCTAssertFalse(app.buttons["target-expense-edit"].exists)
+    }
+
+    func testCollectedExpenseCannotOpenEditForm() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        reveal(expense, in: app); XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
+        XCTAssertTrue(app.staticTexts["Receipt vendor"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["target-expense-edit"].exists)
+    }
+
     func testPaidExpenseUsesExistingInvoicingStatusFilter() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -844,6 +910,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(invoicing.waitForExistence(timeout: 5))
         invoicing.tap()
         let vendor = app.staticTexts["Receipt vendor"]
+        #if os(macOS)
+        let expenseRow = app.buttons["target-invoicing-expense-expense-ui-test"]
+        let invoicingScroll = app.sheets.firstMatch.scrollViews.firstMatch
+        XCTAssertTrue(invoicingScroll.waitForExistence(timeout: 5))
+        reveal(expenseRow, in: app, fullyInsideScrollView: true, within: invoicingScroll)
+        #endif
         XCTAssertTrue(vendor.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Invoice status unavailable"].exists)
         app.buttons["target-invoicing-expense-expense-ui-test"].tap()
@@ -880,6 +952,28 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     #if os(iOS)
+    func testOpenExpenseEditWithdrawsWithFinancialAccess() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        reveal(expense, in: app); XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
+        let edit = app.buttons["target-expense-edit"]
+        reveal(edit, in: app); XCTAssertTrue(edit.waitForExistence(timeout: 5)); edit.tap()
+        let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertEqual(vendor.value as? String, "Receipt vendor")
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(vendor.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.buttons["target-expense-edit"].exists)
+        XCTAssertFalse(app.staticTexts["Receipt vendor"].exists)
+    }
+
     func testOpenExpenseFormWithdrawsWithFinancialAccess() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1934,8 +2028,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         open.tap()
     }
 
-    private func installOfflinePDFPermissionHandler() -> NSObjectProtocol {
-        addUIInterruptionMonitor(withDescription: "Deny local-network discovery for offline PDF review") { dialog in
+    private nonisolated func installOfflinePDFPermissionHandler() -> NSObjectProtocol {
+        addUIInterruptionMonitor(withDescription: "Deny unrelated Ledger local-network discovery") { dialog in
             let text = dialog.staticTexts.allElementsBoundByIndex.map {
                 $0.label + " " + (($0.value as? String) ?? "")
             }.joined(separator: " ")

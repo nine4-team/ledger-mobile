@@ -26,6 +26,82 @@ actor ExpenseCreationPowerSyncStore {
         self.accessFence = accessFence; self.now = now; self.afterOperationWrite = afterOperationWrite
     }
 
+    /// Accept an edit intent without mutating downloaded authoritative facts.
+    /// Collection may have happened while disconnected; the server checks it again.
+    func submit(_ command: EditExpenseCommand) async throws -> OperationReceipt {
+        let e = command.envelope, draft = e.payload.entry
+        guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.scopeMismatch }
+        guard AccountBoundOperationIdentity.isValid(e.operationId, family: .expenseEdit, accountId: accountId) else {
+            throw Failure.invalidIdentity
+        }
+        let request = try EditExpenseUploadRequest(command)
+        let json = String(decoding: try OperationContractCodec.encode(e), as: UTF8.self)
+        let instant = (now().timeIntervalSince1970 * 1000).rounded(.down)
+        guard instant.isFinite, instant >= 0, instant < Double(Int64.max) else { throw Failure.invalidClock }
+        let account = accountId, principal = principalId, fence = accessFence, checkpoint = afterOperationWrite
+        return try await database.writeTransaction { local in
+            try Task.checkCancellation()
+            guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            _ = try CategoryManagementLocalProjection.requireMembership(local, account: account, principal: principal)
+            let financial = try local.getOptional(sql: "SELECT financial_access FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='active'",
+                parameters: [account.rawValue, principal.rawValue]) { try $0.getString(index: 0) }
+            guard financial == "full" else { throw Failure.unavailable }
+            let ownership: LocalOperationIdentityDisposition
+            do {
+                ownership = try LocalOperationIdentityGuard.inspect(transaction: local, operationId: e.operationId,
+                    expectedFamily: .editExpense, expectedFingerprint: request.fingerprint)
+            } catch LocalOperationIdentityGuardFailure.payloadMismatch {
+                throw OperationContractFailure.payloadMismatch(e.operationId)
+            }
+            if ownership == .matchingOwner {
+                return try local.get(sql: "SELECT command_envelope_json,local_state FROM spike_local_operations WHERE id=?",
+                    parameters: [e.operationId.rawValue]) {
+                        guard try $0.getString(index: 0) == json,
+                              let state = LocalOperationState(rawValue: try $0.getString(index: 1)) else {
+                            throw LocalOperationIdentityGuardFailure.malformedEvidence
+                        }
+                        return OperationReceipt(operationId: e.operationId, localState: state)
+                    }
+            }
+            guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(draft.projectId,
+                account: account, principal: principal, in: local), project.lifecycle == .active,
+                project.client.lifecycle == .active else { throw Failure.unavailable }
+            let editable = try local.get(sql: """
+                SELECT count(*) FROM expenses e JOIN spike_budget_categories c ON c.account_id=e.account_id AND c.id=?
+                WHERE e.account_id=? AND e.project_id=? AND e.id=? AND e.revision=? AND e.currency=?
+                  AND c.kind='general' AND c.lifecycle='active'
+                  AND NOT EXISTS(SELECT 1 FROM collected_invoice_lines l WHERE l.account_id=e.account_id
+                    AND l.source_kind='expense' AND l.source_id=e.id)
+                """, parameters: [draft.categoryId.rawValue, account.rawValue, draft.projectId.rawValue,
+                    draft.expenseId.rawValue, String(e.payload.expectedRevision), draft.finalAmount.currency.rawValue]) { try $0.getInt(index: 0) }
+            guard editable == 1 else { throw Failure.unavailable }
+            let retained = try local.getAll(sql: "SELECT attachment_id FROM expense_receipt_attachments WHERE account_id=? AND expense_id=? ORDER BY position",
+                parameters: [account.rawValue, draft.expenseId.rawValue]) { try $0.getString(index: 0) }
+            // Receipt replacement stays unavailable until its media/retention path is implemented.
+            guard retained == draft.receiptAttachmentIds.map(\.rawValue) else { throw Failure.unavailable }
+            let pending = try local.get(sql: """
+                SELECT count(*) FROM spike_local_operations WHERE account_id=? AND local_state IN ('queued','applying') AND
+                  ((command_type IN ('create_expense','edit_expense') AND subject_id=?)
+                   OR (command_type='archive_project' AND subject_id=?) OR (command_type='archive_client' AND subject_id=?))
+                """, parameters: [account.rawValue,draft.expenseId.rawValue,project.id.rawValue,project.clientId.rawValue]) { try $0.getInt(index: 0) }
+            guard pending == 0 else { throw Failure.unavailable }
+            try local.execute(sql: """
+                INSERT INTO spike_local_operations(id,account_id,actor_principal_id,contract_version,fingerprint,
+                  subject_id,local_state,accepted_at_ms,updated_at_ms,command_type,command_envelope_json)
+                VALUES (?,?,?,'expense-edit-v1',?,?,'queued',?,?,'edit_expense',?)
+                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,request.fingerprint,
+                    draft.expenseId.rawValue,Int64(instant),Int64(instant),json])
+            try checkpoint()
+            try local.execute(sql: """
+                INSERT INTO spike_expense_commands(id,account_id,actor_principal_id,expense_id,contract_version,fingerprint,envelope_json)
+                VALUES (?,?,?,?,'expense-edit-v1',?,?)
+                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,draft.expenseId.rawValue,request.fingerprint,json])
+            try Task.checkCancellation()
+            guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            return OperationReceipt(operationId: e.operationId, localState: .queued)
+        }
+    }
+
     func submit(_ command: CreateExpenseCommand, expectedRecovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         let e = command.envelope, draft = e.payload
         guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.scopeMismatch }

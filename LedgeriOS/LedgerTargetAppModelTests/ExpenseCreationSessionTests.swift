@@ -162,9 +162,51 @@ struct ExpenseCreationSessionTests {
         #expect(await service.drafts == [draft, draft])
     }
 
-    private actor Creator: ExpenseCreating {
+    @Test func editingPreservesSourceLineIdentityAndExactAmountsAcrossRetry() async throws {
+        let service = Creator(), session = ExpenseCreationSession(service: service)
+        let currency = try CurrencyCode(validating: "USD")
+        let entry = try BusinessPaidExpenseDraft(accountId: .init(validating: "account"), projectId: .init(validating: "project"),
+            expenseId: .init(validating: "expense"), vendor: "Original", date: "2024-02-29",
+            finalAmount: .init(minorUnits: Int64.max, currency: currency), categoryId: .init(validating: "general"), notes: "Notes",
+            receiptAttachmentIds: [.init(validating: "receipt")], receiptLines: [
+                .init(id: .init(validating: "imported-line-not-a-uuid"), description: .init(validating: "Delivery"),
+                    magnitude: .init(minorUnits: 1025, currency: currency), effect: .increase, quantity: 2)])
+        try session.loadForEditing(.init(entry: entry, revision: 3))
+        let displayedDate = DateFormatter()
+        displayedDate.locale = Locale(identifier: "en_US_POSIX")
+        displayedDate.timeZone = .current
+        displayedDate.dateFormat = "yyyy-MM-dd"
+        #expect(displayedDate.string(from: session.date) == entry.date)
+        for identifier in ["America/Los_Angeles", "Pacific/Kiritimati", "UTC"] {
+            let zone = try #require(TimeZone(identifier: identifier))
+            try session.loadForEditing(.init(entry: entry, revision: 3), timeZone: zone)
+            displayedDate.timeZone = zone
+            #expect(displayedDate.string(from: session.date) == entry.date)
+        }
+        #expect(try Money.parsePositiveEntry(session.amountText, currency: currency) == entry.finalAmount)
+        #expect(try session.receiptLines(currency: currency) == entry.receiptLines)
+        let uuid = UUID(), date = Date(timeIntervalSince1970: 1000)
+        await #expect(throws: Creator.Failure.once) {
+            try await session.saveEdit(entry, expectedRevision: 3, operationUUID: uuid, capturedAt: date)
+        }
+        await #expect(throws: ExpenseCreationSession.Failure.changedAttempt) {
+            try await session.saveEdit(entry, expectedRevision: 4, operationUUID: uuid, capturedAt: date)
+        }
+        let receipt = try await session.saveEdit(entry, expectedRevision: 3, operationUUID: uuid, capturedAt: date)
+        #expect(try await session.saveEdit(entry, expectedRevision: 3, operationUUID: uuid, capturedAt: date) == receipt)
+        #expect(await service.events == ["edit", "edit"])
+        #expect(await service.drafts == [entry, entry])
+        #expect(await service.operations == [uuid, uuid])
+    }
+
+    private actor Creator: ExpenseCreating, ExpenseEditing {
         enum Failure: Error { case once }
         var events: [String] = []
+        func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date) throws -> OperationReceipt {
+            events.append("edit"); operations.append(operationUUID); drafts.append(entry)
+            if operations.count == 1 { throw Failure.once }
+            return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+        }
         var operations: [UUID] = []
         var drafts: [BusinessPaidExpenseDraft] = []
         var shouldFailCapture = false

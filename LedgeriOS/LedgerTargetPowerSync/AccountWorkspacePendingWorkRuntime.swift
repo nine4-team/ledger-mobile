@@ -186,6 +186,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case manageCategories
     case sellInventoryItems
     case createExpense
+    case editExpense
     case reviseSpaceChecklists
     case rejectedOperationRecoverySnapshot
     case archiveClient
@@ -842,6 +843,26 @@ actor AccountWorkspacePendingWorkRuntime {
                 _ = try await resources.attachmentStore.resolveLocalAttachmentBytes(for: receipt)
             }
             return try await store.submit(command, expectedRecovery: recovery)
+        }
+    }
+
+    func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
+                     operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.editExpense) { resources in
+            guard entry.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            let command = try EditExpenseCommand(operationId: AccountBoundOperationIdentity.make(
+                family: .expenseEdit, accountId: resources.accountId, uuid: operationUUID),
+                actorPrincipalId: resources.principalId, capturedAt: capturedAt,
+                expectedRevision: expectedRevision, entry: entry)
+            try await resources.structuredDatabase.readTransaction { local in
+                try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
+                    accountId: resources.accountId, principalId: resources.principalId, projectId: entry.projectId)
+                _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
+                    identity: ProjectExpenseStreamIdentity(accountId: resources.accountId, projectId: entry.projectId))
+            }
+            return try await ExpenseCreationPowerSyncStore(database: resources.structuredDatabase,
+                accountId: resources.accountId, principalId: resources.principalId,
+                accessFence: resources.accessFence, now: resources.now).submit(command)
         }
     }
 
@@ -2458,6 +2479,7 @@ actor AccountWorkspacePendingWorkRuntime {
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
+            expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             now: resources.now
         )
@@ -2518,6 +2540,7 @@ actor AccountWorkspacePendingWorkRuntime {
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
+            expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             workspaceUpload: { [weak self] in
                 guard let self else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }

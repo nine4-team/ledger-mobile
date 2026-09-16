@@ -32,6 +32,10 @@ export const expenseCreationInputSchema = z.object({
   payload: payloadSchema.refine(validReferences),
 }).strict();
 export const expenseReadInputSchema = z.object({ projectId: identifier, expenseId: identifier }).strict();
+export const expenseEditInputSchema = expenseCreationInputSchema.extend({
+  expectedRevision: integer.refine(value => /^[1-9][0-9]*$/.test(value) && BigInt(value) < 9223372036854775807n),
+}).strict();
+export type ExpenseEditInput = z.input<typeof expenseEditInputSchema>;
 export type ExpenseReadInput = z.infer<typeof expenseReadInputSchema>;
 export const expenseReceiptInputSchema = expenseReadInputSchema.extend({ attachmentId: identifier }).strict();
 export type ExpenseReceiptInput = z.infer<typeof expenseReceiptInputSchema>;
@@ -73,6 +77,18 @@ export type ExpenseCreationRequest = Readonly<{ operationId: string; accountId: 
   expenseId: string; createdAtMs: number; commandJSON: string; fingerprint: string }>;
 export interface ExpenseCreationServing {
   apply(request: ExpenseCreationRequest, context: TargetMCPRequestContext): Promise<unknown>;
+  edit?(request: ExpenseCreationRequest, context: TargetMCPRequestContext): Promise<unknown>;
+}
+export function makeExpenseEditRequest(input: ExpenseEditInput, context: TargetMCPRequestContext): ExpenseCreationRequest {
+  const parsed = expenseEditInputSchema.safeParse(input);
+  if (!parsed.success) return fail();
+  const { expectedRevision, ...creation } = parsed.data;
+  const base = makeExpenseCreationRequest(creation, context);
+  const operationId = base.operationId.replace(/^expense-create-/, "expense-edit-");
+  const commandJSON = canonicalJSON({ ...creation.payload, operationId, accountId: base.accountId,
+    actorPrincipalId: base.actorPrincipalId, contractVersion: "expense-edit-v1",
+    createdAtMs: String(base.createdAtMs), expectedRevision }, "expense_payload_invalid");
+  return { ...base, operationId, commandJSON, fingerprint: createHash("sha256").update(commandJSON).digest("hex") };
 }
 export function makeExpenseCreationRequest(input: ExpenseCreationInput, context: TargetMCPRequestContext): ExpenseCreationRequest {
   const parsed = expenseCreationInputSchema.safeParse(input);
@@ -89,18 +105,27 @@ export function makeExpenseCreationRequest(input: ExpenseCreationInput, context:
 const rejections = new Set(["expense_project_unavailable", "expense_category_unavailable",
   "expense_receipt_invalid", "expense_integrity_conflict"]);
 export function validateExpenseCreationResult(value: unknown, request: ExpenseCreationRequest) {
+  return validateExpenseResult(value, request, false);
+}
+export function validateExpenseEditResult(value: unknown, request: ExpenseCreationRequest) {
+  return validateExpenseResult(value, request, true);
+}
+function validateExpenseResult(value: unknown, request: ExpenseCreationRequest, edit: boolean) {
   const mismatch = () => fail("expense_server_result_mismatch");
   if (!value || typeof value !== "object" || Array.isArray(value)) return mismatch();
   const row = value as Record<string, unknown>;
   if (row.operation_id !== request.operationId || row.account_id !== request.accountId
     || row.actor_principal_id !== request.actorPrincipalId || row.subject_id !== request.expenseId
-    || row.command_type !== "create_expense" || row.contract_version !== "expense-create-v1"
+    || row.command_type !== (edit ? "edit_expense" : "create_expense")
+    || row.contract_version !== (edit ? "expense-edit-v1" : "expense-create-v1")
     || row.command_fingerprint !== request.fingerprint || row.envelope_sha256 !== request.fingerprint
     || row.request_sha256 != null || row.client_created_at_ms !== request.createdAtMs
     || !Number.isSafeInteger(row.server_received_at_ms) || !Number.isSafeInteger(row.completed_at_ms)
     || (row.server_received_at_ms as number) < 0 || (row.completed_at_ms as number) < (row.server_received_at_ms as number)) return mismatch();
-  if (!(row.phase === "applied" && row.result_code === "expense_created" && row.error_code === null)
-    && !(row.phase === "rejected" && row.result_code === null && typeof row.error_code === "string" && rejections.has(row.error_code))) return mismatch();
+  const allowed = edit ? new Set([...rejections, "expense_unavailable", "expense_collected",
+    "expense_revision_conflict", "expense_receipt_change_unavailable"]) : rejections;
+  if (!(row.phase === "applied" && row.result_code === (edit ? "expense_edited" : "expense_created") && row.error_code === null)
+    && !(row.phase === "rejected" && row.result_code === null && typeof row.error_code === "string" && allowed.has(row.error_code))) return mismatch();
   return { operationId: request.operationId, phase: row.phase as "applied" | "rejected",
     resultCode: row.result_code as string | null, errorCode: row.error_code as string | null };
 }
@@ -108,6 +133,12 @@ export async function expenseCreationTool(input: ExpenseCreationInput, context: 
   userCredential(context.accessToken);
   const request = makeExpenseCreationRequest(input, context);
   return validateExpenseCreationResult(await service.apply(request, context), request);
+}
+export async function expenseEditTool(input: ExpenseEditInput, context: TargetMCPRequestContext, service: ExpenseCreationServing) {
+  userCredential(context.accessToken);
+  if (!service.edit) return fail("expense_edit_unavailable");
+  const request = makeExpenseEditRequest(input, context);
+  return validateExpenseEditResult(await service.edit(request, context), request);
 }
 
 export class SupabaseExpenseCreationService implements ExpenseCreationServing, ExpenseReading {
@@ -135,6 +166,12 @@ export class SupabaseExpenseCreationService implements ExpenseCreationServing, E
     if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) return fail("account_not_authorized");
     const result = await this.#rpc("spike_create_expense", { p_command: request.commandJSON }, context);
     validateExpenseCreationResult(result, request);
+    return result;
+  }
+  async edit(request: ExpenseCreationRequest, context: TargetMCPRequestContext): Promise<unknown> {
+    if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) return fail("account_not_authorized");
+    const result = await this.#rpc("spike_edit_expense", { p_command: request.commandJSON }, context);
+    validateExpenseEditResult(result, request);
     return result;
   }
   async read(input: ExpenseReadInput, context: TargetMCPRequestContext): Promise<ExpenseSnapshot> {

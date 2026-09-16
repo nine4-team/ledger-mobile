@@ -613,7 +613,7 @@ if (
     "loadDownloadedTransactionAttachment", "readTransactionExport",
     "readDownloadedTransactionReceipt", "watchTransactionReceipt", "watchTransactions",
     "inventorySaleStatus", "readInventorySaleReview", "watchInventorySaleReview",
-    "watchInventorySale", "sellInventoryItems", "createExpense", "expenseAttachmentCaptureScope",
+    "watchInventorySale", "sellInventoryItems", "createExpense", "editExpense", "expenseAttachmentCaptureScope",
     "saveExpenseEntry", "restoreExpenseEntryCaptures", "readExpenses",
     "readCollectedInvoiceReport", "readCollectedInvoices", "watchCollectedInvoices",
     "loadExpenseReceipt", "watchExpenses", "transactionAttachmentCaptureScope",

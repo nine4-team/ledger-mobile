@@ -30,7 +30,7 @@ public final class ExpenseCreationSession {
                 }
                 quantity = value
             }
-            return try .init(id: .init(validating: input.id.uuidString.lowercased()),
+            return try .init(id: .init(validating: input.sourceLineId ?? input.id.uuidString.lowercased()),
                 description: .init(validating: input.description),
                 magnitude: Money.parsePositiveEntry(input.amountText, currency: currency),
                 effect: input.effect, quantity: quantity)
@@ -51,6 +51,54 @@ public final class ExpenseCreationSession {
     }
 
     public init(service: any ExpenseCreating) { self.service = service }
+
+    public func loadForEditing(_ expense: ProjectExpenses.Expense, timeZone: TimeZone = .current) throws {
+        guard !hasAttempt, !isSaving, expense.collectedInvoice == nil else { throw Failure.changedAttempt }
+        let entry = expense.entry
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let parsed = formatter.date(from: entry.date) else { throw Failure.invalidReceipt }
+        vendor = entry.vendor; date = parsed; notes = entry.notes; categoryId = entry.categoryId
+        amountText = Self.amountEntry(entry.finalAmount)
+        receiptLineInputs = entry.receiptLines.map { line in
+            var input = ReceiptLineInput()
+            input.sourceLineId = line.id.rawValue
+            input.description = line.description.rawValue
+            input.amountText = Self.amountEntry(line.magnitude)
+            input.effect = line.effect; input.quantityText = line.quantity.map(String.init) ?? ""
+            return input
+        }
+    }
+
+    private static func amountEntry(_ value: Money) -> String {
+        let units = value.minorUnits
+        return "\(units / 100).\(String(format: "%02lld", units % 100))"
+    }
+
+    private var editAttempt: EditAttempt?
+    private struct EditAttempt: Equatable {
+        let entry: BusinessPaidExpenseDraft
+        let revision: Int64
+        let uuid: UUID
+        let date: Date
+    }
+
+    public func saveEdit(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
+                         operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        guard !isSaving else { throw Failure.saving }
+        guard let editor = service as? any ExpenseEditing, attempt == nil else { throw Failure.changedAttempt }
+        let requested = EditAttempt(entry: entry, revision: expectedRevision, uuid: operationUUID, date: capturedAt)
+        if let editAttempt { guard editAttempt == requested else { throw Failure.changedAttempt } }
+        if let receipt { return receipt }
+        editAttempt = requested; hasAttempt = true; isSaving = true
+        defer { isSaving = false }
+        let accepted = try await editor.editExpense(entry, expectedRevision: expectedRevision,
+            operationUUID: operationUUID, capturedAt: capturedAt)
+        receipt = accepted
+        return accepted
+    }
 
     public func addReceipt(bytes: Data, fileName: String, projectId: ProjectID, expenseId: ExpenseID,
                            beforeCapture: @MainActor (LocalAttachmentCapture) async throws -> Void = { _ in }) async throws {

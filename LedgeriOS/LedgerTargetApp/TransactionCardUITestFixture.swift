@@ -357,10 +357,24 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     private var attachments: [UUID: AsyncThrowingStream<DownloadedTransactionAttachments?, Error>.Continuation] = [:]
     private var withdrawn = false
     private var invoiceReportReadCount = 0
+    private var expenseEdit: ProjectExpenses.PendingEdit?
+    private var expenseObservers: [UUID: AsyncThrowingStream<ProjectExpenses?, Error>.Continuation] = [:]
+    var pendingExpenseEdit: ProjectExpenses.PendingEdit? { lock.withLock { expenseEdit } }
+    func saveExpenseEdit(_ edit: ProjectExpenses.PendingEdit) { lock.withLock { expenseEdit = edit } }
+    func observeExpenses(_ value: AsyncThrowingStream<ProjectExpenses?, Error>.Continuation, id: UUID) {
+        lock.withLock { expenseObservers[id] = value }
+    }
+    func removeExpenseObserver(_ id: UUID) { lock.withLock { expenseObservers[id] = nil } }
+    func publishExpenses(_ snapshot: ProjectExpenses) {
+        let observers = lock.withLock { Array(expenseObservers.values) }
+        for observer in observers { observer.yield(snapshot) }
+    }
     func rejectFirstInvoiceExport() -> Bool {
         lock.withLock {
             invoiceReportReadCount += 1
-            return invoiceReportReadCount == 2
+            // Preview, protected handoff, then the user's Save confirmation.
+            // Reject the Save check, not the earlier pre-dialog handoff check.
+            return invoiceReportReadCount == 3
         }
     }
     var hasAccess: Bool { lock.withLock { !withdrawn } }

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createTargetServer } from "../src/server.js";
-import { makeExpenseCreationRequest, expenseCreationTool, validateExpenseCreationResult, validateExpenseSnapshot, validateExpenseInvoice,
+import { makeExpenseCreationRequest, makeExpenseEditRequest, expenseEditInputSchema, validateExpenseEditResult, expenseCreationTool, validateExpenseCreationResult, validateExpenseSnapshot, validateExpenseInvoice,
   SupabaseExpenseCreationService, type ExpenseCreationInput } from "../src/expenseCreation.js";
 
 const context = { accountId: "account", principalId: "actor", accessToken: "user-token" };
@@ -57,6 +57,40 @@ const terminal = () => ({ operation_id: request.operationId, account_id: "accoun
   command_fingerprint: request.fingerprint, envelope_sha256: request.fingerprint, request_sha256: null,
   client_created_at_ms: 123000, server_received_at_ms: 124000, completed_at_ms: 124000,
   phase: "applied", result_code: "expense_created", error_code: null });
+
+test("Expense edit reuses validation, authenticated transport and registered tool", async () => {
+  const editInput = { ...input, expectedRevision: "2" };
+  const edit = makeExpenseEditRequest(editInput, context);
+  assert.equal(edit.fingerprint, "db5ccf77710ea81173301ba79d39d2772ade9becee4f98467669edc02816ac60");
+  const result = { ...terminal(), operation_id: edit.operationId, command_type: "edit_expense",
+    contract_version: "expense-edit-v1", command_fingerprint: edit.fingerprint,
+    envelope_sha256: edit.fingerprint, result_code: "expense_edited" };
+  assert.equal(JSON.parse(edit.commandJSON).expectedRevision, "2");
+  assert.equal(JSON.parse(edit.commandJSON).amountMinorUnits, input.payload.amountMinorUnits);
+  assert.notEqual(edit.operationId, request.operationId);
+  assert.throws(() => validateExpenseEditResult(terminal(), edit));
+  for (const revision of ["0", "-1", "01", "9223372036854775807"]) {
+    assert.equal(expenseEditInputSchema.safeParse({ ...editInput, expectedRevision: revision }).success, false);
+  }
+  const service = new SupabaseExpenseCreationService(new URL("https://example.invalid"), "public-key", async (url, init) => {
+    assert.equal(new URL(String(url)).pathname, "/rest/v1/rpc/spike_edit_expense");
+    assert.equal((init?.headers as Record<string,string>).Authorization, "Bearer user-token");
+    assert.deepEqual(JSON.parse(String(init?.body)), { p_command: edit.commandJSON });
+    return new Response(JSON.stringify(result), { status: 200 });
+  });
+  const server = createTargetServer({ read: async () => { throw new Error("unused"); } }, context,
+    undefined, undefined, undefined, undefined, undefined, service);
+  const client = new Client({ name: "expense-edit-test", version: "1" });
+  const [a,b] = InMemoryTransport.createLinkedPair();
+  await server.connect(a); await client.connect(b);
+  try {
+    const reply = await client.callTool({ name: "edit_expense", arguments: editInput });
+    assert.ok(!reply.isError);
+    assert.equal(JSON.parse((reply.content as { text: string }[])[0].text).resultCode, "expense_edited");
+  } finally { await client.close(); await server.close(); }
+  assert.equal(validateExpenseEditResult({ ...result, phase: "rejected", result_code: null,
+    error_code: "expense_revision_conflict" }, edit).phase, "rejected");
+});
 
 test("exact money, explicit null, source order and stable account-bound retry", () => {
   assert.deepEqual(makeExpenseCreationRequest(structuredClone(input), context), request);

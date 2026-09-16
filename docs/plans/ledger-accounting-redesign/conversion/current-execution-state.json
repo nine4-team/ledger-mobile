@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 929,
+  "stateVersion": 954,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -59,11 +59,11 @@
     "acceptanceCheckIds": ["INVOICE-REPORT-CONTENT","INVOICE-REPORT-DELIVERY"],
     "meaning": "Invoice hosted download/offline reopen and financial-withdrawal denial passed; exact evidence under Invoice owner. QA permissions restored none/false/false. Expense line-controls passed on both platforms; unavailable-category automation is blocked by desktop interference. Whole-report acceptance and product decisions remain open.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter CollectedInvoiceReportDeliveryTests","Focused iPhone testCollectedInvoiceDownloadCancellation; actual PDF visual/content verification."],
-    "lastResult": "Expense receipt durability fix verified, including reopened retry; see Expense publicReceiptDurabilityVerification. Native1359/193 suites (3 live skips), MCP116 and SQL1645 passed; details remain under Transaction accumulatedIntegrationVerification. No exact-commit CI yet.",
+    "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
-    "databaseReview": "Source review complete for commands/auth/categories, uploads, Expense storage/read/import, Transaction read/projections and Invoice/accounting sync. SQL PASS54 files/1645 assertions/4s: /tmp/ledger-database-integration-review.log session40737 exit0. Fresh migration replay remains pending; use existing CI fresh-stack job after checkpoint scope is resolved, not a destructive local reset.",
-    "immediateFollowup": "Integration scope/risk gate passes: /tmp/ledger-integration-risk-check.log. CI controls19 pass; target contracts/TypeScript pass (integration-ci-controls/contract-check logs). No GitHub run started.",
+    "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
+    "immediateFollowup": "Expense integrated verification passed: native1364/193, latest Mac build,86-migration clean application replay and concurrency checks; evidence under expense-edit-lifecycle. Native86460 is terminal exit0; Mac build terminal success, no Xcode process remains. Next finish diff review/local checkpoint, then continue approved work. Mac UI blocked by authentication; no unchanged retry. O-023 unanswered; receipt editing unfinished. Three20260916migrations applied local directly; do not reapply/reset. Earlier CI failures unresolved.",
     "uiAvailabilityWait": "Category UI failed11.423s before assertion; /tmp/ledger-expense-category-integration.log. Screenshot again shows Boards foreground. No retries until isolated execution. Direct pass retained.",
-    "nextVerification": "CI35038415049 finished FAILED: backend PASS; Mac stale environment guards, iOS missing ignored plist. Environment now PASS /tmp/ledger-environment-fixed.log; parser4tests PASS. Removed erroneous plist ignore: commit generated plist with Xcode project (CI does not regenerate). plutil/state checks PASS. Commit repairs then one integration run; no live CI."
+    "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
   }
 }

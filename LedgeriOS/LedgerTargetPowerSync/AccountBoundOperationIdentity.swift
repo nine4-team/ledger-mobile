@@ -11,6 +11,7 @@ enum AccountBoundOperationFamily: String, Sendable {
     case categoryManagement = "category-management"
     case inventorySale = "inventory-sale"
     case expenseCreation = "expense-create"
+    case expenseEdit = "expense-edit"
 }
 
 enum AccountBoundOperationIdentity {

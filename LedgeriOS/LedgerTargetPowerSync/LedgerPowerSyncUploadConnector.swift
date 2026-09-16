@@ -272,6 +272,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
     var categoryManagement: (any CategoryManagementCommandApplying)?
     var inventorySale: (any InventorySaleCommandApplying)?
     var expenseCreation: (any CreateExpenseCommandApplying)?
+    var expenseEdit: (any EditExpenseCommandApplying)?
 
     public init(clientCreation: any ClientCreationCommandApplying,
                 projectCreation: (any ProjectCreationCommandApplying)? = nil,
@@ -280,7 +281,8 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
                 spaceChecklistRevision: (any SpaceChecklistRevisionCommandApplying)? = nil,
                 categoryManagement: (any CategoryManagementCommandApplying)? = nil,
                 inventorySale: (any InventorySaleCommandApplying)? = nil,
-                expenseCreation: (any CreateExpenseCommandApplying)? = nil) {
+                expenseCreation: (any CreateExpenseCommandApplying)? = nil,
+                expenseEdit: (any EditExpenseCommandApplying)? = nil) {
         self.clientCreation = clientCreation
         self.projectCreation = projectCreation
         self.projectArchive = projectArchive
@@ -289,6 +291,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
         self.categoryManagement = categoryManagement
         self.inventorySale = inventorySale
         self.expenseCreation = expenseCreation
+        self.expenseEdit = expenseEdit
     }
 }
 
@@ -307,6 +310,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let categoryManagementApplier: (any CategoryManagementCommandApplying)?
     private let inventorySaleApplier: (any InventorySaleCommandApplying)?
     private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
+    private let expenseEditApplier: (any EditExpenseCommandApplying)?
     private let verifiedExpenseReceipts: @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID>
     private let workspaceUpload: (@Sendable () async throws -> Void)?
 
@@ -322,6 +326,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         categoryManagementApplier: (any CategoryManagementCommandApplying)? = nil,
         inventorySaleApplier: (any InventorySaleCommandApplying)? = nil,
         expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
+        expenseEditApplier: (any EditExpenseCommandApplying)? = nil,
         verifiedExpenseReceipts: @escaping @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID> = { _ in [] },
         workspaceUpload: (@Sendable () async throws -> Void)? = nil,
         now: @Sendable @escaping () -> Date = Date.init
@@ -336,6 +341,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.categoryManagementApplier = categoryManagementApplier
         self.inventorySaleApplier = inventorySaleApplier
         self.expenseCreationApplier = expenseCreationApplier
+        self.expenseEditApplier = expenseEditApplier
         self.verifiedExpenseReceipts = verifiedExpenseReceipts
         self.workspaceUpload = workspaceUpload
         self.now = now
@@ -368,6 +374,12 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         }
         switch entry.table {
         case LedgerPowerSyncTable.expenseCommands:
+            if entry.opData?["contract_version"] == "expense-edit-v1" {
+                guard let expenseEditApplier else { throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table) }
+                try await ExpenseCreationUpload.applyEdit(entry, database: database, accessFence: accessFence,
+                    applier: expenseEditApplier)
+                break
+            }
             guard let expenseCreationApplier else { throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table) }
             try await ExpenseCreationUpload.apply(entry, database: database, accessFence: accessFence,
                 applier: expenseCreationApplier, verifiedReceipts: verifiedExpenseReceipts)

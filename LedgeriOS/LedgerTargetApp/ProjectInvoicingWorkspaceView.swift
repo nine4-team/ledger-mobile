@@ -218,6 +218,8 @@ private struct InvoicingExpenseDetail: View {
     let expenseId: ExpenseID
     @State private var row: ProjectExpenses.Expense?
     @State private var pending: ProjectExpenses.PendingCreation?
+    @State private var pendingEdits: [ProjectExpenses.PendingEdit] = []
+    @State private var editSource: ProjectExpenses.Expense?
     @State private var loading = true
     @State private var find = FindStateManager()
     @State private var selectedReceipt: ExpenseReceiptSelection?
@@ -271,30 +273,54 @@ private struct InvoicingExpenseDetail: View {
                         Button("Receipt \(index + 1)") { selectedReceipt = .init(localID: id) }
                     }
                 }
-                BillingEmptyRow("Invoice membership is not connected yet. Editing and collection are not available in this build.")
+                ForEach(pendingEdits) { edit in
+                    BillingRowSurface {
+                        VStack(alignment: .leading) {
+                            Text(edit.state == .rejected ? "Edit rejected — saved details retained" : edit.state == .applied
+                                ? "Edit accepted — waiting for updated data" : "Edit saved on this device — waiting to sync")
+                            DetailRow(label: "Proposed vendor", value: edit.entry.vendor)
+                            DetailRow(label: "Proposed amount", value: amount(edit.entry.finalAmount))
+                            DetailRow(label: "Proposed notes", value: edit.entry.notes)
+                        }
+                    }
+                }
+                if let row, row.collectedInvoice == nil, pendingEdits.isEmpty,
+                   runtime is any ExpenseCreating, runtime is any ExpenseEditing {
+                    Button("Edit Expense") { editSource = row }
+                        .accessibilityIdentifier("target-expense-edit")
+                }
+                BillingEmptyRow("Collection is not available in this build.")
             } else if loading { ProgressView("Loading Expense") }
             else { BillingEmptyRow("Expense details are unavailable.") }
         }
         .environment(find)
         .navigationTitle("Expense")
+        .sheet(item: $editSource) { source in
+            if let creator = runtime as? any ExpenseCreating {
+                ExpenseCreationView(accountId: accountId, projectId: projectId, currency: source.entry.finalAmount.currency,
+                    service: creator, editing: source) { _ in editSource = nil }
+            }
+        }
         #if os(iOS)
         .fullScreenCover(item: $selectedReceipt) { selection in receiptViewer(selection) }
         #else
         .adaptivePresentation(item: $selectedReceipt, style: .viewer) { selection in receiptViewer(selection) }
         #endif
         .task(id: expenseId) {
-            row = nil; pending = nil; loading = true
+            row = nil; pending = nil; pendingEdits = []; loading = true
             do {
                 for try await value in runtime.watchExpenses(accountId: accountId, projectId: projectId) {
                     try Task.checkCancellation()
                     row = value?.expenses.first(where: { $0.id == expenseId })
                     pending = value?.pendingCreations.first(where: { $0.entry.expenseId == expenseId })
+                    pendingEdits = value?.pendingEdits.filter { $0.entry.expenseId == expenseId } ?? []
+                    if row == nil || row?.collectedInvoice != nil { editSource = nil }
                     loading = false
                 }
-            } catch { if !Task.isCancelled { row = nil; pending = nil; loading = false } }
-            if !Task.isCancelled { row = nil; pending = nil; loading = false }
+            } catch { if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; editSource = nil; loading = false } }
+            if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; editSource = nil; loading = false }
         }
-        .onDisappear { row = nil; pending = nil }
+        .onDisappear { row = nil; pending = nil; pendingEdits = [] }
     }
 
     private func receiptViewer(_ selection: ExpenseReceiptSelection) -> some View {

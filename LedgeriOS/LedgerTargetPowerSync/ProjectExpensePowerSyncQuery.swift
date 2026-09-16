@@ -228,11 +228,11 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                     receiptObjects: (groupedObjects[id] ?? []).map { $0.1 },
                     collectedInvoice: paidByExpense[try .init(validating: id)])
             }
-            let pending = try local.getAll(sql: """
+            let pending: [ProjectExpenses.PendingCreation] = try local.getAll(sql: """
                 SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations
                 WHERE account_id=? AND actor_principal_id=? AND command_type='create_expense'
                   AND local_state IN ('queued','applying','applied','rejected') ORDER BY accepted_at_ms,id
-                """, parameters: [accountId.rawValue, principalId.rawValue]) { c in
+                """, parameters: [accountId.rawValue, principalId.rawValue]) { c -> ProjectExpenses.PendingCreation in
                     let json = try c.getString(name: "command_envelope_json")
                     let command = try OperationContractCodec.decode(CreateExpenseCommand.self,
                         from: Data("{\"envelope\":\(json)}".utf8))
@@ -247,6 +247,29 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                     return try ProjectExpenses.PendingCreation(id: e.operationId, entry: e.payload, state: state)
                 }.filter { pending in
                     pending.entry.projectId == projectId && !expenses.contains { $0.id == pending.entry.expenseId }
+                }
+            let edits: [ProjectExpenses.PendingEdit] = try local.getAll(sql: """
+                SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations
+                WHERE account_id=? AND actor_principal_id=? AND command_type='edit_expense'
+                  AND local_state IN ('queued','applying','applied','rejected') ORDER BY accepted_at_ms,id
+                """, parameters: [accountId.rawValue, principalId.rawValue]) { c -> ProjectExpenses.PendingEdit in
+                    let json = try c.getString(name: "command_envelope_json")
+                    let command = try OperationContractCodec.decode(EditExpenseCommand.self,
+                        from: Data("{\"envelope\":\(json)}".utf8))
+                    let e = command.envelope
+                    guard e.accountId == accountId, e.actorPrincipalId == principalId,
+                          e.operationId.rawValue == (try c.getString(name: "id")),
+                          e.payload.entry.expenseId.rawValue == (try c.getString(name: "subject_id")),
+                          AccountBoundOperationIdentity.isValid(e.operationId, family: .expenseEdit, accountId: accountId),
+                          try EditExpenseUploadRequest(command).fingerprint == c.getString(name: "fingerprint"),
+                          let state = LocalOperationState(rawValue: try c.getString(name: "local_state"))
+                    else { throw ProjectExpenses.Failure.invalidEvidence }
+                    return try ProjectExpenses.PendingEdit(id: e.operationId, entry: e.payload.entry,
+                        expectedRevision: e.payload.expectedRevision, state: state)
+                }.filter { pending in
+                    pending.entry.projectId == projectId && !(pending.state == .applied && expenses.contains {
+                        $0.id == pending.entry.expenseId && $0.revision > pending.expectedRevision
+                    })
                 }
             let unfinished = try local.getAll(sql: """
                 SELECT d.id,d.entry_json FROM spike_expense_entry_recovery d
@@ -263,7 +286,7 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                     return value
                 }
             return try ProjectExpenses(accountId: accountId, projectId: projectId, expenses: expenses,
-                pendingCreations: pending, unfinishedEntries: unfinished)
+                pendingCreations: pending, pendingEdits: edits, unfinishedEntries: unfinished)
         }
     }
 }

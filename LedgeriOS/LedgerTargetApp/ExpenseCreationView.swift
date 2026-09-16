@@ -10,6 +10,7 @@ struct ExpenseCreationView: View {
     let service: any ExpenseCreating
     let onSaved: (OperationReceipt) -> Void
     let recovery: ExpenseEntryRecovery?
+    let editing: ProjectExpenses.Expense?
     @Environment(\.dismiss) private var dismiss
     @State private var session: ExpenseCreationSession
     @State private var operationUUID = UUID()
@@ -27,10 +28,12 @@ struct ExpenseCreationView: View {
     @State private var recoveryFailed = false
 
     init(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode,
-         service: any ExpenseCreating, recovery: ExpenseEntryRecovery? = nil, onSaved: @escaping (OperationReceipt) -> Void) {
+         service: any ExpenseCreating, recovery: ExpenseEntryRecovery? = nil,
+         editing: ProjectExpenses.Expense? = nil, onSaved: @escaping (OperationReceipt) -> Void) {
         self.accountId = accountId; self.projectId = projectId; self.currency = currency
         self.service = service; self.onSaved = onSaved
         self.recovery = recovery
+        self.editing = editing
         _session = State(initialValue: ExpenseCreationSession(service: service))
         if let recovery {
             _operationUUID = State(initialValue: recovery.operationUUID)
@@ -39,7 +42,7 @@ struct ExpenseCreationView: View {
     }
 
     var body: some View {
-        FormSheet(title: "New Expense", showDismissButton: false,
+        FormSheet(title: editing == nil ? "New Expense" : "Edit Expense", showDismissButton: false,
             primaryAction: FormSheetAction(title: session.hasAttempt ? "Retry Save" : "Save", isLoading: saving,
                 isDisabled: saving || importingReceipt || restoring || recoveryFailed || !session.unconfirmedReceiptIds.isEmpty || !ready || session.categoryId == nil, action: save),
             secondaryAction: FormSheetAction(title: session.hasAttempt ? "Close" : recovery != nil || session.hasStoredReceiptFiles ? "Save for later" : "Cancel",
@@ -74,7 +77,8 @@ struct ExpenseCreationView: View {
                     }
                     Button("Add receipt line") { session.receiptLineInputs.append(.init()) }
                     Text("Line amounts describe the receipt. They do not change the Expense amount or create Items.").font(.caption)
-                    Button("Add receipt") { choosingReceipt = true }
+                    if editing == nil { Button("Add receipt") { choosingReceipt = true } }
+                    else { Text("Existing receipt files are retained. Changing receipt files is not available yet.").font(.caption) }
                     ForEach(session.receiptCaptures, id: \.attachmentId) { upload in
                         HStack {
                             Text(upload.metadata?.fileName ?? "Receipt")
@@ -109,10 +113,15 @@ struct ExpenseCreationView: View {
         #endif
         .interactiveDismissDisabled(saving || importingReceipt || restoring || recovery != nil || session.hasAttempt || session.hasStoredReceiptFiles)
         .modifier(MediaCapturePresentation(showAddSourceMenu: $choosingReceipt, isUploading: $importingReceipt,
-            uploadError: $error, remainingSlots: max(0, 50 - session.receiptCaptures.count), allowedKinds: [.image, .pdf],
+            uploadError: $error, remainingSlots: editing == nil ? max(0, 50 - session.receiptCaptures.count) : 0, allowedKinds: [.image, .pdf],
             onUploadAttachmentFile: { try await addReceipt($0.data, name: $0.displayFileName) },
-            onUploadDocument: { try await addReceipt($0, name: $1) }, allowsImagePaste: true))
+            onUploadDocument: { try await addReceipt($0, name: $1) }, allowsImagePaste: editing == nil))
         .task {
+            if let editing {
+                do { try session.loadForEditing(editing) }
+                catch { recoveryFailed = true; self.error = "This Expense is not available for editing." }
+                return
+            }
             guard let recovery else { return }
             restoring = true
             defer { restoring = false }
@@ -133,6 +142,7 @@ struct ExpenseCreationView: View {
     }
 
     private func addReceipt(_ data: Data, name: String) async throws {
+        guard editing == nil else { throw ExpenseCreationSession.Failure.invalidCaptures }
         try await session.addReceipt(bytes: data, fileName: name, projectId: projectId,
             expenseId: recovery?.expenseId ?? ExpenseID(validating: expenseUUID.uuidString.lowercased()), beforeCapture: { capture in
                 try await session.persistEntry(recoverySnapshot(additionalAttachment: capture.attachmentId))
@@ -176,17 +186,23 @@ struct ExpenseCreationView: View {
                     formatter.calendar = Calendar(identifier: .gregorian)
                     formatter.locale = Locale(identifier: "en_US_POSIX")
                     formatter.dateFormat = "yyyy-MM-dd"
-                    let id = try recovery?.expenseId ?? ExpenseID(validating: expenseUUID.uuidString.lowercased())
+                    let id = try editing?.id ?? recovery?.expenseId ?? ExpenseID(validating: expenseUUID.uuidString.lowercased())
                     let draft = try BusinessPaidExpenseDraft(accountId: accountId, projectId: projectId, expenseId: id,
                         vendor: session.vendor, date: formatter.string(from: session.date), finalAmount: Money.parsePositiveEntry(session.amountText, currency: currency),
                         categoryId: category, notes: session.notes,
-                        receiptAttachmentIds: session.receiptCaptures.map(\.attachmentId),
+                        receiptAttachmentIds: editing?.entry.receiptAttachmentIds ?? session.receiptCaptures.map(\.attachmentId),
                         receiptLines: session.receiptLines(currency: currency))
                     _ = try await service.expenseAttachmentCaptureScope(projectId: projectId, expenseId: id)
                     prepared = session.receiptCaptures
                     frozenDraft = draft
                 }
                 guard let draft = frozenDraft, let prepared else { return }
+                if let editing {
+                    let receipt = try await session.saveEdit(draft, expectedRevision: editing.revision,
+                        operationUUID: operationUUID, capturedAt: capturedAt)
+                    onSaved(receipt); dismiss()
+                    return
+                }
                 let receipt = try await session.save(draft: draft, captures: prepared, operationUUID: operationUUID,
                     capturedAt: capturedAt, recovery: recoverySnapshot())
                 onSaved(receipt); dismiss()

@@ -33,7 +33,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 }
 
 public final class LedgerOfflineClientRuntime:
-    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing,
+    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
     PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, Sendable
 {
@@ -257,6 +257,12 @@ public final class LedgerOfflineClientRuntime:
 
     public func createExpense(_ draft: BusinessPaidExpenseDraft, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         try await lifecycleOwner.createExpense(draft, operationUUID: operationUUID, capturedAt: capturedAt, recovery: recovery)
+    }
+
+    public func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
+                            operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.editExpense(entry, expectedRevision: expectedRevision,
+            operationUUID: operationUUID, capturedAt: capturedAt)
     }
 
     public func expenseAttachmentCaptureScope(projectId: ProjectID, expenseId: ExpenseID) async throws -> AttachmentCaptureScope {

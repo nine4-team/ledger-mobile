@@ -661,8 +661,19 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ExpenseCreating {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
+    func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
+              entry.vendor == "Receipt vendor updated", entry.finalAmount.minorUnits == 12550,
+              !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-expense") else {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        let id = try OperationID(validating: operationUUID.uuidString)
+        expenseAccess.saveExpenseEdit(try .init(id: id, entry: entry, expectedRevision: expectedRevision, state: .queued))
+        expenseAccess.publishExpenses(try await readExpenses(accountId: entry.accountId, projectId: entry.projectId))
+        return .init(operationId: id, localState: .queued)
+    }
     func watchBudgetCategories() -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error> {
         AsyncThrowingStream { continuation in
             do {
@@ -771,7 +782,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 categoryId: BudgetCategoryID(validating: "category-ui-test"), notes: "Delivery",
                 receiptAttachmentIds: objects.map(\.attachmentId)), revision: 1,
                 currentCategoryName: "Shipping", receiptObjects: objects, collectedInvoice: collected)
-        ], pendingCreations: pending, unfinishedEntries: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-unfinished-expense") ? [
+        ], pendingCreations: pending, pendingEdits: expenseAccess.pendingExpenseEdit.map { [$0] } ?? [], unfinishedEntries: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-unfinished-expense") ? [
             .init(accountId: accountId, projectId: projectId, expenseId: .init(validating: "unfinished-expense"),
                 operationUUID: UUID(), capturedAt: Date(), vendor: "Saved unfinished vendor", date: Date(),
                 amountText: "125.50", notes: "Saved unfinished notes", categoryId: .init(validating:
@@ -823,6 +834,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
     func watchExpenses(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectExpenses?, Error> {
         AsyncThrowingStream { continuation in
+            let id = UUID()
+            expenseAccess.observeExpenses(continuation, id: id)
             let task = Task {
                 do {
                     continuation.yield(try await readExpenses(accountId: accountId, projectId: projectId))
@@ -837,7 +850,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 }
                 catch { continuation.finish(throwing: error) }
             }
-            continuation.onTermination = { _ in task.cancel() }
+            continuation.onTermination = { _ in task.cancel(); expenseAccess.removeExpenseObserver(id) }
         }
     }
     var saleProjects: ProjectListSnapshot? = nil

@@ -11,7 +11,7 @@ import { transactionListInputSchema, type TransactionDetailReading } from "./tra
 import { transactionAttachmentInputSchema } from "./transactionAttachmentRead.js";
 import { inventorySaleInputSchema, inventorySaleReviewInputSchema, inventorySaleTool, inventorySaleReviewTool,
   type InventorySaleServing } from "./inventorySale.js";
-import { expenseCreationInputSchema, expenseCreationTool, expenseReadInputSchema, expenseReceiptInputSchema, validateExpenseSnapshot, validateExpenseInvoice,
+import { expenseCreationInputSchema, expenseCreationTool, expenseEditInputSchema, expenseEditTool, expenseReadInputSchema, expenseReceiptInputSchema, validateExpenseSnapshot, validateExpenseInvoice,
   type ExpenseCreationServing, type ExpenseReading } from "./expenseCreation.js";
 
 export interface ClientSummaryPhysicalReportReading {
@@ -81,6 +81,15 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
       code: error instanceof TargetMCPFailure ? error.code : "expense_read_failed" }) }] }; }
+  });
+  if (expenseCreation?.edit) server.registerTool("edit_expense", {
+    description: "Edit an existing uncollected Expense using its current revision. Preserves identity; never creates a payment. Send the full entry and unchanged receipt attachment IDs; image changes are not available yet. Reuse the same operation UUID and exact input for retry; a rejection is not a saved edit.",
+    inputSchema: expenseEditInputSchema,
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  }, async input => {
+    try { return { content: [{ type: "text", text: JSON.stringify(await expenseEditTool(input, context, expenseCreation)) }] }; }
+    catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
+      code: error instanceof TargetMCPFailure ? error.code : "expense_edit_failed" }) }] }; }
   });
   if (expenseCreation) server.registerTool("create_expense", {
     description: "Record a business-paid non-itemized Project cost in Invoicing, not a client-payment Transaction. Requires explicit user intent. Preserve receipt wording and exact decimal-text minor units; lines do not recalculate the final amount. Receipt IDs must already refer to verified uploads for this Expense; this tool does not upload files. Keep operationUUID, timestamp, Expense ID and payload unchanged on retry. Does not edit, resolve rejected work or collect an Invoice.",

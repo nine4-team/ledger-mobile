@@ -112,4 +112,33 @@ struct BusinessPaidExpenseDraftTests {
             try OperationContractCodec.decode(CreateExpenseCommand.self, from: Data(invalidContract.utf8))
         }
     }
+
+    @Test func editCommandPreservesIdentityReceiptsAndExactAmountsAcrossRestart() throws {
+        let value = try draft(amount: Int64.max, attachments: [.init(validating: "receipt")], lines: [line()])
+        let command = try EditExpenseCommand(operationId: .init(validating: "edit-operation"),
+            actorPrincipalId: .init(validating: "actor"), capturedAt: Date(timeIntervalSince1970: 1234),
+            expectedRevision: 7, entry: value)
+        let bytes = try OperationContractCodec.encode(command)
+        let restored = try OperationContractCodec.decode(EditExpenseCommand.self, from: bytes)
+        #expect(restored.envelope.payload.entry == value)
+        #expect(restored.envelope.payload.expectedRevision == 7)
+        #expect(restored.envelope.operationId == command.envelope.operationId)
+        #expect(try OperationContractCodec.encode(restored) == bytes)
+        for revision in [Int64.min, -1, 0, Int64.max] {
+            #expect(throws: EditExpenseCommand.Failure.invalidRevision) {
+                try EditExpenseCommand.Payload(expectedRevision: revision, entry: value)
+            }
+        }
+        let corrupted = String(decoding: bytes, as: UTF8.self)
+            .replacingOccurrences(of: "\"expectedRevision\":7", with: "\"expectedRevision\":0")
+        #expect(corrupted != String(decoding: bytes, as: UTF8.self))
+        #expect(throws: EditExpenseCommand.Failure.invalidRevision) {
+            try OperationContractCodec.decode(EditExpenseCommand.self, from: Data(corrupted.utf8))
+        }
+        let wrongKind = String(decoding: bytes, as: UTF8.self)
+            .replacingOccurrences(of: "expense-edit-v1", with: "expense-create-v1")
+        #expect(throws: EditExpenseCommand.Failure.invalidEnvelope) {
+            try OperationContractCodec.decode(EditExpenseCommand.self, from: Data(wrongKind.utf8))
+        }
+    }
 }

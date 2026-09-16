@@ -3728,3 +3728,20 @@ revalidates contents and visibility; a later checkpoint alone does not invalidat
 unchanged contents. No timestamp is an offline expiry. Provider restart and
 denial checks pass; app wiring and final rendered evidence remain under the
 existing Invoice report checklist, not a separate completion claim.
+
+### 2026-09-15 — Expense edits share the collected source lock
+
+Pre-collection Expense editing reuses the existing entry model and wire encoding,
+with an expected revision rather than a new Expense identity. Database triggers
+lock the Expense row for receipt changes and frozen-line insertion; collected
+sources and their receipt facts cannot be rewritten. Existing source-only
+historical Invoice snapshots remain supported without fabricating Expenses.
+This adds no API grants, delivery/resend requirement, or accounting history store.
+
+Migration `20260916003710_expense_collected_source_guards.sql` and the imported
+Expense tests establish paid-write rejection; all 1,649 local SQL assertions
+passed. The existing two-session race runner also passed edit-first,
+collection-first and collection-rollback Expense cases with observed lock waits;
+local database advisors reported no issues. The edit
+RPC, revision comparison, local queue, MCP and existing-form integration are
+unfinished; these guards alone do not establish an editable workflow.

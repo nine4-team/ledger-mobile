@@ -1,5 +1,10 @@
 import Foundation
 
+public protocol ExpenseEditing: Sendable {
+    func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
+                     operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt
+}
+
 /// Creation capabilities only; this does not authorize editing or collection.
 public protocol ExpenseCreating: Sendable {
     func watchBudgetCategories() -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>
@@ -25,6 +30,8 @@ public enum ExpenseEntryRecoveryFailure: Error { case staleEntry }
 public struct ExpenseEntryRecovery: Codable, Equatable, Sendable, Identifiable {
     public struct Line: Codable, Equatable, Sendable, Identifiable {
         public let id: UUID
+        /// Existing receipt-line identity may come from migration and need not be a UUID.
+        public var sourceLineId: String?
         public var description = ""
         public var amountText = ""
         public var effect: NonItemReceiptLineEffect = .increase

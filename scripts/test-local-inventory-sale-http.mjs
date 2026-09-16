@@ -13,6 +13,14 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
+assert.ok(!process.argv.includes('--expense-edit-conflict') || process.argv.includes('--native-expense-edit'),
+    '--expense-edit-conflict requires --native-expense-edit');
+if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit')) {
+    const ready = await fetch('http://127.0.0.1:5590/probes/readiness', {
+        redirect:'error', signal:AbortSignal.timeout(3000),
+    }).catch(() => null);
+    assert.equal(ready?.status,200,'Start the existing Ledger local PowerSync service before native replication tests');
+}
 const sql=query=>docker(['exec','-i',container,'psql','-X','-q','-A','-t','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{input:query}).trim();
 const q=value=>"'"+value.replaceAll("'","''")+"'";
 const key='sale-http-'+randomUUID(), account=key+'-account', principal=key+'-actor';
@@ -64,10 +72,13 @@ try {
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
+                ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
+                ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
                 ...(test==='actualLocalExpense'?{LEDGER_EXPENSE_LOCAL_TOKEN:token,LEDGER_EXPENSE_LOCAL_ATTACHMENT:key+'-native-receipt'}:{}),
                 LEDGER_SALE_LOCAL_FINANCIAL_ACCESS:process.argv.includes('--financial') ? 'full' : 'none',
                 LEDGER_SALE_LOCAL_EMAIL:email,LEDGER_SALE_LOCAL_PASSWORD:password}});
-        assert.match(output,/passed/);
+        assert.match(output,/Test run with [1-9][0-9]* tests? .* passed/,
+            'Native integration must execute a nonzero number of matching tests');
         console.log(output.slice(-2500));
     };
     if(process.argv.includes('--expense')) {
@@ -150,6 +161,32 @@ try {
             await assert.rejects(expenseService.read({projectId:project,expenseId:expense},
                 {...context,accountId:key+'-foreign'}),error=>error.statusCode===403);
         }
+        let editRequest;
+        if(process.argv.includes('--expense-edit')) {
+            assert.ok(expenseService, '--expense-edit requires --expense-mcp');
+            assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--native-expense'),
+                'Edit proof uses its own revision assertions, not the creation-only native/paid fixtures');
+            const {operationId,accountId,actorPrincipalId,contractVersion,createdAtMs,...payload}=intent;
+            const editInput={operationUUID:randomUUID(),clientCreatedAtMilliseconds:Number(createdAtMs),
+                expectedRevision:'1',payload:{...payload,vendor:'Edited vendor',notes:'Edited notes'}};
+            editRequest=expenseMCP.makeExpenseEditRequest(editInput,context);
+            const edited=await expenseService.edit(editRequest,context);
+            assert.equal(edited.phase,'applied');
+            assert.deepEqual(await expenseService.edit(editRequest,context),edited);
+            const updated=await expenseService.read({projectId:project,expenseId:expense},context);
+            assert.equal(String(updated.revision),'2');
+            assert.equal(updated.vendor,'Edited vendor');
+            assert.equal(updated.notes,'Edited notes');
+            assert.equal(updated.amountMinorUnits,intent.amountMinorUnits);
+            assert.deepEqual(updated.receiptLines,intent.receiptLines);
+            assert.deepEqual(updated.receiptAttachmentIds,receiptAttachmentIds);
+            const stale=expenseMCP.makeExpenseEditRequest({...editInput,operationUUID:randomUUID()},context);
+            const rejected=await expenseService.edit(stale,context);
+            assert.equal(rejected.phase,'rejected');
+            assert.equal(rejected.error_code,'expense_revision_conflict');
+            const anonymousEdit=await call('/rest/v1/rpc/spike_edit_expense',{p_command:editRequest.commandJSON});
+            assert.ok([401,403].includes(anonymousEdit.status));
+        }
         if(process.argv.includes('--expense-paid')) {
             assert.ok(process.argv.includes('--native-expense'),'Paid evidence requires actual native download verification');
             const invoice={invoice_id:key+'-invoice',invoice_revision:'1',account_id:account,project_id:project,
@@ -179,7 +216,9 @@ try {
                 assert.ok([401,403].includes(anonymous.status));
             }
         }
-        if(process.argv.includes('--native-expense')) {
+        if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit')) {
+            assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
+                'Native edit uses its own uncollected revision1 fixture');
             runNative('expenseLiveReplication',project,expense);
         }
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),process.argv.includes('--expense-paid')?'1':'0');
@@ -190,6 +229,7 @@ try {
         assert.ok([401,403].includes(anonymous.status));
         sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
         assert.equal((await call('/rest/v1/rpc/spike_create_expense',body,token)).status,403);
+        if(editRequest) await assert.rejects(expenseService.edit(editRequest,context),error=>error.statusCode===403);
         if(expenseRequest) await assert.rejects(expenseService.apply(expenseRequest,context),
             error=>error.code==='expense_request_rejected' && error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.read({projectId:project,expenseId:expense},context),
@@ -207,8 +247,9 @@ try {
         }
         console.log(JSON.stringify({authenticatedExpense:true,exactInt64:true,replay:true,changedReplayDenied:true,
             noPayment:!process.argv.includes('--expense-paid'),anonymousDenied:true,removedMemberDenied:true,verifiedReceiptBytes:receiptAttachmentIds.length>0,
-            nativeScheduledReceipt:process.argv.includes('--native-expense'),mcpCommand:!!expenseRequest,
-            seededPaidInvoice:process.argv.includes('--expense-paid'),directInvoiceMCP:!!invoiceReader}));
+            nativeScheduledReceipt:process.argv.includes('--native-expense'),nativeOfflineEdit:process.argv.includes('--native-expense-edit'),mcpCommand:!!expenseRequest,
+            seededPaidInvoice:process.argv.includes('--expense-paid'),directInvoiceMCP:!!invoiceReader,
+            authenticatedEdit:!!editRequest,editReplayAndStaleRevision:!!editRequest}));
     } else if(process.argv.includes('--mixed')) {
         assert.ok(mcp,'--mixed requires --mcp');
         const sourceProject=key+'-source-project', originItem=key+'-origin-item', thirdItem=key+'-third-item';

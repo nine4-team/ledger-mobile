@@ -47,6 +47,22 @@ select throws_ok($$select pg_temp.run_import(i=>jsonb_set(pg_temp.invoice_record
   '22023',null,'Typed source cannot disagree with Expense link');
 select lives_ok('select pg_temp.run_import()','Expense and paid Invoice import together');
 select lives_ok('select pg_temp.run_import()','Exact retry succeeds without duplication');
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select is((ledger_private.edit_expense(jsonb_build_object('operationId','edit-collected-expense',
+  'accountId','account-primary','actorPrincipalId','principal-owner','projectId','expense-import-project',
+  'expenseId','expense-import-source','contractVersion','expense-edit-v1','createdAtMs','123000',
+  'vendor','Changed','date','2024-02-29','amountMinorUnits','1','currency','USD','categoryId','category-system',
+  'notes','Changed','receiptLines','[]'::jsonb,'receiptAttachmentIds',jsonb_build_array('expense-import-receipt'),
+  'expectedRevision','1')::text)).error_code,'expense_collected','Handler durably rejects collected Expense edits');
+select throws_ok($$update ledger_private.expenses set notes='changed' where id='expense-import-source'$$,
+  '23514','Collected Expense is immutable','Collected Expense notes cannot rewrite paid source');
+select throws_ok($$update ledger_private.expenses set final_amount_minor_units=1 where id='expense-import-source'$$,
+  '23514','Collected Expense is immutable','Collected Expense amount is locked');
+select throws_ok($$delete from ledger_private.expense_receipt_attachments where expense_id='expense-import-source'$$,
+  '23514','Collected Expense is immutable','Collected receipt relationship cannot be removed');
+select throws_ok($$insert into ledger_private.expense_receipt_lines(account_id,expense_id,id,position,description,magnitude_minor_units,currency,effect)
+  values('account-primary','expense-import-source','late-line',0,'Late change',1,'USD','increase')$$,
+  '23514','Collected Expense is immutable','Collected receipt details cannot be appended');
 select lives_ok('set constraints all immediate','Imported unknown creation metadata has durable source evidence');
 set constraints all deferred;
 select ok((select created_at is null and created_by_principal_id is null from ledger_private.expenses where id='expense-import-source'),

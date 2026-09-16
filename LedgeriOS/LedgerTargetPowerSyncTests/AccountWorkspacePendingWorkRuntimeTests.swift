@@ -720,6 +720,67 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { try await read(context.accountId) }
     }
 
+    @Test("Expense edit requires downloaded scope and preserves pending intent separately")
+    func expenseEditAdmissionAndPendingRead() async throws {
+        let context = try RuntimeTestContext(suffix: "expense-edit-admission")
+        defer { context.remove() }
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            for sql in [
+                "UPDATE spike_account_memberships SET financial_access='full'",
+                "INSERT INTO spike_budget_categories(id,account_id,kind,lifecycle) VALUES('category','account-runtime','general','active')",
+                "INSERT INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES('expense-client','account-runtime','Client','active',1,1,1)",
+                "UPDATE spike_projects SET client_id='expense-client',display_name='Project',lifecycle='active',revision=1 WHERE id='project-physical'",
+                "INSERT INTO expenses(id,account_id,project_id,category_id,vendor,expense_date,final_amount_minor_units,currency,notes,revision) VALUES('expense','account-runtime','project-physical','category','Original','2026-09-15','100','USD','','1')"
+            ] { _ = try await database.execute(sql: sql, parameters: nil) }
+            databases.append(database)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let database = try #require(databases.values.first)
+        let project = try ProjectID(validating: "project-physical")
+        let entry = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: project,
+            expenseId: .init(validating: "expense"), vendor: "Edited", date: "2026-09-15",
+            finalAmount: .init(minorUnits: 200, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "category"), notes: "Edit")
+        let uuid = UUID(), time = Date()
+        await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+            try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
+        }
+        _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_expenses',1,0,?,1000000)",
+            parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
+        let accepted = try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
+        #expect(accepted.localState == .queued)
+        #expect(try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time) == accepted)
+        let snapshot = try await runtime.readExpenses(accountId: context.accountId, projectId: project)
+        #expect(snapshot.expenses[0].entry.vendor == "Original")
+        #expect(snapshot.expenses[0].entry.finalAmount.minorUnits == 100)
+        #expect(snapshot.pendingCreations.isEmpty)
+        #expect(snapshot.pendingEdits.count == 1)
+        #expect(snapshot.pendingEdits[0].entry == entry)
+        #expect(snapshot.pendingEdits[0].expectedRevision == 1)
+        // Projection-only simulation: an applied receipt does not replace downloaded facts.
+        _ = try await database.execute(sql: "UPDATE spike_local_operations SET local_state='applied' WHERE id=?", parameters: [accepted.operationId.rawValue])
+        #expect(try await runtime.readExpenses(accountId: context.accountId, projectId: project).pendingEdits.count == 1)
+        _ = try await database.execute(sql: "UPDATE expenses SET revision='2',vendor='Edited',final_amount_minor_units='200' WHERE id='expense'", parameters: nil)
+        #expect(try await runtime.readExpenses(accountId: context.accountId, projectId: project).pendingEdits.isEmpty)
+        // A newer downloaded revision does not erase a rejected user's proposal.
+        _ = try await database.execute(sql: "UPDATE spike_local_operations SET local_state='rejected' WHERE id=?", parameters: [accepted.operationId.rawValue])
+        let rejected = try await runtime.readExpenses(accountId: context.accountId, projectId: project)
+        #expect(rejected.pendingEdits.count == 1 && rejected.pendingEdits[0].state == .rejected)
+        #expect(rejected.pendingEdits[0].entry == entry)
+        _ = try await database.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) {
+            try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
+        }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
+        }
+    }
+
     @Test("Expense public save refuses receipt IDs without local bytes")
     func expenseMissingReceiptCannotQueue() async throws {
         let context = try RuntimeTestContext(suffix: "expense-missing-receipt")
@@ -1178,7 +1239,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await offline.close()
     }
 
-    @Test("Expense offline creation converges through actual Auth, RPC and PowerSync",
+    @Test("Expense offline commands converge through actual Auth, RPC and PowerSync",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func expenseLiveReplication() async throws {
         let env = ProcessInfo.processInfo.environment
@@ -1262,6 +1323,58 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             return
         }
         try await first.close()
+        if env["LEDGER_EXPENSE_LOCAL_EDIT"] == "1" {
+            guard !hostedQA, env["LEDGER_EXPENSE_LOCAL_PAID"] != "1" else { throw RuntimeInjectedFailure() }
+            let changed = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: projectId,
+                expenseId: source.expenseId, vendor: "Offline edited vendor", date: source.date,
+                finalAmount: source.finalAmount, categoryId: source.categoryId, notes: "Offline edit",
+                receiptAttachmentIds: source.receiptAttachmentIds, receiptLines: source.receiptLines)
+            let uuid = UUID(), capturedAt = Date()
+            let offline = try await context.openRuntime()
+            let receipt = try await offline.editExpense(changed, expectedRevision: 1, operationUUID: uuid, capturedAt: capturedAt)
+            #expect(receipt.localState == .queued)
+            #expect(try await offline.readExpenses(accountId: context.accountId, projectId: projectId).expenses.first?.entry == source)
+            try await offline.close()
+            let resumed = try await context.openRuntime()
+            #expect(try await resumed.readExpenses(accountId: context.accountId, projectId: projectId).pendingEdits.first?.entry == changed)
+            #expect(try await resumed.editExpense(changed, expectedRevision: 1, operationUUID: uuid, capturedAt: capturedAt) == receipt)
+            let conflict = env["LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT"] == "1"
+            var expected = changed
+            if conflict {
+                expected = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: projectId,
+                    expenseId: source.expenseId, vendor: "Newer server vendor", date: source.date,
+                    finalAmount: source.finalAmount, categoryId: source.categoryId, notes: "Second device edit",
+                    receiptAttachmentIds: source.receiptAttachmentIds, receiptLines: source.receiptLines)
+                let rpc = try SupabaseWorkspaceCommandRPC(url: url, key: key, authorization: authorization,
+                    identity: .init(client: auth, userId: authorization.authUserId))
+                let winner = try EditExpenseCommand(operationId: AccountBoundOperationIdentity.make(
+                    family: .expenseEdit, accountId: context.accountId, uuid: UUID()),
+                    actorPrincipalId: context.principalId, capturedAt: Date(), expectedRevision: 1, entry: expected)
+                #expect(try await rpc.apply(winner).phase == "applied")
+            }
+            try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+            var converged = false
+            for try await value in resumed.watchExpenses(accountId: context.accountId, projectId: projectId) {
+                if let row = value?.expenses.first(where: { $0.id == source.expenseId }), row.revision == 2,
+                   conflict ? value?.pendingEdits.first?.state == .rejected : value?.pendingEdits.isEmpty == true {
+                    #expect(row.entry == expected)
+                    if conflict { #expect(value?.pendingEdits.first?.entry == changed) }
+                    converged = true; break
+                }
+            }
+            #expect(converged)
+            try await resumed.close()
+            let verified = try await context.openRuntime()
+            let snapshot = try await verified.readExpenses(accountId: context.accountId, projectId: projectId)
+            #expect(snapshot.expenses.first?.entry == expected)
+            if conflict {
+                #expect(snapshot.pendingEdits.first?.entry == changed)
+                #expect(snapshot.pendingEdits.first?.state == .rejected)
+                #expect(try await verified.pendingWorkSummary().unresolvedRejectedOperationCount == 1)
+            } else { #expect(snapshot.pendingEdits.isEmpty) }
+            try await verified.close()
+            return
+        }
         let attachmentId = try AttachmentID(validating: expense + "-offline-receipt")
         let draft = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: projectId,
             expenseId: .init(validating: expense + "-native"), vendor: source.vendor, date: source.date,
