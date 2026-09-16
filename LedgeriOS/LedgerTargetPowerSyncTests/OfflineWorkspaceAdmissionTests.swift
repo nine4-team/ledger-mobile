@@ -8,6 +8,25 @@ import Testing
 @Suite("Downloaded workspace admission", .serialized)
 @MainActor
 struct OfflineWorkspaceAdmissionTests {
+    @Test func initialAccountRetryIdentitySurvivesReconstructionAndIsScoped() throws {
+        let memory = CategoryAuthTestStorage()
+        let store = makeStore(memory)
+        let user = UUID()
+        try store.selectIdentity(user)
+        let first = try store.initialAccountRequestId(userId: user, environment: .targetStaging)
+        let reopened = makeStore(memory)
+        #expect(try reopened.initialAccountRequestId(userId: user, environment: .targetStaging) == first)
+        #expect(try reopened.initialAccountRequestId(userId: user, environment: .targetLocal) != first)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try reopened.completeInitialAccountRequest(userId: user, environment: .targetStaging, requestId: UUID())
+        }
+        try reopened.completeInitialAccountRequest(userId: user, environment: .targetStaging, requestId: first)
+        #expect(try reopened.initialAccountRequestId(userId: user, environment: .targetStaging) != first)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.identityMismatch) {
+            try reopened.initialAccountRequestId(userId: UUID(), environment: .targetStaging)
+        }
+    }
+
     @Test func reconstructionNeedsNeitherProviderSessionNorNetwork() throws {
         let memory = CategoryAuthTestStorage()
         let store = makeStore(memory)

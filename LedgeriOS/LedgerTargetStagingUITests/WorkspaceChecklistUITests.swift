@@ -9,6 +9,73 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testLocalAccountOnboardingThroughExistingGate() throws {
+        try exerciseLocalAccountEntry(signOutOnly: false)
+    }
+
+    func testLocalEmptyAccountSignOutSurvivesRelaunch() throws {
+        try exerciseLocalAccountEntry(signOutOnly: true)
+    }
+
+    private func exerciseLocalAccountEntry(signOutOnly: Bool) throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["LEDGER_ONBOARDING_UI"] == "1", let email = env["LEDGER_ONBOARDING_EMAIL"],
+              let password = env["LEDGER_ONBOARDING_PASSWORD"], email.hasSuffix("@ledger-tests.invalid") else {
+            throw XCTSkip("Run the isolated local onboarding harness with --ui")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        let passwordPrompt = addUIInterruptionMonitor(withDescription: "Decline saving the disposable QA password") { alert in
+            let decline = alert.buttons["Not Now"]
+            guard decline.exists else { return false }
+            decline.tap()
+            return true
+        }
+        defer { removeUIInterruptionMonitor(passwordPrompt) }
+        app.launch()
+        defer { app.terminate() }
+        func signIn() {
+            let emailField = app.textFields["Email"]
+            XCTAssertTrue(emailField.waitForExistence(timeout: 10), "Do not replace an existing local session")
+            emailField.tap(); emailField.typeText(email)
+            let passwordField = app.secureTextFields["Password"]
+            passwordField.tap(); passwordField.typeText(password + "\n")
+            let signInButtons = app.buttons.matching(identifier: "Sign In")
+            XCTAssertEqual(signInButtons.count, 2) // Mode selector, then submit.
+            signInButtons.element(boundBy: 1).tap()
+            XCTAssertTrue(app.buttons["Create Account"].waitForExistence(timeout: 15))
+            // The password dialog may be owned by a system process, absent from
+            // this app's hierarchy. A benign interaction invokes the monitor.
+            app.staticTexts["target-staging-banner"].tap()
+        }
+        signIn()
+        if signOutOnly {
+            app.buttons["Sign Out"].tap()
+            XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 10))
+            XCTAssertFalse(app.buttons["Create Account"].exists)
+            app.terminate()
+            app.launch()
+            XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 10))
+            XCTAssertFalse(app.buttons["Create Account"].exists)
+            return
+        }
+        app.buttons["Create Account"].tap()
+        let account = app.buttons["My account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["target-account-settings"].exists, "Creation must not auto-select")
+        account.tap()
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 15))
+        reveal(settings, in: app, within: app.scrollViews["target-workspace-scroll"])
+        settings.tap()
+        let categories = app.buttons["target-settings-budget-categories"]
+        XCTAssertTrue(categories.waitForExistence(timeout: 5))
+        categories.tap()
+        for name in ["Furnishings", "Install", "Design Fee", "Storage & Receiving"] {
+            XCTAssertTrue(app.buttons["Edit \(name)"].waitForExistence(timeout: 10))
+        }
+    }
+
     private nonisolated let failureScreenshotLock = NSLock()
     #if os(macOS)
     private var isolatedPermissionMonitor: NSObjectProtocol?

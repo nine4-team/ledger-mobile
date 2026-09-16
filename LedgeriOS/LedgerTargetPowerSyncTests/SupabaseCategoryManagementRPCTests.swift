@@ -9,6 +9,122 @@ import Security
 
 @Suite("Category management HTTP contract", .serialized)
 struct SupabaseCategoryManagementRPCTests {
+    @Test @MainActor func unmappedEntryPreparesIdentityThenReadsAuthoritativeDirectory() async throws {
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
+        let http = session()
+        let state = CategoryAuthTestStorage()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", http: http)
+        try await entry.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        CategoryHTTPProtocol.handler = { request in
+            if request.url?.lastPathComponent == "spike_prepare_authenticated_principal" {
+                state.store(key: "prepared", value: Data([1]))
+                return (try #require(HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                    headerFields: nil)), try JSONEncoder().encode("new-principal"))
+            }
+            #expect(request.url?.lastPathComponent == "spike_read_authenticated_accounts")
+            if state.retrieve(key: "prepared") == nil {
+                return (try #require(HTTPURLResponse(url: request.url!, statusCode: 403, httpVersion: nil,
+                    headerFields: nil)), Data(#"{"code":"42501","message":"identity_not_linked"}"#.utf8))
+            }
+            return try response(request, result: ["principalId": "new-principal", "accounts": []])
+        }
+        let result = try await entry.accounts(environment: .targetStaging)
+        #expect(result.snapshot.principalId.rawValue == "new-principal")
+        #expect(result.snapshot.isAuthoritativeEmpty)
+        #expect(state.retrieve(key: "prepared") != nil)
+    }
+
+    @Test @MainActor func accountCreationRetrySurvivesEntryReconstruction() async throws {
+        let user = UUID()
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: user)
+        let memory = CategoryAuthTestStorage()
+        func admissions() -> OfflineWorkspaceAdmissionStore {
+            OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") },
+                write: { memory.store(key: "records", value: $0) }, requireNotRemoved: { _ in })
+        }
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        func entry() -> SupabaseOnlineSignIn {
+            SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+                publishableKey: "sb_publishable_fixture", http: http, offlineAdmissions: admissions())
+        }
+        let first = entry()
+        try await first.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        await #expect(throws: SupabaseOnlineSignIn.Failure.accountLookupFailed) {
+            try await first.createInitialAccount(environment: .targetStaging)
+        }
+        CategoryHTTPProtocol.handler = { request in
+            try response(request, result: ["principalId": "server-principal", "accounts": []])
+        }
+        _ = try await first.accounts(environment: .targetStaging)
+        CategoryHTTPProtocol.handler = { _ in throw URLError(.timedOut) }
+        await #expect(throws: URLError.self) { try await first.createInitialAccount(environment: .targetStaging) }
+        let saved = try admissions().initialAccountRequestId(userId: user, environment: .targetStaging)
+        let reopened = entry()
+        CategoryHTTPProtocol.handler = { request in
+            try response(request, result: ["principalId": "server-principal", "accounts": []])
+        }
+        _ = try await reopened.accounts(environment: .targetStaging)
+        CategoryHTTPProtocol.handler = { request in
+            let body = try JSONSerialization.jsonObject(with: requestBody(request)) as? [String: String]
+            #expect(body?["p_request_id"] == saved.uuidString)
+            return try response(request, result: ["accountId": "created-account", "displayName": "My account"])
+        }
+        #expect(try await reopened.createInitialAccount(environment: .targetStaging).id.rawValue == "created-account")
+        await #expect(throws: SupabaseOnlineSignIn.Failure.accountLookupFailed) {
+            try await reopened.createInitialAccount(environment: .targetStaging)
+        }
+        // Model a persisted request whose committed Account is discovered on
+        // restart before the user can retry the button. Resolve that exact key.
+        let uncertain = try admissions().initialAccountRequestId(userId: user, environment: .targetStaging)
+        CategoryHTTPProtocol.handler = { request in
+            if request.url?.lastPathComponent == "spike_read_authenticated_accounts" {
+                return try response(request, result: ["principalId": "server-principal",
+                    "accounts": [["id": "created-account", "displayName": "My account"]]])
+            }
+            #expect(request.url?.lastPathComponent == "spike_create_initial_account")
+            let body = try JSONSerialization.jsonObject(with: requestBody(request)) as? [String: String]
+            #expect(body?["p_request_id"] == uncertain.uuidString)
+            return try response(request, result: ["accountId": "created-account", "displayName": "My account"])
+        }
+        #expect(try await entry().accounts(environment: .targetStaging).snapshot.accounts.count == 1)
+        #expect(try admissions().pendingInitialAccountRequestId(userId: user, environment: .targetStaging) == nil)
+    }
+
+    @Test func initialAccountCreationUsesBoundIdentityAndTypedResult() async throws {
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
+        let signedIn = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        let provider = try SupabaseInitialAccountCreation(supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", identity: .init(client: auth, userId: signedIn.user.id), http: http)
+        CategoryHTTPProtocol.handler = { request in
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer signed-in-token")
+            #expect(request.url?.path == "/rest/v1/rpc/spike_prepare_authenticated_principal")
+            return (try #require(HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])), try JSONEncoder().encode("server-principal"))
+        }
+        #expect(try await provider.prepareIdentity().rawValue == "server-principal")
+        let requestId = UUID()
+        CategoryHTTPProtocol.handler = { request in
+            #expect(request.url?.path == "/rest/v1/rpc/spike_create_initial_account")
+            let body = try JSONSerialization.jsonObject(with: requestBody(request)) as? [String: String]
+            #expect(body == ["p_request_id": requestId.uuidString, "p_display_name": "My account"])
+            return try response(request, result: ["accountId": "created-account", "displayName": "My account"])
+        }
+        let command = try InitialAccountCreationRequest(requestId: requestId,
+            displayName: .init(validating: "My account"))
+        #expect(try await provider.createInitialAccount(command).id.rawValue == "created-account")
+        CategoryHTTPProtocol.handler = { request in
+            try response(request, result: ["accountId": "created-account", "displayName": "Wrong name"])
+        }
+        await #expect(throws: SupabaseAuthenticatedAccountLookup.Failure.invalidResponse) {
+            try await provider.createInitialAccount(command)
+        }
+    }
+
     @Test("Provider logout removes this session even offline, without global logout", arguments: [false, true])
     func localSessionSignOut(offline: Bool) async throws {
         let user = UUID()

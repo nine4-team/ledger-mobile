@@ -11,6 +11,55 @@ import CoreGraphics
 
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
+    @Test("New local identity creates, selects, downloads and reopens its Account",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_ONBOARDING_LOCAL"] == "1"),
+          .timeLimit(.minutes(1)))
+    @MainActor func localAccountOnboarding() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let email = try #require(env["LEDGER_ONBOARDING_EMAIL"])
+        let password = try #require(env["LEDGER_ONBOARDING_PASSWORD"])
+        let key = try #require(env["LEDGER_ONBOARDING_KEY"])
+        guard email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let memory = CategoryAuthTestStorage()
+        let admissions = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "admissions") },
+            write: { memory.store(key: "admissions", value: $0) }, requireNotRemoved: { _ in })
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key, offlineAdmissions: admissions)
+        try await entry.signIn(email: email, password: password)
+        #expect(try await entry.accounts(environment: .targetLocal).snapshot.isAuthoritativeEmpty)
+        let created = try await entry.createInitialAccount(environment: .targetLocal)
+        let directory = try await entry.accounts(environment: .targetLocal)
+        #expect(directory.snapshot.accounts == [created])
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: created.id,
+            from: directory.snapshot, requestedAt: Date()))
+        let context = try RuntimeTestContext(suffix: "onboarding-\(UUID())", accountId: created.id,
+            principalId: directory.snapshot.principalId)
+        defer { context.remove() }
+        let runtime = try await context.openRuntime(dependencies: .live)
+        do {
+            try await entry.startWorkspaceSync(runtime, authorization: authorization,
+                powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+            try await entry.rememberDownloadedWorkspace(authorization, account: created, runtime: runtime)
+            try await runtime.close()
+            let reopened = try await context.openRuntime(dependencies: .live)
+            do {
+                var categories = reopened.watchBudgetCategories().makeAsyncIterator()
+                let snapshot = try #require(try await categories.next())
+                #expect(snapshot.local.rows.count == 4)
+                let ender = entry.sessionEnding(runtime: reopened, authorization: authorization,
+                    environment: context.environment, clearCaches: {})
+                let summary = try await ender.pendingWorkSummary()
+                try await ender.endSession(SessionEndRequest(disposition: .ordinaryCleanLogout,
+                    expectedSummary: summary, requestedAt: Date()))
+                #expect(!entry.hasStoredSession)
+                #expect(try entry.downloadedWorkspaces(environment: .targetLocal).isEmpty)
+            } catch { try? await reopened.close(); throw error }
+        } catch { try? await runtime.close(); throw error }
+    }
+
     @Test("Actual local attachment scheduling publishes, syncs and retains offline bytes after restart",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_ATTACHMENT_RUNTIME"] == "1",
                    "Run test-local-transaction-attachment-upload.mjs with LEDGER_ATTACHMENT_RUNTIME=1"),

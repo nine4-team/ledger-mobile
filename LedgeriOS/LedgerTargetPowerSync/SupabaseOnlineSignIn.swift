@@ -273,12 +273,56 @@ public final class SupabaseOnlineSignIn {
         do {
             let lookup = try SupabaseAuthenticatedAccountLookup(supabaseURL: url,
                 publishableKey: publishableKey, identity: identity, session: http)
-            let snapshot = try await lookup.load(environment: environment)
+            let snapshot: AuthorizedAccountListSnapshot
+            do {
+                snapshot = try await lookup.load(environment: environment)
+            } catch SupabaseAuthenticatedAccountLookup.Failure.identityNotLinked {
+                let onboarding = try SupabaseInitialAccountCreation(supabaseURL: url,
+                    publishableKey: publishableKey, identity: identity, http: http)
+                _ = try await onboarding.prepareIdentity()
+                snapshot = try await lookup.load(environment: environment)
+            }
+            try offlineAdmissions?.requireIdentityAvailable(user.id)
+            if !snapshot.accounts.isEmpty, let offlineAdmissions,
+               let pending = try offlineAdmissions.pendingInitialAccountRequestId(userId: user.id, environment: environment) {
+                // A lost creation response may be followed by discovery of the
+                // created Account. Reconcile the exact saved receipt, not merely
+                // any membership (which could instead come from an invitation).
+                let provider = try SupabaseInitialAccountCreation(supabaseURL: url,
+                    publishableKey: publishableKey, identity: identity, http: http)
+                let command = try InitialAccountCreationRequest(requestId: pending, displayName: .init(validating: "My account"))
+                if let created = try? await provider.createInitialAccount(command),
+                   snapshot.accounts.contains(where: { $0.id == created.id }) {
+                    try offlineAdmissions.completeInitialAccountRequest(userId: user.id, environment: environment, requestId: pending)
+                }
+                try Task.checkCancellation()
+                try identity.requireCurrentIdentity()
+            }
             try offlineAdmissions?.requireIdentityAvailable(user.id)
             selectedDirectory = (user.id, snapshot)
             return (identity, snapshot)
         } catch is CancellationError { throw CancellationError() }
         catch { throw Failure.accountLookupFailed }
+    }
+
+    public func createInitialAccount(environment: LedgerEnvironmentKind) async throws -> AccountSummary {
+        guard !inFlight else { throw Failure.busy }
+        guard let user = client.currentSession?.user, !user.isAnonymous else { throw Failure.noSession }
+        guard let offlineAdmissions else { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
+        guard let directory = selectedDirectory, directory.userId == user.id,
+              directory.snapshot.environment == environment, directory.snapshot.isAuthoritativeEmpty else {
+            throw Failure.accountLookupFailed
+        }
+        inFlight = true
+        defer { inFlight = false }
+        let id = try offlineAdmissions.initialAccountRequestId(userId: user.id, environment: environment)
+        let command = try InitialAccountCreationRequest(requestId: id, displayName: .init(validating: "My account"))
+        let provider = try SupabaseInitialAccountCreation(supabaseURL: url, publishableKey: publishableKey,
+            identity: boundIdentity(user.id), http: http)
+        let account = try await provider.createInitialAccount(command)
+        try offlineAdmissions.completeInitialAccountRequest(userId: user.id, environment: environment, requestId: id)
+        selectedDirectory = nil
+        return account
     }
 
     /// No token refresh/network request. Absence of a provider session is not

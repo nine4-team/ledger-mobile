@@ -5,7 +5,7 @@ import LedgerTargetCore
 /// Online bootstrap lookup. Reuses Account selection snapshots; it neither
 /// activates a workspace nor substitutes for the downloaded/offline directory.
 public struct SupabaseAuthenticatedAccountLookup: Sendable {
-    public enum Failure: Error, Equatable { case invalidConfiguration, invalidResponse, rejected(Int) }
+    public enum Failure: Error, Equatable { case invalidConfiguration, invalidResponse, identityNotLinked, rejected(Int) }
     private let endpoint: URL
     private let publishableKey: String
     private let identity: SupabaseAuthenticatedSession
@@ -44,7 +44,14 @@ public struct SupabaseAuthenticatedAccountLookup: Sendable {
         // A user switch during the request must not publish the former user's directory.
         try identity.requireCurrentIdentity()
         guard let response = response as? HTTPURLResponse else { throw Failure.invalidResponse }
-        guard response.statusCode == 200 else { throw Failure.rejected(response.statusCode) }
+        guard response.statusCode == 200 else {
+            struct ServerError: Decodable { let code: String; let message: String }
+            if response.statusCode == 403, let error = try? JSONDecoder().decode(ServerError.self, from: data),
+               error.code == "42501", error.message == "identity_not_linked" {
+                throw Failure.identityNotLinked
+            }
+            throw Failure.rejected(response.statusCode)
+        }
         struct Payload: Decodable { let principalId: PrincipalID; let accounts: [AccountSummary] }
         do {
             let payload = try JSONDecoder().decode(Payload.self, from: data)

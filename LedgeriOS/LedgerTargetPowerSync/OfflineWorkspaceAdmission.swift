@@ -22,6 +22,7 @@ final class OfflineWorkspaceAdmissionStore {
         // Optional for compatibility with previously persisted version-1 records.
         var endingUserIds: [UUID]?
         var endingPlans: [String: EndingPlan]?
+        var initialAccountRequestIds: [String: UUID]?
     }
     private let read: () throws -> Data?
     private let write: (Data) throws -> Void
@@ -48,6 +49,37 @@ final class OfflineWorkspaceAdmissionStore {
         var record = try load()
         guard !(record.endingUserIds ?? []).contains(userId) else { throw Failure.sessionEndingPending }
         record.activeUserId = userId
+        try save(record)
+    }
+
+    func pendingInitialAccountRequestId(userId: UUID, environment: LedgerEnvironmentKind) throws -> UUID? {
+        try requireIdentityAvailable(userId)
+        let record = try load()
+        guard record.activeUserId == userId else { throw Failure.identityMismatch }
+        return record.initialAccountRequestIds?["\(userId.uuidString):\(environment.rawValue)"]
+    }
+
+    func initialAccountRequestId(userId: UUID, environment: LedgerEnvironmentKind) throws -> UUID {
+        try requireIdentityAvailable(userId)
+        var record = try load()
+        guard record.activeUserId == userId else { throw Failure.identityMismatch }
+        let key = "\(userId.uuidString):\(environment.rawValue)"
+        if let existing = record.initialAccountRequestIds?[key] { return existing }
+        let id = UUID()
+        var ids = record.initialAccountRequestIds ?? [:]
+        ids[key] = id
+        record.initialAccountRequestIds = ids
+        try save(record)
+        return id
+    }
+
+    func completeInitialAccountRequest(userId: UUID, environment: LedgerEnvironmentKind, requestId: UUID) throws {
+        try requireIdentityAvailable(userId)
+        var record = try load()
+        guard record.activeUserId == userId else { throw Failure.identityMismatch }
+        let key = "\(userId.uuidString):\(environment.rawValue)"
+        guard record.initialAccountRequestIds?[key] == requestId else { throw Failure.invalidRecord }
+        record.initialAccountRequestIds?.removeValue(forKey: key)
         try save(record)
     }
 

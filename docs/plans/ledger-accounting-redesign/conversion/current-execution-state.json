@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1229,
+  "stateVersion": 1240,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -61,10 +61,10 @@
     "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
     "activeProcesses": {},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Account-entry signout checkpoint after a2eb29f9:39 native +15 real-runtime tests and iPhone build PASS. Actual QA UI refuses downloaded work and returns to retained Account; entrySignOutInteraction owns evidence. Empty-local successful UI and macOS interaction still unverified, not waived. No test processes. NEXT implement approved zero-membership Account creation via existing gate: inspect source frozen behavior and current target schema, design idempotent ownership command; no new screen. Preserve private .native-pdf files; running target simulator remains at downloaded QA picker.",
+    "immediateFollowup": "Dirty onboarding after a0ccb668. No live tests. UI1247 FAILED before signout: recording /tmp/ledger-empty-signout-final-20260916.png shows Save Password still covering app; interruption handling cleared an Apple notification, not password dialog. Do not classify as signout defect or retry unchanged. --ui-signout scenario exists; needs reliable system-dialog interaction/manual proof. UI11566 creation PASS;4304 concurrency PASS;41060 SQL1942 PASS. NEXT checkpoint reviewed onboarding with explicit remaining UI/parity gaps, continue independent authorized workflow. Migration parity87611 host DNS failure after replay; no unchanged retry; parity/history unverified, no hosted change. Preserve private .native-pdf files and QA data.",
     "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Follow immediateFollowup for dirty Account-entry signout. Earlier session/report work committed18208576; evidence in owning stories. macOS interaction and physical-device protection remain unproven. Hosted QA Client retained only in isolated copy; never print auth.json. Account creation is next approved missing capability, not permission to rebuild its UI."
+    "nextWorkflowDecision": "Follow immediateFollowup and auth-online-entry-and-recovery-boundary; never print auth.json. Earlier session/platform gaps remain in their owning stories."
   }
 }

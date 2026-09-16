@@ -2264,6 +2264,41 @@ Client/Project storage and Project form tests also pass in2.385s
 (`/tmp/ledger-client-project-timestamp-consumers.log`). No schema change, hosted
 deployment, or new Project allocation policy was required.
 
+### Account onboarding boundary (2026-09-16, implementation in progress)
+
+Account creation requires READ COMMITTED, matching existing transactional
+commands: after locking the existing Principal, membership and retry-receipt
+reads must see the preceding creator's commit. Reject other isolation modes
+rather than permit a stale empty-membership snapshot. The real concurrency
+harness verifies this rejection and same/different-request-key serialization.
+
+Account onboarding implementation (2026-09-16): preserve the existing zero-Account
+gate's `My account` action and source defaults (Furnishings, Install, Design Fee,
+Storage & Receiving), but make Account, owner membership, categories and canonical
+Furnishings identity one transaction. A private authenticated command serializes
+submissions on the Principal row and records an identity-scoped request UUID;
+matching retries return the same Account, changed payloads fail, and a new request
+cannot create another Account while active membership exists. Clients cannot
+supply owner/role/Account IDs. Existing RLS controls readback; private receipts
+are not readable by clients. This replaces the source's separate preset seeding,
+not its UI. Explicit Account selection remains required. Initial implementation
+uses a separate explicit identity-bootstrap RPC before read-only discovery when
+needed. It inserts only an Auth-subject-bound Principal, preserves an existing
+binding under concurrent retry, and grants no Account membership. The native
+creation port carries a typed request UUID and Account name; its provider checks
+identity again after each response. Durable retry, real local readback/concurrency
+and the targeted iPhone creation flow are verified in the owning checklist;
+hosted rollout and broader entry/recovery acceptance remain separate. Entry stores a per-user,
+per-environment request UUID in the existing protected admission record before
+the network write; timeout/reconstruction reuses it, and a confirmed response
+clears only the matching request. Cleanup does not silently erase these retry IDs.
+Only exact server `identity_not_linked` failure triggers explicit preparation and
+one new read; generic lookup failures never imply empty Accounts or new identity.
+The original Create Account action requires authoritative emptiness, creates the
+fixed original `My account` name, then refreshes the picker without activation.
+Never infer identity linking from email or treat an unmapped user as authoritative
+zero membership. O-057 migration/linking questions remain distinct from this flow.
+
 ### Session-ending shutdown boundary (2026-09-16, implementation in progress)
 
 Account-entry follow-up: the existing coordinator also accepts an explicitly

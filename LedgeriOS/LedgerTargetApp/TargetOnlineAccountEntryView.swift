@@ -118,8 +118,17 @@ struct TargetOnlineAccountEntryView: View {
                     AccountGatePresentation(accounts: directory.accounts.map(Choice.init),
                         isDiscovering: false, name: { $0.account.displayName.rawValue },
                         onSelect: { choice in Task { await select(choice.id, from: directory) } },
-                        onCreate: {}, onSignOut: { Task { await signOutFromEntry() } }, canCreateAccount: false, canSignOut: true)
-                    Text("Account creation is not available in this build. Downloaded Account data must be reviewed in Settings before signing out.")
+                        onCreate: {
+                            guard let entry else { throw SupabaseOnlineSignIn.Failure.noSession }
+                            do {
+                                _ = try await entry.createInitialAccount(environment: environment.manifest.environment)
+                                await loadAccounts()
+                            } catch {
+                                throw AccountCreationUIFailure()
+                            }
+                        }, onSignOut: { Task { await signOutFromEntry() } },
+                        canCreateAccount: directory.isAuthoritativeEmpty, canSignOut: true)
+                    Text("Downloaded Account data must be reviewed in Settings before signing out.")
                         .font(.caption).foregroundStyle(.secondary).padding()
                 }
             } else if let entry {
@@ -169,6 +178,10 @@ struct TargetOnlineAccountEntryView: View {
         } message: {
             Text("Confirm your email address, then return to sign in.")
         }
+    }
+
+    private struct AccountCreationUIFailure: LocalizedError {
+        var errorDescription: String? { "Could not finish creating your Account. Check your connection and retry; Ledger will reuse the saved request." }
     }
 
     private func loadAccounts() async {
