@@ -427,6 +427,19 @@ public struct DownloadedItemClientPurchase: Equatable, Sendable, Identifiable {
 
 /// Newest intervals first. Never asserts complete history: older placements,
 /// labels or payment facts may not be downloaded.
+public struct DownloadedItemReturnLink: Equatable, Sendable, Identifiable {
+    public let id: EntityID
+    public let chargeId: BillableItemOccurrenceID
+    public let projectId: ProjectID
+    public let projectPlacementId: EntityID
+    public let inventoryPlacementId: EntityID
+    public init(id: EntityID, chargeId: BillableItemOccurrenceID, projectId: ProjectID,
+                projectPlacementId: EntityID, inventoryPlacementId: EntityID) {
+        self.id = id; self.chargeId = chargeId; self.projectId = projectId
+        self.projectPlacementId = projectPlacementId; self.inventoryPlacementId = inventoryPlacementId
+    }
+}
+
 public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     public let accountId: AccountID
     public let itemId: ItemID
@@ -441,6 +454,7 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
     /// payment ledger. Empty does not mean unpaid; missing bytes stay unknown.
     public let currentClientPaidPurchases: [DownloadedItemClientPurchase]
     public let pendingSale: InventorySalePendingPlacement?
+    public let returnLinks: [DownloadedItemReturnLink]
     public var isPartial: Bool { true }
 
     public init(accountId: AccountID, itemId: ItemID, description: String,
@@ -448,7 +462,8 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
                 currentBudgetCategoryName: String? = nil,
                 currentAccountingResolution: ProjectItemAccountingResolution? = nil,
                 currentClientPaidPurchases: [DownloadedItemClientPurchase] = [],
-                pendingSale: InventorySalePendingPlacement? = nil) throws {
+                pendingSale: InventorySalePendingPlacement? = nil,
+                returnLinks: [DownloadedItemReturnLink] = []) throws {
         guard Set(intervals.map(\.placementId)).count == intervals.count else {
             throw DownloadedItemPlacementsFailure.duplicateItem
         }
@@ -469,6 +484,15 @@ public struct DownloadedItemPlacementHistory: Equatable, Sendable {
             throw DownloadedItemPlacementsFailure.scopeMismatch
         }
         self.pendingSale = pendingSale
+        guard Set(returnLinks.map(\.id)).count == returnLinks.count,
+              Set(returnLinks.map(\.chargeId)).count == returnLinks.count,
+              returnLinks.allSatisfy({ link in
+                  guard let from = intervals.first(where: { $0.placementId == link.projectPlacementId }),
+                        let to = intervals.first(where: { $0.placementId == link.inventoryPlacementId }) else { return false }
+                  return from.scope == .project(link.projectId) && to.scope == .businessInventory
+                    && from.endedAt == to.startedAt && from.placementId != to.placementId
+              }) else { throw DownloadedItemPlacementsFailure.scopeMismatch }
+        self.returnLinks = returnLinks
     }
 }
 

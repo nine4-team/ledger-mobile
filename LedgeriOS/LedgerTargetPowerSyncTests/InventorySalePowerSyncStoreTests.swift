@@ -10,6 +10,276 @@ struct InventorySalePowerSyncStoreTests {
     private let principal = try! PrincipalID(validating: "sale-member")
     private struct InjectedFailure: Error {}
 
+    @Test func uninvoicedReturnRequiresMatchingInventoryOrigin() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        do {
+            let store = returnStore(db), command = try returnCommand()
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2024-12-31T00:00:00Z' WHERE id='inventory-origin'", parameters: nil)
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) { try await store.submit(command) }
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) {
+                try await store.review(projectId: command.envelope.payload.projectId, itemIds: [.init(validating: "item")])
+            }
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2025-01-01T00:00:00Z' WHERE id='inventory-origin'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET start_evidence='unknown' WHERE id='old'", parameters: nil)
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) { try await store.submit(command) }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 0)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    @Test(.timeLimit(.minutes(1))) func uninvoicedReturnReviewWatchWithdrawsInvoicedSelection() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let store = returnStore(db)
+        var updates = store.watchReview(projectId: try .init(validating: "destination"),
+            itemIds: [try .init(validating: "item")]).makeAsyncIterator()
+        #expect(try await updates.next()??.items.count == 1)
+        _ = try await db.execute(sql: "INSERT INTO return_live_memberships(id,account_id,source_id) VALUES('charge',?,'charge')", parameters: [account.rawValue])
+        var withdrawn = false
+        while let next = try await updates.next() {
+            if next == nil { withdrawn = true; break }
+        }
+        #expect(withdrawn)
+        await store.cancelAndDrainWatches()
+        #expect(try await updates.next() == nil)
+        try await db.close()
+    }
+
+    @Test func uninvoicedReturnReviewBindsSelectionWithoutMoneyOrNewItemIdentity() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        do {
+            let store = returnStore(db), project = try ProjectID(validating: "destination")
+            let review = try await store.review(projectId: project, itemIds: [.init(validating: "item")])
+            #expect(review.accountId == account && review.principalId == principal)
+            let payload = try review.makePayload()
+            #expect(payload.items[0].itemId.rawValue == "item")
+            #expect(payload.items[0].chargeId.rawValue == "charge")
+            #expect(payload.items[0].placementId.rawValue == "old")
+            #expect(payload.items[0].inventoryPlacementId != payload.items[0].placementId)
+            let command = try ReturnUninvoicedItemsCommand(
+                operationId: ReturnUninvoicedItemsOperationIdentity.make(accountId: account, uuid: UUID()),
+                accountId: account, actorPrincipalId: principal, capturedAt: Date(), payload: payload)
+            _ = try await db.execute(sql: "UPDATE return_charge_sources SET revision='2'", parameters: nil)
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) { try await store.submit(command) }
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) {
+                try await store.review(projectId: project, itemIds: [.init(validating: "item"),.init(validating: "missing")])
+            }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 0)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    @Test func uninvoicedReturnRequiresCompleteAuthorizedNonfinancialReview() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        do {
+            #expect(try await db.get("SELECT count(*) FROM item_charge_occurrences") { try $0.getInt(index: 0) } == 0)
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=NULL WHERE stream_name='item_return_review'", parameters: nil)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await returnStore(db).submit(returnCommand())
+            }
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=1000000 WHERE stream_name='item_return_review'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='company_financial'", parameters: nil)
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) {
+                try await returnStore(db).submit(returnCommand())
+            }
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='ordinary'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO return_paid_memberships(id,account_id,source_id) VALUES('charge',?,'charge')", parameters: [account.rawValue])
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) {
+                try await returnStore(db).submit(returnCommand())
+            }
+            _ = try await db.execute(sql: "DELETE FROM return_paid_memberships", parameters: nil)
+            #expect(try await returnStore(db).submit(returnCommand()).localState == .queued)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    @Test(.timeLimit(.minutes(1))) func uninvoicedReturnWatchFollowsReceiptAndStopsOnRemoval() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let store = returnStore(db), command = try returnCommand()
+        _ = try await store.submit(command)
+        var updates = store.watch(command.envelope.operationId).makeAsyncIterator()
+        #expect(try await updates.next()??.state.phase == .queued)
+        try await returnConnector(ReturnApplier()).uploadData(database: db)
+        var applied = false
+        while let update = try await updates.next() {
+            if update?.state.phase == .applied { applied = true; break }
+        }
+        #expect(applied)
+        _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+        await #expect(throws: (any Error).self) { while let _ = try await updates.next() {} }
+        await store.cancelAndDrainWatches()
+        try await db.close()
+    }
+
+    @Test(.timeLimit(.minutes(1))) func uninvoicedReturnWatchDrainsBeforeClosingDatabase() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let store = returnStore(db), command = try returnCommand()
+        var updates = store.watch(command.envelope.operationId).makeAsyncIterator()
+        let initial = try await updates.next()
+        #expect(initial != nil && initial! == nil)
+        await store.cancelAndDrainWatches()
+        #expect(try await updates.next() == nil)
+        try await db.close()
+    }
+
+    @Test func uninvoicedReturnCountsAsPendingWorkAcrossRestartAndRejection() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let command = try returnCommand(); _ = try await returnStore(db).submit(command)
+        #expect(try await pending(db).summary().queuedOperationCount == 1)
+        try await db.close()
+        let reopened = try fixture.open()
+        #expect(try await pending(reopened).summary().queuedOperationCount == 1)
+        try await returnConnector(ReturnApplier(rejected: true)).uploadData(database: reopened)
+        #expect(try await returnStore(reopened).status(command.envelope.operationId)?.state.phase == .rejected)
+        let summary = try await pending(reopened).summary()
+        #expect(summary.queuedOperationCount == 0)
+        #expect(summary.unresolvedRejectedOperationCount == 1)
+        try await reopened.close()
+    }
+
+    @Test(arguments: [false, true]) func uninvoicedReturnUploadRetainsTerminalReceipt(rejected: Bool) async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let command = try returnCommand(); _ = try await returnStore(db).submit(command)
+        try await returnConnector(ReturnApplier(rejected: rejected)).uploadData(database: db)
+        #expect(try await db.getNextCrudTransaction() == nil)
+        #expect(try await returnStore(db).submit(command).localState == (rejected ? .rejected : .applied))
+        try await db.close()
+        let reopened = try fixture.open()
+        #expect(try await returnStore(reopened).submit(command).localState == (rejected ? .rejected : .applied))
+        #expect(try await reopened.getNextCrudTransaction() == nil)
+        try await reopened.close()
+    }
+
+    @Test func uninvoicedReturnInterruptedUploadRetriesAfterRestart() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let command = try returnCommand(); _ = try await returnStore(db).submit(command)
+        await #expect(throws: InjectedFailure.self) {
+            try await returnConnector(ReturnApplier(fails: true)).uploadData(database: db)
+        }
+        await #expect(throws: ReturnUninvoicedItemsServerResult.Failure.receiptMismatch) {
+            try await returnConnector(ReturnApplier(wrongHash: true)).uploadData(database: db)
+        }
+        #expect(try await db.getNextCrudTransaction() != nil)
+        #expect(try await returnStore(db).submit(command).localState == .applying)
+        try await db.close()
+        let reopened = try fixture.open()
+        try await returnConnector(ReturnApplier()).uploadData(database: reopened)
+        #expect(try await returnStore(reopened).submit(command).localState == .applied)
+        #expect(try await reopened.getNextCrudTransaction() == nil)
+        try await reopened.close()
+    }
+
+    @Test func uninvoicedReturnRemovalDuringUploadRetainsIntent() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        _ = try await returnStore(db).submit(returnCommand())
+        let fence = LedgerWorkspaceAccessFence()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await returnConnector(ReturnApplier(removes: fence), fence: fence).uploadData(database: db)
+        }
+        #expect(try await db.getNextCrudTransaction() != nil)
+        #expect(try await db.get("SELECT local_state FROM spike_local_operations") { try $0.getString(index: 0) } == "applying")
+        try await db.close()
+    }
+
+    private func returnConnector(_ applier: ReturnApplier, fence: LedgerWorkspaceAccessFence = .init()) -> LedgerPowerSyncUploadConnector {
+        .init(accessFence: fence, credentialProvider: { nil }, clientCreationApplier: UnusedClientApplier(), uninvoicedReturnApplier: applier)
+    }
+    private struct ReturnApplier: ReturnUninvoicedItemsCommandApplying {
+        var rejected = false
+        var fails = false
+        var wrongHash = false
+        var removes: LedgerWorkspaceAccessFence?
+        func apply(_ command: ReturnUninvoicedItemsCommand) async throws -> ReturnUninvoicedItemsServerResult {
+            if fails { throw InjectedFailure() }
+            removes?.markRemoved()
+            let e = command.envelope, wire = try ReturnUninvoicedItemsUploadRequest(command)
+            var values: [String: Any] = ["operation_id":e.operationId.rawValue,"account_id":e.accountId.rawValue,
+                "actor_principal_id":e.actorPrincipalId.rawValue,"subject_id":e.payload.projectId.rawValue,
+                "command_type":"return_uninvoiced_items","contract_version":"return-uninvoiced-items-v1",
+                "command_fingerprint":wrongHash ? "wrong" : wire.fingerprint,"envelope_sha256":wire.fingerprint,
+                "phase":rejected ? "rejected" : "applied","client_created_at_ms":1000000,
+                "server_received_at_ms":2000000,"completed_at_ms":2000001]
+            if rejected { values["error_code"] = "return_charge_invoiced" }
+            else { values["result_code"] = "uninvoiced_items_returned" }
+            return try JSONDecoder().decode(ReturnUninvoicedItemsServerResult.self,
+                from: JSONSerialization.data(withJSONObject: values))
+        }
+    }
+
+    @Test func uninvoicedReturnSurvivesRestartAndReservesExactPlacement() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        let command = try returnCommand()
+        #expect(try await returnStore(db).submit(command).localState == .queued)
+        #expect(try await db.get("SELECT scope_kind FROM spike_item_placements WHERE id='old'") { try $0.getString(index: 0) } == "project")
+        try await db.close()
+        let reopened = try fixture.open()
+        do {
+            #expect(try await returnStore(reopened).submit(command).localState == .queued)
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.alreadyAccepted) {
+                try await returnStore(reopened).submit(returnCommand())
+            }
+            #expect(try await reopened.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 1)
+            let crud = try #require(try await reopened.getNextCrudTransaction())
+            #expect(crud.crud.count == 1)
+            #expect(crud.crud.first?.table == LedgerPowerSyncTable.uninvoicedReturnCommands)
+            _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: (any Error).self) { try await returnStore(reopened).submit(command) }
+            #expect(try await reopened.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 1)
+            try await reopened.close()
+        } catch { try? await reopened.close(); throw error }
+    }
+
+    @Test func uninvoicedReturnAcceptanceIsAtomicAndRejectsInvoicedSource() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seedReturn(db)
+        do {
+            let failing = ReturnUninvoicedItemsPowerSyncStore(database: db, accountId: account,
+                principalId: principal, accessFence: .init(), afterOperationWrite: { throw InjectedFailure() })
+            await #expect(throws: InjectedFailure.self) { try await failing.submit(returnCommand()) }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 0)
+            #expect(try await db.getNextCrudTransaction() == nil)
+            _ = try await db.execute(sql: "INSERT INTO return_live_memberships(id,account_id,source_id) VALUES('charge',?,'charge')",
+                parameters: [account.rawValue])
+            await #expect(throws: ReturnUninvoicedItemsPowerSyncStore.Failure.unavailable) {
+                try await returnStore(db).submit(returnCommand())
+            }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 0)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    private func returnStore(_ db: any PowerSyncDatabaseProtocol) -> ReturnUninvoicedItemsPowerSyncStore {
+        .init(database: db, accountId: account, principalId: principal, accessFence: .init())
+    }
+    private func returnCommand() throws -> ReturnUninvoicedItemsCommand {
+        try .init(operationId: ReturnUninvoicedItemsOperationIdentity.make(accountId: account, uuid: UUID()),
+            accountId: account, actorPrincipalId: principal, capturedAt: Date(timeIntervalSince1970: 1000),
+            payload: .init(projectId: .init(validating: "destination"), items: [
+                .init(itemId: .init(validating: "item"), placementId: .init(validating: "old"),
+                    chargeId: .init(validating: "charge"), expectedChargeRevision: 1,
+                    inventoryPlacementId: .init(validating: "returned"), returnOccurrenceId: .init(validating: "return"))]))
+    }
+    private func seedReturn(_ db: any PowerSyncDatabaseProtocol) async throws {
+        try await seed(db)
+        _ = try await db.execute(sql: "UPDATE spike_item_placements SET scope_kind='project',project_id='destination',start_evidence='recorded_move',started_at='2025-01-01T00:00:00Z' WHERE id='old'", parameters: nil)
+        _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,ended_at) VALUES('inventory-origin',?,'item','business_inventory','2025-01-01T00:00:00Z')", parameters: [account.rawValue])
+        _ = try await db.execute(sql: "INSERT INTO spike_budget_categories(id,account_id,display_name,kind,visibility_class) VALUES('category',?,'Furnishings','itemized','ordinary')", parameters: [account.rawValue])
+        _ = try await db.execute(sql: "INSERT INTO return_charge_sources(id,account_id,project_id,item_id,placement_id,category_id,revision) VALUES('charge',?,'destination','item','old','category','1')", parameters: [account.rawValue])
+        _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('item_return_review',1,0,?,1000000)",
+            parameters: [#"{"account_id":"sale-account","project_id":"destination"}"#])
+        while let pending = try await db.getNextCrudTransaction() { try await pending.complete() }
+    }
+
     @Test func paidExpenseReadsFrozenContentsAndSurvivesRestart() async throws {
         let fixture = try Fixture(); defer { fixture.remove() }
         let db = try fixture.open()

@@ -13,6 +13,9 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
+assert.ok(!process.argv.includes('--native-return') || process.argv.includes('--native'), '--native-return requires --native');
+const returnScale=process.argv.includes('--return-scale')?700:1;
+assert.ok(returnScale===1 || process.argv.includes('--native-return'), '--return-scale requires --native-return');
 assert.ok(!process.argv.includes('--native-invoice-create') || process.argv.includes('--native-live-invoice'),
     '--native-invoice-create requires --native-live-invoice');
 assert.ok(!process.argv.includes('--native-invoice-revise') || process.argv.includes('--native-invoice-create'),
@@ -48,6 +51,11 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 // Resolve optional test adapters before provisioning a synthetic user. A loader
 // failure must not leave a signed-in fixture outside the cleanup block.
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
+const returnMCP=process.argv.includes('--return-mcp') ? await import('../LedgerTargetMCP/src/uninvoicedReturn.ts') : null;
+assert.ok(!process.argv.includes('--return-withdrawal') || (returnMCP && !process.argv.includes('--financial')),
+    '--return-withdrawal requires --return-mcp with the ordinary no-financial-access fixture');
+assert.ok(!returnMCP || (mcp && !['--expense','--mixed','--native'].some(flag=>process.argv.includes(flag))),
+    'Return MCP uses the ordinary sale fixture with --mcp');
 const expenseMCP=process.argv.includes('--expense-mcp') ? await import('../LedgerTargetMCP/src/expenseCreation.ts') : null;
 const invoiceCreationMCP=process.argv.includes('--invoice-mcp') ? await import('../LedgerTargetMCP/src/invoiceCreation.ts') : null;
 const feeMCP=process.argv.includes('--fee-mcp') ? await import('../LedgerTargetMCP/src/feeCreation.ts') : null;
@@ -83,15 +91,27 @@ try {
       update public.spike_accounts set furnishings_category_id=${q(category)} where id=${q(account)};
       insert into public.spike_items(id,account_id,description,created_by_principal_id)
         values(${q(item)},${q(account)},'Synthetic',${q(principal)});
-      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
-        values(${q(key+'-old')},${q(account)},${q(item)},'business_inventory','2026-01-01',${q(principal)});
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id,start_evidence)
+        values(${q(key+'-old')},${q(account)},${q(item)},'business_inventory','2026-01-01',${q(principal)},${q(process.argv.includes('--return-mcp') ? 'import_observation' : 'recorded_move')});
       commit; notify pgrst,'reload schema';`);
+    if(returnScale>1) sql(`begin;
+      insert into public.spike_items(id,account_id,description,created_by_principal_id)
+        select ${q(key)}||'-scale-'||i,${q(account)},'Synthetic scale Item',${q(principal)} from generate_series(1,${returnScale-1}) i;
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,ended_at,started_by_principal_id,ended_by_principal_id)
+        select ${q(key)}||'-scale-old-'||i,${q(account)},${q(key)}||'-scale-'||i,'business_inventory','2025-01-01','2026-01-01',${q(principal)},${q(principal)} from generate_series(1,${returnScale-1}) i;
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id)
+        select ${q(key)}||'-scale-placement-'||i,${q(account)},${q(key)}||'-scale-'||i,'project',${q(project)},'2026-01-01',${q(principal)} from generate_series(1,${returnScale-1}) i;
+      insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,created_at,created_by_principal_id)
+        select ${q(key)}||'-scale-charge-'||i,${q(account)},${q(project)},${q(key)}||'-scale-'||i,${q(key)}||'-scale-placement-'||i,${q(category)},1,'USD','2026-01-01',${q(principal)} from generate_series(1,${returnScale-1}) i;
+      commit;`);
     const runNative = (test, selectedProject=project, selectedItem=item) => {
         const output=execFileSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
             test==='actualLocalExpense' ? `SupabaseTransactionAttachmentUploadTests/${test}` : `AccountWorkspacePendingWorkRuntimeTests/${test}`],{encoding:'utf8',timeout:120000,
             env:{...process.env,LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:principal,
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
+                ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
+                LEDGER_RETURN_LOCAL_PROJECT_COUNT:String(returnScale),
                 LEDGER_SALE_LOCAL_CLIENT:client,
                 ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
                 ...(process.argv.includes('--native-invoice-revise')?{LEDGER_INVOICE_LOCAL_REVISE:'1'}:{}),
@@ -463,10 +483,15 @@ try {
         const ports=JSON.parse(docker(['inspect','--format','{{json .NetworkSettings.Ports}}','ledger_powersync_local']));
         assert.deepEqual(ports['8080/tcp'],[{HostIp:'127.0.0.1',HostPort:'5590'}]);
         runNative('inventorySaleLiveReplication');
-        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}`),'1');
-        assert.equal(sql(`select amount_minor_units::text from ledger_private.item_charge_occurrences where account_id=${q(account)}`),'9223372036854775807');
+        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}`),String(returnScale));
+        assert.equal(sql(`select amount_minor_units::text from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)}`),'9223372036854775807');
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
-        console.log(JSON.stringify({nativeLiveSale:true,charges:1,salePayments:0,exactInt64:true}));
+        if(process.argv.includes('--native-return')) {
+            assert.equal(sql(`select count(*) from ledger_private.uninvoiced_item_returns where account_id=${q(account)}`),'1');
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and withdrawn_at is null`),String(returnScale-1));
+            assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and ended_at is null and scope_kind='business_inventory'`),'1');
+        }
+        console.log(JSON.stringify({nativeLiveSale:true,nativeLiveReturn:process.argv.includes('--native-return'),charges:returnScale,salePayments:0,exactInt64:true}));
     } else {
     const reviewEndpoint='/rest/v1/rpc/spike_read_inventory_sale_review';
     const reviewBody={p_account_id:account,p_item_ids:[item]};
@@ -497,6 +522,80 @@ try {
     assert.equal(retry.status,200); assert.deepEqual(await retry.json(),applied);
     assert.equal(sql(`select amount_minor_units::text from ledger_private.item_charge_occurrences where id=${q(key+'-charge')}`),'9223372036854775807');
     assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+    let returnInput, returnService;
+    if(returnMCP) {
+        returnService=new returnMCP.SupabaseUninvoicedReturnService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+        const reviewInput={projectId:project,itemIds:[item]};
+        const reviewed=await returnService.review(reviewInput,context);
+        assert.deepEqual(reviewed,{accountId:account,principalId:principal,projectId:project,items:[{
+            itemId:item,placementId:key+'-new',chargeId:key+'-charge',revision:'1'}]});
+        returnInput={operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
+            payload:{projectId:project,items:reviewed.items.map(row=>({itemId:row.itemId,placementId:row.placementId,
+                chargeId:row.chargeId,expectedChargeRevision:row.revision,inventoryPlacementId:key+'-returned',returnOccurrenceId:key+'-return-fact'}))}};
+        const returnBody={p_command:returnMCP.makeUninvoicedReturnRequest(returnInput,context).commandJSON};
+        assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_return_uninvoiced_items',returnBody)).status));
+        const returned=await returnMCP.uninvoicedReturnTool(returnInput,context,returnService);
+        assert.equal(returned.phase,'applied');
+        assert.deepEqual(await returnMCP.uninvoicedReturnTool(returnInput,context,returnService),returned);
+        assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and ended_at is null and scope_kind='business_inventory'`),'1');
+        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and withdrawn_at is null`),'0');
+        assert.equal(sql(`select amount_minor_units::text||':'||revision::text from ledger_private.item_charge_occurrences where id=${q(key+'-charge')}`),'9223372036854775807:2');
+        assert.equal(sql(`select count(*) from ledger_private.uninvoiced_item_returns where account_id=${q(account)} and charge_id=${q(key+'-charge')}`),'1');
+        assert.equal(sql(`select count(*) from public.spike_item_placements origin
+          join public.spike_item_placements sale on sale.account_id=origin.account_id and sale.item_id=origin.item_id and sale.started_at=origin.ended_at
+          join public.spike_item_placements returned on returned.account_id=sale.account_id and returned.item_id=sale.item_id and returned.started_at=sale.ended_at
+          join ledger_private.uninvoiced_item_returns fact on fact.account_id=returned.account_id and fact.item_id=returned.item_id and fact.inventory_placement_id=returned.id
+          where origin.id=${q(key+'-old')} and origin.start_evidence='import_observation' and origin.started_at='2026-01-01'
+            and sale.id=${q(key+'-new')} and sale.start_evidence='recorded_move'
+            and returned.id=${q(key+'-returned')} and returned.ended_at is null
+            and fact.charge_id=${q(key+'-charge')}`),'1','Imported Inventory observation remains linked through actual sale and return');
+        assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+        await assert.rejects(returnService.review(reviewInput,context),error=>error.statusCode===403);
+        const changed=structuredClone(returnInput); changed.payload.items[0].returnOccurrenceId+='-changed';
+        await assert.rejects(returnMCP.uninvoicedReturnTool(changed,context,returnService),error=>error.statusCode===409);
+        if(process.argv.includes('--return-withdrawal')) {
+            const controller=new AbortController(), deadline=setTimeout(()=>controller.abort(),20000);
+            let historyBucket, checkpointBuckets=new Set(), stage='download', purged=false, pending='';
+            try {
+                const response=await fetch('http://127.0.0.1:5590/sync/stream',{
+                    method:'POST',signal:controller.signal,headers:{Authorization:'Bearer '+token,
+                        'Content-Type':'application/json',Accept:'application/x-ndjson'},
+                    body:JSON.stringify({buckets:[],raw_data:true,client_id:'return-withdrawal-'+randomUUID(),
+                        streams:{include_defaults:false,subscriptions:[{stream:'physical_account_items',override_priority:null,
+                            parameters:{account_id:account}}]}})});
+                assert.equal(response.status,200); assert.ok(response.body);
+                const reader=response.body.pipeThrough(new TextDecoderStream()).getReader();
+                try {
+                    while(!purged) {
+                        const chunk=await reader.read(); if(chunk.done) break;
+                        pending+=chunk.value; const lines=pending.split('\n'); pending=lines.pop();
+                        for(const line of lines) {
+                            if(!line.trim()) continue;
+                            const message=JSON.parse(line); assert.ok(!message.error);
+                            if(message.checkpoint) {
+                                for(const stream of message.checkpoint.streams??[]) assert.deepEqual(stream.errors,[]);
+                                checkpointBuckets=new Set(message.checkpoint.buckets.map(b=>b.bucket));
+                            }
+                            if(message.checkpoint_diff) {
+                                for(const bucket of message.checkpoint_diff.removed_buckets??[]) checkpointBuckets.delete(bucket);
+                                for(const bucket of message.checkpoint_diff.updated_buckets??[]) checkpointBuckets.add(bucket.bucket);
+                            }
+                            for(const row of message.data?.data??[]) if(row.op==='PUT' && row.object_type==='item_return_history'
+                                && row.object_id===key+'-return-fact') historyBucket=message.data.bucket;
+                            if(message.checkpoint_complete && historyBucket) {
+                                if(stage==='download' && checkpointBuckets.has(historyBucket)) {
+                                    sql(`update public.spike_budget_categories set kind='fee' where account_id=${q(account)} and id=${q(category)}`);
+                                    stage='withdraw';
+                                } else if(stage==='withdraw' && !checkpointBuckets.has(historyBucket)) purged=true;
+                            }
+                        }
+                    }
+                } finally { await reader.cancel().catch(()=>{}); }
+                assert.ok(purged,'Category restriction must remove the previously downloaded history bucket at a completed checkpoint');
+                console.log(JSON.stringify({returnHistoryNetworkWithdrawal:true}));
+            } finally { clearTimeout(deadline); controller.abort(); }
+        }
+    }
     sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
     const removed=await call(endpoint,body,token);
     assert.equal(removed.status,403,'Removed member must not replay a former result');
@@ -505,7 +604,12 @@ try {
         await assert.rejects(mcp.inventorySaleTool(input,context,service),error=>error.statusCode===403);
         await assert.rejects(mcp.inventorySaleReviewTool({itemIds:[item]},context,service),error=>error.statusCode===403);
     }
-    console.log(JSON.stringify({mcp:!!mcp,authenticatedSale:true,exactInt64:true,replay:true,anonymousDenied:true,removedMemberDenied:true,syntheticAccount:account}));
+    if(returnMCP) {
+        await assert.rejects(returnMCP.uninvoicedReturnTool(returnInput,context,returnService),error=>error.statusCode===403);
+        await assert.rejects(returnService.review({projectId:project,itemIds:[item]},context),error=>error.statusCode===403);
+    }
+    console.log(JSON.stringify({mcp:!!mcp,authenticatedSale:true,exactInt64:true,replay:true,anonymousDenied:true,removedMemberDenied:true,
+        mcpReturn:!!returnMCP,returnReadback:!!returnMCP,syntheticAccount:account}));
     }
 } catch (error) {
     // Preserve native test diagnostics even if fixture cleanup subsequently fails.

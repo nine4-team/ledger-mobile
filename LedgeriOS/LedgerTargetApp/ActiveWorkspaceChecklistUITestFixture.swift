@@ -661,7 +661,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
@@ -1052,6 +1052,39 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     func watchInventorySale(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
         AsyncThrowingStream { $0.yield(nil) }
     }
+    func watchUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<UninvoicedReturnReview?, Error> {
+        AsyncThrowingStream { continuation in
+            do {
+                guard !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-unavailable") else {
+                    continuation.yield(nil); return
+                }
+                continuation.yield(try .init(accountId: .init(validating: "account-ui-test"),
+                    principalId: .init(validating: "principal-ui-test"), projectId: projectId, items: itemIds.map {
+                        try .init(itemId: $0, placementId: .init(validating: "history-\($0.rawValue)"),
+                            chargeId: .init(validating: "charge-\($0.rawValue)"), revision: 1)
+                    }))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    func returnUninvoicedItems(_ payload: ReturnUninvoicedItemsPayload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        let expected: Set<String> = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bulk-return")
+            ? ["physical-ui-chair", "physical-ui-other-space", "physical-ui-unassigned"] : ["physical-ui-chair"]
+        guard payload.projectId.rawValue == "project-ui-test", payload.items.count == expected.count,
+              Set(payload.items.map { $0.itemId.rawValue }) == expected,
+              payload.items.allSatisfy({ item in
+                  item.placementId.rawValue == "history-\(item.itemId.rawValue)"
+                    && item.chargeId.rawValue == "charge-\(item.itemId.rawValue)" && item.expectedChargeRevision == 1
+              }) else { throw ReturnUninvoicedItemsFailure.invalidSelection }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-retry"),
+           !expenseAccess.isExactReturnRetry(operationUUID, date: capturedAt, payload: payload) {
+            throw ReturnUninvoicedItemsFailure.invalidSelection
+        }
+        await saleAccepted?()
+        return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+    }
+    func watchUninvoicedReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { $0.yield(nil) }
+    }
     private var imageBytes: Data {
         Data(base64Encoded: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")!
     }
@@ -1157,6 +1190,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
 
     func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-history") {
+            return try .init(accountId: accountId, itemId: itemId, description: "Returned chair", intervals: [
+                .init(placementId: .init(validating: "returned-inventory"), scope: .businessInventory, spaceId: nil,
+                    startedAt: "2026-09-03T12:00:00Z", endedAt: nil),
+                .init(placementId: .init(validating: "returned-project"), scope: .project(.init(validating: "project-ui-test")), spaceId: nil,
+                    projectDisplayName: "UI Test Project", startedAt: "2026-09-02T12:00:00Z", endedAt: "2026-09-03T12:00:00Z")
+            ], returnLinks: [.init(id: .init(validating: "return-ui-fact"), chargeId: .init(validating: "return-ui-charge"),
+                projectId: .init(validating: "project-ui-test"), projectPlacementId: .init(validating: "returned-project"),
+                inventoryPlacementId: .init(validating: "returned-inventory"))])
+        }
         let pending = try pendingSale(accountId: accountId)
         let inventory = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-inventory-space")
         return try DownloadedItemPlacementHistory(accountId: accountId, itemId: itemId,

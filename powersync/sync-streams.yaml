@@ -782,8 +782,66 @@ streams:
       # immutable line's derived Project removes per-Invoice parameter lookups;
       # source assembly cannot commit and is never a downloadable draft phase.
 
+  item_return_review:
+    queries:
+      - |
+        SELECT return_charge_sources.id, return_charge_sources.account_id, return_charge_sources.project_id,
+          return_charge_sources.item_id, return_charge_sources.placement_id, return_charge_sources.category_id,
+          return_charge_sources.revision::text AS revision
+        FROM ledger_private.item_return_reviews AS "return_charge_sources"
+        JOIN spike_budget_categories AS category ON category.account_id=return_charge_sources.account_id
+          AND category.id=return_charge_sources.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=return_charge_sources.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE return_charge_sources.account_id=subscription.parameter('account_id')
+          AND return_charge_sources.project_id=subscription.parameter('project_id')
+          AND return_charge_sources.withdrawn=false
+          AND membership.account_id=subscription.parameter('account_id')
+          AND category.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
+      - |
+        SELECT return_live_memberships.id, return_live_memberships.account_id,
+          return_live_memberships.id AS source_id
+        FROM ledger_private.item_return_reviews AS "return_live_memberships"
+        JOIN spike_budget_categories AS category ON category.account_id=return_live_memberships.account_id AND category.id=return_live_memberships.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=return_live_memberships.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE return_live_memberships.account_id=subscription.parameter('account_id')
+          AND return_live_memberships.has_live_invoice=true
+          AND return_live_memberships.project_id=subscription.parameter('project_id')
+          AND category.account_id=subscription.parameter('account_id') AND membership.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
+      - |
+        SELECT return_paid_memberships.id, return_paid_memberships.account_id,
+          return_paid_memberships.id AS source_id
+        FROM ledger_private.item_return_reviews AS "return_paid_memberships"
+        JOIN spike_budget_categories AS category ON category.account_id=return_paid_memberships.account_id AND category.id=return_paid_memberships.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=return_paid_memberships.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE return_paid_memberships.account_id=subscription.parameter('account_id')
+          AND return_paid_memberships.has_collected_invoice=true
+          AND return_paid_memberships.project_id=subscription.parameter('project_id')
+          AND category.account_id=subscription.parameter('account_id') AND membership.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
+
   physical_account_items:
     queries:
+      - |
+        SELECT item_return_history.return_occurrence_id AS id, item_return_history.account_id,
+          item_return_history.id AS charge_id, item_return_history.item_id, item_return_history.project_id,
+          item_return_history.placement_id, item_return_history.inventory_placement_id, item_return_history.category_id
+        FROM ledger_private.item_return_reviews AS "item_return_history"
+        JOIN spike_budget_categories AS category ON category.account_id=item_return_history.account_id AND category.id=item_return_history.category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_return_history.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_return_history.account_id=subscription.parameter('account_id')
+          AND item_return_history.return_occurrence_id IS NOT NULL
+          AND category.account_id=subscription.parameter('account_id') AND membership.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
       - |
         SELECT item_acquisition_reviews.id,item_acquisition_reviews.account_id,
           item_acquisition_reviews.state,item_acquisition_reviews.amount_minor_units::text AS amount_minor_units,

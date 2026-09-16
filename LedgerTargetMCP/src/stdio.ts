@@ -6,6 +6,7 @@ import { SupabaseCategoryManagementApplier } from "./categoryManagement.js";
 import { SupabaseTransactionReceiptReader } from "./transactionReceiptRead.js";
 import { SupabaseTransactionDetailReader } from "./transactionDetailRead.js";
 import { SupabaseInventorySaleService } from "./inventorySale.js";
+import { SupabaseUninvoicedReturnService } from "./uninvoicedReturn.js";
 import { SupabaseExpenseCreationService } from "./expenseCreation.js";
 import { SupabaseCollectedInvoiceReader } from "./collectedInvoiceRead.js";
 import { SupabaseLiveInvoiceReader } from "./liveInvoiceRead.js";
@@ -44,7 +45,9 @@ try {
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const fees = new SupabaseFeeReader(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
-  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision);
+  const uninvoicedReturn = new SupabaseUninvoicedReturnService(
+    new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
+  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision, uninvoicedReturn);
   await server.connect(new StdioServerTransport());
 } catch {
   process.stderr.write("Ledger target MCP could not start: check target configuration and user session.\n");

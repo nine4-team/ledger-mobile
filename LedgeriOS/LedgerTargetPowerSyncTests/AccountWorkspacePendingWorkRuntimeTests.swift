@@ -1731,7 +1731,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let uuid = UUID(), captured = Date()
         let receipt = try await offline.sellInventoryItems(payload,operationUUID: uuid,capturedAt: captured)
         #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.isEmpty)
-        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)).rows.first?.pendingSale != nil)
+        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)).rows.first(where: { $0.itemId == itemId })?.pendingSale != nil)
         try await offline.close()
         let resumed = try await context.openRuntime()
         #expect(try await resumed.sellInventoryItems(payload,operationUUID: uuid,capturedAt: captured).operationId == receipt.operationId)
@@ -1744,8 +1744,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(applied)
         var reconciled = false
         for try await value in resumed.watchDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)) {
-            if let row = value.rows.first, row.placementId == payload.items[0].newPlacementId, row.pendingSale == nil {
-                #expect(value.rows.count == 1); reconciled = true; break
+            if let row = value.rows.first(where: { $0.itemId == itemId }), row.placementId == payload.items[0].newPlacementId, row.pendingSale == nil {
+                #expect(value.rows.count == Int(env["LEDGER_RETURN_LOCAL_PROJECT_COUNT"] ?? "1")); reconciled = true; break
             }
         }
         #expect(reconciled)
@@ -1762,6 +1762,70 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
         }
         #expect(chargeRecognized)
+        if env["LEDGER_RETURN_LOCAL"] == "1" {
+            var returnReview: UninvoicedReturnReview?
+            for try await value in resumed.watchUninvoicedReturnReview(projectId: projectId, itemIds: [itemId]) {
+                if let value { returnReview = value; break }
+            }
+            let selected = try #require(returnReview)
+            #expect(selected.items.count == 1)
+            try await resumed.close()
+            let returnOffline = try await context.openRuntime()
+            let localReview = try await returnOffline.readUninvoicedReturnReview(projectId: projectId, itemIds: [itemId])
+            #expect(localReview == selected)
+            let returnPayload = try localReview.makePayload()
+            let returnUUID = UUID(), returnCaptured = Date()
+            let returned = try await returnOffline.returnUninvoicedItems(returnPayload,
+                operationUUID: returnUUID, capturedAt: returnCaptured)
+            #expect(returned.localState == .queued)
+            try await returnOffline.close()
+            let returnResumed = try await context.openRuntime()
+            #expect(try await returnResumed.returnUninvoicedItems(returnPayload,
+                operationUUID: returnUUID, capturedAt: returnCaptured).operationId == returned.operationId)
+            try await entry.startWorkspaceSync(returnResumed, authorization: authorization, powerSyncURL: sync)
+            var returnApplied = false
+            for try await status in returnResumed.watchUninvoicedReturn(returned.operationId) {
+                if status?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+                if status?.state.phase == .applied { returnApplied = true; break }
+            }
+            #expect(returnApplied)
+            var inventoryReadback = false
+            for try await value in returnResumed.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) {
+                if value.rows.contains(where: { $0.itemId == itemId && $0.placementId == returnPayload.items[0].inventoryPlacementId }) {
+                    inventoryReadback = true; break
+                }
+            }
+            #expect(inventoryReadback)
+            var linkedHistory = false
+            for try await history in returnResumed.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                if history.returnLinks.contains(where: { $0.id == returnPayload.items[0].returnOccurrenceId }) {
+                    linkedHistory = true; break
+                }
+            }
+            #expect(linkedHistory)
+            try await returnResumed.close()
+            let finalOffline = try await context.openRuntime()
+            #expect(try await finalOffline.uninvoicedReturnStatus(returned.operationId)?.state.phase == .applied)
+            #expect(try await finalOffline.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory).rows.contains(where: { $0.itemId == itemId }))
+            let history = try await finalOffline.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+            #expect(history.intervals.count == 3)
+            let returnLink = try #require(history.returnLinks.first)
+            #expect(history.returnLinks.count == 1)
+            #expect(returnLink.id == returnPayload.items[0].returnOccurrenceId)
+            #expect(returnLink.chargeId == returnPayload.items[0].chargeId)
+            #expect(returnLink.projectPlacementId == payload.items[0].newPlacementId)
+            #expect(returnLink.inventoryPlacementId == returnPayload.items[0].inventoryPlacementId)
+            let returnedPlacement = try #require(history.intervals.first)
+            #expect(returnedPlacement.placementId == returnPayload.items[0].inventoryPlacementId)
+            #expect(returnedPlacement.scope == .businessInventory && returnedPlacement.endedAt == nil)
+            let soldPlacement = try #require(history.intervals.first(where: { $0.placementId == payload.items[0].newPlacementId }))
+            #expect(soldPlacement.scope == .project(projectId))
+            #expect(soldPlacement.endedAt == returnedPlacement.startedAt)
+            let original = try #require(history.intervals.first(where: { $0.placementId == payload.items[0].placementId }))
+            #expect(original.scope == .businessInventory && original.endedAt == soldPlacement.startedAt)
+            #expect(history.currentClientPaidPurchases.isEmpty)
+            try await finalOffline.close()
+        }
         try await resumed.close()
     }
 

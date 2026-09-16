@@ -18,6 +18,7 @@ struct DownloadedItemsView: View {
     @State private var refresh = UUID()
     @State private var selectedItem: ItemSelection?
     @State private var saleSelection: SaleSelection?
+    @State private var returnSelection: ReturnSelection?
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
     @State private var filters = DownloadedItemFilters()
@@ -37,6 +38,13 @@ struct DownloadedItemsView: View {
         let id = UUID()
         let accountId: AccountID
         let names: [ItemID: String]
+    }
+
+    private struct ReturnSelection: Identifiable {
+        let id = UUID()
+        let accountId: AccountID
+        let projectId: ProjectID
+        let itemIds: [ItemID]
     }
 
     private struct GroupExpansionID: Hashable {
@@ -198,6 +206,13 @@ struct DownloadedItemsView: View {
                     currency: try! CurrencyCode(validating: "USD"), service: service)
             }
         }
+        .sheet(item: $returnSelection) { selected in
+            if selected.accountId == accountId, scope == .project(selected.projectId),
+               let service = reader as? any UninvoicedReturnWorkflowServing {
+                UninvoicedReturnForm(accountId: accountId, projectId: selected.projectId,
+                    itemIds: selected.itemIds, service: service)
+            }
+        }
         .onChange(of: accountId) { _, _ in resetContext() }
         .onChange(of: scope) { _, _ in resetContext() }
         .onChange(of: spaceId.map { Array($0.rawValue.utf8) }) { _, _ in resetContext() }
@@ -244,6 +259,14 @@ struct DownloadedItemsView: View {
                         guard names.count == selected.count else { return }
                         saleSelection = SaleSelection(accountId: accountId, names: names)
                     }.accessibilityIdentifier("target-items-sell")
+                }
+                if case .project(let projectId) = scope, reader is any UninvoicedReturnWorkflowServing {
+                    Button("Return to Inventory") {
+                        guard let current = selectionEvidence else { return }
+                        let ids = selection.ids.intersection(current).sorted { $0.rawValue < $1.rawValue }
+                        guard !ids.isEmpty else { return }
+                        returnSelection = ReturnSelection(accountId: accountId, projectId: projectId, itemIds: ids)
+                    }.accessibilityIdentifier("target-items-return")
                 }
                 Button("Copy IDs") {
                     // Re-read eligibility at the actual click, not from the
@@ -476,6 +499,7 @@ struct DownloadedItemsView: View {
 
     private func resetContext() {
         saleSelection = nil
+        returnSelection = nil
         selectedItem = nil
         search = ""
         order = .newest
@@ -510,6 +534,7 @@ struct DownloadedItemDetailView: View {
     var spaceNavigation: ItemSpaceNavigation? = nil
     @State private var selectedSpace: ReferencedSpaceSelection?
     @State private var showingInventorySale = false
+    @State private var showingInventoryReturn = false
     private struct ReferencedSpaceSelection: Identifiable {
         let id: SpaceID
         let scope: SpaceCreationScope
@@ -589,6 +614,14 @@ struct DownloadedItemDetailView: View {
                     currency: try! CurrencyCode(validating: "USD"),service: service)
             }
         }
+        .sheet(isPresented: $showingInventoryReturn) {
+            if let service = reader as? any UninvoicedReturnWorkflowServing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               case .project(let projectId) = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                UninvoicedReturnForm(accountId: accountId, projectId: projectId, itemIds: [itemId], service: service)
+            }
+        }
     }
 
     private var historyContent: some View {
@@ -604,6 +637,12 @@ struct DownloadedItemDetailView: View {
                            history.intervals.first(where: { $0.endedAt == nil })?.scope == .businessInventory {
                             Button("Sell to Project") { showingInventorySale = true }
                                 .accessibilityIdentifier("target-item-detail-sell")
+                        }
+                        if reader is any UninvoicedReturnWorkflowServing,
+                           case .downloaded(let history) = model.state,
+                           case .project = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                            Button("Return to Inventory") { showingInventoryReturn = true }
+                                .accessibilityIdentifier("target-item-detail-return")
                         }
                         Button("Copy ID") {
                             guard hasCurrentItem else { return }
@@ -745,7 +784,7 @@ struct DownloadedItemDetailView: View {
         }
         detailSection("History", id: "target-item-detail-history-section", isExpanded: $historyExpanded) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Downloaded locations only. Older moves may be missing. Payments, sales and refunds are not shown here.")
+                Text("Downloaded locations and available return links. Older history may be missing. This is not a payment or refund ledger.")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-item-history-partial")
                 if history.intervals.isEmpty { Text("No location history is downloaded for this Item yet.") }
@@ -755,6 +794,11 @@ struct DownloadedItemDetailView: View {
                         if interval.spaceId != nil { Text(interval.spaceDisplayName ?? "Space name not downloaded") }
                         Text(interval.startDescription)
                         Text(interval.endedAt.map { "Until: \($0)" } ?? "Current downloaded location")
+                        ForEach(history.returnLinks.filter { $0.inventoryPlacementId == interval.placementId }) { link in
+                            Text("Returned before invoicing · original charge \(link.chargeId.rawValue)")
+                                .font(.caption).foregroundStyle(.secondary)
+                                .accessibilityIdentifier("target-item-return-link-\(link.id.rawValue)")
+                        }
                     }.accessibilityIdentifier("target-item-history-\(interval.placementId.rawValue)")
                 }
             }

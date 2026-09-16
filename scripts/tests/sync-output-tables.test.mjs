@@ -23,14 +23,29 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  assert.equal(count, 81);
+  assert.equal(count, 85);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 37);
+  assert.equal(outputs.length, 41);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
+test('return review outputs exclude money and Invoice identities while retaining category authorization', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const block = yaml.split('  item_return_review:')[1].split('  physical_account_items:')[0];
+  const queries = block.split('      - |').slice(1);
+  assert.equal(queries.length, 3);
+  for (const query of queries) {
+    const projection = query.split('FROM')[0];
+    assert.doesNotMatch(projection, /amount|currency|invoice_id|purchase_id|description|snapshot/);
+    assert.match(query, /principal.auth_user_id=auth.user_id\(\)/);
+    assert.match(query, /membership.state='active'/);
+    assert.match(query, /category.visibility_class='ordinary' OR membership.financial_access='full'/);
+    assert.match(query, /project_id=subscription.parameter\('project_id'\)/);
+  }
+});
+
 test('service parser proves primary aliases change the downloaded table', () => {
   const result = SqlSyncRules.fromYaml(`config:
   edition: 3

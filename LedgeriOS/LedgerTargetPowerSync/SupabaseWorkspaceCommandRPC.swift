@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -57,6 +57,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
                          principal: command.envelope.actorPrincipalId.rawValue)
         let request = try InventorySaleUploadRequest(command)
         let result: InventorySaleServerResult = try await call("spike_sell_inventory_items", body: request.rpcBody)
+        try result.validate(for: command)
+        return result
+    }
+
+    func apply(_ command: ReturnUninvoicedItemsCommand) async throws -> ReturnUninvoicedItemsServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try ReturnUninvoicedItemsUploadRequest(command)
+        let result: ReturnUninvoicedItemsServerResult = try await call("spike_return_uninvoiced_items", body: request.rpcBody)
         try result.validate(for: command)
         return result
     }

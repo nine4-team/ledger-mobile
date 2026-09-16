@@ -12,6 +12,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
     case reviseSpaceChecklists = "revise_space_checklists"
     case manageCategories = "manage_categories"
     case sellInventoryItems = "sell_inventory_items"
+    case returnUninvoicedItems = "return_uninvoiced_items"
     case createExpense = "create_expense"
     case editExpense = "edit_expense"
     case createInvoice = "create_invoice"
@@ -26,6 +27,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
         case .archiveClient: LedgerPowerSyncTable.clientArchiveCommands
         case .manageCategories: LedgerPowerSyncTable.categoryCommands
         case .sellInventoryItems: LedgerPowerSyncTable.inventorySaleCommands
+        case .returnUninvoicedItems: LedgerPowerSyncTable.uninvoicedReturnCommands
         case .createExpense, .editExpense: LedgerPowerSyncTable.expenseCommands
         case .createInvoice, .reviseCreatedInvoice: LedgerPowerSyncTable.invoiceCommands
         case .createFeeInstallment: LedgerPowerSyncTable.feeCommands
@@ -73,6 +75,7 @@ enum LocalOperationIdentityGuard {
         LedgerPowerSyncTable.spaceChecklistRevisionCommands,
         LedgerPowerSyncTable.categoryCommands,
         LedgerPowerSyncTable.inventorySaleCommands,
+        LedgerPowerSyncTable.uninvoicedReturnCommands,
         LedgerPowerSyncTable.expenseCommands,
         LedgerPowerSyncTable.invoiceCommands,
         LedgerPowerSyncTable.feeCommands
@@ -88,6 +91,7 @@ enum LocalOperationIdentityGuard {
         "SpaceChecklistRevisionPowerSyncStore",
         "CategoryManagementPowerSyncStore",
         "InventorySalePowerSyncStore",
+        "ReturnUninvoicedItemsPowerSyncStore",
         "ExpenseCreationPowerSyncStore",
         "InvoiceCreationPowerSyncStore",
         "FeeCreationPowerSyncStore"
@@ -293,7 +297,7 @@ enum LocalOperationIdentityGuard {
         case "queued", "applying":
             let resultCountIsValid: Bool
             switch family {
-            case .createProject, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
+            case .createProject, .manageCategories, .sellInventoryItems, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 resultCountIsValid = results.count <= 1
             case .createClient, .archiveProject, .archiveClient,
                  .reviseSpaceChecklists, .assignItemsToSpace,
@@ -303,7 +307,7 @@ enum LocalOperationIdentityGuard {
             guard operation.updatedAt >= operation.acceptedAt,
                   operation.hasNoTerminalEvidence, resultCountIsValid else { return false }
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
+            case .manageCategories, .sellInventoryItems, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 return commandCount == 1 && pendingClients.isEmpty
                     && pendingProjects.isEmpty && pendingAllocations.isEmpty
                     && projectOverlays.isEmpty && clientOverlays.isEmpty
@@ -355,7 +359,7 @@ enum LocalOperationIdentityGuard {
             }
         case "applied", "rejected", "superseded", "resolved":
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
+            case .manageCategories, .sellInventoryItems, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 return (operation.state == "applied" || operation.state == "rejected")
                     && operation.hasCompleteSingleDigestTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty && pendingAllocations.isEmpty
@@ -502,6 +506,7 @@ enum LocalOperationIdentityGuard {
         var hasCompleteSingleDigestTerminalEvidence: Bool {
             guard [LocalOperationCommandFamily.manageCategories.rawValue,
                    LocalOperationCommandFamily.sellInventoryItems.rawValue,
+                   LocalOperationCommandFamily.returnUninvoicedItems.rawValue,
                    LocalOperationCommandFamily.createExpense.rawValue,
                    LocalOperationCommandFamily.createInvoice.rawValue,
                    LocalOperationCommandFamily.reviseCreatedInvoice.rawValue,
@@ -512,7 +517,8 @@ enum LocalOperationIdentityGuard {
                   server >= 0, completed >= server else { return false }
             return terminalPhase == "applied"
                 ? state == "applied" && terminalResultCode == (commandType == LocalOperationCommandFamily.sellInventoryItems.rawValue
-                    ? "inventory_items_sold" : commandType == LocalOperationCommandFamily.createExpense.rawValue
+                    ? "inventory_items_sold" : commandType == LocalOperationCommandFamily.returnUninvoicedItems.rawValue
+                        ? "uninvoiced_items_returned" : commandType == LocalOperationCommandFamily.createExpense.rawValue
                         ? "expense_created" : commandType == LocalOperationCommandFamily.editExpense.rawValue
                             ? "expense_edited" : commandType == LocalOperationCommandFamily.createInvoice.rawValue
                                 ? "invoice_created" : commandType == LocalOperationCommandFamily.reviseCreatedInvoice.rawValue
@@ -562,6 +568,7 @@ enum LocalOperationIdentityGuard {
                 && [LocalOperationCommandFamily.createProject.rawValue,
                     LocalOperationCommandFamily.manageCategories.rawValue,
                     LocalOperationCommandFamily.sellInventoryItems.rawValue,
+                    LocalOperationCommandFamily.returnUninvoicedItems.rawValue,
                     LocalOperationCommandFamily.createExpense.rawValue,
                     LocalOperationCommandFamily.createInvoice.rawValue,
                     LocalOperationCommandFamily.reviseCreatedInvoice.rawValue,
@@ -607,6 +614,9 @@ enum LocalOperationIdentityGuard {
                 case LocalOperationCommandFamily.sellInventoryItems.rawValue:
                     return phase == "applied" ? resultCode == "inventory_items_sold"
                         : InventorySaleServerResult.rejections.contains(errorCode ?? "")
+                case LocalOperationCommandFamily.returnUninvoicedItems.rawValue:
+                    return phase == "applied" ? resultCode == "uninvoiced_items_returned"
+                        : ReturnUninvoicedItemsServerResult.rejections.contains(errorCode ?? "")
                 case LocalOperationCommandFamily.manageCategories.rawValue:
                     return phase == "applied" ? resultCode == "categories_updated"
                         : CategoryManagementServerResult.rejections.contains(errorCode ?? "")
@@ -827,6 +837,7 @@ enum LocalOperationIdentityGuard {
               '\(LedgerPowerSyncTable.spaceChecklistRevisionCommands)',
               '\(LedgerPowerSyncTable.categoryCommands)',
               '\(LedgerPowerSyncTable.inventorySaleCommands)',
+              '\(LedgerPowerSyncTable.uninvoicedReturnCommands)',
               '\(LedgerPowerSyncTable.expenseCommands)',
               '\(LedgerPowerSyncTable.invoiceCommands)',
               '\(LedgerPowerSyncTable.feeCommands)',

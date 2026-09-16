@@ -1,0 +1,15 @@
+{
+  "accountId": "account",
+  "principalId": "member",
+  "input": {
+    "operationUUID": "11111111-2222-3333-4444-555555555555",
+    "clientCreatedAtMilliseconds": 1800000000123,
+    "payload": { "projectId": "project", "items": [{
+      "itemId": "item", "placementId": "old", "chargeId": "charge",
+      "expectedChargeRevision": "9223372036854775806",
+      "inventoryPlacementId": "new", "returnOccurrenceId": "return"
+    }] }
+  },
+  "operationId": "uninvoiced-return-9af211329b2fc82e5efe906062c730082819b23fe8394bc435e0b1bf0458eb54-11111111-2222-3333-4444-555555555555",
+  "fingerprint": "9b352fed568f7874d4a4ef9e2fe42b6c4cb95649d0de1182520edd716fd31e54"
+}

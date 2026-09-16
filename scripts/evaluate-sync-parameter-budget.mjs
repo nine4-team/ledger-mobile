@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const {SqlSyncRules, DEFAULT_HYDRATION_STATE, RequestParameters} = await import('/app/packages/sync-rules/dist/index.js');
 const input = JSON.parse(readFileSync(0, 'utf8'));
-const block = input.yaml.match(/^  transaction_receipts:\n([\s\S]*?)(?=^  \S|$(?![\s\S]))/m)?.[1];
+const stream = input.stream ?? 'transaction_receipts';
+assert.match(stream, /^[a-z_]+$/);
+const block = input.yaml.match(new RegExp(`^  ${stream}:\\n([\\s\\S]*?)(?=^  \\S|$(?![\\s\\S]))`, 'm'))?.[1];
 assert.ok(block);
 const queries = [...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)].map(m => m[1]);
 const results = [];
 const cases = queries.map((query,index)=>({index, query,
-    yaml: `config:\n  edition: 3\nstreams:\n  transaction_receipts:\n    auto_subscribe: false\n    queries:\n      - |\n${query}`}));
+    yaml: `config:\n  edition: 3\nstreams:\n  ${stream}:\n    auto_subscribe: false\n    queries:\n      - |\n${query}`}));
 cases.push({index: 'combined', query: '', yaml: input.yaml});
 for (const {index, query, yaml} of cases) {
     const {config} = SqlSyncRules.fromYaml(yaml, {defaultSchema: 'public', throwOnError: true});
@@ -40,7 +42,7 @@ for (const {index, query, yaml} of cases) {
     const {querier, errors} = hydrated.getBucketParameterQuerier({
         globalParameters: new RequestParameters({parsedPayload: {sub: input.userId},
             userIdJson: input.userId, parameters: {}}, {}), hasDefaultStreams: index === 'combined',
-        streams: {transaction_receipts: subscriptions, ...(index === 'combined'
+        streams: {[stream]: subscriptions, ...(index === 'combined'
             ? {spike_projects: [{parameters: null, priorityOverride: null, opaque_id: 2}]} : {})}
     });
     assert.deepEqual(errors, []);
@@ -59,7 +61,7 @@ for (const {index, query, yaml} of cases) {
         const all = [...resolved, ...querier.staticBuckets];
         bucketCandidates = all.length;
         buckets = new Set(all.map(bucket=>bucket.bucket)).size;
-    } catch (failure) { error = failure.message; }
+    } catch (failure) { error = input.diagnosticStack ? failure.stack : failure.message; }
     results.push({index, table: query.match(/FROM\s+(?:ledger_private\.)?([a-z_]+)/)?.[1], lookups, rows, buckets, bucketCandidates, bySource, error});
 }
 console.log(JSON.stringify(results));

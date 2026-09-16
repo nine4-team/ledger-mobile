@@ -613,7 +613,7 @@ if (
     "loadDownloadedTransactionAttachment", "readTransactionExport",
     "readDownloadedTransactionReceipt", "watchTransactionReceipt", "watchTransactions",
     "inventorySaleStatus", "readInventorySaleReview", "watchInventorySaleReview",
-    "watchInventorySale", "sellInventoryItems", "createExpense", "editExpense", "expenseAttachmentCaptureScope",
+    "watchInventorySale", "sellInventoryItems", "returnUninvoicedItems", "uninvoicedReturnStatus", "watchUninvoicedReturn", "readUninvoicedReturnReview", "watchUninvoicedReturnReview", "createExpense", "editExpense", "expenseAttachmentCaptureScope",
     "saveExpenseEntry", "restoreExpenseEntryCaptures", "readExpenses",
     "readCollectedInvoiceReport", "readCollectedInvoices", "watchCollectedInvoices",
     "readLiveInvoices", "watchLiveInvoices", "readFeeCreationCategories",
@@ -2559,6 +2559,7 @@ if (
     "project_expenses",
     "project_invoicing_item_charges",
     "transaction_receipts",
+    "item_return_review",
     "physical_account_items",
     "spike_account_bootstrap",
     "spike_clients",
@@ -2653,6 +2654,7 @@ const localOperationAcceptingStores = [
   ["SpaceChecklistRevisionPowerSyncStore", "SpaceChecklistRevisionPowerSyncStore.swift", "reviseSpaceChecklists"],
   ["CategoryManagementPowerSyncStore", "CategoryManagementPowerSyncStore.swift", "manageCategories"],
   ["InventorySalePowerSyncStore", "InventorySalePowerSyncStore.swift", "sellInventoryItems"],
+  ["ReturnUninvoicedItemsPowerSyncStore", "ReturnUninvoicedItemsPowerSyncStore.swift", "returnUninvoicedItems"],
   ["ExpenseCreationPowerSyncStore", "ExpenseCreationPowerSyncStore.swift", "createExpense"],
   ["InvoiceCreationPowerSyncStore", "InvoiceCreationPowerSyncStore.swift", "createInvoice"],
   ["FeeCreationPowerSyncStore", "FeeCreationPowerSyncStore.swift", "createFeeInstallment"],
@@ -2695,7 +2697,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "expenseCommands", "invoiceCommands", "feeCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "uninvoicedReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,

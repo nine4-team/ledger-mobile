@@ -33,7 +33,8 @@ select is((select amount_minor_units from ledger_private.item_charge_occurrences
 select throws_ok($$update ledger_private.item_charge_occurrences set withdrawn_at=null,withdrawn_by_principal_id=null,
  revision=3 where id='charge-one'$$,'55000',null,'Withdrawn charge cannot reopen as a new sale');
 select throws_ok('delete from ledger_private.item_charge_occurrences','55000',null,'Charge history is retained');
-select throws_ok('truncate ledger_private.item_charge_occurrences','55000',null,'Charge history cannot be truncated');
+select throws_ok('truncate ledger_private.item_charge_occurrences','0A000',null,'Return provenance prevents truncating its referenced charge table');
+select throws_ok('truncate ledger_private.item_charge_occurrences cascade','55000',null,'History guard also prevents cascading truncation');
 set local role authenticated;
 select throws_ok('select * from ledger_private.item_charge_occurrences','42501',null,'Narrow read grant excludes private charge metadata');
 select throws_ok('delete from ledger_private.item_charge_occurrences','42501',null,'Draft source grants no write authority');

@@ -79,6 +79,7 @@
 		6903F2F43339710A57A4BEB5 /* FindMatchHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FF203D2A411D9B78E358A /* FindMatchHighlight.swift */; };
 		6A232BDE124DE5E10C03493F /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8168F38170E9580A556D85 /* BudgetDisplayCalculations.swift */; };
 		6E2471991975A3C9F6CB2478 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFFC8D8628F02118410645 /* NativeListControlBar.swift */; };
+		6FB5234F2D8903619A69AA65 /* UninvoicedReturnForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FB453A448C833B40412841 /* UninvoicedReturnForm.swift */; };
 		708C01681B4318A9750D41BE /* AttachmentUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6955DA81E52206D25B305F04 /* AttachmentUpload.swift */; };
 		723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */; };
 		7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */; };
@@ -287,6 +288,7 @@
 		CD9D46DF596A1EA6F014D08F /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		CF3128F37CBBCA1DA594F6F9 /* FeeInstallmentEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeeInstallmentEntry.swift; sourceTree = "<group>"; };
 		CFBAFB37EF3BB087DC920967 /* DownloadedItemThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemThumbnailView.swift; sourceTree = "<group>"; };
+		D4FB453A448C833B40412841 /* UninvoicedReturnForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninvoicedReturnForm.swift; sourceTree = "<group>"; };
 		D7C774E889B46543E5F20F36 /* FormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheet.swift; sourceTree = "<group>"; };
 		D7EDDD4D9FACA89057F966A4 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
 		D9C66A8C602BD14B02C57641 /* ReportPDFSharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportPDFSharing.swift; sourceTree = "<group>"; };
@@ -457,6 +459,7 @@
 				C7CDE9C1C90F4F11BA4E3C78 /* TransactionCardUITestFixture.swift */,
 				E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */,
 				A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */,
+				D4FB453A448C833B40412841 /* UninvoicedReturnForm.swift */,
 				DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */,
 				7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */,
 				52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */,
@@ -890,6 +893,7 @@
 				4B2E67F1224159C2E6B6F853 /* TransferDestinationSelectionStagingExerciseView.swift in Sources */,
 				EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */,
 				863B314F07B41BBE1496B8D3 /* Typography.swift in Sources */,
+				6FB5234F2D8903619A69AA65 /* UninvoicedReturnForm.swift in Sources */,
 				31CED7215B80D142B786C8EE /* VendorSuggestionPickerRuntimeAdapter.swift in Sources */,
 				D5549BCFFADB798944BA0844 /* VendorSuggestionPickerView.swift in Sources */,
 				F6A138DF43D73431C691AE26 /* WayfairInvoiceParser.swift in Sources */,

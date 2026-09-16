@@ -8,10 +8,12 @@ export function validateSyncOutputTables(yaml, swiftSchema) {
     markers[index + 1]?.index ?? yaml.length));
   if (!blocks.length) throw new Error('No supported SQL query blocks found');
   for (const block of blocks) {
-    const source = block.match(/\bFROM\s+((?:[a-z_][a-z_0-9]*\.)?[a-z_][a-z_0-9]*)(?:\s+AS\s+([a-z_][a-z_0-9]*))?/i);
+    const source = block.match(/\bFROM\s+((?:[a-z_][a-z_0-9]*\.)?[a-z_][a-z_0-9]*)(?:\s+AS\s+"?([a-z_][a-z_0-9]*)"?)?/i);
     if (!source) throw new Error('Missing supported primary table');
     const table = source[1].split('.').at(-1), output = source[2] ?? table;
-    if (output !== table || !tables.has(output)) {
+    const returnProjection = source[1] === 'ledger_private.item_return_reviews'
+      && ['return_charge_sources','return_live_memberships','return_paid_memberships','item_return_history'].includes(output);
+    if ((!returnProjection && output !== table) || !tables.has(output)) {
       throw new Error(`Sync output ${output} from ${table} does not match its client table`);
     }
   }

@@ -53,7 +53,20 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 currentBudgetCategoryName: physical.currentBudgetCategoryName,
                 currentAccountingResolution: accounting, currentClientPaidPurchases: purchases,
                 pendingSale: Self.pendingSalePlacements(transaction: transaction,accountId: accountId,principalId: principalId)
-                    .first(where: { $0.itemId == itemId })?.pendingSale)
+                    .first(where: { $0.itemId == itemId })?.pendingSale,
+                returnLinks: transaction.getAll(sql: """
+                    SELECT h.* FROM item_return_history h
+                    JOIN spike_budget_categories c ON c.account_id=h.account_id AND c.id=h.category_id
+                    JOIN spike_account_memberships m ON m.account_id=h.account_id AND m.principal_id=? AND m.state='active'
+                    WHERE h.account_id=? AND h.item_id=? AND (c.visibility_class='ordinary' OR m.financial_access='full')
+                    ORDER BY h.id
+                    """, parameters: [principalId.rawValue,accountId.rawValue,itemId.rawValue]) { row in
+                        try DownloadedItemReturnLink(id: .init(validating: row.getString(name: "id")),
+                            chargeId: .init(validating: row.getString(name: "charge_id")),
+                            projectId: .init(validating: row.getString(name: "project_id")),
+                            projectPlacementId: .init(validating: row.getString(name: "placement_id")),
+                            inventoryPlacementId: .init(validating: row.getString(name: "inventory_placement_id")))
+                    })
         }
     }
 
@@ -266,7 +279,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
         EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=i.account_id) AS charge_changes,
         EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=i.account_id) AS line_changes,
         EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=i.account_id) AS invoice_changes,
-        EXISTS(SELECT 1 FROM spike_transactions WHERE account_id=i.account_id) AS purchase_changes
+        EXISTS(SELECT 1 FROM spike_transactions WHERE account_id=i.account_id) AS purchase_changes,
+        EXISTS(SELECT 1 FROM item_return_history WHERE account_id=i.account_id) AS return_changes
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
       LEFT JOIN placements p ON access.is_active
       LEFT JOIN spike_projects project ON project.id=p.project_id AND project.account_id=p.account_id

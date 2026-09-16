@@ -386,6 +386,13 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     var invoiceSourceHasChanged: Bool { lock.withLock { changedInvoiceSource } }
     func changeInvoiceSource() { lock.withLock { changedInvoiceSource = true } }
     private var firstInvoiceAttempt: (UUID, Date, CreateInvoiceCommand.Payload)?
+    private var firstReturnAttempt: (UUID, Date, ReturnUninvoicedItemsPayload)?
+    func isExactReturnRetry(_ id: UUID, date: Date, payload: ReturnUninvoicedItemsPayload) -> Bool {
+        lock.withLock {
+            guard let firstReturnAttempt else { firstReturnAttempt = (id, date, payload); return false }
+            return firstReturnAttempt.0 == id && firstReturnAttempt.1 == date && firstReturnAttempt.2 == payload
+        }
+    }
     func isExactInvoiceRetry(_ id: UUID, date: Date, payload: CreateInvoiceCommand.Payload) -> Bool {
         lock.withLock {
             guard let firstInvoiceAttempt else { firstInvoiceAttempt = (id, date, payload); return false }

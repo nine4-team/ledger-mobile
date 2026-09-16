@@ -10,6 +10,40 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Return links survive restart and follow current category authorization")
+    func returnLinkVisibility() async throws {
+        let item = try ItemID(validating: "chair")
+        try await withDatabase(reopen: { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).returnLinks.first?.id.rawValue == "return")
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.accountUnavailable) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            }
+        }) { db in
+            try await seedCategory(db)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='project-now'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('inventory-return','account-item','chair','business_inventory','2026-03-01')", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO item_return_history(id,account_id,item_id,project_id,placement_id,inventory_placement_id,charge_id,category_id) VALUES('return','account-item','chair','project-item','project-now','inventory-return','charge','furnishings')", parameters: nil)
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            var changes = try reader.watchHistory(accountId: account, principalId: principal, itemId: item).makeAsyncIterator()
+            _ = try #require(await changes.next())
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).returnLinks.count == 1)
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='company_financial'", parameters: nil)
+            _ = try #require(await changes.next())
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).returnLinks.isEmpty)
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET visibility_class='ordinary'", parameters: nil)
+            _ = try #require(await changes.next())
+            _ = try await db.execute(sql: "UPDATE item_return_history SET project_id='other'", parameters: nil)
+            _ = try #require(await changes.next())
+            await #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            }
+            _ = try await db.execute(sql: "UPDATE item_return_history SET project_id='project-item'", parameters: nil)
+        }
+    }
+
     @Test("Current Purchase facts are exact, durable and cleared when the Item leaves its Project")
     func currentPurchaseFacts() async throws {
         try await withDatabase(reopen: { db in

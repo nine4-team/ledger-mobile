@@ -3073,6 +3073,104 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testUninvoicedReturnCancelAndConfirm() throws {
+        try exerciseUninvoicedReturn(retry: false)
+    }
+
+    func testUninvoicedReturnRetainsExactRequestForRetry() throws {
+        try exerciseUninvoicedReturn(retry: true)
+    }
+
+    private func exerciseUninvoicedReturn(retry: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        if retry { app.launchArguments.append("--ledger-ui-test-return-retry") }
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openReturn() {
+            let actions = app.descendants(matching: .any)["target-item-detail-actions"]
+            XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.tap()
+            #if os(macOS)
+            let action = app.menuItems["Return to Inventory"]
+            #else
+            let action = app.buttons["Return to Inventory"]
+            #endif
+            XCTAssertTrue(action.waitForExistence(timeout: 5)); action.tap()
+            XCTAssertTrue(app.buttons["Confirm Return"].waitForExistence(timeout: 5))
+            XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
+        }
+        openReturn()
+        app.buttons["Cancel"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+        openReturn()
+        app.buttons["Confirm Return"].tap()
+        if retry {
+            let error = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Could not confirm this return")).firstMatch
+            XCTAssertTrue(error.waitForExistence(timeout: 5))
+            XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
+            app.buttons["Confirm Return"].tap()
+        }
+        XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Confirm Return"].isEnabled)
+        XCTAssertTrue(waitUntil { self.displayedText(app.staticTexts["target-return-status"]).contains("saved on this device") })
+        app.buttons["Done"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    func testUninvoicedBulkReturnAndUnavailableSelection() throws {
+        continueAfterFailure = false
+        for unavailable in [false, true] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-bulk-return"]
+            if unavailable { app.launchArguments.append("--ledger-ui-test-return-unavailable") }
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+            let select = app.buttons["target-items-select-all"]
+            reveal(select, in: app, fullyInsideScrollView: true); select.tap()
+            let action = app.buttons["target-items-return"]
+            reveal(action, in: app, fullyInsideScrollView: true); action.tap()
+            let confirm = app.buttons["Confirm Return"]
+            XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+            if unavailable {
+                XCTAssertFalse(confirm.isEnabled)
+                app.buttons["Cancel"].tap()
+                XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+            } else {
+                XCTAssertTrue(waitUntil { confirm.isEnabled }); confirm.tap()
+                XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+                XCTAssertFalse(confirm.isEnabled)
+                app.buttons["Done"].tap()
+                XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+            }
+        }
+    }
+
+    func testUninvoicedReturnHistoryUsesExistingItemDetail() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+                               "--ledger-ui-test-return-history", "--ledger-ui-test-reset-inventory-section"]
+        app.launch()
+        defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10)); inventory.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        let scroll = app.scrollViews["target-item-detail-scroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5))
+        let link = app.staticTexts["target-item-return-link-return-ui-fact"]
+        reveal(link, in: app, fullyInsideScrollView: true, within: scroll)
+        XCTAssertEqual(displayedText(link), "Returned before invoicing · original charge return-ui-charge")
+        XCTAssertTrue(app.staticTexts["target-item-history-partial"].exists)
+    }
+
     func testInventorySaleReviewCancelAndConfirm() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

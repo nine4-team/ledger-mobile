@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1039,
+  "stateVersion": 1076,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -21,18 +21,16 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "invoice-report-readback",
-    "integrationWorkflowIds": ["invoice-report-readback", "business-paid-expense-entry", "inventory-to-project-sale", "transaction-browser-and-detail", "category-management", "item-history-source-reconciliation", "learned-account-removal-enforcement", "property-management-report-delivery", "scoped-active-space-list-to-detail", "existing-client-project-creation", "downloaded-item-browsing-and-detail"],
+    "id": "item-remove-before-invoice",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Route the Invoice report entry through the existing Invoice browser. Render exact live or frozen paid contents, signed groups/totals, status, notes and revision evidence. A linked Purchase explains payment without adding demand again; never substitute generic Project arrays or current Item price repairs.",
-    "baseCommit": "ca68d793f193463fd191d272891d02cf85b7c5c4",
+    "outcome": "Return the Item to Inventory, remove its uninvoiced positive charge and unpaid Furnishings progress, and link the return to the reversed sale occurrence. Retain audit history; create no Invoice, credit or project Transaction.",
+    "baseCommit": "0de51756df4422d835acf47d852bc0cf1290b182",
     "nextActions": [
-      "Invoice local and hosted offline/readiness/withdrawal evidence is recorded under its owner. Do not repeat passing checks; finish integration review. Needed Mac UI checks are now authorized.",
-      "Hosted Invoice download and withdrawal checks passed; see Invoice owner. Review integrated report acceptance without repeating these tests. O-032 payment metadata remains unresolved.",
-      "Continue Invoicing live statuses and lifecycle under their own owners. O-034 sent-revision, O-009 adjustments and O-060 mixed visibility remain unresolved; paid full-access work does not decide them.",
-      "Expense iPhone and Mac line-controls passed. Separate unavailable-category behavior passed directly; automated coverage awaits isolated batch CI. See Expense owner. Transaction export/attachment gaps and Sale reconciliation retain their owners."
+      "Return review, RPC, offline queue, Item menu and MCP are implemented. Finish remaining UI interaction/history/Account-switch evidence and final review; do not reimplement completed wiring.",
+      "Four acceptance checks now passed with linked local evidence: idempotency, sync convergence, accounting and atomicity. Keep remaining checks and exact-commit CI open; then commit/push a coherent batch.",
+      "Earlier Invoice/Fee/PDF evidence and unfinished Mac/CI checks stay with their owners; this batch does not waive them."
     ]
   },
   "blockers": [
@@ -54,15 +52,15 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "invoice-report-readback-implementation",
+    "id": "item-remove-before-invoice-implementation",
     "status": "implementation",
-    "acceptanceCheckIds": ["INVOICE-REPORT-CONTENT","INVOICE-REPORT-DELIVERY"],
-    "meaning": "Invoice hosted download/offline reopen and financial-withdrawal denial passed; exact evidence under Invoice owner. QA permissions restored none/false/false. Expense line-controls passed on both platforms; unavailable-category automation is blocked by desktop interference. Whole-report acceptance and product decisions remain open.",
-    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter CollectedInvoiceReportDeliveryTests","Focused iPhone testCollectedInvoiceDownloadCancellation; actual PDF visual/content verification."],
+    "acceptanceCheckIds": ["UNINVOICED-RETURN-INTENT","UNINVOICED-RETURN-ATOMIC"],
+    "meaning": "Story2 only: Inventory-originated Item with open charge and no Invoice. Exact source/return IDs and revision contract implemented; backend/queue/UI/MCP still required.",
+    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "Historical CI35039310979 on41b0f5e7 failed Mac UI; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "desktopPrerequisite": "Mac locked; unlock requested. No UI retry before unlock. ce42269c checkpoint plus dirty shared save validator: native37712 PASS5, Mac build49887 PASS; invoice-report-readback.liveExportContentGuardReview.",
-    "immediateFollowup": "Hosted Invoice76471 and Fee92392 PASS: offline/restart/replay/real sync/readback plus MCP and no payment. Evidence invoice-build-edit.hostedInvoiceFlowEvidence and fee-demand-lifecycle.hostedFeeFlowEvidence; QA permissions restored none/false/false. Hosted SQL99, PowerSync deployment6aaa65c602481fb31b96f38c config7/37tables active and no errors. NEXT integration review including terminal CI35078916886 (iOS running lastcheck; Mac boundary failure fixed locally), Mac final-save interaction after unlock, then next approved workflow. Do not repeat hosted tests for context. Private .native-pdf files untouched.",
-    "nextVerification": "CI35078916886 Mac failed before build/tests; boundary fix locally passed (invoice-report-readback.integrationBoundaryCorrection). Review iOS when terminal, no duplicate dispatch. Historical UI failures remain separate."
+    "immediateFollowup": "Added bulk3Item/unavailable/exact retry UI tests using existing fixtures; Mac build-for-testing PASS63509 (returnAdditionalUIPreparation). No interactions run: desktop locked. NEXT finish Account-switch/history coverage and final diff/acceptance reconciliation, coherent commit/CI; existing three return UI methods ready when unlocked. Imported Inventory target sale/return PASS21621 and observed Project rejection PASS55 retained; not full source migration. Clean102migration/integrated proofs retained. Hosted unchanged; no active processes. Private .native-pdf files untouched.",
+    "nextVerification": "CI35078916886 attempt1 terminal: conversion/provider passed, Mac failed, iOS cancelled, aggregate failed (read76166). Boundary fix locally passed earlier. No running CI to wait for. Return history UI test added/build PASS79868; bulk/retry builds retained. NEXT coherent checkpoint review/commit and normal PR CI; UI interaction remains required, desktop locked. Historical failures not waived."
   }
 }

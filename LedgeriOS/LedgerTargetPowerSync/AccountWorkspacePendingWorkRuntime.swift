@@ -191,6 +191,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case archiveProject
     case manageCategories
     case sellInventoryItems
+    case returnUninvoicedItems
     case createExpense
     case editExpense
     case reviseSpaceChecklists
@@ -236,6 +237,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case budgetCategories
     case categoryOperations
     case inventorySaleOperation
+    case uninvoicedReturnOperation
     case spaceAssignmentDestinations
     case transferDestinations
     case projectCreationOperation
@@ -575,6 +577,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
     let categoryManagementStore: CategoryManagementPowerSyncStore
     let inventorySaleStore: InventorySalePowerSyncStore
+    let uninvoicedReturnStore: ReturnUninvoicedItemsPowerSyncStore
     let spaceChecklistRevisionStore:
         any AccountWorkspaceSpaceChecklistRevisionStoring
     let itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring
@@ -665,6 +668,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             accessFence: accessFence, isDirectoryComplete: categoryDirectoryIsComplete, now: now
         )
         inventorySaleStore = InventorySalePowerSyncStore(database: structuredDatabase,
+            accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
+        uninvoicedReturnStore = ReturnUninvoicedItemsPowerSyncStore(database: structuredDatabase,
             accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
         spaceChecklistRevisionStore = SpaceChecklistRevisionPowerSyncStore(
             database: structuredDatabase,
@@ -803,6 +808,29 @@ actor AccountWorkspacePendingWorkRuntime {
                 accountId: resources.accountId, actorPrincipalId: resources.principalId,
                 capturedAt: capturedAt, payload: payload)
             return try await resources.inventorySaleStore.submit(command)
+        }
+    }
+
+    func readUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) async throws -> UninvoicedReturnReview {
+        try await withFiniteLease(.returnUninvoicedItems) { resources in
+            try await resources.uninvoicedReturnStore.review(projectId: projectId, itemIds: itemIds)
+        }
+    }
+
+    func uninvoicedReturnStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await withFiniteLease(.returnUninvoicedItems) { resources in
+            try await resources.uninvoicedReturnStore.status(operationId)
+        }
+    }
+
+    func returnUninvoicedItems(_ payload: ReturnUninvoicedItemsPayload, operationUUID: UUID,
+                              capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.returnUninvoicedItems) { resources in
+            let command = try ReturnUninvoicedItemsCommand(
+                operationId: ReturnUninvoicedItemsOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                accountId: resources.accountId, actorPrincipalId: resources.principalId,
+                capturedAt: capturedAt, payload: payload)
+            return try await resources.uninvoicedReturnStore.submit(command)
         }
     }
 
@@ -2430,6 +2458,18 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in }, makeStream: { $0.categoryManagementStore.watchOperations() })
     }
 
+    func startUninvoicedReturnReviewWatch(id: UUID, projectId: ProjectID, itemIds: [ItemID],
+        continuation: AsyncThrowingStream<UninvoicedReturnReview?, Error>.Continuation) {
+        startStream(id: id, operation: .uninvoicedReturnOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.uninvoicedReturnStore.watchReview(projectId: projectId, itemIds: itemIds) })
+    }
+
+    func startUninvoicedReturnWatch(id: UUID, operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot?, Error>.Continuation) {
+        startStream(id: id, operation: .uninvoicedReturnOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.uninvoicedReturnStore.watch(operationId) })
+    }
+
     func startInventorySaleWatch(id: UUID, operationId: OperationID,
         continuation: AsyncThrowingStream<OperationSnapshot?, Error>.Continuation) {
         startStream(id: id, operation: .inventorySaleOperation, continuation: continuation,
@@ -2656,6 +2696,7 @@ actor AccountWorkspacePendingWorkRuntime {
             spaceChecklistRevisionApplier: appliers.spaceChecklistRevision,
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
+            uninvoicedReturnApplier: appliers.uninvoicedReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
             invoiceRevisionApplier: appliers.invoiceRevision,
@@ -2721,6 +2762,7 @@ actor AccountWorkspacePendingWorkRuntime {
             spaceChecklistRevisionApplier: appliers.spaceChecklistRevision,
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
+            uninvoicedReturnApplier: appliers.uninvoicedReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
             invoiceRevisionApplier: appliers.invoiceRevision,
@@ -2895,6 +2937,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
         await resources.categoryManagementStore.cancelAndDrainWatches()
         await resources.inventorySaleStore.cancelAndDrainWatches()
+        await resources.uninvoicedReturnStore.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
         await resources.projectNoteQuery.cancelAndDrainWatches()
         await resources.spaceCoreDetailsQuery.cancelAndDrainWatches()

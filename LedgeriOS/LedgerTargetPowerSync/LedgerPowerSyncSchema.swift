@@ -24,6 +24,10 @@ public enum LedgerPowerSyncTable {
     public static let transactionAttachmentSets = "transaction_attachment_sets"
     public static let transactionAttachmentReferences = "transaction_attachment_references"
     public static let itemChargeOccurrences = "item_charge_occurrences"
+    public static let returnChargeSources = "return_charge_sources"
+    public static let returnLiveMemberships = "return_live_memberships"
+    public static let returnPaidMemberships = "return_paid_memberships"
+    public static let itemReturnHistory = "item_return_history"
     public static let collectedInvoiceLines = "collected_invoice_lines"
     public static let collectedInvoices = "collected_invoices"
     public static let liveInvoices = "live_invoices"
@@ -52,6 +56,7 @@ public enum LedgerPowerSyncTable {
     public static let localOperations = "spike_local_operations"
     public static let categoryCommands = "spike_category_commands"
     public static let inventorySaleCommands = "spike_inventory_sale_commands"
+    public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
     public static let expenseCommands = "spike_expense_commands"
     public static let expenseEntryRecovery = "spike_expense_entry_recovery"
     public static let expenses = "expenses"
@@ -85,6 +90,17 @@ public enum LedgerPowerSyncSchema {
                       .text("set_revision"), .integer("position"), .integer("is_primary"), .text("file_name"),
                       .text("content_sha256"), .text("byte_count"), .text("media_type"), .text("storage_path")],
             indexes: [.ascending(name: "transaction_attachment_reference", columns: ["account_id", "transaction_id", "section"])]),
+        Table(name: LedgerPowerSyncTable.returnChargeSources,
+            columns: [.text("account_id"), .text("project_id"), .text("item_id"), .text("placement_id"),
+                      .text("category_id"), .text("revision")]),
+        Table(name: LedgerPowerSyncTable.itemReturnHistory,
+            columns: [.text("account_id"), .text("charge_id"), .text("item_id"), .text("project_id"),
+                      .text("placement_id"), .text("inventory_placement_id"), .text("category_id")],
+            indexes: [.ascending(name: "item_return_history_item", columns: ["account_id", "item_id"])]),
+        Table(name: LedgerPowerSyncTable.returnLiveMemberships,
+            columns: [.text("account_id"), .text("source_id")]),
+        Table(name: LedgerPowerSyncTable.returnPaidMemberships,
+            columns: [.text("account_id"), .text("source_id")]),
         Table(name: LedgerPowerSyncTable.itemChargeOccurrences,
             columns: [.text("account_id"), .text("project_id"), .text("item_id"), .text("placement_id"),
                       .text("category_id"), .text("amount_minor_units"), .text("currency"),
@@ -569,6 +585,12 @@ public enum LedgerPowerSyncSchema {
                 .text("account_id"), .text("actor_principal_id"), .text("project_id"),
                 .text("contract_version"), .text("fingerprint"), .text("envelope_json")
             ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.uninvoicedReturnCommands,
+            columns: [.text("account_id"), .text("actor_principal_id"), .text("project_id"),
+                      .text("contract_version"), .text("fingerprint"), .text("envelope_json")],
             insertOnly: true
         ),
         Table(

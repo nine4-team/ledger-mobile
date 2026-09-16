@@ -3,6 +3,26 @@ import Testing
 
 @Suite("Downloaded physical Item contract")
 struct DownloadedItemPlacementsTests {
+    @Test func returnLinkRequiresMatchingPlacementHistory() throws {
+        let project = try ProjectID(validating: "project")
+        let from = PhysicalItemPlacementHistoryInterval(placementId: try .init(validating: "from"),
+            scope: .project(project), spaceId: nil, startedAt: "2025-01-01", endedAt: "2026-01-01")
+        let to = PhysicalItemPlacementHistoryInterval(placementId: try .init(validating: "to"),
+            scope: .businessInventory, spaceId: nil, startedAt: "2026-01-01", endedAt: nil)
+        let link = DownloadedItemReturnLink(id: try .init(validating: "return"), chargeId: try .init(validating: "charge"),
+            projectId: project, projectPlacementId: from.placementId, inventoryPlacementId: to.placementId)
+        func make(_ intervals: [PhysicalItemPlacementHistoryInterval], _ links: [DownloadedItemReturnLink]) throws -> DownloadedItemPlacementHistory {
+            try .init(accountId: .init(validating: "account"), itemId: .init(validating: "item"),
+                description: "Item", intervals: intervals, returnLinks: links)
+        }
+        #expect(try make([to, from], [link]).returnLinks == [link])
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) { try make([to], [link]) }
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) { try make([to, from], [link, link]) }
+        let wrong = DownloadedItemReturnLink(id: link.id, chargeId: link.chargeId, projectId: try .init(validating: "other"),
+            projectPlacementId: from.placementId, inventoryPlacementId: to.placementId)
+        #expect(throws: DownloadedItemPlacementsFailure.scopeMismatch) { try make([to, from], [wrong]) }
+    }
+
     @Test("A Purchase fact cannot contain zero or negative money", arguments: [Int64.min, -1, 0])
     func purchaseAmount(_ cents: Int64) throws {
         #expect(throws: ProjectItemAccountingSectionFailure.invalidPurchaseClassification) {

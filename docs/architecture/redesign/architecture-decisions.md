@@ -3804,3 +3804,60 @@ The initial schema has no API grants. The writer still needs source existence,
 Project scope, eligibility, authorization and lock-order checks, and Fee source
 integration remains unfinished. Existing CreateInvoiceModal presentation is the
 reuse boundary; no replacement Invoice wizard is authorized by these tables.
+
+### 2026-09-16 — Uninvoiced returns retain links, not a second monetary ledger
+
+For Inventory lifecycle Story 2, `uninvoiced_item_returns` links the original
+Item charge to its successor Inventory placement. The charge retains its exact
+amount, category and Project placement and becomes withdrawn; the same physical
+Item remains. No negative charge, Invoice, credit or Transaction is created.
+An immutable return fact identifies which sale cycle was reversed without copying
+its monetary values. The writer requires proven Inventory-origin placement,
+current revision and no live or collected Invoice membership, and rejects the
+entire selection on any conflict. Imported cycles without sufficient evidence
+remain unsupported rather than receiving invented provenance.
+
+The private writer has no client grants yet. Focused SQL checks cover replay,
+atomic rejection, live/paid membership, missing origin and identity collisions;
+concurrency, authorized API exposure, offline queue, sync history and reused UI
+integration remain required in the existing `item-remove-before-invoice` record.
+
+### 2026-09-16 — Return review uses non-monetary projections of existing facts
+
+The existing charge/Invoice streams require full financial access. Ordinary-category
+Item returns must not inherit that restriction. `item_return_review` projects
+existing charge identities/revisions and active/collected source membership into
+three explicitly named client tables. It includes no money, Invoice identity,
+payment identity or contents; category visibility and active Account membership
+still authorize every source. These are sync projections, not new server tables,
+accounting events or balances. The server command remains authoritative on replay.
+
+Separate membership projections allow removal/release to update eligibility
+without maintaining a second server eligibility cache. The actual PowerSync parser
+accepts the queries. Queue integration must require complete scoped downloads;
+real replication, revocation, query fanout and source-history tests remain required
+before deployment. Parser success alone does not establish offline correctness.
+
+Capacity verification correction: the initial no-server-projection approach is
+not approved for hosted deployment. The repeatable
+`scripts/test-local-return-sync-capacity.mjs` fixture (10 Projects × 700 charges)
+fails inside the pinned PowerSync `BucketParameterQuerier.js` result aggregation
+for both membership queries. The charge query remains bounded. This is evidence
+against the current query implementation, not authority to weaken membership or
+category checks. Refine the membership delivery to avoid per-charge parameter
+expansion, retaining current category authorization and source history; require
+the capacity fixture, revocation and actual replication to pass before replacing
+this proposed implementation. Any derived server fields must be maintained from
+the existing facts, not become independently editable accounting state.
+
+The local replacement now uses private `item_return_reviews`: charge references,
+current category/revision, withdrawal and live/collected membership booleans only.
+Triggers refresh it under the existing charge-source lock when charges or Invoice
+membership change; the migration backfills existing charges. No amounts or
+Invoice/payment identity are copied, and API roles have no table privileges.
+Sync still checks current category visibility and active membership. This avoids
+loosening immutable charge/collected-record guards merely to store sync metadata.
+The same three client table shapes are retained, so app behavior is unchanged.
+The 10×700 evaluator now passes (six parameter rows per query); 48 focused SQL
+checks pass. Actual replication, concurrent refresh, source truncation handling,
+fresh migration and category-withdrawal checks remain required before acceptance.
