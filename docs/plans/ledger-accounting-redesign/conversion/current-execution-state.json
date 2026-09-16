@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1094,
+  "stateVersion": 1098,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -29,7 +29,7 @@
     "baseCommit": "726431917f3acdd3091e7ca369222c5225c00754",
     "nextActions": [
       "Verify existing Sell on returned Inventory Items: same/different Project, fresh charge/placement, original history unchanged. Use existing UI and commands.",
-      "Return batch72643191 CI35093201085 failed its shared consumer; correction7836695f CI35094251669 has passed backend checks with native UI still running. Do not mix later follow-up evidence into that revision or waive remaining checks.",
+      "Correction7836695f CI35094251669 terminal failure: backend/native passed, Mac UI failed, iOS cancelled. Diagnose captured failures; no live watcher or unchanged broad rerun. Later follow-up evidence stays separate.",
       "Earlier Invoice/Fee/PDF evidence and unfinished Mac/CI checks stay with their owners; this batch does not waive them."
     ]
   },
@@ -57,13 +57,13 @@
     "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
-    "lastResult": "CI35094251669 Mac failed78UI/3skipped/28failures; iOS still running. Return owner returnMacCIFailure + /tmp/ledger-ci-35094251669-macos.log hold exact issues. NEXT scope ambiguous Done, diagnose retry missing text and Inventory/history reveal; no broad unchanged retry. Prior local tests committed169e7114. PowerSync config located /tmp/ledger-powersync-repair.Xy9pwq, not yet deployed.",
-    "activeProcesses": {"localEdgeService":14316,"resaleCIWatcher":53379},
+    "lastResult": "CI35094251669 terminal failed; Mac78UI/28failures, iOS cancelled. Hosted Return deployed/verified at87f8e777. Actual failing Invoice PDF contains SHIPPING: uppercase heading CSS, not missing data. Corrected test expectation; all live PDF content assertions replayed with PDFKit PASS. Evidence owner invoice-report-readback.liveInvoicePDFCaseDiagnosis. App/renderer unchanged.",
+    "activeProcesses": {"localEdgeService":14316},
     "desktopPrerequisite": "Mac last observed locked; no local UI retry before unlock. Prior Invoice evidence stays in invoice-report-readback.",
     "immediateFollowup": "Local resale/lifecycle follow-ups saved9f1700ce/169e7114; evidence in owning Sale/Return records, not CI7836695f. Follow nextWorkflowDecision for live hosted deployment and lastResult for UI failure triage. Private .native-pdf untouched.",
-    "nextVerification": "Committed/pushed7836695f2a766960a1bd7de2644bc255d6bc63f0 consumer correction/resale tests. PR1 still conflicting/no checks; single workflow35094251669 attempt1 verified in_progress onexact7836695f. Quiet watcher log /tmp/ledger-ci-35094251669-watch.log. NEXT inspect terminal result, not rerun. Previous35093201085 failed consumer, native skipped; retained. No Firebase merge.",
-    "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"in_progress","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
+    "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
+    "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Hosted native Sale→offlineReturn/restart/replay/history PASS87570 /tmp/ledger-hosted-return-flow-mapped.log; SQL1return/1withdrawn/1Inventory/0payments. Return owner returnHostedNativeVerification includes exact synthetic IDs and reviewed QA Furnishings link assignment (sourceID+metadata+hash; no auto name mapping). Permissions preserved. NEXT iOS CI result and remaining UI failures; review shared local harness change before coherent commit. Native/hosted runner/UI tests/docs dirty."
+    "nextWorkflowDecision": "Hosted Return PASS saved87f8e777. Test-only corrections: PDF uppercase, history disclaimer, bulkSale picker and positive Item-row scrolling. Owners retain captured evidence and incomplete UI acceptance. Desktop rechecked locked: do not launch UI unchanged. NEXT targeted Mac Return/PDF/detail and iOS five Item scenarios after unlock; other CI failures remain. Latest compile log /tmp/ledger-item-visibility-test-build-fixed.log; initial61505 failed argument ordering, corrected directly. conversion:check PASS. No push or CI dispatch. Preserve private .native-pdf files."
   }
 }

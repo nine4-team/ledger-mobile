@@ -1140,7 +1140,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(text.contains("Invoice Total") && !text.contains("Net Amount Due"))
             if live {
                 XCTAssertGreaterThanOrEqual(document.pageCount, 1)
-                for expected in ["Live Invoice", "Receipt vendor", "Shipping", "125.50", "Sent outside Ledger", "live-invoice-ui-test", "not collected"] {
+                // The shared report stylesheet renders category table headings uppercase.
+                for expected in ["Live Invoice", "Receipt vendor", "SHIPPING", "125.50", "Sent outside Ledger", "live-invoice-ui-test", "not collected"] {
                     XCTAssertTrue(text.contains(expected), "Missing live Invoice content: \(expected)")
                 }
                 XCTAssertFalse(text.contains("paid-expense-payment"))
@@ -2993,6 +2994,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         expectCount(3)
         choose("Bookmark", "Not Bookmarked") // AND across facets leaves the bookmarked chair.
         expectCount(1)
+        reveal(app.buttons["target-physical-item-physical-ui-chair"], in: app, fullyInsideScrollView: true)
         XCTAssertTrue(app.buttons["target-physical-item-physical-ui-chair"].waitForExistence(timeout: 5))
         let clear = app.buttons["target-items-filters-clear"]
         reveal(clear, in: app, fullyInsideScrollView: true)
@@ -3063,6 +3065,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             choose("None")
             choose(label)
             let item = app.buttons["target-physical-item-\(itemId)"]
+            reveal(item, in: app, fullyInsideScrollView: true)
             XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription)
             let count = app.staticTexts["target-items-downloaded-count"]
             XCTAssertTrue(waitUntil { self.displayedText(count) == "Matching Items: 1 of 3 downloaded" })
@@ -3323,7 +3326,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let sale = app.buttons["target-items-sell"]
         reveal(sale, in: app, fullyInsideScrollView: true)
         sale.tap()
-        let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+        let project = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "UI Test Project")).firstMatch
         XCTAssertTrue(project.waitForExistence(timeout: 5))
         project.tap()
         XCTAssertTrue(app.buttons["Confirm Sale"].waitForExistence(timeout: 5))
@@ -3384,7 +3387,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
         let history = app.staticTexts["target-item-history-partial"]
         reveal(history, in: app, fullyInsideScrollView: true, within: scroll)
-        XCTAssertTrue(displayedText(history).contains("Payments, sales and refunds are not shown here."))
+        XCTAssertEqual(displayedText(history),
+            "Downloaded locations and available return links. Older history may be missing. This is not a payment or refund ledger.")
         let actions = app.descendants(matching: .any)
             .matching(identifier: "target-item-detail-actions").firstMatch
         XCTAssertTrue(actions.exists)
@@ -3862,8 +3866,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let other = app.buttons["target-physical-item-group-c"]
         XCTAssertFalse(first.exists)
         XCTAssertFalse(second.exists)
+        reveal(other, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(other.exists)
         let source = app.staticTexts["target-item-source-group-a"]
+        reveal(source, in: app, upwards: false, fullyInsideScrollView: true)
         XCTAssertTrue(source.label == "Design Inventory" || (source.value as? String) == "Design Inventory")
         let groupSelect = app.buttons["target-item-group-select-group-a"]
         #if os(iOS)
@@ -4026,6 +4032,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(unset.exists) // Absent source bookmark retains Not Bookmarked behavior.
         XCTAssertTrue(returned.exists)
         app.buttons["target-items-filters-clear"].tap()
+        reveal(chair, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(chair.waitForExistence(timeout: 5))
         XCTAssertTrue(returned.exists)
         XCTAssertTrue(unset.exists)
@@ -4165,6 +4172,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(elsewhere.waitForNonExistence(timeout: 5))
         XCTAssertFalse(unassigned.exists)
         disclosure.tap()
+        reveal(elsewhere, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(elsewhere.waitForExistence(timeout: 5))
         for (choice, unassignedFirst) in [("Oldest first", false), ("Newest first", true),
                                          ("Name A–Z", false), ("Name Z–A", true)] {
