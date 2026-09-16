@@ -738,8 +738,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             ] { _ = try await database.execute(sql: sql, parameters: nil) }
             databases.append(database)
         }
-        let runtime = try await context.openRuntime(dependencies: dependencies)
-        let database = try #require(databases.values.first)
+        var runtime = try await context.openRuntime(dependencies: dependencies)
+        var database = try #require(databases.values.first)
         let project = try ProjectID(validating: "project-physical")
         let entry = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: project,
             expenseId: .init(validating: "expense"), vendor: "Edited", date: "2026-09-15",
@@ -751,7 +751,36 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_expenses',1,0,?,1000000)",
             parameters: [#"{"account_id":"account-runtime","project_id":"project-physical"}"#])
-        let accepted = try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
+        let recovery = ExpenseEntryRecovery(accountId: context.accountId, projectId: project,
+            expenseId: entry.expenseId, operationUUID: uuid, capturedAt: time,
+            vendor: entry.vendor, date: time, amountText: "2.00", notes: entry.notes,
+            categoryId: entry.categoryId, lines: [], attachmentIds: [],
+            editContext: try .init(expectedRevision: 1, retainedAttachmentIds: []))
+        try await runtime.saveExpenseEntry(recovery)
+        try await runtime.close()
+        var reopening = context.dependencies()
+        let reopenValidation = reopening.validateStructuredDatabase
+        reopening.validateStructuredDatabase = { reopened in
+            try await reopenValidation(reopened)
+            databases.append(reopened)
+        }
+        runtime = try await context.openRuntime(dependencies: reopening)
+        database = try #require(databases.values.last)
+        let unfinished = try await runtime.readExpenses(accountId: context.accountId, projectId: project)
+        #expect(unfinished.unfinishedEntries.isEmpty)
+        #expect(unfinished.unfinishedEdits == [recovery])
+        #expect(try await runtime.pendingWorkSummary().unfinishedEntryCount == 1)
+        #expect(try await runtime.restoreExpenseEntryCaptures(recovery).isEmpty)
+        var staleRecovery = recovery
+        staleRecovery.notes = "Old draft"
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time, recovery: staleRecovery)
+        }
+        let accepted = try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time, recovery: recovery)
+        #expect(try await runtime.readExpenses(accountId: context.accountId, projectId: project).unfinishedEdits.isEmpty)
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await runtime.saveExpenseEntry(recovery, replacing: recovery)
+        }
         #expect(accepted.localState == .queued)
         #expect(try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time) == accepted)
         let snapshot = try await runtime.readExpenses(accountId: context.accountId, projectId: project)
@@ -771,6 +800,52 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let rejected = try await runtime.readExpenses(accountId: context.accountId, projectId: project)
         #expect(rejected.pendingEdits.count == 1 && rejected.pendingEdits[0].state == .rejected)
         #expect(rejected.pendingEdits[0].entry == entry)
+        let receiptId = try AttachmentID(validating: "expense-edit-new-receipt")
+        let receiptBytes = Data("%PDF-1.4\nExpense edit retained receipt\n%%EOF\n".utf8)
+        let captured = try LocalAttachmentCapture(attachmentId: receiptId,
+            scope: await runtime.expenseAttachmentCaptureScope(projectId: project, expenseId: entry.expenseId),
+            capturedAt: .init(validating: 1_789_459_200_000), bytes: receiptBytes,
+            metadata: .init(mediaType: "application/pdf", fileName: "Expense edit.pdf"))
+        let laterRecovery = ExpenseEntryRecovery(accountId: context.accountId, projectId: project,
+            expenseId: entry.expenseId, operationUUID: UUID(), capturedAt: time,
+            vendor: "Unsubmitted later edit", date: time, amountText: "2.00", notes: "Keep this draft",
+            categoryId: entry.categoryId, lines: [], attachmentIds: [receiptId],
+            editContext: try .init(expectedRevision: 2, retainedAttachmentIds: []))
+        // A new edit may replace the recovery already consumed by an accepted
+        // command, but must not overwrite another still-unsubmitted draft.
+        try await runtime.saveExpenseEntry(laterRecovery)
+        var conflictingRecovery = laterRecovery
+        conflictingRecovery.notes = "Stale second form"
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await runtime.saveExpenseEntry(conflictingRecovery)
+        }
+        let withReceipt = try BusinessPaidExpenseDraft(accountId: entry.accountId, projectId: entry.projectId,
+            expenseId: entry.expenseId, vendor: entry.vendor, date: entry.date, finalAmount: entry.finalAmount,
+            categoryId: entry.categoryId, notes: entry.notes, receiptAttachmentIds: [receiptId])
+        await #expect(throws: AttachmentLocalByteResolutionFailure.receiptNotFound) {
+            try await runtime.editExpense(withReceipt, expectedRevision: 2, operationUUID: UUID(), capturedAt: time)
+        }
+        _ = try await runtime.captureAttachment(captured)
+        try await runtime.close()
+        runtime = try await context.openRuntime(dependencies: reopening)
+        database = try #require(databases.values.last)
+        let restoredCaptures = try await runtime.restoreExpenseEntryCaptures(laterRecovery)
+        #expect(restoredCaptures.count == 1)
+        #expect(restoredCaptures.first?.bytes == receiptBytes)
+        #expect(restoredCaptures.first?.scope == captured.scope)
+        _ = try await database.execute(sql: "UPDATE expenses SET revision='3',vendor='Remote change' WHERE id='expense'", parameters: nil)
+        #expect(try await runtime.readExpenses(accountId: context.accountId, projectId: project).unfinishedEdits == [laterRecovery])
+        #expect(try await runtime.pendingWorkSummary().unfinishedEntryCount == 1)
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await runtime.saveExpenseEntry(laterRecovery, replacing: laterRecovery)
+        }
+        #expect(try await runtime.restoreExpenseEntryCaptures(laterRecovery).first?.bytes == receiptBytes)
+        let receiptEditUUID = UUID()
+        let receiptEdit = try await runtime.editExpense(withReceipt, expectedRevision: 3,
+            operationUUID: receiptEditUUID, capturedAt: time)
+        #expect(receiptEdit.localState == .queued)
+        #expect(try await runtime.editExpense(withReceipt, expectedRevision: 3,
+            operationUUID: receiptEditUUID, capturedAt: time) == receiptEdit)
         _ = try await database.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
         await #expect(throws: ProjectInvoicingItemLocalReader.Failure.unavailable) {
             try await runtime.editExpense(entry, expectedRevision: 1, operationUUID: uuid, capturedAt: time)
@@ -1325,12 +1400,24 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await first.close()
         if env["LEDGER_EXPENSE_LOCAL_EDIT"] == "1" {
             guard !hostedQA, env["LEDGER_EXPENSE_LOCAL_PAID"] != "1" else { throw RuntimeInjectedFailure() }
+            let offline = try await context.openRuntime()
+            var receiptIds = source.receiptAttachmentIds
+            var addedReceipt: AttachmentID?
+            let mediaBytes = Data("%PDF-1.4\nOffline added Expense receipt\n%%EOF\n".utf8)
+            if env["LEDGER_EXPENSE_LOCAL_EDIT_MEDIA"] == "1" {
+                let id = try AttachmentID(validating: expense + "-edit-native-receipt")
+                let capture = try LocalAttachmentCapture(attachmentId: id,
+                    scope: await offline.expenseAttachmentCaptureScope(projectId: projectId, expenseId: source.expenseId),
+                    capturedAt: .init(validating: 1_789_459_200_000), bytes: mediaBytes,
+                    metadata: .init(mediaType: "application/pdf", fileName: "Added receipt.pdf"))
+                _ = try await offline.captureAttachment(capture)
+                receiptIds.append(id); addedReceipt = id
+            }
             let changed = try BusinessPaidExpenseDraft(accountId: context.accountId, projectId: projectId,
                 expenseId: source.expenseId, vendor: "Offline edited vendor", date: source.date,
                 finalAmount: source.finalAmount, categoryId: source.categoryId, notes: "Offline edit",
-                receiptAttachmentIds: source.receiptAttachmentIds, receiptLines: source.receiptLines)
+                receiptAttachmentIds: receiptIds, receiptLines: source.receiptLines)
             let uuid = UUID(), capturedAt = Date()
-            let offline = try await context.openRuntime()
             let receipt = try await offline.editExpense(changed, expectedRevision: 1, operationUUID: uuid, capturedAt: capturedAt)
             #expect(receipt.localState == .queued)
             #expect(try await offline.readExpenses(accountId: context.accountId, projectId: projectId).expenses.first?.entry == source)
@@ -1363,6 +1450,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 }
             }
             #expect(converged)
+            if let addedReceipt, !conflict {
+                #expect(try await resumed.loadExpenseReceipt(projectId: projectId, expenseId: source.expenseId,
+                    attachmentId: addedReceipt, allowDownload: true) == mediaBytes)
+            }
             try await resumed.close()
             let verified = try await context.openRuntime()
             let snapshot = try await verified.readExpenses(accountId: context.accountId, projectId: projectId)

@@ -219,7 +219,13 @@ private struct InvoicingExpenseDetail: View {
     @State private var row: ProjectExpenses.Expense?
     @State private var pending: ProjectExpenses.PendingCreation?
     @State private var pendingEdits: [ProjectExpenses.PendingEdit] = []
-    @State private var editSource: ProjectExpenses.Expense?
+    private struct EditSelection: Identifiable {
+        let source: ProjectExpenses.Expense
+        let recovery: ExpenseEntryRecovery?
+        var id: ExpenseID { source.id }
+    }
+    @State private var editSource: EditSelection?
+    @State private var unfinishedEdit: ExpenseEntryRecovery?
     @State private var loading = true
     @State private var find = FindStateManager()
     @State private var selectedReceipt: ExpenseReceiptSelection?
@@ -286,8 +292,18 @@ private struct InvoicingExpenseDetail: View {
                 }
                 if let row, row.collectedInvoice == nil, pendingEdits.isEmpty,
                    runtime is any ExpenseCreating, runtime is any ExpenseEditing {
-                    Button("Edit Expense") { editSource = row }
+                    Button(unfinishedEdit == nil ? "Edit Expense" : "Resume saved edit") {
+                        editSource = .init(source: row, recovery: unfinishedEdit)
+                    }
+                        .disabled(unfinishedEdit.map { $0.editContext?.expectedRevision != row.revision } ?? false)
                         .accessibilityIdentifier("target-expense-edit")
+                }
+                if let unfinishedEdit {
+                    if row?.collectedInvoice != nil {
+                        BillingEmptyRow("This Expense was collected after your edit was saved. Your saved details and receipt files are retained; they have not changed the collected Invoice.")
+                    } else if unfinishedEdit.editContext?.expectedRevision != row?.revision {
+                        BillingEmptyRow("This Expense changed after your edit was saved. Your saved details and receipt files are retained; they have not overwritten the newer Expense.")
+                    }
                 }
                 BillingEmptyRow("Collection is not available in this build.")
             } else if loading { ProgressView("Loading Expense") }
@@ -297,8 +313,8 @@ private struct InvoicingExpenseDetail: View {
         .navigationTitle("Expense")
         .sheet(item: $editSource) { source in
             if let creator = runtime as? any ExpenseCreating {
-                ExpenseCreationView(accountId: accountId, projectId: projectId, currency: source.entry.finalAmount.currency,
-                    service: creator, editing: source) { _ in editSource = nil }
+                ExpenseCreationView(accountId: accountId, projectId: projectId, currency: source.source.entry.finalAmount.currency,
+                    service: creator, recovery: source.recovery, editing: source.source) { _ in editSource = nil }
             }
         }
         #if os(iOS)
@@ -307,20 +323,21 @@ private struct InvoicingExpenseDetail: View {
         .adaptivePresentation(item: $selectedReceipt, style: .viewer) { selection in receiptViewer(selection) }
         #endif
         .task(id: expenseId) {
-            row = nil; pending = nil; pendingEdits = []; loading = true
+            row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil; loading = true
             do {
                 for try await value in runtime.watchExpenses(accountId: accountId, projectId: projectId) {
                     try Task.checkCancellation()
                     row = value?.expenses.first(where: { $0.id == expenseId })
                     pending = value?.pendingCreations.first(where: { $0.entry.expenseId == expenseId })
                     pendingEdits = value?.pendingEdits.filter { $0.entry.expenseId == expenseId } ?? []
+                    unfinishedEdit = value?.unfinishedEdits.first { $0.expenseId == expenseId }
                     if row == nil || row?.collectedInvoice != nil { editSource = nil }
                     loading = false
                 }
-            } catch { if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; editSource = nil; loading = false } }
-            if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; editSource = nil; loading = false }
+            } catch { if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil; editSource = nil; loading = false } }
+            if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil; editSource = nil; loading = false }
         }
-        .onDisappear { row = nil; pending = nil; pendingEdits = [] }
+        .onDisappear { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil }
     }
 
     private func receiptViewer(_ selection: ExpenseReceiptSelection) -> some View {

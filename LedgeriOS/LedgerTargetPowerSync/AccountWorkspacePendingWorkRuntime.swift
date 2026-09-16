@@ -61,6 +61,7 @@ protocol AccountWorkspaceAttachmentStoring:
     func pendingCaptureReceipts(parent: LedgerEntityReference) async throws -> [AttachmentLocalDurabilityReceipt]
     func pendingTransactionUploads() async throws -> [AttachmentLocalDurabilityReceipt]
     func verifiedExpenseReceipts(for command: CreateExpenseCommand) async throws -> Set<AttachmentID>
+    func verifiedExpenseReceipts(for command: EditExpenseCommand) async throws -> Set<AttachmentID>
     func publishExpenseAttachment(_ receipt: AttachmentLocalDurabilityReceipt, projectId: EntityID,
         publish: ExpenseAttachmentPublisher) async throws -> ExpenseAttachmentPublication
     func pendingExpenseReconciliations() async throws -> [(AttachmentLocalDurabilityReceipt, EntityID)]
@@ -847,7 +848,7 @@ actor AccountWorkspacePendingWorkRuntime {
     }
 
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
-                     operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+                     operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         try await withFiniteLease(.editExpense) { resources in
             guard entry.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
             let command = try EditExpenseCommand(operationId: AccountBoundOperationIdentity.make(
@@ -860,9 +861,27 @@ actor AccountWorkspacePendingWorkRuntime {
                 _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
                     identity: ProjectExpenseStreamIdentity(accountId: resources.accountId, projectId: entry.projectId))
             }
+            let accepted = try await resources.structuredDatabase.getOptional(sql: "SELECT id FROM spike_local_operations WHERE id=?",
+                parameters: [command.envelope.operationId.rawValue]) { try $0.getString(index: 0) } != nil
+            if !accepted {
+                let retained = try await resources.structuredDatabase.getAll(
+                    sql: "SELECT attachment_id FROM expense_receipt_attachments WHERE account_id=? AND expense_id=? ORDER BY position",
+                    parameters: [resources.accountId.rawValue,entry.expenseId.rawValue]) { try $0.getString(index: 0) }
+                guard entry.receiptAttachmentIds.map(\.rawValue).starts(with: retained) else {
+                    throw ExpenseCreationPowerSyncStore.Failure.unavailable
+                }
+                let parent = try LedgerEntityReference(kind: .expense, id: .init(validating: entry.expenseId.rawValue))
+                let captures = try await resources.attachmentStore.pendingCaptureReceipts(parent: parent)
+                for id in entry.receiptAttachmentIds.dropFirst(retained.count) {
+                    guard let capture = captures.first(where: { $0.attachmentId == id }) else {
+                        throw AttachmentLocalByteResolutionFailure.receiptNotFound
+                    }
+                    _ = try await resources.attachmentStore.resolveLocalAttachmentBytes(for: capture)
+                }
+            }
             return try await ExpenseCreationPowerSyncStore(database: resources.structuredDatabase,
                 accountId: resources.accountId, principalId: resources.principalId,
-                accessFence: resources.accessFence, now: resources.now).submit(command)
+                accessFence: resources.accessFence, now: resources.now).submit(command, expectedRecovery: recovery)
         }
     }
 
@@ -875,9 +894,29 @@ actor AccountWorkspacePendingWorkRuntime {
                 try ProjectInvoicingItemLocalReader.requireAccess(transaction: local, accountId: resources.accountId,
                     principalId: resources.principalId, projectId: entry.projectId)
                 guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
-                let accepted = try local.get(sql: "SELECT count(*) FROM spike_local_operations WHERE account_id=? AND command_type='create_expense' AND subject_id=?",
-                    parameters: [resources.accountId.rawValue, entry.expenseId.rawValue]) { try $0.getInt(index: 0) }
-                guard accepted == 0 else { throw ExpenseCreationPowerSyncStore.Failure.duplicateExpense }
+                if let edit = entry.editContext {
+                    let operation = try AccountBoundOperationIdentity.make(family: .expenseEdit,
+                        accountId: resources.accountId, uuid: entry.operationUUID)
+                    let accepted = try local.getOptional(sql: "SELECT id FROM spike_local_operations WHERE id=?",
+                        parameters: [operation.rawValue]) { try $0.getString(index: 0) }
+                    guard accepted == nil else { throw ExpenseEntryRecoveryFailure.staleEntry }
+                    let eligible = try local.get(sql: """
+                        SELECT count(*) FROM expenses e WHERE account_id=? AND project_id=? AND id=? AND revision=?
+                          AND NOT EXISTS(SELECT 1 FROM collected_invoice_lines l WHERE l.account_id=e.account_id
+                            AND l.source_kind='expense' AND l.source_id=e.id)
+                        """, parameters: [resources.accountId.rawValue,entry.projectId.rawValue,entry.expenseId.rawValue,
+                            String(edit.expectedRevision)]) { try $0.getInt(index: 0) }
+                    let retained = try local.getAll(sql: "SELECT attachment_id FROM expense_receipt_attachments WHERE account_id=? AND expense_id=? ORDER BY position",
+                        parameters: [resources.accountId.rawValue,entry.expenseId.rawValue]) { try $0.getString(index: 0) }
+                    guard eligible == 1, retained == edit.retainedAttachmentIds.map(\.rawValue),
+                          Set(entry.attachmentIds).isDisjoint(with: edit.retainedAttachmentIds) else {
+                        throw ExpenseEntryRecoveryFailure.staleEntry
+                    }
+                } else {
+                    let accepted = try local.get(sql: "SELECT count(*) FROM spike_local_operations WHERE account_id=? AND command_type='create_expense' AND subject_id=?",
+                        parameters: [resources.accountId.rawValue, entry.expenseId.rawValue]) { try $0.getInt(index: 0) }
+                    guard accepted == 0 else { throw ExpenseCreationPowerSyncStore.Failure.duplicateExpense }
+                }
                 let owner = try local.getOptional(sql: "SELECT account_id,actor_principal_id,project_id FROM spike_expense_entry_recovery WHERE id=?",
                     parameters: [entry.expenseId.rawValue]) { c in
                         try [c.getString(index: 0), c.getString(index: 1), c.getString(index: 2)]
@@ -888,7 +927,16 @@ actor AccountWorkspacePendingWorkRuntime {
                     }
                     let current = try local.get(sql: "SELECT entry_json FROM spike_expense_entry_recovery WHERE id=?",
                         parameters: [entry.expenseId.rawValue]) { try $0.getString(index: 0) }
-                    guard current == json || current == expectedJSON else { throw ExpenseEntryRecoveryFailure.staleEntry }
+                    var consumedPrevious = false
+                    if entry.editContext != nil, previous == nil, current != json {
+                        let old = try OperationContractCodec.decode(ExpenseEntryRecovery.self, from: Data(current.utf8))
+                        let oldOperation = try AccountBoundOperationIdentity.make(
+                            family: old.editContext == nil ? .expenseCreation : .expenseEdit,
+                            accountId: resources.accountId, uuid: old.operationUUID)
+                        consumedPrevious = try local.getOptional(sql: "SELECT id FROM spike_local_operations WHERE id=?",
+                            parameters: [oldOperation.rawValue]) { try $0.getString(index: 0) } != nil
+                    }
+                    guard current == json || current == expectedJSON || consumedPrevious else { throw ExpenseEntryRecoveryFailure.staleEntry }
                     try local.execute(sql: "UPDATE spike_expense_entry_recovery SET entry_json=? WHERE id=?",
                         parameters: [json, entry.expenseId.rawValue])
                 } else {
@@ -910,7 +958,7 @@ actor AccountWorkspacePendingWorkRuntime {
         try await withFiniteLease(.resolveAttachmentBytes) { resources in
             let query = ProjectExpensePowerSyncQuery(database: resources.structuredDatabase)
             let snapshot = try await query.read(accountId: resources.accountId, principalId: resources.principalId, projectId: entry.projectId)
-            guard snapshot.unfinishedEntries.contains(entry) else { throw ProjectExpenses.Failure.invalidEvidence }
+            guard snapshot.unfinishedEntries.contains(entry) || snapshot.unfinishedEdits.contains(entry) else { throw ProjectExpenses.Failure.invalidEvidence }
             let parent = try LedgerEntityReference(kind: .expense, id: .init(validating: entry.expenseId.rawValue))
             let receipts = try await resources.attachmentStore.pendingCaptureReceipts(parent: parent)
             var captures: [LocalAttachmentCapture] = []
@@ -923,7 +971,8 @@ actor AccountWorkspacePendingWorkRuntime {
                     bytes: bytes, metadata: receipt.metadata))
             }
             let current = try await query.read(accountId: resources.accountId, principalId: resources.principalId, projectId: entry.projectId)
-            guard current.unfinishedEntries.contains(entry), !resources.accessFence.isRemoved else { throw ProjectExpenses.Failure.invalidEvidence }
+            guard (current.unfinishedEntries.contains(entry) || current.unfinishedEdits.contains(entry)),
+                  !resources.accessFence.isRemoved else { throw ProjectExpenses.Failure.invalidEvidence }
             return captures
         }
     }
@@ -1904,7 +1953,7 @@ actor AccountWorkspacePendingWorkRuntime {
                         group.addTask {
                             do {
                                 for try await _ in try resources.structuredDatabase.watch(sql:
-                                    "SELECT id,command_envelope_json FROM spike_local_operations WHERE command_type='create_expense' AND local_state IN ('queued','applying')",
+                                    "SELECT id,command_envelope_json FROM spike_local_operations WHERE command_type IN ('create_expense','edit_expense') AND local_state IN ('queued','applying')",
                                     parameters: nil, mapper: { try $0.getString(name: "id") }) {
                                     continuation.yield(())
                                 }
@@ -2016,24 +2065,35 @@ actor AccountWorkspacePendingWorkRuntime {
 
     func uploadPendingExpenseAttachments(using client: SupabaseExpenseAttachmentUpload) async {
         guard !normalAccessLocked, case .open = state, let resources else { return }
-        let commands: [CreateExpenseCommand]
+        let commands: [BusinessPaidExpenseDraft]
         do {
             commands = try await resources.structuredDatabase.getAll(sql: """
-                SELECT command_envelope_json FROM spike_local_operations
-                WHERE account_id=? AND actor_principal_id=? AND command_type='create_expense' AND local_state IN ('queued','applying')
+                SELECT command_type,command_envelope_json FROM spike_local_operations
+                WHERE account_id=? AND actor_principal_id=? AND command_type IN ('create_expense','edit_expense') AND local_state IN ('queued','applying')
                 """, parameters: [resources.accountId.rawValue, resources.principalId.rawValue]) {
                     let envelope = try $0.getString(name: "command_envelope_json")
-                    return try OperationContractCodec.decode(CreateExpenseCommand.self, from: Data("{\"envelope\":\(envelope)}".utf8))
+                    let bytes = Data("{\"envelope\":\(envelope)}".utf8)
+                    let draft: BusinessPaidExpenseDraft
+                    let actor: PrincipalID
+                    if try $0.getString(name: "command_type") == "edit_expense" {
+                        let command = try OperationContractCodec.decode(EditExpenseCommand.self, from: bytes)
+                        draft = command.envelope.payload.entry; actor = command.envelope.actorPrincipalId
+                    } else {
+                        let command = try OperationContractCodec.decode(CreateExpenseCommand.self, from: bytes)
+                        draft = command.envelope.payload; actor = command.envelope.actorPrincipalId
+                    }
+                    guard draft.accountId == resources.accountId, actor == resources.principalId else {
+                        throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+                    }
+                    return draft
                 }
         } catch { return }
         var active: Set<String> = []
-        for command in commands {
-            let e = command.envelope
-            guard e.accountId == resources.accountId, e.actorPrincipalId == resources.principalId else { continue }
+        for draft in commands {
             do {
-                let parent = try LedgerEntityReference(kind: .expense, id: .init(validating: e.payload.expenseId.rawValue))
+                let parent = try LedgerEntityReference(kind: .expense, id: .init(validating: draft.expenseId.rawValue))
                 let receipts = try await resources.attachmentStore.pendingCaptureReceipts(parent: parent)
-                for receipt in receipts where e.payload.receiptAttachmentIds.contains(receipt.attachmentId) {
+                for receipt in receipts where draft.receiptAttachmentIds.contains(receipt.attachmentId) {
                     let retryID = "expense:" + receipt.attachmentId.rawValue
                     active.insert(retryID)
                     if Task.isCancelled || normalAccessLocked { return }
@@ -2049,15 +2109,15 @@ actor AccountWorkspacePendingWorkRuntime {
                                     JOIN spike_clients c ON c.account_id=p.account_id AND c.id=p.client_id
                                     WHERE m.account_id=? AND m.principal_id=? AND m.state='active' AND m.financial_access='full'
                                       AND p.id=? AND p.lifecycle='active' AND c.lifecycle='active') AS allowed
-                                    """, parameters: [owned.accountId.rawValue, owned.principalId.rawValue, e.payload.projectId.rawValue]) {
+                                    """, parameters: [owned.accountId.rawValue, owned.principalId.rawValue, draft.projectId.rawValue]) {
                                         try $0.getInt(name: "allowed") == 1
                                     }
                                 guard allowed, !owned.accessFence.isRemoved else { throw ExpenseCreationUpload.Failure.unavailable }
                             }
                             try await authorize()
                             _ = try await owned.attachmentStore.publishExpenseAttachment(receipt,
-                                projectId: EntityID(validating: e.payload.projectId.rawValue)) { candidate, checkpoint, save in
-                                    try await client.publish(candidate, projectId: EntityID(validating: e.payload.projectId.rawValue),
+                                projectId: EntityID(validating: draft.projectId.rawValue)) { candidate, checkpoint, save in
+                                    try await client.publish(candidate, projectId: EntityID(validating: draft.projectId.rawValue),
                                         resumeFrom: checkpoint, onCheckpoint: save, authorize: authorize)
                                 }
                             try await authorize()
@@ -2481,6 +2541,7 @@ actor AccountWorkspacePendingWorkRuntime {
             expenseCreationApplier: appliers.expenseCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
+            verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             now: resources.now
         )
         let task = Task {
@@ -2542,6 +2603,7 @@ actor AccountWorkspacePendingWorkRuntime {
             expenseCreationApplier: appliers.expenseCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
+            verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             workspaceUpload: { [weak self] in
                 guard let self else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
                 try await self.uploadPendingCommands(using: appliers)
@@ -2797,6 +2859,14 @@ public enum LedgerPowerSyncLocalBootstrap {
         let account = try AccountID(validating: "capture-ui-\(fixtureID.uuidString)")
         let principal = try PrincipalID(validating: "capture-ui-member-\(fixtureID.uuidString)")
         var dependencies = LedgerPowerSyncLocalBootstrapDependencies.live
+        // This no-network fixture seeds the complete category directory below.
+        // Supply its synthetic download evidence without bypassing real row reads.
+        dependencies.makeBudgetCategoryQuery = { database, principalId, accountId, now in
+            BudgetCategoryReferencePowerSyncQuery(database: database, principalId: principalId,
+                accountId: accountId, completenessObservation: { _ in
+                    AsyncStream { continuation in continuation.yield(true); continuation.finish() }
+                }, now: now)
+        }
         let validate = dependencies.validateStructuredDatabase
         dependencies.validateStructuredDatabase = { database in
             try await validate(database)
@@ -2826,6 +2896,14 @@ public enum LedgerPowerSyncLocalBootstrap {
             if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-capture") {
                 _ = try await database.execute(sql: "INSERT OR IGNORE INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES('capture-ui-client',?,'Capture Client','active',1,1,1)", parameters: [account.rawValue])
                 _ = try await database.execute(sql: "INSERT OR IGNORE INTO spike_projects(id,account_id,client_id,display_name,lifecycle,revision) VALUES('capture-ui-project',?,'capture-ui-client','Capture Project','active',1)", parameters: [account.rawValue])
+                if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-edit-capture") {
+                    _ = try await database.execute(sql: """
+                        INSERT OR IGNORE INTO expenses(id,account_id,project_id,category_id,vendor,
+                            expense_date,final_amount_minor_units,currency,notes,revision)
+                        VALUES('capture-ui-expense',?,'capture-ui-project','capture-ui-category',
+                            'Original expense','2026-09-15','100','USD','','1')
+                        """, parameters: [account.rawValue])
+                }
                 let expenses = ProjectExpenseStreamIdentity(accountId: account,
                     projectId: try ProjectID(validating: "capture-ui-project"))
                 _ = try await database.syncStream(name: expenses.name, params: expenses.parameters).subscribe()

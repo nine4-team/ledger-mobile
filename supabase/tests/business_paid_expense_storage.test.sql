@@ -100,7 +100,7 @@ select is((ledger_private.edit_expense(pg_temp.edit_command('expense-edit-stale'
   'expense_revision_conflict','Stale edit receives durable rejection');
 select is((ledger_private.edit_expense((pg_temp.edit_command('expense-edit-media','2')::jsonb ||
   '{"receiptAttachmentIds":["unverified"]}'::jsonb)::text)).error_code,
-  'expense_receipt_change_unavailable','Bare receipt IDs cannot bypass verified media');
+  'expense_receipt_invalid','Bare receipt IDs cannot bypass verified media');
 select is((ledger_private.edit_expense((pg_temp.edit_command('expense-edit-invalid','2')::jsonb ||
   '{"date":"2025-02-29"}'::jsonb)::text)).phase,'rejected','Invalid date rejects atomically');
 select is((select revision from ledger_private.expenses where id='expense-created'),2::bigint,'Rejected edits preserve revision');
@@ -124,6 +124,31 @@ select is((ledger_private.edit_expense((pg_temp.edit_command('edit-bad-lines','2
   '{"receiptLines":[{"id":"invalid"}]}'::jsonb)::text)).error_code,'expense_receipt_invalid','Malformed lines rejected before mutation');
 select is((select count(*) from ledger_private.expense_receipt_lines where expense_id='expense-created'),1::bigint,
   'Rejected line replacement preserves existing lines');
+select public.spike_begin_expense_attachment_upload('edit-receipt','account-primary','expense-project','expense-created',repeat('c',64),12,'application/pdf','New.pdf');
+create function pg_temp.add_receipt_command(op text, revision text default '2') returns text language sql as $$
+  select (pg_temp.edit_command(op,revision)::jsonb || '{"receiptAttachmentIds":["edit-receipt"]}'::jsonb)::text
+$$;
+select is((ledger_private.edit_expense(pg_temp.add_receipt_command('edit-unpublished'))).error_code,
+  'expense_receipt_invalid','Reservation without verified object cannot be attached');
+insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+values('edit-receipt','account-primary',repeat('c',64),12,'application/pdf','accounts/account-primary/attachments/edit-receipt/'||repeat('c',64));
+update ledger_private.expense_attachment_uploads set expense_id='different-expense' where id='edit-receipt';
+select is((ledger_private.edit_expense(pg_temp.add_receipt_command('edit-wrong-receipt-parent'))).error_code,
+  'expense_receipt_invalid','Verified object reserved for another Expense cannot attach');
+update ledger_private.expense_attachment_uploads set expense_id='expense-created',principal_id='principal-restricted' where id='edit-receipt';
+select is((ledger_private.edit_expense(pg_temp.add_receipt_command('edit-wrong-receipt-actor'))).error_code,
+  'expense_receipt_invalid','Another actor pending upload cannot attach');
+update ledger_private.expense_attachment_uploads set principal_id='principal-owner' where id='edit-receipt';
+select is((select revision from ledger_private.expenses where id='expense-created'),2::bigint,'Wrong-parent/actor rejection preserves source');
+select is((ledger_private.edit_expense(pg_temp.add_receipt_command('edit-add-receipt'))).phase,'applied','Verified same-parent receipt addition applies');
+select is((ledger_private.edit_expense(pg_temp.add_receipt_command('edit-add-receipt'))).phase,'applied','Receipt addition retries exactly');
+select is((select revision from ledger_private.expenses where id='expense-created'),3::bigint,'Receipt addition advances source exactly once');
+select is((select count(*) from ledger_private.expense_receipt_attachments where expense_id='expense-created'),1::bigint,'Receipt addition replay does not duplicate link');
+select is((ledger_private.edit_expense(pg_temp.edit_command('edit-remove-receipt','3'))).error_code,
+  'expense_receipt_change_unavailable','Edit cannot remove retained receipt');
+select is((ledger_private.edit_expense((pg_temp.add_receipt_command('edit-duplicate-receipt','3')::jsonb ||
+  '{"receiptAttachmentIds":["edit-receipt","edit-receipt"]}'::jsonb)::text)).phase,'rejected','Duplicate addition rolls back');
+select is((select revision from ledger_private.expenses where id='expense-created'),3::bigint,'Rejected duplicate preserves source revision');
 select set_config('request.jwt.claims','{}',true);
 select throws_ok($$select ledger_private.edit_expense(pg_temp.edit_command('expense-edit-op'))$$,
   '42501','Authenticated actor required','Anonymous caller cannot replay accepted edit');
@@ -143,9 +168,9 @@ reset role;
 update public.spike_account_memberships set financial_access='full'
   where account_id='account-primary' and principal_id='principal-owner';
 set local role authenticated;
-select is((public.spike_edit_expense(pg_temp.edit_command('expense-edit-endpoint','2'))).phase,
+select is((public.spike_edit_expense(pg_temp.add_receipt_command('expense-edit-endpoint','3'))).phase,
   'applied','Authenticated endpoint applies allowed edit');
-select is((public.spike_edit_expense(pg_temp.edit_command('expense-edit-endpoint','2'))).phase,
+select is((public.spike_edit_expense(pg_temp.add_receipt_command('expense-edit-endpoint','3'))).phase,
   'applied','Authenticated endpoint supports exact replay');
 select throws_ok($$select public.spike_edit_expense((pg_temp.edit_command('edit-endpoint-cross','3')::jsonb ||
   '{"accountId":"account-other"}'::jsonb)::text)$$,'42501','Expense access required','Actual endpoint denies cross Account');

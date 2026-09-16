@@ -663,7 +663,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
 }
 private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
-    func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+    func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
               entry.vendor == "Receipt vendor updated", entry.finalAmount.minorUnits == 12550,
               !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-expense") else {
@@ -789,6 +789,12 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                     ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-missing-category")
                         ? "category-no-longer-available" : "category-ui-test"),
                 lines: [], attachmentIds: [])
+        ] : [], unfinishedEdits: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-expense-saved-edit") ? [
+            .init(accountId: accountId, projectId: projectId, expenseId: .init(validating: "expense-ui-test"),
+                operationUUID: UUID(), capturedAt: Date(), vendor: "Retained edit", date: Date(),
+                amountText: "125.50", notes: "Unsubmitted edit", categoryId: .init(validating: "category-ui-test"),
+                lines: [], attachmentIds: [], editContext: .init(expectedRevision: 1,
+                    retainedAttachmentIds: objects.map(\.attachmentId)))
         ] : [])
     }
     func readCollectedInvoiceReport(accountId: AccountID, projectId: ProjectID, invoiceId: InvoiceID,

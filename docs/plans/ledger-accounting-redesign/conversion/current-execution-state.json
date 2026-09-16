@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 954,
+  "stateVersion": 971,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,8 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Expense integrated verification passed: native1364/193, latest Mac build,86-migration clean application replay and concurrency checks; evidence under expense-edit-lifecycle. Native86460 is terminal exit0; Mac build terminal success, no Xcode process remains. Next finish diff review/local checkpoint, then continue approved work. Mac UI blocked by authentication; no unchanged retry. O-023 unanswered; receipt editing unfinished. Three20260916migrations applied local directly; do not reapply/reset. Earlier CI failures unresolved.",
-    "uiAvailabilityWait": "Category UI failed11.423s before assertion; /tmp/ledger-expense-category-integration.log. Screenshot again shows Boards foreground. No retries until isolated execution. Direct pass retained.",
+    "immediateFollowup": "Receipt-edit local checkpoint ready: paid-recovery iPhone31230 PASS10.230s; native65tests21315 and verified-link/collection3races94614 PASS; full evidence under expense-edit-lifecycle. Next existing hosted Ledger schema/config parity and Expense integration, then remaining Invoice lifecycle under approved authority; inspect deployment differences before writes. Do not repeat passing local checks for context. Existing runner always replays application migrations/grants. O-023 removal separate; collection equality unanswered. Mac automation unavailable/no retry. Expense5d62e9e4 and receipt checkpoint local only. Five20260916migrations local directly; do not reapply/reset. Earlier CI failures and hosted/full integration open.",
     "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
   }
 }

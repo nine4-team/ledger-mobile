@@ -274,9 +274,6 @@ struct ProjectExpensePowerSyncQuery: Sendable {
             let unfinished = try local.getAll(sql: """
                 SELECT d.id,d.entry_json FROM spike_expense_entry_recovery d
                 WHERE d.account_id=? AND d.actor_principal_id=? AND d.project_id=?
-                  AND NOT EXISTS(SELECT 1 FROM spike_local_operations o WHERE o.account_id=d.account_id
-                    AND o.command_type='create_expense' AND o.subject_id=d.id)
-                  AND NOT EXISTS(SELECT 1 FROM expenses e WHERE e.account_id=d.account_id AND e.id=d.id)
                 ORDER BY d.id
                 """, parameters: [accountId.rawValue, principalId.rawValue, projectId.rawValue]) { c in
                     let value = try OperationContractCodec.decode(ExpenseEntryRecovery.self,
@@ -284,9 +281,23 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                     guard value.accountId == accountId, value.projectId == projectId,
                           value.expenseId.rawValue == (try c.getString(name: "id")) else { throw ProjectExpenses.Failure.invalidEvidence }
                     return value
+                }.filter { value in
+                    if value.editContext != nil {
+                        let operation = try AccountBoundOperationIdentity.make(family: .expenseEdit,
+                            accountId: accountId, uuid: value.operationUUID)
+                        return try local.getOptional(sql: "SELECT id FROM spike_local_operations WHERE id=?",
+                            parameters: [operation.rawValue]) { try $0.getString(index: 0) } == nil
+                    }
+                    let used = try local.get(sql: """
+                        SELECT (SELECT count(*) FROM spike_local_operations WHERE account_id=? AND command_type='create_expense' AND subject_id=?)
+                          + (SELECT count(*) FROM expenses WHERE account_id=? AND id=?)
+                        """, parameters: [accountId.rawValue,value.expenseId.rawValue,accountId.rawValue,value.expenseId.rawValue]) { try $0.getInt(index: 0) }
+                    return used == 0
                 }
             return try ProjectExpenses(accountId: accountId, projectId: projectId, expenses: expenses,
-                pendingCreations: pending, pendingEdits: edits, unfinishedEntries: unfinished)
+                pendingCreations: pending, pendingEdits: edits,
+                unfinishedEntries: unfinished.filter { $0.editContext == nil },
+                unfinishedEdits: unfinished.filter { $0.editContext != nil })
         }
     }
 }

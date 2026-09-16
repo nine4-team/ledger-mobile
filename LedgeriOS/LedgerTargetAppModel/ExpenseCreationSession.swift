@@ -95,7 +95,7 @@ public final class ExpenseCreationSession {
         editAttempt = requested; hasAttempt = true; isSaving = true
         defer { isSaving = false }
         let accepted = try await editor.editExpense(entry, expectedRevision: expectedRevision,
-            operationUUID: operationUUID, capturedAt: capturedAt)
+            operationUUID: operationUUID, capturedAt: capturedAt, recovery: savedEntry)
         receipt = accepted
         return accepted
     }
@@ -118,6 +118,18 @@ public final class ExpenseCreationSession {
               saved.contentSHA256 == capture.contentSHA256, saved.byteCount == capture.byteCount else { throw Failure.invalidReceipt }
         receiptCaptures.append(capture)
         unconfirmedReceiptIds.removeAll { $0 == capture.attachmentId }
+    }
+
+    public func restoreForEditing(_ entry: ExpenseEntryRecovery, source: ProjectExpenses.Expense) async throws {
+        guard let context = entry.editContext,
+              source.collectedInvoice == nil, source.revision == context.expectedRevision,
+              source.entry.accountId == entry.accountId, source.entry.projectId == entry.projectId,
+              source.id == entry.expenseId,
+              source.entry.receiptAttachmentIds == context.retainedAttachmentIds,
+              Set(entry.attachmentIds).isDisjoint(with: context.retainedAttachmentIds) else {
+            throw ExpenseEntryRecoveryFailure.staleEntry
+        }
+        try await restore(entry)
     }
 
     public func restore(_ entry: ExpenseEntryRecovery) async throws {
@@ -162,7 +174,8 @@ public final class ExpenseCreationSession {
                      operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery) async throws -> OperationReceipt {
         guard !isSaving else { throw Failure.saving }
         guard unconfirmedReceiptIds.isEmpty else { throw Failure.invalidCaptures }
-        guard recovery.accountId == draft.accountId, recovery.projectId == draft.projectId,
+        guard recovery.editContext == nil,
+              recovery.accountId == draft.accountId, recovery.projectId == draft.projectId,
               recovery.expenseId == draft.expenseId, recovery.operationUUID == operationUUID,
               recovery.capturedAt == Date(timeIntervalSince1970: (capturedAt.timeIntervalSince1970 * 1000).rounded(.down) / 1000),
               recovery.attachmentIds == draft.receiptAttachmentIds else {

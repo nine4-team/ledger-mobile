@@ -553,21 +553,28 @@ actor AttachmentCapturePowerSyncStore:
     }
 
     func verifiedExpenseReceipts(for command: CreateExpenseCommand) async throws -> Set<AttachmentID> {
-        let e = command.envelope
-        guard e.accountId == scope.accountId, e.actorPrincipalId == scope.principalId else {
+        try await verifiedExpenseReceipts(entry: command.envelope.payload, actor: command.envelope.actorPrincipalId)
+    }
+
+    func verifiedExpenseReceipts(for command: EditExpenseCommand) async throws -> Set<AttachmentID> {
+        try await verifiedExpenseReceipts(entry: command.envelope.payload.entry, actor: command.envelope.actorPrincipalId)
+    }
+
+    private func verifiedExpenseReceipts(entry: BusinessPaidExpenseDraft, actor: PrincipalID) async throws -> Set<AttachmentID> {
+        guard entry.accountId == scope.accountId, actor == scope.principalId else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
         }
         try await ensureScopeBinding()
         var verified: Set<AttachmentID> = []
-        for id in e.payload.receiptAttachmentIds {
+        for id in entry.receiptAttachmentIds {
             guard let row = try await existingRow(attachmentIdentifier: id.rawValue) else { continue }
             guard let record = row.validatedRecord, scope.contains(record.receipt.scope),
                   record.receipt.scope.parent.kind == .expense,
-                  record.receipt.scope.parent.id.rawValue == e.payload.expenseId.rawValue else {
+                  record.receipt.scope.parent.id.rawValue == entry.expenseId.rawValue else {
                 throw AttachmentCapturePowerSyncStoreFailure.replayMismatch
             }
             if let progress = try row.uploadProgress?.expense,
-               progress.projectId.rawValue == e.payload.projectId.rawValue, progress.publication == .verified {
+               progress.projectId.rawValue == entry.projectId.rawValue, progress.publication == .verified {
                 verified.insert(id)
             }
         }

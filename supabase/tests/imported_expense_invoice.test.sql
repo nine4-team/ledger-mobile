@@ -116,6 +116,9 @@ select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-00000000
 set local role authenticated;
 select is(public.spike_read_collected_invoice('account-primary','expense-import-project','expense-import-invoice')->>'total_minor_units',
   '9007199254740993','Direct Invoice read preserves exact amount without Expense selection');
+select throws_ok($$select public.spike_begin_expense_attachment_upload('paid-new-receipt','account-primary',
+  'expense-import-project','expense-import-source',repeat('d',64),12,'application/pdf','Paid.pdf')$$,
+  '42501','expense_upload_unavailable','Collected Expense cannot reserve a new receipt');
 select is(public.spike_read_collected_invoice('account-primary','expense-import-project','expense-import-invoice'),
   public.spike_read_expense_invoice('account-primary','expense-import-project','expense-import-source')->'invoice',
   'Direct and Expense paths return the identical frozen Invoice');

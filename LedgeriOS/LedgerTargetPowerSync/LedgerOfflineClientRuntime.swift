@@ -260,9 +260,9 @@ public final class LedgerOfflineClientRuntime:
     }
 
     public func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
-                            operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+                            operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         try await lifecycleOwner.editExpense(entry, expectedRevision: expectedRevision,
-            operationUUID: operationUUID, capturedAt: capturedAt)
+            operationUUID: operationUUID, capturedAt: capturedAt, recovery: recovery)
     }
 
     public func expenseAttachmentCaptureScope(projectId: ProjectID, expenseId: ExpenseID) async throws -> AttachmentCaptureScope {

@@ -95,6 +95,43 @@ struct ExpenseCreationSessionTests {
         #expect(await service.drafts == [draft, draft])
     }
 
+    @Test func editRecoveryRequiresItsOriginalSourceRevision() async throws {
+        let service = Creator(), session = ExpenseCreationSession(service: service)
+        let entry = try BusinessPaidExpenseDraft(accountId: .init(validating: "account"),
+            projectId: .init(validating: "project"), expenseId: .init(validating: "expense"),
+            vendor: "Original", date: "2024-02-29", finalAmount: .init(minorUnits: 100, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "general"), notes: "")
+        let recovery = ExpenseEntryRecovery(accountId: entry.accountId, projectId: entry.projectId,
+            expenseId: entry.expenseId, operationUUID: UUID(), capturedAt: Date(), vendor: "Saved edit",
+            date: Date(), amountText: "2.00", notes: "Recovered notes", categoryId: entry.categoryId,
+            lines: [], attachmentIds: [], editContext: try .init(expectedRevision: 1, retainedAttachmentIds: []))
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await session.restoreForEditing(recovery, source: .init(entry: entry, revision: 2))
+        }
+        #expect(session.savedEntry == nil)
+        let scope = TransactionScope.project(accountId: entry.accountId, projectId: entry.projectId,
+            clientId: try .init(validating: "client"))
+        let paid = try FrozenInvoiceContents(invoiceId: .init(validating: "invoice"), invoiceRevision: 1,
+            scope: scope, purchaseId: .init(validating: "payment"), lines: [
+                .init(id: .init(validating: "line"), scope: scope, source: .expense(expenseId: entry.expenseId),
+                    sourceRevision: 1, categoryId: entry.categoryId, signedAmount: entry.finalAmount,
+                    description: entry.vendor)
+            ], total: entry.finalAmount)
+        await #expect(throws: ExpenseEntryRecoveryFailure.staleEntry) {
+            try await session.restoreForEditing(recovery, source: .init(entry: entry, revision: 1, collectedInvoice: paid))
+        }
+        #expect(session.savedEntry == nil)
+        try await session.restoreForEditing(recovery, source: .init(entry: entry, revision: 1))
+        #expect(session.vendor == "Saved edit")
+        #expect(session.amountText == "2.00")
+        #expect(session.savedEntry == recovery)
+        await #expect(throws: ExpenseCreationSession.Failure.invalidCaptures) {
+            try await session.save(draft: entry, captures: [], operationUUID: recovery.operationUUID,
+                capturedAt: recovery.capturedAt, recovery: recovery)
+        }
+        #expect(await service.operations.isEmpty)
+    }
+
     #if canImport(CoreGraphics)
     @Test func receiptSelectionRequiresDurabilityAndRemovalRetainsFiles() async throws {
         let service = Creator(), session = ExpenseCreationSession(service: service)
@@ -202,7 +239,7 @@ struct ExpenseCreationSessionTests {
     private actor Creator: ExpenseCreating, ExpenseEditing {
         enum Failure: Error { case once }
         var events: [String] = []
-        func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date) throws -> OperationReceipt {
+        func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) throws -> OperationReceipt {
             events.append("edit"); operations.append(operationUUID); drafts.append(entry)
             if operations.count == 1 { throw Failure.once }
             return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)

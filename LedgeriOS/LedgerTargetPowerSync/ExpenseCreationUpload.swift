@@ -51,7 +51,8 @@ enum ExpenseCreationUpload {
 
     static func applyEdit(_ entry: CrudEntry, database: any PowerSyncDatabaseProtocol,
                           accessFence: LedgerWorkspaceAccessFence,
-                          applier: any EditExpenseCommandApplying) async throws {
+                          applier: any EditExpenseCommandApplying,
+                          verifiedReceipts: @Sendable (EditExpenseCommand) async throws -> Set<AttachmentID> = { _ in [] }) async throws {
         guard entry.op == .put, entry.table == LedgerPowerSyncTable.expenseCommands,
               let data = entry.opData, let json = data["envelope_json"] ?? nil,
               Set(data.keys) == Set(["account_id", "actor_principal_id", "expense_id", "contract_version", "fingerprint", "envelope_json"]) else {
@@ -70,8 +71,15 @@ enum ExpenseCreationUpload {
             try requireOwner(local, account: e.accountId, principal: e.actorPrincipalId, operation: e.operationId,
                 family: .editExpense, fingerprint: request.fingerprint, fence: accessFence)
         }
+        try requireAccess(accessFence)
+        let published = try await verifiedReceipts(command)
         try await database.writeTransaction { local in
             try owner(local)
+            for attachment in e.payload.entry.receiptAttachmentIds where !published.contains(attachment) {
+                let found = try local.get(sql: "SELECT count(*) FROM item_image_objects WHERE account_id=? AND id=?",
+                    parameters: [e.accountId.rawValue, attachment.rawValue]) { try $0.getInt(index: 0) }
+                guard found == 1 else { throw Failure.receiptNotReady }
+            }
             _ = try local.execute(sql: "UPDATE spike_local_operations SET local_state='applying' WHERE id=? AND local_state='queued'", parameters: [entry.id])
         }
         try requireAccess(accessFence)

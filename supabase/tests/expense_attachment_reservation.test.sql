@@ -73,6 +73,15 @@ insert into ledger_private.expenses(id,account_id,project_id,category_id,vendor,
 values('pending-expense','account-primary','expense-upload-project','category-furnishings','Vendor','2026-09-15',12,'USD',now(),'principal-owner');
 insert into ledger_private.expense_receipt_attachments(account_id,expense_id,attachment_id,position)
 values('account-primary','pending-expense','expense-upload-one',0);
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select is(pg_temp.reserve_expense('expense-upload-addition')->>'phase','awaiting_upload',
+  'existing uncollected Expense can reserve an added receipt');
+select is(pg_temp.reserve_expense('expense-upload-addition')->>'expenseId','pending-expense',
+  'existing Expense upload retry preserves parent');
+reset role;
+select is((select count(*) from ledger_private.expense_receipt_attachments where expense_id='pending-expense'),1::bigint,
+  'upload admission does not attach the new receipt or rewrite Expense');
 update public.spike_account_memberships set financial_access='full' where account_id='account-primary' and principal_id='principal-restricted';
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);

@@ -73,6 +73,7 @@ try {
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
+                ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
                 ...(test==='actualLocalExpense'?{LEDGER_EXPENSE_LOCAL_TOKEN:token,LEDGER_EXPENSE_LOCAL_ATTACHMENT:key+'-native-receipt'}:{}),
                 LEDGER_SALE_LOCAL_FINANCIAL_ACCESS:process.argv.includes('--financial') ? 'full' : 'none',
@@ -89,8 +90,7 @@ try {
             runNative('actualLocalExpense',project,expense);
             receiptAttachmentIds.push(key+'-native-receipt');
         }
-        if(process.argv.includes('--expense-media')) {
-            const attachment=key+'-receipt';
+        async function uploadExpenseReceipt(attachment, expectedExpenseCount) {
             const bytes=Buffer.from('%PDF-1.4\nSynthetic Expense receipt\n%%EOF\n');
             const hash=createHash('sha256').update(bytes).digest('hex');
             const reservation=await call('/rest/v1/rpc/spike_begin_expense_attachment_upload',{
@@ -114,9 +114,10 @@ try {
             assert.equal(published.phase,'verified'); assert.equal(published.expenseId,expense);
             assert.equal(published.contentSHA256,hash); assert.equal(published.byteCount,String(bytes.length));
             const replay=await verify(); assert.equal(replay.status,200); assert.deepEqual(await replay.json(),published);
-            assert.equal(sql(`select count(*) from ledger_private.expenses where id=${q(expense)}`),'0');
-            receiptAttachmentIds.push(attachment);
+            assert.equal(sql(`select count(*) from ledger_private.expenses where id=${q(expense)}`),String(expectedExpenseCount));
+            return attachment;
         }
+        if(process.argv.includes('--expense-media')) receiptAttachmentIds.push(await uploadExpenseReceipt(key+'-receipt',0));
         sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
           values(${q(expenseCategory)},${q(account)},'Delivery','general',1,1,1)`);
         const intent={operationId:key+'-expense-op',accountId:account,actorPrincipalId:principal,
@@ -167,8 +168,12 @@ try {
             assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--native-expense'),
                 'Edit proof uses its own revision assertions, not the creation-only native/paid fixtures');
             const {operationId,accountId,actorPrincipalId,contractVersion,createdAtMs,...payload}=intent;
+            const editedReceiptIds=[...receiptAttachmentIds];
+            if(process.argv.includes('--expense-edit-media')) {
+                editedReceiptIds.push(await uploadExpenseReceipt(key+'-edit-receipt',1));
+            }
             const editInput={operationUUID:randomUUID(),clientCreatedAtMilliseconds:Number(createdAtMs),
-                expectedRevision:'1',payload:{...payload,vendor:'Edited vendor',notes:'Edited notes'}};
+                expectedRevision:'1',payload:{...payload,receiptAttachmentIds:editedReceiptIds,vendor:'Edited vendor',notes:'Edited notes'}};
             editRequest=expenseMCP.makeExpenseEditRequest(editInput,context);
             const edited=await expenseService.edit(editRequest,context);
             assert.equal(edited.phase,'applied');
@@ -179,7 +184,7 @@ try {
             assert.equal(updated.notes,'Edited notes');
             assert.equal(updated.amountMinorUnits,intent.amountMinorUnits);
             assert.deepEqual(updated.receiptLines,intent.receiptLines);
-            assert.deepEqual(updated.receiptAttachmentIds,receiptAttachmentIds);
+            assert.deepEqual(updated.receiptAttachmentIds,editedReceiptIds);
             const stale=expenseMCP.makeExpenseEditRequest({...editInput,operationUUID:randomUUID()},context);
             const rejected=await expenseService.edit(stale,context);
             assert.equal(rejected.phase,'rejected');

@@ -3745,3 +3745,25 @@ collection-first and collection-rollback Expense cases with observed lock waits;
 local database advisors reported no issues. The edit
 RPC, revision comparison, local queue, MCP and existing-form integration are
 unfinished; these guards alone do not establish an editable workflow.
+
+### 2026-09-15 — Expense receipt edits reuse capture and publication
+
+Receipt addition before collection uses the existing Expense form, encrypted
+capture store, upload worker and verified Storage publication. An edit retains
+the original ordered receipt IDs and appends only receipts reserved and verified
+for that same Account, Project, Expense and actor. The revision-checked database
+command links them atomically under the same Expense lock used by collection.
+No replacement uploader, receipt history or presentation component is introduced.
+
+The existing recovery record optionally carries the source revision and retained
+receipt IDs. Older creation records still decode without these fields. Unsubmitted
+edit recovery remains distinct from accepted pending operations and authoritative
+accounting; stale drafts retain their bytes but cannot overwrite a newer source.
+Acceptance checks the exact saved recovery in its local transaction. A consumed
+record can be replaced by a later edit; an unfinished draft cannot be silently
+overwritten. Receipt removal/reordering and post-collection editing are not enabled.
+
+Actual native upload/readback and encrypted restart tests passed, as did the local
+SQL authorization/verified-receipt cases. The Expense lifecycle checklist owns
+the precise evidence and remaining UI, migration and integration checks. These
+local results are not hosted or cutover-readiness claims.

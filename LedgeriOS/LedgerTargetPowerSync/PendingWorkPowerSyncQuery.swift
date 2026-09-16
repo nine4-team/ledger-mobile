@@ -253,9 +253,6 @@ actor PendingWorkPowerSyncQuery {
             try transaction.getAll(sql: """
                 SELECT d.id,d.account_id,d.actor_principal_id,d.project_id,d.entry_json
                 FROM spike_expense_entry_recovery d
-                WHERE NOT EXISTS(SELECT 1 FROM spike_local_operations o WHERE o.account_id=d.account_id
-                    AND o.command_type='create_expense' AND o.subject_id=d.id)
-                  AND NOT EXISTS(SELECT 1 FROM expenses e WHERE e.account_id=d.account_id AND e.id=d.id)
                 ORDER BY d.id
                 """, parameters: nil) { c in
                     guard try c.getString(name: "account_id") == self.accountId.rawValue,
@@ -268,8 +265,20 @@ actor PendingWorkPowerSyncQuery {
                           entry.projectId.rawValue == (try c.getString(name: "project_id")) else {
                         throw PendingWorkPowerSyncQueryFailure.malformedOperationEvidence
                     }
-                    return json
-                }
+                    return (entry, json)
+                }.filter { entry, _ in
+                    if entry.editContext != nil {
+                        let operation = try AccountBoundOperationIdentity.make(family: .expenseEdit,
+                            accountId: self.accountId, uuid: entry.operationUUID)
+                        return try transaction.getOptional(sql: "SELECT id FROM spike_local_operations WHERE id=?",
+                            parameters: [operation.rawValue]) { try $0.getString(index: 0) } == nil
+                    }
+                    let used = try transaction.get(sql: """
+                        SELECT (SELECT count(*) FROM spike_local_operations WHERE account_id=? AND command_type='create_expense' AND subject_id=?)
+                          + (SELECT count(*) FROM expenses WHERE account_id=? AND id=?)
+                        """, parameters: [self.accountId.rawValue,entry.expenseId.rawValue,self.accountId.rawValue,entry.expenseId.rawValue]) { try $0.getInt(index: 0) }
+                    return used == 0
+                }.map { $0.1 }
         }
     }
 

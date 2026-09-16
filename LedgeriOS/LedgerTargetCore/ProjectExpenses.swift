@@ -92,7 +92,8 @@ public struct ProjectExpenses: Equatable, Sendable {
     public let pendingCreations: [PendingCreation]
     public let pendingEdits: [PendingEdit]
     public let unfinishedEntries: [ExpenseEntryRecovery]
-    public init(accountId: AccountID, projectId: ProjectID, expenses: [Expense], pendingCreations: [PendingCreation] = [], pendingEdits: [PendingEdit] = [], unfinishedEntries: [ExpenseEntryRecovery] = []) throws {
+    public let unfinishedEdits: [ExpenseEntryRecovery]
+    public init(accountId: AccountID, projectId: ProjectID, expenses: [Expense], pendingCreations: [PendingCreation] = [], pendingEdits: [PendingEdit] = [], unfinishedEntries: [ExpenseEntryRecovery] = [], unfinishedEdits: [ExpenseEntryRecovery] = []) throws {
         guard expenses.allSatisfy({ $0.entry.accountId == accountId && $0.entry.projectId == projectId }),
               Set(expenses.map(\.id)).count == expenses.count,
               pendingCreations.allSatisfy({ $0.entry.accountId == accountId && $0.entry.projectId == projectId }),
@@ -103,8 +104,12 @@ public struct ProjectExpenses: Equatable, Sendable {
               Set(pendingEdits.map(\.id)).count == pendingEdits.count,
               Set(pendingCreations.map(\.id)).isDisjoint(with: pendingEdits.map(\.id)) else { throw Failure.invalidEvidence }
         self.pendingEdits = pendingEdits
-        guard unfinishedEntries.allSatisfy({ $0.accountId == accountId && $0.projectId == projectId }) else { throw Failure.invalidEvidence }
+        guard unfinishedEntries.allSatisfy({ $0.accountId == accountId && $0.projectId == projectId && $0.editContext == nil }),
+              unfinishedEdits.allSatisfy({ $0.accountId == accountId && $0.projectId == projectId && $0.editContext != nil }),
+              Set(unfinishedEntries.map(\.id) + unfinishedEdits.map(\.id)).count == unfinishedEntries.count + unfinishedEdits.count
+        else { throw Failure.invalidEvidence }
         self.unfinishedEntries = unfinishedEntries
+        self.unfinishedEdits = unfinishedEdits
     }
     public enum Failure: Error, Equatable, Sendable { case invalidEvidence }
 }

@@ -312,6 +312,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
     private let expenseEditApplier: (any EditExpenseCommandApplying)?
     private let verifiedExpenseReceipts: @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID>
+    private let verifiedExpenseEditReceipts: @Sendable (EditExpenseCommand) async throws -> Set<AttachmentID>
     private let workspaceUpload: (@Sendable () async throws -> Void)?
 
     init(
@@ -328,6 +329,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
         expenseEditApplier: (any EditExpenseCommandApplying)? = nil,
         verifiedExpenseReceipts: @escaping @Sendable (CreateExpenseCommand) async throws -> Set<AttachmentID> = { _ in [] },
+        verifiedExpenseEditReceipts: @escaping @Sendable (EditExpenseCommand) async throws -> Set<AttachmentID> = { _ in [] },
         workspaceUpload: (@Sendable () async throws -> Void)? = nil,
         now: @Sendable @escaping () -> Date = Date.init
     ) {
@@ -343,6 +345,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.expenseCreationApplier = expenseCreationApplier
         self.expenseEditApplier = expenseEditApplier
         self.verifiedExpenseReceipts = verifiedExpenseReceipts
+        self.verifiedExpenseEditReceipts = verifiedExpenseEditReceipts
         self.workspaceUpload = workspaceUpload
         self.now = now
     }
@@ -377,7 +380,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             if entry.opData?["contract_version"] == "expense-edit-v1" {
                 guard let expenseEditApplier else { throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table) }
                 try await ExpenseCreationUpload.applyEdit(entry, database: database, accessFence: accessFence,
-                    applier: expenseEditApplier)
+                    applier: expenseEditApplier, verifiedReceipts: verifiedExpenseEditReceipts)
                 break
             }
             guard let expenseCreationApplier else { throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table) }

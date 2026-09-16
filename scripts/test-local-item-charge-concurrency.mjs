@@ -108,6 +108,30 @@ function prepareExpense(name) {
       12345,'USD','',now(),'principal-owner');`);
 }
 const editExpense = name => `update ledger_private.expenses set final_amount_minor_units=12346,revision=revision+1 where id='${source(name)}';`;
+function reserveExpenseReceipt(name) {
+  return `set local role authenticated;
+    select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+    select public.spike_begin_expense_attachment_upload('receipt-${source(name)}','account-primary',
+      'race-project','${source(name)}',repeat('a',64),12,'application/pdf','Receipt.pdf');
+    reset role;`;
+}
+function prepareVerifiedExpenseReceipt(name) {
+  prepareExpense(name);
+  sql(`begin; ${reserveExpenseReceipt(name)} commit;
+    insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+    select id,account_id,content_sha256,byte_count,media_type,storage_path
+    from ledger_private.expense_attachment_uploads where id='receipt-${source(name)}';`);
+}
+function linkExpenseReceipt(name) {
+  const command = JSON.stringify({ operationId: `edit-${source(name)}`, accountId: 'account-primary',
+    actorPrincipalId: 'principal-owner', projectId: 'race-project', expenseId: source(name),
+    contractVersion: 'expense-edit-v1', createdAtMs: '1000', vendor: 'Synthetic', date: '2026-01-01',
+    amountMinorUnits: '12345', currency: 'USD', categoryId: 'category-system', notes: '',
+    receiptLines: [], receiptAttachmentIds: [`receipt-${source(name)}`], expectedRevision: '1' });
+  return `set local role authenticated;
+    select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+    select public.spike_edit_expense('${command}'); reset role;`;
+}
 function collectExpense(name) {
   const id = source(name);
   return `select ledger_private.import_client_payment('payment-${id}','account-primary','race-project','client-existing',
@@ -129,7 +153,10 @@ try {
   sql(`create database ${database};`, 'postgres'); created = true;
   execFileSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'postgres', '-d', database,
     '--no-owner', '--no-privileges', '--exit-on-error'], { input: dump, timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
-  if (process.argv.includes('--replay-migrations')) {
+  // Replay is now required: authenticated receipt races need the actual Ledger
+  // grants, while platform extension ACLs cannot be restored by local postgres.
+  // The previous --replay-migrations invocation remains compatible.
+  {
     // Retain the schema-only Supabase platform, but remove every Ledger object.
     // This is only the generated disposable database, never the working database.
     sql(`drop schema ledger_private cascade; drop schema public cascade;
@@ -195,6 +222,32 @@ try {
   await race('expense-rollback', collectExpense('expense-rollback'), editExpense('expense-rollback'), 'rollback');
   assert.equal(sql("select revision from ledger_private.expenses where id='race-expense-rollback'"), '2');
   console.log('PASS 3 observed Expense edit/collection races; rollback releases the source without a paid lock.');
+  for (const name of ['receipt-collection-first', 'receipt-reservation-first', 'receipt-collection-rollback']) prepareExpense(name);
+  await race('receipt-collection-first', collectExpense('receipt-collection-first'),
+    reserveExpenseReceipt('receipt-collection-first'), 'commit', '42501');
+  assert.equal(sql("select count(*) from ledger_private.expense_attachment_uploads where expense_id='race-receipt-collection-first'"), '0');
+  await race('receipt-reservation-first', reserveExpenseReceipt('receipt-reservation-first'),
+    collectExpense('receipt-reservation-first'), 'commit');
+  assert.equal(sql("select revision||':'||final_amount_minor_units from ledger_private.expenses where id='race-receipt-reservation-first'"), '1:12345');
+  assert.equal(sql("select count(*) from ledger_private.expense_attachment_uploads where expense_id='race-receipt-reservation-first'"), '1');
+  // Exact retry may recover an already-reserved upload, but never adds a paid reference.
+  sql(`begin; ${reserveExpenseReceipt('receipt-reservation-first')} commit;`);
+  assert.equal(sql("select count(*) from ledger_private.expense_receipt_attachments where expense_id='race-receipt-reservation-first'"), '0');
+  await race('receipt-collection-rollback', collectExpense('receipt-collection-rollback'),
+    reserveExpenseReceipt('receipt-collection-rollback'), 'rollback');
+  assert.equal(sql("select count(*) from ledger_private.expense_attachment_uploads where expense_id='race-receipt-collection-rollback'"), '1');
+  console.log('PASS 3 observed receipt-reservation/collection races; reservations do not mutate paid receipt references.');
+  for (const name of ['receipt-link-first', 'receipt-link-paid', 'receipt-link-rollback']) prepareVerifiedExpenseReceipt(name);
+  await race('receipt-link-first', linkExpenseReceipt('receipt-link-first'), collectExpense('receipt-link-first'), 'commit', '23514');
+  assert.equal(sql("select phase from public.spike_operation_results where operation_id='edit-race-receipt-link-first'"), 'applied');
+  assert.equal(sql("select count(*) from ledger_private.expense_receipt_attachments where expense_id='race-receipt-link-first'"), '1');
+  await race('receipt-link-paid', collectExpense('receipt-link-paid'), linkExpenseReceipt('receipt-link-paid'), 'commit');
+  assert.equal(sql("select phase||':'||error_code from public.spike_operation_results where operation_id='edit-race-receipt-link-paid'"), 'rejected:expense_collected');
+  assert.equal(sql("select count(*) from ledger_private.expense_receipt_attachments where expense_id='race-receipt-link-paid'"), '0');
+  await race('receipt-link-rollback', collectExpense('receipt-link-rollback'), linkExpenseReceipt('receipt-link-rollback'), 'rollback');
+  assert.equal(sql("select phase from public.spike_operation_results where operation_id='edit-race-receipt-link-rollback'"), 'applied');
+  assert.equal(sql("select count(*) from ledger_private.expense_receipt_attachments where expense_id='race-receipt-link-rollback'"), '1');
+  console.log('PASS 3 observed verified-receipt edit RPC/collection races; synthetic verified objects, no Storage upload claim.');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

@@ -4,6 +4,33 @@ import Testing
 
 @Suite("Business-paid Expense entry data")
 struct BusinessPaidExpenseDraftTests {
+    @Test func recoveryDistinguishesExistingExpenseFromLegacyCreation() throws {
+        let existing = try AttachmentID(validating: "existing-receipt")
+        let context = try ExpenseEntryRecovery.EditContext(expectedRevision: 7, retainedAttachmentIds: [existing])
+        func recovery(_ edit: ExpenseEntryRecovery.EditContext?) throws -> ExpenseEntryRecovery {
+            .init(accountId: try .init(validating: "account"), projectId: try .init(validating: "project"),
+                expenseId: try .init(validating: "expense"), operationUUID: UUID(),
+                capturedAt: Date(timeIntervalSince1970: 100), vendor: "Vendor", date: Date(timeIntervalSince1970: 100),
+                amountText: "1.00", notes: "", categoryId: nil, lines: [],
+                attachmentIds: [try .init(validating: "new-receipt")], editContext: edit)
+        }
+        let edit = try recovery(context)
+        let bytes = try OperationContractCodec.encode(edit)
+        #expect(try OperationContractCodec.decode(ExpenseEntryRecovery.self, from: bytes) == edit)
+        let legacy = try recovery(nil)
+        let legacyBytes = try OperationContractCodec.encode(legacy)
+        #expect(!String(decoding: legacyBytes, as: UTF8.self).contains("editContext"))
+        #expect(try OperationContractCodec.decode(ExpenseEntryRecovery.self, from: legacyBytes).editContext == nil)
+        let invalid = String(decoding: bytes, as: UTF8.self)
+            .replacingOccurrences(of: "\"expectedRevision\":7", with: "\"expectedRevision\":0")
+        #expect(throws: EditExpenseCommand.Failure.invalidRevision) {
+            try OperationContractCodec.decode(ExpenseEntryRecovery.self, from: Data(invalid.utf8))
+        }
+        #expect(throws: BusinessPaidExpenseDraft.Failure.duplicateAttachment) {
+            try ExpenseEntryRecovery.EditContext(expectedRevision: 1, retainedAttachmentIds: [existing, existing])
+        }
+    }
+
     private func draft(amount: Int64 = 100, date: String = "2024-02-29",
                        attachments: [AttachmentID] = [], lines: [NonItemReceiptLine] = []) throws -> BusinessPaidExpenseDraft {
         try .init(accountId: .init(validating: "account"), projectId: .init(validating: "project"),

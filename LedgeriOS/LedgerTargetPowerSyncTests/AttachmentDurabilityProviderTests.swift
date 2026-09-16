@@ -60,6 +60,16 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         let command = try CreateExpenseCommand(operationId: ExpenseCreationOperationIdentity.make(accountId: receipt.scope.accountId, uuid: UUID()),
             actorPrincipalId: receipt.scope.principalId, capturedAt: Date(timeIntervalSince1970: 1_789_459_200), draft: draft)
         #expect(try await finalStore.verifiedExpenseReceipts(for: command) == [receipt.attachmentId])
+        let edit = try EditExpenseCommand(operationId: AccountBoundOperationIdentity.make(family: .expenseEdit,
+            accountId: receipt.scope.accountId, uuid: UUID()), actorPrincipalId: receipt.scope.principalId,
+            capturedAt: Date(timeIntervalSince1970: 1_789_459_200), expectedRevision: 1, entry: draft)
+        #expect(try await finalStore.verifiedExpenseReceipts(for: edit) == [receipt.attachmentId])
+        let wrongActor = try EditExpenseCommand(operationId: edit.envelope.operationId,
+            actorPrincipalId: .init(validating: "other-principal"), capturedAt: edit.envelope.clientCreatedAt,
+            expectedRevision: 1, entry: draft)
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.scopeMismatch) {
+            try await finalStore.verifiedExpenseReceipts(for: wrongActor)
+        }
         await #expect(throws: AttachmentCapturePowerSyncStoreFailure.replayMismatch) {
             try await finalStore.saveUploadProgress(.init(checkpoint: checkpoint, publication: nil), for: receipt)
         }

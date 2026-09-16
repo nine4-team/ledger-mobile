@@ -28,13 +28,14 @@ actor ExpenseCreationPowerSyncStore {
 
     /// Accept an edit intent without mutating downloaded authoritative facts.
     /// Collection may have happened while disconnected; the server checks it again.
-    func submit(_ command: EditExpenseCommand) async throws -> OperationReceipt {
+    func submit(_ command: EditExpenseCommand, expectedRecovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         let e = command.envelope, draft = e.payload.entry
         guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.scopeMismatch }
         guard AccountBoundOperationIdentity.isValid(e.operationId, family: .expenseEdit, accountId: accountId) else {
             throw Failure.invalidIdentity
         }
         let request = try EditExpenseUploadRequest(command)
+        let expectedJSON = try expectedRecovery.map { String(decoding: try OperationContractCodec.encode($0), as: UTF8.self) }
         let json = String(decoding: try OperationContractCodec.encode(e), as: UTF8.self)
         let instant = (now().timeIntervalSince1970 * 1000).rounded(.down)
         guard instant.isFinite, instant >= 0, instant < Double(Int64.max) else { throw Failure.invalidClock }
@@ -63,6 +64,16 @@ actor ExpenseCreationPowerSyncStore {
                         return OperationReceipt(operationId: e.operationId, localState: state)
                     }
             }
+            if let expectedRecovery {
+                guard expectedRecovery.accountId == account, expectedRecovery.projectId == draft.projectId,
+                      expectedRecovery.expenseId == draft.expenseId,
+                      expectedRecovery.editContext?.expectedRevision == e.payload.expectedRevision,
+                      try AccountBoundOperationIdentity.make(family: .expenseEdit, accountId: account,
+                        uuid: expectedRecovery.operationUUID) == e.operationId else { throw ExpenseEntryRecoveryFailure.staleEntry }
+                let current = try local.getOptional(sql: "SELECT entry_json FROM spike_expense_entry_recovery WHERE id=? AND account_id=? AND actor_principal_id=?",
+                    parameters: [draft.expenseId.rawValue,account.rawValue,principal.rawValue]) { try $0.getString(index: 0) }
+                guard current == expectedJSON else { throw ExpenseEntryRecoveryFailure.staleEntry }
+            }
             guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(draft.projectId,
                 account: account, principal: principal, in: local), project.lifecycle == .active,
                 project.client.lifecycle == .active else { throw Failure.unavailable }
@@ -77,8 +88,9 @@ actor ExpenseCreationPowerSyncStore {
             guard editable == 1 else { throw Failure.unavailable }
             let retained = try local.getAll(sql: "SELECT attachment_id FROM expense_receipt_attachments WHERE account_id=? AND expense_id=? ORDER BY position",
                 parameters: [account.rawValue, draft.expenseId.rawValue]) { try $0.getString(index: 0) }
-            // Receipt replacement stays unavailable until its media/retention path is implemented.
-            guard retained == draft.receiptAttachmentIds.map(\.rawValue) else { throw Failure.unavailable }
+            // Additions retain the original ordered references. Removal/reordering
+            // remains unavailable until its retention policy is approved.
+            guard draft.receiptAttachmentIds.map(\.rawValue).starts(with: retained) else { throw Failure.unavailable }
             let pending = try local.get(sql: """
                 SELECT count(*) FROM spike_local_operations WHERE account_id=? AND local_state IN ('queued','applying') AND
                   ((command_type IN ('create_expense','edit_expense') AND subject_id=?)
@@ -103,6 +115,7 @@ actor ExpenseCreationPowerSyncStore {
     }
 
     func submit(_ command: CreateExpenseCommand, expectedRecovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
+        guard expectedRecovery?.editContext == nil else { throw ExpenseEntryRecoveryFailure.staleEntry }
         let e = command.envelope, draft = e.payload
         guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.scopeMismatch }
         guard AccountBoundOperationIdentity.isValid(e.operationId, family: .expenseCreation, accountId: accountId) else {

@@ -222,18 +222,27 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testExpensePhotoSaveForLaterSurvivesAppRestart() throws {
+        try verifyExpensePhotoRecovery(editing: false)
+    }
+
+    func testExpenseEditPhotoSaveForLaterSurvivesAppRestart() throws {
+        try verifyExpensePhotoRecovery(editing: true)
+    }
+
+    private func verifyExpensePhotoRecovery(editing: Bool) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-transaction-capture", "--ledger-ui-test-expense-capture",
             "--capture-fixture-id=\(UUID().uuidString)"]
+        if editing { app.launchArguments.append("--ledger-ui-test-expense-edit-capture") }
         app.launch()
         defer { app.terminate() }
-        let create = app.buttons["New Expense"]
+        let create = app.buttons[editing ? "Edit Expense" : "New Expense"]
         XCTAssertTrue(create.waitForExistence(timeout: 15), app.debugDescription)
         create.tap()
         let vendor = app.textFields["Vendor"]
         XCTAssertTrue(vendor.waitForExistence(timeout: 5))
-        vendor.tap(); vendor.typeText("Retained photo expense")
+        if !editing { vendor.tap(); vendor.typeText("Retained photo expense") }
         let form = app.descendants(matching: .any)["target-expense-form"]
         let add = app.buttons["Add receipt"]
         reveal(add, in: app, within: form.scrollViews.firstMatch); add.tap()
@@ -252,8 +261,18 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(unfinished.waitForExistence(timeout: 15), app.debugDescription)
         unfinished.tap()
         XCTAssertTrue(remove.waitForExistence(timeout: 10), app.debugDescription)
-        XCTAssertEqual(vendor.value as? String, "Retained photo expense")
+        XCTAssertEqual(vendor.value as? String, editing ? "Original expense" : "Retained photo expense")
         XCTAssertFalse(app.buttons["Retry receipt recovery"].exists)
+        if editing {
+            app.buttons["Save"].tap()
+            let pending = app.staticTexts["capture-expense-edit-pending"]
+            XCTAssertTrue(pending.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertFalse(unfinished.exists)
+            app.terminate(); app.launch()
+            XCTAssertTrue(pending.waitForExistence(timeout: 15), app.debugDescription)
+            XCTAssertFalse(unfinished.exists)
+            return
+        }
         app.buttons["Save for later"].tap()
         XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
     }
@@ -864,7 +883,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testCollectedExpenseCannotOpenEditForm() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense", "--ledger-ui-test-paid-expense-saved-edit"]
         app.launch(); defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
@@ -874,6 +893,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(expense, in: app); XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
         XCTAssertTrue(app.staticTexts["Receipt vendor"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["target-expense-edit"].exists)
+        let retained = app.staticTexts.matching(NSPredicate(format: "label == %@",
+            "This Expense was collected after your edit was saved. Your saved details and receipt files are retained; they have not changed the collected Invoice.")).firstMatch
+        reveal(retained, in: app)
+        XCTAssertTrue(retained.exists)
     }
 
     func testPaidExpenseUsesExistingInvoicingStatusFilter() throws {
@@ -2742,7 +2765,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             #endif
             XCTAssertTrue(sale.waitForExistence(timeout: 5))
             sale.tap()
-            let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+            let project = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "UI Test Project")).firstMatch
             XCTAssertTrue(project.waitForExistence(timeout: 5))
             XCTAssertFalse(app.staticTexts["Archived UI Test Project"].exists)
             project.tap()
@@ -2788,7 +2811,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(item, in: app, fullyInsideScrollView: true); item.tap()
         app.descendants(matching: .any)["target-item-detail-actions"].tap()
         app.buttons["Sell to Project"].tap()
-        let project = app.buttons.containing(.staticText, identifier: "UI Test Project").firstMatch
+        let project = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "UI Test Project")).firstMatch
         XCTAssertTrue(project.waitForExistence(timeout: 5)); project.tap()
         let field = app.textFields["0.00"]
         XCTAssertTrue(field.waitForExistence(timeout: 5)); field.tap(); field.typeText("125.50")

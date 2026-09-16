@@ -105,11 +105,19 @@ private struct ExpenseCaptureUITestContent: View {
     @State private var creating = false
     @State private var recovery: ExpenseEntryRecovery?
     @State private var entries: [ExpenseEntryRecovery] = []
+    @State private var editing: ProjectExpenses.Expense?
+    @State private var pendingEdit = false
     @State private var failure: String?
+
+    private var isEditing: Bool {
+        ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-edit-capture")
+    }
 
     var body: some View {
         VStack {
-            Button("New Expense") { creating = true }
+            Button(isEditing ? "Edit Expense" : "New Expense") { creating = true }
+                .disabled(isEditing && editing == nil)
+            if pendingEdit { Text("Expense edit saved offline").accessibilityIdentifier("capture-expense-edit-pending") }
             ForEach(entries) { entry in
                 Button(entry.vendor.isEmpty ? "Unfinished Expense" : entry.vendor) { recovery = entry }
                     .accessibilityIdentifier("capture-unfinished-expense")
@@ -121,7 +129,9 @@ private struct ExpenseCaptureUITestContent: View {
         .task {
             do {
                 for try await value in runtime.watchExpenses(accountId: accountId, projectId: projectId) {
-                    entries = value?.unfinishedEntries ?? []
+                    entries = isEditing ? value?.unfinishedEdits ?? [] : value?.unfinishedEntries ?? []
+                    editing = isEditing ? value?.expenses.first : nil
+                    pendingEdit = !(value?.pendingEdits.isEmpty ?? true)
                 }
             } catch { failure = String(describing: error) }
         }
@@ -129,7 +139,7 @@ private struct ExpenseCaptureUITestContent: View {
 
     private func form(_ entry: ExpenseEntryRecovery?) -> some View {
         ExpenseCreationView(accountId: accountId, projectId: projectId,
-            currency: try! CurrencyCode(validating: "USD"), service: runtime, recovery: entry,
+            currency: try! CurrencyCode(validating: "USD"), service: runtime, recovery: entry, editing: editing,
             onSaved: { _ in })
     }
 }
