@@ -3836,7 +3836,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             if (viewer.value as? String) == "Image controls visible" && zoomIn.isHittable { return }
             Thread.sleep(forTimeInterval: 0.05)
         }
-        XCTFail("Single tap reveals image controls")
+        XCTFail("Single tap reveals image controls; viewer value=\(String(describing: viewer.value)), image frame=\(image.frame), image hittable=\(image.isHittable), zoom button exists=\(zoomIn.exists)\n\(app.debugDescription)")
     }
 
     private func assertImageCounter(_ expected: String, in app: XCUIApplication) {
