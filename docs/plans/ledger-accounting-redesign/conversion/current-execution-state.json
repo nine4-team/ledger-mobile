@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1277,
+  "stateVersion": 1280,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -59,10 +59,10 @@
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
-    "activeProcesses": {},
+    "activeProcesses": {"integrationCI":{"run":35156566635,"attempt":1,"commit":"a147da42a9b046a12a95f884bf0cf4ed6970746e","watchSession":90641,"log":"/tmp/ledger-ci-35156566635-watch.log","status":"in_progress"}},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "50511 hosted price native flow PASS /tmp/ledger-price-hosted-flow-fixed-20260916.log: offlineaccept/restart/retry/upload/readback, price=charge12347/payments0. QA permission restored none/session logout; labeled synthetic Item/Project retained.83772 no-access and42359 missing fixture timestamp fixed. NEXT coherent commit hosted extension/checkpoint, inspect CI selection before any push, Account onboarding hosted verification under own owner and continue approved workflow.82b544c6 local core commit;14957 hosted5migration deploy/readback111;83615 Auth leaked-password WARN. No live processes, private files untouched; no full-app readiness claim.",
-    "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
+    "immediateFollowup": "13684 fresh synthetic hosted onboarding PASS /tmp/ledger-hosted-onboarding-20260916.log: actual native create/select/sync4categories/offline reopen/logout. User926cfc05-f7c3-4a08-990a-520f53ed9c27+Account retained; credentials not printed. Harness/native extension uncommitted. CI35156566635 a147da42 watcher90641 remains; no duplicate run. NEXT review CI when actionable and continue approved Item editing/remaining workflow. Private files untouched.",
+    "nextVerification": "Supersedes dispatch instruction above: CI35156566635 attempt1 running for a147da42, watcher90641. No redispatch. Continue independent onboarding/approved work; review saved run on completion. Earlier UI failures retained; no Firebase merge. Local onboarding harness scripts/test-local-account-onboarding-concurrency.mjs is not hosted-ready; existing hosted QA member cannot prove empty discovery.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
     "nextWorkflowDecision": "Follow immediateFollowup and auth-online-entry-and-recovery-boundary; never print auth.json. Earlier session/platform gaps remain in their owning stories."

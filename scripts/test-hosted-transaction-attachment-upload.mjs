@@ -13,9 +13,10 @@ const returnFlow=process.argv.includes('--return-flow');
 const historyFlow=process.argv.includes('--history-flow');
 const sessionFlow=process.argv.includes('--session-flow');
 const priceFlow=process.argv.includes('--price-flow');
+const onboardingFlow=process.argv.includes('--onboarding-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),onboardingFlow?['--apply','--onboarding-flow']:priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -44,7 +45,29 @@ try {
   const memberships=await read('/rest/v1/spike_account_memberships?account_id=eq.'+account+'&select=principal_id,role,state,financial_access,can_manage_projects,can_manage_project_budgets');
   assert.deepEqual(memberships.map(({principal_id,role,state})=>({principal_id,role,state})),
     [{principal_id:auth.principalId,role:'owner',state:'active'}]);
-  if(priceFlow) {
+  if(onboardingFlow) {
+    const keys=spawnSync('npx',['--offline','--yes','supabase@2.116.0','projects','api-keys',
+      '--project-ref','ybwviepljilrkrjoahbl','--output','json'],{encoding:'utf8',timeout:30000});
+    assert.equal(keys.status,0,'QA admin credential lookup failed');
+    const admin=JSON.parse(keys.stdout).find(row=>row.name==='service_role')?.api_key;
+    assert.equal(typeof admin,'string');
+    const email='hosted-onboarding-'+crypto.randomUUID()+'@ledger-tests.invalid',password=crypto.randomUUID()+'-aA1!';
+    const created=await request('/auth/v1/admin/users',{method:'POST',headers:{apikey:admin,
+      Authorization:'Bearer '+admin,'content-type':'application/json'},body:JSON.stringify({email,password,email_confirm:true})});
+    assert.equal(created.status,200,'Synthetic onboarding user creation failed');
+    const user=await created.json();
+    assert.equal(user.email,email);
+    console.log(JSON.stringify({hostedOnboardingStarted:true,userId:user.id}));
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+      'AccountWorkspacePendingWorkRuntimeTests/localAccountOnboarding'],{encoding:'utf8',timeout:180000,env:{...process.env,
+        LEDGER_ONBOARDING_LOCAL:'1',LEDGER_ONBOARDING_HOSTED_QA:'1',LEDGER_ONBOARDING_EMAIL:email,
+        LEDGER_ONBOARDING_PASSWORD:password,LEDGER_ONBOARDING_KEY:apikey}});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted onboarding failed');
+    assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
+    console.log(JSON.stringify({hostedOnboardingPassed:true,userId:user.id,
+      retainedSyntheticAccount:true,sessionEndedByNativeTest:true}));
+  } else if(priceFlow) {
     if(memberships[0].financial_access==='none') {
       restoreHistoryAccess=true;
       const changed=historySQL(`update public.spike_account_memberships set financial_access='full'

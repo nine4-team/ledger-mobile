@@ -20,7 +20,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let password = try #require(env["LEDGER_ONBOARDING_PASSWORD"])
         let key = try #require(env["LEDGER_ONBOARDING_KEY"])
         guard email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
-        let url = URL(string: "http://127.0.0.1:54321")!
+        let hosted = env["LEDGER_ONBOARDING_HOSTED_QA"] == "1"
+        if hosted { guard email.hasPrefix("hosted-onboarding-") else { throw RuntimeInjectedFailure() } }
+        let url = URL(string: hosted ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
         let memory = CategoryAuthTestStorage()
         let admissions = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "admissions") },
             write: { memory.store(key: "admissions", value: $0) }, requireNotRemoved: { _ in })
@@ -41,7 +43,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let runtime = try await context.openRuntime(dependencies: .live)
         do {
             try await entry.startWorkspaceSync(runtime, authorization: authorization,
-                powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+                powerSyncURL: URL(string: hosted ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!)
             try await entry.rememberDownloadedWorkspace(authorization, account: created, runtime: runtime)
             try await runtime.close()
             let reopened = try await context.openRuntime(dependencies: .live)
