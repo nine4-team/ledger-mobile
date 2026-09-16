@@ -6,9 +6,10 @@ import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 
 assert.equal(process.cwd(),'/Users/benjaminmackenzie/Dev/ledger_mobile_supabase');
-const expenseFlow=process.argv.includes('--expense-flow');
+const expenseEditFlow=process.argv.includes('--expense-edit-flow');
+const expenseFlow=expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),expenseMode?['--apply',expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),expenseMode?['--apply',expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -59,21 +60,23 @@ try {
     const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
       'AccountWorkspacePendingWorkRuntimeTests/expenseLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
         LEDGER_EXPENSE_HOSTED_QA:'1',LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,
+        LEDGER_EXPENSE_LOCAL_EDIT:expenseEditFlow?'1':'0',LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:expenseEditFlow?'1':'0',
         LEDGER_SALE_LOCAL_ITEM:expense,LEDGER_SALE_LOCAL_PROJECT:project,LEDGER_SALE_LOCAL_KEY:apikey,
         LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password}});
     process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
     assert.equal(run.status,0,'Hosted native Expense creation/sync/restart failed');
     assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/,'Native flow must execute');
-    const created=await service.read({projectId:project,expenseId:expense+'-native'},context);
-    assert.equal(created.amountMinorUnits,'12345');assert.equal(created.notes,'Offline native creation');
-    assert.deepEqual(created.receiptAttachmentIds,[expense+'-offline-receipt']);
+    const created=await service.read({projectId:project,expenseId:expenseEditFlow?expense:expense+'-native'},context);
+    assert.equal(created.amountMinorUnits,'12345');assert.equal(created.notes,expenseEditFlow?'Offline edit':'Offline native creation');
+    assert.equal(created.revision,expenseEditFlow?'2':'1');
+    assert.deepEqual(created.receiptAttachmentIds,[expense+(expenseEditFlow?'-edit-native-receipt':'-offline-receipt')]);
     const receipt=await service.receipt({projectId:project,expenseId:created.expenseId,
       attachmentId:created.receiptAttachmentIds[0]},context);
-    assert.equal(Buffer.from(receipt.bytes).toString(),'%PDF-1.4\nOffline Expense receipt\n%%EOF\n');
+    assert.equal(Buffer.from(receipt.bytes).toString(),expenseEditFlow?'%PDF-1.4\nOffline added Expense receipt\n%%EOF\n':'%PDF-1.4\nOffline Expense receipt\n%%EOF\n');
     assert.equal((await service.invoice({projectId:project,expenseId:created.expenseId},context)).invoice,null);
     const transactions=await read('/rest/v1/spike_transactions?account_id=eq.'+account+'&project_id=eq.'+project+'&select=id');
     assert.deepEqual(transactions,[],'Expense creation must not invent a payment');
-    console.log(JSON.stringify({hostedExpenseFlow:true,project,expense:created.expenseId,
+    console.log(JSON.stringify({hostedExpenseFlow:true,expenseEditFlow,project,expense:created.expenseId,
       nativeOfflineRestart:true,realPowerSync:true,mcpReadback:true,receiptBytes:true,noPayment:true}));
   } else if(expenseMode) {
     assert.equal(memberships[0].financial_access,'full','Positive Expense test requires financial access; do not weaken authorization');

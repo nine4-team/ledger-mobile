@@ -1399,7 +1399,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         try await first.close()
         if env["LEDGER_EXPENSE_LOCAL_EDIT"] == "1" {
-            guard !hostedQA, env["LEDGER_EXPENSE_LOCAL_PAID"] != "1" else { throw RuntimeInjectedFailure() }
+            guard env["LEDGER_EXPENSE_LOCAL_PAID"] != "1" else { throw RuntimeInjectedFailure() }
             let offline = try await context.openRuntime()
             var receiptIds = source.receiptAttachmentIds
             var addedReceipt: AttachmentID?
