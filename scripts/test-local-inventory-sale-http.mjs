@@ -42,6 +42,9 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 // failure must not leave a signed-in fixture outside the cleanup block.
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
 const expenseMCP=process.argv.includes('--expense-mcp') ? await import('../LedgerTargetMCP/src/expenseCreation.ts') : null;
+const invoiceCreationMCP=process.argv.includes('--invoice-mcp') ? await import('../LedgerTargetMCP/src/invoiceCreation.ts') : null;
+assert.ok(!invoiceCreationMCP || (process.argv.includes('--expense') && process.argv.includes('--financial')
+    && !process.argv.includes('--native-invoice-create')), 'Invoice MCP requires the separate financial Expense fixture');
 const invoiceMCP=process.argv.includes('--expense-mcp') && process.argv.includes('--expense-paid')
     ? await import('../LedgerTargetMCP/src/collectedInvoiceRead.ts') : null;
 const invoiceReader=invoiceMCP ? new invoiceMCP.SupabaseCollectedInvoiceReader(new URL(local.API_URL),local.PUBLISHABLE_KEY) : null;
@@ -231,7 +234,7 @@ try {
                 assert.ok([401,403].includes(anonymous.status));
             }
         }
-        if(process.argv.includes('--native-live-invoice') && !process.argv.includes('--native-invoice-create')) {
+        if((process.argv.includes('--native-live-invoice') || invoiceCreationMCP) && !process.argv.includes('--native-invoice-create')) {
             assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--expense-edit') && !process.argv.includes('--native-expense'),
                 'Live Invoice replication requires the uncollected revision1 Expense fixture');
             const command = {operationId:key+'-invoice-op',accountId:account,actorPrincipalId:principal,
@@ -239,10 +242,22 @@ try {
                 createdAtMs:'1788523200000',name:'Live sync Invoice',notes:'External delivery',
                 sources:[{kind:'expense',sourceId:expense,expectedRevision:'1',amountMinorUnits:intent.amountMinorUnits,currency:intent.currency}]};
             const createBody = {p_command:JSON.stringify(command)};
+            let mcpResult;
+            if (invoiceCreationMCP) {
+                const request = invoiceCreationMCP.makeInvoiceCreationRequest({operationUUID:randomUUID(),
+                    clientCreatedAtMilliseconds:Number(command.createdAtMs), payload:{projectId:project,clientId:client,
+                        invoiceId:command.invoiceId,name:command.name,notes:command.notes,sources:command.sources}},context);
+                createBody.p_command = request.commandJSON;
+                const service = new invoiceCreationMCP.SupabaseInvoiceCreationService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+                mcpResult = await service.apply(request,context);
+                assert.equal(invoiceCreationMCP.validateInvoiceCreationResult(mcpResult,request).phase,'applied');
+                assert.deepEqual(await service.apply(request,context),mcpResult);
+            }
             const createdInvoice = await call('/rest/v1/rpc/spike_create_invoice',createBody,token);
             assert.equal(createdInvoice.status,200,await createdInvoice.clone().text());
             const createdResult = await createdInvoice.json();
             assert.equal(createdResult.result_code,'invoice_created');
+            if (mcpResult) assert.deepEqual(createdResult,mcpResult);
             assert.deepEqual(await (await call('/rest/v1/rpc/spike_create_invoice',createBody,token)).json(),createdResult);
             assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_create_invoice',createBody)).status));
             const response = await call('/rest/v1/rpc/spike_read_live_invoice',
@@ -283,7 +298,7 @@ try {
             const removed=await call('/functions/v1/verify-expense-attachment',{attachmentId:receiptAttachmentIds[0]},token);
             assert.equal(removed.status,404,'removed member cannot reuse verifier admission');
         }
-        console.log(JSON.stringify({authenticatedExpense:true,exactInt64:true,replay:true,changedReplayDenied:true,
+        console.log(JSON.stringify({authenticatedExpense:true,invoiceCreationMCP:!!invoiceCreationMCP,exactInt64:true,replay:true,changedReplayDenied:true,
             noPayment:!process.argv.includes('--expense-paid'),anonymousDenied:true,removedMemberDenied:true,verifiedReceiptBytes:receiptAttachmentIds.length>0,
             nativeScheduledReceipt:process.argv.includes('--native-expense'),nativeOfflineEdit:process.argv.includes('--native-expense-edit'),mcpCommand:!!expenseRequest,
             seededPaidInvoice:process.argv.includes('--expense-paid'),directInvoiceMCP:!!invoiceReader,

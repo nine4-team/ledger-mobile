@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 995,
+  "stateVersion": 996,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Original Invoice form adaptation tested: search/exact failed-save retry13016 and source-change/access-loss10768 PASS. Parent-owned observable draft fixes sheet recreation loss; collapsed-section test assertion fixed (failures preserved in invoice-build-edit). Existing MultiStepFormSheet reused. Next MCP create (expenseCreation.ts pattern, server.ts/stdio.ts registration), then Fee creation/cap/live PDF and integrated review. No passing-context reruns. Unsubmitted form state memory-only; accepted queue durable. Editing/manual adjustments/credit selection unfinished. No hosted Invoice deploy. Local20260916054042 direct/no history;37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
+    "immediateFollowup": "4c794c29 saved original-form adaptation. MCP create now implemented/registered; typecheck+focused7 tests12616/full consumers passed; real local provider create/exact replay/read/no-payment58295 passed. Evidence invoice-build-edit. Next coherent integration review, MCP eligible-source discovery and Fee creation/cap/live PDF dependencies; no passing-context reruns. Form search/retry13016 and changed-source/withdrawal10768 already pass. Unsubmitted form memory-only; accepted queue durable. Editing/manual adjustments/credit selection unfinished. No hosted Invoice deploy. Local20260916054042 direct/no history;37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
     "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
   }
 }
