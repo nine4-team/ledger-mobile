@@ -132,7 +132,17 @@ function linkExpenseReceipt(name) {
     select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
     select public.spike_edit_expense('${command}'); reset role;`;
 }
-function collectExpense(name) {
+function createInvoice(name, suffix) {
+  const command = JSON.stringify({ operationId: `invoice-${source(name)}-${suffix}`, accountId: 'account-primary',
+    actorPrincipalId: 'principal-owner', projectId: 'race-project', clientId: 'client-existing',
+    invoiceId: `invoice-${source(name)}-${suffix}`, contractVersion: 'invoice-create-v1', createdAtMs: '1000',
+    name: 'Synthetic race Invoice', notes: '', sources: [{kind: 'expense', sourceId: source(name),
+      expectedRevision: '1', amountMinorUnits: '12345', currency: 'USD'}] });
+  // Private handler until the full source set and endpoint are implemented.
+  return `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+    select ledger_private.create_live_invoice('${command}');`;
+}
+function collectExpense(name, kind = 'expense', category = 'category-system') {
   const id = source(name);
   return `select ledger_private.import_client_payment('payment-${id}','account-primary','race-project','client-existing',
     12345,'USD','synthetic-expense-race','${id}','\\x01'::bytea);
@@ -140,7 +150,7 @@ function collectExpense(name) {
     values('invoice-${id}','account-primary','race-project','client-existing','payment-${id}',1,'USD',12345);
     insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,
       source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
-    values('line-${id}','account-primary','invoice-${id}',0,'USD','expense','${id}',1,'category-system',12345,'Synthetic','{}');
+    values('line-${id}','account-primary','invoice-${id}',0,'USD','${kind}','${id}',1,'${category}',12345,'Synthetic','{}');
     update ledger_private.collected_invoices set sealed=true where id='invoice-${id}'; set constraints all immediate;`;
 }
 let created = false;
@@ -248,6 +258,29 @@ try {
   assert.equal(sql("select phase from public.spike_operation_results where operation_id='edit-race-receipt-link-rollback'"), 'applied');
   assert.equal(sql("select count(*) from ledger_private.expense_receipt_attachments where expense_id='race-receipt-link-rollback'"), '1');
   console.log('PASS 3 observed verified-receipt edit RPC/collection races; synthetic verified objects, no Storage upload claim.');
+  for (const name of ['invoice-compete','invoice-rollback','invoice-source-edit','invoice-source-paid']) prepareExpense(name);
+  await race('invoice-compete', createInvoice('invoice-compete','first'), createInvoice('invoice-compete','second'), 'commit');
+  assert.equal(sql("select phase||':'||error_code from public.spike_operation_results where operation_id='invoice-race-invoice-compete-second'"), 'rejected:invoice_source_reserved');
+  assert.equal(sql("select count(*) from ledger_private.live_invoice_memberships where source_id='race-invoice-compete'"), '1');
+  await race('invoice-rollback', createInvoice('invoice-rollback','first'), createInvoice('invoice-rollback','second'), 'rollback');
+  assert.equal(sql("select phase from public.spike_operation_results where operation_id='invoice-race-invoice-rollback-second'"), 'applied');
+  await race('invoice-source-edit', editExpense('invoice-source-edit'), createInvoice('invoice-source-edit','first'), 'commit');
+  assert.equal(sql("select error_code from public.spike_operation_results where operation_id='invoice-race-invoice-source-edit-first'"), 'invoice_source_changed');
+  await race('invoice-source-paid', collectExpense('invoice-source-paid'), createInvoice('invoice-source-paid','first'), 'commit');
+  assert.equal(sql("select error_code from public.spike_operation_results where operation_id='invoice-race-invoice-source-paid-first'"), 'invoice_source_collected');
+  console.log('PASS 4 observed live Invoice creation/source races; private handler, not public endpoint proof.');
+  for (const name of ['fee-edit-first','fee-paid-first','fee-paid-rollback']) {
+    sql(`insert into ledger_private.fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency,created_at,created_by_principal_id)
+      values('${source(name)}','account-primary','race-project','category-design-fee','Design fee',12345,'USD',now(),'principal-owner');`);
+  }
+  const editFee = name => `update ledger_private.fee_installments set amount_minor_units=12346,revision=2 where id='${source(name)}';`;
+  const collectFee = name => collectExpense(name, 'fee_installment', 'category-design-fee');
+  await race('fee-edit-first', editFee('fee-edit-first'), collectFee('fee-edit-first'), 'commit', '23514');
+  await race('fee-paid-first', collectFee('fee-paid-first'), editFee('fee-paid-first'), 'commit', '23514');
+  assert.equal(sql("select amount_minor_units from ledger_private.fee_installments where id='race-fee-paid-first'"), '12345');
+  await race('fee-paid-rollback', collectFee('fee-paid-rollback'), editFee('fee-paid-rollback'), 'rollback');
+  assert.equal(sql("select revision from ledger_private.fee_installments where id='race-fee-paid-rollback'"), '2');
+  console.log('PASS 3 observed Fee edit/collection races; no user-facing Fee writer claimed.');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

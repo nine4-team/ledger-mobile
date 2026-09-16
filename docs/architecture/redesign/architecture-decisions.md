@@ -3767,3 +3767,20 @@ Actual native upload/readback and encrypted restart tests passed, as did the loc
 SQL authorization/verified-receipt cases. The Expense lifecycle checklist owns
 the precise evidence and remaining UI, migration and integration checks. These
 local results are not hosted or cutover-readiness claims.
+
+### 2026-09-15 — Live Invoice membership separates selection from settlement
+
+Live Invoice headers and ordered memberships identify Item charge occurrences,
+Expenses and Fee installments. They do not copy source amounts or category values:
+live reads resolve those facts, while the existing frozen Invoice tables remain
+the paid authority. A reviewed selection carries revision and amount evidence
+for the command to revalidate, not another stored accounting balance.
+
+An active-source unique index prevents competing Invoice membership. Released
+membership can retain provenance; paid membership remains reserved because a later
+Item return/resale uses a different occurrence. This storage capability does not
+decide cancellation, sent-membership changes or credit/zero settlement policy.
+The initial schema has no API grants. The writer still needs source existence,
+Project scope, eligibility, authorization and lock-order checks, and Fee source
+integration remains unfinished. Existing CreateInvoiceModal presentation is the
+reuse boundary; no replacement Invoice wizard is authorized by these tables.

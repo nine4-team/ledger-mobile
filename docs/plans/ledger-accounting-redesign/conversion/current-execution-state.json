@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 972,
+  "stateVersion": 976,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Receipt checkpoint74d3228f committed locally; hosted Expense edit+PDF/offline/restart/PowerSync/MCP PASS24030 native8.563s /tmp/ledger-hosted-expense-edit-media.log. All88hosted migrations now source-version aligned; seven new migrations applied, do not reapply. QA permissions restored none/false/false. Evidence under expense-edit-lifecycle. Next remaining Invoice lifecycle/live-status authority and coherent integration/CI review; do not repeat passing receipt checks. O-023 removal separate; collection equality unanswered. Mac automation unavailable/no unchanged retry. Local five20260916migrations applied directly without history; no reset. Earlier CI failures/full app readiness open; leaked-password Auth warning retained.",
+    "immediateFollowup": "Invoice private handler now resolves Item/Expense/Fee sources; mixed/paid-source SQL1734 PASS55151. Fee source migration20260916050037 LOCAL direct;91migration replay and3Fee races plus previous creation/accounting races PASS35305, advisors78284 clean. Next live Invoice query/API/queue/MCP and reused CreateInvoiceModal; Fee installment creation/cap validation under fee-demand-lifecycle remains dependency. No member endpoint yet. Preserve core/wire evidence; no repeat checks for context. Receipt74d3228f/40670559 local, hosted88migrations, QA restored. Collection equality/O-023/sent/zero unresolved. Mac automation unavailable. Eight20260916local migrations direct/no history; no reset. Earlier CI/full readiness/leaked-password warning remain.",
     "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
   }
 }
