@@ -1502,6 +1502,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let add = app.buttons["Add Expenses"]
         XCTAssertTrue(add.waitForExistence(timeout: 5)); add.tap()
         let vendor = app.textFields["Vendor"]
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        vendor.tap(); vendor.typeText("Canceled vendor")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(add.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Expense saved on this device (queued). It appears here after sync."].exists)
+        add.tap()
+        XCTAssertTrue(vendor.waitForExistence(timeout: 5))
+        XCTAssertNotEqual(vendor.value as? String, "Canceled vendor")
         XCTAssertTrue(vendor.waitForExistence(timeout: 5)); vendor.tap(); vendor.typeText("Current vendor")
         let amount = app.textFields["0.00"]
         amount.tap(); amount.typeText("125.50")
