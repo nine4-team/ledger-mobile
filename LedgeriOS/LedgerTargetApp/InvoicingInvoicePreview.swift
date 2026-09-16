@@ -79,7 +79,7 @@ struct InvoicingInvoicePreview: View {
                 }
                 .accessibilityLabel("Download Invoice")
                 .accessibilityIdentifier("target-invoice-download")
-                .disabled(exporting || invoice == nil || profile == nil)
+                .disabled(exporting || (invoice == nil && liveInvoice == nil) || profile == nil)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -133,6 +133,9 @@ struct InvoicingInvoicePreview: View {
         }
         .onChange(of: invoice == nil) { _, unavailable in
             if unavailable { exportTask?.cancel() }
+        }
+        .onChange(of: liveInvoice) { _, _ in
+            if exporting { exportTask?.cancel() }
         }
         .task {
             do {
@@ -195,8 +198,10 @@ struct InvoicingInvoicePreview: View {
     }
 
     private func download() {
-        guard !exporting, let report, let invoice, let profile,
+        guard !exporting, let profile,
               let profileReader = runtime as? any AccountBusinessProfileReading else { return }
+        let report = report, invoice = invoice, live = liveInvoice
+        guard invoice != nil || live != nil else { return }
         let renderedCategoryNames = categoryNames
         exporting = true
         exportTask = Task { @MainActor in
@@ -211,12 +216,21 @@ struct InvoicingInvoicePreview: View {
                     logoBase64 = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.base64EncodedString()
                     #endif
                 } else { logoBase64 = nil }
-                let html = ReportHTMLBuilder.invoice(data: reportData(invoice), projectName: projectName,
+                let html: String
+                if let invoice, let report {
+                    html = ReportHTMLBuilder.invoice(data: reportData(invoice), projectName: projectName,
                     clientName: clientName, businessName: profile.name.rawValue, logoBase64: logoBase64,
                     invoiceName: invoice.displayMetadata?.invoiceNumber, invoiceStatusLabel: "Paid",
                     invoiceDate: invoice.displayMetadata?.displayDate, notes: invoice.displayMetadata?.notes,
                     currencyCode: invoice.total.currency.rawValue, totalLabel: "Invoice Total",
                     provenance: "\(provenance(invoice, evidence: report.provenance)) \(brandingNotice ?? "")")
+                } else if let live {
+                    html = ReportHTMLBuilder.invoice(data: liveReportData(live), projectName: projectName,
+                        clientName: clientName, businessName: profile.name.rawValue, logoBase64: logoBase64,
+                        invoiceName: live.name, invoiceStatusLabel: live.status.rawValue.capitalized,
+                        invoiceDate: nil, notes: live.notes, currencyCode: live.total.currency.rawValue,
+                        totalLabel: "Invoice Total", provenance: "Live Invoice \(live.invoiceId.rawValue), revision \(live.revision). Downloaded source values; not collected. \(brandingNotice ?? "")")
+                } else { throw CollectedInvoiceReportDeliveryFailure.snapshotChanged }
                 let bytes: Data
                 #if os(macOS)
                 let scratch = try ReportScratchStore()
@@ -233,20 +247,35 @@ struct InvoicingInvoicePreview: View {
                 #else
                 bytes = try await ReportPDFSharing.renderData(html: html)
                 #endif
-                try await CollectedInvoiceReportDelivery.deliver(data: bytes, invoice: invoice, reader: runtime) { url in
+                let handoff: @MainActor (URL) async throws -> Void = { url in
                     try await PDFDownloadHelper.downloadAndWait(url: url,
-                        fileName: "invoice-\(invoice.displayMetadata?.invoiceNumber ?? projectName).pdf") {
-                        let current = try await runtime.readCollectedInvoiceReport(accountId: accountId,
-                            projectId: projectId, invoiceId: invoiceId, asOf: report.provenance.asOf)
-                        guard self.invoice == invoice, self.categoryNames == renderedCategoryNames,
-                              try await profileReader.readAccountBusinessProfile(accountId: accountId).matchesExportedBranding(profile),
-                              current.invoice == report.invoice,
-                              current.provenance.localDataVersion == report.provenance.localDataVersion,
-                              current.provenance.visibilityScopeID == report.provenance.visibilityScopeID else {
+                        fileName: "invoice-\(invoice?.displayMetadata?.invoiceNumber ?? projectName).pdf") {
+                        guard self.categoryNames == renderedCategoryNames,
+                              try await profileReader.readAccountBusinessProfile(accountId: accountId).matchesExportedBranding(profile) else {
                             throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
                         }
+                        if let invoice, let report {
+                            let current = try await runtime.readCollectedInvoiceReport(accountId: accountId,
+                                projectId: projectId, invoiceId: invoiceId, asOf: report.provenance.asOf)
+                            guard self.invoice == invoice, current.invoice == report.invoice,
+                                  current.provenance.localDataVersion == report.provenance.localDataVersion,
+                                  current.provenance.visibilityScopeID == report.provenance.visibilityScopeID else {
+                                throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
+                            }
+                        } else if let live, let reader = runtime as? any ProjectLiveInvoiceReading {
+                            guard self.liveInvoice == live,
+                                  try await reader.readLiveInvoices(accountId: accountId, projectId: projectId)
+                                    .first(where: { $0.invoiceId == invoiceId }) == live else {
+                                throw CollectedInvoiceReportDeliveryFailure.snapshotChanged
+                            }
+                        } else { throw CollectedInvoiceReportDeliveryFailure.snapshotChanged }
                     }
                 }
+                if let invoice {
+                    try await CollectedInvoiceReportDelivery.deliver(data: bytes, invoice: invoice, reader: runtime, handoff: handoff)
+                } else if let live, let reader = runtime as? any ProjectLiveInvoiceReading {
+                    try await CollectedInvoiceReportDelivery.deliver(data: bytes, invoice: live, reader: reader, handoff: handoff)
+                } else { throw CollectedInvoiceReportDeliveryFailure.snapshotChanged }
             } catch is CancellationError { }
             catch let error as ReportPDFSharing.RenderFailure {
                 switch error {

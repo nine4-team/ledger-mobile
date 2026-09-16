@@ -616,6 +616,10 @@ if (
     "watchInventorySale", "sellInventoryItems", "createExpense", "editExpense", "expenseAttachmentCaptureScope",
     "saveExpenseEntry", "restoreExpenseEntryCaptures", "readExpenses",
     "readCollectedInvoiceReport", "readCollectedInvoices", "watchCollectedInvoices",
+    "readLiveInvoices", "watchLiveInvoices", "readFeeCreationCategories",
+    "readPendingFeeCreations", "readFeeBrowsingReview", "createFeeInstallment",
+    "createInvoice", "reviseCreatedInvoice", "readPendingInvoiceRevisions",
+    "readPendingInvoiceCreations", "readInvoiceCreationReview",
     "loadExpenseReceipt", "watchExpenses", "transactionAttachmentCaptureScope",
     "captureTransactionAttachment", "publishTransactionAttachment", "rejectTransactionAttachmentUIFixture",
     "archive",
@@ -2651,6 +2655,7 @@ const localOperationAcceptingStores = [
   ["InventorySalePowerSyncStore", "InventorySalePowerSyncStore.swift", "sellInventoryItems"],
   ["ExpenseCreationPowerSyncStore", "ExpenseCreationPowerSyncStore.swift", "createExpense"],
   ["InvoiceCreationPowerSyncStore", "InvoiceCreationPowerSyncStore.swift", "createInvoice"],
+  ["FeeCreationPowerSyncStore", "FeeCreationPowerSyncStore.swift", "createFeeInstallment"],
 ];
 if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
   fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
@@ -2690,7 +2695,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "expenseCommands", "invoiceCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "expenseCommands", "invoiceCommands", "feeCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,
@@ -2725,9 +2730,15 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     const code = (swiftWithoutComments(source) ?? "").replace(/\s+/g, "");
     const guardIndex = code.indexOf("LocalOperationIdentityGuard.inspect(");
     const firstWriteIndex = code.indexOf("INSERTINTO");
+    // Invoice creation and revision share one guarded writer; both retain their
+    // distinct command family rather than masquerading as a creation.
+    const expectedFamilyPresent = provider === "InvoiceCreationPowerSyncStore"
+      ? code.includes("letfamily:LocalOperationCommandFamily=revision==nil?.createInvoice:.reviseCreatedInvoice") &&
+        code.includes("expectedFamily:family")
+      : code.includes(`expectedFamily:.${family}`);
     if (
       guardIndex < 0 || firstWriteIndex < 0 || guardIndex >= firstWriteIndex ||
-      !code.includes(`expectedFamily:.${family}`) ||
+      !expectedFamilyPresent ||
       !/writeTransaction\{(?:transaction|local)in/.test(code)
     ) {
       fail("target_local_operation_identity_guard_before_write", provider);

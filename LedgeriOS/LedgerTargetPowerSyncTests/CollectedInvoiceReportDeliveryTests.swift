@@ -7,6 +7,49 @@ import Testing
 @Suite("Collected Invoice authorized PDF delivery") @MainActor
 struct CollectedInvoiceReportDeliveryTests {
     enum Failure: Error { case denied, unused, handoff }
+    struct LiveReader: ProjectLiveInvoiceReading {
+        let invoices: [LiveInvoiceContents]?
+        func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
+            guard let invoices else { throw Failure.denied }
+            return invoices
+        }
+        func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error> {
+            .init { $0.finish() }
+        }
+    }
+    @Test func liveSourceChangeWithoutHeaderRevisionCannotExport() async throws {
+        func invoice(amount: Int64, name: String = "Live", notes: String = "",
+                     description: String = "Expense", sourceId: String = "expense",
+                     accountId: String = "account") throws -> LiveInvoiceContents {
+            let money = try Money(minorUnits: amount, currency: .init(validating: "USD"))
+            return try .init(invoiceId: .init(validating: "live"), revision: 1, status: .created, name: name, notes: notes,
+                scope: .project(accountId: .init(validating: accountId), projectId: .init(validating: "project"), clientId: .init(validating: "client")),
+                lines: [.init(selection: .init(source: .expense(.init(validating: sourceId)), expectedRevision: 1,
+                    reviewedAmount: money), categoryId: .init(validating: "category"), description: description)], reportedTotal: money)
+        }
+        let rendered = try invoice(amount: 100), changed = try invoice(amount: 101)
+        let unavailable: [[LiveInvoiceContents]?] = try [
+            [changed], [invoice(amount: 100, name: "Renamed")],
+            [invoice(amount: 100, notes: "Changed terms")],
+            [invoice(amount: 100, description: "Changed vendor")],
+            [invoice(amount: 100, sourceId: "replacement-expense")],
+            [invoice(amount: 100, accountId: "other-account")], [], nil,
+        ]
+        for available in unavailable {
+            await #expect(throws: (any Error).self) {
+                try await CollectedInvoiceReportDelivery.deliver(data: Data("%PDF-live".utf8), invoice: rendered,
+                    reader: LiveReader(invoices: available)) { _ in Issue.record("Stale or unauthorized live export") }
+            }
+        }
+        var delivered: URL?
+        try await CollectedInvoiceReportDelivery.deliver(data: Data("%PDF-live".utf8), invoice: rendered,
+            reader: LiveReader(invoices: [rendered])) { url in
+                delivered = url
+                let actual = try Data(contentsOf: url)
+                #expect(actual == Data("%PDF-live".utf8))
+            }
+        #expect(!FileManager.default.fileExists(atPath: try #require(delivered).path))
+    }
     struct Reader: ProjectInvoicingReading {
         var invoices: [FrozenInvoiceContents]?
         var read: (@Sendable () async throws -> [FrozenInvoiceContents])? = nil

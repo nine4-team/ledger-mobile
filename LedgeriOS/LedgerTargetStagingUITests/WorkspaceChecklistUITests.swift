@@ -793,7 +793,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["target-live-invoice-preview"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Invoice Total"].exists)
         XCTAssertTrue(app.staticTexts["Receipt vendor"].exists)
-        XCTAssertFalse(app.buttons["target-invoice-download"].isEnabled)
+        XCTAssertTrue(waitUntil { app.buttons["target-invoice-download"].isEnabled })
         #if os(iOS)
         XCUIDevice.shared.press(.home); app.activate()
         XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5))
@@ -916,9 +916,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testCollectedInvoiceDownloadCancellation() throws {
         try exerciseCollectedInvoiceDownload(save: false)
     }
+    func testLiveInvoiceDownloadCancellation() throws {
+        try exerciseCollectedInvoiceDownload(save: false, live: true)
+    }
 
     func testCollectedInvoiceDownloadSave() throws {
         try exerciseCollectedInvoiceDownload(save: true)
+    }
+
+    func testLiveInvoiceDownloadSave() throws {
+        try exerciseCollectedInvoiceDownload(save: true, live: true)
     }
 
     #if os(macOS)
@@ -1058,11 +1065,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
-    private func exerciseCollectedInvoiceDownload(save: Bool, retry: Bool = false) throws {
+    private func exerciseCollectedInvoiceDownload(save: Bool, retry: Bool = false, live: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense"]
-        if save { app.launchArguments.append("--ledger-ui-test-long-invoice") }
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", live ? "--ledger-ui-test-live-invoice" : "--ledger-ui-test-paid-expense"]
+        if save && !live { app.launchArguments.append("--ledger-ui-test-long-invoice") }
         if retry { app.launchArguments.append("--ledger-ui-test-invoice-export-retry") }
         app.launch(); defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -1078,7 +1085,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(section, in: app)
         #endif
         section.tap()
-        let row = app.descendants(matching: .any)["target-invoicing-invoice-paid-expense-invoice"].firstMatch
+        let row = app.descendants(matching: .any)[live ? "target-invoicing-invoice-live-invoice-ui-test" : "target-invoicing-invoice-paid-expense-invoice"].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 5)); row.tap()
         let download = app.buttons["target-invoice-download"]
         XCTAssertTrue(download.waitForExistence(timeout: 5))
@@ -1086,7 +1093,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Net Amount Due"].exists)
         XCTAssertTrue(app.staticTexts["Shipping"].firstMatch.waitForExistence(timeout: 5),
             "Invoice lines should use the downloaded category name")
-        let paymentText = "Collected by Purchase paid-expense-payment"
+        let paymentText = live ? "Not collected." : "Collected by Purchase paid-expense-payment"
         let paymentEvidence = app.descendants(matching: .any)["invoice-report-provenance"].firstMatch
         XCTAssertTrue(paymentEvidence.waitForExistence(timeout: 5),
             "The Invoice must retain its actual collection Purchase connection")
@@ -1099,7 +1106,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
             let panel = app.windows["save-panel"]
             let name = panel.textFields["saveAsNameTextField"]
             XCTAssertTrue(name.waitForExistence(timeout: 15))
-            XCTAssertTrue((name.value as? String)?.hasPrefix("invoice-INV-UI-001") == true)
+            let fileName = live ? "invoice-UI Test Project" : "invoice-INV-UI-001"
+            XCTAssertTrue((name.value as? String)?.hasPrefix(fileName) == true)
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-invoice-save-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
             defer { try? FileManager.default.removeItem(at: directory) }
@@ -1110,7 +1118,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             path.typeText(directory.path + "/")
             app.typeKey(.return, modifierFlags: [])
             panel.buttons["OKButton"].tap()
-            let destination = directory.appendingPathComponent("invoice-INV-UI-001.pdf")
+            let destination = directory.appendingPathComponent(fileName + ".pdf")
             if retry && attempt == 0 {
                 let failure = app.sheets["alert"]
                 XCTAssertTrue(failure.waitForExistence(timeout: 5))
@@ -1128,8 +1136,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
             savedPDF.name = "Invoice saved PDF"
             savedPDF.lifetime = .keepAlways
             add(savedPDF)
-            XCTAssertGreaterThan(document.pageCount, 1)
             let text = try XCTUnwrap(document.string).split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            XCTAssertTrue(text.contains("Invoice Total") && !text.contains("Net Amount Due"))
+            if live {
+                XCTAssertGreaterThanOrEqual(document.pageCount, 1)
+                for expected in ["Live Invoice", "Receipt vendor", "Shipping", "125.50", "Sent outside Ledger", "live-invoice-ui-test", "not collected"] {
+                    XCTAssertTrue(text.contains(expected), "Missing live Invoice content: \(expected)")
+                }
+                XCTAssertFalse(text.contains("paid-expense-payment"))
+            } else {
+            XCTAssertGreaterThan(document.pageCount, 1)
             for index in 0..<80 {
                 XCTAssertTrue(text.contains(String(format: "Invoice row %03d", index)))
             }
@@ -1140,6 +1156,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(text.contains("Last completed sync (UTC milliseconds): 1000"))
             XCTAssertTrue(text.contains("Report read (UTC milliseconds):"))
             XCTAssertTrue(text.contains("Accounting: collected-invoice-v1"))
+            }
             }
             #else
             let saveButton = app.buttons["Save"].firstMatch
