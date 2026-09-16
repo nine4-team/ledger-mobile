@@ -292,22 +292,6 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 Button("Notes") { model.openNotesTab() }
                     .accessibilityIdentifier("target-active-project-notes-tab")
                     .accessibilityHint("Opens note history for this Project")
-                Button("Review Vendor PDF") {
-                    model.openVendorDocumentReview()
-                }
-                    .accessibilityIdentifier("target-vendor-pdf-open")
-                    .sheet(isPresented: Binding(
-                        get: { model.vendorDocumentReview != nil },
-                        set: { if !$0 { model.closeVendorDocumentReview() } }
-                    )) {
-                        NavigationStack {
-                            if let vendorReview = model.vendorDocumentReview {
-                                LocalVendorDocumentReviewView(review: vendorReview, categoryWatch: model.categoryWatch)
-                                    .id(projectId)
-                            }
-                        }
-                        .frame(minWidth: 320, minHeight: 400)
-                    }
                 if let reader = model.itemReader {
                     DownloadedItemsView(accountId: model.accountId, scope: .project(projectId), reader: reader,
                         spaceNavigation: itemSpaceNavigation)

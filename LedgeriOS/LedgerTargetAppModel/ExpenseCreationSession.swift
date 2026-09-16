@@ -160,6 +160,9 @@ public final class ExpenseCreationSession {
     }
 
     public func persistEntry(_ entry: ExpenseEntryRecovery) async throws {
+        guard Set(unconfirmedReceiptIds).isSubset(of: Set(entry.attachmentIds)) else {
+            throw Failure.invalidCaptures
+        }
         try await service.saveExpenseEntry(entry, replacing: savedEntry)
         savedEntry = entry
     }

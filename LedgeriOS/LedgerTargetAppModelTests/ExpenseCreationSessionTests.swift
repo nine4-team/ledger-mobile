@@ -23,6 +23,15 @@ struct ExpenseCreationSessionTests {
         #expect(session.savedEntry == entry)
         #expect(session.receiptCaptures.isEmpty)
         #expect(session.unconfirmedReceiptIds == entry.attachmentIds)
+        var missingReference = entry
+        missingReference.attachmentIds = []
+        await #expect(throws: ExpenseCreationSession.Failure.invalidCaptures) {
+            try await session.persistEntry(missingReference)
+        }
+        #expect(await service.savedEntries.isEmpty)
+        #expect(session.savedEntry == entry)
+        try await session.persistEntry(entry)
+        #expect(await service.savedEntries == [entry])
         try await session.restore(entry)
         #expect(session.vendor == entry.vendor)
         #expect(session.receiptCaptures == [capture])
@@ -149,11 +158,19 @@ struct ExpenseCreationSessionTests {
         #expect(session.unconfirmedReceiptIds.count == 1)
         #expect(session.hasStoredReceiptFiles) // An uncertain persistence result must still warn on close.
         #expect(!session.hasAttempt)
-        try await session.addReceipt(bytes: output as Data, fileName: "Receipt.pdf", projectId: project, expenseId: expense)
+        try await session.addReceipt(bytes: output as Data, fileName: "Receipt.pdf", projectId: project, expenseId: expense,
+            beforeCapture: { capture in
+                let entry = ExpenseEntryRecovery(accountId: capture.scope.accountId, projectId: project,
+                    expenseId: expense, operationUUID: UUID(), capturedAt: Date(), vendor: "Vendor", date: Date(),
+                    amountText: "12.50", notes: "", categoryId: nil, lines: [],
+                    attachmentIds: session.unconfirmedReceiptIds + [capture.attachmentId])
+                try await session.persistEntry(entry)
+            })
         let capture = try #require(session.receiptCaptures.first)
         #expect(capture.bytes == output as Data)
         #expect(capture.scope.parent.id.rawValue == expense.rawValue)
-        #expect(await service.events == ["capture", "capture"])
+        #expect(await service.events == ["capture", "entry", "capture"])
+        #expect(session.savedEntry?.attachmentIds == session.unconfirmedReceiptIds + [capture.attachmentId])
         #expect(session.unconfirmedReceiptIds.count == 1) // A different successful selection cannot erase the uncertain file.
         session.removeReceipt(capture.attachmentId)
         #expect(session.receiptCaptures.isEmpty)
