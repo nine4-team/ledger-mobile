@@ -52,6 +52,58 @@ struct FirebaseInvoiceSettlementReviewTests {
                 projectId: try ProjectID(validating: "target-project"), clientId: try ClientID(validating: "target-client")))
     }
 
+    @Test("Paid Fee field mapping preserves source evidence without creating new demand")
+    func feeFieldMapping() throws {
+        let line = Self.map(["id": .string("line"), "amountCents": .integer("9007199254740993"),
+            "sign": .integer("1"), "sourceType": .string("feeInstallment"), "sourceId": .string("fee")])
+        let source = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "projects", "source-project", "feeInstallments", "fee"],
+            entityCode: "feeInstallments", evidenceKind: .record,
+            fields: Self.map(["budgetCategoryId": .string("category"), "label": .string("Original fee"),
+                "amountCents": .integer("9007199254740993"), "sortOrder": .integer("2"), "unknown": .string("retain")]),
+            sourceRecordID: "fee")
+        let review = try Self.review(Self.invoice(lines: [line], total: "9007199254740993"),
+            [Self.payment(amount: "9007199254740993")]).resolveSources(in: [source])
+        let scope = TransactionScope.project(accountId: try .init(validating: "target-account"),
+            projectId: try .init(validating: "target-project"), clientId: try .init(validating: "target-client"))
+        let category = try BudgetCategoryID(validating: "target-category")
+        func map(_ value: FirebaseInvoiceSourcesReview, categories: [String: BudgetCategoryID]) throws -> FeeInstallmentDraft {
+            try value.mapFee(lineID: "line", targetScope: scope, installmentID: .init(validating: "target-fee"),
+                categories: categories, currency: .init(validating: "USD")).draft
+        }
+        let mapped = try review.mapFee(lineID: "line", targetScope: scope, installmentID: .init(validating: "target-fee"),
+            categories: ["category": category], currency: .init(validating: "USD"))
+        #expect(mapped.draft.amount.minorUnits == 9007199254740993)
+        #expect(mapped.draft.label == "Original fee" && mapped.draft.sortOrder == 2)
+        #expect(mapped.evidence.source == source && mapped.evidence.line == line)
+        #expect(throws: (any Error).self) { try map(review, categories: [:]) }
+        let missing = try Self.review(Self.invoice(lines: [line], total: "9007199254740993"),
+            [Self.payment(amount: "9007199254740993")]).resolveSources(in: [])
+        #expect(throws: (any Error).self) { try map(missing, categories: ["category": category]) }
+        let foreignScope = TransactionScope.project(accountId: try .init(validating: "foreign-account"),
+            projectId: scope.projectId!, clientId: scope.clientId!)
+        #expect(throws: (any Error).self) {
+            try review.mapFee(lineID: "line", targetScope: foreignScope,
+                installmentID: .init(validating: "target-fee"), categories: ["category": category], currency: .init(validating: "USD"))
+        }
+        for change: [String: FirebaseSourceValue] in [
+            ["amountCents": .integer("9007199254740992")], ["label": .string(" ")],
+            ["sortOrder": .string("2")], ["sortOrder": .integer("2147483648")],
+            ["projectId": .string("foreign-project")], ["accountId": .string("foreign-account")]
+        ] {
+            guard case .map(let fields) = source.fields else { Issue.record("Invalid fixture"); return }
+            var values = Dictionary(uniqueKeysWithValues: fields.map { ($0.key, $0.value) })
+            values.merge(change) { _, new in new }
+            let changed = FirebaseSourceDocument(accountScopeID: source.accountScopeID,
+                documentPathSegments: source.documentPathSegments, entityCode: source.entityCode,
+                evidenceKind: .record, fields: Self.map(values), sourceRecordID: source.sourceRecordID)
+            let rejected = review.settlement.resolveSources(in: [changed])
+            #expect(throws: (any Error).self) { try map(rejected, categories: ["category": category]) }
+        }
+        let duplicated = review.settlement.resolveSources(in: [source, source])
+        #expect(throws: (any Error).self) { try map(duplicated, categories: ["category": category]) }
+    }
+
     @Test("Exact signed lines and one explicit payment establish only source line coverage")
     func exactCoverage() throws {
         let source = Self.invoice(lines: [Self.line("charge", amount: "120"), Self.line("credit", amount: "20", sign: "-1")])

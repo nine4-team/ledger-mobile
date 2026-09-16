@@ -23,9 +23,47 @@ package struct FirebaseInvoiceSourcesReview: Sendable {
     package let settlement: FirebaseInvoiceSettlementReview
     package let suppliedDocuments: [FirebaseSourceDocument]
     package let lines: [FirebaseInvoiceLineSourceReview]
+
+    /// Field mapping only: does not insert available demand or collect again.
+    /// Retain the full reviewed source and historical line beside the draft.
+    package func mapFee(lineID: String, targetScope: TransactionScope, installmentID: FeeInstallmentID,
+                        categories: [String: BudgetCategoryID], currency: CurrencyCode) throws
+        -> (draft: FeeInstallmentDraft, evidence: FirebaseInvoiceLineSourceReview) {
+        func field(_ value: FirebaseSourceValue, _ key: String) -> FirebaseSourceValue? {
+            guard case .map(let fields) = value else { return nil }
+            return fields.first { $0.key.utf8.elementsEqual(key.utf8) }?.value
+        }
+        let matches = lines.filter {
+            guard case .string(let id) = field($0.line, "id") else { return false }
+            return id.utf8.elementsEqual(lineID.utf8)
+        }
+        guard settlement.hasSinglePaymentLineCoverage, targetScope == settlement.targetScope, matches.count == 1,
+              let reviewed = matches.first, reviewed.issues == [.feeNotMapped], let source = reviewed.source,
+              let projectID = targetScope.projectId,
+              case .string(let category) = field(source.fields, "budgetCategoryId"),
+              let categoryID = categories.first(where: { $0.key.utf8.elementsEqual(category.utf8) })?.value,
+              case .string(let label) = field(source.fields, "label"),
+              case .integer(let amountText) = field(source.fields, "amountCents"), let amount = Int64(amountText),
+              field(reviewed.line, "sign") == .integer("1"),
+              field(reviewed.line, "amountCents") == .integer(amountText) else {
+            throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+        }
+        let order: Int64?
+        switch field(source.fields, "sortOrder") {
+        case nil, .null: order = nil
+        case .integer(let text):
+            guard let parsed = Int64(text) else { throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping }
+            order = parsed
+        default: throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+        }
+        return (try FeeInstallmentDraft(accountId: targetScope.accountId, projectId: projectID,
+            installmentId: installmentID, categoryId: categoryID, label: label,
+            amount: .init(minorUnits: amount, currency: currency), sortOrder: order), reviewed)
+    }
 }
 
 package struct FirebaseInvoiceSettlementReview: Sendable {
+    package let targetScope: TransactionScope
     package let invoice: FirebaseSourceDocument
     package let suppliedPayments: [FirebaseSourceDocument]
     package let issues: [FirebaseInvoiceSettlementIssue]
@@ -92,7 +130,7 @@ package struct FirebaseInvoiceSettlementReview: Sendable {
     package static func review(invoice: FirebaseSourceDocument, payments: [FirebaseSourceDocument],
                                sourceAccountID: String, targetScope: TransactionScope) -> Self {
         var issues: [FirebaseInvoiceSettlementIssue] = []
-        func result() -> Self { .init(invoice: invoice, suppliedPayments: payments, issues: issues) }
+        func result() -> Self { .init(targetScope: targetScope, invoice: invoice, suppliedPayments: payments, issues: issues) }
         func equal(_ lhs: String, _ rhs: String) -> Bool { lhs.utf8.elementsEqual(rhs.utf8) }
         func field(_ value: FirebaseSourceValue, _ key: String) -> FirebaseSourceValue? {
             guard case .map(let entries) = value else { return nil }
