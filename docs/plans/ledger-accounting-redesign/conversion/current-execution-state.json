@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1011,
+  "stateVersion": 1015,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Fee MCP browsing verified locally; evidence fee-demand-lifecycle. e6b19645 has prior UI/creation. NEXT preserve original Fee grouping/per-group Add using FeeGroupCard/feeSummaryLine/DualToneFeeProgressBar and canonical exact/readiness-aware values. Flat rows are incomplete per reusePlan. No new installment-edit UI from unused service methods; contract-derived updates retain separate scope. See remainingScopeReview. Platform/integration acceptance pending. Migration20260916075932 LOCAL direct/no history; no hosted Invoice/Fee deploy. Hosted88/QA restored;37-table local sync current. Existing product/CI blockers remain. Do not rerun passing tests for context.",
+    "immediateFollowup": "Fee grouping local checkpoint ready: reused card/config-readiness/group Add/order/filter implemented. Native10, macOSbuild and iPhone archived/create/group Add/filter82493 passed; evidence fee-demand-lifecycle. NEXT resume Invoice build/edit controls from existing specs/reuse plan, implementing unblocked dependencies; collection amount/status policy blocks only affected actions. Fee whole-lifecycle/budget/hosted/CI acceptance remains incomplete. No invented installment-edit UI; contract schedules separate. No hosted Invoice/Fee deploy; migration20260916075932 LOCAL direct/no history. Hosted88/QA restored. Existing product/CI blockers remain; no context reruns.",
     "nextVerification": "CI35039310979 failed: Mac14/57/3skips, iOS cancelled. Existing workflow owners retain failures and unverified UI fixes. No duplicate dispatch."
   }
 }

@@ -37,6 +37,7 @@ struct ProjectInvoicingWorkspaceView: View {
     @State private var itemsExpanded = true
     @State private var expensesExpanded = true
     @State private var feesExpanded = false
+    @State private var expandedFeeCategories: Set<BudgetCategoryID> = []
     @State private var invoicesExpanded = false
     @State private var creatingExpense = false
     @State private var creatingInvoice = false
@@ -135,15 +136,10 @@ struct ProjectInvoicingWorkspaceView: View {
                             statusColor: BrandColors.textSecondary, invoiceName: nil)
                     }
                     if let feeReview, let liveInvoices, let invoices {
-                        if let rows = try? ProjectFeeRow.compose(review: feeReview.sources, live: liveInvoices, paid: invoices) {
-                            let matching = rows.filter { $0.matches(search: search,
-                                availability: InvoicingAvailability(rawValue: availabilityFilter.rawValue)) }
-                            if matching.isEmpty && pendingFees.isEmpty { BillingEmptyRow("No matching Fees in downloaded data.") }
-                            ForEach(matching) { row in
-                                BillingCandidateRowPresentation(title: row.title, metadata: row.categoryName ?? "Fee",
-                                    amountText: amount(row.amount), statusLabel: row.availability.rawValue.capitalized,
-                                    statusColor: row.availability == .paid ? StatusColors.metText : BrandColors.textSecondary,
-                                    invoiceName: row.invoiceName)
+                        if let groups = try? feeGroups(review: feeReview, live: liveInvoices, paid: invoices) {
+                            if groups.isEmpty && pendingFees.isEmpty { BillingEmptyRow("No matching Fees in downloaded data.") }
+                            ForEach(groups) { group in
+                                feeGroupCard(group, review: feeReview)
                             }
                         } else { BillingEmptyRow("Fee history is unavailable. Please retry after sync.") }
                     } else if let invoiceError { BillingEmptyRow(invoiceError) }
@@ -346,6 +342,46 @@ struct ProjectInvoicingWorkspaceView: View {
                 } else { feeCategoryChoice = FeeCategoryChoice(categories: categories) }
             } catch { saveNotice = "Fee categories are unavailable. Wait for download or check access." }
         }
+    }
+
+    private func feeGroups(review: FeeBrowsingReview, live: [LiveInvoiceContents], paid: [FrozenInvoiceContents]) throws -> [ProjectFeeGroup] {
+        let rows = try ProjectFeeRow.compose(review: review.sources, live: live, paid: paid)
+        let categoryIDs = Set(review.categories.map { $0.category.id })
+        guard rows.allSatisfy({ categoryIDs.contains($0.categoryId) }) else { throw ProjectFeeRow.Failure.scopeMismatch }
+        return try review.categories.map { entry in
+            try ProjectFeeGroup(category: entry.category, rows: rows.filter { $0.categoryId == entry.category.id },
+                currency: currency, sortOrders: review.sortOrders)
+        }.filter { group in
+            let matching = group.rows.filter { $0.matches(search: search, availability: InvoicingAvailability(rawValue: availabilityFilter.rawValue)) }
+            let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+            return (query.isEmpty || group.name.localizedStandardContains(query) || !matching.isEmpty)
+                && (availabilityFilter == .all || !matching.isEmpty || (availabilityFilter == .available && group.remainingToInvoice.minorUnits > 0))
+        }
+    }
+
+    private func feeGroupCard(_ group: ProjectFeeGroup, review: FeeBrowsingReview) -> some View {
+        let matching = group.rows.filter { $0.matches(search: search, availability: InvoicingAvailability(rawValue: availabilityFilter.rawValue)) }
+        let entry = review.categories.first { $0.category.id == group.id }
+        let invoicedRatio = group.total.minorUnits > 0 ? min(Double(group.invoiced.minorUnits) / Double(group.total.minorUnits), 1) : 0
+        let receivedRatio = group.total.minorUnits > 0 ? min(Double(group.received.minorUnits) / Double(group.total.minorUnits), invoicedRatio) : 0
+        return FeeGroupCardPresentation(name: group.name, rowCount: matching.count,
+            remainingText: amount(group.remainingToInvoice), totalText: amount(group.total),
+            invoicedText: amount(group.invoiced), receivedText: amount(group.received),
+            invoicedRatio: invoicedRatio, receivedRatio: receivedRatio,
+            isExpanded: Binding(get: { expandedFeeCategories.contains(group.id) }, set: { expanded in
+                if expanded { expandedFeeCategories.insert(group.id) } else { expandedFeeCategories.remove(group.id) }
+            }), onAddInstallment: entry?.canCreate == true ? {
+                guard let entry else { return }
+                feeFormState = FeeInstallmentEntryState(); selectedFeeCategory = entry.category
+            } : nil) {
+                ForEach(matching) { row in
+                    BillingCandidateRowPresentation(title: row.title, metadata: row.categoryName ?? "Fee",
+                        amountText: amount(row.amount), statusLabel: row.availability.rawValue.capitalized,
+                        statusColor: row.availability == .paid ? StatusColors.metText : BrandColors.textSecondary,
+                        invoiceName: row.invoiceName)
+                    if row.id != matching.last?.id { CardDivider(horizontalPadding: Spacing.cardPadding) }
+                }
+            }
     }
 
     @ViewBuilder private func expenseForm(recovery: ExpenseEntryRecovery?) -> some View {

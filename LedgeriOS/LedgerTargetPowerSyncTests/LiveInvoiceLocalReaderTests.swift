@@ -84,10 +84,24 @@ struct LiveInvoiceLocalReaderTests {
             }
             _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,'{\"account_id\":\"account\"}',1000000)", parameters: nil)
             let query = LiveInvoicePowerSyncQuery(database: db)
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('spike_projects',1,1,'null',1000000)", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_budget_categories(id,account_id,display_name,kind,lifecycle) VALUES('category','account','Design','fee','active')", parameters: nil)
             #expect(try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project).canCreate)
+            let uncapped = try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project)
+            #expect(uncapped.categories.first?.category.configuredTotal == nil)
+            #expect(uncapped.sortOrders.isEmpty)
+            _ = try await db.execute(sql: "UPDATE fee_installments SET sort_order=-7", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency) VALUES('cap','account','project','category','0','USD')", parameters: nil)
+            _ = try await db.execute(sql: "UPDATE spike_budget_categories SET lifecycle='archived'", parameters: nil)
             _ = try await db.execute(sql: "UPDATE spike_projects SET lifecycle='archived',revision=2", parameters: nil)
             let archived = try await query.readFeeBrowsingReview(accountId: account, principalId: principal, projectId: project)
             #expect(!archived.canCreate)
+            #expect(archived.sortOrders[try FeeInstallmentID(validating: "fee")] == -7)
+            #expect(archived.categories.count == 1 && archived.categories[0].category.configuredTotal?.minorUnits == 0)
+            #expect(archived.categories[0].canCreate == false)
             #expect(archived.sources.candidates.map(\.description) == ["Design fee"])
             await #expect(throws: (any Error).self) {
                 try await query.readCreationReview(accountId: account, principalId: principal, projectId: project)

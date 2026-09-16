@@ -875,6 +875,10 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseFeeCreation(retry: true)
     }
 
+    func testFeeGroupShowsConfiguredTotalAndCreatesInstallment() throws {
+        try exerciseFeeCreation(retry: false, fromGroup: true)
+    }
+
     func testFeeCreationClosesOnFinancialAccessLoss() throws {
         #if os(iOS)
         continueAfterFailure = false
@@ -899,7 +903,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
-    private func exerciseFeeCreation(retry: Bool) throws {
+    private func exerciseFeeCreation(retry: Bool, fromGroup: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-fee"]
@@ -909,13 +913,24 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
         let invoicing = app.buttons["target-project-invoicing"]
         reveal(invoicing, in: app); invoicing.tap()
-        let add = app.buttons["Add Fees"]
-        reveal(add, in: app); add.tap()
+        if fromGroup {
+            let fees = app.buttons.matching(identifier: "Fees").element(boundBy: 1)
+            reveal(fees, in: app); fees.tap()
+            let group = app.buttons.containing(.staticText, identifier: "Design Fee").firstMatch
+            XCTAssertTrue(group.waitForExistence(timeout: 5)); group.tap()
+            XCTAssertTrue(app.staticTexts["Total $300.00"].exists)
+            let add = app.buttons["Add Installment"]
+            reveal(add, in: app); add.tap()
+        } else {
+            let add = app.buttons["Add Fees"]
+            reveal(add, in: app); add.tap()
+        }
         if retry {
             let retainer = app.buttons["Retainer"]
             XCTAssertTrue(retainer.waitForExistence(timeout: 5)); retainer.tap()
         }
-        let save = app.buttons["Add Installment"]
+        // The modal precedes the group's same-named background button in the hierarchy.
+        let save = app.buttons["Add Installment"].firstMatch
         XCTAssertTrue(save.waitForExistence(timeout: 5)); XCTAssertFalse(save.isEnabled)
         let label = app.textFields["Design fee 1 of 3"]
         label.tap(); label.typeText("First design installment")
@@ -941,7 +956,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseFeeBrowsing(archived: true)
     }
 
-    private func exerciseFeeBrowsing(archived: Bool) throws {
+    func testFeeSearchAndStatusPreserveWholeCategoryTotals() throws {
+        try exerciseFeeBrowsing(archived: false, checkFilters: true)
+    }
+
+    private func exerciseFeeBrowsing(archived: Bool, checkFilters: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-paid-expense", "--ledger-ui-test-long-invoice"]
@@ -954,10 +973,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         // The first Fees button is the source filter; the second opens the section.
         let fees = app.buttons.matching(identifier: "Fees").element(boundBy: 1)
         reveal(fees, in: app); fees.tap()
+        let group = app.buttons.containing(.staticText, identifier: "Design Fee").firstMatch
+        XCTAssertTrue(group.waitForExistence(timeout: 5)); group.tap()
         XCTAssertTrue(app.staticTexts["Invoice row 000 <original>"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Paid"].firstMatch.exists)
         XCTAssertFalse(app.staticTexts["Canonical Fee browsing is not connected yet."].exists)
         if archived { XCTAssertFalse(app.buttons["Add Fees"].exists) }
+        if checkFilters {
+            let total = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Total ")).firstMatch.label
+            let search = app.textFields["Search receivables..."]
+            search.tap(); search.typeText("Invoice row 000")
+            XCTAssertTrue(app.staticTexts["Invoice row 000 <original>"].firstMatch.exists)
+            XCTAssertFalse(app.staticTexts["Invoice row 001 <original>"].exists)
+            XCTAssertTrue(app.staticTexts[total].exists, "Filtering must not shrink the group total")
+            app.buttons["Filter receivables"].tap()
+            XCTAssertTrue(app.buttons["Paid"].waitForExistence(timeout: 5)); app.buttons["Paid"].tap()
+            app.buttons["Close menu"].tap()
+            XCTAssertTrue(app.staticTexts[total].exists)
+            app.buttons["Filter receivables"].tap()
+            app.buttons["Available"].tap(); app.buttons["Close menu"].tap()
+            XCTAssertTrue(app.staticTexts["No matching Fees in downloaded data."].waitForExistence(timeout: 5))
+            app.buttons["Filter receivables"].tap(); app.buttons["Clear"].tap(); app.buttons["Close menu"].tap()
+            XCTAssertTrue(app.staticTexts[total].waitForExistence(timeout: 5))
+        }
     }
 
     private func exerciseCollectedInvoiceDownload(save: Bool, retry: Bool = false) throws {

@@ -12,6 +12,10 @@ struct LiveInvoiceStreamIdentity: SyncStreamDescription, Sendable {
 
 struct LiveInvoicePowerSyncQuery: Sendable {
     let database: any PowerSyncDatabaseProtocol
+    private struct ConfigurationIdentity: SyncStreamDescription {
+        let name = "spike_projects"
+        let parameters: JsonParam? = nil
+    }
     private struct PhysicalIdentity: SyncStreamDescription {
         let name = "physical_account_items"
         let parameters: JsonParam?
@@ -49,6 +53,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                             UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories)
+                            UNION ALL SELECT EXISTS(SELECT 1 FROM spike_project_category_allocations)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_local_operations)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
                             """, parameters: nil) { try $0.getInt(index: 0) }
@@ -94,6 +99,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
     func readFeeBrowsingReview(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> FeeBrowsingReview {
         try await database.readTransaction { local in
             try Self.requireReady(local, accountId: accountId, principalId: principalId, projectId: projectId)
+            _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local, identity: ConfigurationIdentity())
             guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(projectId,
                 account: accountId, principal: principalId, in: local) else { throw Failure.incomplete }
             let sources = try InvoiceCreationReview(scope: .project(accountId: accountId, projectId: projectId, clientId: project.clientId),
@@ -102,8 +108,33 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                     "SELECT id,display_name FROM spike_budget_categories WHERE account_id=?", parameters: [accountId.rawValue]) {
                         (try BudgetCategoryID(validating: $0.getString(name: "id")), try $0.getString(name: "display_name"))
                     }))
-            return FeeBrowsingReview(sources: sources,
-                canCreate: project.lifecycle == .active && project.client.lifecycle == .active)
+            let canCreate = project.lifecycle == .active && project.client.lifecycle == .active
+            let categories = try local.getAll(sql: """
+                SELECT c.id,c.display_name,c.kind,c.lifecycle,a.allocation_minor_units,a.allocation_currency
+                FROM spike_budget_categories c LEFT JOIN spike_project_category_allocations a
+                  ON a.account_id=c.account_id AND a.category_id=c.id AND a.project_id=?
+                WHERE c.account_id=? AND ((c.kind='fee' AND c.lifecycle='active') OR EXISTS(
+                  SELECT 1 FROM fee_installments f WHERE f.account_id=c.account_id AND f.project_id=? AND f.category_id=c.id))
+                ORDER BY c.presentation_order,c.id
+                """, parameters: [projectId.rawValue,accountId.rawValue,projectId.rawValue]) { row in
+                    let total: Money?
+                    if let raw = try row.getStringOptional(index: 4) {
+                        guard let amount = Int64(raw), amount >= 0 else { throw Failure.incomplete }
+                        total = try Money(minorUnits: amount, currency: .init(validating: row.getString(index: 5)))
+                    } else {
+                        guard try row.getStringOptional(index: 5) == nil else { throw Failure.incomplete }
+                        total = nil
+                    }
+                    return try FeeBrowsingCategory(category: .init(id: .init(validating: row.getString(index: 0)),
+                        name: row.getString(index: 1), configuredTotal: total),
+                        canCreate: canCreate && row.getString(index: 2) == "fee" && row.getString(index: 3) == "active")
+                }
+            let orders = try local.getAll(sql: "SELECT id,sort_order FROM fee_installments WHERE account_id=? AND project_id=? AND sort_order IS NOT NULL",
+                parameters: [accountId.rawValue,projectId.rawValue]) { row in
+                    (try FeeInstallmentID(validating: row.getString(index: 0)), try row.getInt64(index: 1))
+                }
+            return FeeBrowsingReview(sources: sources, canCreate: canCreate, categories: categories,
+                sortOrders: Dictionary(uniqueKeysWithValues: orders))
         }
     }
 

@@ -550,71 +550,24 @@ private struct FeeGroupCard: View {
     var onAddInstallment: () -> Void
 
     var body: some View {
-        BillingRowSurface(padding: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                Button {
-                    withAnimation { isExpanded.toggle() }
-                } label: {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        HStack(spacing: Spacing.sm) {
-                            Text(display.group.name)
-                                .font(Typography.body.weight(.semibold))
-                                .foregroundStyle(BrandColors.textPrimary)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(CurrencyFormatting.formatCents(display.toInvoiceCents))
-                                .font(Typography.small.weight(.semibold))
-                                .foregroundStyle(BrandColors.textPrimary)
-                                .monospacedDigit()
-                            if !display.rows.isEmpty {
-                                Badge(text: "\(display.rows.count)", color: BrandColors.primary)
-                            }
-                            Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(BrandColors.textTertiary)
-                        }
-                        feeSummaryLine
-                        DualToneFeeProgressBar(
-                            totalCents: display.totalCents,
-                            invoicedCents: display.invoicedCents,
-                            receivedCents: display.receivedCents
-                        )
-                    }
-                    .padding(Spacing.md)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                if isExpanded {
-                    CardDivider()
-                    VStack(spacing: 0) {
-                        ForEach(display.rows) { row in
-                            FeeInstallmentRow(row: row)
-                            if row.id != display.rows.last?.id { CardDivider(horizontalPadding: Spacing.cardPadding) }
-                        }
-                        Button(action: onAddInstallment) {
-                            Label("Add Installment", systemImage: "plus.circle.fill")
-                                .font(Typography.body.weight(.semibold))
-                                .foregroundStyle(BrandColors.primary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(Spacing.md)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+        FeeGroupCardPresentation(name: display.group.name, rowCount: display.rows.count,
+            remainingText: CurrencyFormatting.formatCents(display.toInvoiceCents),
+            totalText: CurrencyFormatting.formatCents(display.totalCents),
+            invoicedText: CurrencyFormatting.formatCents(display.invoicedCents),
+            receivedText: CurrencyFormatting.formatCents(display.receivedCents),
+            invoicedRatio: invoicedRatio, receivedRatio: receivedRatio,
+            isExpanded: $isExpanded, onAddInstallment: onAddInstallment) {
+            ForEach(display.rows) { row in
+                FeeInstallmentRow(row: row)
+                if row.id != display.rows.last?.id { CardDivider(horizontalPadding: Spacing.cardPadding) }
             }
         }
     }
-
-    private var feeSummaryLine: some View {
-        HStack(spacing: Spacing.sm) {
-            Text("Total \(CurrencyFormatting.formatCents(display.totalCents))")
-            Text("Invoiced \(CurrencyFormatting.formatCents(display.invoicedCents))")
-            Text("Received \(CurrencyFormatting.formatCents(display.receivedCents))")
-        }
-        .font(Typography.caption)
-        .foregroundStyle(BrandColors.textSecondary)
-        .lineLimit(1)
+    private var invoicedRatio: Double {
+        display.totalCents > 0 ? min(Double(display.invoicedCents) / Double(display.totalCents), 1) : 0
+    }
+    private var receivedRatio: Double {
+        display.totalCents > 0 ? min(Double(display.receivedCents) / Double(display.totalCents), invoicedRatio) : 0
     }
 }
 
@@ -644,40 +597,6 @@ private struct FeeInstallmentRow: View {
                 .monospacedDigit()
         }
         .padding(Spacing.cardPadding)
-    }
-}
-
-private struct DualToneFeeProgressBar: View {
-    let totalCents: Int
-    let invoicedCents: Int
-    let receivedCents: Int
-
-    private var invoicedRatio: Double {
-        guard totalCents > 0 else { return 0 }
-        return min(Double(invoicedCents) / Double(totalCents), 1)
-    }
-
-    private var receivedRatio: Double {
-        guard totalCents > 0 else { return 0 }
-        return min(Double(receivedCents) / Double(totalCents), invoicedRatio)
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(BrandColors.progressTrack)
-                Capsule()
-                    .fill(BrandColors.primary.opacity(0.35))
-                    .frame(width: geometry.size.width * invoicedRatio)
-                Capsule()
-                    .fill(BrandColors.primary)
-                    .frame(width: geometry.size.width * receivedRatio)
-            }
-        }
-        .frame(height: 7)
-        .clipShape(Capsule())
-        .accessibilityLabel("Fee invoicing progress")
-        .accessibilityValue("\(CurrencyFormatting.formatCents(invoicedCents)) invoiced, \(CurrencyFormatting.formatCents(receivedCents)) received")
     }
 }
 

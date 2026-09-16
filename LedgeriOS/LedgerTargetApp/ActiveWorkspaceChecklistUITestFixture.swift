@@ -871,8 +871,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
 
     func readFeeBrowsingReview(accountId: AccountID, projectId: ProjectID) async throws -> FeeBrowsingReview {
-        try await FeeBrowsingReview(sources: readInvoiceCreationReview(accountId: accountId, projectId: projectId),
-            canCreate: !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-archived-fees"))
+        let sources = try await readInvoiceCreationReview(accountId: accountId, projectId: projectId)
+        let canCreate = !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-archived-fees")
+        var categories = try await readFeeCreationCategories(accountId: accountId, projectId: projectId)
+        let paid = try await readCollectedInvoices(accountId: accountId, projectId: projectId)
+        let ids = Set(sources.candidates.map(\.categoryId) + paid.flatMap { $0.lines.map(\.categoryId) })
+        for id in ids where !categories.contains(where: { $0.id == id }) {
+            categories.append(.init(id: id, name: sources.categoryNames[id] ?? "Design Fee", configuredTotal: nil))
+        }
+        return FeeBrowsingReview(sources: sources, canCreate: canCreate,
+            categories: categories.map { .init(category: $0, canCreate: canCreate) })
     }
     func readPendingFeeCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingFeeCreation] {
         _ = try await readExpenses(accountId: accountId, projectId: projectId)

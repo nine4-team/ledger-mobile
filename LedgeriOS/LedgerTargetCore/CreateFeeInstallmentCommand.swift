@@ -11,8 +11,19 @@ public protocol ProjectFeeInstallmentCreating: Sendable {
 public struct FeeBrowsingReview: Sendable {
     public let sources: InvoiceCreationReview
     public let canCreate: Bool
-    public init(sources: InvoiceCreationReview, canCreate: Bool) {
-        self.sources = sources; self.canCreate = canCreate
+    public let categories: [FeeBrowsingCategory]
+    public let sortOrders: [FeeInstallmentID: Int64]
+    public init(sources: InvoiceCreationReview, canCreate: Bool, categories: [FeeBrowsingCategory], sortOrders: [FeeInstallmentID: Int64] = [:]) {
+        self.sources = sources; self.canCreate = canCreate; self.categories = categories
+        self.sortOrders = sortOrders
+    }
+}
+
+public struct FeeBrowsingCategory: Sendable {
+    public let category: FeeCreationCategory
+    public let canCreate: Bool
+    public init(category: FeeCreationCategory, canCreate: Bool) {
+        self.category = category; self.canCreate = canCreate
     }
 }
 
