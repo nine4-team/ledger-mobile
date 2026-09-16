@@ -10,9 +10,10 @@ const expenseEditFlow=process.argv.includes('--expense-edit-flow');
 const invoiceFlow=process.argv.includes('--invoice-flow');
 const feeFlow=process.argv.includes('--fee-flow');
 const returnFlow=process.argv.includes('--return-flow');
+const historyFlow=process.argv.includes('--history-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -32,11 +33,72 @@ assert.equal(login.status,200,'QA login failed');
 const session=await login.json();
 const headers={apikey,Authorization:'Bearer '+session.access_token,'content-type':'application/json'};
 const read=async path=>{const r=await request(path,{headers});assert.equal(r.status,200,'QA read failed');return r.json();};
+const historySQL=query=>{
+  const result=spawnSync('npx',['--yes','supabase@2.116.0','db','query','--linked','--project-ref','ybwviepljilrkrjoahbl',query],{encoding:'utf8',timeout:30000});
+  assert.equal(result.status,0,'Hosted history fixture/reconciliation failed');return JSON.parse(result.stdout).rows;
+};
+let restoreHistoryAccess=false;
 try {
   const memberships=await read('/rest/v1/spike_account_memberships?account_id=eq.'+account+'&select=principal_id,role,state,financial_access,can_manage_projects,can_manage_project_budgets');
   assert.deepEqual(memberships.map(({principal_id,role,state})=>({principal_id,role,state})),
     [{principal_id:auth.principalId,role:'owner',state:'active'}]);
-  if(returnFlow) {
+  if(historyFlow) {
+    if(memberships[0].financial_access==='none') {
+      restoreHistoryAccess=true;
+      const changed=historySQL(`update public.spike_account_memberships set financial_access='full'
+        where account_id='realcopy-b9d236394770-account'
+          and principal_id='upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64'
+          and state='active' and role='owner' and financial_access='none' returning financial_access;`);
+      assert.deepEqual(changed,[{financial_access:'full'}]);
+      memberships[0].financial_access='full';
+    }
+    assert.equal(memberships[0].financial_access,'full');
+    const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
+    const accounts=await read('/rest/v1/spike_accounts?id=eq.'+account+'&select=furnishings_category_id');
+    assert.equal(clients.length,1);assert.equal(accounts.length,1);
+    const category=accounts[0].furnishings_category_id;assert.equal(typeof category,'string');
+    const id='hosted-history-flow-'+crypto.randomUUID(),source=id+'-source',destination=id+'-destination',item=id+'-item';
+    const q=value=>"'"+value.replaceAll("'","''")+"'";
+    const sql=historySQL;
+    // Synthetic read fixture, matching the existing local historical test.
+    // This does not exercise collection/return commands or import real records.
+    sql(`begin;
+      insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values(${q(source)},${q(account)},${q(clients[0].id)},'QA historical source',now(),now(),1,1,${q(auth.principalId)}),
+        (${q(destination)},${q(account)},${q(clients[0].id)},'QA historical destination',now(),now(),1,1,${q(auth.principalId)});
+      insert into public.spike_items(id,account_id,description,created_by_principal_id)
+        values(${q(item)},${q(account)},'QA same physical Item',${q(auth.principalId)});
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,ended_at,started_by_principal_id,ended_by_principal_id)
+        values(${q(id+'-old')},${q(account)},${q(item)},'project',${q(source)},'2025-01-01','2026-01-01',${q(auth.principalId)},${q(auth.principalId)}),
+        (${q(id+'-current')},${q(account)},${q(item)},'project',${q(destination)},'2026-01-01',null,${q(auth.principalId)},null);
+      insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,created_at,created_by_principal_id)
+        values(${q(id+'-paid-charge')},${q(account)},${q(source)},${q(item)},${q(id+'-old')},${q(category)},900,'USD','2025-01-01',${q(auth.principalId)}),
+        (${q(id+'-current-charge')},${q(account)},${q(destination)},${q(item)},${q(id+'-current')},${q(category)},200,'USD','2026-01-01',${q(auth.principalId)});
+      select ledger_private.import_client_payment(${q(id+'-payment')},${q(account)},${q(source)},${q(clients[0].id)},900,'USD',${q(id)},${q(id+'-payment')},decode('01','hex'));
+      insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
+        values(${q(id+'-invoice')},${q(account)},${q(source)},${q(clients[0].id)},${q(id+'-payment')},1,'USD',900);
+      insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
+        values(${q(id+'-line')},${q(account)},${q(id+'-invoice')},0,'USD','item',${q(id+'-paid-charge')},${q(item)},1,${q(category)},900,'Previous collected sale','{}');
+      update ledger_private.collected_invoices set sealed=true where id=${q(id+'-invoice')};
+      commit; select true as seeded;`);
+    const history=()=>sql(`select (select to_jsonb(i) from ledger_private.collected_invoices i where id=${q(id+'-invoice')}) as invoice,
+      (select to_jsonb(l) from ledger_private.collected_invoice_lines l where id=${q(id+'-line')}) as line,
+      (select to_jsonb(t) from public.spike_transactions t where id=${q(id+'-payment')}) as payment;`);
+    const before=history();
+    console.log(JSON.stringify({hostedHistoryStarted:true,source,destination,item}));
+    const env={...process.env,LEDGER_HISTORY_HOSTED_QA:'1',LEDGER_HISTORY_LIVE_INVOICE:'0',
+      LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,
+      LEDGER_SALE_LOCAL_ITEM:item,LEDGER_SALE_LOCAL_PROJECT:source,LEDGER_SALE_LOCAL_DESTINATION_PROJECT:destination,
+      LEDGER_SALE_LOCAL_KEY:apikey,LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password,
+      LEDGER_SALE_LOCAL_FINANCIAL_ACCESS:'full'};
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+      'AccountWorkspacePendingWorkRuntimeTests/invoicingHistoricalLiveReplication'],{encoding:'utf8',timeout:180000,env});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted native historical read failed');
+    assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
+    assert.deepEqual(history(),before,'Historical read must not rewrite paid evidence');
+    console.log(JSON.stringify({hostedHistoryPassed:true,source,destination,item,offlineReopen:true,paidHistoryUnchanged:true}));
+  } else if(returnFlow) {
     assert.ok(['none','full'].includes(memberships[0].financial_access));
     const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
     const accounts=await read('/rest/v1/spike_accounts?id=eq.'+account+'&select=furnishings_category_id');
@@ -213,5 +275,13 @@ try {
   console.log(JSON.stringify({nativeInterruptedUpload:true,hostedPublication:true,concurrentReplay:true,attachment,transaction}));
   }
 } finally {
+  if(restoreHistoryAccess) {
+    const restored=historySQL(`update public.spike_account_memberships set financial_access='none'
+      where account_id='realcopy-b9d236394770-account'
+        and principal_id='upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64'
+        and state='active' and role='owner' and financial_access='full' returning financial_access;`);
+    assert.deepEqual(restored,[{financial_access:'none'}]);
+    console.log(JSON.stringify({hostedHistoryQAAccessRestored:true}));
+  }
   await request('/auth/v1/logout?scope=local',{method:'POST',headers});
 }

@@ -1273,14 +1273,23 @@ struct AccountWorkspacePendingWorkRuntimeTests {
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func invoicingHistoricalLiveReplication() async throws {
         let env = ProcessInfo.processInfo.environment
-        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
+        let hostedQA = env["LEDGER_HISTORY_HOSTED_QA"] == "1"
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"],
               let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], let source = env["LEDGER_SALE_LOCAL_PROJECT"],
               let destination = env["LEDGER_SALE_LOCAL_DESTINATION_PROJECT"], let item = env["LEDGER_SALE_LOCAL_ITEM"],
               let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
               let password = env["LEDGER_SALE_LOCAL_PASSWORD"], env["LEDGER_SALE_LOCAL_FINANCIAL_ACCESS"] == "full" else { throw RuntimeInjectedFailure() }
+        if hostedQA {
+            guard account == "realcopy-b9d236394770-account",
+                  principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+                  [source, destination, item].allSatisfy({ $0.hasPrefix("hosted-history-flow-") }),
+                  email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        } else {
+            guard account.hasPrefix("sale-http-") else { throw RuntimeInjectedFailure() }
+        }
         let context = try RuntimeTestContext(suffix: "invoicing-live", accountId: .init(validating: account), principalId: .init(validating: principal))
         defer { context.remove() }
-        let url = URL(string: "http://127.0.0.1:54321")!
+        let url = URL(string: hostedQA ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
         let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
             storageKey: "invoicing-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
             autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
@@ -1290,7 +1299,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
             from: directory.snapshot, requestedAt: Date()))
         let runtime = try await context.openRuntime()
-        try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+        try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: URL(string: hostedQA
+            ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!)
         for try await snapshot in runtime.watchProjects() {
             if Set(snapshot.local.rows.map { $0.id.rawValue }).isSuperset(of: [source, destination]) { break }
         }
