@@ -42,6 +42,7 @@ public final class LedgerOfflineClientRuntime:
     PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
+    let location: LedgerWorkspaceRuntimeLocation
     public func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
         try await lifecycleOwner.readInvoicingCharges(accountId: accountId, projectId: projectId)
     }
@@ -97,9 +98,10 @@ public final class LedgerOfflineClientRuntime:
     }
     private let removalHandler: @Sendable () async throws -> Void
 
-    init(lifecycleOwner: AccountWorkspacePendingWorkRuntime,
+    init(lifecycleOwner: AccountWorkspacePendingWorkRuntime, location: LedgerWorkspaceRuntimeLocation,
          removalHandler: @Sendable @escaping () async throws -> Void) {
         self.lifecycleOwner = lifecycleOwner
+        self.location = location
         self.removalHandler = removalHandler
     }
 

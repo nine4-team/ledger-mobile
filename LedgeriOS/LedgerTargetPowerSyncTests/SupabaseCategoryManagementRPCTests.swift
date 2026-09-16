@@ -9,6 +9,69 @@ import Security
 
 @Suite("Category management HTTP contract", .serialized)
 struct SupabaseCategoryManagementRPCTests {
+    @Test("Provider logout removes this session even offline, without global logout", arguments: [false, true])
+    func localSessionSignOut(offline: Bool) async throws {
+        let user = UUID()
+        let storage = CategoryAuthTestStorage()
+        let auth = authClient(storage: storage, userId: user, logoutOffline: offline)
+        _ = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let identity = SupabaseAuthenticatedSession(client: auth, userId: user)
+        #expect(try await identity.signOutThisDevice() == (offline ? .localOnly : .requestCompleted))
+        #expect(auth.currentSession == nil)
+        #expect(try await identity.signOutThisDevice() == .localOnly)
+        let reopened = authClient(storage: storage, userId: user)
+        #expect(reopened.currentSession == nil)
+    }
+
+    @Test func localSignOutCannotEndAChangedIdentity() async throws {
+        let original = UUID()
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: original, nextUserId: UUID())
+        _ = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let identity = SupabaseAuthenticatedSession(client: auth, userId: original)
+        let replacement = try await auth.signIn(email: "another@example.invalid", password: "fixture-password")
+        await #expect(throws: SupabaseAuthenticatedSession.Failure.identityChanged) {
+            try await identity.signOutThisDevice()
+        }
+        #expect(auth.currentSession?.user.id == replacement.user.id)
+    }
+
+    @Test @MainActor func pendingSessionEndBlocksStoredAuthAndPreviouslyBoundAccessCheck() async throws {
+        let user = UUID()
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: user)
+        _ = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let memory = CategoryAuthTestStorage()
+        let admissions = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") },
+            write: { memory.store(key: "records", value: $0) }, requireNotRemoved: { _ in })
+        try admissions.selectIdentity(user)
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        CategoryHTTPProtocol.handler = { _ in
+            Issue.record("Pending logout must deny before making an authenticated request")
+            throw URLError(.notConnectedToInternet)
+        }
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", http: http, offlineAdmissions: admissions)
+        let access = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: user,
+            principalId: .init(validating: "principal"), accountId: .init(validating: "account"),
+            role: .employee, financialAccess: .full)
+        let previouslyBound = try entry.workspaceAccessCheck(access)
+        let previouslyBoundReceipts = try entry.onlineTransactionReceipts(access)
+        try admissions.beginSessionEnding(user, expectedWorkspaces: [])
+        #expect(entry.hasStoredSession) // Stored credentials do not bypass local ending state.
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            _ = try await entry.accounts(environment: .targetLocal)
+        }
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try await previouslyBound()
+        }
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            _ = try await previouslyBoundReceipts.read(transactionId: .init(validating: "transaction"))
+        }
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try entry.downloadedWorkspaces(environment: .targetLocal)
+        }
+    }
+
     @Test func uninvoicedReturnUsesBoundAuthenticatedTransport() async throws {
         let auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
         let signedIn = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
@@ -631,10 +694,16 @@ struct SupabaseCategoryManagementRPCTests {
     #endif
 
     private func authClient(storage: any AuthLocalStorage, userId: UUID, anonymous: Bool = false,
-                            expiredOnSignIn: Bool = false, nextUserId: UUID? = nil) -> AuthClient {
+                            expiredOnSignIn: Bool = false, nextUserId: UUID? = nil,
+                            logoutOffline: Bool = false) -> AuthClient {
         AuthClient(configuration: .init(url: URL(string: "https://target.invalid/auth/v1")!,
             storageKey: "category-auth-test", localStorage: storage, fetch: { request in
                 let url = try #require(request.url)
+                if url.path.hasSuffix("/logout") {
+                    #expect(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems == [
+                        URLQueryItem(name: "scope", value: "local")])
+                    if logoutOffline { throw URLError(.notConnectedToInternet) }
+                }
                 let token = url.query?.contains("refresh_token") == true ? "refreshed-token" : "signed-in-token"
                 let body = request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? ""
                 let identity = body.contains("another@example.invalid") ? (nextUserId ?? userId) : userId

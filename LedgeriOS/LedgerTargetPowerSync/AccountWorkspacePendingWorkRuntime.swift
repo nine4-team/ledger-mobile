@@ -3409,7 +3409,7 @@ public enum LedgerPowerSyncLocalBootstrap {
             stage = .runtimeConstruction
             let owner = try dependencies.makeLifecycleOwner(madeRuntimeResources)
             dependencies.lifecycleEvent(.lifecycleOwnerConstructed)
-            return LedgerOfflineClientRuntime(lifecycleOwner: owner) {
+            return LedgerOfflineClientRuntime(lifecycleOwner: owner, location: location) {
                 [coordinator = dependencies.accessCoordinator,
                  record = dependencies.recordWorkspaceRemoval,
                  environment = validatedEnvironment.manifest.environment] in

@@ -81,6 +81,13 @@ public final class SupabaseOnlineSignIn {
 
     public var hasStoredSession: Bool { client.currentSession != nil }
 
+    private func boundIdentity(_ userId: UUID) -> SupabaseAuthenticatedSession {
+        let admissions = offlineAdmissions
+        return SupabaseAuthenticatedSession(client: client, userId: userId) {
+            try await admissions?.requireIdentityAvailable(userId)
+        }
+    }
+
     public func signIn(email: String, password: String) async throws {
         guard !inFlight else { throw Failure.busy }
         inFlight = true
@@ -123,13 +130,15 @@ public final class SupabaseOnlineSignIn {
         -> (identity: SupabaseAuthenticatedSession, snapshot: AuthorizedAccountListSnapshot) {
         guard !inFlight else { throw Failure.busy }
         guard let user = client.currentSession?.user, !user.isAnonymous else { throw Failure.noSession }
+        try offlineAdmissions?.requireIdentityAvailable(user.id)
         inFlight = true
         defer { inFlight = false }
-        let identity = SupabaseAuthenticatedSession(client: client, userId: user.id)
+        let identity = boundIdentity(user.id)
         do {
             let lookup = try SupabaseAuthenticatedAccountLookup(supabaseURL: url,
                 publishableKey: publishableKey, identity: identity, session: http)
             let snapshot = try await lookup.load(environment: environment)
+            try offlineAdmissions?.requireIdentityAvailable(user.id)
             selectedDirectory = (user.id, snapshot)
             return (identity, snapshot)
         } catch is CancellationError { throw CancellationError() }
@@ -153,7 +162,7 @@ public final class SupabaseOnlineSignIn {
     public func rememberDownloadedWorkspace(_ authorization: WorkspaceMembershipAuthorization,
                                             account: AccountSummary, runtime: LedgerOfflineClientRuntime) async throws {
         guard let offlineAdmissions else { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
-        let identity = SupabaseAuthenticatedSession(client: client, userId: authorization.authUserId)
+        let identity = boundIdentity(authorization.authUserId)
         try identity.requireCurrentIdentity()
         // Directory completion, physical scope and membership all precede the
         // persisted grant. Sign-in or an HTTP permission response alone is insufficient.
@@ -166,6 +175,7 @@ public final class SupabaseOnlineSignIn {
     public func authorize(_ selection: WorkspaceSelectionIntent) async throws -> WorkspaceMembershipAuthorization {
         guard !inFlight else { throw Failure.busy }
         guard let user = client.currentSession?.user, !user.isAnonymous else { throw Failure.noSession }
+        try offlineAdmissions?.requireIdentityAvailable(user.id)
         guard let selectedDirectory, selectedDirectory.userId == user.id,
               selectedDirectory.snapshot.principalId == selection.principalId,
               selectedDirectory.snapshot.environment == selection.environment,
@@ -175,8 +185,12 @@ public final class SupabaseOnlineSignIn {
         inFlight = true
         defer { inFlight = false }
         let authorizer = try SupabaseWorkspaceAuthorization(supabaseURL: url, publishableKey: publishableKey,
-            identity: .init(client: client, userId: user.id), http: http)
-        do { return try await authorizer.authorize(selection) }
+            identity: boundIdentity(user.id), http: http)
+        do {
+            let authorization = try await authorizer.authorize(selection)
+            try offlineAdmissions?.requireIdentityAvailable(user.id)
+            return authorization
+        }
         catch SupabaseWorkspaceAuthorization.Failure.accessDenied {
             // Only the exact authenticated membership denial reaches here;
             // expired tokens, outages and unrelated 403s are not revocation.
@@ -199,9 +213,11 @@ public final class SupabaseOnlineSignIn {
     func workspaceAccessCheck(_ authorization: WorkspaceMembershipAuthorization) throws
         -> @Sendable () async throws -> Void {
         let authorizer = try SupabaseWorkspaceAuthorization(supabaseURL: url, publishableKey: publishableKey,
-            identity: .init(client: client, userId: authorization.authUserId), http: http)
+            identity: boundIdentity(authorization.authUserId), http: http)
         let onDenied = onSyncAccessDenied
+        let admissions = offlineAdmissions
         return {
+            try await admissions?.requireIdentityAvailable(authorization.authUserId)
             try await authorizer.requireCurrentAccess(authorization) {
                 if let onDenied { try await onDenied(authorization) }
                 else {
@@ -220,7 +236,7 @@ public final class SupabaseOnlineSignIn {
     /// working-set reader or confer offline completeness on cached RPC results.
     public func onlineTransactionReceipts(_ authorization: WorkspaceMembershipAuthorization) throws
         -> any TransactionReceiptReading {
-        let identity = SupabaseAuthenticatedSession(client: client, userId: authorization.authUserId)
+        let identity = boundIdentity(authorization.authUserId)
         try identity.requireCurrentIdentity()
         return try SupabaseWorkspaceCommandRPC(url: url, key: publishableKey, authorization: authorization,
             identity: identity, http: http, revalidateAccess: workspaceAccessCheck(authorization))
@@ -229,7 +245,7 @@ public final class SupabaseOnlineSignIn {
     /// Online review only; offline admission still requires durable complete evidence.
     public func onlineInventorySaleReviews(_ authorization: WorkspaceMembershipAuthorization) throws
         -> any InventorySaleReviewReading {
-        let identity = SupabaseAuthenticatedSession(client: client, userId: authorization.authUserId)
+        let identity = boundIdentity(authorization.authUserId)
         try identity.requireCurrentIdentity()
         return try SupabaseWorkspaceCommandRPC(url: url, key: publishableKey, authorization: authorization,
             identity: identity, http: http, revalidateAccess: workspaceAccessCheck(authorization))
@@ -243,7 +259,8 @@ public final class SupabaseOnlineSignIn {
         // Check the physical database's identity before downloads can start;
         // command-level guards alone protect uploads, not incoming rows.
         try await runtime.lifecycleOwner.requireWorkspaceScope(authorization)
-        let identity = SupabaseAuthenticatedSession(client: client, userId: authorization.authUserId)
+        try offlineAdmissions?.requireIdentityAvailable(authorization.authUserId)
+        let identity = boundIdentity(authorization.authUserId)
         try identity.requireCurrentIdentity()
         if let powerSyncURL {
             let loopback = ["localhost", "127.0.0.1", "::1"].contains(powerSyncURL.host ?? "")

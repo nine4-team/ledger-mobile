@@ -8,6 +8,13 @@ public enum LedgerWorkspaceRuntimeIsolationFailure: Error, Equatable, Sendable {
 }
 
 struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
+    var cleanupBinding: String {
+        let parts = [sessionScopeIdentity, structuredDatabaseURL.absoluteString,
+            attachmentDatabaseURL.absoluteString, mediaVaultRootURL.absoluteString,
+            databaseKeychainService, databaseKeychainAccount, mediaKeychainService, mediaKeychainAccount]
+        return SHA256.hash(data: Data(parts.joined(separator: "\u{1f}").utf8))
+            .map { String(format: "%02x", $0) }.joined()
+    }
     let sessionScopeIdentity: String
     let structuredDatabaseURL: URL
     let attachmentDatabaseURL: URL

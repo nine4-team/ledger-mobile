@@ -1091,6 +1091,105 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
     }
 
+    @Test("Multi-Account shutdown deletes only after every runtime closes and holds all fences")
+    func sessionCoordinatorMultipleAccounts() async throws {
+        let principal = try PrincipalID(validating: "session-coordinator-\(UUID())")
+        let first = try RuntimeTestContext(suffix: "session-first", principalId: principal)
+        let second = try RuntimeTestContext(suffix: "session-second",
+            accountId: AccountID(validating: "second-account"), principalId: principal)
+        defer { first.remove(); second.remove() }
+        let firstRuntime = try await first.openRuntime()
+        let secondRuntime = try await second.openRuntime()
+        var prepared: [LedgerSessionEndCoordinator.Target] = []
+        for runtime in [firstRuntime, secondRuntime] {
+            let summary = try await runtime.pendingWorkSummary()
+            prepared.append(.init(runtime: runtime, request: try .init(disposition: .ordinaryCleanLogout,
+                expectedSummary: summary, requestedAt: summary.observedAt)))
+        }
+        let targets = prepared
+        defer {
+            for target in targets {
+                try? LedgerWorkspaceSessionCleanup.removeLocalData(target.request, location: target.runtime.location)
+                try? LedgerWorkspaceSessionCleanup.complete(target.request, location: target.runtime.location)
+            }
+        }
+        let steps = LockedRecorder<String>()
+        let user = UUID()
+        let (admissions, workspaces) = try await sessionAdmissions([first, second], user: user)
+        try await LedgerSessionEndCoordinator.end(targets: targets, admissions: admissions,
+            userId: user, expectedWorkspaces: workspaces, clearCachesAndEndProviderSession: {
+            let savedRequests = try await admissions.approvedSessionEndingRequests(user)
+            #expect(savedRequests == targets.map(\.request))
+            try await admissions.requireApprovedCleanupLocation(user, location: firstRuntime.location)
+            let differentRoot = try LedgerWorkspaceRuntimeIsolation.resolve(validatedEnvironment: first.environment,
+                principalId: first.principalId, accountId: first.accountId,
+                applicationSupportDirectory: first.root.appendingPathComponent("different-root"))
+            await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+                try await admissions.requireApprovedCleanupLocation(user, location: differentRoot)
+            }
+            for runtime in [firstRuntime, secondRuntime] {
+                await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                    _ = try await runtime.pendingWorkSummary()
+                }
+                #expect(!FileManager.default.fileExists(atPath: runtime.location.structuredDatabaseURL.path))
+            }
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { _ = try await first.openRuntime() }
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) { _ = try await second.openRuntime() }
+            steps.append("provider")
+        })
+        #expect(steps.values == ["provider"])
+        #expect(try await admissions.downloaded(environment: .targetLocal, currentUserId: nil).isEmpty)
+        for runtime in [firstRuntime, secondRuntime] {
+            #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: runtime.location) == nil)
+        }
+    }
+
+    @Test("Pending work in another Account prevents all teardown")
+    func sessionCoordinatorPendingOtherAccount() async throws {
+        let principal = try PrincipalID(validating: "session-coordinator-\(UUID())")
+        let first = try RuntimeTestContext(suffix: "session-first-pending", principalId: principal)
+        let second = try RuntimeTestContext(suffix: "session-second-pending",
+            accountId: AccountID(validating: "second-account"), principalId: principal)
+        defer { first.remove(); second.remove() }
+        let firstRuntime = try await first.openRuntime()
+        let secondRuntime = try await second.openRuntime()
+        _ = try await secondRuntime.createClient(second.clientCommand(id: "pending"))
+        let clean = try await firstRuntime.pendingWorkSummary()
+        let pending = try await secondRuntime.pendingWorkSummary()
+        let targets: [LedgerSessionEndCoordinator.Target] = [
+            .init(runtime: firstRuntime, request: try .init(disposition: .ordinaryCleanLogout,
+                expectedSummary: clean, requestedAt: clean.observedAt)),
+            .init(runtime: secondRuntime, request: try .init(disposition: .synchronizeThenLogout,
+                expectedSummary: pending, requestedAt: pending.observedAt))]
+        let forbidden: @Sendable () async throws -> Void = { Issue.record("No teardown while another Account has pending work") }
+        let user = UUID()
+        let (admissions, workspaces) = try await sessionAdmissions([first, second], user: user)
+        await #expect(throws: SessionEndingFailure.synchronizationIncomplete) {
+            try await LedgerSessionEndCoordinator.end(targets: targets, admissions: admissions,
+                userId: user, expectedWorkspaces: workspaces, clearCachesAndEndProviderSession: forbidden)
+        }
+        #expect(try await admissions.downloaded(environment: .targetLocal, currentUserId: user) == workspaces)
+        #expect(try await firstRuntime.pendingWorkSummary() == clean)
+        #expect(try await secondRuntime.pendingWorkSummary() == pending)
+        try await firstRuntime.close()
+        try await secondRuntime.close()
+    }
+
+    @MainActor private func sessionAdmissions(_ contexts: [RuntimeTestContext], user: UUID) throws
+        -> (OfflineWorkspaceAdmissionStore, [OfflineWorkspaceAdmission]) {
+        let memory = CategoryAuthTestStorage()
+        let store = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") },
+            write: { memory.store(key: "records", value: $0) }, requireNotRemoved: { _ in })
+        try store.selectIdentity(user)
+        for context in contexts {
+            let authorization = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: user,
+                principalId: context.principalId, accountId: context.accountId, role: .employee, financialAccess: .full)
+            try store.remember(authorization, account: .init(id: context.accountId,
+                displayName: AccountDisplayName(validating: "Session Account")))
+        }
+        return (store, try store.workspacesForSessionEnding(user))
+    }
+
     @Test("WORKRUNTIME-TEST-001 exact composition returns clean and all pending classes")
     func exactCompositionAndPendingClasses() async throws {
         let cleanContext = try RuntimeTestContext(suffix: "clean")

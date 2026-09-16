@@ -2289,12 +2289,55 @@ again before exposing the runtime; malformed intent also denies access. The
 marker cannot be cleared while the workspace directory or either key remains.
 A changed configuration/location is refused rather than deleting another path.
 
-Remaining implementation: the session-ending coordinator must run this cleanup
-inside guarded shutdown, coordinate identity-wide Auth/offline admissions and
-caches across Accounts, resume pending cleanup during sign-in, and bind the
-existing Settings action. Bootstrap currently denies pending cleanup; automatic
-recovery orchestration and complete signout are not yet delivered. Focused
-real-database evidence belongs to the existing session-ending checklist stories.
+The existing offline-admission record also retains an identity-level ending flag
+and all affected Account admissions until cleanup succeeds. Existing version-1
+records decode without that optional flag. A changed Account directory refuses
+the transition. A flagged identity cannot restore offline access, select itself,
+remember another admission, load online Accounts, or reuse a bound access-check
+closure. Other identities remain separate. This is a recovery directory and
+access lock, not approval to delete any Account's pending work. The shared
+`SupabaseAuthenticatedSession` credential path checks the local flag both before
+and after token refresh. OnlineSignIn binds that check to all its derived
+identities. This also stops previously created RPC readers without adding a
+network membership check to each call; the RPC's 403-only revalidation callback
+alone was insufficient for this purpose.
+
+The provider final step uses `AuthClient.signOut(scope: .local)`, not its global
+default. The pinned SDK removes its stored session before its network request;
+the wrapper distinguishes SDK request completion from local-only completion on
+network failure and refuses a changed identity. Neither result claims immediate
+invalidation of already issued access tokens. Current Swift reference checked
+2026-09-16: https://supabase.com/docs/reference/swift/auth-signout (saved privately
+in `.firecrawl/supabase-swift-signout-20260916.md`); pinned AuthClient/SessionStorage
+source establishes ordering. Coordinator cleanup remains responsible for durable
+admission/intent completion and must not bypass protected-storage errors.
+
+`LedgerSessionEndCoordinator` preflights every supplied Account before closing
+any, then nests the existing guarded shutdowns to hold every open fence through
+cleanup. It orders durable identity intent, all per-Account intents, physical
+cleanup, cache/provider cleanup, per-Account completion, then identity completion.
+Another Account's pending work refuses the whole attempt before deletion.
+Locations come from the opened runtimes, not caller-reconstructed paths.
+
+The coordinator now calls the real admission store directly: one atomic record
+write saves every approved `SessionEndRequest` with the identity ending flag
+before any per-Account intent or deletion. Missing/duplicate Account requests,
+changed directories and attempts to replace a saved decision are refused.
+Recovery can retrieve the full set even if per-Account setup was interrupted.
+This replaces the placeholder identity-persistence/completion callbacks.
+The same atomic plan includes each runtime's physical cleanup binding (a digest
+of its resolved database/media paths, key namespaces and stable scope). Recovery
+must verify that binding before deletion; matching only Account/Principal IDs
+would incorrectly permit a different manifest or application-support root to
+retarget consent. Older/incomplete ending records without a matching binding
+remain locked rather than being upgraded into destructive authority.
+
+Remaining implementation: bind the coordinator to the Auth owner and existing
+Settings action, and resume pending cleanup during sign-in. Cache cleanup and actual provider signout
+must be bound, not left as diagnostic callbacks. Bootstrap currently denies
+pending cleanup; automatic recovery orchestration and complete signout are not
+yet delivered. Focused real-database evidence belongs to the existing
+session-ending checklist stories.
 
 ## A-008 — No General-Purpose Dual Writing
 

@@ -10,11 +10,18 @@ public struct OfflineWorkspaceAdmission: Codable, Equatable, Sendable {
 
 @MainActor
 final class OfflineWorkspaceAdmissionStore {
-    enum Failure: Error, Equatable { case invalidRecord, identityMismatch, unavailable }
+    private struct EndingPlan: Codable, Equatable {
+        let requests: [SessionEndRequest]
+        let workspaceBindings: [String: String]
+    }
+    enum Failure: Error, Equatable { case invalidRecord, identityMismatch, unavailable, sessionEndingPending }
     private struct Record: Codable {
         var version = 1
         var activeUserId: UUID?
         var workspaces: [OfflineWorkspaceAdmission] = []
+        // Optional for compatibility with previously persisted version-1 records.
+        var endingUserIds: [UUID]?
+        var endingPlans: [String: EndingPlan]?
     }
     private let read: () throws -> Data?
     private let write: (Data) throws -> Void
@@ -22,6 +29,8 @@ final class OfflineWorkspaceAdmissionStore {
 
     init(read: @escaping () throws -> Data?, write: @escaping (Data) throws -> Void,
          requireNotRemoved: @escaping (WorkspaceMembershipAuthorization) throws -> Void = {
+             try LedgerWorkspaceSessionCleanup.requireNoPendingCleanup(environment: $0.environment,
+                 principalId: $0.principalId, accountId: $0.accountId)
              try LedgerWorkspaceRemovalRegistry.requireNotRemoved(environment: $0.environment,
                  principalId: $0.principalId, accountId: $0.accountId)
          }) {
@@ -37,6 +46,7 @@ final class OfflineWorkspaceAdmissionStore {
 
     func selectIdentity(_ userId: UUID) throws {
         var record = try load()
+        guard !(record.endingUserIds ?? []).contains(userId) else { throw Failure.sessionEndingPending }
         record.activeUserId = userId
         try save(record)
     }
@@ -44,6 +54,9 @@ final class OfflineWorkspaceAdmissionStore {
     func remember(_ authorization: WorkspaceMembershipAuthorization, account: AccountSummary) throws {
         var record = try load()
         guard record.activeUserId == authorization.authUserId else { throw Failure.identityMismatch }
+        guard !(record.endingUserIds ?? []).contains(authorization.authUserId) else {
+            throw Failure.sessionEndingPending
+        }
         guard account.id == authorization.accountId else { throw Failure.invalidRecord }
         try requireNotRemoved(authorization)
         record.workspaces.removeAll {
@@ -57,6 +70,7 @@ final class OfflineWorkspaceAdmissionStore {
     func downloaded(environment: LedgerEnvironmentKind, currentUserId: UUID?) throws -> [OfflineWorkspaceAdmission] {
         let record = try load()
         guard let active = record.activeUserId else { return [] }
+        guard !(record.endingUserIds ?? []).contains(active) else { throw Failure.sessionEndingPending }
         // A new online identity cannot inherit an old user's offline working set.
         guard currentUserId == nil || currentUserId == active else { throw Failure.identityMismatch }
         return try record.workspaces.filter {
@@ -64,6 +78,98 @@ final class OfflineWorkspaceAdmissionStore {
             do { try requireNotRemoved($0.authorization); return true }
             catch LedgerWorkspaceRemovalFailure.removed { return false }
         }
+    }
+
+    func requireIdentityAvailable(_ userId: UUID) throws {
+        guard !(try load().endingUserIds ?? []).contains(userId) else { throw Failure.sessionEndingPending }
+    }
+
+    /// Includes every downloaded Account for the identity, even removed Accounts
+    /// whose unsynced evidence must remain protected. This is not discard consent.
+    func workspacesForSessionEnding(_ userId: UUID) throws -> [OfflineWorkspaceAdmission] {
+        let record = try load()
+        guard record.activeUserId == userId || (record.endingUserIds ?? []).contains(userId) else {
+            throw Failure.identityMismatch
+        }
+        return record.workspaces.filter { $0.authorization.authUserId == userId }
+    }
+
+    /// Persist only after the coordinator has obtained the required dispositions
+    /// for all affected Accounts. Retain the directory for interrupted recovery.
+    func beginSessionEnding(_ userId: UUID, expectedWorkspaces: [OfflineWorkspaceAdmission]) throws {
+        try persistEnding(userId, expectedWorkspaces: expectedWorkspaces, approvedRequests: nil)
+    }
+
+    func beginApprovedSessionEnding(_ userId: UUID, expectedWorkspaces: [OfflineWorkspaceAdmission],
+                                    requests: [SessionEndRequest], workspaceBindings: [String: String]) throws {
+        let scopes = try Set(requests.map { request in
+            try LedgerWorkspaceRemovalRegistry.identity(environment: request.expectedSummary.environment,
+                principalId: request.expectedSummary.principalId, accountId: request.expectedSummary.accountId)
+        })
+        guard Set(workspaceBindings.keys) == scopes,
+              workspaceBindings.values.allSatisfy({ $0.count == 64 && $0.allSatisfy(\.isHexDigit) }) else {
+            throw Failure.invalidRecord
+        }
+        guard !requests.isEmpty, requests.count == expectedWorkspaces.count,
+              expectedWorkspaces.allSatisfy({ workspace in
+                  requests.filter { request in
+                      let summary = request.expectedSummary
+                      return summary.environment == workspace.authorization.environment &&
+                          summary.principalId == workspace.authorization.principalId &&
+                          summary.accountId == workspace.account.id
+                  }.count == 1
+              }) else { throw Failure.invalidRecord }
+        try persistEnding(userId, expectedWorkspaces: expectedWorkspaces,
+            approvedRequests: EndingPlan(requests: requests, workspaceBindings: workspaceBindings))
+    }
+
+    func approvedSessionEndingRequests(_ userId: UUID) throws -> [SessionEndRequest] {
+        let record = try load()
+        guard (record.endingUserIds ?? []).contains(userId),
+              let requests = record.endingPlans?[userId.uuidString]?.requests, !requests.isEmpty else {
+            throw Failure.invalidRecord
+        }
+        return requests
+    }
+
+    func requireApprovedCleanupLocation(_ userId: UUID, location: LedgerWorkspaceRuntimeLocation) throws {
+        let record = try load()
+        guard (record.endingUserIds ?? []).contains(userId),
+              record.endingPlans?[userId.uuidString]?.workspaceBindings[location.sessionScopeIdentity] == location.cleanupBinding else {
+            throw Failure.invalidRecord
+        }
+    }
+
+    private func persistEnding(_ userId: UUID, expectedWorkspaces: [OfflineWorkspaceAdmission],
+                               approvedRequests: EndingPlan?) throws {
+        var record = try load()
+        guard record.activeUserId == userId else { throw Failure.identityMismatch }
+        guard record.workspaces.filter({ $0.authorization.authUserId == userId }) == expectedWorkspaces else {
+            throw Failure.invalidRecord
+        }
+        if (record.endingUserIds ?? []).contains(userId) {
+            guard record.endingPlans?[userId.uuidString] == approvedRequests else { throw Failure.invalidRecord }
+            return
+        }
+        record.endingUserIds = (record.endingUserIds ?? []) + [userId]
+        if let approvedRequests {
+            var requests = record.endingPlans ?? [:]
+            requests[userId.uuidString] = approvedRequests
+            record.endingPlans = requests
+        }
+        try save(record)
+    }
+
+    /// Called after the coordinator finishes physical/cache and provider cleanup.
+    /// Never clear another identity or forget this user's recovery directory early.
+    func completeSessionEnding(_ userId: UUID) throws {
+        var record = try load()
+        guard (record.endingUserIds ?? []).contains(userId) else { throw Failure.invalidRecord }
+        record.workspaces.removeAll { $0.authorization.authUserId == userId }
+        record.endingUserIds?.removeAll { $0 == userId }
+        record.endingPlans?.removeValue(forKey: userId.uuidString)
+        if record.activeUserId == userId { record.activeUserId = nil }
+        try save(record)
     }
 
     private func load() throws -> Record {

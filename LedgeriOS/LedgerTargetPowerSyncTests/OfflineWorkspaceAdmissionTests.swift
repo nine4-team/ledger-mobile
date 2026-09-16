@@ -81,6 +81,142 @@ struct OfflineWorkspaceAdmissionTests {
         #expect(throws: OfflineWorkspaceAdmissionStore.Failure.unavailable) { try failing.selectIdentity(UUID()) }
     }
 
+    @Test func interruptedEndingLocksIdentityButRetainsEveryAccountForRecovery() throws {
+        let memory = CategoryAuthTestStorage()
+        let store = makeStore(memory)
+        let first = try admission()
+        let second = try admission(userId: first.authorization.authUserId)
+        let userId = first.authorization.authUserId
+        try store.selectIdentity(userId)
+        try store.remember(first.authorization, account: first.account)
+        try store.remember(second.authorization, account: second.account)
+        let directory = try store.workspacesForSessionEnding(userId)
+        #expect(directory == [first, second])
+        try store.beginSessionEnding(userId, expectedWorkspaces: directory)
+        let reopened = makeStore(memory)
+        #expect(try reopened.workspacesForSessionEnding(userId) == directory)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try reopened.downloaded(environment: .targetLocal, currentUserId: nil)
+        }
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try reopened.selectIdentity(userId)
+        }
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try reopened.remember(first.authorization, account: first.account)
+        }
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try reopened.requireIdentityAvailable(userId)
+        }
+        try reopened.completeSessionEnding(userId)
+        #expect(try reopened.downloaded(environment: .targetLocal, currentUserId: nil).isEmpty)
+        try reopened.selectIdentity(userId)
+        #expect(try reopened.workspacesForSessionEnding(userId).isEmpty)
+    }
+
+    @Test func endingCannotForgetAnotherIdentityOrAChangedDirectory() throws {
+        let store = makeStore(CategoryAuthTestStorage())
+        let first = try admission()
+        let another = try admission()
+        let userId = first.authorization.authUserId
+        try store.selectIdentity(userId)
+        try store.remember(first.authorization, account: first.account)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try store.beginSessionEnding(userId, expectedWorkspaces: [])
+        }
+        #expect(try store.downloaded(environment: .targetLocal, currentUserId: nil) == [first])
+        try store.beginSessionEnding(userId, expectedWorkspaces: [first])
+        try store.selectIdentity(another.authorization.authUserId)
+        try store.remember(another.authorization, account: another.account)
+        try store.completeSessionEnding(userId)
+        #expect(try store.downloaded(environment: .targetLocal, currentUserId: nil) == [another])
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try store.completeSessionEnding(another.authorization.authUserId)
+        }
+    }
+
+    @Test func failedEndingPersistenceDoesNotReportSuccessOrLoseRecoveryDirectory() throws {
+        let memory = CategoryAuthTestStorage()
+        var failWrites = false
+        let store = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") }, write: {
+            if failWrites { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
+            memory.store(key: "records", value: $0)
+        }, requireNotRemoved: { _ in })
+        let grant = try admission()
+        let userId = grant.authorization.authUserId
+        try store.selectIdentity(userId)
+        try store.remember(grant.authorization, account: grant.account)
+        failWrites = true
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.unavailable) {
+            try store.beginSessionEnding(userId, expectedWorkspaces: [grant])
+        }
+        #expect(try store.downloaded(environment: .targetLocal, currentUserId: nil) == [grant])
+        failWrites = false
+        try store.beginSessionEnding(userId, expectedWorkspaces: [grant])
+        failWrites = true
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.unavailable) {
+            try store.completeSessionEnding(userId)
+        }
+        #expect(try makeStore(memory).workspacesForSessionEnding(userId) == [grant])
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.sessionEndingPending) {
+            try makeStore(memory).requireIdentityAvailable(userId)
+        }
+    }
+
+    @Test func approvedWholeSessionIntentIsAtomicCompleteAndCannotBeReplaced() throws {
+        let memory = CategoryAuthTestStorage()
+        var rejectSave = false
+        var writes = 0
+        let store = OfflineWorkspaceAdmissionStore(read: { memory.retrieve(key: "records") }, write: {
+            if rejectSave { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
+            writes += 1
+            memory.store(key: "records", value: $0)
+        }, requireNotRemoved: { _ in })
+        let first = try admission()
+        let second = try admission(userId: first.authorization.authUserId)
+        let user = first.authorization.authUserId
+        let workspaces = [first, second]
+        try store.selectIdentity(user)
+        for workspace in workspaces { try store.remember(workspace.authorization, account: workspace.account) }
+        let requests = try workspaces.map { workspace in
+            let summary = try PendingLocalWorkSummary(environment: workspace.authorization.environment,
+                principalId: workspace.authorization.principalId, accountId: workspace.account.id,
+                snapshotRevision: 1, observedAt: Date(timeIntervalSince1970: 123), queuedOperationCount: 0,
+                applyingOperationCount: 0, unresolvedRejectedOperationCount: 0, unverifiedAttachmentCount: 0)
+            return try SessionEndRequest(disposition: .ordinaryCleanLogout, expectedSummary: summary,
+                requestedAt: summary.observedAt)
+        }
+        let bindings = try Dictionary(uniqueKeysWithValues: requests.map { request in
+            (try LedgerWorkspaceRemovalRegistry.identity(environment: request.expectedSummary.environment,
+                principalId: request.expectedSummary.principalId, accountId: request.expectedSummary.accountId),
+             String(repeating: "a", count: 64))
+        })
+        for invalid in [[requests[0]], [requests[0], requests[0]]] {
+            #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+                try store.beginApprovedSessionEnding(user, expectedWorkspaces: workspaces, requests: invalid, workspaceBindings: bindings)
+            }
+        }
+        let saved = memory.retrieve(key: "records")
+        rejectSave = true
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.unavailable) {
+            try store.beginApprovedSessionEnding(user, expectedWorkspaces: workspaces, requests: requests, workspaceBindings: bindings)
+        }
+        #expect(memory.retrieve(key: "records") == saved)
+        rejectSave = false
+        let priorWrites = writes
+        try store.beginApprovedSessionEnding(user, expectedWorkspaces: workspaces, requests: requests, workspaceBindings: bindings)
+        #expect(writes == priorWrites + 1)
+        #expect(try makeStore(memory).approvedSessionEndingRequests(user) == requests)
+        try store.beginApprovedSessionEnding(user, expectedWorkspaces: workspaces, requests: requests, workspaceBindings: bindings)
+        #expect(writes == priorWrites + 1)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try store.beginSessionEnding(user, expectedWorkspaces: workspaces)
+        }
+        try store.completeSessionEnding(user)
+        #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try store.approvedSessionEndingRequests(user)
+        }
+    }
+
     @Test func nativeKeychainAdmissionIsPersistentAndNotSynchronizable() throws {
         let service = "ledger.offline-admission-test.\(UUID())"
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
@@ -116,9 +252,9 @@ struct OfflineWorkspaceAdmissionTests {
             write: { memory.store(key: "records", value: $0) }, requireNotRemoved: requireNotRemoved)
     }
 
-    private func admission() throws -> OfflineWorkspaceAdmission {
+    private func admission(userId: UUID = UUID()) throws -> OfflineWorkspaceAdmission {
         let account = try AccountID(validating: UUID().uuidString)
-        return try OfflineWorkspaceAdmission(authorization: .init(environment: .targetLocal, authUserId: UUID(),
+        return try OfflineWorkspaceAdmission(authorization: .init(environment: .targetLocal, authUserId: userId,
             principalId: PrincipalID(validating: UUID().uuidString), accountId: account, role: .employee,
             financialAccess: .full), account: AccountSummary(id: account, displayName: AccountDisplayName(validating: "Downloaded Account")))
     }
