@@ -1,3 +1,4 @@
+import Foundation
 import LedgerTargetCore
 import PowerSync
 
@@ -45,6 +46,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                             UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines)
+                            UNION ALL SELECT EXISTS(SELECT 1 FROM spike_local_operations)
                             UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
                             """, parameters: nil) { try $0.getInt(index: 0) }
                         for try await _ in updates {
@@ -62,6 +64,12 @@ struct LiveInvoicePowerSyncQuery: Sendable {
 
     func read(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
         try await database.readTransaction { local in
+            try Self.requireReady(local, accountId: accountId, principalId: principalId, projectId: projectId)
+            return try Self.readAuthorized(transaction: local, accountId: accountId, projectId: projectId)
+        }
+    }
+
+    private static func requireReady(_ local: any Transaction, accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) throws {
             try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
                 accountId: accountId, principalId: principalId, projectId: projectId)
             for identity: any SyncStreamDescription in [
@@ -72,7 +80,75 @@ struct LiveInvoicePowerSyncQuery: Sendable {
             ] {
                 _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local, identity: identity)
             }
-            return try Self.readAuthorized(transaction: local, accountId: accountId, projectId: projectId)
+    }
+
+    func readCreationReview(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> InvoiceCreationReview {
+        try await database.readTransaction { local in
+            try Self.requireReady(local, accountId: accountId, principalId: principalId, projectId: projectId)
+            guard let project = try ClientProjectDirectoryPowerSyncQuery.readProject(projectId,
+                account: accountId, principal: principalId, in: local), project.lifecycle == .active,
+                project.client.lifecycle == .active else { throw Failure.incomplete }
+            return try InvoiceCreationReview(scope: .project(accountId: accountId, projectId: projectId, clientId: project.clientId),
+                candidates: Self.creationCandidatesAuthorized(transaction: local, accountId: accountId, projectId: projectId))
+        }
+    }
+
+    // Caller establishes financial authorization, active scope and complete downloads.
+    static func creationCandidatesAuthorized(transaction: any Transaction, accountId: AccountID, projectId: ProjectID) throws -> [LiveInvoiceContents.Line] {
+        try transaction.getAll(sql: """
+            WITH candidates AS (
+              SELECT 'item' AS kind,i.id,i.account_id,i.project_id,i.category_id,i.amount_minor_units AS amount,
+                i.currency,CAST(i.revision AS TEXT) AS revision,item.description AS description
+                FROM item_charge_occurrences i LEFT JOIN spike_items item ON item.account_id=i.account_id AND item.id=i.item_id
+                WHERE i.withdrawn_at IS NULL
+              UNION ALL SELECT 'expense',id,account_id,project_id,category_id,final_amount_minor_units,currency,CAST(revision AS TEXT),vendor FROM expenses
+              UNION ALL SELECT 'fee_installment',id,account_id,project_id,category_id,amount_minor_units,currency,CAST(revision AS TEXT),label FROM fee_installments
+            )
+            SELECT * FROM candidates c WHERE c.account_id=? AND c.project_id=?
+              AND NOT EXISTS(SELECT 1 FROM live_invoice_memberships m WHERE m.account_id=c.account_id AND m.source_kind=c.kind AND m.source_id=c.id)
+              AND NOT EXISTS(SELECT 1 FROM collected_invoice_lines p WHERE p.account_id=c.account_id AND p.source_kind=c.kind AND p.source_id=c.id)
+            ORDER BY kind,id
+            """, parameters: [accountId.rawValue, projectId.rawValue]) { row in
+                let source: LiveInvoiceSource
+                let id = try row.getString(name: "id")
+                switch try row.getString(name: "kind") {
+                case "item": source = .itemOccurrence(try .init(validating: id))
+                case "expense": source = .expense(try .init(validating: id))
+                case "fee_installment": source = .feeInstallment(try .init(validating: id))
+                default: throw Failure.incomplete
+                }
+                return try .init(selection: .init(source: source, expectedRevision: integer(row.getString(name: "revision")),
+                    reviewedAmount: .init(minorUnits: integer(row.getString(name: "amount")), currency: .init(validating: row.getString(name: "currency")))),
+                    categoryId: .init(validating: row.getString(name: "category_id")), description: row.getString(name: "description"))
+            }
+    }
+
+    func readPendingCreations(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {
+        try await database.readTransaction { local in
+            try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
+                accountId: accountId, principalId: principalId, projectId: projectId)
+            return try local.getAll(sql: """
+                SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations o
+                WHERE account_id=? AND actor_principal_id=? AND command_type='create_invoice'
+                  AND local_state IN ('queued','applying','applied','rejected')
+                  AND NOT (local_state='applied' AND (
+                    EXISTS(SELECT 1 FROM live_invoices h WHERE h.account_id=o.account_id AND h.id=o.subject_id)
+                    OR EXISTS(SELECT 1 FROM collected_invoices h WHERE h.account_id=o.account_id AND h.id=o.subject_id AND h.sealed=1)))
+                ORDER BY accepted_at_ms,id
+                """, parameters: [accountId.rawValue, principalId.rawValue]) { row -> PendingInvoiceCreation in
+                    let json = try row.getString(name: "command_envelope_json")
+                    let command = try OperationContractCodec.decode(CreateInvoiceCommand.self, from: Data("{\"envelope\":\(json)}".utf8))
+                    let e = command.envelope
+                    guard e.accountId == accountId, e.actorPrincipalId == principalId,
+                          e.operationId.rawValue == (try row.getString(name: "id")),
+                          e.payload.invoiceId.rawValue == (try row.getString(name: "subject_id")),
+                          AccountBoundOperationIdentity.isValid(e.operationId, family: .invoiceCreation, accountId: accountId),
+                          try CreateInvoiceUploadRequest(command).fingerprint == row.getString(name: "fingerprint"),
+                          let state = LocalOperationState(rawValue: try row.getString(name: "local_state")) else {
+                        throw LocalOperationIdentityGuardFailure.malformedEvidence
+                    }
+                    return PendingInvoiceCreation(id: e.operationId, payload: e.payload, state: state)
+                }.filter { $0.payload.selection.scope.projectId == projectId }
         }
     }
 

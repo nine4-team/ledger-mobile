@@ -66,6 +66,37 @@ struct LiveInvoiceLocalReaderTests {
             return try LiveInvoicePowerSyncQuery.readAuthorized(transaction: local, accountId: account, projectId: project)
         }
     }
+    @Test func creationReviewExcludesReservedPaidWithdrawnAndForeignSources() async throws {
+        try await withDatabase { db in
+            func candidates() async throws -> [LiveInvoiceContents.Line] {
+                try await db.readTransaction { local in
+                    try LiveInvoicePowerSyncQuery.creationCandidatesAuthorized(transaction: local, accountId: account, projectId: project)
+                }
+            }
+            #expect(try await candidates().isEmpty, "Existing Expense is already on a live Invoice")
+            for sql in [
+                "DELETE FROM live_invoice_memberships",
+                "INSERT INTO spike_items(id,account_id,description) VALUES('chair','account','Chair')",
+                "INSERT INTO item_charge_occurrences(id,account_id,project_id,item_id,category_id,amount_minor_units,currency,revision) VALUES('sale','account','project','chair','category','250','USD',3)",
+                "INSERT INTO fee_installments(id,account_id,project_id,category_id,label,amount_minor_units,currency,revision) VALUES('fee','account','project','category','Design fee','50','USD','4')",
+                "INSERT INTO expenses(id,account_id,project_id,category_id,vendor,final_amount_minor_units,currency,revision) VALUES('foreign','other','project','category','Foreign','1','USD','1')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            let available = try await candidates()
+            #expect(available.count == 3)
+            #expect(available.first?.selection.reviewedAmount.minorUnits == 9_007_199_254_740_993)
+            #expect(available.last?.selection.source == .itemOccurrence(try .init(validating: "sale")))
+            _ = try await db.execute(sql: "UPDATE item_charge_occurrences SET withdrawn_at='2026-09-15'", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id) VALUES('paid','account','frozen','expense','expense')", parameters: nil)
+            #expect(try await candidates().map(\.description) == ["Design fee"])
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await LiveInvoicePowerSyncQuery(database: db).readCreationReview(accountId: account, principalId: principal, projectId: project)
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+            await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+                try await LiveInvoicePowerSyncQuery(database: db).readCreationReview(accountId: account, principalId: principal, projectId: project)
+            }
+        }
+    }
     @Test func incompleteWatchEmitsUnavailableAndFinishesWithoutClosingSharedDatabase() async throws {
         try await withDatabase { db in
             let emitted = AsyncStream<Bool>.makeStream()

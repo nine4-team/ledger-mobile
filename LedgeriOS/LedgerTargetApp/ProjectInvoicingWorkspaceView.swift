@@ -14,6 +14,7 @@ struct ProjectInvoicingWorkspaceView: View {
     @State private var expenses: ProjectExpenses?
     @State private var invoices: [FrozenInvoiceContents]?
     @State private var liveInvoices: [LiveInvoiceContents]?
+    @State private var pendingInvoices: [PendingInvoiceCreation] = []
     @State private var liveInvoiceError: String?
     @State private var invoiceError: String?
     @State private var invoiceFilter: InvoicePipelineFilter = .all
@@ -117,6 +118,21 @@ struct ProjectInvoicingWorkspaceView: View {
                 VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                     SegmentedControl(selection: $invoiceFilter,
                         options: InvoicePipelineFilter.allCases.map(\.segmentOption))
+                    if let liveInvoiceError { BillingEmptyRow(liveInvoiceError) }
+                    if invoiceFilter == .all {
+                        ForEach(pendingInvoices) { pending in
+                            BillingRowSurface(isMuted: false) {
+                                VStack(alignment: .leading, spacing: Spacing.sm) {
+                                    BillingInvoiceSummaryPresentation(title: pending.payload.name.isEmpty ? "Invoice" : pending.payload.name,
+                                        amountText: amount(pending.payload.selection.reviewedTotal), date: nil)
+                                    BillingInvoiceStatusPresentation(label: pending.state == .rejected ? "Not saved to server — needs review"
+                                        : pending.state == .applied ? "Saved — waiting for download" : "Saved on device — pending sync",
+                                        color: BrandColors.textSecondary)
+                                }
+                            }
+                            .accessibilityIdentifier("target-pending-invoice-\(pending.payload.invoiceId.rawValue)")
+                        }
+                    }
                     if let invoiceError { BillingEmptyRow(invoiceError) }
                     else if let invoices {
                         if invoiceFilter == .all || invoiceFilter == .paid {
@@ -136,8 +152,7 @@ struct ProjectInvoicingWorkspaceView: View {
                             }
                         }
                         if invoiceFilter == .all || invoiceFilter == .created || invoiceFilter == .sent {
-                            if let liveInvoiceError { BillingEmptyRow(liveInvoiceError) }
-                            else if let liveInvoices {
+                            if let liveInvoices {
                                 let visible = liveInvoices.filter { invoiceFilter == .all || $0.status.rawValue == invoiceFilter.rawValue }
                                 if visible.isEmpty { BillingEmptyRow("No matching live Invoices in downloaded data.") }
                                 ForEach(visible, id: \.invoiceId) { invoice in
@@ -153,7 +168,7 @@ struct ProjectInvoicingWorkspaceView: View {
                                     }.buttonStyle(.plain)
                                     .accessibilityIdentifier("target-invoicing-invoice-\(invoice.invoiceId.rawValue)")
                                 }
-                            } else { ProgressView("Downloading live Invoices") }
+                            } else if liveInvoiceError == nil { ProgressView("Downloading live Invoices") }
                         }
                         if invoiceFilter == .all || invoiceFilter == .canceled {
                             BillingEmptyRow("Canceled Invoice coverage is not connected yet.")
@@ -217,16 +232,22 @@ struct ProjectInvoicingWorkspaceView: View {
             } catch { if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." } }
         }
         .task(id: projectId) {
-            liveInvoices = nil; liveInvoiceError = nil
+            liveInvoices = nil; pendingInvoices = []; liveInvoiceError = nil
             guard let reader = runtime as? any ProjectLiveInvoiceReading else {
                 liveInvoiceError = "Live Invoices are not connected in this build."; return
             }
             do {
+                // Saved local intent is readable before network streams finish downloading.
+                pendingInvoices = try await (reader as? any ProjectInvoiceCreating)?
+                    .readPendingInvoiceCreations(accountId: accountId, projectId: projectId) ?? []
                 for try await value in reader.watchLiveInvoices(accountId: accountId, projectId: projectId) {
-                    guard !Task.isCancelled else { return }; liveInvoices = value
+                    let pending = try await (reader as? any ProjectInvoiceCreating)?
+                        .readPendingInvoiceCreations(accountId: accountId, projectId: projectId) ?? []
+                    guard !Task.isCancelled else { return }
+                    liveInvoices = value; pendingInvoices = pending
                 }
-                if !Task.isCancelled { liveInvoices = nil; liveInvoiceError = "Live Invoices are unavailable." }
-            } catch { if !Task.isCancelled { liveInvoices = nil; liveInvoiceError = "Live Invoices are unavailable." } }
+                if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." }
+            } catch { if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." } }
         }
     }
 

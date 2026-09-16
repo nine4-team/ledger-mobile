@@ -2,7 +2,7 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
-extension LedgerOfflineClientRuntime: ProjectLiveInvoiceReading {}
+extension LedgerOfflineClientRuntime: ProjectInvoiceCreating {}
 
 public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
     case accountScopeMismatch
@@ -289,6 +289,18 @@ public final class LedgerOfflineClientRuntime:
 
     public func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
         try await lifecycleOwner.readLiveInvoices(accountId: accountId, projectId: projectId)
+    }
+
+    public func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.createInvoice(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {
+        try await lifecycleOwner.readPendingInvoiceCreations(accountId: accountId, projectId: projectId)
+    }
+
+    public func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview {
+        try await lifecycleOwner.readInvoiceCreationReview(accountId: accountId, projectId: projectId)
     }
 
     public func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error> {

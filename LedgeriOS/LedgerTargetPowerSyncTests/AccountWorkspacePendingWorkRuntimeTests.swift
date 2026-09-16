@@ -1377,8 +1377,30 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(source.receiptLines.count == 1)
         if env["LEDGER_LIVE_INVOICE_LOCAL"] == "1" {
             guard !hostedQA else { throw RuntimeInjectedFailure() }
+            var invoiceRuntime = first
+            if env["LEDGER_INVOICE_LOCAL_CREATE"] == "1" {
+                for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+                    if invoices != nil { break }
+                }
+                let review = try await first.readInvoiceCreationReview(accountId: context.accountId, projectId: projectId)
+                #expect(review.candidates.count == 1)
+                #expect(review.candidates.first?.selection.source == .expense(source.expenseId))
+                let payload = try CreateInvoiceCommand.Payload(invoiceId: .init(validating: expense + "-invoice"),
+                    selection: .init(scope: review.scope, lines: review.candidates.map(\.selection)),
+                    name: "Live sync Invoice", notes: "External delivery")
+                let operationUUID = UUID(), capturedAt = Date()
+                try await first.close()
+                let disconnected = try await context.openRuntime()
+                let receipt = try await disconnected.createInvoice(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+                #expect(receipt.localState == .queued)
+                try await disconnected.close()
+                invoiceRuntime = try await context.openRuntime()
+                #expect(try await invoiceRuntime.createInvoice(payload, operationUUID: operationUUID, capturedAt: capturedAt) == receipt)
+                liveStage("offline creation survived restart")
+                try await entry.startWorkspaceSync(invoiceRuntime, authorization: authorization, powerSyncURL: sync)
+            }
             var downloaded: [LiveInvoiceContents]?
-            for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+            for try await invoices in invoiceRuntime.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
                 guard let invoices, !invoices.isEmpty else { continue }
                 downloaded = invoices; break
             }
@@ -1388,7 +1410,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             #expect(expected[0].total == source.finalAmount)
             #expect(expected[0].lines[0].selection.source == .expense(source.expenseId))
             #expect(expected[0].name == "Live sync Invoice")
-            try await first.close()
+            try await invoiceRuntime.close()
             liveStage("first runtime closed")
             let offline = try await context.openRuntime()
             #expect(try await offline.readLiveInvoices(accountId: context.accountId, projectId: projectId) == expected)

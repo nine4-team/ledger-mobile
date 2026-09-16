@@ -14,6 +14,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
     case sellInventoryItems = "sell_inventory_items"
     case createExpense = "create_expense"
     case editExpense = "edit_expense"
+    case createInvoice = "create_invoice"
 
     var insertOnlyCommandTable: String? {
         switch self {
@@ -24,6 +25,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
         case .manageCategories: LedgerPowerSyncTable.categoryCommands
         case .sellInventoryItems: LedgerPowerSyncTable.inventorySaleCommands
         case .createExpense, .editExpense: LedgerPowerSyncTable.expenseCommands
+        case .createInvoice: LedgerPowerSyncTable.invoiceCommands
         case .reviseSpaceChecklists:
             LedgerPowerSyncTable.spaceChecklistRevisionCommands
         case .assignItemsToSpace, .clearItemSpaceAssignments: nil
@@ -68,7 +70,8 @@ enum LocalOperationIdentityGuard {
         LedgerPowerSyncTable.spaceChecklistRevisionCommands,
         LedgerPowerSyncTable.categoryCommands,
         LedgerPowerSyncTable.inventorySaleCommands,
-        LedgerPowerSyncTable.expenseCommands
+        LedgerPowerSyncTable.expenseCommands,
+        LedgerPowerSyncTable.invoiceCommands
     ]
     static let forbiddenMutationTables = [LedgerPowerSyncTable.operationResults]
     static let acceptingProviders = [
@@ -81,7 +84,8 @@ enum LocalOperationIdentityGuard {
         "SpaceChecklistRevisionPowerSyncStore",
         "CategoryManagementPowerSyncStore",
         "InventorySalePowerSyncStore",
-        "ExpenseCreationPowerSyncStore"
+        "ExpenseCreationPowerSyncStore",
+        "InvoiceCreationPowerSyncStore"
     ]
 
     static func inspect(
@@ -284,7 +288,7 @@ enum LocalOperationIdentityGuard {
         case "queued", "applying":
             let resultCountIsValid: Bool
             switch family {
-            case .createProject, .manageCategories, .sellInventoryItems, .createExpense, .editExpense:
+            case .createProject, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice:
                 resultCountIsValid = results.count <= 1
             case .createClient, .archiveProject, .archiveClient,
                  .reviseSpaceChecklists, .assignItemsToSpace,
@@ -294,7 +298,7 @@ enum LocalOperationIdentityGuard {
             guard operation.updatedAt >= operation.acceptedAt,
                   operation.hasNoTerminalEvidence, resultCountIsValid else { return false }
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense:
+            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice:
                 return commandCount == 1 && pendingClients.isEmpty
                     && pendingProjects.isEmpty && pendingAllocations.isEmpty
                     && projectOverlays.isEmpty && clientOverlays.isEmpty
@@ -346,7 +350,7 @@ enum LocalOperationIdentityGuard {
             }
         case "applied", "rejected", "superseded", "resolved":
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense:
+            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice:
                 return (operation.state == "applied" || operation.state == "rejected")
                     && operation.hasCompleteSingleDigestTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty && pendingAllocations.isEmpty
@@ -494,6 +498,7 @@ enum LocalOperationIdentityGuard {
             guard [LocalOperationCommandFamily.manageCategories.rawValue,
                    LocalOperationCommandFamily.sellInventoryItems.rawValue,
                    LocalOperationCommandFamily.createExpense.rawValue,
+                   LocalOperationCommandFamily.createInvoice.rawValue,
                    LocalOperationCommandFamily.editExpense.rawValue].contains(commandType ?? ""),
                   terminalEnvelopeSHA256 == fingerprint, terminalRequestSHA256 == nil,
                   let server = terminalServerReceivedAt, let completed = terminalCompletedAt,
@@ -502,7 +507,8 @@ enum LocalOperationIdentityGuard {
                 ? state == "applied" && terminalResultCode == (commandType == LocalOperationCommandFamily.sellInventoryItems.rawValue
                     ? "inventory_items_sold" : commandType == LocalOperationCommandFamily.createExpense.rawValue
                         ? "expense_created" : commandType == LocalOperationCommandFamily.editExpense.rawValue
-                            ? "expense_edited" : "categories_updated") && terminalErrorCode == nil
+                            ? "expense_edited" : commandType == LocalOperationCommandFamily.createInvoice.rawValue
+                                ? "invoice_created" : "categories_updated") && terminalErrorCode == nil
                 : terminalPhase == "rejected" && state == "rejected"
                     && terminalResultCode == nil && terminalErrorCode?.isEmpty == false
         }
@@ -548,6 +554,7 @@ enum LocalOperationIdentityGuard {
                     LocalOperationCommandFamily.manageCategories.rawValue,
                     LocalOperationCommandFamily.sellInventoryItems.rawValue,
                     LocalOperationCommandFamily.createExpense.rawValue,
+                    LocalOperationCommandFamily.createInvoice.rawValue,
                     LocalOperationCommandFamily.editExpense.rawValue].contains(commandType)
             let phaseMatches = operation.hasNoTerminalEvidence
                 ? phase == operation.state || pendingCreationCanObserveTerminalResult
@@ -571,6 +578,9 @@ enum LocalOperationIdentityGuard {
                     return false
                 }
                 switch commandType {
+                case LocalOperationCommandFamily.createInvoice.rawValue:
+                    return phase == "applied" ? resultCode == "invoice_created"
+                        : CreateInvoiceServerResult.rejections.contains(errorCode ?? "")
                 case LocalOperationCommandFamily.editExpense.rawValue:
                     return phase == "applied" ? resultCode == "expense_edited"
                         : ExpenseServerResult.editRejections.contains(errorCode ?? "")
@@ -773,6 +783,8 @@ enum LocalOperationIdentityGuard {
                json_extract(data, '$.data.fingerprint') AS fingerprint,
                json_extract(data, '$.data.envelope_json') AS envelope_json,
                CASE json_extract(data, '$.type')
+                 WHEN '\(LedgerPowerSyncTable.invoiceCommands)'
+                   THEN json_extract(data, '$.data.invoice_id')
                  WHEN '\(LedgerPowerSyncTable.expenseCommands)'
                    THEN json_extract(data, '$.data.expense_id')
                  WHEN '\(LedgerPowerSyncTable.categoryCommands)'
@@ -797,6 +809,7 @@ enum LocalOperationIdentityGuard {
               '\(LedgerPowerSyncTable.categoryCommands)',
               '\(LedgerPowerSyncTable.inventorySaleCommands)',
               '\(LedgerPowerSyncTable.expenseCommands)',
+              '\(LedgerPowerSyncTable.invoiceCommands)',
               '\(LedgerPowerSyncTable.operationResults)'
             )
             OR (

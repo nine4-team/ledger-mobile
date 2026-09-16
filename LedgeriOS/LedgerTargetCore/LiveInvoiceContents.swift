@@ -5,6 +5,30 @@ public protocol ProjectLiveInvoiceReading: Sendable {
     func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error>
 }
 
+public protocol ProjectInvoiceCreating: ProjectLiveInvoiceReading {
+    func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt
+    func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation]
+    func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview
+}
+
+public struct InvoiceCreationReview: Equatable, Sendable {
+    public let scope: TransactionScope
+    public let candidates: [LiveInvoiceContents.Line]
+    public init(scope: TransactionScope, candidates: [LiveInvoiceContents.Line]) {
+        self.scope = scope; self.candidates = candidates
+    }
+}
+
+/// Locally accepted intent, not authoritative Invoice membership or a payment.
+public struct PendingInvoiceCreation: Identifiable, Equatable, Sendable {
+    public let id: OperationID
+    public let payload: CreateInvoiceCommand.Payload
+    public let state: LocalOperationState
+    public init(id: OperationID, payload: CreateInvoiceCommand.Payload, state: LocalOperationState) {
+        self.id = id; self.payload = payload; self.state = state
+    }
+}
+
 /// Current source facts for an uncollected Invoice; never a paid snapshot.
 public struct LiveInvoiceContents: Equatable, Sendable {
     public enum Status: String, Codable, Sendable { case created, sent }

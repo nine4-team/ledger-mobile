@@ -13,6 +13,13 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
+assert.ok(!process.argv.includes('--native-invoice-create') || process.argv.includes('--native-live-invoice'),
+    '--native-invoice-create requires --native-live-invoice');
+if (process.argv.includes('--native-invoice-create')) {
+    assert.ok(process.argv.includes('--expense') && process.argv.includes('--financial') &&
+        !['--expense-paid','--expense-edit','--native-expense','--native-expense-edit'].some(flag => process.argv.includes(flag)),
+        'Native Invoice creation requires the uncollected revision1 Expense fixture');
+}
 assert.ok(!process.argv.includes('--expense-edit-conflict') || process.argv.includes('--native-expense-edit'),
     '--expense-edit-conflict requires --native-expense-edit');
 if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice')) {
@@ -71,6 +78,8 @@ try {
             env:{...process.env,LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:principal,
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
+                LEDGER_SALE_LOCAL_CLIENT:client,
+                ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
@@ -222,16 +231,20 @@ try {
                 assert.ok([401,403].includes(anonymous.status));
             }
         }
-        if(process.argv.includes('--native-live-invoice')) {
+        if(process.argv.includes('--native-live-invoice') && !process.argv.includes('--native-invoice-create')) {
             assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--expense-edit') && !process.argv.includes('--native-expense'),
                 'Live Invoice replication requires the uncollected revision1 Expense fixture');
             const command = {operationId:key+'-invoice-op',accountId:account,actorPrincipalId:principal,
                 projectId:project,clientId:client,invoiceId:key+'-invoice',contractVersion:'invoice-create-v1',
                 createdAtMs:'1788523200000',name:'Live sync Invoice',notes:'External delivery',
                 sources:[{kind:'expense',sourceId:expense,expectedRevision:'1',amountMinorUnits:intent.amountMinorUnits,currency:intent.currency}]};
-            const result = sql(`begin; select set_config('request.jwt.claim.sub',${q(user.id)},true);
-                select ledger_private.create_live_invoice(${q(JSON.stringify(command))}); commit;`);
-            assert.match(result,/invoice_created/);
+            const createBody = {p_command:JSON.stringify(command)};
+            const createdInvoice = await call('/rest/v1/rpc/spike_create_invoice',createBody,token);
+            assert.equal(createdInvoice.status,200,await createdInvoice.clone().text());
+            const createdResult = await createdInvoice.json();
+            assert.equal(createdResult.result_code,'invoice_created');
+            assert.deepEqual(await (await call('/rest/v1/rpc/spike_create_invoice',createBody,token)).json(),createdResult);
+            assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_create_invoice',createBody)).status));
             const response = await call('/rest/v1/rpc/spike_read_live_invoice',
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
             assert.equal(response.status,200);
@@ -241,6 +254,10 @@ try {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
                 'Native edit uses its own uncollected revision1 fixture');
             runNative('expenseLiveReplication',project,expense);
+        }
+        if(process.argv.includes('--native-invoice-create')) {
+            assert.equal(sql(`select count(*) from ledger_private.live_invoices where account_id=${q(account)}`),'1');
+            assert.equal(sql(`select count(*) from public.spike_operation_results where account_id=${q(account)} and command_type='create_invoice' and phase='applied'`),'1');
         }
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),process.argv.includes('--expense-paid')?'1':'0');
         assert.equal(sql(`select count(*) from ledger_private.expenses where account_id=${q(account)}`),process.argv.includes('--native-expense')?'2':'1');

@@ -661,7 +661,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectLiveInvoiceReading, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
@@ -840,6 +840,24 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 } catch { continuation.finish(throwing: error) }
             }
             continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+    func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        throw ProjectExpenses.Failure.invalidEvidence // Read-only fixture; never simulate a successful save.
+    }
+    func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview {
+        throw ProjectExpenses.Failure.invalidEvidence // This fixture currently exercises pending/list reads only.
+    }
+    func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {
+        let expenses = try await readExpenses(accountId: accountId, projectId: projectId)
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-pending-invoice"),
+              let expense = expenses.expenses.first else { return [] }
+        return try [LocalOperationState.queued, .rejected].map { state in
+            try PendingInvoiceCreation(id: .init(validating: "pending-op-" + state.rawValue),
+                payload: .init(invoiceId: .init(validating: "pending-" + state.rawValue),
+                    selection: .init(scope: .project(accountId: accountId, projectId: projectId, clientId: .init(validating: "client-ui-test")),
+                        lines: [.init(source: .expense(expense.entry.expenseId), expectedRevision: expense.revision,
+                            reviewedAmount: expense.entry.finalAmount)]), name: "Pending Invoice", notes: ""), state: state)
         }
     }
     func watchCollectedInvoices(accountId: AccountID, projectId: ProjectID, invoiceId: InvoiceID? = nil) -> AsyncThrowingStream<[FrozenInvoiceContents]?, Error> {

@@ -682,6 +682,33 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Balanced"].waitForExistence(timeout: 5))
     }
 
+    func testPendingInvoicesShowLocalStatusAndWithdraw() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-pending-invoice", "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let section = app.buttons["Invoices"].firstMatch
+        reveal(section, in: app); section.tap()
+        let queued = app.descendants(matching: .any)["target-pending-invoice-pending-queued"].firstMatch
+        reveal(queued, in: app)
+        XCTAssertTrue(queued.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Saved on device — pending sync"].exists)
+        let rejected = app.descendants(matching: .any)["target-pending-invoice-pending-rejected"].firstMatch
+        reveal(rejected, in: app)
+        XCTAssertTrue(rejected.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Not saved to server — needs review"].exists)
+        #if os(iOS)
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.staticTexts["Live Invoices are unavailable."].waitForExistence(timeout: 5))
+        XCTAssertFalse(queued.exists)
+        XCTAssertFalse(rejected.exists)
+        #endif
+    }
+
     func testLiveInvoiceUsesExistingListAndReport() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

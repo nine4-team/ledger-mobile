@@ -34,7 +34,8 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.spaceChecklistRevisionCommands,
             LedgerPowerSyncTable.categoryCommands,
             LedgerPowerSyncTable.inventorySaleCommands,
-            LedgerPowerSyncTable.expenseCommands
+            LedgerPowerSyncTable.expenseCommands,
+            LedgerPowerSyncTable.invoiceCommands
         ])
         #expect(LocalOperationIdentityGuard.forbiddenMutationTables == [
             LedgerPowerSyncTable.operationResults
@@ -472,7 +473,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .createExpense, .editExpense].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -958,6 +959,11 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
+        case .createInvoice:
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_invoice_commands(id,account_id,actor_principal_id,invoice_id,contract_version,fingerprint,envelope_json)
+                VALUES (?, 'account', 'principal', 'invoice', 'contract', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .createExpense, .editExpense:
             _ = try await database.execute(sql: """
                 INSERT INTO spike_expense_commands(id,account_id,actor_principal_id,expense_id,contract_version,fingerprint,envelope_json)
@@ -1038,7 +1044,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .createExpense, .editExpense: break
+        case .sellInventoryItems, .createExpense, .editExpense, .createInvoice: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1203,6 +1209,7 @@ struct LocalOperationIdentityGuardTests {
 
     private static func subject(_ family: LocalOperationCommandFamily) -> String {
         switch family {
+        case .createInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
         case .createClient, .archiveClient: "client"
         case .createProject, .archiveProject, .sellInventoryItems: "project"
@@ -1783,6 +1790,9 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         index: Int
     ) throws -> OperationID {
+        if families.contains(.createInvoice) {
+            return try InvoiceCreationOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.editExpense) {
             return try AccountBoundOperationIdentity.make(family: .expenseEdit, accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1820,7 +1830,7 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         database: any PowerSyncDatabaseProtocol
     ) async throws {
-        if families.contains(.manageCategories) || families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) {
+        if families.contains(.manageCategories) || families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) {
             _ = try await database.execute(sql: """
                 INSERT OR REPLACE INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
                 VALUES ('category-test-member', ?, ?, 'active', 'full')
@@ -1829,10 +1839,10 @@ struct LocalOperationIdentityGuardTests {
         if families.contains(.createExpense) || families.contains(.editExpense) {
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_budget_categories(id,account_id,kind,lifecycle) VALUES ('expense-category',?,'general','active')", parameters: [guardAccountId.rawValue])
         }
-        if families.contains(.editExpense) {
-            _ = try await database.execute(sql: "INSERT OR REPLACE INTO expenses(id,account_id,project_id,revision,currency) VALUES ('expense',?,'project','1','USD')", parameters: [guardAccountId.rawValue])
+        if families.contains(.editExpense) || families.contains(.createInvoice) {
+            _ = try await database.execute(sql: "INSERT OR REPLACE INTO expenses(id,account_id,project_id,revision,currency,final_amount_minor_units) VALUES ('expense',?,'project','1','USD','100')", parameters: [guardAccountId.rawValue])
         }
-        if families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) {
+        if families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) {
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES ('sale-client',?,'Client','active',1,1,1)",
                 parameters: [guardAccountId.rawValue])
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_projects(id,account_id,client_id,display_name,lifecycle,revision) VALUES ('project',?,'sale-client','Project','active',1)",
@@ -1855,6 +1865,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .createInvoice:
+            return try await submitInvoice(operationId, changed: false, database: database)
         case .editExpense:
             return try await submitExpense(operationId, changed: false, edit: true, database: database)
         case .createExpense:
@@ -2018,6 +2030,154 @@ struct LocalOperationIdentityGuardTests {
         }
     }
 
+    @Test("Invoice acceptance is atomic and survives encrypted restart")
+    func invoiceAcceptanceDurability() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let first = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createInvoice], database: first)
+        let id = try Self.concurrentOperationId(for: [.createInvoice], index: 902)
+        let foreignID = try ExpenseCreationOperationIdentity.make(accountId: Self.guardAccountId, uuid: Self.checkpointUUID(index: 903))
+        await #expect(throws: InvoiceCreationPowerSyncStore.Failure.invalidIdentity) {
+            try await Self.submitInvoice(foreignID, changed: false, database: first)
+        }
+        let baseline = try await Self.count("ps_crud", first)
+        await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+            try await Self.submitInvoice(id, changed: false, database: first,
+                checkpoint: { throw LocalOperationGuardInjectedFailure() })
+        }
+        #expect(try await Self.count("spike_local_operations", first) == 0)
+        #expect(try await Self.count("ps_crud", first) == baseline)
+        let receipt = try await Self.submitInvoice(id, changed: false, database: first)
+        #expect(receipt.localState == .queued)
+        #expect(try await Self.count("live_invoices", first) == 0)
+        try await first.close()
+        let reopened = try fixture.open()
+        #expect(try await Self.submitInvoice(id, changed: false, database: reopened) == receipt)
+        await #expect(throws: OperationContractFailure.payloadMismatch(id)) {
+            try await Self.submitInvoice(id, changed: true, database: reopened)
+        }
+        #expect(try await Self.count("spike_local_operations", reopened) == 1)
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await Self.submitInvoice(id, changed: false, database: reopened)
+        }
+        try await reopened.close()
+    }
+
+    @Test("Invoice upload retains retry and rejection evidence", arguments: [false, true])
+    func invoiceUploadTerminalEvidence(rejected: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createInvoice], database: db)
+        while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+        let id = try Self.concurrentOperationId(for: [.createInvoice], index: rejected ? 905 : 904)
+        _ = try await Self.submitInvoice(id, changed: false, database: db)
+        let transaction = try #require(try await db.getNextCrudTransaction())
+        let entry = try #require(transaction.crud.first)
+        #expect(transaction.crud.count == 1)
+        let query = LiveInvoicePowerSyncQuery(database: db)
+        let project = try ProjectID(validating: "project")
+        let pending = try await query.readPendingCreations(accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, projectId: project)
+        #expect(pending.count == 1)
+        #expect(pending.first?.state == .queued)
+        await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+            try await InvoiceCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: InvoiceReply(rejected: rejected, transportFailure: true))
+        }
+        #expect(try await Self.submitInvoice(id, changed: false, database: db).localState == .applying)
+        await #expect(throws: CreateInvoiceServerResult.Failure.receiptMismatch) {
+            try await InvoiceCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: InvoiceReply(rejected: rejected, wrongSubject: true))
+        }
+        try await InvoiceCreationUpload.apply(entry, database: db, accessFence: .init(), applier: InvoiceReply(rejected: rejected))
+        // A crash after result persistence but before CRUD acknowledgement replays safely.
+        try await InvoiceCreationUpload.apply(entry, database: db, accessFence: .init(), applier: InvoiceReply(rejected: rejected))
+        try await transaction.complete()
+        #expect(try await Self.submitInvoice(id, changed: false, database: db).localState == (rejected ? .rejected : .applied))
+        #expect(try await db.getNextCrudTransaction() == nil)
+        #expect(try await Self.count("live_invoices", db) == 0, "Result handling does not invent downloaded facts")
+        #expect(try await query.readPendingCreations(accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, projectId: project).first?.state == (rejected ? .rejected : .applied))
+        try await db.close()
+        let reopened = try fixture.open()
+        #expect(try await Self.submitInvoice(id, changed: false, database: reopened).localState == (rejected ? .rejected : .applied))
+        let reopenedQuery = LiveInvoicePowerSyncQuery(database: reopened)
+        #expect(try await reopenedQuery.readPendingCreations(accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, projectId: project).count == 1)
+        _ = try await reopened.execute(sql: "INSERT INTO live_invoices(id,account_id,project_id) VALUES ('invoice',?,'project')",
+            parameters: [Self.guardAccountId.rawValue])
+        #expect(try await reopenedQuery.readPendingCreations(accountId: Self.guardAccountId,
+            principalId: Self.guardPrincipalId, projectId: project).count == (rejected ? 1 : 0),
+            "Only a successful creation may disappear when its authoritative Invoice arrives")
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await reopenedQuery.readPendingCreations(accountId: Self.guardAccountId,
+                principalId: Self.guardPrincipalId, projectId: project)
+        }
+        try await reopened.close()
+    }
+
+    @Test("Invoice upload cannot acknowledge a result after financial access is withdrawn")
+    func invoiceUploadAccessWithdrawal() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createInvoice], database: db)
+        while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+        let id = try Self.concurrentOperationId(for: [.createInvoice], index: 906)
+        _ = try await Self.submitInvoice(id, changed: false, database: db)
+        let transaction = try #require(try await db.getNextCrudTransaction())
+        let entry = try #require(transaction.crud.first)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await InvoiceCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: InvoiceReply(rejected: false, beforeReply: {
+                    _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+                }))
+        }
+        let state = try await db.get(sql: "SELECT local_state FROM spike_local_operations WHERE id=?",
+            parameters: [id.rawValue]) { try $0.getString(index: 0) }
+        #expect(state == "applying", "Keep the operation for authorized recovery; do not claim a terminal result")
+        #expect(try await db.getNextCrudTransaction() != nil)
+        #expect(try await Self.count("live_invoices", db) == 0)
+        try await db.close()
+    }
+
+    private struct InvoiceReply: CreateInvoiceCommandApplying {
+        let rejected: Bool
+        var transportFailure = false
+        var wrongSubject = false
+        var beforeReply: @Sendable () async throws -> Void = {}
+        func apply(_ command: CreateInvoiceCommand) async throws -> CreateInvoiceServerResult {
+            if transportFailure { throw LocalOperationGuardInjectedFailure() }
+            try await beforeReply()
+            let e = command.envelope, fingerprint = try CreateInvoiceUploadRequest(command).fingerprint
+            let time = Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded())
+            return .init(operation_id: e.operationId.rawValue, account_id: e.accountId.rawValue,
+                actor_principal_id: e.actorPrincipalId.rawValue, command_type: "create_invoice", contract_version: "invoice-create-v1",
+                command_fingerprint: fingerprint, envelope_sha256: fingerprint,
+                subject_id: wrongSubject ? "wrong" : e.payload.invoiceId.rawValue, phase: rejected ? "rejected" : "applied",
+                request_sha256: nil, result_code: rejected ? nil : "invoice_created",
+                error_code: rejected ? "invoice_source_changed" : nil,
+                client_created_at_ms: time, server_received_at_ms: time, completed_at_ms: time)
+        }
+    }
+
+    private static func submitInvoice(_ operationId: OperationID, changed: Bool, database: any PowerSyncDatabaseProtocol,
+                                      checkpoint: @escaping @Sendable () throws -> Void = {}) async throws -> OperationReceipt {
+        let command = try CreateInvoiceCommand(operationId: operationId, actorPrincipalId: guardPrincipalId,
+            capturedAt: guardAcceptedAt, payload: .init(invoiceId: .init(validating: "invoice"),
+                selection: .init(scope: .project(accountId: guardAccountId, projectId: .init(validating: "project"),
+                    clientId: .init(validating: "sale-client")), lines: [
+                        .init(source: .expense(.init(validating: "expense")), expectedRevision: 1,
+                            reviewedAmount: .init(minorUnits: 100, currency: .init(validating: "USD")))]),
+                name: changed ? "Changed" : "Invoice", notes: ""))
+        return try await InvoiceCreationPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }, afterOperationWrite: checkpoint).submit(command)
+    }
+
     private static func submitExpense(_ operationId: OperationID, changed: Bool, edit: Bool = false, database: any PowerSyncDatabaseProtocol) async throws -> OperationReceipt {
         let command = try CreateExpenseCommand(operationId: operationId, actorPrincipalId: guardPrincipalId,
             capturedAt: guardAcceptedAt, draft: .init(accountId: guardAccountId, projectId: .init(validating: "project"),
@@ -2039,6 +2199,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .createInvoice:
+            return try await submitInvoice(operationId, changed: true, database: database)
         case .editExpense:
             return try await submitExpense(operationId, changed: true, edit: true, database: database)
         case .createExpense:

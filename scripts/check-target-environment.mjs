@@ -2650,6 +2650,7 @@ const localOperationAcceptingStores = [
   ["CategoryManagementPowerSyncStore", "CategoryManagementPowerSyncStore.swift", "manageCategories"],
   ["InventorySalePowerSyncStore", "InventorySalePowerSyncStore.swift", "sellInventoryItems"],
   ["ExpenseCreationPowerSyncStore", "ExpenseCreationPowerSyncStore.swift", "createExpense"],
+  ["InvoiceCreationPowerSyncStore", "InvoiceCreationPowerSyncStore.swift", "createInvoice"],
 ];
 if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
   fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
@@ -2689,7 +2690,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "expenseCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "expenseCommands", "invoiceCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,

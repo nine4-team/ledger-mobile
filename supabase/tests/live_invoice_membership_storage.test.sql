@@ -42,14 +42,18 @@ returns text language sql as $$ select jsonb_build_object(
   'contractVersion','invoice-create-v1','createdAtMs','1000','name','Phase 1','notes','Original notes',
   'sources',jsonb_build_array(jsonb_build_object('kind','expense','sourceId',source,'expectedRevision','1',
     'amountMinorUnits','9007199254740993','currency','USD')))::text $$;
-select ok(not has_function_privilege('authenticated','ledger_private.create_live_invoice(text)','EXECUTE'),
-  'Writer remains private pending complete integration');
+select ok(has_function_privilege('authenticated','public.spike_create_invoice(text)','EXECUTE')
+  and not has_function_privilege('anon','public.spike_create_invoice(text)','EXECUTE')
+  and not has_function_privilege('service_role','public.spike_create_invoice(text)','EXECUTE'),
+  'Creation endpoint is authenticated only, without direct table writes');
 select set_config('request.jwt.claims','{}',true);
 select throws_ok($$select ledger_private.create_live_invoice(pg_temp.invoice_command('unauth'))$$,
   '42501','Authenticated actor required','No unauthenticated writes');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
-select is((ledger_private.create_live_invoice(pg_temp.invoice_command('create-invoice'))).phase,'applied','Exact Expense source creates Invoice');
-select is((ledger_private.create_live_invoice(pg_temp.invoice_command('create-invoice'))).phase,'applied','Identical replay applies once');
+set local role authenticated;
+select is((public.spike_create_invoice(pg_temp.invoice_command('create-invoice'))).phase,'applied','Exact Expense source creates Invoice through authenticated endpoint');
+select is((public.spike_create_invoice(pg_temp.invoice_command('create-invoice'))).phase,'applied','Identical replay applies once');
+reset role;
 select is((select count(*) from ledger_private.live_invoice_memberships where invoice_id='created-invoice'),1::bigint,'Replay does not duplicate membership');
 select is((select final_amount_minor_units from ledger_private.expenses where id='invoice-expense'),9007199254740993::bigint,'Creation preserves exact source money');
 select is((select count(*) from public.spike_transactions where project_id='invoice-membership-project'),0::bigint,'Invoice demand creates no payment');

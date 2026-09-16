@@ -182,6 +182,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readExpenses
     case readCollectedInvoices
     case readLiveInvoices
+    case createInvoice
     case createClient
     case createProject
     case archiveProject
@@ -1556,11 +1557,37 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.createInvoice) { resources in
+            guard payload.selection.scope.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            let command = try CreateInvoiceCommand(operationId: InvoiceCreationOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                actorPrincipalId: resources.principalId, capturedAt: capturedAt, payload: payload)
+            return try await InvoiceCreationPowerSyncStore(database: resources.structuredDatabase, accountId: resources.accountId,
+                principalId: resources.principalId, accessFence: resources.accessFence, now: resources.now).submit(command)
+        }
+    }
+
     func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
         try await withFiniteLease(.readLiveInvoices) { resources in
             guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
             return try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase)
                 .read(accountId: accountId, principalId: resources.principalId, projectId: projectId)
+        }
+    }
+
+    func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {
+        try await withFiniteLease(.readLiveInvoices) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase)
+                .readPendingCreations(accountId: accountId, principalId: resources.principalId, projectId: projectId)
+        }
+    }
+
+    func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview {
+        try await withFiniteLease(.readLiveInvoices) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase)
+                .readCreationReview(accountId: accountId, principalId: resources.principalId, projectId: projectId)
         }
     }
 
@@ -2575,6 +2602,7 @@ actor AccountWorkspacePendingWorkRuntime {
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
+            invoiceCreationApplier: appliers.invoiceCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
@@ -2637,6 +2665,7 @@ actor AccountWorkspacePendingWorkRuntime {
             categoryManagementApplier: appliers.categoryManagement,
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
+            invoiceCreationApplier: appliers.invoiceCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
