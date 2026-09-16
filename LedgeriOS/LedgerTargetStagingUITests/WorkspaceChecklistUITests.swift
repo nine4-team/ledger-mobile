@@ -4046,9 +4046,12 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(unset.exists)
         choose("Workflow Status", "Not Set") // Only mode: OR within the facet.
         XCTAssertTrue(unset.waitForExistence(timeout: 5))
+        reveal(returned, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(returned.exists)
         choose("Bookmark", "Bookmarked")
+        reveal(unset, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(unset.exists) // Absent source bookmark retains Not Bookmarked behavior.
+        reveal(returned, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(returned.exists)
         app.buttons["target-items-filters-clear"].tap()
         reveal(chair, in: app, fullyInsideScrollView: true)
@@ -4077,6 +4080,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         })
         XCTAssertTrue(app.staticTexts["target-items-partial-notice"].exists)
         XCTAssertTrue(app.buttons["target-items-group-accountedFor"].exists)
+        reveal(app.buttons["target-items-group-relationshipEvidenceIncomplete"], in: app, fullyInsideScrollView: true)
         XCTAssertTrue(app.buttons["target-items-group-relationshipEvidenceIncomplete"].exists)
         XCTAssertFalse(app.buttons["target-items-group-unaccountedFor"].exists)
         let itemSearch = app.textFields["target-items-search"]
@@ -4220,12 +4224,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let refresh = app.buttons["target-items-refresh"]
         reveal(refresh, in: app)
         refresh.tap()
+        reveal(item, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         reveal(chairSelection, in: app)
         chairSelection.tap()
         assertSelectedCount(1)
         reveal(refresh, in: app, fullyInsideScrollView: true)
         refresh.tap()
+        reveal(item, in: app, fullyInsideScrollView: true)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         reveal(selectedCount, in: app)
         assertSelectedCount(1) // Loading is not evidence that the selected Item was deleted.
