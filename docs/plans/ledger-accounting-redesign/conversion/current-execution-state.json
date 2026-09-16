@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1180,
+  "stateVersion": 1185,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -61,10 +61,10 @@
     "lastResult": "CI35094251669 terminal failed; Mac78UI/28failures, iOS cancelled. Hosted Return deployed/verified at87f8e777. Actual failing Invoice PDF contains SHIPPING: uppercase heading CSS, not missing data. Corrected test expectation; all live PDF content assertions replayed with PDFKit PASS. Evidence owner invoice-report-readback.liveInvoicePDFCaseDiagnosis. App/renderer unchanged.",
     "activeProcesses": {},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Local resale/lifecycle follow-ups saved9f1700ce/169e7114; evidence in owning Sale/Return records, not CI7836695f. Follow nextWorkflowDecision for live hosted deployment and lastResult for UI failure triage. Private .native-pdf untouched.",
+    "immediateFollowup": "Follow nextWorkflowDecision. Sale/Return evidence9f1700ce/169e7114 does not replace failed CI7836695f. Private .native-pdf untouched.",
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Expense receipt export committed eb0b7aba; local native/actual-sync evidence in business-paid-expense-entry.receiptExportImplementation. MCP parity confirmed through existing get_expense, strengthened test PASS10; receiptExportMCPVerification owns evidence. NEXT address outstanding Mac/platform verification and captured integration failures; no duplicate export implementation or repeated passing iPhone checks. Credit question pending; no repeat. No live processes/hosted changes/push."
+    "nextWorkflowDecision": "Hosted SQL106 verified; PowerSync active9 matches repository, initial replication done/lag0/no errors (hostedHistorySyncActive). NEXT adapt existing invoicing Item live replication test (runtime tests near1275) for strict hosted QA, reuse synthetic seeding pattern in test-hosted-transaction-attachment-upload.mjs; verify paid history/offline reopen. No second harness. Transfer/credit questions pending. Mac UI auth blocked. No processes/source import/Git push."
   }
 }
