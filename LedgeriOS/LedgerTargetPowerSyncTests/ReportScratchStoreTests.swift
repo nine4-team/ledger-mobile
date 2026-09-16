@@ -98,6 +98,11 @@ struct ReportScratchStoreTests {
         defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
         let active = try ReportScratchStore(rootDirectory: root)
         let activeFile = try await active.create(data: Data("%PDF-active".utf8), snapshotReference: reference())
+        await #expect(throws: ReportScratchFailure.artifactsPending) {
+            try await PropertyManagementReportDelivery.recoverStartupScratch(scratchRoot: root,
+                requireNoActiveSessions: true)
+        }
+        #expect(try Data(contentsOf: activeFile.url) == Data("%PDF-active".utf8))
         var abandoned: ReportScratchStore? = try ReportScratchStore(rootDirectory: root)
         let abandonedFile = try await abandoned!.create(data: Data("row,value\r\n".utf8), format: .csv, snapshotReference: reference(), nameHint: "Invoice-42")
         #expect(abandonedFile.url.pathExtension == "csv")
@@ -115,6 +120,8 @@ struct ReportScratchStoreTests {
         try await active.remove(activeFile)
         try await active.close()
         try await recovery.close()
+        try await PropertyManagementReportDelivery.recoverStartupScratch(scratchRoot: root,
+            requireNoActiveSessions: true)
     }
 
     @Test("Foreign artifacts and symlink replacements cannot delete outside evidence")

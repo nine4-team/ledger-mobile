@@ -1827,6 +1827,138 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["offline-entry-cleaned"].waitForExistence(timeout: 5))
     }
 
+    func testSettingsSignOutPreservesSettingsWhenPendingWorkRefuses() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-settings-signout"]
+        app.launch()
+        defer { app.terminate() }
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        let signOut = app.buttons["target-settings-sign-out"]
+        XCTAssertTrue(signOut.waitForExistence(timeout: 5))
+        signOut.tap()
+        XCTAssertTrue(app.staticTexts["target-settings-sign-out-error"].waitForExistence(timeout: 5))
+        XCTAssertTrue(signOut.isEnabled)
+        app.buttons["target-account-settings-done"].tap()
+        XCTAssertTrue(app.staticTexts["target-ui-signout-called"].waitForExistence(timeout: 5))
+        XCTAssertTrue(settings.exists)
+    }
+
+    func testLiveOfflineSettingsSignOutReturnsToSignIn() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-offline-entry", "--ledger-ui-test-entry-live-signout",
+            "--ledger-ui-test-transaction-capture", "--ledger-ui-test-entry-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let account = app.buttons["Offline Test Account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 10))
+        account.tap()
+        let settings = app.buttons["target-account-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        reveal(settings, in: app, within: app.scrollViews["target-workspace-scroll"])
+        settings.tap()
+        let signOut = app.buttons["target-settings-sign-out"]
+        XCTAssertTrue(signOut.waitForExistence(timeout: 5))
+        signOut.tap()
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Sign In"].exists)
+        XCTAssertFalse(account.exists)
+        XCTAssertFalse(settings.exists)
+        XCTAssertFalse(app.buttons["Use Downloaded Accounts"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["Sign In"].waitForExistence(timeout: 10))
+        XCTAssertFalse(account.exists)
+        XCTAssertFalse(app.buttons["Use Downloaded Accounts"].exists)
+    }
+
+    func testApprovedSignOutRecoveryBeforeOfflineEntryAfterRestart() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-offline-entry", "--ledger-ui-test-entry-live-signout",
+            "--ledger-ui-test-entry-approved-recovery", "--ledger-ui-test-transaction-capture",
+            "--ledger-ui-test-entry-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["offline-entry-interrupted-ready"].waitForExistence(timeout: 10))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["Sign In"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Offline Test Account"].exists)
+        XCTAssertFalse(app.buttons["Use Downloaded Accounts"].exists)
+        XCTAssertFalse(app.buttons["Retry"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["Sign In"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Offline Test Account"].exists)
+    }
+
+    func testLivePendingWorkCancelAndConfirmedDiscard() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-offline-entry", "--ledger-ui-test-entry-live-signout",
+            "--ledger-ui-test-transaction-capture", "--ledger-ui-test-entry-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let account = app.buttons["Offline Test Account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 10))
+        account.tap()
+        let name = app.textFields["target-client-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10))
+        name.tap()
+        name.typeText("Unsynced logout test\n")
+        app.buttons["target-create-client"].tap()
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Unsynced logout test — queued locally")).firstMatch.waitForExistence(timeout: 10))
+        let settings = app.buttons["target-account-settings"]
+        reveal(settings, in: app, within: app.scrollViews["target-workspace-scroll"])
+        settings.tap()
+        let syncSignOut = app.buttons["target-pending-sync-sign-out"]
+        reveal(syncSignOut, in: app, within: app.descendants(matching: .any)["target-settings-form"].firstMatch)
+        syncSignOut.tap()
+        let cancelSignOut = app.buttons["Cancel Sign Out"]
+        XCTAssertTrue(cancelSignOut.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Sign In"].exists)
+        cancelSignOut.tap()
+        XCTAssertTrue(waitUntil { syncSignOut.isEnabled })
+        let discard = app.buttons["target-pending-discard-sign-out"]
+        reveal(discard, in: app, within: app.descendants(matching: .any)["target-settings-form"].firstMatch)
+        XCTAssertTrue(discard.isEnabled)
+        discard.tap()
+        XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "1 queued operations")).firstMatch.exists)
+        app.alerts.buttons["Keep My Work"].tap()
+        XCTAssertTrue(discard.exists)
+        discard.tap()
+        app.alerts.buttons["Discard and Sign Out"].tap()
+        XCTAssertTrue(app.buttons["Sign In"].waitForExistence(timeout: 10))
+        XCTAssertFalse(account.exists)
+    }
+
+    func testDownloadedAccountEntryBlocksIncompleteLogoutRecovery() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-offline-entry",
+            "--ledger-ui-test-entry-incomplete-cleanup", "--ledger-ui-test-entry-id=\(UUID().uuidString)"]
+        app.launch()
+        defer {
+            if app.buttons["offline-entry-cleanup"].exists { app.buttons["offline-entry-cleanup"].tap() }
+            app.terminate()
+        }
+        let message = app.staticTexts["Ledger could not finish the previous sign-out. Retry before opening downloaded Accounts."]
+        XCTAssertTrue(message.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Offline Test Account"].exists)
+        app.buttons["Retry"].tap()
+        XCTAssertTrue(message.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Offline Test Account"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(message.waitForExistence(timeout: 10), "An incomplete cleanup remains locked across restart")
+        XCTAssertFalse(app.buttons["Offline Test Account"].exists)
+    }
+
     func testCategoryEditorClosesWhenCategoryAccessIsWithdrawn() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

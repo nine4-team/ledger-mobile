@@ -84,6 +84,8 @@ final class OfflineWorkspaceAdmissionStore {
         guard !(try load().endingUserIds ?? []).contains(userId) else { throw Failure.sessionEndingPending }
     }
 
+    func pendingSessionEndingUsers() throws -> [UUID] { try load().endingUserIds ?? [] }
+
     /// Includes every downloaded Account for the identity, even removed Accounts
     /// whose unsynced evidence must remain protected. This is not discard consent.
     func workspacesForSessionEnding(_ userId: UUID) throws -> [OfflineWorkspaceAdmission] {

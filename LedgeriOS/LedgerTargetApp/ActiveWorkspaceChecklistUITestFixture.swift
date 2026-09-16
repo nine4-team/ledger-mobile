@@ -20,6 +20,8 @@ struct OfflineAccountEntryUITestFixture: View {
     @State private var prepared = false
     @State private var failure: String?
     @State private var cleanup = false
+    @State private var interruptedSignOutReady = false
+    private enum RecoveryFixtureFailure: Error { case interruption, unexpectedlyCompleted }
     private let url = URL(string: "https://offline-entry.invalid")!
     private var fixtureId: String {
         let argument = ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--ledger-ui-test-entry-id=") }
@@ -27,6 +29,7 @@ struct OfflineAccountEntryUITestFixture: View {
         return UUID(uuidString: value)?.uuidString ?? "invalid"
     }
     private var namespace: String { "apps.nine4.ledger.target.ui-entry.\(fixtureId)" }
+    private var liveSignOut: Bool { ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-entry-live-signout") }
     private var query: [String: Any] {
         let hash = SHA256.hash(data: Data(url.absoluteString.utf8)).map { String(format: "%02x", $0) }.joined()
         return [kSecClass as String: kSecClassGenericPassword,
@@ -34,16 +37,23 @@ struct OfflineAccountEntryUITestFixture: View {
     }
 
     var body: some View {
-        ScrollView {
+        VStack {
             VStack {
                 Text("OFFLINE ENTRY UI TEST • SYNTHETIC ADMISSION")
+                if interruptedSignOutReady {
+                    Text("Approved sign-out interrupted").accessibilityIdentifier("offline-entry-interrupted-ready")
+                }
                 if let failure { Text(failure).accessibilityIdentifier("offline-entry-fixture-error") }
                 if prepared {
                     TargetOnlineAccountEntryView(environment: environment, makeEntry: {
                         try SupabaseOnlineSignIn(supabaseURL: url, publishableKey: "sb_publishable_fixture",
                             localDataNamespace: namespace, redirectTo: TargetSupabaseConfiguration.callback)
-                    }) { selection, entry in
-                        AnyView(Text(selection.offlineAdmission != nil && !entry.hasStoredSession
+                    }) { selection, entry, signedOut in
+                        if liveSignOut {
+                            return AnyView(OfflineProviderSpikeView(environment: environment, selection: selection,
+                                entry: entry, signedOut: signedOut))
+                        }
+                        return AnyView(Text(selection.offlineAdmission != nil && !entry.hasStoredSession
                             && selection.account.id.rawValue == fixtureId ? "Offline selection verified" : "Unexpected selection")
                             .accessibilityIdentifier("offline-entry-selected"))
                     }
@@ -57,19 +67,58 @@ struct OfflineAccountEntryUITestFixture: View {
         }
         .task {
             guard !prepared, fixtureId != "invalid" else { return }
+            let seedKey = "offline-entry-seeded-\(fixtureId)"
+            if liveSignOut, UserDefaults.standard.bool(forKey: seedKey) {
+                prepared = true
+                return
+            }
             do {
                 let user = UUID().uuidString
-                let bytes = try JSONSerialization.data(withJSONObject: ["version": 1, "activeUserId": user,
+                let account = liveSignOut ? "capture-ui-\(fixtureId)" : fixtureId
+                let principal = liveSignOut ? "capture-ui-member-\(fixtureId)" : "offline-test-\(fixtureId)"
+                if liveSignOut, let id = UUID(uuidString: fixtureId) {
+                    let runtime = try await LedgerPowerSyncLocalBootstrap.openTransactionAttachmentUIFixture(
+                        validatedEnvironment: environment, fixtureID: id)
+                    try await runtime.close()
+                }
+                var record: [String: Any] = ["version": 1, "activeUserId": user,
                     "workspaces": [["authorization": ["environment": environment.manifest.environment.rawValue,
-                        "authUserId": user, "principalId": "offline-test-\(fixtureId)", "accountId": fixtureId,
+                        "authUserId": user, "principalId": principal, "accountId": account,
                         "role": "employee", "financialAccess": "full"],
-                        "account": ["id": fixtureId, "displayName": "Offline Test Account"]]]])
+                        "account": ["id": account, "displayName": "Offline Test Account"]]]]
+                if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-entry-incomplete-cleanup") {
+                    // A marker without an approved plan must block access, never
+                    // fabricate consent to delete this downloaded Account.
+                    record["endingUserIds"] = [user]
+                }
+                let bytes = try JSONSerialization.data(withJSONObject: record)
                 let status = SecItemAdd(query.merging([kSecValueData as String: bytes,
                     kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly]) { _, new in new } as CFDictionary, nil)
                 guard status == errSecSuccess || status == errSecDuplicateItem else {
                     failure = "Fixture Keychain write failed: \(status)"; return
                 }
                 // Duplicate means the prior app process's admission is reused.
+                if liveSignOut, ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-entry-approved-recovery") {
+                    let entry = try SupabaseOnlineSignIn(supabaseURL: url, publishableKey: "sb_publishable_fixture",
+                        localDataNamespace: namespace, redirectTo: TargetSupabaseConfiguration.callback)
+                    guard let authorization = try entry.downloadedWorkspaces(environment: environment.manifest.environment)
+                        .first?.authorization else { throw RecoveryFixtureFailure.unexpectedlyCompleted }
+                    let runtime = try await LedgerPowerSyncLocalBootstrap.open(validatedEnvironment: environment,
+                        principalId: authorization.principalId, accountId: authorization.accountId)
+                    let ender = entry.sessionEnding(runtime: runtime, authorization: authorization,
+                        environment: environment, clearCaches: { throw RecoveryFixtureFailure.interruption })
+                    let summary = try await ender.pendingWorkSummary()
+                    do {
+                        try await ender.endSession(SessionEndRequest(disposition: .ordinaryCleanLogout,
+                            expectedSummary: summary, requestedAt: Date()))
+                        throw RecoveryFixtureFailure.unexpectedlyCompleted
+                    } catch RecoveryFixtureFailure.interruption {
+                        UserDefaults.standard.set(true, forKey: seedKey)
+                        interruptedSignOutReady = true
+                        return
+                    }
+                }
+                if liveSignOut { UserDefaults.standard.set(true, forKey: seedKey) }
                 prepared = true
             } catch { failure = "Fixture preparation failed" }
         }
@@ -82,6 +131,7 @@ struct OfflineAccountEntryUITestFixture: View {
 @MainActor
 struct ActiveWorkspaceChecklistUITestFixtureView: View {
     @State private var fixture = ActiveWorkspaceChecklistUITestFixture()
+    @State private var signOutCalled = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -126,8 +176,13 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
 
                 WorkspaceAccessGate(access: fixture.access) {
                     ActiveWorkspaceToSpaceChecklistStagingView(model: fixture.model,
-                        accountCurrency: try! CurrencyCode(validating: "USD"))
+                        accountCurrency: try! CurrencyCode(validating: "USD"),
+                        onSignOut: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-settings-signout") ? {
+                            signOutCalled = true
+                            throw SessionEndingFailure.pendingWorkRequiresDisposition
+                        } : nil)
                 }
+                if signOutCalled { Text("Sign-out boundary called").accessibilityIdentifier("target-ui-signout-called") }
               }.frame(maxWidth: .infinity, alignment: .leading).padding()
             }
             .itemThumbnailViewport()

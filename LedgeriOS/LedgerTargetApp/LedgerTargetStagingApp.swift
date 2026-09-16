@@ -117,8 +117,8 @@ private struct TargetStagingRootView: View {
                             Text("Sign-in is configured for Ledger's Supabase project. Hosted database setup, live sync and offline startup are not complete. Do not use this build for real work.")
                         }
 
-                        TargetOnlineAccountEntryView(environment: environment) { selection, entry in
-                            AnyView(OfflineProviderSpikeView(environment: environment, selection: selection, entry: entry))
+                        TargetOnlineAccountEntryView(environment: environment) { selection, entry, signedOut in
+                            AnyView(OfflineProviderSpikeView(environment: environment, selection: selection, entry: entry, signedOut: signedOut))
                         }
                       }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding()
                 } else {
@@ -133,12 +133,16 @@ private struct TargetStagingRootView: View {
     }
 }
 
-private struct OfflineProviderSpikeView: View {
+struct OfflineProviderSpikeView: View {
     let environment: ValidatedLedgerEnvironment
+    let entry: SupabaseOnlineSignIn
+    let signedOut: () -> Void
     @State private var model: OfflineClientSpikeModel
 
-    init(environment: ValidatedLedgerEnvironment, selection: TargetWorkspaceSelection, entry: SupabaseOnlineSignIn) {
+    init(environment: ValidatedLedgerEnvironment, selection: TargetWorkspaceSelection, entry: SupabaseOnlineSignIn, signedOut: @escaping () -> Void) {
         self.environment = environment
+        self.entry = entry
+        self.signedOut = signedOut
         let authorization = selection.authorization
         _model = State(initialValue: OfflineClientSpikeModel(authorization: authorization, prepareWorkspace: { runtime in
             if let admission = selection.offlineAdmission {
@@ -216,7 +220,14 @@ private struct OfflineProviderSpikeView: View {
         )
         ActiveWorkspaceToSpaceChecklistStagingView(
             model: model.activeWorkspaceToSpaceChecklist,
-            accountCurrency: model.projectSetup.accountCurrency
+            accountCurrency: model.projectSetup.accountCurrency,
+            onSignOut: {
+                try await model.signOut(entry: entry, environment: environment)
+                signedOut()
+            }, pendingWork: model.pendingWork, onEndSession: { request in
+                try await model.signOut(entry: entry, environment: environment, request: request)
+                signedOut()
+            }
         )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations
@@ -501,7 +512,7 @@ private final class OfflineClientSpikeModel {
         }
     }
 
-    private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+    private func stopPresentation() async {
         let pendingWork = self.pendingWork
         self.pendingWork = nil
         await pendingWork?.stop()
@@ -516,6 +527,33 @@ private final class OfflineClientSpikeModel {
         await spaceChecklistToggle.stop()
         await activeWorkspaceToSpaceChecklist.stop()
         await transferDestinations.stop()
+        displayName = ""
+        lastCreatedName = nil
+        pendingUploadCount = "—"
+    }
+
+    func signOut(entry: SupabaseOnlineSignIn, environment: ValidatedLedgerEnvironment,
+                 request: SessionEndRequest? = nil) async throws {
+        guard let runtime else { throw SupabaseOnlineSignIn.Failure.noSession }
+        let ender = entry.sessionEnding(runtime: runtime, authorization: authorization,
+            environment: environment) { [self] in
+                await stopPresentation()
+                try await PropertyManagementReportDelivery.recoverStartupScratch(requireNoActiveSessions: true)
+            }
+        if let request { try await ender.endSession(request) }
+        else {
+            let summary = try await ender.pendingWorkSummary()
+            let clean = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+                expectedSummary: summary, requestedAt: Date())
+            try await ender.endSession(clean)
+        }
+        await stopRemovalCleanup()
+        self.runtime = nil
+        databaseState = "Signed out"
+    }
+
+    private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+        await stopPresentation()
         if let openedRuntime {
             try? await openedRuntime.close()
         }

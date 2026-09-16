@@ -36,7 +36,7 @@ struct TargetWorkspaceSelection {
 
 struct TargetOnlineAccountEntryView: View {
     let environment: ValidatedLedgerEnvironment
-    let workspace: (TargetWorkspaceSelection, SupabaseOnlineSignIn) -> AnyView
+    let workspace: (TargetWorkspaceSelection, SupabaseOnlineSignIn, @escaping () -> Void) -> AnyView
     private let makeEntry: (() throws -> SupabaseOnlineSignIn)?
     @State private var entry: SupabaseOnlineSignIn?
     @State private var directory: AuthorizedAccountListSnapshot?
@@ -49,7 +49,7 @@ struct TargetOnlineAccountEntryView: View {
 
     init(environment: ValidatedLedgerEnvironment,
          makeEntry: (() throws -> SupabaseOnlineSignIn)? = nil,
-         workspace: @escaping (TargetWorkspaceSelection, SupabaseOnlineSignIn) -> AnyView) {
+         workspace: @escaping (TargetWorkspaceSelection, SupabaseOnlineSignIn, @escaping () -> Void) -> AnyView) {
         self.environment = environment
         self.makeEntry = makeEntry
         self.workspace = workspace
@@ -63,7 +63,13 @@ struct TargetOnlineAccountEntryView: View {
     var body: some View {
         Group {
             if let selection, let entry {
-                workspace(selection, entry)
+                workspace(selection, entry) {
+                    self.selection = nil
+                    directory = nil
+                    downloaded = nil
+                    hasDownloadedAccounts = false
+                    failure = nil
+                }
             } else {
               ScrollView {
                VStack {
@@ -131,11 +137,13 @@ struct TargetOnlineAccountEntryView: View {
                     publishableKey: TargetSupabaseConfiguration.publishableKey,
                     localDataNamespace: environment.manifest.localDataNamespacePrefix,
                     redirectTo: TargetSupabaseConfiguration.callback)
+                try await recoverBeforeAccountEntry()
                 if showDownloadedAccounts() { loading = false }
                 else if entry?.hasStoredSession == true { await loadAccounts() }
                 else { loading = false }
             } catch {
-                failure = "Ledger's sign-in configuration is unavailable."
+                failure = (error as? SupabaseOnlineSignIn.Failure) == .sessionRecoveryFailed
+                    ? error.localizedDescription : "Ledger's sign-in configuration is unavailable."
                 loading = false
             }
         }
@@ -152,14 +160,30 @@ struct TargetOnlineAccountEntryView: View {
         failure = nil
         defer { loading = false }
         do {
+            try await recoverBeforeAccountEntry()
             directory = try await entry.accounts(environment: environment.manifest.environment).snapshot
             downloaded = nil
         }
         catch is CancellationError { return }
         catch SupabaseOnlineSignIn.Failure.noSession { directory = nil }
+        catch SupabaseOnlineSignIn.Failure.sessionRecoveryFailed {
+            directory = nil
+            failure = SupabaseOnlineSignIn.Failure.sessionRecoveryFailed.localizedDescription
+        }
         catch {
             directory = nil
-            failure = "Could not load your Accounts. Your downloaded data and pending work have not been deleted."
+            failure = "Could not load your Accounts. Retry or use available downloaded Accounts."
+        }
+    }
+
+    private func recoverBeforeAccountEntry() async throws {
+        guard let entry else { return }
+        try await entry.recoverPendingSessionEnd(environment: environment) {
+            try await PropertyManagementReportDelivery.recoverStartupScratch(requireNoActiveSessions: true)
+            directory = nil
+            downloaded = nil
+            selection = nil
+            hasDownloadedAccounts = false
         }
     }
 

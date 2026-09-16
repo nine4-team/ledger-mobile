@@ -1175,6 +1175,133 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await secondRuntime.close()
     }
 
+    @Test("Real sign-in owner coordinates local cleanup, cache callback and SDK logout", arguments: [false, true], [false, true])
+    @MainActor func sessionOwnerEndToEnd(offline: Bool, recovering: Bool) async throws {
+        try await checkSessionOwner(offline: offline, recovering: recovering, pendingOther: false)
+    }
+
+    @Test("Sign-in owner preserves both Accounts and Auth when another Account has pending work")
+    @MainActor func sessionOwnerPendingOtherAccount() async throws {
+        try await checkSessionOwner(offline: false, recovering: false, pendingOther: true)
+    }
+
+    @MainActor private func checkSessionOwner(offline: Bool, recovering: Bool, pendingOther: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "session-owner-\(offline)",
+            principalId: PrincipalID(validating: "session-owner-\(UUID())"))
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let user = UUID()
+        let replacementUser = UUID()
+        let preserveNewIdentity = recovering && !offline
+        let (admissions, workspaces) = try sessionAdmissions([context], user: user)
+        let otherAccount = try AccountID(validating: "other-\(UUID())")
+        let otherAuthorization = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: user,
+            principalId: context.principalId, accountId: otherAccount, role: .employee, financialAccess: .full)
+        // The factory opens secondary Accounts itself using live storage/key
+        // dependencies. Seed a real closed working set in the same app root.
+        let other = try await LedgerPowerSyncLocalBootstrap.open(validatedEnvironment: context.environment,
+            principalId: context.principalId, accountId: otherAccount,
+            applicationSupportDirectory: context.root, dependencies: .live)
+        let otherLocation = other.location
+        if pendingOther {
+            _ = try await other.createClient(context.clientCommand(id: "pending-other", accountId: otherAccount))
+        }
+        try await other.close()
+        try admissions.remember(otherAuthorization, account: .init(id: otherAccount,
+            displayName: AccountDisplayName(validating: "Other Session Account")))
+        defer {
+            try? LedgerPowerSyncKeychain(service: otherLocation.databaseKeychainService)
+                .removeRecord(key: otherLocation.databaseKeychainAccount)
+            try? LedgerPowerSyncKeychain(service: otherLocation.mediaKeychainService)
+                .removeRecord(key: otherLocation.mediaKeychainAccount)
+        }
+        let credentials = Session(accessToken: "session-owner-token", tokenType: "bearer", expiresIn: 3600,
+            expiresAt: Date().timeIntervalSince1970 + 3600, refreshToken: "session-owner-refresh",
+            user: User(id: user, appMetadata: [:], userMetadata: [:], aud: "authenticated",
+                createdAt: Date(), updatedAt: Date(), isAnonymous: false))
+        let auth = AuthClient(configuration: .init(url: URL(string: "https://target.invalid/auth/v1")!,
+            localStorage: CategoryAuthTestStorage(), fetch: { request in
+                let url = try #require(request.url)
+                if url.path.hasSuffix("/logout") {
+                    #expect(url.query == "scope=local")
+                    if offline { throw URLError(.notConnectedToInternet) }
+                    return (Data(), HTTPURLResponse(url: url, statusCode: 204, httpVersion: nil, headerFields: nil)!)
+                }
+                if String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("another@example.invalid") {
+                    let replacement = Session(accessToken: "replacement-token", tokenType: "bearer", expiresIn: 3600,
+                        expiresAt: Date().timeIntervalSince1970 + 3600, refreshToken: "replacement-refresh",
+                        user: User(id: replacementUser, appMetadata: [:], userMetadata: [:], aud: "authenticated",
+                            createdAt: Date(), updatedAt: Date(), isAnonymous: false))
+                    return (try AuthClient.Configuration.jsonEncoder.encode(replacement),
+                        HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+                }
+                return (try AuthClient.Configuration.jsonEncoder.encode(credentials),
+                    HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            }, autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        _ = try await auth.signIn(email: "fixture@example.invalid", password: "fixture")
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: URL(string: "https://target.invalid")!,
+            publishableKey: "sb_publishable_fixture", offlineAdmissions: admissions)
+        var cleared = false
+        var interruptOnce = recovering
+        let adapter = entry.sessionEnding(runtime: runtime, authorization: workspaces[0].authorization,
+            environment: context.environment, clearCaches: {
+                #expect(!FileManager.default.fileExists(atPath: runtime.location.structuredDatabaseURL.path))
+                #expect(auth.currentSession?.user.id == user)
+                if interruptOnce { interruptOnce = false; throw RuntimeInjectedFailure() }
+                cleared = true
+            })
+        let summary = try await adapter.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        if pendingOther {
+            await #expect(throws: SessionEndingFailure.pendingWorkRequiresDisposition) {
+                try await adapter.endSession(request)
+            }
+            #expect(!cleared)
+            #expect(auth.currentSession?.user.id == user)
+            #expect(try admissions.workspacesForSessionEnding(user).count == 2)
+            #expect(try admissions.pendingSessionEndingUsers().isEmpty)
+            #expect(try await runtime.pendingWorkSummary() == summary)
+            let retained = try await LedgerPowerSyncLocalBootstrap.open(validatedEnvironment: context.environment,
+                principalId: context.principalId, accountId: otherAccount,
+                applicationSupportDirectory: context.root, dependencies: .live)
+            #expect(try await retained.pendingWorkSummary().queuedOperationCount == 1)
+            try await retained.close()
+            try await runtime.close()
+            return
+        }
+        defer {
+            try? LedgerWorkspaceSessionCleanup.removeLocalData(request, location: runtime.location)
+            try? LedgerWorkspaceSessionCleanup.complete(request, location: runtime.location)
+        }
+        if recovering {
+            await #expect(throws: RuntimeInjectedFailure.self) { try await adapter.endSession(request) }
+            if preserveNewIdentity {
+                _ = try await auth.signIn(email: "another@example.invalid", password: "fixture")
+                try admissions.selectIdentity(replacementUser)
+            }
+            let recovered = try await entry.recoverPendingSessionEnd(environment: context.environment,
+                applicationSupportDirectory: context.root, accessCoordinator: context.accessCoordinator,
+                clearCaches: { cleared = true })
+            #expect(recovered)
+        } else { try await adapter.endSession(request) }
+        #expect(cleared)
+        #expect(entry.hasStoredSession == preserveNewIdentity)
+        if preserveNewIdentity { #expect(auth.currentSession?.user.id == replacementUser) }
+        #expect(try entry.downloadedWorkspaces(environment: .targetLocal).isEmpty)
+        #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: runtime.location) == nil)
+        #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: otherLocation) == nil)
+        #expect(!FileManager.default.fileExists(atPath: otherLocation.structuredDatabaseURL.path))
+        #expect(try LedgerPowerSyncKeychain(service: otherLocation.databaseKeychainService)
+            .loadRecord(key: otherLocation.databaseKeychainAccount) == nil)
+        #expect(try LedgerPowerSyncKeychain(service: otherLocation.mediaKeychainService)
+            .loadRecord(key: otherLocation.mediaKeychainAccount) == nil)
+        let again = try await entry.recoverPendingSessionEnd(environment: context.environment,
+            applicationSupportDirectory: context.root, accessCoordinator: context.accessCoordinator,
+            clearCaches: { Issue.record("Completed logout must not repeat cleanup") })
+        #expect(!again)
+    }
+
     @MainActor private func sessionAdmissions(_ contexts: [RuntimeTestContext], user: UUID) throws
         -> (OfflineWorkspaceAdmissionStore, [OfflineWorkspaceAdmission]) {
         let memory = CategoryAuthTestStorage()
@@ -1188,6 +1315,79 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 displayName: AccountDisplayName(validating: "Session Account")))
         }
         return (store, try store.workspacesForSessionEnding(user))
+    }
+
+    @Test("Recovery fence refuses open runtimes and releases on success or failure", arguments: [false, true])
+    func sessionRecoveryClosedFence(failing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "session-recovery-fence-\(failing)")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let identity = runtime.location.sessionScopeIdentity
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace) {
+            try await context.accessCoordinator.withClosedWorkspaces([identity]) {
+                Issue.record("Recovery cannot touch an open workspace")
+            }
+        }
+        try await runtime.close()
+        let recover: @Sendable () async throws -> Void = {
+            try await context.accessCoordinator.withClosedWorkspaces([identity]) {
+                await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                    _ = try await context.openRuntime()
+                }
+                if failing { throw RuntimeInjectedFailure() }
+            }
+        }
+        if failing { await #expect(throws: RuntimeInjectedFailure.self) { try await recover() } }
+        else { try await recover() }
+        let reopened = try await context.openRuntime()
+        try await reopened.close()
+    }
+
+    @Test("Saved whole-session recovery handles missing markers and interrupted final cleanup", arguments: [false, true])
+    @MainActor func sessionPlanRecovery(partiallyDeleted: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "session-plan-recovery-\(partiallyDeleted)",
+            principalId: PrincipalID(validating: "session-recovery-\(UUID())"))
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let summary = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        let location = runtime.location
+        let user = UUID()
+        let (admissions, workspaces) = try sessionAdmissions([context], user: user)
+        try await runtime.close()
+        try admissions.beginApprovedSessionEnding(user, expectedWorkspaces: workspaces, requests: [request],
+            workspaceBindings: [location.sessionScopeIdentity: location.cleanupBinding])
+        defer {
+            try? LedgerWorkspaceSessionCleanup.removeLocalData(request, location: location)
+            try? LedgerWorkspaceSessionCleanup.complete(request, location: location)
+        }
+        if partiallyDeleted {
+            try LedgerWorkspaceSessionCleanup.begin(request, location: location)
+            try LedgerWorkspaceSessionCleanup.removeLocalData(request, location: location)
+        }
+        let wrong = try LedgerWorkspaceRuntimeIsolation.resolve(validatedEnvironment: context.environment,
+            principalId: context.principalId, accountId: context.accountId,
+            applicationSupportDirectory: context.root.appendingPathComponent("wrong-root"))
+        await #expect(throws: OfflineWorkspaceAdmissionStore.Failure.invalidRecord) {
+            try await LedgerSessionEndCoordinator.recover(admissions: admissions, userId: user,
+                locations: [wrong], accessCoordinator: context.accessCoordinator,
+                clearCachesAndEndProviderSession: { Issue.record("Wrong location cannot reach cleanup") })
+        }
+        #expect(FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path) == !partiallyDeleted)
+        await #expect(throws: RuntimeInjectedFailure.self) {
+            try await LedgerSessionEndCoordinator.recover(admissions: admissions, userId: user,
+                locations: [location], accessCoordinator: context.accessCoordinator,
+                clearCachesAndEndProviderSession: { throw RuntimeInjectedFailure() })
+        }
+        #expect(try admissions.approvedSessionEndingRequests(user) == [request])
+        #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: location) == request)
+        try await LedgerSessionEndCoordinator.recover(admissions: admissions, userId: user,
+            locations: [location], accessCoordinator: context.accessCoordinator,
+            clearCachesAndEndProviderSession: {})
+        #expect(try admissions.downloaded(environment: .targetLocal, currentUserId: nil).isEmpty)
+        #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: location) == nil)
+        #expect(!FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
     }
 
     @Test("WORKRUNTIME-TEST-001 exact composition returns clean and all pending classes")

@@ -10,10 +10,11 @@ public enum PropertyManagementReportDeliveryFailure: Error, Equatable {
 public enum PropertyManagementReportDelivery {
     /// Startup recovery is independent of opening or exporting a report.
     /// Store locks preserve any other window/process's active handoff.
-    public static func recoverStartupScratch(scratchRoot: URL? = nil) async throws {
+    public static func recoverStartupScratch(scratchRoot: URL? = nil,
+                                            requireNoActiveSessions: Bool = false) async throws {
         let store = try ReportScratchStore(rootDirectory: scratchRoot)
         do {
-            try await store.recoverAbandonedSessions()
+            try await store.recoverAbandonedSessions(requireNoActiveSessions: requireNoActiveSessions)
             try await store.close()
         } catch {
             try? await store.close()

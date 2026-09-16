@@ -198,7 +198,7 @@ public actor ReportScratchStore {
 
     /// Only unlocked, well-formed sessions in this dedicated root are eligible.
     /// Unexpected files/symlinks are rejected, never recursively followed/deleted.
-    public func recoverAbandonedSessions() throws {
+    public func recoverAbandonedSessions(requireNoActiveSessions: Bool = false) throws {
         guard sessionFD >= 0 else { throw ReportScratchFailure.closed }
         try Self.lock(rootFD)
         defer { flock(rootFD, LOCK_UN) }
@@ -212,7 +212,10 @@ public actor ReportScratchStore {
             defer { Darwin.close(fd) }
             _ = try Self.info(fd, directory: true)
             if flock(fd, LOCK_EX | LOCK_NB) != 0 {
-                if errno == EWOULDBLOCK { continue }
+                if errno == EWOULDBLOCK {
+                    if requireNoActiveSessions { throw ReportScratchFailure.artifactsPending }
+                    continue
+                }
                 throw Self.ioError()
             }
             let files = try Self.names(fd)

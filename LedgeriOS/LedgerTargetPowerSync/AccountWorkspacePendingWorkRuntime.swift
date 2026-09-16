@@ -401,10 +401,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             return try keychain.loadOrCreateKeyBytes(principalNamespace: account)
         },
         createDirectory: { directory in
+            var attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o700]
+            #if os(iOS) || os(tvOS) || os(watchOS)
+            attributes[.protectionKey] = FileProtectionType.complete
+            #endif
             try FileManager.default.createDirectory(
                 at: directory,
                 withIntermediateDirectories: true,
-                attributes: [.protectionKey: FileProtectionType.complete]
+                attributes: attributes
             )
         },
         openStructuredDatabase: { path, key in
@@ -3081,8 +3085,8 @@ public enum LedgerPowerSyncLocalBootstrap {
         dependencies.validateStructuredDatabase = { database in
             try await validate(database)
             _ = try await database.execute(sql: """
-                INSERT OR IGNORE INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
-                VALUES('capture-ui-member',?,?,'active','full')
+                INSERT OR IGNORE INTO spike_account_memberships(id,account_id,principal_id,state,financial_access,role)
+                VALUES('capture-ui-member',?,?,'active','full','employee')
                 """, parameters: [account.rawValue, principal.rawValue])
             _ = try await database.execute(sql: """
                 INSERT OR IGNORE INTO spike_budget_categories(id,account_id,display_name,kind,lifecycle,is_system,

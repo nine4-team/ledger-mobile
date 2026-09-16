@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1203,
+  "stateVersion": 1216,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Continue session ending. Whole-session EndingPlan now atomically saves all requests AND physical cleanup bindings with admission lock; real coordinator persists/completes it.54452 PASS15/.992s /tmp/ledger-session-physical-binding-20260916.log (coordinator/admission/isolation); owner session-interrupted-cleanup.physicalRecoveryBindingVerification. NEXT actual SupabaseOnlineSignIn AccountSessionEnding binding, cache cleanup, automatic recovery and existing Settings action. Recovery must call requireApprovedCleanupLocation before deletion and retain all scopes until complete; config/root mismatch refuses. Provider signOutThisDevice tested88499, local-only outcome offline. No complete app logout/automatic recovery claim. No live processes."
+    "nextWorkflowDecision": "Session Settings/startup checkpoint: committing current accumulated work after native82806 PASS135/5suites46.450s; session-clean-logout.integratedSessionVerification owns evidence/review. UI62333 covers real pending wait/cancel/confirmed discard; clean/recovery68259/47952 passed. NEXT authoritative sync completion->automatic logout, stale-confirmation/lifecycle and export interleavings. Existing core policy, owner and protected scratch mechanisms only; no new framework or repeated passing checks for context. Locate checkpoint by latest git log (message Wire guarded session ending into Settings and startup recovery). No full session/app/CI acceptance; no push. No live processes. Preserve private .native-pdf files."
   }
 }

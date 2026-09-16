@@ -9,6 +9,10 @@ enum LedgerSessionEndCoordinator {
         let runtime: LedgerOfflineClientRuntime
         let request: SessionEndRequest
     }
+    private struct CleanupTarget: Sendable {
+        let request: SessionEndRequest
+        let location: LedgerWorkspaceRuntimeLocation
+    }
 
     static func end(
         targets: [Target],
@@ -37,20 +41,54 @@ enum LedgerSessionEndCoordinator {
                 workspaceBindings: Dictionary(uniqueKeysWithValues: targets.map {
                     ($0.runtime.location.sessionScopeIdentity, $0.runtime.location.cleanupBinding)
                 }))
-            for target in targets {
-                try LedgerWorkspaceSessionCleanup.begin(target.request, location: target.runtime.location)
-            }
-            for target in targets {
-                try LedgerWorkspaceSessionCleanup.removeLocalData(target.request, location: target.runtime.location)
-            }
-            try await clearCachesAndEndProviderSession()
-            for target in targets {
-                try LedgerWorkspaceSessionCleanup.complete(target.request, location: target.runtime.location)
-            }
-            // Retain the identity recovery directory until individual markers
-            // have cleared; a failed final write must not forget recovery scope.
-            try await admissions.completeSessionEnding(userId)
+            try await finishCleanup(targets.map { .init(request: $0.request, location: $0.runtime.location) },
+                admissions: admissions, userId: userId, finishProvider: clearCachesAndEndProviderSession)
         }
+    }
+
+    static func recover(admissions: OfflineWorkspaceAdmissionStore, userId: UUID,
+                        locations: [LedgerWorkspaceRuntimeLocation],
+                        accessCoordinator: LedgerWorkspaceAccessCoordinator = .shared,
+                        clearCachesAndEndProviderSession: @escaping @Sendable () async throws -> Void) async throws {
+        let requests = try await admissions.approvedSessionEndingRequests(userId)
+        guard !locations.isEmpty, locations.count == requests.count,
+              Set(locations.map(\.sessionScopeIdentity)).count == locations.count else {
+            throw SessionEndingFailure.scopeMismatch
+        }
+        var byScope: [String: SessionEndRequest] = [:]
+        for request in requests {
+            let summary = request.expectedSummary
+            let scope = try LedgerWorkspaceRemovalRegistry.identity(environment: summary.environment,
+                principalId: summary.principalId, accountId: summary.accountId)
+            guard byScope.updateValue(request, forKey: scope) == nil else { throw SessionEndingFailure.scopeMismatch }
+        }
+        var prepared: [CleanupTarget] = []
+        for location in locations {
+            try await admissions.requireApprovedCleanupLocation(userId, location: location)
+            guard let request = byScope[location.sessionScopeIdentity] else { throw SessionEndingFailure.scopeMismatch }
+            prepared.append(.init(request: request, location: location))
+        }
+        let targets = prepared
+        try await accessCoordinator.withClosedWorkspaces(locations.map(\.sessionScopeIdentity)) {
+            // A competing completion cannot turn stale recovery state into new
+            // deletion authority while this task was acquiring its fences.
+            guard try await admissions.approvedSessionEndingRequests(userId) == requests else {
+                throw SessionEndingFailure.summaryChanged
+            }
+            for location in locations { try await admissions.requireApprovedCleanupLocation(userId, location: location) }
+            try await finishCleanup(targets, admissions: admissions, userId: userId,
+                finishProvider: clearCachesAndEndProviderSession)
+        }
+    }
+
+    private static func finishCleanup(_ targets: [CleanupTarget], admissions: OfflineWorkspaceAdmissionStore,
+                                      userId: UUID, finishProvider: @Sendable () async throws -> Void) async throws {
+        for target in targets { try LedgerWorkspaceSessionCleanup.begin(target.request, location: target.location) }
+        for target in targets { try LedgerWorkspaceSessionCleanup.removeLocalData(target.request, location: target.location) }
+        try await finishProvider()
+        for target in targets { try LedgerWorkspaceSessionCleanup.complete(target.request, location: target.location) }
+        // Retain the complete recovery directory until individual markers clear.
+        try await admissions.completeSessionEnding(userId)
     }
 
     private static func shutdown(

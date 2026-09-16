@@ -24,6 +24,11 @@ enum ActiveWorkspaceToSpaceChecklistStagingRuntimeAdapter {
 struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @Bindable var model: ActiveWorkspaceToSpaceChecklistStagingExercise
     let accountCurrency: CurrencyCode
+    var onSignOut: (() async throws -> Void)? = nil
+    var pendingWork: AccountPendingWorkStagingExercise? = nil
+    var onEndSession: ((SessionEndRequest) async throws -> Void)? = nil
+    @State private var signingOut = false
+    @State private var signOutFailure: String?
     @State private var showingPropertyReport = false
     @State private var showingClientReport = false
     @State private var showingSettings = false
@@ -101,8 +106,35 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                                 Section("Business profile") {
                                     AccountBusinessProfileView(accountId: model.accountId, reader: profileReader)
                                 }
+                                if let onSignOut {
+                                    Section {
+                                        Button("Sign Out") {
+                                            guard !signingOut else { return }
+                                            signingOut = true
+                                            signOutFailure = nil
+                                            Task {
+                                                defer { signingOut = false }
+                                                do { try await onSignOut() }
+                                                catch {
+                                                    signOutFailure = "Sign-out could not finish. Sync pending work in every downloaded Account and retry. If cleanup already started, restart Ledger to finish it safely."
+                                                }
+                                            }
+                                        }
+                                        .disabled(signingOut)
+                                        .accessibilityIdentifier("target-settings-sign-out")
+                                        if let signOutFailure {
+                                            Text(signOutFailure).foregroundStyle(.red)
+                                                .accessibilityIdentifier("target-settings-sign-out-error")
+                                        }
+                                    }
+                                }
+                                if let pendingWork, let onEndSession {
+                                    AccountPendingWorkStagingExerciseView(model: pendingWork, endSession: onEndSession)
+                                        .task { await pendingWork.refresh() }
+                                }
                             }
                             .navigationTitle("Settings")
+                            .accessibilityIdentifier("target-settings-form")
                             .toolbar {
                                 ToolbarItem(placement: .confirmationAction) {
                                     Button("Done") { showingSettings = false }

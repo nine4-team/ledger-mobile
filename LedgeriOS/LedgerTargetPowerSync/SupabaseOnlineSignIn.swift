@@ -9,7 +9,7 @@ import PowerSync
 @MainActor
 public final class SupabaseOnlineSignIn {
     public enum Failure: Error, LocalizedError, Equatable {
-        case busy, signInFailed, signUpFailed, accountLookupFailed, noSession, syncNotConfigured
+        case busy, signInFailed, signUpFailed, accountLookupFailed, noSession, syncNotConfigured, sessionRecoveryFailed
         public var errorDescription: String? {
             switch self {
             case .busy: "Please wait for the current sign-in attempt to finish."
@@ -18,6 +18,7 @@ public final class SupabaseOnlineSignIn {
             case .accountLookupFailed: "Signed in, but Ledger could not load your Accounts. Please try again."
             case .noSession: "Please sign in again."
             case .syncNotConfigured: "The PowerSync service is not configured for this build yet."
+            case .sessionRecoveryFailed: "Ledger could not finish the previous sign-out. Retry before opening downloaded Accounts."
             }
         }
     }
@@ -80,6 +81,117 @@ public final class SupabaseOnlineSignIn {
     }
 
     public var hasStoredSession: Bool { client.currentSession != nil }
+
+    @discardableResult
+    public func recoverPendingSessionEnd(environment: ValidatedLedgerEnvironment,
+        clearCaches: @escaping @MainActor @Sendable () async throws -> Void) async throws -> Bool {
+        guard let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw Failure.sessionRecoveryFailed
+        }
+        return try await recoverPendingSessionEnd(environment: environment, applicationSupportDirectory: root,
+            clearCaches: clearCaches)
+    }
+
+    @discardableResult
+    func recoverPendingSessionEnd(environment: ValidatedLedgerEnvironment, applicationSupportDirectory: URL,
+        accessCoordinator: LedgerWorkspaceAccessCoordinator = .shared,
+        clearCaches: @escaping @MainActor @Sendable () async throws -> Void) async throws -> Bool {
+        guard !inFlight else { throw Failure.busy }
+        guard let offlineAdmissions else { return false }
+        inFlight = true
+        defer { inFlight = false }
+        do {
+            let users = try offlineAdmissions.pendingSessionEndingUsers()
+            for user in users {
+                let workspaces = try offlineAdmissions.workspacesForSessionEnding(user)
+                guard workspaces.allSatisfy({ $0.authorization.environment == environment.manifest.environment }) else {
+                    throw Failure.sessionRecoveryFailed
+                }
+                let locations = try workspaces.map { workspace in
+                    try LedgerWorkspaceRuntimeIsolation.resolve(validatedEnvironment: environment,
+                        principalId: workspace.authorization.principalId, accountId: workspace.account.id,
+                        applicationSupportDirectory: applicationSupportDirectory)
+                }
+                try await LedgerSessionEndCoordinator.recover(admissions: offlineAdmissions, userId: user,
+                    locations: locations, accessCoordinator: accessCoordinator,
+                    clearCachesAndEndProviderSession: { [self] in
+                        try await clearCaches()
+                        try await finishRecoveredProviderSession(user)
+                    })
+            }
+            if !users.isEmpty { selectedDirectory = nil }
+            return !users.isEmpty
+        } catch { throw Failure.sessionRecoveryFailed }
+    }
+
+    private func finishRecoveredProviderSession(_ userId: UUID) async throws {
+        // A different currently stored identity already replaced the old local
+        // session; never sign that other user out during old cleanup recovery.
+        guard client.currentSession == nil || client.currentSession?.user.id == userId else { return }
+        _ = try await boundIdentity(userId).signOutThisDevice()
+    }
+
+    public func sessionEnding(runtime: LedgerOfflineClientRuntime,
+                              authorization: WorkspaceMembershipAuthorization,
+                              environment: ValidatedLedgerEnvironment,
+                              clearCaches: @escaping @MainActor @Sendable () async throws -> Void)
+        -> any AccountSessionEnding {
+        SupabaseSessionEndingAdapter(runtime: runtime) { [self] request in
+            guard !inFlight else { throw Failure.busy }
+            guard let offlineAdmissions else { throw OfflineWorkspaceAdmissionStore.Failure.unavailable }
+            guard client.currentSession == nil || client.currentSession?.user.id == authorization.authUserId else {
+                throw SupabaseAuthenticatedSession.Failure.identityChanged
+            }
+            inFlight = true
+            defer { inFlight = false }
+            try await runtime.lifecycleOwner.requireWorkspaceScope(authorization)
+            let workspaces = try offlineAdmissions.workspacesForSessionEnding(authorization.authUserId)
+            guard workspaces.contains(where: { $0.authorization == authorization }),
+                  workspaces.allSatisfy({ $0.authorization.environment == environment.manifest.environment }) else {
+                throw Failure.accountLookupFailed
+            }
+            var opened: [LedgerOfflineClientRuntime] = []
+            do {
+                var targets = [LedgerSessionEndCoordinator.Target(runtime: runtime, request: request)]
+                let root = runtime.location.structuredDatabaseURL.deletingLastPathComponent()
+                    .deletingLastPathComponent().deletingLastPathComponent()
+                guard try LedgerWorkspaceRuntimeIsolation.resolve(validatedEnvironment: environment,
+                    principalId: authorization.principalId, accountId: authorization.accountId,
+                    applicationSupportDirectory: root) == runtime.location else {
+                    throw Failure.accountLookupFailed
+                }
+                for workspace in workspaces where workspace.account.id != authorization.accountId {
+                    let access = workspace.authorization
+                    let location = try LedgerWorkspaceRuntimeIsolation.resolve(validatedEnvironment: environment,
+                        principalId: access.principalId, accountId: access.accountId, applicationSupportDirectory: root)
+                    // Never manufacture a clean empty database for a missing or
+                    // differently-versioned downloaded Account during logout.
+                    guard FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path) else {
+                        throw Failure.accountLookupFailed
+                    }
+                    let other = try await LedgerPowerSyncLocalBootstrap.open(validatedEnvironment: environment,
+                        principalId: access.principalId, accountId: access.accountId,
+                        applicationSupportDirectory: root, dependencies: .live)
+                    opened.append(other)
+                    let summary = try await other.pendingWorkSummary()
+                    let clean = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+                        expectedSummary: summary, requestedAt: summary.observedAt)
+                    targets.append(.init(runtime: other, request: clean))
+                }
+                let identity = boundIdentity(authorization.authUserId)
+                try await LedgerSessionEndCoordinator.end(targets: targets, admissions: offlineAdmissions,
+                    userId: authorization.authUserId, expectedWorkspaces: workspaces,
+                    clearCachesAndEndProviderSession: {
+                        try await clearCaches()
+                        _ = try await identity.signOutThisDevice()
+                    })
+                selectedDirectory = nil
+            } catch {
+                for other in opened { try? await other.close() }
+                throw error
+            }
+        }
+    }
 
     private func boundIdentity(_ userId: UUID) -> SupabaseAuthenticatedSession {
         let admissions = offlineAdmissions
@@ -298,4 +410,17 @@ public final class SupabaseOnlineSignIn {
             }, session: http)
         try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: attachments)
     }
+}
+
+@MainActor
+private final class SupabaseSessionEndingAdapter: AccountSessionEnding {
+    private let runtime: LedgerOfflineClientRuntime
+    private let end: @MainActor @Sendable (SessionEndRequest) async throws -> Void
+    init(runtime: LedgerOfflineClientRuntime,
+         end: @escaping @MainActor @Sendable (SessionEndRequest) async throws -> Void) {
+        self.runtime = runtime
+        self.end = end
+    }
+    func pendingWorkSummary() async throws -> PendingLocalWorkSummary { try await runtime.pendingWorkSummary() }
+    func endSession(_ request: SessionEndRequest) async throws { try await end(request) }
 }

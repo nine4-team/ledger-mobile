@@ -45,6 +45,16 @@ final class LedgerWorkspaceAccessFence: @unchecked Sendable {
 
     func endSessionEnding() { lock.withLock { sessionEnding = false } }
 
+    func beginClosedWorkspaceCleanup() throws {
+        try lock.withLock {
+            guard !removed, !sessionEnding else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            guard openRuntimeCount == 0, !syncConnectionInUse, !commandUploadInProgress else {
+                throw LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace
+            }
+            sessionEnding = true
+        }
+    }
+
     func beginSyncConnection() throws {
         try lock.withLock {
             guard !removed else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
@@ -115,6 +125,23 @@ actor LedgerWorkspaceAccessCoordinator {
     }
     private var fences: [String: LedgerWorkspaceAccessFence] = [:]
     private var runtimes: [String: [Reference]] = [:]
+
+    /// Recovery cannot open databases whose cleanup is pending. Fence their
+    /// closed locations directly, acquiring every scope before awaiting work.
+    func withClosedWorkspaces(_ identities: [String],
+                              body: @Sendable () async throws -> Void) async throws {
+        guard !identities.isEmpty, Set(identities).count == identities.count else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
+        var acquired: [LedgerWorkspaceAccessFence] = []
+        defer { for fence in acquired { fence.endSessionEnding() } }
+        for identity in identities {
+            let candidate = fence(for: identity)
+            try candidate.beginClosedWorkspaceCleanup()
+            acquired.append(candidate)
+        }
+        try await body()
+    }
 
     func open(
         identity: String,

@@ -2266,6 +2266,33 @@ deployment, or new Project allocation policy was required.
 
 ### Session-ending shutdown boundary (2026-09-16, implementation in progress)
 
+The existing target Settings now binds ordinary Sign Out to the live workspace's
+`SupabaseOnlineSignIn.sessionEnding` adapter. The workspace owner reuses its
+presentation stop path and the existing report scratch cleanup; successful
+completion returns to the existing entry form. Pending work refuses ordinary
+logout. Settings reuses Pending Local Work for sync-first and exact-summary
+discard confirmation. Sync-first refreshes local evidence while existing sync
+runs; cancellation/disappearance stops waiting. Discard binds the displayed
+counts to the existing policy request; other Accounts still must be clean.
+Startup and Retry invoke saved-plan recovery before Account entry. UI evidence
+and remaining end-to-end gaps belong to the existing session stories.
+
+Session cleanup uses the existing `recoverStartupScratch` helper with strict
+active-session checking. Ordinary report startup still skips locked exports;
+logout/recovery instead throws while another export owns its scratch session,
+preserving the file and durable cleanup intent until that handoff finishes.
+This avoids declaring cache cleanup complete merely because active files were
+skipped. It does not forcibly cancel OS sharing or delete its in-use files.
+ReportScratchStoreTests covers refusal, byte preservation, and later success.
+
+Real multi-Account owner tests exposed unconditional iOS file protection in the
+database directory creator: on this macOS host the resulting directory rejected
+file creation (SQLite CANTOPEN). It now follows the attachment vault's platform
+guard, retains complete protection on iOS/tvOS/watchOS, and creates owner-only
+0700 directories on all platforms. SQLCipher and scoped Keychain keys remain
+unchanged. Native live-secondary-Account cleanup/recovery passes all four cases;
+the changed iOS branch still needs targeted build/runtime verification.
+
 The runtime now reuses its existing close/drain path for a final session-ending
 policy check. A temporary workspace fence excludes other handles and new opens;
 admitted writes finish, watches/uploads drain, and replication disconnects before
@@ -2332,10 +2359,23 @@ would incorrectly permit a different manifest or application-support root to
 retarget consent. Older/incomplete ending records without a matching binding
 remain locked rather than being upgraded into destructive authority.
 
-Remaining implementation: bind the coordinator to the Auth owner and existing
-Settings action, and resume pending cleanup during sign-in. Cache cleanup and actual provider signout
-must be bound, not left as diagnostic callbacks. Bootstrap currently denies
-pending cleanup; automatic recovery orchestration and complete signout are not
+`SupabaseOnlineSignIn.sessionEnding` now returns the concrete AccountSessionEnding
+adapter. It gathers saved Accounts, refuses missing/differently-versioned local
+databases rather than creating clean substitutes, opens other downloaded Accounts
+for a clean-only disposition, and binds the coordinator to the existing Auth owner.
+Caller-supplied cache cleanup precedes the actual device-scoped provider signout.
+Pending work in another Account is not implicitly approved for discard.
+
+Remaining implementation: wire the existing Settings action/cache owners and
+invoke the Auth owner's `recoverPendingSessionEnd` from startup/retry. That method
+discovers pending identities, resolves their originally bound locations, invokes
+the coordinator and preserves any different current provider identity. It reports
+recovery failure without unlocking saved Accounts. `LedgerSessionEndCoordinator.recover`
+validates every saved request and original physical binding, fences all closed
+workspaces, then reuses normal cleanup. Missing per-Account markers are recreated
+only from the complete approved plan; failures retain that plan for retry. It
+does not open a database or infer consent from empty/new data. Bootstrap denies
+pending cleanup; automatic startup invocation and complete app signout are not
 yet delivered. Focused real-database evidence belongs to the existing
 session-ending checklist stories.
 
