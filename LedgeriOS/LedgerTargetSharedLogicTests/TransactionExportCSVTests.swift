@@ -4,6 +4,24 @@ import Testing
 
 @Suite("Original CSV serializer with target snapshots")
 struct TransactionExportCSVTests {
+    @Test func expenseUsesSameEscapingAndRetainsExactReceiptEvidence() throws {
+        let expense = try ProjectExpenses.Expense(entry: .init(accountId: .init(validating: "account"),
+            projectId: .init(validating: "project"), expenseId: .init(validating: "expense"),
+            vendor: "=untrusted", date: "2026-09-16",
+            finalAmount: .init(minorUnits: Int64.max, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "category"), notes: "Comma, quote\"\nnext", receiptAttachmentIds: [],
+            receiptLines: [.init(id: .init(validating: "credit"), description: .init(validating: "Original credit"),
+                magnitude: .init(minorUnits: 25, currency: .init(validating: "USD")), effect: .decrease)]),
+            revision: 1, currentCategoryName: nil, receiptObjects: [])
+        let csv = TransactionExportCalculations.exportExpenseCSV(snapshot: try .init(expense: expense))
+        #expect(csv.contains("'\u{003d}untrusted"))
+        #expect(csv.contains(String(Int64.max)))
+        #expect(csv.contains("\"Comma, quote\"\"\nnext\""))
+        #expect(csv.contains("credit: Original credit [decrease; 25 USD minor units]"))
+        #expect(csv.contains("\"\"amountMinorUnits\"\":\"\"25\"\""))
+        #expect(!csv.contains("receiptAuditStatus")) // No invented Itemized-Transaction audit on an Expense.
+    }
+
     @Test func defaultSelectionExportsWithoutRemovingLegacyOptions() throws {
         let defaults = TransactionExportCalculations.targetDefaultSelectedIds
         #expect(defaults == ExportFields.defaultSelectedIds.subtracting(["receiptImages"]))

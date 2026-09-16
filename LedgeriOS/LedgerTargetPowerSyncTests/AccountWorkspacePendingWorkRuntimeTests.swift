@@ -1461,6 +1461,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 #expect(row.liveInvoice == expected[0])
                 break
             }
+            let exported = try await ExpenseExportDelivery.read(accountId: context.accountId, projectId: projectId,
+                expenseId: source.expenseId, reader: invoiceRuntime)
+            #expect(exported.values[6] == String(source.finalAmount.minorUnits))
+            let exportedLines = try ReceiptLineExport.structured(source.receiptLines)
+            #expect(exported.values[11] == exportedLines)
             try await invoiceRuntime.close()
             liveStage("first runtime closed")
             let offline = try await context.openRuntime()
@@ -1469,6 +1474,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 projectId: projectId).expenses.first(where: { $0.id == source.expenseId }))
             #expect(offlineExpense.availability == expectedAvailability)
             #expect(offlineExpense.liveInvoice == expected[0])
+            #expect(try await ExpenseExportDelivery.read(accountId: context.accountId, projectId: projectId,
+                expenseId: source.expenseId, reader: offline) == exported)
             liveStage("offline reopened contents match")
             if env["LEDGER_INVOICE_LOCAL_REVISE"] == "1" {
                 let current = expected[0]

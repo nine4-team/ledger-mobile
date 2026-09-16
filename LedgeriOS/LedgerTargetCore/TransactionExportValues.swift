@@ -76,29 +76,12 @@ public enum TransactionExportValues {
         case "receiptVariance": return row.receipt?.reconstruction.map { .money($0.variance) } ?? .unknown
         case "receiptLines":
             guard let receipt = row.receipt else { return .unknown }
-            return .text(receipt.lines.map { line in
-                let quantity = line.quantity.map { "; quantity=\($0)" } ?? ""
-                return "\(line.id.rawValue): \(line.description.rawValue) [\(line.effect.rawValue); \(line.magnitude.minorUnits) \(line.magnitude.currency.rawValue) minor units\(quantity)]"
-            }.joined(separator: "\n"))
+            return .text(ReceiptLineExport.readable(receipt.lines))
         case "receiptLinesJSON":
             guard let receipt = row.receipt else { return .unknown }
-            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-            let data = try encoder.encode(receipt.lines.map(ReceiptLine.init))
-            return .text(String(decoding: data, as: UTF8.self))
+            return .text(try ReceiptLineExport.structured(receipt.lines))
         default: throw Failure.unknownField(fieldID)
         }
     }
 
-    /// Strings keep all Int64 digits intact in CSV consumers that parse JSON
-    /// numbers as floating point. Array order is the authoritative receipt order.
-    private struct ReceiptLine: Encodable {
-        let id, description, amountMinorUnits, currency, effect: String
-        let quantity: String?
-        init(_ line: NonItemReceiptLine) {
-            id = line.id.rawValue; description = line.description.rawValue
-            amountMinorUnits = String(line.magnitude.minorUnits)
-            currency = line.magnitude.currency.rawValue; effect = line.effect.rawValue
-            quantity = line.quantity.map(String.init)
-        }
-    }
 }

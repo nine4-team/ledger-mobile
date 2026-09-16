@@ -1,4 +1,5 @@
 import LedgerTargetCore
+import LedgerTargetPowerSync
 import SwiftUI
 import PDFKit
 
@@ -416,6 +417,8 @@ private struct InvoicingExpenseDetail: View {
     @State private var loading = true
     @State private var find = FindStateManager()
     @State private var selectedReceipt: ExpenseReceiptSelection?
+    @State private var exportTask: Task<Void, Never>?
+    @State private var exportError: String?
 
     var body: some View {
         BillingWorkspacePresentation {
@@ -477,6 +480,11 @@ private struct InvoicingExpenseDetail: View {
                         }
                     }
                 }
+                if row != nil {
+                    Button("Export Expense", systemImage: "square.and.arrow.up", action: exportExpense)
+                        .disabled(exportTask != nil)
+                        .accessibilityIdentifier("target-expense-export")
+                }
                 if let row, row.collectedInvoice == nil, pendingEdits.isEmpty,
                    runtime is any ExpenseCreating, runtime is any ExpenseEditing {
                     Button(unfinishedEdit == nil ? "Edit Expense" : "Resume saved edit") {
@@ -524,7 +532,29 @@ private struct InvoicingExpenseDetail: View {
             } catch { if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil; editSource = nil; loading = false } }
             if !Task.isCancelled { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil; editSource = nil; loading = false }
         }
-        .onDisappear { row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil }
+        .onChange(of: row == nil) { _, unavailable in
+            if unavailable { exportTask?.cancel() }
+        }
+        .alert("Export failed", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button("OK") { exportError = nil }
+        } message: { Text(exportError ?? "") }
+        .onDisappear { exportTask?.cancel(); row = nil; pending = nil; pendingEdits = []; unfinishedEdit = nil }
+    }
+
+    private func exportExpense() {
+        guard row != nil, exportTask == nil else { return }
+        exportTask = Task { @MainActor in
+            defer { exportTask = nil }
+            do {
+                let snapshot = try await ExpenseExportDelivery.read(accountId: accountId, projectId: projectId,
+                    expenseId: expenseId, reader: runtime)
+                let csv = TransactionExportCalculations.exportExpenseCSV(snapshot: snapshot)
+                try await ExpenseExportDelivery.deliver(data: Data(csv.utf8), snapshot: snapshot, reader: runtime) { url in
+                    try await PropertyManagementReportSystemDelivery.handoff(url, action: .share)
+                }
+            } catch is CancellationError { }
+            catch { exportError = "The Expense could not be exported. Its data or your access may have changed. Please try again." }
+        }
     }
 
     private func receiptViewer(_ selection: ExpenseReceiptSelection) -> some View {

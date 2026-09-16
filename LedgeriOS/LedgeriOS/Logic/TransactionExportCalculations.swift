@@ -62,6 +62,14 @@ enum TransactionExportCalculations {
     }
     #endif
 
+    #if canImport(LedgerTargetCore)
+    static func exportExpenseCSV(snapshot: ExpenseExportSnapshot) -> String {
+        exportCSV(rows: [snapshot.values], headers: ExpenseExportSnapshot.headers) { values, index in
+            spreadsheetText(values[index])
+        }
+    }
+    #endif
+
     /// Shared serialization for either backend's already-authorized rows.
     /// Column order belongs to the field selector; this function never fetches
     /// data, decides readiness, or changes the caller's row order.

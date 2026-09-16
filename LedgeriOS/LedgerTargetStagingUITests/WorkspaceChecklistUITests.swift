@@ -1490,6 +1490,29 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Retained draft"].exists)
     }
 
+    func testExpenseExportUsesNativeShareAndCancelsCleanly() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        XCTAssertTrue(expense.waitForExistence(timeout: 5)); expense.tap()
+        let export = app.buttons["target-expense-export"]
+        reveal(export, in: app)
+        XCTAssertTrue(export.waitForExistence(timeout: 5)); export.tap()
+        let activity = app.otherElements["ActivityListView"].firstMatch
+        XCTAssertTrue(activity.waitForExistence(timeout: 10))
+        let dismissShare = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(waitUntil { dismissShare.isHittable }); dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(export.waitForExistence(timeout: 5)); XCTAssertTrue(export.isEnabled)
+        XCTAssertFalse(app.alerts["Export failed"].exists)
+    }
+
     func testExpenseWithoutReceiptPersistsCurrentFormBeforeSave() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
