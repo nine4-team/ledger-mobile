@@ -72,11 +72,9 @@ struct ProjectInvoicingWorkspaceView: View {
             CollapsibleSection(title: "Expenses", isExpanded: $expensesExpanded,
                 onAdd: runtime is any ExpenseCreating && expenses != nil ? { recoveringExpense = nil; creatingExpense = true } : nil) {
                 if let expenseError { BillingEmptyRow(expenseError) }
-                else if availabilityFilter != .all && availabilityFilter != .paid {
-                    BillingEmptyRow("Expense Invoice status has not been downloaded; this status filter cannot be applied yet.")
-                } else if let expenses {
-                    if availabilityFilter == .paid && expenses.expenses.contains(where: { $0.collectedInvoice == nil }) {
-                        BillingEmptyRow("Some Expense Invoice statuses are unavailable; only confirmed paid Expenses are shown.")
+                else if let expenses {
+                    if availabilityFilter != .all && expenses.expenses.contains(where: { $0.availability == nil }) {
+                        BillingEmptyRow("Some Expense Invoice statuses are unavailable; only confirmed matching Expenses are shown.")
                     }
                     ForEach(availabilityFilter == .all ? expenses.unfinishedEntries : []) { entry in
                         Button {
@@ -91,7 +89,7 @@ struct ProjectInvoicingWorkspaceView: View {
                     }
                     let rows = expenses.expenses.filter { row in
                         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
-                        return (availabilityFilter == .all || row.collectedInvoice != nil)
+                        return (availabilityFilter == .all || row.availability?.rawValue == availabilityFilter.rawValue)
                             && (query.isEmpty || [row.entry.vendor, row.entry.notes, row.entry.date].contains { $0.localizedStandardContains(query) })
                     }
                     let pending = expenses.pendingCreations.filter { row in
@@ -113,8 +111,9 @@ struct ProjectInvoicingWorkspaceView: View {
                     ForEach(rows) { row in
                         NavigationLink(value: row.id) {
                         BillingCandidateRowPresentation(title: row.entry.vendor, metadata: row.entry.date,
-                            amountText: amount(row.entry.finalAmount), statusLabel: row.collectedInvoice == nil ? "Invoice status unavailable" : "Paid",
-                            statusColor: BrandColors.textSecondary, invoiceName: nil)
+                            amountText: amount(row.entry.finalAmount), statusLabel: row.availability?.rawValue.capitalized ?? "Invoice status unavailable",
+                            statusColor: row.availability == .paid ? StatusColors.metText : BrandColors.textSecondary,
+                            invoiceName: row.liveInvoice?.name ?? row.collectedInvoice?.displayMetadata?.invoiceNumber)
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("target-invoicing-expense-\(row.id.rawValue)")

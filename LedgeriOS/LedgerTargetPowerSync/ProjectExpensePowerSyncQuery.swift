@@ -124,6 +124,16 @@ struct ProjectExpensePowerSyncQuery: Sendable {
 
     func run(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
              receive: @Sendable @escaping (ProjectExpenses?) async -> Bool) async throws {
+        let live = LiveInvoiceStreamIdentity(accountId: accountId, projectId: projectId)
+        try await withOwnedSyncStreamWatch(subscribe: {
+            try await database.syncStream(name: live.name, params: live.parameters).subscribe()
+        }, observe: {
+            try await runExpenses(accountId: accountId, principalId: principalId, projectId: projectId, receive: receive)
+        })
+    }
+
+    private func runExpenses(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID,
+             receive: @Sendable @escaping (ProjectExpenses?) async -> Bool) async throws {
         let stream = ProjectExpenseStreamIdentity(accountId: accountId, projectId: projectId)
         try await withOwnedSyncStreamWatch(subscribe: {
             try await database.syncStream(name: stream.name, params: stream.parameters).subscribe()
@@ -140,6 +150,11 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoices)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoice_memberships)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM fee_installments)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
                 """, parameters: nil) { try $0.getInt(index: 0) }
             for try await _ in updates {
@@ -209,6 +224,30 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                 }
             }
             let paidByExpense = paid
+            var liveInvoices: [LiveInvoiceContents]?
+            do {
+                _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
+                    identity: LiveInvoiceStreamIdentity(accountId: accountId, projectId: projectId))
+                liveInvoices = try LiveInvoicePowerSyncQuery.readAuthorized(transaction: local,
+                    accountId: accountId, projectId: projectId)
+            } catch PropertyManagementReportFailure.incompleteReadiness {
+                liveInvoices = nil
+            } catch is LiveInvoicePowerSyncQuery.Failure {
+                liveInvoices = nil
+            }
+            var liveByExpense: [ExpenseID: LiveInvoiceContents] = [:]
+            for invoice in liveInvoices ?? [] {
+                for line in invoice.lines {
+                    guard case .expense(let id) = line.selection.source else { continue }
+                    if let paid = paidByExpense[id] {
+                        guard paid.invoiceId == invoice.invoiceId else { throw ProjectExpenses.Failure.invalidEvidence }
+                        continue
+                    }
+                    guard liveByExpense.updateValue(invoice, forKey: id) == nil else { throw ProjectExpenses.Failure.invalidEvidence }
+                }
+            }
+            let validatedLiveByExpense = liveByExpense
+            let membershipComplete = liveInvoices != nil
             let expenses = try local.getAll(sql: """
                 SELECT e.*, category.display_name AS current_category_name FROM expenses e
                 LEFT JOIN spike_budget_categories category ON category.account_id=e.account_id AND category.id=e.category_id
@@ -226,7 +265,8 @@ struct ProjectExpensePowerSyncQuery: Sendable {
                     receiptAttachmentIds: media.map { $0.2 }, receiptLines: detail.map { $0.2 }), revision: revision,
                     currentCategoryName: c.getStringOptional(name: "current_category_name"),
                     receiptObjects: (groupedObjects[id] ?? []).map { $0.1 },
-                    collectedInvoice: paidByExpense[try .init(validating: id)])
+                    collectedInvoice: paidByExpense[try .init(validating: id)],
+                    liveInvoice: validatedLiveByExpense[try .init(validating: id)], invoiceMembershipComplete: membershipComplete)
             }
             let pending: [ProjectExpenses.PendingCreation] = try local.getAll(sql: """
                 SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations

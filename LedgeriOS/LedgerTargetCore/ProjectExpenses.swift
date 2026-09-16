@@ -67,8 +67,16 @@ public struct ProjectExpenses: Equatable, Sendable {
         /// Positive paid evidence only. Nil does not mean available/unpaid:
         /// live Invoice membership has its own completeness requirements.
         public let collectedInvoice: FrozenInvoiceContents?
+        public let liveInvoice: LiveInvoiceContents?
+        public let invoiceMembershipComplete: Bool
+        public var availability: InvoicingAvailability? {
+            if collectedInvoice != nil { return .paid }
+            if let liveInvoice { return liveInvoice.status == .created ? .created : .sent }
+            return invoiceMembershipComplete ? .available : nil
+        }
         public init(entry: BusinessPaidExpenseDraft, revision: Int64, currentCategoryName: String? = nil,
-                    receiptObjects: [DownloadedMediaObjectReference] = [], collectedInvoice: FrozenInvoiceContents? = nil) throws {
+                    receiptObjects: [DownloadedMediaObjectReference] = [], collectedInvoice: FrozenInvoiceContents? = nil,
+                    liveInvoice: LiveInvoiceContents? = nil, invoiceMembershipComplete: Bool = false) throws {
             guard revision > 0, Set(receiptObjects.map(\.attachmentId)).count == receiptObjects.count,
                   receiptObjects.allSatisfy({ $0.accountId == entry.accountId && entry.receiptAttachmentIds.contains($0.attachmentId) })
             else { throw Failure.invalidEvidence }
@@ -84,6 +92,15 @@ public struct ProjectExpenses: Equatable, Sendable {
             self.currentCategoryName = currentCategoryName
             self.receiptObjects = receiptObjects
             self.collectedInvoice = collectedInvoice
+            if let invoice = liveInvoice {
+                let lines = invoice.lines.filter { $0.selection.source == .expense(entry.expenseId) }
+                guard collectedInvoice == nil, invoice.selection.scope.accountId == entry.accountId,
+                      invoice.selection.scope.projectId == entry.projectId, lines.count == 1,
+                      lines[0].selection.expectedRevision == revision,
+                      lines[0].selection.reviewedAmount == entry.finalAmount else { throw Failure.invalidEvidence }
+            }
+            self.liveInvoice = liveInvoice
+            self.invoiceMembershipComplete = invoiceMembershipComplete
         }
     }
     public let accountId: AccountID

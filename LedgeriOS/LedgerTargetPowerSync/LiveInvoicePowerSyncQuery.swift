@@ -269,6 +269,10 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                     guard try row.getInt(name: "collected") == 0 else {
                         throw Failure.incomplete
                     }
+                    // Membership can arrive before its source stream has downloaded.
+                    for field in ["revision", "amount", "currency", "category", "description"] {
+                        guard try row.getStringOptional(name: field) != nil else { throw Failure.incomplete }
+                    }
                     let source: LiveInvoiceSource
                     let id = try row.getString(name: "source_id")
                     switch try row.getString(name: "source_kind") {
@@ -284,6 +288,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
                 }
             guard positionedLines.enumerated().allSatisfy({ $0.offset == $0.element.0 }) else { throw Failure.incomplete }
             let lines = positionedLines.map(\.1)
+            guard !lines.isEmpty else { throw Failure.incomplete }
             let selection = try LiveInvoiceSelection(scope: scope, lines: lines.map(\.selection))
             return try .init(invoiceId: .init(validating: header.0), revision: integer(header.1), status: status,
                 name: header.3, notes: header.4, scope: scope, lines: lines, reportedTotal: selection.reviewedTotal)

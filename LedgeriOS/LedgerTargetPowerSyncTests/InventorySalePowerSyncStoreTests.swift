@@ -434,6 +434,84 @@ struct InventorySalePowerSyncStoreTests {
         } catch { try? await db.close(); throw error }
     }
 
+    @Test(.timeLimit(.minutes(1))) func expenseWatchInvalidatesForInvoiceMembershipAndStatus() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open()
+        do {
+            try await seed(db)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+            let emissions = AsyncStream<String>.makeStream()
+            let watcher = Task {
+                defer { emissions.continuation.finish() }
+                try await ProjectExpensePowerSyncQuery(database: db).run(accountId: account,
+                    principalId: principal, projectId: .init(validating: "destination")) { _ in
+                    do {
+                        let evidence = try await db.get(sql: "SELECT (SELECT count(*) FROM live_invoice_memberships),COALESCE((SELECT status FROM live_invoices LIMIT 1),'none')", parameters: nil) {
+                            try "\($0.getInt(index: 0)):\($0.getString(index: 1))"
+                        }
+                        emissions.continuation.yield(evidence)
+                        return true
+                    } catch { return false }
+                }
+            }
+            var iterator = emissions.stream.makeAsyncIterator()
+            #expect(await iterator.next() == "0:none")
+            _ = try await db.execute(sql: "INSERT INTO live_invoices(id,account_id,project_id,status) VALUES('watch-invoice','sale-account','destination','created')", parameters: nil)
+            var observed: String?
+            repeat { observed = await iterator.next() } while observed != nil && observed != "0:created"
+            #expect(observed == "0:created")
+            _ = try await db.execute(sql: "INSERT INTO live_invoice_memberships(id,account_id,invoice_id) VALUES('watch-member','sale-account','watch-invoice')", parameters: nil)
+            repeat { observed = await iterator.next() } while observed != nil && observed != "1:created"
+            #expect(observed == "1:created")
+            _ = try await db.execute(sql: "UPDATE live_invoices SET status='sent' WHERE id='watch-invoice'", parameters: nil)
+            repeat { observed = await iterator.next() } while observed != nil && observed != "1:sent"
+            #expect(observed == "1:sent")
+            watcher.cancel()
+            _ = await watcher.result
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    @Test func expenseStatusUsesCompletedLiveMembershipAcrossReopen() async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open()
+        do {
+            try await seed(db)
+            for sql in [
+                "UPDATE spike_account_memberships SET financial_access='full'",
+                "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_expenses',1,0,'{\"account_id\":\"sale-account\",\"project_id\":\"destination\"}',1000000)",
+                "INSERT INTO expenses(id,account_id,project_id,category_id,vendor,expense_date,final_amount_minor_units,currency,notes,revision) VALUES('status-expense','sale-account','destination','general','Vendor','2024-02-29','100','USD','','1')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            let project = try ProjectID(validating: "destination")
+            let query = ProjectExpensePowerSyncQuery(database: db)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == nil)
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_live_invoices',1,0,'{\"account_id\":\"sale-account\",\"project_id\":\"destination\"}',1000000)", parameters: nil)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == .available)
+            _ = try await db.execute(sql: "INSERT INTO live_invoices(id,account_id,project_id,revision,status,name,notes) VALUES('status-invoice','sale-account','destination','1','created','INV-STATUS','')", parameters: nil)
+            _ = try await db.execute(sql: "INSERT INTO live_invoice_memberships(id,account_id,invoice_id,source_kind,source_id,position) VALUES('status-member','sale-account','status-invoice','expense','status-expense',0)", parameters: nil)
+            #expect(try await query.read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == .created)
+            _ = try await db.execute(sql: "UPDATE live_invoices SET status='sent' WHERE id='status-invoice'", parameters: nil)
+            try await db.close()
+            let reopened = try fixture.open()
+            do {
+                let rows = try await ProjectExpensePowerSyncQuery(database: reopened).read(accountId: account, principalId: principal, projectId: project)
+                #expect(rows.expenses.first?.availability == .sent)
+                #expect(rows.expenses.first?.liveInvoice?.name == "INV-STATUS")
+                _ = try await reopened.execute(sql: "INSERT INTO live_invoice_memberships(id,account_id,invoice_id,source_kind,source_id,position) VALUES('missing-source','sale-account','status-invoice','fee_installment','not-downloaded',1)", parameters: nil)
+                #expect(try await ProjectExpensePowerSyncQuery(database: reopened).read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == nil)
+                _ = try await reopened.execute(sql: "DELETE FROM live_invoice_memberships WHERE id='missing-source'", parameters: nil)
+                // A partially downloaded Invoice must not turn its Expense into Available.
+                _ = try await reopened.execute(sql: "DELETE FROM live_invoice_memberships WHERE id='status-member'", parameters: nil)
+                let reopenedQuery = ProjectExpensePowerSyncQuery(database: reopened)
+                #expect(try await reopenedQuery.read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == nil)
+                // Once both records are absent in a completed stream, absence is authoritative.
+                _ = try await reopened.execute(sql: "DELETE FROM live_invoices WHERE id='status-invoice'", parameters: nil)
+                #expect(try await reopenedQuery.read(accountId: account, principalId: principal, projectId: project).expenses.first?.availability == .available)
+                try await reopened.close()
+            } catch { try? await reopened.close(); throw error }
+        } catch { try? await db.close(); throw error }
+    }
+
     @Test func downloadedExpensesRequireCheckpointAndPreserveSourceDetail() async throws {
         let fixture = try Fixture(); defer { fixture.remove() }
         let db = try fixture.open(); try await seed(db)

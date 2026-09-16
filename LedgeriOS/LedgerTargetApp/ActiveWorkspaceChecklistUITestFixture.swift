@@ -732,6 +732,26 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
     func readExpenses(accountId: AccountID, projectId: ProjectID) async throws -> ProjectExpenses {
         guard expenseAccess.hasAccess else { throw ProjectExpenses.Failure.invalidEvidence }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-statuses") {
+            let scope = TransactionScope.project(accountId: accountId, projectId: projectId,
+                clientId: try .init(validating: "client-ui-test"))
+            let rows = try ["available", "created", "sent"].map { status in
+                let entry = try BusinessPaidExpenseDraft(accountId: accountId, projectId: projectId,
+                    expenseId: .init(validating: "expense-\(status)"), vendor: "\(status.capitalized) vendor",
+                    date: "2026-09-15", finalAmount: .init(minorUnits: 12550, currency: .init(validating: "USD")),
+                    categoryId: .init(validating: "category-ui-test"), notes: "", receiptAttachmentIds: [])
+                let invoice: LiveInvoiceContents? = try LiveInvoiceContents.Status(rawValue: status).map {
+                    try .init(invoiceId: .init(validating: "invoice-\(status)"), revision: 1, status: $0,
+                        name: "INV-\(status.uppercased())", notes: "", scope: scope,
+                        lines: [.init(selection: .init(source: .expense(entry.expenseId), expectedRevision: 1,
+                            reviewedAmount: entry.finalAmount), categoryId: entry.categoryId, description: entry.vendor)],
+                        reportedTotal: entry.finalAmount)
+                }
+                return try ProjectExpenses.Expense(entry: entry, revision: 1, currentCategoryName: "Shipping",
+                    receiptObjects: [], liveInvoice: invoice, invoiceMembershipComplete: true)
+            }
+            return try ProjectExpenses(accountId: accountId, projectId: projectId, expenses: rows)
+        }
         var objects: [DownloadedMediaObjectReference] = []
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-receipts") {
             for (index, kind) in ["pdf", "image", "image"].enumerated() {

@@ -1271,6 +1271,34 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
+    func testExpenseInvoiceStatusFilters() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-expense-statuses"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app)
+        XCTAssertTrue(invoicing.waitForExistence(timeout: 5)); invoicing.tap()
+        app.buttons["Expenses"].firstMatch.tap()
+        for status in ["Available", "Created", "Sent"] {
+            app.buttons["Filter receivables"].tap()
+            let label = status == "Created" ? "On Created Invoice" : status
+            XCTAssertTrue(app.buttons[label].waitForExistence(timeout: 5))
+            app.buttons[label].tap()
+            app.buttons["Close menu"].tap()
+            for candidate in ["available", "created", "sent"] {
+                let row = app.buttons["target-invoicing-expense-expense-\(candidate)"]
+                if candidate == status.lowercased() {
+                    XCTAssertTrue(row.waitForExistence(timeout: 5))
+                } else {
+                    XCTAssertFalse(row.exists)
+                }
+            }
+        }
+    }
+
     func testInvoicingReusesSourceAndSearchControls() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1317,7 +1345,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["Paid"].tap()
         app.buttons["Close menu"].tap()
         app.buttons["Expenses"].firstMatch.tap()
-        let unavailable = app.staticTexts["Some Expense Invoice statuses are unavailable; only confirmed paid Expenses are shown."]
+        let unavailable = app.staticTexts["Some Expense Invoice statuses are unavailable; only confirmed matching Expenses are shown."]
         XCTAssertTrue(unavailable.waitForExistence(timeout: 5))
         app.buttons["Filter receivables"].tap()
         app.buttons["Clear"].tap()

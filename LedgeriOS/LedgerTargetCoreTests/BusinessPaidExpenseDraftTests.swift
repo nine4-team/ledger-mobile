@@ -100,6 +100,28 @@ struct BusinessPaidExpenseDraftTests {
         }
     }
 
+    @Test func invoiceStatusRequiresExactMembershipAndCompleteAbsenceEvidence() throws {
+        let entry = try draft()
+        #expect(try ProjectExpenses.Expense(entry: entry, revision: 1).availability == nil)
+        #expect(try ProjectExpenses.Expense(entry: entry, revision: 1, invoiceMembershipComplete: true).availability == .available)
+        for status in [LiveInvoiceContents.Status.created, .sent] {
+            let invoice = try LiveInvoiceContents(invoiceId: .init(validating: "invoice"), revision: 1,
+                status: status, name: "Invoice", notes: "", scope: .project(accountId: entry.accountId,
+                    projectId: entry.projectId, clientId: .init(validating: "client")),
+                lines: [.init(selection: .init(source: .expense(entry.expenseId), expectedRevision: 1,
+                    reviewedAmount: entry.finalAmount), categoryId: entry.categoryId, description: entry.vendor)],
+                reportedTotal: entry.finalAmount)
+            #expect(try ProjectExpenses.Expense(entry: entry, revision: 1, liveInvoice: invoice).availability
+                == (status == .created ? .created : .sent))
+            #expect(throws: ProjectExpenses.Failure.invalidEvidence) {
+                try ProjectExpenses.Expense(entry: entry, revision: 2, liveInvoice: invoice)
+            }
+            #expect(throws: ProjectExpenses.Failure.invalidEvidence) {
+                try ProjectExpenses.Expense(entry: draft(amount: 101), revision: 1, liveInvoice: invoice)
+            }
+        }
+    }
+
     @Test func receiptMetadataCannotIntroduceUnrelatedOrDuplicateObjects() throws {
         let id = try AttachmentID(validating: "receipt"), hash = String(repeating: "a", count: 64)
         func object(account: String) throws -> DownloadedMediaObjectReference {
