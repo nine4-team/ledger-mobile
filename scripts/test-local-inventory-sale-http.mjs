@@ -104,6 +104,12 @@ try {
       insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,created_at,created_by_principal_id)
         select ${q(key)}||'-scale-charge-'||i,${q(account)},${q(project)},${q(key)}||'-scale-'||i,${q(key)}||'-scale-placement-'||i,${q(category)},1,'USD','2026-01-01',${q(principal)} from generate_series(1,${returnScale-1}) i;
       commit;`);
+    if(process.argv.includes('--native-resale-other-project')) sql(`begin;
+      insert into public.spike_clients(id,account_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values(${q(key+'-native-client')},${q(account)},'Other native Client',now(),now(),1,1,${q(principal)});
+      insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values(${q(key+'-native-project')},${q(account)},${q(key+'-native-client')},'Other native Project',now(),now(),1,1,${q(principal)});
+      commit;`);
     const runNative = (test, selectedProject=project, selectedItem=item) => {
         const output=execFileSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
             test==='actualLocalExpense' ? `SupabaseTransactionAttachmentUploadTests/${test}` : `AccountWorkspacePendingWorkRuntimeTests/${test}`],{encoding:'utf8',timeout:120000,
@@ -112,6 +118,7 @@ try {
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale')?{LEDGER_RESALE_LOCAL:'1'}:{}),
+                ...(process.argv.includes('--native-resale-other-project')?{LEDGER_RESALE_PROJECT:key+'-native-project'}:{}),
                 LEDGER_RETURN_LOCAL_PROJECT_COUNT:String(returnScale),
                 LEDGER_SALE_LOCAL_CLIENT:client,
                 ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
@@ -492,6 +499,12 @@ try {
             assert.equal(sql(`select count(*) from ledger_private.uninvoiced_item_returns where account_id=${q(account)}`),'1');
             assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and withdrawn_at is null`),String(returnScale-1+(resold?1:0)));
             assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and ended_at is null and scope_kind='business_inventory'`),resold?'0':'1');
+        }
+        if(process.argv.includes('--native-resale-other-project')) {
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}
+                and project_id=${q(key+'-native-project')} and withdrawn_at is null`),'1');
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}
+                and project_id=${q(project)} and withdrawn_at is null`),'0');
         }
         console.log(JSON.stringify({nativeLiveSale:true,nativeLiveReturn:process.argv.includes('--native-return'),nativeLiveResale:resold,charges:returnScale+(resold?1:0),salePayments:0,exactInt64:true}));
     } else {

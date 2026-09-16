@@ -1713,9 +1713,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let first = try await context.openRuntime()
         try await entry.startWorkspaceSync(first,authorization: authorization,powerSyncURL: sync)
         let projectId = try ProjectID(validating: project), itemId = try ItemID(validating: item)
+        let resaleProjectId = try ProjectID(validating: env["LEDGER_RESALE_PROJECT"] ?? project)
         var projectLoaded = false
         for try await value in first.watchProjects() {
-            if value.local.rows.contains(where: { $0.id == projectId }) { projectLoaded = true; break }
+            if value.local.rows.contains(where: { $0.id == projectId })
+                && value.local.rows.contains(where: { $0.id == resaleProjectId }) { projectLoaded = true; break }
         }
         #expect(projectLoaded)
         var downloaded: InventorySaleReview?
@@ -1826,7 +1828,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             #expect(history.currentClientPaidPurchases.isEmpty)
             if env["LEDGER_RESALE_LOCAL"] == "1" {
                 let resaleReview = try await finalOffline.readInventorySaleReview(itemIds: [itemId])
-                let resalePayload = try resaleReview.makePayload(projectId: projectId,
+                let resalePayload = try resaleReview.makePayload(projectId: resaleProjectId,
                     currency: .init(validating: "USD"), enteredPrices: [:])
                 #expect(resalePayload.items[0].placementId == returnedPlacement.placementId)
                 #expect(resalePayload.items[0].occurrenceId != payload.items[0].occurrenceId)
@@ -1856,6 +1858,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 let finalHistory = try await reopened.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
                 #expect(finalHistory.returnLinks == history.returnLinks)
                 #expect(finalHistory.intervals.first?.placementId == resalePayload.items[0].newPlacementId)
+                #expect(finalHistory.intervals.first?.scope == .project(resaleProjectId))
                 try await reopened.close()
             }
             try await finalOffline.close()
