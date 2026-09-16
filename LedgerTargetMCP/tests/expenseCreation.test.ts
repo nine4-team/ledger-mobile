@@ -130,9 +130,13 @@ test("authorized Expense HTTP and MCP read expose only validated requested recor
   await assert.rejects(service.read(selection, { ...context, accessToken: "sb_secret_privileged" }));
   assert.equal(calls, 1);
   let foreign = false;
+  const exported = { ...snapshot(), receiptLines: [
+    { id: "z-first", description: "Original wording, with \"quotes\"\nand newline", magnitudeMinorUnits: "9223372036854775807", currency: "USD", effect: "increase" as const, quantity: "9223372036854775807" },
+    { id: "a-second", description: "Vendor credit", magnitudeMinorUnits: "25", currency: "USD", effect: "decrease" as const, quantity: null },
+  ] };
   const server = createTargetServer({ read: async () => { throw Error("unused"); } }, context,
     undefined, undefined, undefined, undefined, undefined, undefined,
-    { read: async () => ({ ...snapshot(), accountId: foreign ? "foreign" : "account" }),
+    { read: async () => ({ ...exported, accountId: foreign ? "foreign" : "account" }),
       receipt: async () => ({ mimeType: "application/pdf", bytes: Buffer.from("receipt bytes") }) });
   const client = new Client({ name: "expense-read-test", version: "1" });
   const [a, b] = InMemoryTransport.createLinkedPair();
@@ -142,6 +146,9 @@ test("authorized Expense HTTP and MCP read expose only validated requested recor
     const result = await client.callTool({ name: "get_expense", arguments: selection });
     assert.notEqual(result.isError, true);
     assert.match(JSON.stringify(result.content), /9223372036854775807/);
+    const response = result.content as { type: string; text: string }[];
+    assert.equal(response[0].type, "text");
+    assert.deepEqual(JSON.parse(response[0].text), exported);
     const receipt = await client.callTool({ name: "get_expense_receipt", arguments: { ...selection, attachmentId: "receipt" } });
     assert.notEqual(receipt.isError, true);
     const content = receipt.content as { type: string; resource: { uri: string; mimeType: string; blob: string } }[];

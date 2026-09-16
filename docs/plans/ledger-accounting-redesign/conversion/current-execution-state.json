@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1178,
+  "stateVersion": 1180,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -60,11 +60,11 @@
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "CI35094251669 terminal failed; Mac78UI/28failures, iOS cancelled. Hosted Return deployed/verified at87f8e777. Actual failing Invoice PDF contains SHIPPING: uppercase heading CSS, not missing data. Corrected test expectation; all live PDF content assertions replayed with PDFKit PASS. Evidence owner invoice-report-readback.liveInvoicePDFCaseDiagnosis. App/renderer unchanged.",
     "activeProcesses": {},
-    "desktopPrerequisite": "Mac locked blocks Mac UI, but background iOS simulator test68209 PASS. Existing Ledger PDF Review simulator can execute iOS UI without foregrounding; do not assume all UI blocked by host lock.",
+    "desktopPrerequisite": "Mac focused Invoice/paid Expense UI70530 failed before tests: Authentication canceled. System authentication is running. /tmp/ledger-mac-invoice-followup-20260916.log and .xcresult. Build completed; neither scenario ran. Do not retry unchanged. Background iOS testing previously passed; Mac initialization failure does not block other work.",
     "immediateFollowup": "Local resale/lifecycle follow-ups saved9f1700ce/169e7114; evidence in owning Sale/Return records, not CI7836695f. Follow nextWorkflowDecision for live hosted deployment and lastResult for UI failure triage. Private .native-pdf untouched.",
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Expense receipt export local implementation/tests complete:65039 actual sync/reopen PASS; iPhone Share, CSV, delivery and Transaction consumers PASS. Exact evidence business-paid-expense-entry.receiptExportImplementation. NEXT inspect MCP receipt-export parity (existing Expense reader may already retain structured lines; avoid duplicate writer/format) and Mac/platform verification as available. Credit question pending; no repeat. No live processes/hosted changes/push."
+    "nextWorkflowDecision": "Expense receipt export committed eb0b7aba; local native/actual-sync evidence in business-paid-expense-entry.receiptExportImplementation. MCP parity confirmed through existing get_expense, strengthened test PASS10; receiptExportMCPVerification owns evidence. NEXT address outstanding Mac/platform verification and captured integration failures; no duplicate export implementation or repeated passing iPhone checks. Credit question pending; no repeat. No live processes/hosted changes/push."
   }
 }
