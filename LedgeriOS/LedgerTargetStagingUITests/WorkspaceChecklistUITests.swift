@@ -3110,15 +3110,21 @@ final class WorkspaceChecklistUITests: XCTestCase {
         openReturn()
         app.buttons["Confirm Return"].tap()
         if retry {
-            let error = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Could not confirm this return")).firstMatch
+            let error = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
+                "Could not confirm this return", "Could not confirm this return")).firstMatch
             XCTAssertTrue(error.waitForExistence(timeout: 5))
             XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
             app.buttons["Confirm Return"].tap()
         }
-        XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+        #if os(macOS)
+        let done = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "target-return-form", "Done")).firstMatch
+        #else
+        let done = app.buttons["Done"]
+        #endif
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Confirm Return"].isEnabled)
         XCTAssertTrue(waitUntil { self.displayedText(app.staticTexts["target-return-status"]).contains("saved on this device") })
-        app.buttons["Done"].tap()
+        done.tap()
         XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
     }
 
@@ -4586,7 +4592,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
                     continue
                 }
             }
+            #if os(macOS)
+            // Drag-style swipes may activate a row while searching for an
+            // offscreen element. Use a wheel event, as in the measured path.
+            list.scroll(byDeltaX: 0, deltaY: upwards ? -list.frame.height * 0.6 : list.frame.height * 0.6)
+            #else
             if upwards { list.swipeUp() } else { list.swipeDown() }
+            #endif
         }
         XCTAssertTrue(element.isHittable, app.debugDescription)
         if fullyInsideScrollView {

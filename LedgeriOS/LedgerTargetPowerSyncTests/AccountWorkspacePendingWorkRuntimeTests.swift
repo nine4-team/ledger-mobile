@@ -1689,19 +1689,30 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await reopened.close()
     }
 
-    @Test("Offline sale converges through actual local Auth, RPC and PowerSync",
+    @Test("Offline sale converges through actual Auth, RPC and PowerSync",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func inventorySaleLiveReplication() async throws {
         let env = ProcessInfo.processInfo.environment
-        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
-              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], principal.hasPrefix("sale-http-"),
-              let item = env["LEDGER_SALE_LOCAL_ITEM"], item.hasPrefix("sale-http-"),
-              let project = env["LEDGER_SALE_LOCAL_PROJECT"], project.hasPrefix("sale-http-"),
+        let hostedQA = env["LEDGER_RETURN_HOSTED_QA"] == "1"
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"],
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
+              let item = env["LEDGER_SALE_LOCAL_ITEM"],
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"],
               let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
               let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        if hostedQA {
+            guard account == "realcopy-b9d236394770-account",
+                  principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+                  item.hasPrefix("hosted-return-flow-"), project.hasPrefix("hosted-return-flow-"),
+                  email.hasSuffix("@ledger-tests.invalid"), env["LEDGER_RETURN_LOCAL"] == "1",
+                  env["LEDGER_RESALE_LOCAL"] == nil else { throw RuntimeInjectedFailure() }
+        } else {
+            guard [account, principal, item, project].allSatisfy({ $0.hasPrefix("sale-http-") }) else { throw RuntimeInjectedFailure() }
+        }
         let context = try RuntimeTestContext(suffix: "sale-live",accountId: .init(validating: account),principalId: .init(validating: principal))
         defer { context.remove() }
-        let url = URL(string: "http://127.0.0.1:54321")!, sync = URL(string: "http://127.0.0.1:5590")!
+        let url = URL(string: hostedQA ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
+        let sync = URL(string: hostedQA ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!
         let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),headers: ["apikey": key],
             storageKey: "sale-live",localStorage: CategoryAuthTestStorage(),fetch: { try await URLSession.shared.data(for: $0) },
             autoRefreshToken: false,emitLocalSessionAsInitialSession: true))
@@ -1729,10 +1740,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let offline = try await context.openRuntime()
         let review = try await offline.readInventorySaleReview(itemIds: [itemId])
         let payload = try review.makePayload(projectId: projectId,currency: .init(validating: "USD"),
-            enteredPrices: [itemId: Money(minorUnits: Int64.max,currency: .init(validating: "USD"))])
+            enteredPrices: [itemId: Money(minorUnits: hostedQA ? 12_345 : Int64.max,currency: .init(validating: "USD"))])
         let uuid = UUID(), captured = Date()
         let receipt = try await offline.sellInventoryItems(payload,operationUUID: uuid,capturedAt: captured)
-        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.isEmpty)
+        #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.allSatisfy { $0.itemId != itemId })
         #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)).rows.first(where: { $0.itemId == itemId })?.pendingSale != nil)
         try await offline.close()
         let resumed = try await context.openRuntime()
@@ -1751,7 +1762,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
         }
         #expect(reconciled)
-        #expect(try await resumed.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.isEmpty)
+        #expect(try await resumed.readDownloadedItemPlacements(accountId: context.accountId,scope: .businessInventory).rows.allSatisfy { $0.itemId != itemId })
         var chargeRecognized = false
         for try await history in resumed.watchDownloadedItemPlacementHistory(accountId: context.accountId,itemId: itemId) {
             let expected: ProjectItemAccountingResolution = env["LEDGER_SALE_LOCAL_FINANCIAL_ACCESS"] == "full"

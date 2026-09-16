@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1086,
+  "stateVersion": 1094,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -57,13 +57,13 @@
     "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
-    "lastResult": "After9f1700ce: shared Sale/Return lifecycle4cases PASS21821 /tmp/ledger-sale-return-lifecycle-fixed.log; Return owner records evidence. Added cross-Account mixed selection SQL denial/atomicity5checks; focused60 PASS44360 /tmp/ledger-return-cross-account.log. Return AUTH and INTENT bounded checks credited. Native test/SQL test/checklist/resume dirty, not CI35094251669. No product/schema changes. Next reconcile UI CI or remaining return acceptance; no duplicate dispatch.",
+    "lastResult": "CI35094251669 Mac failed78UI/3skipped/28failures; iOS still running. Return owner returnMacCIFailure + /tmp/ledger-ci-35094251669-macos.log hold exact issues. NEXT scope ambiguous Done, diagnose retry missing text and Inventory/history reveal; no broad unchanged retry. Prior local tests committed169e7114. PowerSync config located /tmp/ledger-powersync-repair.Xy9pwq, not yet deployed.",
     "activeProcesses": {"localEdgeService":14316,"resaleCIWatcher":53379},
     "desktopPrerequisite": "Mac last observed locked; no local UI retry before unlock. Prior Invoice evidence stays in invoice-report-readback.",
-    "immediateFollowup": "Different-Client/Project native offline resale PASS59789 (/tmp/ledger-native-resale-other-project.log), independently reviewed and committed locally9f1700ce; conversion:check passed. No push or new CI. Existing test/harness verifies destination placement/source-zero-demand after restart/retry. Not included in CI35094251669 watcher53379, revalidated live with backend jobs passed and native UI running. NEXT concrete CI failure handling or remaining UI/acceptance; no duplicate runs. Private .native-pdf untouched.",
+    "immediateFollowup": "Local resale/lifecycle follow-ups saved9f1700ce/169e7114; evidence in owning Sale/Return records, not CI7836695f. Follow nextWorkflowDecision for live hosted deployment and lastResult for UI failure triage. Private .native-pdf untouched.",
     "nextVerification": "Committed/pushed7836695f2a766960a1bd7de2644bc255d6bc63f0 consumer correction/resale tests. PR1 still conflicting/no checks; single workflow35094251669 attempt1 verified in_progress onexact7836695f. Quiet watcher log /tmp/ledger-ci-35094251669-watch.log. NEXT inspect terminal result, not rerun. Previous35093201085 failed consumer, native skipped; retained. No Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"in_progress","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "O-033 collection exact-amount question awaiting answer. Live-Invoice returns retain O-010/O-034 blockers. Continue approved outcomes; query selected stories only."
+    "nextWorkflowDecision": "Hosted native Sale→offlineReturn/restart/replay/history PASS87570 /tmp/ledger-hosted-return-flow-mapped.log; SQL1return/1withdrawn/1Inventory/0payments. Return owner returnHostedNativeVerification includes exact synthetic IDs and reviewed QA Furnishings link assignment (sourceID+metadata+hash; no auto name mapping). Permissions preserved. NEXT iOS CI result and remaining UI failures; review shared local harness change before coherent commit. Native/hosted runner/UI tests/docs dirty."
   }
 }

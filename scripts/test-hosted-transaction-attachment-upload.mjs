@@ -9,9 +9,10 @@ assert.equal(process.cwd(),'/Users/benjaminmackenzie/Dev/ledger_mobile_supabase'
 const expenseEditFlow=process.argv.includes('--expense-edit-flow');
 const invoiceFlow=process.argv.includes('--invoice-flow');
 const feeFlow=process.argv.includes('--fee-flow');
+const returnFlow=process.argv.includes('--return-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -35,7 +36,49 @@ try {
   const memberships=await read('/rest/v1/spike_account_memberships?account_id=eq.'+account+'&select=principal_id,role,state,financial_access,can_manage_projects,can_manage_project_budgets');
   assert.deepEqual(memberships.map(({principal_id,role,state})=>({principal_id,role,state})),
     [{principal_id:auth.principalId,role:'owner',state:'active'}]);
-  if(expenseFlow) {
+  if(returnFlow) {
+    assert.ok(['none','full'].includes(memberships[0].financial_access));
+    const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
+    const accounts=await read('/rest/v1/spike_accounts?id=eq.'+account+'&select=furnishings_category_id');
+    assert.equal(clients.length,1);assert.equal(accounts.length,1);
+    assert.equal(typeof accounts[0].furnishings_category_id,'string');
+    const id='hosted-return-flow-'+crypto.randomUUID(),project=id+'-project',item=id+'-item';
+    const q=value=>"'"+value.replaceAll("'","''")+"'";
+    // Administrative fixture setup only. All sale/return mutations below use
+    // the native signed-in QA member and normal command endpoints.
+    const sql=query=>{
+      const result=spawnSync('npx',['--yes','supabase@2.116.0','db','query','--linked','--project-ref','ybwviepljilrkrjoahbl',query],{encoding:'utf8',timeout:30000});
+      assert.equal(result.status,0,'Hosted synthetic setup/reconciliation failed');
+      return JSON.parse(result.stdout).rows;
+    };
+    sql(`begin;
+      insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+      values(${q(project)},${q(account)},${q(clients[0].id)},'QA — hosted Item return',now(),now(),1,1,${q(auth.principalId)});
+      insert into public.spike_items(id,account_id,description,created_by_principal_id)
+      values(${q(item)},${q(account)},'QA synthetic return Item',${q(auth.principalId)});
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id,start_evidence)
+      values(${q(id+'-initial')},${q(account)},${q(item)},'business_inventory','2026-01-01',${q(auth.principalId)},'import_observation');
+      commit; select true as seeded;`);
+    console.log(JSON.stringify({hostedReturnStarted:true,project,item}));
+    const env={...process.env,LEDGER_RETURN_HOSTED_QA:'1',LEDGER_RETURN_LOCAL:'1',
+      LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,
+      LEDGER_SALE_LOCAL_ITEM:item,LEDGER_SALE_LOCAL_PROJECT:project,LEDGER_SALE_LOCAL_KEY:apikey,
+      LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password,
+      LEDGER_SALE_LOCAL_FINANCIAL_ACCESS:memberships[0].financial_access,LEDGER_RETURN_LOCAL_PROJECT_COUNT:'1'};
+    delete env.LEDGER_RESALE_LOCAL;delete env.LEDGER_RESALE_PROJECT;
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+      'AccountWorkspacePendingWorkRuntimeTests/inventorySaleLiveReplication'],{encoding:'utf8',timeout:180000,env});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted native return failed');
+    assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
+    const [facts]=sql(`select
+      (select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)} and withdrawn_at is not null and amount_minor_units=12345) as withdrawn,
+      (select count(*) from ledger_private.uninvoiced_item_returns where account_id=${q(account)} and item_id=${q(item)}) as returns,
+      (select count(*) from public.spike_item_placements where account_id=${q(account)} and item_id=${q(item)} and ended_at is null and scope_kind='business_inventory') as inventory,
+      (select count(*) from public.spike_transactions where account_id=${q(account)} and project_id=${q(project)}) as payments;`);
+    assert.deepEqual(facts,{withdrawn:1,returns:1,inventory:1,payments:0});
+    console.log(JSON.stringify({hostedReturnPassed:true,project,item,...facts}));
+  } else if(expenseFlow) {
     assert.equal(memberships[0].financial_access,'full','Positive Expense flow requires financial access');
     assert.equal(memberships[0].can_manage_projects,true,'QA Project setup requires project management');
     assert.equal(memberships[0].can_manage_project_budgets,true,'QA Project setup requires category assignment permission');
