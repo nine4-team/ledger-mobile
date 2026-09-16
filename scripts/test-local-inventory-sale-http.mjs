@@ -15,6 +15,9 @@ const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
 assert.ok(!process.argv.includes('--native-return') || process.argv.includes('--native'), '--native-return requires --native');
 const returnScale=process.argv.includes('--return-scale')?700:1;
+assert.ok(!process.argv.includes('--invoice-sent') || (process.argv.includes('--native-live-invoice')
+    && !process.argv.includes('--native-invoice-create') && !process.argv.includes('--invoice-revise')),
+    'Sent read fixture requires a seeded live Invoice, not creation/revision testing');
 assert.ok(returnScale===1 || process.argv.includes('--native-return'), '--return-scale requires --native-return');
 assert.ok(!process.argv.includes('--native-invoice-create') || process.argv.includes('--native-live-invoice'),
     '--native-invoice-create requires --native-live-invoice');
@@ -126,6 +129,7 @@ try {
                 ...(process.argv.includes('--native-fee-create')?{LEDGER_FEE_LOCAL_CREATE:'1',LEDGER_FEE_LOCAL_CATEGORY:key+'-fee-category'}:{}),
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
+                ...(process.argv.includes('--invoice-sent')?{LEDGER_INVOICE_LOCAL_SENT:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
@@ -300,6 +304,10 @@ try {
             assert.equal(createdResult.result_code,'invoice_created');
             if (mcpResult) assert.deepEqual(createdResult,mcpResult);
             assert.deepEqual(await (await call('/rest/v1/rpc/spike_create_invoice',createBody,token)).json(),createdResult);
+            if(process.argv.includes('--invoice-sent')) {
+                // Synthetic read fixture only; this does not define the pending sent-action policy.
+                sql(`update ledger_private.live_invoices set status='sent' where id=${q(command.invoiceId)}`);
+            }
             assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_create_invoice',createBody)).status));
             const response = await call('/rest/v1/rpc/spike_read_live_invoice',
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);

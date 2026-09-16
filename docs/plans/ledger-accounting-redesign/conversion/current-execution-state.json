@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1156,
+  "stateVersion": 1158,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "74369 actual Expense Created status/exact Invoice Auth/RPC/PowerSync + offline reopen PASS1/.790s; evidence project-invoicing-workspace.expenseStatusActualSync. Existing script/test reused; desktop lock does not block native live tests. NEXT extend existing integration to mixed-source/Sent if needed, or continue remaining canonical Invoicing behavior under its owner; do not claim full workflow. No hosted changes/push. O-033 pending; no reask."
+    "nextWorkflowDecision": "58103 Sent Expense actual sync/reopen PASS1/.700s; Created74369 PASS saved a957d159. Both results under project-invoicing-workspace.expenseStatusActualSync. NEXT remaining approved Invoicing integration (mixed sources), not repeated single-Expense tests. Sent action O-034, collection O-033 and cancellation O-070 remain policy-gated. No hosted changes/push; no live process."
   }
 }
