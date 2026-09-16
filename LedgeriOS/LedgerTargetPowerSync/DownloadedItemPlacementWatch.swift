@@ -7,10 +7,12 @@ struct DownloadedItemPlacementWatch: Sendable {
     let database: any PowerSyncDatabaseProtocol
     var subscribe: @Sendable (AccountID) async throws -> any SyncStreamSubscription
     var subscribeProject: @Sendable (AccountID, ProjectID) async throws -> any SyncStreamSubscription
+    var subscribeInvoiceHistory: @Sendable (AccountID, ItemID) async throws -> any SyncStreamSubscription
 
     init(database: any PowerSyncDatabaseProtocol,
          subscribe: (@Sendable (AccountID) async throws -> any SyncStreamSubscription)? = nil,
-         subscribeProject: (@Sendable (AccountID, ProjectID) async throws -> any SyncStreamSubscription)? = nil) {
+         subscribeProject: (@Sendable (AccountID, ProjectID) async throws -> any SyncStreamSubscription)? = nil,
+         subscribeInvoiceHistory: (@Sendable (AccountID, ItemID) async throws -> any SyncStreamSubscription)? = nil) {
         self.database = database
         self.subscribe = subscribe ?? { account in
             try await database.syncStream(name: "physical_account_items",
@@ -19,6 +21,10 @@ struct DownloadedItemPlacementWatch: Sendable {
         self.subscribeProject = subscribeProject ?? { account, project in
             let identity = PropertyManagementReportStreamIdentity(accountId: account, projectId: project)
             return try await database.syncStream(name: identity.name, params: identity.parameters).subscribe()
+        }
+        self.subscribeInvoiceHistory = subscribeInvoiceHistory ?? { account, item in
+            try await database.syncStream(name: "item_invoice_history",
+                params: ["account_id": .string(account.rawValue), "item_id": .string(item.rawValue)]).subscribe()
         }
     }
 
@@ -38,6 +44,13 @@ struct DownloadedItemPlacementWatch: Sendable {
     }
 
     func runHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID,
+                    receive: @Sendable @escaping (DownloadedItemPlacementHistory) async -> Bool) async throws {
+        try await withOwnedSyncStreamWatch(subscribe: { try await subscribeInvoiceHistory(accountId, itemId) }, observe: {
+            try await runPhysicalHistory(accountId: accountId, principalId: principalId, itemId: itemId, receive: receive)
+        })
+    }
+
+    private func runPhysicalHistory(accountId: AccountID, principalId: PrincipalID, itemId: ItemID,
                     receive: @Sendable @escaping (DownloadedItemPlacementHistory) async -> Bool) async throws {
         try await withOwnedSyncStreamWatch(subscribe: { try await subscribe(accountId) }, observe: {
             let reader = CurrentItemPlacementLocalReader(database: database)

@@ -252,9 +252,38 @@ try {
     assert.ok(frozenInvoice.lines.every(line => line.description === description));
     assert.equal(frozenInvoice.lines[2].item_id, null);
     assert.equal(frozenInvoice.lines[3].item_id, null);
+    const importedInput = { ...invoiceInput, total_minor_units: '9007199254740993', lines: [
+      { ...invoiceInput.lines[0], source_revision: '1', source_snapshot_json:
+        invoiceInput.lines[0].source_snapshot_json.replace('"projectPrice":{}', '"importedInvoiceAmount":{}') }
+    ] };
+    const importedInvoice = JSON.parse(execFileSync('docker', ['exec', '-i', container, 'psql', '-X', '-q', '-A', '-t',
+      '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input: `begin;
+        insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+          values ('frozen-project','account-primary','client-existing','Imported Invoice parity',now(),now(),1,1,'principal-owner');
+        insert into public.spike_items(id,account_id,description,created_by_principal_id)
+          values ('frozen-item','account-primary','Current Item','principal-owner');
+        do $fixture$ begin
+          perform ledger_private.import_client_payment('frozen-purchase','account-primary','frozen-project','client-existing',
+            9007199254740993,'USD','synthetic-frozen-parity','source-payment',decode('01','hex'));
+          perform ledger_private.import_invoice_sources($record$${JSON.stringify(importedInput)}$record$::jsonb,
+            '[{"source_document_id":"source-item","source_line_id":"source-line","source_bytes":"\\\\x02","line_source_bytes":"\\\\x03"}]',
+            '{"p_id":"frozen-purchase","p_account_id":"account-primary","p_project_id":"frozen-project","p_client_id":"client-existing","p_amount":"9007199254740993","p_currency":"USD","p_source_account":"synthetic-frozen-parity","p_source_document":"source-payment","p_source_bytes":"\\\\x01"}',
+            'synthetic-frozen-parity','source-invoice',decode('04','hex'));
+        end $fixture$;
+        set constraints all immediate;
+        select ledger_private.read_collected_invoice('account-primary','frozen-invoice');
+        rollback;`, encoding: 'utf8',
+    }).trim());
+    execFileSync(process.execPath, ['--import', `${root}/LedgerTargetMCP/node_modules/tsx/dist/loader.mjs`,
+      '--input-type=module', '-e', `import { invoiceSchema, validateFrozenInvoice } from './LedgerTargetMCP/src/transactionPaymentContents.ts';
+        import { readFileSync } from 'node:fs';
+        const invoice=invoiceSchema.parse(JSON.parse(readFileSync(0,'utf8')));
+        validateFrozenInvoice(invoice,{accountId:'account-primary',projectId:'frozen-project',clientId:'client-existing',transactionId:'frozen-purchase',currency:'USD'});`],
+      { cwd: root, input: JSON.stringify(importedInvoice), encoding: 'utf8', timeout: 10000 });
     writeFileSync(parityOutput, JSON.stringify({
       accountId: account, principalId: 'principal-restricted', projectId: populated,
-      currency: 'USD', tables: raw, report, clientReport, frozenInvoice,
+      currency: 'USD', tables: raw, report, clientReport, frozenInvoice, importedInvoice,
     }), { mode: 0o600, flag: 'wx' });
     console.log('Captured actual scoped stream rows, MCP snapshot and SQL frozen Invoice for native differential verification.');
   }

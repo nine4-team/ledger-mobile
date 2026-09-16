@@ -63,6 +63,23 @@ try {
   assert.match(mixed, /Expense Invoices 1, Expenses 1, unresolved Transactions 0, unresolved Invoices 0/);
   assert.equal(execFileSync('docker', ['exec', 'supabase_db_ledger_target_supabase_local', 'psql', '-U', 'postgres', '-d', 'postgres', '-Atc',
     `select count(*) from ledger_private.imported_fee_sources where source_document_id='${fee}';`], { encoding: 'utf8' }).trim(), '0', 'Mixed Fee import rolls back');
+  const item = `paid-item-${suffix}`;
+  snapshot.documents.push(doc(`items/${item}`, { name: s('Current chair'), projectId: { nullValue: null }, projectPriceCents: n(99999) }));
+  paymentFields.amountCents = n('9007199254741093');
+  invoiceFields.totalCents = n('9007199254741093');
+  paymentFields.settlementInvoiceLineIds.arrayValue.values.push(s(`item-line-${suffix}`));
+  invoiceFields.lines.arrayValue.values.push(m({ id: s(`item-line-${suffix}`), amountCents: n(50), sign: n(1),
+    sourceType: s('item'), sourceId: s(item), snapshotName: s('Historical chair'),
+    budgetCategoryId: s('da556858-1df8-40be-b10c-b15710d7cc9a') }));
+  writeFileSync(file, JSON.stringify(snapshot), { mode: 0o600 });
+  const itemMixed = execFileSync(path.join(binDir, 'LedgerLocalPaymentImport'), ['--check-project-copy', file], { encoding: 'utf8', timeout: 30000 });
+  assert.match(itemMixed, /1 Items/);
+  assert.match(itemMixed, /Expense Invoices 1, Expenses 1, unresolved Transactions 0, unresolved Invoices 0/);
+  assert.equal(execFileSync('docker', ['exec', 'supabase_db_ledger_target_supabase_local', 'psql', '-U', 'postgres', '-d', 'postgres', '-Atc',
+    `select count(*) from ledger_private.imported_item_invoice_sources where source_item_id='${item}';`], { encoding: 'utf8' }).trim(), '0', 'Paid Item import rolls back');
+  snapshot.documents.pop();
+  paymentFields.settlementInvoiceLineIds.arrayValue.values.pop();
+  invoiceFields.lines.arrayValue.values.pop();
   snapshot.documents.splice(-2);
   paymentFields.amountCents = n('9007199254740993');
   paymentFields.settlementInvoiceLineIds.arrayValue.values.pop();
@@ -123,7 +140,7 @@ try {
   assert.equal(remaining,'0','Receipt catalog and financial import both roll back');
   writeFileSync(path.join(mediaDirectory,hash(originals[0].object)),'corrupt');
   assert.throws(run,/Command failed/,'Changed local source bytes cannot be substituted by already-uploaded bytes');
-  console.log('PASS: actual Swift Expense-only and mixed Fee/Expense conversion → verified PDF/image Storage bytes → source/receipt/Invoice SQL reconciliation → rollback; >2^53 amount, original timestamp, missing/corrupt media rejection.');
+  console.log('PASS: actual Swift Expense-only and mixed Item/Fee/Expense conversion → verified PDF/image Storage bytes → source/receipt/frozen-line SQL reconciliation → rollback; >2^53 amount, historical Item amount, original timestamp, missing/corrupt media rejection.');
 } finally {
   if(uploaded.length) {
     const removed=await fetch('http://127.0.0.1:54321/storage/v1/object/ledger-attachments',{method:'DELETE',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({prefixes:uploaded}),signal:AbortSignal.timeout(10000)});

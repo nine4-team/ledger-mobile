@@ -8,6 +8,9 @@ public typealias FeeInstallmentID = DomainEntityIdentifier<FeeInstallmentIDTag>
 public typealias InventoryEntryID = DomainEntityIdentifier<InventoryEntryIDTag>
 
 public enum FrozenItemPriceBasis: Codable, Equatable, Sendable {
+    /// Recorded positive paid amount; historical price calculation is unknown.
+    /// Only operator migration with retained source-line evidence may store it.
+    case importedInvoiceAmount
     case projectPrice
     case purchaseCost(acquisitionId: TransactionID)
     case paidInvoiceLine(invoiceId: InvoiceID, lineId: InvoiceLineID)
@@ -63,6 +66,9 @@ public struct FrozenInvoiceLine: Codable, Equatable, Sendable {
         guard scope.ownerKind == .project else { throw FrozenInvoiceContentsFailure.requiresProjectScope }
         guard sourceRevision > 0 else { throw FrozenInvoiceContentsFailure.invalidRevision }
         if case .item(_, _, let price) = source {
+            if case .importedInvoiceAmount = price.basis {
+                guard signedAmount.minorUnits > 0 else { throw FrozenInvoiceContentsFailure.invalidPriceSnapshot }
+            }
             let magnitude = try signedAmount.sign == .negative ? signedAmount.negated() : signedAmount
             guard price.amount == magnitude else { throw FrozenInvoiceContentsFailure.invalidPriceSnapshot }
         }

@@ -197,8 +197,10 @@ try {
   prepare('correction-first');
   for (const scenario of ['exact', 'changed', 'rollback']) {
     const id = `mixed-import-${scenario}`;
+    sql(`insert into public.spike_items(id,account_id,description,created_by_principal_id)
+      values('${id}-item','account-primary','Current Item','principal-owner');`);
     sql(`select ledger_private.import_client_payment('${id}-payment','account-primary','race-project','client-existing',
-      100,'USD','source-account','${id}-source-payment','\\x00ff');`);
+      150,'USD','source-account','${id}-source-payment','\\x00ff');`);
     const importMixed = (label = 'Fee') => {
       const lines = ['fee', 'expense'].map((kind, position) => ({
         id: `${id}-${kind}-line`, line_position: position, source_kind: kind === 'fee' ? 'fee_installment' : 'expense',
@@ -207,9 +209,13 @@ try {
         description: kind, source_snapshot_json: JSON.stringify(kind === 'fee'
           ? { feeInstallment: { installmentId: `${id}-fee` } } : { expense: { expenseId: `${id}-expense` } })
       }));
+      lines.push({ id: `${id}-item-line`, line_position: 2, source_kind: 'item', source_id: `${id}-occurrence`,
+        item_id: `${id}-item`, source_revision: '1', category_id: 'furnishings', signed_amount_minor_units: '50',
+        description: 'Historical Item', source_snapshot_json: JSON.stringify({ item: { itemId: `${id}-item`,
+          occurrenceId: `${id}-occurrence`, price: { basis: { importedInvoiceAmount: {} }, amount: { minorUnits: 50, currency: 'USD' } } } }) });
       const invoice = { invoice_id: `${id}-invoice`, invoice_revision: '1', account_id: 'account-primary',
         project_id: 'race-project', client_id: 'client-existing', purchase_id: `${id}-payment`, currency: 'USD',
-        total_minor_units: '100', lines };
+        total_minor_units: '150', lines };
       const common = { account_id: 'account-primary', project_id: 'race-project', currency: 'USD', revision: '1',
         created_at: null, created_by_principal_id: null };
       const sources = [
@@ -219,15 +225,19 @@ try {
           id: `${id}-expense`, category_id: 'category-system', vendor: 'Vendor', expense_date: '2024-02-29',
           final_amount_minor_units: '50', notes: '' } }
       ];
+      sources.push({ source_document_id: `${id}-source-item`, source_line_id: `${id}-source-line`,
+        source_bytes: '\\x04ff', line_source_bytes: '\\x05ff' });
       const payment = { p_id: `${id}-payment`, p_account_id: 'account-primary', p_project_id: 'race-project',
-        p_client_id: 'client-existing', p_amount: '100', p_currency: 'USD', p_source_account: 'source-account',
+        p_client_id: 'client-existing', p_amount: '150', p_currency: 'USD', p_source_account: 'source-account',
         p_source_document: `${id}-source-payment`, p_source_bytes: '\\x00ff' };
       return `select ledger_private.import_invoice_sources('${JSON.stringify(invoice)}','${JSON.stringify(sources)}',
         '${JSON.stringify(payment)}','source-account','${id}-source-invoice','\\x03ff');`;
     };
     await race(id, importMixed(), importMixed(scenario === 'changed' ? 'Changed' : 'Fee'),
       scenario === 'rollback' ? 'rollback' : 'commit', scenario === 'changed' ? '22000' : undefined);
-    assert.equal(sql(`select count(*) from ledger_private.collected_invoice_lines where invoice_id='${id}-invoice'`), '2');
+    assert.equal(sql(`select count(*) from ledger_private.collected_invoice_lines where invoice_id='${id}-invoice'`), '3');
+    assert.equal(sql(`select count(*) from ledger_private.imported_item_invoice_sources where line_id='${id}-item-line'`), '1');
+    assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where item_id='${id}-item'`), '0');
     assert.equal(sql(`select label from ledger_private.fee_installments where id='${id}-fee'`), 'Fee');
     assert.equal(sql(`select count(*) from ledger_private.imported_fee_sources where fee_id='${id}-fee'`), '1');
   }

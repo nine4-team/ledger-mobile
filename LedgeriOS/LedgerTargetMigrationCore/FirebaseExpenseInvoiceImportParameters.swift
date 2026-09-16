@@ -28,12 +28,16 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
         let source_document_id, source_project_id, source_bytes: String
     }
     package let p_fees: [Fee]
+    package struct Item: Encodable, Sendable {
+        let source_document_id, source_line_id, source_bytes, line_source_bytes: String
+    }
     package enum Source: Encodable, Sendable {
-        case expense(Expense), fee(Fee)
+        case expense(Expense), fee(Fee), item(Item)
         package func encode(to encoder: Encoder) throws {
             switch self {
             case .expense(let value): try value.encode(to: encoder)
             case .fee(let value): try value.encode(to: encoder)
+            case .item(let value): try value.encode(to: encoder)
             }
         }
     }
@@ -65,6 +69,7 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
         }
         let expenses = try mappedSources.compactMap { mapped -> Expense? in
             if case .feeSourceMapped = mapped { return nil }
+            if case .paidItemSourceMapped = mapped { return nil }
             guard case .invoiceSourceMapped(let draft, let source, _, _) = mapped,
                   case .map(let fields) = source.fields,
                   let sourceID = source.documentPathSegments.last,
@@ -104,7 +109,17 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
                 source_bytes: bytes(try source.canonicalEvidenceData()))
         }
         var expenseIndex = 0, feeIndex = 0
-        let sources: [Source] = mappedSources.map { mapped in
+        let sources: [Source] = try mappedSources.map { mapped in
+            if case .paidItemSourceMapped(_, let document, _, let line) = mapped {
+                guard let sourceID = document.documentPathSegments.last,
+                      case .map(let fields) = line,
+                      case .string(let lineID) = fields.first(where: { $0.key == "id" })?.value else {
+                    throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+                }
+                return .item(.init(source_document_id: sourceID, source_line_id: lineID,
+                    source_bytes: bytes(try document.canonicalEvidenceData()),
+                    line_source_bytes: bytes(try FirebaseSourceFixtureCatalog.canonicalData(for: line))))
+            }
             if case .feeSourceMapped = mapped {
                 defer { feeIndex += 1 }
                 return .fee(fees[feeIndex])

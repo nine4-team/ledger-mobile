@@ -97,6 +97,17 @@ struct FrozenInvoiceContentsTests {
         }
     }
 
+    @Test("Imported Item amount retains its distinct positive evidence basis")
+    func importedAmountProvenance() throws {
+        let source = try FrozenInvoiceLineSource.item(itemId: .init(validating: "item"),
+            occurrenceId: .init(validating: "imported-cycle"),
+            price: .init(basis: .importedInvoiceAmount, amount: Self.money(100)))
+        let line = try Self.line("imported-line", cents: 100, source: source)
+        #expect(try JSONDecoder().decode(FrozenInvoiceLine.self, from: JSONEncoder().encode(line)) == line)
+        #expect(throws: FrozenInvoiceContentsFailure.invalidPriceSnapshot) { try Self.line("credit", cents: -100, source: source) }
+        #expect(throws: FrozenInvoiceContentsFailure.invalidPriceSnapshot) { try Self.line("wrong", cents: 99, source: source) }
+    }
+
     @Test("Item price provenance is mandatory, exact and retained across decoding")
     func priceProvenance() throws {
         let bases: [FrozenItemPriceBasis] = try [.projectPrice,

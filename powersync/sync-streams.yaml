@@ -782,6 +782,44 @@ streams:
       # immutable line's derived Project removes per-Invoice parameter lookups;
       # source assembly cannot commit and is never a downloadable draft phase.
 
+  item_invoice_history:
+    auto_subscribe: false
+    priority: 3
+    queries:
+      - |
+        SELECT collected_invoices.id, collected_invoices.account_id, collected_invoices.project_id,
+          collected_invoices.client_id, collected_invoices.sealed, collected_invoices.purchase_id,
+          collected_invoices.invoice_revision::text AS invoice_revision, collected_invoices.currency,
+          collected_invoices.total_minor_units::text AS total_minor_units,
+          collected_invoices.display_metadata::text AS display_metadata
+        FROM ledger_private.collected_invoices
+        JOIN spike_account_memberships AS membership ON membership.account_id=collected_invoices.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE collected_invoices.account_id=subscription.parameter('account_id') AND collected_invoices.sealed=true
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active' AND membership.financial_access='full'
+          AND collected_invoices.id IN (
+            SELECT line.invoice_id FROM ledger_private.collected_invoice_lines AS line
+            WHERE line.account_id=subscription.parameter('account_id') AND line.item_id=subscription.parameter('item_id')
+              AND line.source_kind='item'
+          )
+      - |
+        SELECT collected_invoice_lines.id, collected_invoice_lines.account_id, collected_invoice_lines.invoice_id,
+          collected_invoice_lines.source_kind, collected_invoice_lines.source_id, collected_invoice_lines.item_id,
+          collected_invoice_lines.source_revision::text AS source_revision, collected_invoice_lines.category_id,
+          collected_invoice_lines.signed_amount_minor_units::text AS signed_amount_minor_units, collected_invoice_lines.currency,
+          collected_invoice_lines.line_position, collected_invoice_lines.description,
+          collected_invoice_lines.source_snapshot::text AS source_snapshot_json
+        FROM ledger_private.collected_invoice_lines
+        JOIN spike_account_memberships AS membership ON membership.account_id=collected_invoice_lines.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE collected_invoice_lines.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active' AND membership.financial_access='full'
+          AND collected_invoice_lines.invoice_id IN (
+            SELECT line.invoice_id FROM ledger_private.collected_invoice_lines AS line
+            WHERE line.account_id=subscription.parameter('account_id') AND line.item_id=subscription.parameter('item_id')
+              AND line.source_kind='item'
+          )
+
   item_return_review:
     queries:
       - |

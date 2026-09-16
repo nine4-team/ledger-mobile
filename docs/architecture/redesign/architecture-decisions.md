@@ -3887,3 +3887,49 @@ The synthetic Swift-to-SQL rollback bridge, duplicate-source denial, three
 observed concurrent retry/rollback cases and 104-migration clean replay pass;
 local advisors report no issues. These are local evidence, not production
 migration approval or full historical migration coverage.
+
+## 2026-09-16 — Historical paid Item amounts during migration
+
+The frozen source baseline `ca68d793f193463fd191d272891d02cf85b7c5c4`,
+`Invoice.swift`'s `InvoiceLine`, stores stable line/Item identity, signed amount,
+category, label and settlement links. It does not store the historical Item
+price calculation. Current Item purchase/project prices and current placement
+must not be used to fabricate that missing basis.
+
+For a fully reconciled positive paid Item line, represent its recorded amount
+as imported paid-line evidence, retaining the original Invoice/Item envelopes
+and source-line identity. This needs an explicit imported-amount price basis
+in the existing frozen snapshot contract, rather than labeling it project price
+or introducing a self-referential paid-line lookup. Only the operator migration
+may introduce that basis; ordinary app commands retain their existing rules.
+Stable imported occurrence identity must derive from the source Invoice line,
+not today's placement. Do not fabricate a historical placement date or move the
+physical Item during import. Negative lines remain unresolved until their exact
+reversed occurrence can be demonstrated. This is a technical representation
+under D-028, not approval to drop history or guess a financial policy.
+
+Local verification now covers Swift/MCP persisted decoding, operator-only SQL
+admission, raw evidence binding, exact reconciliation, encrypted reopen and
+historical billing after the Item has moved. Mixed Item/Expense/Fee rollback,
+retry concurrency, clean migration replay and targeted iPhone history checks
+pass. This is not hosted deployment, full migration coverage or cutover approval.
+
+Item history exposes downloaded frozen billing lines independently of current
+placement through `DownloadedItemInvoiceLine`, reusing `FrozenInvoiceLine` and
+the existing full-Invoice decoder. These are billing amounts, not allocations
+of the entire client payment and not synthetic physical intervals. The reader
+requires active full financial access and omits incomplete Invoice evidence
+while retaining explicitly partial physical history. The existing History section
+shows these facts without replacing the screen or changing current accounting.
+
+The history watch owns an on-demand `item_invoice_history` subscription scoped
+to Account and Item. It downloads complete Invoices containing that Item so the
+shared decoder can validate totals, rather than treating a partial line subset
+as a complete Invoice. Active full financial membership is required. Its row
+projections match existing Project subscriptions; it does not depend on current
+placement or download all Account Invoices. Cancellation uses the existing owned
+subscription cleanup. The pinned local service resolves 7,000 synthetic lines
+within capacity and denies foreign/removed/limited access. Live replication
+delivers imported records and withdraws them after financial access changes.
+The temporary copier apply guard is removed; actual source copying still needs
+the existing explicit scope and isolation checks.

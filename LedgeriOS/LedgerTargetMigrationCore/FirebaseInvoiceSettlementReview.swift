@@ -24,6 +24,46 @@ package struct FirebaseInvoiceSourcesReview: Sendable {
     package let suppliedDocuments: [FirebaseSourceDocument]
     package let lines: [FirebaseInvoiceLineSourceReview]
 
+    /// A recorded paid charge is evidence of billing, not of physical placement.
+    package func mapPaidItem(lineID: String, targetScope: TransactionScope, invoiceID: InvoiceID,
+                            itemMappings: [String: ItemID], categories: [String: BudgetCategoryID],
+                            currency: CurrencyCode) throws
+        -> (line: FrozenInvoiceLine, evidence: FirebaseInvoiceLineSourceReview) {
+        func field(_ value: FirebaseSourceValue, _ key: String) -> FirebaseSourceValue? {
+            guard case .map(let fields) = value else { return nil }
+            return fields.first { $0.key.utf8.elementsEqual(key.utf8) }?.value
+        }
+        let matches = lines.filter {
+            guard case .string(let id) = field($0.line, "id") else { return false }
+            return id.utf8.elementsEqual(lineID.utf8)
+        }
+        guard settlement.hasSinglePaymentLineCoverage, targetScope == settlement.targetScope,
+              matches.count == 1, let reviewed = matches.first, reviewed.issues == [.itemOccurrenceNotMapped],
+              let original = reviewed.source, let originalID = original.documentPathSegments.last,
+              let itemID = itemMappings.first(where: { $0.key.utf8.elementsEqual(originalID.utf8) })?.value,
+              field(reviewed.line, "sign") == .integer("1"),
+              case .integer(let text) = field(reviewed.line, "amountCents"), let amount = Int64(text), amount > 0,
+              case .string(let category) = field(reviewed.line, "budgetCategoryId"),
+              let categoryID = categories.first(where: { $0.key.utf8.elementsEqual(category.utf8) })?.value,
+              case .string(let label) = field(reviewed.line, "snapshotName"),
+              let originalInvoiceID = settlement.invoice.documentPathSegments.last else {
+            throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.withoutEscapingSlashes]
+        let occurrenceBytes = try encoder.encode([targetScope.accountId.rawValue,
+            settlement.invoice.accountScopeID, originalInvoiceID, lineID])
+        let lineBytes = try encoder.encode([targetScope.accountId.rawValue, invoiceID.rawValue, lineID])
+        let money = try Money(minorUnits: amount, currency: currency)
+        let line = try FrozenInvoiceLine(
+            id: .init(validating: "import-line-" + MigrationSHA256.make(bytes: lineBytes).rawValue),
+            scope: targetScope, source: .item(itemId: itemID,
+                occurrenceId: .init(validating: "import-occurrence-" + MigrationSHA256.make(bytes: occurrenceBytes).rawValue),
+                price: .init(basis: .importedInvoiceAmount, amount: money)),
+            sourceRevision: 1, categoryId: categoryID, signedAmount: money, description: label)
+        return (line, reviewed)
+    }
+
     /// Field mapping only: does not insert available demand or collect again.
     /// Retain the full reviewed source and historical line beside the draft.
     package func mapFee(lineID: String, targetScope: TransactionScope, installmentID: FeeInstallmentID,

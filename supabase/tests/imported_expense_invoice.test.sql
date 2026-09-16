@@ -33,6 +33,42 @@ create function pg_temp.run_import(i jsonb default pg_temp.invoice_record(), e j
   p jsonb default pg_temp.payment_record(), b bytea default '\x01ff') returns jsonb language sql as $$
   select ledger_private.import_expense_invoice(i,e,p,'source-account','source-invoice',b)
 $$;
+insert into public.spike_items(id,account_id,description,created_by_principal_id)
+  values('imported-paid-item','account-primary','Current Item name','principal-owner');
+select ledger_private.import_client_payment('item-import-payment','account-primary','expense-import-project','client-existing',
+  50,'USD','source-account','item-payment-source','\x07ff');
+create function pg_temp.imported_item_evidence(with_evidence boolean, original_invoice text default 'item-source-invoice')
+returns void language plpgsql as $$
+begin
+  perform ledger_private.store_collected_invoice(pg_temp.invoice_record()||jsonb_build_object(
+    'invoice_id','item-import-invoice','purchase_id','item-import-payment','total_minor_units','50',
+    'lines',jsonb_build_array(jsonb_build_object('id','item-import-line','line_position',0,'source_kind','item',
+      'source_id','item-import-occurrence','item_id','imported-paid-item','source_revision','1',
+      'category_id','historical-category','signed_amount_minor_units','50','description','Historical Item',
+      'source_snapshot_json','{"item":{"itemId":"imported-paid-item","occurrenceId":"item-import-occurrence","price":{"basis":{"importedInvoiceAmount":{}},"amount":{"minorUnits":50,"currency":"USD"}}}}'))));
+  if with_evidence then
+    insert into ledger_private.imported_expense_invoice_sources values
+      ('item-import-invoice','source-account','item-source-invoice','\x08ff','{}');
+    insert into ledger_private.imported_item_invoice_sources values
+      ('item-import-line','item-import-invoice','source-account',original_invoice,'original-line','original-item','\x09ff','\x0aff');
+  end if;
+  set constraints all immediate;
+end;
+$$;
+select throws_ok('select pg_temp.imported_item_evidence(false)','23514',
+  'Imported Item amount requires exact retained Invoice-line evidence','Imported amount without original evidence rejected');
+select throws_ok($$select pg_temp.imported_item_evidence(true,'wrong-invoice')$$,'23514',
+  'Imported Item amount requires exact retained Invoice-line evidence','Evidence for another original Invoice rejected');
+select is((select count(*) from ledger_private.collected_invoices where id='item-import-invoice'),0::bigint,
+  'Rejected Item evidence rolls back frozen Invoice');
+select lives_ok('select pg_temp.imported_item_evidence(true)','Exact original paid Item evidence accepted');
+set constraints all deferred;
+select is((select count(*) from public.spike_item_placements where item_id='imported-paid-item'),0::bigint,
+  'Paid Item import does not invent physical placement');
+select is((select count(*) from ledger_private.item_charge_occurrences where item_id='imported-paid-item'),0::bigint,
+  'Paid Item import does not create new unpaid demand');
+select ok(not has_table_privilege(r,'ledger_private.imported_item_invoice_sources','SELECT,INSERT,UPDATE,DELETE'),
+  r||' cannot manufacture imported Item evidence') from unnest(array['anon','authenticated','service_role']) r;
 select ledger_private.import_client_payment('mixed-payment','account-primary','expense-import-project','client-existing',
   150,'USD','source-account','mixed-payment-source','\x02ff');
 create function pg_temp.mixed_invoice() returns jsonb language sql as $$
@@ -259,5 +295,54 @@ select ok(not has_function_privilege(r,'public.spike_read_collected_invoice(text
   from unnest(array['anon','service_role']) r;
 select ok(not prosecdef,'Public Invoice wrapper uses invoker rights') from pg_proc
   where oid='public.spike_read_collected_invoice(text,text,text)'::regprocedure;
+set constraints all deferred;
+select ledger_private.import_client_payment('item-mixed-payment','account-primary','expense-import-project','client-existing',
+  200,'USD','source-account','item-mixed-payment-source','\x0bff');
+create function pg_temp.item_mixed_import(source_line text default 'paid-item-line', item_id text default 'imported-paid-item')
+returns jsonb language plpgsql as $$
+declare
+  i jsonb:=replace(pg_temp.mixed_invoice()::text,'mixed-','item-mixed-')::jsonb;
+  s jsonb:=replace(pg_temp.mixed_sources()::text,'mixed-','item-mixed-')::jsonb;
+begin
+  i:=i||jsonb_build_object('total_minor_units','200','lines',(i->'lines')||jsonb_build_array(jsonb_build_object(
+    'id','item-mixed-item-line','line_position',2,'source_kind','item','source_id','item-mixed-occurrence',
+    'item_id',item_id,'source_revision','1','category_id','historical-category','signed_amount_minor_units','50',
+    'description','Historical chair','source_snapshot_json',jsonb_build_object('item',jsonb_build_object(
+      'itemId',item_id,'occurrenceId','item-mixed-occurrence','price',jsonb_build_object(
+        'basis',jsonb_build_object('importedInvoiceAmount','{}'::jsonb),
+        'amount',jsonb_build_object('minorUnits',50,'currency','USD'))))::text)));
+  s:=s||jsonb_build_array(jsonb_build_object('source_document_id','original-item','source_line_id',source_line,
+    'source_bytes','\x09ff','line_source_bytes','\x0aff'));
+  return ledger_private.import_invoice_sources(i,s,pg_temp.payment_record()||jsonb_build_object(
+    'p_id','item-mixed-payment','p_amount','200','p_source_document','item-mixed-payment-source','p_source_bytes','\x0bff'),
+    'source-account','item-mixed-source-invoice','\x0cff');
+end;
+$$;
+select throws_ok($$select pg_temp.item_mixed_import(item_id=>'missing-item')$$,'22023',null,
+  'Missing physical Item rejects a mixed import after earlier Fee and Expense processing');
+select is((select count(*) from ledger_private.expenses where id='item-mixed-expense'),0::bigint,
+  'Invalid Item rolls back earlier Expense');
+select is((select count(*) from ledger_private.fee_installments where id='item-mixed-fee'),0::bigint,
+  'Invalid Item rolls back earlier Fee');
+select throws_ok($$select pg_temp.item_mixed_import(source_line=>'bad/line')$$,'23514',null,
+  'Late Item evidence constraint rejects entire import');
+select is((select count(*) from ledger_private.collected_invoices where id='item-mixed-invoice'),0::bigint,
+  'Late evidence failure rolls back frozen Invoice');
+select lives_ok('select pg_temp.item_mixed_import()','Complete Item Expense Fee import succeeds');
+set constraints all immediate;
+set constraints all deferred;
+select lives_ok('select pg_temp.item_mixed_import()','Exact Item mixed import replay succeeds');
+select throws_ok($$select pg_temp.item_mixed_import(source_line=>'changed')$$,'22000',null,
+  'Changed source evidence cannot replay a paid Item import');
+select is((select count(*) from ledger_private.collected_invoice_lines where invoice_id='item-mixed-invoice'),3::bigint,
+  'Replay retains exactly three ordered sources');
+select is((ledger_private.read_collected_invoice('account-primary','item-mixed-invoice')->'lines'->2->>'signed_amount_minor_units'),
+  '50','Persisted Item reader returns original billed amount');
+select is((select item_source_bytes from ledger_private.imported_item_invoice_sources where line_id='item-mixed-item-line'),
+  '\x09ff'::bytea,'Original Item bytes retained');
+select is((select description from public.spike_items where id='imported-paid-item'),'Current Item name',
+  'Historical import does not rewrite current physical Item');
+select is((select count(*) from ledger_private.item_charge_occurrences where item_id='imported-paid-item'),0::bigint,
+  'Historical import creates no billable charge');
 select * from finish();
 rollback;

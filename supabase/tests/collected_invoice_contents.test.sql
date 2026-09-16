@@ -58,7 +58,8 @@ select throws_ok($$insert into ledger_private.collected_invoice_lines(id,account
   '55000',null,'Even a zero-value line cannot be added after sealing');
 update public.spike_items set description='Current edited Item',revision=2 where id='frozen-item';
 select is((select description from ledger_private.collected_invoice_lines where id='frozen-one-charge'),E'  Original charge\n','Current Item edits do not change frozen description');
-select throws_ok('truncate ledger_private.collected_invoice_lines','55000',null,'Frozen line truncation denied');
+select throws_ok('truncate ledger_private.collected_invoice_lines','0A000',null,'Retained source evidence foreign key prevents plain frozen line truncation');
+select throws_ok('truncate ledger_private.collected_invoice_lines cascade','55000',null,'Cascading truncation cannot bypass frozen history guards');
 select ok((select bool_and(not has_table_privilege(r,'ledger_private.collected_invoices','SELECT,INSERT,UPDATE,DELETE,TRUNCATE')
   and not has_table_privilege(r,'ledger_private.collected_invoice_lines','SELECT,INSERT,UPDATE,DELETE,TRUNCATE'))
   from unnest(array['anon','authenticated','service_role']) r),'All API roles denied private snapshot access');

@@ -19,8 +19,8 @@ package enum FirebaseExpenseConversion {
         case invoiceSourceUnresolved, settlementUnresolved, invoiceAmountRequiresMapping
     }
 
-    /// Compose mapped Expense/Fee lines using the canonical frozen
-    /// contract. Item/manual invoices must provide their own complete
+    /// Compose mapped Expense/Fee/Item lines using the canonical frozen
+    /// contract. Manual invoices must provide their own complete
     /// source mapping; this function never drops those lines to make a subtotal.
     package static func frozenInvoice(_ review: FirebaseInvoiceSourcesReview, mappedSources: [Result],
         targetScope: TransactionScope, invoiceID: InvoiceID, payment: FirebaseClientPaymentImportParameters,
@@ -38,6 +38,19 @@ package enum FirebaseExpenseConversion {
             let original: FirebaseSourceDocument, invoice: FirebaseSourceDocument, line: FirebaseSourceValue
             let accountID: AccountID, projectID: ProjectID, money: Money, source: FrozenInvoiceLineSource
             switch mapped {
+            case .paidItemSourceMapped(let frozen, let document, let parent, let evidence):
+                guard reviewed.issues == [.itemOccurrenceNotMapped],
+                      let originalID = document.documentPathSegments.last,
+                      case .string(let originalLineID) = field(evidence, "id"),
+                      case .item(let itemID, _, _) = frozen.source,
+                      try parent.canonicalEvidenceData() == review.settlement.invoice.canonicalEvidenceData(),
+                      try document.canonicalEvidenceData() == reviewed.source?.canonicalEvidenceData(),
+                      try FirebaseSourceFixtureCatalog.canonicalData(for: evidence) == FirebaseSourceFixtureCatalog.canonicalData(for: reviewed.line),
+                      try review.mapPaidItem(lineID: originalLineID, targetScope: targetScope, invoiceID: invoiceID,
+                        itemMappings: [originalID: itemID], categories: historicalCategories, currency: currency).line == frozen else {
+                    throw MappingFailure.incompleteInvoiceMapping
+                }
+                return frozen
             case .invoiceSourceMapped(let draft, let document, let parent, let evidence):
                 guard reviewed.issues == [.transactionMeaningNotMapped] else { throw MappingFailure.incompleteInvoiceMapping }
                 original = document; invoice = parent; line = evidence
@@ -107,6 +120,8 @@ package enum FirebaseExpenseConversion {
         case invoiceSourceMapped(BusinessPaidExpenseDraft, original: FirebaseSourceDocument,
             invoice: FirebaseSourceDocument, line: FirebaseSourceValue)
         case feeSourceMapped(FeeInstallmentDraft, original: FirebaseSourceDocument,
+            invoice: FirebaseSourceDocument, line: FirebaseSourceValue)
+        case paidItemSourceMapped(FrozenInvoiceLine, original: FirebaseSourceDocument,
             invoice: FirebaseSourceDocument, line: FirebaseSourceValue)
         case unresolved(Issue)
     }

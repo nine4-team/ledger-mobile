@@ -82,7 +82,10 @@ function sourceIdentity(line: z.infer<typeof lineSchema>, currency: string): voi
         ? -BigInt(line.signed_amount_minor_units) : BigInt(line.signed_amount_minor_units))) throw new Error("frozen Item mismatch");
     const basis = price.basis;
     if (!basis || typeof basis !== "object" || Array.isArray(basis) || Object.keys(basis).length !== 1) throw new Error("invalid price basis");
-    if ("projectPrice" in basis) {
+    if ("importedInvoiceAmount" in basis) {
+      if (!basis.importedInvoiceAmount || typeof basis.importedInvoiceAmount !== "object"
+        || Array.isArray(basis.importedInvoiceAmount) || BigInt(line.signed_amount_minor_units) <= 0n) throw new Error("invalid imported amount basis");
+    } else if ("projectPrice" in basis) {
       if (!basis.projectPrice || typeof basis.projectPrice !== "object" || Array.isArray(basis.projectPrice)) throw new Error("invalid price basis");
     } else if ("purchaseCost" in basis) identifier.parse(basis.purchaseCost?.acquisitionId);
     else if ("paidInvoiceLine" in basis) {

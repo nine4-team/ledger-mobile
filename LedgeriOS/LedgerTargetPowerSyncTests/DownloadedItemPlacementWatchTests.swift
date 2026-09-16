@@ -20,6 +20,8 @@ struct DownloadedItemPlacementWatchTests {
             "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at) VALUES('placement','watch-account','chair','project','first','2026-09-01')"
         ] { _ = try await db.execute(sql: sql, parameters: nil) }
         let physicalGate = PhysicalWatchGate(); await physicalGate.release()
+        let historyGate = PhysicalWatchGate(); await historyGate.release()
+        let historySubscription = PhysicalWatchSubscription(cleanup: historyGate)
         let oldGate = PhysicalWatchGate(), newGate = PhysicalWatchGate()
         let old = PhysicalWatchSubscription(cleanup: oldGate), next = PhysicalWatchSubscription(cleanup: newGate)
         let subscriptions = AsyncStream<String>.makeStream()
@@ -32,6 +34,9 @@ struct DownloadedItemPlacementWatchTests {
                     #expect(requested == account)
                     subscriptions.continuation.yield(project.rawValue)
                     return project.rawValue == "first" ? old : next
+                }, subscribeInvoiceHistory: { requested, item in
+                    #expect(requested == account && item.rawValue == "chair")
+                    return historySubscription
                 }).runHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "chair")) { _ in true }
             } catch is CancellationError { }
             catch { Issue.record(error) }
@@ -50,6 +55,7 @@ struct DownloadedItemPlacementWatchTests {
         await newGate.release()
         await task.value
         #expect(await next.unsubscribeCount == 1)
+        #expect(await historySubscription.unsubscribeCount == 1)
         subscriptions.continuation.finish()
         try await db.close()
     }

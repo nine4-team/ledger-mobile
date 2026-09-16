@@ -346,8 +346,20 @@ final class TransactionBrowserFixtureReader: TransactionBrowsing, TransactionExp
         if sold { history.insert(.init(placementId: try EntityID(validating: "sold-project"),
             scope: .project(try ProjectID(validating: "other-project")), spaceId: nil, projectDisplayName: "Other Project",
             startedAt: "2024-02-01", endedAt: nil), at: 0) }
+        var invoices: [DownloadedItemInvoiceLine] = []
+        if sold && ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-payment-history") {
+            let amount = try Money(minorUnits: 4000, currency: .init(validating: "USD"))
+            let line = try FrozenInvoiceLine(id: .init(validating: "frozen-item-line"),
+                scope: .project(accountId: accountId, projectId: .init(validating: "fixture-project"), clientId: .init(validating: "fixture-client")),
+                source: .item(itemId: itemId, occurrenceId: .init(validating: "occurrence"),
+                    price: .init(basis: .importedInvoiceAmount, amount: amount)),
+                sourceRevision: 1, categoryId: .init(validating: "fixture-category"), signedAmount: amount,
+                description: "Frozen chair at collection")
+            invoices = [try .init(invoiceId: .init(validating: "invoice-fixture"),
+                purchaseId: .init(validating: "transaction-browser-fixture"), line: line, invoiceNumber: "INV-001")]
+        }
         return try .init(accountId: accountId, itemId: itemId, description: name, intervals: history,
-            details: .init(name: name, description: name, notes: "Same physical Item"))
+            details: .init(name: name, description: name, notes: "Same physical Item"), invoiceLines: invoices)
     }
     func watchDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemPlacementHistory, Error> {
         AsyncThrowingStream { continuation in

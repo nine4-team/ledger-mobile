@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1131,
+  "stateVersion": 1147,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "O-033 pending; no reask. Mixed copier bridge52625 pass; duplicate-source35465 PASS82SQL;16831 clean104migration replay and3observed mixed retry/rollback races PASS /tmp/ledger-mixed-import-concurrency.log. Disposable DB removed. NEXT integrated review/checkpoint; then remaining Item/manual/settlement migration gaps, not repeated Expense/Fee tests. Local migrations142938/143420 applied without history, no hosted/real imports. Owner fee-demand-lifecycle.mixedImportConcurrencyCheckpoint. Preserve private .native-pdf files."
+    "nextWorkflowDecision": "NEXT finish local checkpoint after final79100 build/conversion; Item import/history layered local proof saved in item-collection-frozen-membership.99717 live sync delivered imported records then revoked buckets; local PS restart loaded rules after55004 timeout. Apply guard removed; no real copy/hosted deployment. iPhone29427 PASS; reader82316 PASS28; SQL64969 PASS1922; clean106/races47926. Continue approved workflow gaps, not CI waiting."
   }
 }

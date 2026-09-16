@@ -28,6 +28,24 @@ test("shared native fixture preserves closed links, frozen text and exact wire J
   assert.equal(result.receipt, null);
   assert.equal(result.paymentContents?.connections.length, 2);
 });
+test("imported paid Item amount is explicit, retained and positive", () => {
+  const value = detail(), line = value.paymentContents.invoice.lines[0];
+  line.source_snapshot_json = line.source_snapshot_json.replace('"projectPrice":{}', '"importedInvoiceAmount":{}');
+  assert.equal(transactionDetail(value, "payment", context).paymentContents?.invoice?.lines[0].source_snapshot_json, line.source_snapshot_json);
+  const credit = detail(), creditInvoice = credit.paymentContents.invoice, creditLine = creditInvoice.lines[0];
+  creditLine.signed_amount_minor_units = "-125";
+  creditInvoice.lines.push({ ...creditLine, id: "balancing-line", line_position: 1, source_kind: "expense",
+    source_id: "balancing-expense", item_id: null, signed_amount_minor_units: "250",
+    source_snapshot_json: '{"expense":{"expenseId":"balancing-expense"}}' });
+  transactionDetail(credit, "payment", context); // Balanced existing-basis credit is valid.
+  creditLine.source_snapshot_json = line.source_snapshot_json;
+  assert.throws(() => transactionDetail(credit, "payment", context), { code: "transaction_detail_server_result_mismatch" });
+  for (const malformed of ['null', '[]', '"unknown"']) {
+    const bad = detail();
+    bad.paymentContents.invoice.lines[0].source_snapshot_json = line.source_snapshot_json.replace('"importedInvoiceAmount":{}', `"importedInvoiceAmount":${malformed}`);
+    assert.throws(() => transactionDetail(bad, "payment", context), { code: "transaction_detail_server_result_mismatch" });
+  }
+});
 test("embedded frozen Int64 amounts never pass through a rounded JS Number", () => {
   for (const raw of ["125.0", "1.25e2", "9007199254740993", "9223372036854775807"]) {
     const value = detail(), invoice = value.paymentContents.invoice, line = invoice.lines[0];

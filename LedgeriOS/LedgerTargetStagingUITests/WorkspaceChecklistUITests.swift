@@ -537,6 +537,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["target-item-detail-name"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Same physical Item"].exists)
         XCTAssertTrue(app.staticTexts["Other Project"].exists)
+        let billing = app.descendants(matching: .any)["target-item-invoice-line-frozen-item-line"].firstMatch
+        let historyScroll = app.scrollViews["target-item-detail-scroll"].firstMatch
+        for _ in 0..<7 {
+            if billing.isHittable { break }
+            historyScroll.swipeUp()
+        }
+        XCTAssertTrue(billing.isHittable)
+        XCTAssertTrue(billing.label.contains("INV-001"))
+        XCTAssertTrue(billing.label.contains("40.00"), "Show Item billing amount, not whole payment")
     }
 
     func testTransactionRelatedItemsOpenExistingPhysicalHistory() throws {

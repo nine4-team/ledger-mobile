@@ -104,6 +104,59 @@ struct FirebaseInvoiceSettlementReviewTests {
         #expect(throws: (any Error).self) { try map(duplicated, categories: ["category": category]) }
     }
 
+    @Test("Paid Item mapping ignores current location and current price")
+    func paidItemMappingDoesNotInferCurrentPriceOrPlacement() throws {
+        let paidLine = Self.map(["id": .string("line"), "amountCents": .integer("100"), "sign": .integer("1"),
+            "sourceType": .string("item"), "sourceId": .string("physical-item"),
+            "budgetCategoryId": .string("historical"), "snapshotName": .string("Historical chair")])
+        let item = Self.document("items", "physical-item", ["projectId": .string("different-project"),
+            "projectPriceCents": .integer("99999"), "description": .string("Renamed chair")])
+        let review = try Self.review(Self.invoice(lines: [paidLine]), [Self.payment()]).resolveSources(in: [item])
+        let scope = review.settlement.targetScope
+        let items = ["physical-item": try ItemID(validating: "target-item")]
+        let categories = ["historical": try BudgetCategoryID(validating: "target-category")]
+        func map(_ evidence: FirebaseInvoiceSourcesReview) throws -> FrozenInvoiceLine {
+            try evidence.mapPaidItem(lineID: "line", targetScope: scope, invoiceID: .init(validating: "target-invoice"),
+                itemMappings: items, categories: categories, currency: .init(validating: "USD")).line
+        }
+        let mapped = try map(review)
+        #expect(mapped.signedAmount.minorUnits == 100 && mapped.description == "Historical chair")
+        #expect(mapped.scope == scope && mapped.categoryId == categories["historical"])
+        #expect(try map(review) == mapped)
+        guard case .item(let id, let occurrence, let price) = mapped.source else { Issue.record("Missing Item source"); return }
+        #expect(id == items["physical-item"] && occurrence.rawValue.hasPrefix("import-occurrence-"))
+        #expect(price.basis == .importedInvoiceAmount && price.amount.minorUnits == 100)
+        let sourcePayment = Self.payment()
+        let payment = FirebaseClientPaymentImportParameters(p_id: "target-payment",
+            p_account_id: scope.accountId.rawValue, p_project_id: scope.projectId!.rawValue,
+            p_client_id: scope.clientId!.rawValue, p_amount: "100", p_currency: "USD",
+            p_source_account: sourcePayment.accountScopeID, p_source_document: sourcePayment.documentPathSegments.last!,
+            p_source_bytes: "\\x" + (try sourcePayment.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())
+        func parameters(_ line: FrozenInvoiceLine = mapped, invoiceID: String = "target-invoice") throws -> FirebaseExpenseInvoiceImportParameters {
+            try .make(review: review, mappedSources: [.paidItemSourceMapped(line, original: item,
+                invoice: review.settlement.invoice, line: paidLine)], targetScope: scope,
+                invoiceID: .init(validating: invoiceID), payment: payment, invoiceRevision: 1,
+                sourceRevision: 7, historicalCategories: categories, currency: .init(validating: "USD"))
+        }
+        let imported = try parameters()
+        #expect(try imported.p_invoice.restored().lines == [mapped])
+        #expect(imported.p_expenses.isEmpty && imported.p_fees.isEmpty)
+        guard case .item(let retained) = imported.p_sources.first else { Issue.record("Missing retained Item evidence"); return }
+        #expect(retained.source_document_id == "physical-item" && retained.source_line_id == "line")
+        #expect(retained.source_bytes == "\\x" + (try item.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())
+        #expect(retained.line_source_bytes == "\\x" + (try FirebaseSourceFixtureCatalog.canonicalData(for: paidLine)).map { String(format: "%02x", $0) }.joined())
+        #expect(throws: (any Error).self) { try parameters(invoiceID: "other-invoice") }
+        let altered = try FrozenInvoiceLine(id: mapped.id, scope: mapped.scope, source: mapped.source,
+            sourceRevision: 2, categoryId: mapped.categoryId, signedAmount: mapped.signedAmount, description: mapped.description)
+        #expect(throws: (any Error).self) { try parameters(altered) }
+        #expect(throws: (any Error).self) { try map(review.settlement.resolveSources(in: [])) }
+        #expect(throws: (any Error).self) { try map(review.settlement.resolveSources(in: [item, item])) }
+        #expect(throws: (any Error).self) {
+            try review.mapPaidItem(lineID: "line", targetScope: scope, invoiceID: .init(validating: "target-invoice"),
+                itemMappings: [:], categories: categories, currency: .init(validating: "USD"))
+        }
+    }
+
     @Test("Exact signed lines and one explicit payment establish only source line coverage")
     func exactCoverage() throws {
         let source = Self.invoice(lines: [Self.line("charge", amount: "120"), Self.line("credit", amount: "20", sign: "-1")])

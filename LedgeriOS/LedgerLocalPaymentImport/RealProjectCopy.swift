@@ -228,8 +228,29 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
             guard case .map(let fields) = reviewed.line, let source = reviewed.source,
                   case .string(let lineID) = fields.first(where: { $0.key == "id" })?.value,
                   case .string(let historicalID) = fields.first(where: { $0.key == "budgetCategoryId" })?.value,
-                  case .string(let currentID) = field(source,"budgetCategoryId"),
-                  let historical = categorySource(historicalID), let current = categorySource(currentID) else {
+                  let historical = categorySource(historicalID) else {
+                issue = "sourceOrHistoricalCategoryRequiresMapping"; break
+            }
+            if reviewed.issues == [.itemOccurrenceNotMapped] {
+                do {
+                    let sourceID = source.documentPathSegments.last!
+                    guard items.contains(where: { $0.documentPathSegments == source.documentPathSegments }) else {
+                        issue = "physicalItemRequiresMapping"; break
+                    }
+                    let category = try BudgetCategoryID(validating: id("category", historicalID))
+                    let paid = try review.mapPaidItem(lineID: lineID, targetScope: scope,
+                        invoiceID: .init(validating: id("invoice", sourceInvoiceID)),
+                        itemMappings: [sourceID: .init(validating: id("item", sourceID))],
+                        categories: [historicalID: category], currency: .init(validating: "USD"))
+                    mapped.append(.paidItemSourceMapped(paid.line, original: source,
+                        invoice: review.settlement.invoice, line: reviewed.line))
+                    historicalCategories[historicalID] = category
+                    requiredCategories[historicalID] = historical
+                    continue
+                } catch { issue = "paidItemSourceRequiresMapping"; break }
+            }
+            guard case .string(let currentID) = field(source,"budgetCategoryId"),
+                  let current = categorySource(currentID) else {
                 issue = "sourceOrHistoricalCategoryRequiresMapping"; break
             }
             if reviewed.issues == [.feeNotMapped] {
@@ -329,6 +350,8 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         sql += "select ledger_private.import_invoice_sources(\(q(String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(parameters.p_sources),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(payment),as: UTF8.self)))::jsonb,\(q(parameters.p_source_account)),\(q(parameters.p_source_invoice)),\(q(parameters.p_invoice_bytes))::bytea);\n"
         let expenseJSON = String(decoding: try canonical(parameters.p_expenses),as: UTF8.self)
         let invoiceJSON = String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)
+        // Swift omits nil item_id for Expense/Fee; Postgres emits JSON null.
+        sql += "do $$ declare actual jsonb:=ledger_private.read_collected_invoice(\(q(account)),\(q(try id("invoice",sourceInvoiceID))))->'lines'; expected jsonb:=(\(q(invoiceJSON))::jsonb)->'lines'; begin if jsonb_array_length(actual)<>jsonb_array_length(expected) or exists(select 1 from jsonb_array_elements(expected) with ordinality e join jsonb_array_elements(actual) with ordinality a using(ordinality) where jsonb_strip_nulls(e.value-'source_snapshot_json') is distinct from jsonb_strip_nulls(a.value-'source_snapshot_json') or (e.value->>'source_snapshot_json')::jsonb is distinct from (a.value->>'source_snapshot_json')::jsonb) then raise exception 'Frozen Invoice line reconciliation mismatch'; end if; end $$;\n"
         sql += "do $$ begin if ledger_private.read_collected_invoice(\(q(account)),\(q(try id("invoice",sourceInvoiceID))))->'display_metadata' is distinct from (\(q(invoiceJSON))::jsonb)->'display_metadata' then raise exception 'Invoice display metadata reconciliation mismatch'; end if; end $$;\n"
         sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(expenseJSON))::jsonb) expected left join ledger_private.expenses e on e.id=expected->'record'->>'id' where to_jsonb(e) is distinct from to_jsonb(jsonb_populate_record(null::ledger_private.expenses,expected->'record'))) then raise exception 'Imported Expense field reconciliation mismatch'; end if; end $$;\n"
         sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(expenseJSON))::jsonb) expected where coalesce((select jsonb_agg(r.attachment_id order by r.position) from ledger_private.expense_receipt_attachments r where r.expense_id=expected->'record'->>'id'),'[]'::jsonb) is distinct from expected->'receipt_attachment_ids') then raise exception 'Expense receipt reconciliation mismatch'; end if; end $$;\n"
@@ -414,7 +437,7 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
             "limitations":["Not accounting/migration acceptance evidence",
                 "Related Projects use separate QA Client identities, not approved production Client mappings",
                 "Category visibility is restricted to company financial access for this QA copy",
-                "Only explicitly verified Expense receipts are loaded here; other media, full historical relationships, Item/manual Invoice sources, unresolved settlements and remaining metadata are not loaded",
+                "Only explicitly verified Expense receipts are loaded here; other media, full historical relationships, Item credits/manual Invoice sources, unresolved settlements and remaining metadata are not loaded",
                 "Physical record timestamps currently describe target creation; original timestamps remain in source.json",
                 "No balance adjustment or tax allocation invented; nonphysical receipt lines await source mapping"]]
         try retain(JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys]),

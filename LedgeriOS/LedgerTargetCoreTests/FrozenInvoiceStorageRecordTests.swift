@@ -12,7 +12,10 @@ struct FrozenInvoiceStorageRecordTests {
         let environment = ProcessInfo.processInfo.environment
         let path = try #require(environment["LEDGER_REPORT_PARITY_INPUT"]
             ?? environment["RUNNER_TEMP"].map { "\($0)/ledger-property-report-parity.json" })
-        struct DatabaseEvidence: Decodable { let frozenInvoice: FrozenInvoiceStorageRecord }
+        struct DatabaseEvidence: Decodable {
+            let frozenInvoice: FrozenInvoiceStorageRecord
+            let importedInvoice: FrozenInvoiceStorageRecord
+        }
         let evidence = try JSONDecoder().decode(DatabaseEvidence.self,
             from: Data(contentsOf: URL(fileURLWithPath: path)))
         let actual = try evidence.frozenInvoice.restored()
@@ -23,6 +26,16 @@ struct FrozenInvoiceStorageRecordTests {
             #expect(actualLine.description.utf8.elementsEqual(expectedLine.description.utf8))
         }
         #expect(try actual.categoryTotals() == expected.categoryTotals())
+        let imported = try evidence.importedInvoice.restored()
+        #expect(imported.lines.count == 1 && imported.total.minorUnits == 9007199254740993)
+        let importedLine = try #require(imported.lines.first)
+        #expect(importedLine.sourceRevision == 1)
+        #expect(importedLine.description.utf8.elementsEqual(expected.lines[0].description.utf8))
+        guard case .item(let item, let occurrence, let price) = importedLine.source else {
+            Issue.record("Expected imported physical Item evidence"); return
+        }
+        #expect(item.rawValue == "frozen-item" && occurrence.rawValue == "sale")
+        #expect(price.basis == .importedInvoiceAmount && price.amount == imported.total)
     }
 
     @Test func displayMetadataRoundTripAndValidation() throws {

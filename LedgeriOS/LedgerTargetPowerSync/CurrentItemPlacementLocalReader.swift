@@ -66,7 +66,42 @@ struct CurrentItemPlacementLocalReader: Sendable {
                             projectId: .init(validating: row.getString(name: "project_id")),
                             projectPlacementId: .init(validating: row.getString(name: "placement_id")),
                             inventoryPlacementId: .init(validating: row.getString(name: "inventory_placement_id")))
-                    })
+                    }, invoiceLines: Self.invoiceHistory(transaction: transaction, accountId: accountId,
+                        principalId: principalId, itemId: itemId))
+        }
+    }
+
+    private static func invoiceHistory(transaction: any Transaction, accountId: AccountID,
+        principalId: PrincipalID, itemId: ItemID) throws -> [DownloadedItemInvoiceLine] {
+        let parents = try transaction.getAll(sql: """
+            SELECT DISTINCT h.id,h.project_id FROM collected_invoices h
+            JOIN collected_invoice_lines l ON l.account_id=h.account_id AND l.invoice_id=h.id
+            JOIN spike_account_memberships m ON m.account_id=h.account_id
+            WHERE h.account_id=? AND l.item_id=? AND l.source_kind='item' AND h.sealed=1
+              AND m.principal_id=? AND m.state='active' AND m.financial_access='full'
+            ORDER BY h.id
+            """, parameters: [accountId.rawValue,itemId.rawValue,principalId.rawValue]) {
+                (try InvoiceID(validating: $0.getString(name: "id")),
+                 try ProjectID(validating: $0.getString(name: "project_id")))
+            }
+        return try parents.flatMap { invoiceId, projectId -> [DownloadedItemInvoiceLine] in
+            let records: [FrozenInvoiceContents]
+            do {
+                records = try ProjectExpensePowerSyncQuery.collectedRecords(transaction: transaction, accountId: accountId,
+                    projectId: projectId, invoiceId: invoiceId)
+            } catch is DecodingError { return [] }
+              catch is FrozenInvoiceStorageFailure { return [] }
+              catch is FrozenInvoiceContentsFailure { return [] }
+              catch is DomainPrimitiveFailure { return [] }
+            // An incomplete download is not proof of no billing history. The
+            // containing history remains explicitly partial; SQL errors propagate.
+            return records.flatMap { invoice in
+                    invoice.lines.compactMap { line in
+                        guard case .item(let linkedItem, _, _) = line.source, linkedItem == itemId else { return nil }
+                        return DownloadedItemInvoiceLine(invoiceId: invoice.invoiceId, purchaseId: invoice.purchaseId,
+                            line: line, invoiceNumber: invoice.displayMetadata?.invoiceNumber)
+                    }
+                }
         }
     }
 

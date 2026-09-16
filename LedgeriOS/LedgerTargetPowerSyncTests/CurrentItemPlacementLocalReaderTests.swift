@@ -10,6 +10,36 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Imported Invoice history survives encrypted reopen in Inventory without implying current payment")
+    func importedInvoiceHistory() async throws {
+        let item = try ItemID(validating: "chair")
+        func verify(_ db: any PowerSyncDatabaseProtocol) async throws {
+            let history = try await CurrentItemPlacementLocalReader(database: db)
+                .readHistory(accountId: account, principalId: principal, itemId: item)
+            let fact = try #require(history.invoiceLines.first)
+            #expect(fact.invoiceId.rawValue == "paid-invoice" && fact.purchaseId.rawValue == "paid-purchase")
+            #expect(fact.line.signedAmount.minorUnits == 9007199254740993)
+            #expect(fact.line.description == "Historical chair")
+            #expect(history.currentClientPaidPurchases.isEmpty && history.currentAccountingResolution == nil)
+            #expect(history.intervals.first?.scope == .businessInventory)
+        }
+        try await withDatabase(reopen: { db in
+            try await verify(db)
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='limited'", parameters: nil)
+            #expect(try await CurrentItemPlacementLocalReader(database: db)
+                .readHistory(accountId: account, principalId: principal, itemId: item).invoiceLines.isEmpty)
+        }) { db in
+            for sql in [
+                "UPDATE spike_account_memberships SET financial_access='full'",
+                "UPDATE spike_item_placements SET ended_at='2026-03-01' WHERE id='project-now'",
+                "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,started_at) VALUES('inventory-now','account-item','chair','business_inventory','2026-03-01')",
+                "INSERT INTO collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units,sealed) VALUES('paid-invoice','account-item','project-item','client','paid-purchase','1','USD','9007199254740993',1)",
+                "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,line_position,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency,description,source_snapshot_json) VALUES('paid-line','account-item','paid-invoice',0,'item','historical-occurrence','chair','1','furnishings','9007199254740993','USD','Historical chair','{\"item\":{\"itemId\":\"chair\",\"occurrenceId\":\"historical-occurrence\",\"price\":{\"basis\":{\"importedInvoiceAmount\":{}},\"amount\":{\"minorUnits\":9007199254740993,\"currency\":\"USD\"}}}}')"
+            ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            try await verify(db)
+        }
+    }
+
     @Test("Return links survive restart and follow current category authorization")
     func returnLinkVisibility() async throws {
         let item = try ItemID(validating: "chair")

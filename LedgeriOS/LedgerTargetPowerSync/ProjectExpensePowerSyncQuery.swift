@@ -76,7 +76,7 @@ struct ProjectExpensePowerSyncQuery: Sendable {
         })
     }
 
-    private static func collectedRecords(transaction: any Transaction, accountId: AccountID,
+    static func collectedRecords(transaction: any Transaction, accountId: AccountID,
         projectId: ProjectID, expensesOnly: Bool = false, invoiceId: InvoiceID? = nil) throws -> [FrozenInvoiceContents] {
         try transaction.getAll(sql: """
             SELECT json_object('invoice_id',h.id,'invoice_revision',CAST(h.invoice_revision AS TEXT),

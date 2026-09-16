@@ -784,7 +784,7 @@ struct DownloadedItemDetailView: View {
         }
         detailSection("History", id: "target-item-detail-history-section", isExpanded: $historyExpanded) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Downloaded locations and available return links. Older history may be missing. This is not a payment or refund ledger.")
+                Text("Downloaded locations, Invoice lines and available return links. Older history may be missing. Invoice line amounts are not the total client payment.")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("target-item-history-partial")
                 if history.intervals.isEmpty { Text("No location history is downloaded for this Item yet.") }
@@ -800,6 +800,16 @@ struct DownloadedItemDetailView: View {
                                 .accessibilityIdentifier("target-item-return-link-\(link.id.rawValue)")
                         }
                     }.accessibilityIdentifier("target-item-history-\(interval.placementId.rawValue)")
+                }
+                ForEach(history.invoiceLines) { fact in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(fact.invoiceNumber.map { "Collected Invoice · \($0)" } ?? "Collected Invoice").font(.subheadline)
+                        Text(fact.line.description)
+                        Text((Decimal(fact.line.signedAmount.minorUnits) / 100)
+                            .formatted(.currency(code: fact.line.signedAmount.currency.rawValue)))
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("target-item-invoice-line-\(fact.id.rawValue)")
                 }
             }
         }
