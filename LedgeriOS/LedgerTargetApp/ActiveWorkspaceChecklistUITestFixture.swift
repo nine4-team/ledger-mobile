@@ -661,7 +661,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
@@ -822,12 +822,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         let expenses = try await readExpenses(accountId: accountId, projectId: projectId)
         guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-live-invoice"),
               let expense = expenses.expenses.first else { return [] }
-        return try [.init(invoiceId: .init(validating: "live-invoice-ui-test"), revision: 1, status: .sent,
+        let changed = expenseAccess.invoiceSourceHasChanged
+        let headerChanged = changed && ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoice-header-change")
+        let amount = changed && !headerChanged ? try Money(minorUnits: 12551, currency: expense.entry.finalAmount.currency) : expense.entry.finalAmount
+        return try [.init(invoiceId: .init(validating: "live-invoice-ui-test"), revision: headerChanged ? 2 : 1,
+            status: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-edit-invoice") ? .created : .sent,
             name: "Live Invoice", notes: "Sent outside Ledger",
             scope: .project(accountId: accountId, projectId: projectId, clientId: .init(validating: "client-ui-test")),
-            lines: [.init(selection: .init(source: .expense(expense.entry.expenseId), expectedRevision: expense.revision,
-                reviewedAmount: expense.entry.finalAmount), categoryId: expense.entry.categoryId,
-                description: expense.entry.vendor)], reportedTotal: expense.entry.finalAmount)]
+            lines: [.init(selection: .init(source: .expense(expense.entry.expenseId), expectedRevision: changed && !headerChanged ? 2 : expense.revision,
+                reviewedAmount: amount), categoryId: expense.entry.categoryId,
+                description: expense.entry.vendor)], reportedTotal: amount)]
     }
     func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error> {
         AsyncThrowingStream { continuation in
@@ -841,6 +845,25 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+    func reviseCreatedInvoice(_ payload: ReviseCreatedInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-edit-invoice"), expenseAccess.hasAccess,
+              let project = payload.invoice.selection.scope.projectId,
+              let current = try await readLiveInvoices(accountId: payload.invoice.selection.scope.accountId, projectId: project).first,
+              payload.invoice.invoiceId == current.invoiceId, payload.expectedRevision == current.revision,
+              payload.invoice.selection.lines == current.lines.map(\.selection) else { throw ProjectExpenses.Failure.invalidEvidence }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoice-create-retry"),
+           !expenseAccess.isExactInvoiceRetry(operationUUID, date: capturedAt, payload: payload.invoice) {
+            throw ProjectExpenses.Failure.invalidEvidence
+        }
+        let id = try OperationID(validating: "ui-invoice-edit-" + operationUUID.uuidString)
+        expenseAccess.saveInvoiceRevision(.init(id: id, payload: payload, state: .queued))
+        expenseAccess.publishExpenses(try await readExpenses(accountId: payload.invoice.selection.scope.accountId, projectId: project))
+        return .init(operationId: id, localState: .queued)
+    }
+    func readPendingInvoiceRevisions(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceRevision] {
+        _ = try await readExpenses(accountId: accountId, projectId: projectId)
+        return expenseAccess.pendingInvoiceRevision.map { [$0] } ?? []
     }
     func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
         guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-create-invoice"), expenseAccess.hasAccess,

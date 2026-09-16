@@ -1449,6 +1449,40 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             let offline = try await context.openRuntime()
             #expect(try await offline.readLiveInvoices(accountId: context.accountId, projectId: projectId) == expected)
             liveStage("offline reopened contents match")
+            if env["LEDGER_INVOICE_LOCAL_REVISE"] == "1" {
+                let current = expected[0]
+                let payload = try ReviseCreatedInvoiceCommand.Payload(invoice: .init(invoiceId: current.invoiceId,
+                    selection: current.selection,
+                    name: "Revised offline Invoice", notes: "Offline edit"), expectedRevision: current.revision)
+                let uuid = UUID(), time = Date()
+                let accepted = try await offline.reviseCreatedInvoice(payload, operationUUID: uuid, capturedAt: time)
+                #expect(accepted.localState == .queued)
+                #expect(try await offline.readPendingInvoiceRevisions(accountId: context.accountId, projectId: projectId).count == 1)
+                try await offline.close()
+                let resumed = try await context.openRuntime()
+                #expect(try await resumed.reviseCreatedInvoice(payload, operationUUID: uuid, capturedAt: time) == accepted)
+                liveStage("offline revision survived restart")
+                try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+                var revised: LiveInvoiceContents?
+                for try await invoices in resumed.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+                    guard let invoice = invoices?.first, invoice.revision == 2 else { continue }
+                    let pending = try await resumed.readPendingInvoiceRevisions(accountId: context.accountId, projectId: projectId)
+                    guard pending.isEmpty else { continue }
+                    revised = invoice; break
+                }
+                let updated = try #require(revised)
+                #expect(updated.name == "Revised offline Invoice")
+                #expect(updated.notes == "Offline edit")
+                #expect(updated.total == current.total && updated.lines == current.lines)
+                #expect(try await resumed.reviseCreatedInvoice(payload, operationUUID: uuid, capturedAt: time).localState == .applied)
+                try await resumed.close()
+                let finalOffline = try await context.openRuntime()
+                #expect(try await finalOffline.readLiveInvoices(accountId: context.accountId, projectId: projectId) == [updated])
+                #expect(try await finalOffline.readPendingInvoiceRevisions(accountId: context.accountId, projectId: projectId).isEmpty)
+                try await finalOffline.close()
+                liveStage("revised Invoice downloaded and reopened offline")
+                return
+            }
             try await offline.close()
             return
         }
@@ -3980,18 +4014,29 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
-    @Test("Live Invoice read lease drains before workspace close")
-    func liveInvoiceReadDrainsBeforeClose() async throws {
+    @Test("Live Invoice read and revision leases drain before workspace close", arguments: [false, true])
+    func liveInvoiceReadDrainsBeforeClose(revising: Bool) async throws {
         let context = try RuntimeTestContext(suffix: "live-invoice-read-close")
         let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
         let gate = ManualGate()
         var dependencies = context.dependencies(events: events)
         dependencies.finiteOperationCheckpoint = { operation in
-            if operation == .readLiveInvoices { await gate.wait() }
+            if operation == (revising ? .reviseCreatedInvoice : .readLiveInvoices) { await gate.wait() }
         }
         let runtime = try await context.openRuntime(dependencies: dependencies)
         let project = try ProjectID(validating: "invoice-project")
-        let read = Task { try await runtime.readLiveInvoices(accountId: context.accountId, projectId: project) }
+        let payload = try ReviseCreatedInvoiceCommand.Payload(invoice: .init(invoiceId: .init(validating: "invoice"),
+            selection: .init(scope: .project(accountId: context.accountId, projectId: project, clientId: .init(validating: "client")),
+                lines: [.init(source: .expense(.init(validating: "expense")), expectedRevision: 1,
+                    reviewedAmount: .init(minorUnits: 100, currency: .init(validating: "USD")))]), name: "Invoice", notes: ""), expectedRevision: 1)
+        let invoke: @Sendable () async throws -> Void = {
+            if revising {
+                _ = try await runtime.reviseCreatedInvoice(payload, operationUUID: UUID(), capturedAt: Date())
+            } else {
+                _ = try await runtime.readLiveInvoices(accountId: context.accountId, projectId: project)
+            }
+        }
+        let read = Task { try await invoke() }
         await gate.waitUntilEntered()
         let close = Task { try await runtime.close() }
         try await Task.sleep(for: .milliseconds(30))
@@ -4001,7 +4046,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         await #expect(throws: CancellationError.self) { try await read.value }
         try await close.value
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await runtime.readLiveInvoices(accountId: context.accountId, projectId: project)
+            try await invoke()
         }
         #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
         context.remove()

@@ -164,5 +164,24 @@ select throws_ok($$select public.spike_read_live_invoice('account-primary','invo
 reset role;
 select ok(not has_function_privilege('anon','public.spike_read_live_invoice(text,text,text)','EXECUTE'),
   'Anonymous role cannot call read endpoint');
+-- Same Invoice may later select the same source again without overwriting its
+-- first membership. Structural proof only; no collection/cancel policy implied.
+update ledger_private.live_invoice_memberships set released_at=now()
+where invoice_id='live-two' and source_id='expense-source';
+insert into ledger_private.live_invoice_memberships(account_id,invoice_id,source_kind,source_id,position,joined_at_revision)
+values('account-primary','live-one','expense','expense-source',0,2);
+select is((select count(*) from ledger_private.live_invoice_memberships where invoice_id='live-one' and source_id='expense-source'),
+  2::bigint,'Re-add retains both membership revisions');
+select is((select count(*) from ledger_private.live_invoice_memberships where source_id='expense-source' and released_at is null),
+  1::bigint,'Only one current membership across historical revisions');
+select throws_ok($$update ledger_private.live_invoice_memberships set released_at=null
+  where invoice_id='live-one' and source_id='expense-source' and joined_at_revision=1$$,
+  '55000','Invoice membership history is immutable; release and replace','Cannot resurrect old history in place');
+select throws_ok($$delete from ledger_private.live_invoice_memberships
+  where invoice_id='live-one' and source_id='expense-source' and joined_at_revision=1$$,
+  '55000','Invoice membership history is immutable; release and replace','Cannot delete old membership history');
+select throws_ok($$update ledger_private.live_invoice_memberships set position=99
+  where invoice_id='live-one' and source_id='expense-source' and joined_at_revision=2$$,
+  '55000','Invoice membership history is immutable; release and replace','Reorder requires retained prior membership');
 select * from finish();
 rollback;

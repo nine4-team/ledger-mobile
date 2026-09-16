@@ -1,6 +1,26 @@
 # Architecture Decision Register
 
 Status: active
+
+### 2026-09-16 — Repeated created-Invoice edits retain membership revisions
+
+Extend the existing live membership key with `joined_at_revision`; do not add
+a competing history table. A created-Invoice edit releases previous rows and
+inserts the reviewed ordered membership at the new Invoice revision, atomically.
+Released rows cannot be rewritten or deleted. Existing membership rows receive
+revision 1 as their legacy storage baseline, not a claim about previously
+unrecorded edit history. Original source identity, position and release time stay
+intact. A trigger permits only first release, never changing source or position
+in place; trusted writers must release-and-replace for reordering too.
+
+Existing active-source/position uniqueness and active-only PowerSync projection
+remain unchanged: historical rows do not duplicate offline current membership.
+Tradeoff: retained rows grow with actual edits. This is simpler than a second
+event/projection system and preserves remove/re-add provenance. No sending,
+sent-membership, cancellation or collection policy is decided here. The writer
+still needs current authorization, created-status/revision and ordered source
+locks; this storage change alone does not implement editing. Verification is
+owned by `invoice-build-edit` in the product checklist.
 Architecture version: 0.2
 Last reviewed: 2026-09-07
 

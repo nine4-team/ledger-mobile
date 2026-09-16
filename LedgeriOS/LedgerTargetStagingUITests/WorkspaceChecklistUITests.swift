@@ -742,6 +742,37 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Saved on device — pending sync"].exists)
     }
 
+    func testEditInvoiceReusesSelectionReviewAndRetry() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-live-invoice",
+            "--ledger-ui-test-edit-invoice", "--ledger-ui-test-invoice-create-retry"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let section = app.buttons["Invoices"].firstMatch
+        reveal(section, in: app); section.tap()
+        let row = app.descendants(matching: .any)["target-invoicing-invoice-live-invoice-ui-test"].firstMatch
+        reveal(row, in: app); row.tap()
+        let edit = app.buttons["target-edit-invoice"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5)); edit.tap()
+        let source = app.buttons["invoice-source-expense-expense-ui-test"]
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Next"].isEnabled)
+        source.tap(); XCTAssertFalse(app.buttons["Next"].isEnabled)
+        source.tap(); app.buttons["Next"].tap()
+        let name = app.textFields["Phase 1 — Furnishings"]
+        XCTAssertEqual(name.value as? String, "Live Invoice")
+        name.tap(); name.typeText(" revised")
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Invoice was not accepted on this device. Check the current billable records and try again."].waitForExistence(timeout: 5))
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Invoice edit saved on this device — waiting to sync."].waitForExistence(timeout: 5))
+        XCTAssertFalse(edit.isEnabled)
+    }
+
     func testLiveInvoiceUsesExistingListAndReport() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -771,21 +802,42 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testInvoiceReviewRespondsToSourceChangeAndAccessLoss() throws {
+        try checkInvoiceReviewChanges(editing: false)
+    }
+
+    func testInvoiceEditRespondsToChangesAndAccessLoss() throws {
+        try checkInvoiceReviewChanges(editing: true)
+    }
+
+    private func checkInvoiceReviewChanges(editing: Bool) throws {
         #if os(iOS)
         continueAfterFailure = false
-        for withdrawal in [false, true] {
+        for change in editing ? ["source", "header", "withdrawal"] : ["source", "withdrawal"] {
+            let withdrawal = change == "withdrawal"
             let app = XCUIApplication()
             app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-create-invoice",
                 withdrawal ? "--ledger-ui-test-expense-withdrawal" : "--ledger-ui-test-invoice-source-change"]
+            if editing { app.launchArguments += ["--ledger-ui-test-live-invoice", "--ledger-ui-test-edit-invoice"] }
+            if change == "header" { app.launchArguments.append("--ledger-ui-test-invoice-header-change") }
             app.launch(); defer { app.terminate() }
             let project = app.buttons["target-active-project-card-project-ui-test"]
             XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
             let invoicing = app.buttons["target-project-invoicing"]
             reveal(invoicing, in: app); invoicing.tap()
-            let add = app.buttons["Add Invoices"]
-            reveal(add, in: app); add.tap()
+            if editing {
+                let section = app.buttons["Invoices"].firstMatch
+                reveal(section, in: app); section.tap()
+                let row = app.descendants(matching: .any)["target-invoicing-invoice-live-invoice-ui-test"].firstMatch
+                reveal(row, in: app); row.tap()
+                let edit = app.buttons["target-edit-invoice"]
+                XCTAssertTrue(edit.waitForExistence(timeout: 5)); edit.tap()
+            } else {
+                let add = app.buttons["Add Invoices"]
+                reveal(add, in: app); add.tap()
+            }
             let source = app.buttons["invoice-source-expense-expense-ui-test"]
-            XCTAssertTrue(source.waitForExistence(timeout: 5)); source.tap()
+            XCTAssertTrue(source.waitForExistence(timeout: 5))
+            if !editing { source.tap() }
             XCTAssertTrue(app.staticTexts["$125.50"].firstMatch.exists, app.debugDescription)
             app.buttons["Next"].tap()
             XCTAssertTrue(app.textFields["Phase 1 — Furnishings"].waitForExistence(timeout: 5))
@@ -793,9 +845,17 @@ final class WorkspaceChecklistUITests: XCTestCase {
             if withdrawal {
                 XCTAssertTrue(app.textFields["Phase 1 — Furnishings"].waitForNonExistence(timeout: 5))
                 XCTAssertFalse(app.buttons["Create Invoice"].exists)
-                let invoices = app.buttons["Invoices"].firstMatch
-                reveal(invoices, in: app); invoices.tap()
-                XCTAssertTrue(app.staticTexts["Live Invoices are unavailable."].waitForExistence(timeout: 5), app.debugDescription)
+                if editing {
+                    XCTAssertFalse(app.buttons["Save Changes"].exists)
+                    XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5))
+                } else {
+                    let invoices = app.buttons["Invoices"].firstMatch
+                    reveal(invoices, in: app); invoices.tap()
+                    XCTAssertTrue(app.staticTexts["Live Invoices are unavailable."].waitForExistence(timeout: 5), app.debugDescription)
+                }
+            } else if change == "header" {
+                XCTAssertTrue(app.staticTexts["This Invoice changed. Close this form and reopen it to review the latest version."].waitForExistence(timeout: 5))
+                XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
             } else {
                 XCTAssertTrue(app.staticTexts["Billable records changed. Review your selection before saving."].waitForExistence(timeout: 5), app.debugDescription)
                 XCTAssertTrue(app.buttons["Next"].exists)

@@ -15,6 +15,8 @@ const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
 assert.ok(!process.argv.includes('--native-invoice-create') || process.argv.includes('--native-live-invoice'),
     '--native-invoice-create requires --native-live-invoice');
+assert.ok(!process.argv.includes('--native-invoice-revise') || process.argv.includes('--native-invoice-create'),
+    '--native-invoice-revise requires --native-invoice-create');
 if (process.argv.includes('--native-invoice-create')) {
     assert.ok(process.argv.includes('--expense') && process.argv.includes('--financial') &&
         !['--expense-paid','--expense-edit','--native-expense','--native-expense-edit'].some(flag => process.argv.includes(flag)),
@@ -92,6 +94,7 @@ try {
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 LEDGER_SALE_LOCAL_CLIENT:client,
                 ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
+                ...(process.argv.includes('--native-invoice-revise')?{LEDGER_INVOICE_LOCAL_REVISE:'1'}:{}),
                 ...(process.argv.includes('--native-fee-create')?{LEDGER_FEE_LOCAL_CREATE:'1',LEDGER_FEE_LOCAL_CATEGORY:key+'-fee-category'}:{}),
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
@@ -244,7 +247,7 @@ try {
                 assert.ok([401,403].includes(anonymous.status));
             }
         }
-        if((process.argv.includes('--native-live-invoice') || invoiceCreationMCP) && !process.argv.includes('--native-invoice-create')) {
+        if((process.argv.includes('--native-live-invoice') || process.argv.includes('--invoice-revise') || invoiceCreationMCP) && !process.argv.includes('--native-invoice-create')) {
             assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--expense-edit') && !process.argv.includes('--native-expense'),
                 'Live Invoice replication requires the uncollected revision1 Expense fixture');
             const command = {operationId:key+'-invoice-op',accountId:account,actorPrincipalId:principal,
@@ -274,6 +277,34 @@ try {
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
             assert.equal(response.status,200);
             assert.equal((await response.json()).totalMinorUnits,intent.amountMinorUnits);
+            if (process.argv.includes('--invoice-revise')) {
+                const edit = {...command, operationId:key+'-invoice-revision', contractVersion:'invoice-revise-created-v1',
+                    expectedRevision:'1', name:'Revised Invoice'};
+                const body = {p_command:JSON.stringify(edit)};
+                const revised = await call('/rest/v1/rpc/spike_revise_created_invoice',body,token);
+                assert.equal(revised.status,200,await revised.clone().text());
+                const receipt = await revised.json();
+                assert.equal(receipt.result_code,'invoice_revised');
+                assert.deepEqual(await (await call('/rest/v1/rpc/spike_revise_created_invoice',body,token)).json(),receipt);
+                assert.ok([401,403].includes((await call('/rest/v1/rpc/spike_revise_created_invoice',body)).status));
+                const stale = await call('/rest/v1/rpc/spike_revise_created_invoice',
+                    {p_command:JSON.stringify({...edit,operationId:key+'-stale-revision'})},token);
+                assert.equal(stale.status,200);
+                assert.equal((await stale.json()).error_code,'invoice_revision_conflict');
+                assert.equal(sql(`select revision from ledger_private.live_invoices where id=${q(command.invoiceId)}`),'2');
+                const mcp = await import('../LedgerTargetMCP/src/invoiceCreation.ts');
+                const input = {operationUUID:randomUUID(),clientCreatedAtMilliseconds:Number(command.createdAtMs),expectedRevision:'2',
+                    payload:{projectId:project,clientId:client,invoiceId:command.invoiceId,name:'MCP revised Invoice',notes:command.notes,sources:command.sources}};
+                const request = mcp.makeInvoiceRevisionRequest(input,context);
+                const service = new mcp.SupabaseInvoiceRevisionService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+                assert.equal((await mcp.invoiceRevisionTool(input,context,service)).phase,'applied');
+                const mcpReceipt = await service.apply(request,context);
+                assert.equal(mcp.validateInvoiceRevisionResult(mcpReceipt,request).resultCode,'invoice_revised');
+                assert.deepEqual(await service.apply(request,context),mcpReceipt);
+                assert.equal(sql(`select revision from ledger_private.live_invoices where id=${q(command.invoiceId)}`),'3');
+                console.log('PASS authenticated Invoice revision HTTP: exact replay, anonymous denial, stale edit rejection');
+                console.log('PASS MCP Invoice revision uses same authorized HTTP writer and exact replay');
+            }
         }
         if(process.argv.includes('--native-fee-create') || feeMCP) {
             sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
@@ -317,6 +348,10 @@ try {
         if(process.argv.includes('--native-invoice-create')) {
             assert.equal(sql(`select count(*) from ledger_private.live_invoices where account_id=${q(account)}`),'1');
             assert.equal(sql(`select count(*) from public.spike_operation_results where account_id=${q(account)} and command_type='create_invoice' and phase='applied'`),'1');
+        }
+        if(process.argv.includes('--native-invoice-revise')) {
+            assert.equal(sql(`select count(*) from public.spike_operation_results where account_id=${q(account)} and command_type='revise_created_invoice' and phase='applied'`),'1');
+            assert.equal(sql(`select revision from ledger_private.live_invoices where account_id=${q(account)}`),'2');
         }
         if(process.argv.includes('--native-fee-create')) {
             assert.equal(sql(`select count(*) from ledger_private.fee_installments where account_id=${q(account)} and amount_minor_units=12345`),'1');

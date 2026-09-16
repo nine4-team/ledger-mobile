@@ -17,13 +17,23 @@ export const invoiceCreationInputSchema = z.object({
     name: z.string(), notes: z.string(), sources: z.array(source).nonempty() }).strict(),
 }).strict();
 export type InvoiceCreationInput = z.input<typeof invoiceCreationInputSchema>;
+export const invoiceRevisionInputSchema = invoiceCreationInputSchema.extend({
+  expectedRevision: integer.refine(value => /^[1-9][0-9]*$/.test(value) && BigInt(value) < 9223372036854775807n),
+});
+export type InvoiceRevisionInput = z.input<typeof invoiceRevisionInputSchema>;
 export type InvoiceCreationRequest = Readonly<{ operationId: string; accountId: string; actorPrincipalId: string;
   invoiceId: string; createdAtMs: number; commandJSON: string; fingerprint: string }>;
 export interface InvoiceCreationServing {
   apply(request: InvoiceCreationRequest, context: TargetMCPRequestContext): Promise<unknown>;
 }
 export function makeInvoiceCreationRequest(input: InvoiceCreationInput, context: TargetMCPRequestContext): InvoiceCreationRequest {
-  const parsed = invoiceCreationInputSchema.safeParse(input);
+  return makeInvoiceRequest(input, context, false);
+}
+export function makeInvoiceRevisionRequest(input: InvoiceRevisionInput, context: TargetMCPRequestContext): InvoiceCreationRequest {
+  return makeInvoiceRequest(input, context, true);
+}
+function makeInvoiceRequest(input: InvoiceCreationInput | InvoiceRevisionInput, context: TargetMCPRequestContext, revision: boolean): InvoiceCreationRequest {
+  const parsed = (revision ? invoiceRevisionInputSchema : invoiceCreationInputSchema).safeParse(input);
   if (!parsed.success) return fail();
   const sources = parsed.data.payload.sources;
   if (new Set(sources.map(row => `${row.kind}:${row.sourceId}`)).size !== sources.length
@@ -35,9 +45,11 @@ export function makeInvoiceCreationRequest(input: InvoiceCreationInput, context:
   }
   const accountId = validateIdentifier(context.accountId, "account_not_authorized");
   const actorPrincipalId = validateIdentifier(context.principalId, "account_not_authorized");
-  const operationId = `invoice-create-${createHash("sha256").update(accountId).digest("hex")}-${parsed.data.operationUUID}`;
+  const operationId = `${revision ? "invoice-revise-created" : "invoice-create"}-${createHash("sha256").update(accountId).digest("hex")}-${parsed.data.operationUUID}`;
   const commandJSON = canonicalJSON({ ...parsed.data.payload, operationId, accountId, actorPrincipalId,
-    contractVersion: "invoice-create-v1", createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "invoice_payload_invalid");
+    contractVersion: revision ? "invoice-revise-created-v1" : "invoice-create-v1",
+    ...("expectedRevision" in parsed.data ? {expectedRevision: parsed.data.expectedRevision} : {}),
+    createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "invoice_payload_invalid");
   return { operationId, accountId, actorPrincipalId, invoiceId: parsed.data.payload.invoiceId,
     createdAtMs: parsed.data.clientCreatedAtMilliseconds, commandJSON,
     fingerprint: createHash("sha256").update(commandJSON).digest("hex") };
@@ -46,18 +58,26 @@ const rejections = new Set(["invoice_project_unavailable", "invoice_empty_select
   "invoice_source_invalid", "invoice_source_unavailable", "invoice_source_changed", "invoice_source_collected",
   "invoice_source_reserved", "invoice_currency_mismatch", "invoice_total_overflow", "invoice_integrity_conflict"]);
 export function validateInvoiceCreationResult(value: unknown, request: InvoiceCreationRequest) {
+  return validateInvoiceResult(value, request, false);
+}
+export function validateInvoiceRevisionResult(value: unknown, request: InvoiceCreationRequest) {
+  return validateInvoiceResult(value, request, true);
+}
+function validateInvoiceResult(value: unknown, request: InvoiceCreationRequest, revision: boolean) {
   const mismatch = () => fail("invoice_server_result_mismatch");
   if (!value || typeof value !== "object" || Array.isArray(value)) return mismatch();
   const row = value as Record<string, unknown>;
   if (row.operation_id !== request.operationId || row.account_id !== request.accountId
     || row.actor_principal_id !== request.actorPrincipalId || row.subject_id !== request.invoiceId
-    || row.command_type !== "create_invoice" || row.contract_version !== "invoice-create-v1"
+    || row.command_type !== (revision ? "revise_created_invoice" : "create_invoice")
+    || row.contract_version !== (revision ? "invoice-revise-created-v1" : "invoice-create-v1")
     || row.command_fingerprint !== request.fingerprint || row.envelope_sha256 !== request.fingerprint
     || row.request_sha256 !== null || row.client_created_at_ms !== request.createdAtMs
     || !Number.isSafeInteger(row.server_received_at_ms) || !Number.isSafeInteger(row.completed_at_ms)
     || (row.server_received_at_ms as number) < 0 || (row.completed_at_ms as number) < (row.server_received_at_ms as number)) return mismatch();
-  if (!(row.phase === "applied" && row.result_code === "invoice_created" && row.error_code === null)
-    && !(row.phase === "rejected" && row.result_code === null && typeof row.error_code === "string" && rejections.has(row.error_code))) return mismatch();
+  const allowed = revision ? new Set([...rejections, "invoice_unavailable", "invoice_not_editable", "invoice_revision_conflict"]) : rejections;
+  if (!(row.phase === "applied" && row.result_code === (revision ? "invoice_revised" : "invoice_created") && row.error_code === null)
+    && !(row.phase === "rejected" && row.result_code === null && typeof row.error_code === "string" && allowed.has(row.error_code))) return mismatch();
   return { operationId: request.operationId, phase: row.phase as "applied" | "rejected",
     resultCode: row.result_code as string | null, errorCode: row.error_code as string | null };
 }
@@ -66,14 +86,19 @@ export async function invoiceCreationTool(input: InvoiceCreationInput, context: 
   const request = makeInvoiceCreationRequest(input, context);
   return validateInvoiceCreationResult(await service.apply(request, context), request);
 }
+export async function invoiceRevisionTool(input: InvoiceRevisionInput, context: TargetMCPRequestContext, service: InvoiceCreationServing) {
+  userCredential(context.accessToken);
+  const request = makeInvoiceRevisionRequest(input, context);
+  return validateInvoiceRevisionResult(await service.apply(request, context), request);
+}
 export class SupabaseInvoiceCreationService implements InvoiceCreationServing {
   readonly #url: URL;
-  constructor(url: URL, readonly key: string, readonly fetchImplementation: typeof fetch = fetch) {
+  constructor(url: URL, readonly key: string, readonly fetchImplementation: typeof fetch = fetch, private readonly revision = false) {
     if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password || url.search || url.hash) {
       throw new TargetMCPFailure("invoice_configuration_invalid");
     }
     userCredential(key);
-    this.#url = new URL(`${url.href.replace(/\/$/, "")}/rest/v1/rpc/spike_create_invoice`);
+    this.#url = new URL(`${url.href.replace(/\/$/, "")}/rest/v1/rpc/${revision ? "spike_revise_created_invoice" : "spike_create_invoice"}`);
   }
   async apply(request: InvoiceCreationRequest, context: TargetMCPRequestContext): Promise<unknown> {
     userCredential(context.accessToken);
@@ -83,7 +108,12 @@ export class SupabaseInvoiceCreationService implements InvoiceCreationServing {
         Authorization: `Bearer ${context.accessToken}` }, body: JSON.stringify({ p_command: request.commandJSON }) });
     if (!response.ok) throw new TargetMCPFailure("invoice_request_rejected", response.status);
     const result: unknown = await response.json();
-    validateInvoiceCreationResult(result, request);
+    validateInvoiceResult(result, request, this.revision);
     return result;
+  }
+}
+export class SupabaseInvoiceRevisionService extends SupabaseInvoiceCreationService {
+  constructor(url: URL, key: string, fetchImplementation: typeof fetch = fetch) {
+    super(url, key, fetchImplementation, true);
   }
 }

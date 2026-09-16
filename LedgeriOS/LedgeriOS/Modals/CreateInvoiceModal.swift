@@ -2,6 +2,24 @@ import LedgerTargetCore
 import SwiftUI
 
 @Observable final class InvoiceCreationFormState {
+    var editingInvoice: LiveInvoiceContents?
+    init(editingInvoice: LiveInvoiceContents? = nil) {
+        self.editingInvoice = editingInvoice
+        if let editingInvoice {
+            selected = Set(editingInvoice.lines.map { $0.selection.source })
+            invoiceName = editingInvoice.name; notes = editingInvoice.notes
+        }
+    }
+    func prepareEdit(_ invoice: LiveInvoiceContents) {
+        editingInvoice = invoice
+        selected = Set(invoice.lines.map { $0.selection.source })
+        invoiceName = invoice.name; notes = invoice.notes
+        step = 1; review = nil; searchText = ""; isSaving = false; errorMessage = nil; attempt = nil
+    }
+    func prepareCreation() {
+        editingInvoice = nil; selected = []; invoiceName = ""; notes = ""
+        step = 1; review = nil; searchText = ""; isSaving = false; errorMessage = nil; attempt = nil
+    }
     var step = 1
     var selected: Set<LiveInvoiceSource> = []
     var review: InvoiceCreationReview?
@@ -19,7 +37,7 @@ import SwiftUI
 }
 
 /// Original selection/review form adapted to canonical sources and local acceptance.
-/// Editing membership, manual adjustments and credit selection remain separate unfinished outcomes.
+/// Creation and created-Invoice editing share this form; adjustments and credits remain separate.
 struct CreateInvoiceModal: View {
     let accountId: AccountID
     let projectId: ProjectID
@@ -54,7 +72,7 @@ struct CreateInvoiceModal: View {
     }
 
     var body: some View {
-        MultiStepFormSheet(title: step == 1 ? "Create Invoice" : "Review Invoice",
+        MultiStepFormSheet(title: step == 1 ? (state.editingInvoice == nil ? "Create Invoice" : "Edit Invoice") : "Review Invoice",
             description: step == 1 ? "Select items and project costs to bill the client for."
                 : "Add an optional invoice name and notes, then save.",
             showDismissButton: !isSaving, currentStep: step, totalSteps: 2, primaryAction: primaryAction,
@@ -73,7 +91,18 @@ struct CreateInvoiceModal: View {
                         if !isSaving { step = 1 }
                         continue
                     }
-                    let next = try await service.readInvoiceCreationReview(accountId: accountId, projectId: projectId)
+                    var next = try await service.readInvoiceCreationReview(accountId: accountId, projectId: projectId)
+                    if let editing = state.editingInvoice {
+                        guard let current = ready?.first(where: { $0.invoiceId == editing.invoiceId }),
+                              current.status == .created, current.revision == editing.revision else {
+                            review = nil
+                            errorMessage = "This Invoice changed. Close this form and reopen it to review the latest version."
+                            continue
+                        }
+                        let retained = Set(current.lines.map { $0.selection.source })
+                        next = .init(scope: next.scope, candidates: current.lines + next.candidates.filter { !retained.contains($0.selection.source) },
+                            categoryNames: next.categoryNames)
+                    }
                     guard !Task.isCancelled else { return }
                     if let review, review != next, !selected.isEmpty, !isSaving {
                         step = 1
@@ -85,7 +114,7 @@ struct CreateInvoiceModal: View {
             } catch {
                 if !Task.isCancelled {
                     review = nil; selected = []; state.invoiceName = ""; state.notes = ""
-                    errorMessage = "Invoice creation is unavailable. Previously saved work remains on this device."
+                    errorMessage = "Invoice editing is unavailable. Previously saved work remains on this device."
                     dismiss()
                 }
             }
@@ -93,7 +122,8 @@ struct CreateInvoiceModal: View {
     }
     private var primaryAction: FormSheetAction {
         if step == 1 { return .init(title: "Next", isDisabled: selection == nil, action: { step = 2 }) }
-        return .init(title: "Create Invoice", isLoading: isSaving, isDisabled: selection == nil || isSaving, action: performSave)
+        return .init(title: state.editingInvoice == nil ? "Create Invoice" : "Save Changes", isLoading: isSaving,
+            isDisabled: selection == nil || isSaving, action: performSave)
     }
     private var secondaryAction: FormSheetAction? {
         .init(title: step == 1 ? "Cancel" : "Back", isDisabled: isSaving, action: {
@@ -164,7 +194,7 @@ struct CreateInvoiceModal: View {
     private func performSave() {
         guard let selection, !isSaving else { return }
         do {
-            let id = try attempt?.payload.invoiceId ?? InvoiceID(validating: UUID().uuidString)
+            let id = try state.editingInvoice?.invoiceId ?? attempt?.payload.invoiceId ?? InvoiceID(validating: UUID().uuidString)
             let payload = CreateInvoiceCommand.Payload(invoiceId: id, selection: selection,
                 name: invoiceName.trimmingCharacters(in: .whitespacesAndNewlines), notes: notes.trimmingCharacters(in: .whitespacesAndNewlines))
             if attempt?.payload != payload { attempt = .init(payload: payload, operationUUID: UUID(), capturedAt: Date()) }
@@ -172,7 +202,16 @@ struct CreateInvoiceModal: View {
             isSaving = true; errorMessage = nil
             Task {
                 do {
-                    let receipt = try await service.createInvoice(attempt.payload, operationUUID: attempt.operationUUID, capturedAt: attempt.capturedAt)
+                    let receipt: OperationReceipt
+                    if let editing = state.editingInvoice {
+                        guard let reviser = service as? any ProjectInvoiceRevising else {
+                            isSaving = false; errorMessage = "Invoice editing is unavailable."; return
+                        }
+                        receipt = try await reviser.reviseCreatedInvoice(.init(invoice: attempt.payload, expectedRevision: editing.revision),
+                            operationUUID: attempt.operationUUID, capturedAt: attempt.capturedAt)
+                    } else {
+                        receipt = try await service.createInvoice(attempt.payload, operationUUID: attempt.operationUUID, capturedAt: attempt.capturedAt)
+                    }
                     onSaved(receipt); dismiss()
                 } catch {
                     isSaving = false

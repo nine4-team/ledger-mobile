@@ -34,6 +34,29 @@ struct CreateInvoiceUploadRequestTests {
         }
         var invalid = row; invalid["completed_at_ms"] = 1000
         #expect(throws: (any Error).self) { try validate(invalid) }
+        let revision = try ReviseCreatedInvoiceCommand(operationId: command.envelope.operationId,
+            actorPrincipalId: command.envelope.actorPrincipalId, capturedAt: command.envelope.clientCreatedAt,
+            payload: .init(invoice: command.envelope.payload, expectedRevision: 1))
+        let revisionFingerprint = try CreateInvoiceUploadRequest(revision).fingerprint
+        var revised = row
+        revised["command_type"] = "revise_created_invoice"; revised["contract_version"] = "invoice-revise-created-v1"
+        revised["command_fingerprint"] = revisionFingerprint; revised["envelope_sha256"] = revisionFingerprint
+        revised["result_code"] = "invoice_revised"
+        func validateRevision(_ value: [String: Any]) throws {
+            try JSONDecoder().decode(CreateInvoiceServerResult.self, from: JSONSerialization.data(withJSONObject: value)).validate(for: revision)
+        }
+        try validateRevision(revised)
+        #expect(throws: (any Error).self) { try validateRevision(row) }
+        #expect(throws: (any Error).self) { try validate(revised) }
+        for code in CreateInvoiceServerResult.rejections.union(CreateInvoiceServerResult.revisionRejections) {
+            var rejected = revised; rejected["phase"] = "rejected"; rejected["result_code"] = NSNull(); rejected["error_code"] = code
+            try validateRevision(rejected)
+        }
+        for field in ["operation_id", "account_id", "actor_principal_id", "command_type", "contract_version",
+                      "command_fingerprint", "envelope_sha256", "subject_id", "result_code", "request_sha256"] {
+            var wrong = revised; wrong[field] = "wrong"
+            #expect(throws: (any Error).self) { try validateRevision(wrong) }
+        }
     }
     @Test func exactSourceIdentityAndReplay() throws {
         let selection = try LiveInvoiceSelection(scope: .project(accountId: .init(validating: "account"),
@@ -54,5 +77,19 @@ struct CreateInvoiceUploadRequestTests {
         #expect(try CreateInvoiceUploadRequest(restored).fingerprint == request.fingerprint)
         let body = try #require(JSONSerialization.jsonObject(with: request.rpcBody) as? [String: String])
         #expect(body == ["p_command":request.commandJSON])
+        #expect(wire["expectedRevision"] == nil)
+        let revision = try ReviseCreatedInvoiceCommand(operationId: .init(validating: "revision-operation"),
+            actorPrincipalId: command.envelope.actorPrincipalId, capturedAt: command.envelope.clientCreatedAt,
+            payload: .init(invoice: command.envelope.payload, expectedRevision: 9_007_199_254_740_993))
+        let revisedRequest = try CreateInvoiceUploadRequest(revision)
+        let revisedWire = try #require(JSONSerialization.jsonObject(with: Data(revisedRequest.commandJSON.utf8)) as? [String: Any])
+        #expect(revisedWire["expectedRevision"] as? String == "9007199254740993")
+        #expect(revisedWire["contractVersion"] as? String == "invoice-revise-created-v1")
+        #expect(revisedWire["invoiceId"] as? String == "invoice")
+        #expect(revisedWire["sources"] as? [[String: String]] == [source])
+        let restoredRevision = try OperationContractCodec.decode(ReviseCreatedInvoiceCommand.self,
+            from: OperationContractCodec.encode(revision))
+        #expect(try CreateInvoiceUploadRequest(restoredRevision).fingerprint == revisedRequest.fingerprint)
+        #expect(revisedRequest.fingerprint != request.fingerprint)
     }
 }

@@ -3,6 +3,7 @@ import LedgerTargetCore
 import PowerSync
 
 extension LedgerOfflineClientRuntime: ProjectInvoiceCreating {}
+extension LedgerOfflineClientRuntime: ProjectInvoiceRevising {}
 extension LedgerOfflineClientRuntime: ProjectFeeInstallmentCreating {}
 
 public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
@@ -310,6 +311,14 @@ public final class LedgerOfflineClientRuntime:
 
     public func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
         try await lifecycleOwner.createInvoice(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func reviseCreatedInvoice(_ payload: ReviseCreatedInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.reviseCreatedInvoice(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func readPendingInvoiceRevisions(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceRevision] {
+        try await lifecycleOwner.readPendingInvoiceRevisions(accountId: accountId, projectId: projectId)
     }
 
     public func readPendingInvoiceCreations(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceCreation] {

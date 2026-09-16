@@ -15,6 +15,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
     case createExpense = "create_expense"
     case editExpense = "edit_expense"
     case createInvoice = "create_invoice"
+    case reviseCreatedInvoice = "revise_created_invoice"
     case createFeeInstallment = "create_fee_installment"
 
     var insertOnlyCommandTable: String? {
@@ -26,7 +27,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
         case .manageCategories: LedgerPowerSyncTable.categoryCommands
         case .sellInventoryItems: LedgerPowerSyncTable.inventorySaleCommands
         case .createExpense, .editExpense: LedgerPowerSyncTable.expenseCommands
-        case .createInvoice: LedgerPowerSyncTable.invoiceCommands
+        case .createInvoice, .reviseCreatedInvoice: LedgerPowerSyncTable.invoiceCommands
         case .createFeeInstallment: LedgerPowerSyncTable.feeCommands
         case .reviseSpaceChecklists:
             LedgerPowerSyncTable.spaceChecklistRevisionCommands
@@ -292,7 +293,7 @@ enum LocalOperationIdentityGuard {
         case "queued", "applying":
             let resultCountIsValid: Bool
             switch family {
-            case .createProject, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .createFeeInstallment:
+            case .createProject, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 resultCountIsValid = results.count <= 1
             case .createClient, .archiveProject, .archiveClient,
                  .reviseSpaceChecklists, .assignItemsToSpace,
@@ -302,7 +303,7 @@ enum LocalOperationIdentityGuard {
             guard operation.updatedAt >= operation.acceptedAt,
                   operation.hasNoTerminalEvidence, resultCountIsValid else { return false }
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .createFeeInstallment:
+            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 return commandCount == 1 && pendingClients.isEmpty
                     && pendingProjects.isEmpty && pendingAllocations.isEmpty
                     && projectOverlays.isEmpty && clientOverlays.isEmpty
@@ -354,7 +355,7 @@ enum LocalOperationIdentityGuard {
             }
         case "applied", "rejected", "superseded", "resolved":
             switch family {
-            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .createFeeInstallment:
+            case .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment:
                 return (operation.state == "applied" || operation.state == "rejected")
                     && operation.hasCompleteSingleDigestTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty && pendingAllocations.isEmpty
@@ -503,6 +504,7 @@ enum LocalOperationIdentityGuard {
                    LocalOperationCommandFamily.sellInventoryItems.rawValue,
                    LocalOperationCommandFamily.createExpense.rawValue,
                    LocalOperationCommandFamily.createInvoice.rawValue,
+                   LocalOperationCommandFamily.reviseCreatedInvoice.rawValue,
                    LocalOperationCommandFamily.createFeeInstallment.rawValue,
                    LocalOperationCommandFamily.editExpense.rawValue].contains(commandType ?? ""),
                   terminalEnvelopeSHA256 == fingerprint, terminalRequestSHA256 == nil,
@@ -513,7 +515,8 @@ enum LocalOperationIdentityGuard {
                     ? "inventory_items_sold" : commandType == LocalOperationCommandFamily.createExpense.rawValue
                         ? "expense_created" : commandType == LocalOperationCommandFamily.editExpense.rawValue
                             ? "expense_edited" : commandType == LocalOperationCommandFamily.createInvoice.rawValue
-                                ? "invoice_created" : commandType == LocalOperationCommandFamily.createFeeInstallment.rawValue
+                                ? "invoice_created" : commandType == LocalOperationCommandFamily.reviseCreatedInvoice.rawValue
+                                    ? "invoice_revised" : commandType == LocalOperationCommandFamily.createFeeInstallment.rawValue
                                     ? "fee_installment_created" : "categories_updated") && terminalErrorCode == nil
                 : terminalPhase == "rejected" && state == "rejected"
                     && terminalResultCode == nil && terminalErrorCode?.isEmpty == false
@@ -561,6 +564,7 @@ enum LocalOperationIdentityGuard {
                     LocalOperationCommandFamily.sellInventoryItems.rawValue,
                     LocalOperationCommandFamily.createExpense.rawValue,
                     LocalOperationCommandFamily.createInvoice.rawValue,
+                    LocalOperationCommandFamily.reviseCreatedInvoice.rawValue,
                     LocalOperationCommandFamily.createFeeInstallment.rawValue,
                     LocalOperationCommandFamily.editExpense.rawValue].contains(commandType)
             let phaseMatches = operation.hasNoTerminalEvidence
@@ -591,6 +595,9 @@ enum LocalOperationIdentityGuard {
                 case LocalOperationCommandFamily.createInvoice.rawValue:
                     return phase == "applied" ? resultCode == "invoice_created"
                         : CreateInvoiceServerResult.rejections.contains(errorCode ?? "")
+                case LocalOperationCommandFamily.reviseCreatedInvoice.rawValue:
+                    return phase == "applied" ? resultCode == "invoice_revised"
+                        : CreateInvoiceServerResult.rejections.union(CreateInvoiceServerResult.revisionRejections).contains(errorCode ?? "")
                 case LocalOperationCommandFamily.editExpense.rawValue:
                     return phase == "applied" ? resultCode == "expense_edited"
                         : ExpenseServerResult.editRejections.contains(errorCode ?? "")

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1015,
+  "stateVersion": 1028,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Fee grouping local checkpoint ready: reused card/config-readiness/group Add/order/filter implemented. Native10, macOSbuild and iPhone archived/create/group Add/filter82493 passed; evidence fee-demand-lifecycle. NEXT resume Invoice build/edit controls from existing specs/reuse plan, implementing unblocked dependencies; collection amount/status policy blocks only affected actions. Fee whole-lifecycle/budget/hosted/CI acceptance remains incomplete. No invented installment-edit UI; contract schedules separate. No hosted Invoice/Fee deploy; migration20260916075932 LOCAL direct/no history. Hosted88/QA restored. Existing product/CI blockers remain; no context reruns.",
+    "immediateFollowup": "Created-Invoice edit local batch ready for checkpoint (resolve current HEAD): runtime shutdown8989 and conversion check pass; iPhone edit/risk/creation, native actual Auth/RPC/PowerSync6023, MCP132/HTTP, SQL1810/advisors/races/guard21 passed. Evidence invoice-build-edit; no context reruns. NEXT Mac edit verification when system authentication allows, then appropriate integrated batch CI (inspect current selector, no tiny push/duplicate dispatch); continue independent approved workflow while unavailable. Mac25984 zero assertions; do not claim full acceptance. Sent/collection/credit/cancel decisions remain separate. Migrations LOCAL direct/no history; no hosted Invoice/Fee deploy. Hosted88/QA restored. Private .native-pdf files untouched.",
     "nextVerification": "CI35039310979 failed: Mac14/57/3skips, iOS cancelled. Existing workflow owners retain failures and unverified UI fixes. No duplicate dispatch."
   }
 }

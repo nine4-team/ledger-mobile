@@ -40,3 +40,47 @@ public struct CreateInvoiceCommand: Codable, Sendable {
     public enum Failure: Error { case invalidEnvelope }
     private enum CodingKeys: String, CodingKey { case envelope }
 }
+
+/// Full reviewed replacement of a created Invoice's membership and metadata.
+/// The authoritative writer must lock the Invoice, require created status and
+/// expected revision, and validate all sources before changing any membership.
+/// Sent/paid/canceled editing is deliberately not authorized by this command.
+public struct ReviseCreatedInvoiceCommand: Codable, Sendable {
+    public struct Payload: Codable, Equatable, Sendable {
+        public let invoice: CreateInvoiceCommand.Payload
+        public let expectedRevision: Int64
+        public init(invoice: CreateInvoiceCommand.Payload, expectedRevision: Int64) throws {
+            guard expectedRevision > 0, expectedRevision < Int64.max else { throw Failure.invalidRevision }
+            self.invoice = invoice; self.expectedRevision = expectedRevision
+        }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            try self.init(invoice: c.decode(CreateInvoiceCommand.Payload.self, forKey: .invoice),
+                expectedRevision: c.decode(Int64.self, forKey: .expectedRevision))
+        }
+        private enum CodingKeys: String, CodingKey { case invoice, expectedRevision }
+    }
+    public let envelope: OperationEnvelope<Payload>
+    public init(operationId: OperationID, actorPrincipalId: PrincipalID, capturedAt: Date, payload: Payload) throws {
+        let normalized = try CreateInvoiceCommand(operationId: operationId, actorPrincipalId: actorPrincipalId,
+            capturedAt: capturedAt, payload: payload.invoice).envelope
+        try self.init(envelope: .init(operationId: operationId, contractVersion: .init(validating: "invoice-revise-created-v1"),
+            accountId: normalized.accountId, actorPrincipalId: actorPrincipalId,
+            clientCreatedAt: normalized.clientCreatedAt, payload: payload))
+    }
+    private init(envelope: OperationEnvelope<Payload>) throws {
+        let milliseconds = envelope.clientCreatedAt.timeIntervalSince1970 * 1000
+        guard envelope.contractVersion.rawValue == "invoice-revise-created-v1", envelope.preconditions.isEmpty,
+              envelope.accountId == envelope.payload.invoice.selection.scope.accountId,
+              milliseconds.isFinite, milliseconds >= 0, milliseconds < 1_000_000_000_000_000 else {
+            throw Failure.invalidEnvelope
+        }
+        self.envelope = envelope
+    }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(envelope: c.decode(OperationEnvelope<Payload>.self, forKey: .envelope))
+    }
+    public enum Failure: Error { case invalidRevision, invalidEnvelope }
+    private enum CodingKeys: String, CodingKey { case envelope }
+}

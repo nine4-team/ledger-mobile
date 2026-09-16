@@ -11,6 +11,20 @@ public protocol ProjectInvoiceCreating: ProjectLiveInvoiceReading {
     func readInvoiceCreationReview(accountId: AccountID, projectId: ProjectID) async throws -> InvoiceCreationReview
 }
 
+public protocol ProjectInvoiceRevising: ProjectLiveInvoiceReading {
+    func reviseCreatedInvoice(_ payload: ReviseCreatedInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt
+    func readPendingInvoiceRevisions(accountId: AccountID, projectId: ProjectID) async throws -> [PendingInvoiceRevision]
+}
+
+public struct PendingInvoiceRevision: Identifiable, Equatable, Sendable {
+    public let id: OperationID
+    public let payload: ReviseCreatedInvoiceCommand.Payload
+    public let state: LocalOperationState
+    public init(id: OperationID, payload: ReviseCreatedInvoiceCommand.Payload, state: LocalOperationState) {
+        self.id = id; self.payload = payload; self.state = state
+    }
+}
+
 public struct InvoiceCreationReview: Equatable, Sendable {
     public let scope: TransactionScope
     public let candidates: [LiveInvoiceContents.Line]

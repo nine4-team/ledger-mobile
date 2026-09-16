@@ -197,6 +197,42 @@ struct LiveInvoicePowerSyncQuery: Sendable {
         }
     }
 
+    func readPendingRevisions(accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) async throws -> [PendingInvoiceRevision] {
+        try await database.readTransaction { local in
+            try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
+                accountId: accountId, principalId: principalId, projectId: projectId)
+            return try local.getAll(sql: """
+                SELECT id,subject_id,local_state,fingerprint,command_envelope_json FROM spike_local_operations
+                WHERE account_id=? AND actor_principal_id=? AND command_type='revise_created_invoice'
+                  AND local_state IN ('queued','applying','applied','rejected') ORDER BY accepted_at_ms,id
+                """, parameters: [accountId.rawValue,principalId.rawValue]) { row -> PendingInvoiceRevision in
+                    let json = try row.getString(name: "command_envelope_json")
+                    let command = try OperationContractCodec.decode(ReviseCreatedInvoiceCommand.self, from: Data("{\"envelope\":\(json)}".utf8))
+                    let e = command.envelope
+                    guard e.accountId == accountId, e.actorPrincipalId == principalId,
+                          e.operationId.rawValue == (try row.getString(name: "id")),
+                          e.payload.invoice.invoiceId.rawValue == (try row.getString(name: "subject_id")),
+                          AccountBoundOperationIdentity.isValid(e.operationId, family: .invoiceRevision, accountId: accountId),
+                          try CreateInvoiceUploadRequest(command).fingerprint == row.getString(name: "fingerprint"),
+                          let state = LocalOperationState(rawValue: try row.getString(name: "local_state")) else {
+                        throw LocalOperationIdentityGuardFailure.malformedEvidence
+                    }
+                    return .init(id: e.operationId, payload: e.payload, state: state)
+                }.filter { pending in
+                    guard pending.payload.invoice.selection.scope.projectId == projectId else { return false }
+                    guard pending.state == .applied else { return true }
+                    // An existing header at the reviewed revision is not readback.
+                    // Later authoritative revisions also prove this accepted edit was superseded.
+                    let observed = try local.get(sql: """
+                        SELECT EXISTS(SELECT 1 FROM live_invoices WHERE account_id=? AND project_id=? AND id=? AND CAST(revision AS INTEGER)>?)
+                          OR EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=? AND project_id=? AND id=? AND sealed=1 AND CAST(invoice_revision AS INTEGER)>?)
+                        """, parameters: [accountId.rawValue,projectId.rawValue,pending.payload.invoice.invoiceId.rawValue,pending.payload.expectedRevision,
+                            accountId.rawValue,projectId.rawValue,pending.payload.invoice.invoiceId.rawValue,pending.payload.expectedRevision]) { try $0.getInt(index: 0) }
+                    return observed == 0
+                }
+        }
+    }
+
     // Caller establishes authorization and complete downloads in the same read transaction.
     static func readAuthorized(transaction: any Transaction, accountId: AccountID,
                                projectId: ProjectID) throws -> [LiveInvoiceContents] {

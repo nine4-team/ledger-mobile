@@ -9,7 +9,7 @@ import { SupabaseInventorySaleService } from "./inventorySale.js";
 import { SupabaseExpenseCreationService } from "./expenseCreation.js";
 import { SupabaseCollectedInvoiceReader } from "./collectedInvoiceRead.js";
 import { SupabaseLiveInvoiceReader } from "./liveInvoiceRead.js";
-import { SupabaseInvoiceCreationService } from "./invoiceCreation.js";
+import { SupabaseInvoiceCreationService, SupabaseInvoiceRevisionService } from "./invoiceCreation.js";
 import { SupabaseFeeCreationService } from "./feeCreation.js";
 import { SupabaseFeeReader } from "./feeRead.js";
 
@@ -38,11 +38,13 @@ try {
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const invoiceCreation = new SupabaseInvoiceCreationService(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
+  const invoiceRevision = new SupabaseInvoiceRevisionService(
+    new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const feeCreation = new SupabaseFeeCreationService(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const fees = new SupabaseFeeReader(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
-  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees);
+  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision);
   await server.connect(new StdioServerTransport());
 } catch {
   process.stderr.write("Ledger target MCP could not start: check target configuration and user session.\n");

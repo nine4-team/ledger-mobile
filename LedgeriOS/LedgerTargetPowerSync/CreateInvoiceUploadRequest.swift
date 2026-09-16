@@ -5,6 +5,9 @@ import LedgerTargetCore
 public protocol CreateInvoiceCommandApplying: Sendable {
     func apply(_ command: CreateInvoiceCommand) async throws -> CreateInvoiceServerResult
 }
+public protocol ReviseCreatedInvoiceCommandApplying: Sendable {
+    func apply(_ command: ReviseCreatedInvoiceCommand) async throws -> CreateInvoiceServerResult
+}
 
 public struct CreateInvoiceServerResult: Decodable, Sendable {
     enum Failure: Error { case receiptMismatch }
@@ -15,18 +18,31 @@ public struct CreateInvoiceServerResult: Decodable, Sendable {
 
     func validate(for command: CreateInvoiceCommand) throws {
         let e = command.envelope, request = try CreateInvoiceUploadRequest(command)
-        guard operation_id == e.operationId.rawValue, account_id == e.accountId.rawValue,
-              actor_principal_id == e.actorPrincipalId.rawValue, subject_id == e.payload.invoiceId.rawValue,
-              command_type == "create_invoice", contract_version == "invoice-create-v1",
+        try validate(operation: e.operationId, account: e.accountId, actor: e.actorPrincipalId,
+            invoice: e.payload.invoiceId, capturedAt: e.clientCreatedAt, request: request, revision: false)
+    }
+    func validate(for command: ReviseCreatedInvoiceCommand) throws {
+        let e = command.envelope, request = try CreateInvoiceUploadRequest(command)
+        try validate(operation: e.operationId, account: e.accountId, actor: e.actorPrincipalId,
+            invoice: e.payload.invoice.invoiceId, capturedAt: e.clientCreatedAt, request: request, revision: true)
+    }
+    private func validate(operation: OperationID, account: AccountID, actor: PrincipalID, invoice: InvoiceID,
+                          capturedAt: Date, request: CreateInvoiceUploadRequest, revision: Bool) throws {
+        let allowedRejections = revision ? Self.rejections.union(Self.revisionRejections) : Self.rejections
+        guard operation_id == operation.rawValue, account_id == account.rawValue,
+              actor_principal_id == actor.rawValue, subject_id == invoice.rawValue,
+              command_type == (revision ? "revise_created_invoice" : "create_invoice"),
+              contract_version == (revision ? "invoice-revise-created-v1" : "invoice-create-v1"),
               command_fingerprint == request.fingerprint, envelope_sha256 == request.fingerprint,
               request_sha256 == nil,
-              client_created_at_ms == Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded()),
+              client_created_at_ms == Int64((capturedAt.timeIntervalSince1970 * 1000).rounded()),
               server_received_at_ms >= 0, completed_at_ms >= server_received_at_ms,
-              (phase == "applied" && result_code == "invoice_created" && error_code == nil)
-                || (phase == "rejected" && result_code == nil && Self.rejections.contains(error_code ?? "")) else {
+              (phase == "applied" && result_code == (revision ? "invoice_revised" : "invoice_created") && error_code == nil)
+                || (phase == "rejected" && result_code == nil && allowedRejections.contains(error_code ?? "")) else {
             throw Failure.receiptMismatch
         }
     }
+    static let revisionRejections: Set<String> = ["invoice_unavailable", "invoice_not_editable", "invoice_revision_conflict"]
     static let rejections: Set<String> = ["invoice_project_unavailable", "invoice_empty_selection",
         "invoice_duplicate_source", "invoice_source_invalid", "invoice_source_unavailable", "invoice_source_changed",
         "invoice_source_collected", "invoice_source_reserved", "invoice_currency_mismatch",
@@ -39,14 +55,25 @@ struct CreateInvoiceUploadRequest: Sendable {
     let fingerprint: String
     init(_ command: CreateInvoiceCommand) throws {
         let e = command.envelope, p = e.payload
+        try self.init(operationId: e.operationId, actor: e.actorPrincipalId, capturedAt: e.clientCreatedAt,
+            contractVersion: e.contractVersion.rawValue, payload: p, expectedRevision: nil)
+    }
+    init(_ command: ReviseCreatedInvoiceCommand) throws {
+        let e = command.envelope
+        try self.init(operationId: e.operationId, actor: e.actorPrincipalId, capturedAt: e.clientCreatedAt,
+            contractVersion: e.contractVersion.rawValue, payload: e.payload.invoice,
+            expectedRevision: String(e.payload.expectedRevision))
+    }
+    private init(operationId: OperationID, actor: PrincipalID, capturedAt: Date,
+                 contractVersion: String, payload p: CreateInvoiceCommand.Payload, expectedRevision: String?) throws {
         guard let project = p.selection.scope.projectId, let client = p.selection.scope.clientId else {
             throw LiveInvoiceSelection.Failure.requiresProject
         }
-        let wire = Wire(operationId: e.operationId.rawValue, accountId: e.accountId.rawValue,
-            actorPrincipalId: e.actorPrincipalId.rawValue, projectId: project.rawValue, clientId: client.rawValue,
-            invoiceId: p.invoiceId.rawValue, contractVersion: e.contractVersion.rawValue,
-            createdAtMs: String(Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded())),
-            name: p.name, notes: p.notes, sources: p.selection.lines.map(Source.init))
+        let wire = Wire(operationId: operationId.rawValue, accountId: p.selection.scope.accountId.rawValue,
+            actorPrincipalId: actor.rawValue, projectId: project.rawValue, clientId: client.rawValue,
+            invoiceId: p.invoiceId.rawValue, contractVersion: contractVersion,
+            createdAtMs: String(Int64((capturedAt.timeIntervalSince1970 * 1000).rounded())),
+            name: p.name, notes: p.notes, sources: p.selection.lines.map(Source.init), expectedRevision: expectedRevision)
         let data = try OperationContractCodec.encode(wire)
         commandJSON = String(decoding: data, as: UTF8.self)
         fingerprint = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
@@ -57,6 +84,7 @@ struct CreateInvoiceUploadRequest: Sendable {
         let operationId, accountId, actorPrincipalId, projectId, clientId, invoiceId, contractVersion, createdAtMs: String
         let name, notes: String
         let sources: [Source]
+        let expectedRevision: String?
     }
     private struct Source: Encodable {
         let kind, sourceId, expectedRevision, amountMinorUnits, currency: String

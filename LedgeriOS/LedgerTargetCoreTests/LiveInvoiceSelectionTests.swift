@@ -72,4 +72,30 @@ struct LiveInvoiceSelectionTests {
             try OperationContractCodec.decode(LiveInvoiceSelection.self, from: Data(malformed.utf8))
         }
     }
+
+    @Test func createdRevisionPreservesFullReviewedIntentAndRejectsInvalidReplay() throws {
+        let selection = try LiveInvoiceSelection(scope: scope(), lines: [line(.expense(.init(validating: "expense")), 100)])
+        let invoice = try CreateInvoiceCommand.Payload(invoiceId: .init(validating: "invoice"), selection: selection,
+            name: "Updated name", notes: "Updated notes")
+        let payload = try ReviseCreatedInvoiceCommand.Payload(invoice: invoice, expectedRevision: 5)
+        let command = try ReviseCreatedInvoiceCommand(operationId: .init(validating: "revision-operation"),
+            actorPrincipalId: .init(validating: "actor"), capturedAt: Date(timeIntervalSince1970: 100.1234), payload: payload)
+        let bytes = try OperationContractCodec.encode(command)
+        let restored = try OperationContractCodec.decode(ReviseCreatedInvoiceCommand.self, from: bytes)
+        #expect(restored.envelope.payload == payload)
+        #expect(try OperationContractCodec.encode(restored) == bytes)
+        for revision in [Int64(0), -1, .max] {
+            #expect(throws: ReviseCreatedInvoiceCommand.Failure.invalidRevision) {
+                try ReviseCreatedInvoiceCommand.Payload(invoice: invoice, expectedRevision: revision)
+            }
+        }
+        let wrong = String(decoding: bytes, as: UTF8.self).replacingOccurrences(of: "invoice-revise-created-v1", with: "invoice-create-v1")
+        #expect(throws: ReviseCreatedInvoiceCommand.Failure.invalidEnvelope) {
+            try OperationContractCodec.decode(ReviseCreatedInvoiceCommand.self, from: Data(wrong.utf8))
+        }
+        let wrongRevision = String(decoding: bytes, as: UTF8.self).replacingOccurrences(of: "\"expectedRevision\":5", with: "\"expectedRevision\":0")
+        #expect(throws: ReviseCreatedInvoiceCommand.Failure.invalidRevision) {
+            try OperationContractCodec.decode(ReviseCreatedInvoiceCommand.self, from: Data(wrongRevision.utf8))
+        }
+    }
 }

@@ -23,6 +23,9 @@ struct InvoicingInvoicePreview: View {
     @State private var exportTask: Task<Void, Never>?
     @State private var exportError: String?
     @State private var categoryNames: [[UInt8]: String] = [:]
+    @State private var editingInvoice = false
+    @State private var editState = InvoiceCreationFormState()
+    @State private var pendingEdits: [PendingInvoiceRevision] = []
 
     var body: some View {
         Group {
@@ -59,6 +62,17 @@ struct InvoicingInvoicePreview: View {
         }
         .environment(find)
         .toolbar {
+            if invoice == nil, let liveInvoice, liveInvoice.status == .created,
+               runtime is any ProjectInvoiceCreating, runtime is any ProjectInvoiceRevising {
+                ToolbarItem(placement: .trailingNavBar) {
+                    Button("Edit") {
+                        editState.prepareEdit(liveInvoice)
+                        editingInvoice = true
+                    }
+                    .disabled(pendingEdits.contains { $0.state != .rejected })
+                    .accessibilityIdentifier("target-edit-invoice")
+                }
+            }
             ToolbarItem(placement: .trailingNavBar) {
                 Button { download() } label: {
                     if exporting { ProgressView() } else { Image(systemName: "arrow.down.circle") }
@@ -66,6 +80,25 @@ struct InvoicingInvoicePreview: View {
                 .accessibilityLabel("Download Invoice")
                 .accessibilityIdentifier("target-invoice-download")
                 .disabled(exporting || invoice == nil || profile == nil)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if !pendingEdits.isEmpty {
+                VStack(alignment: .leading) {
+                    ForEach(pendingEdits) { edit in
+                        Text(edit.state == .rejected ? "Invoice edit was not saved to the server — review required."
+                            : edit.state == .applied ? "Invoice edit saved — waiting for updated contents."
+                            : "Invoice edit saved on this device — waiting to sync.")
+                    }
+                }.font(.caption).padding().background(.regularMaterial)
+                    .accessibilityIdentifier("target-pending-invoice-edit")
+            }
+        }
+        .adaptivePresentation(isPresented: $editingInvoice, style: .form) {
+            if let service = runtime as? any ProjectInvoiceCreating {
+                CreateInvoiceModal(accountId: accountId, projectId: projectId, service: service, state: editState) { _ in
+                    editingInvoice = false
+                }
             }
         }
         .alert("Invoice download failed", isPresented: Binding(get: { exportError != nil },
@@ -120,13 +153,20 @@ struct InvoicingInvoicePreview: View {
         .task {
             guard let reader = runtime as? any ProjectLiveInvoiceReading else { liveLoading = false; return }
             do {
+                if let reviser = runtime as? any ProjectInvoiceRevising {
+                    pendingEdits = try await reviser.readPendingInvoiceRevisions(accountId: accountId, projectId: projectId)
+                        .filter { $0.payload.invoice.invoiceId == invoiceId }
+                }
                 for try await values in reader.watchLiveInvoices(accountId: accountId, projectId: projectId) {
+                    let pending = try await (runtime as? any ProjectInvoiceRevising)?
+                        .readPendingInvoiceRevisions(accountId: accountId, projectId: projectId) ?? []
                     guard !Task.isCancelled else { return }
+                    pendingEdits = pending.filter { $0.payload.invoice.invoiceId == invoiceId }
                     liveInvoice = values?.first { $0.invoiceId == invoiceId }
                     liveLoading = false
                 }
-                if !Task.isCancelled { liveInvoice = nil; liveLoading = false }
-            } catch { if !Task.isCancelled { liveInvoice = nil; liveLoading = false } }
+                if !Task.isCancelled { liveInvoice = nil; pendingEdits = []; editingInvoice = false; liveLoading = false }
+            } catch { if !Task.isCancelled { liveInvoice = nil; pendingEdits = []; editingInvoice = false; liveLoading = false } }
         }
     }
 

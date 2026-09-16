@@ -149,7 +149,7 @@ struct ProjectInvoicingWorkspaceView: View {
             }
             CollapsibleSection(title: "Invoices", isExpanded: $invoicesExpanded,
                 onAdd: runtime is any ProjectInvoiceCreating && liveInvoices != nil ? {
-                    invoiceFormState = InvoiceCreationFormState(); creatingInvoice = true
+                    invoiceFormState.prepareCreation(); creatingInvoice = true
                 } : nil) {
                 VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                     SegmentedControl(selection: $invoiceFilter,

@@ -369,6 +369,9 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     private var invoiceReportReadCount = 0
     private var expenseEdit: ProjectExpenses.PendingEdit?
     private var invoiceCreation: PendingInvoiceCreation?
+    private var invoiceRevision: PendingInvoiceRevision?
+    var pendingInvoiceRevision: PendingInvoiceRevision? { lock.withLock { invoiceRevision } }
+    func saveInvoiceRevision(_ value: PendingInvoiceRevision) { lock.withLock { invoiceRevision = value } }
     private var feeCreation: PendingFeeCreation?
     var pendingFeeCreation: PendingFeeCreation? { lock.withLock { feeCreation } }
     func saveFeeCreation(_ value: PendingFeeCreation) { lock.withLock { feeCreation = value } }
