@@ -102,7 +102,7 @@ struct TargetOnlineAccountEntryView: View {
                         isDiscovering: false, name: { $0.account.displayName.rawValue },
                         onSelect: { choice in Task { await select(choice.id, from: directory) } },
                         onCreate: {}, onSignOut: {}, canCreateAccount: false, canSignOut: false)
-                    Text("Account creation and safe sign-out are not connected in this build.")
+                    Text("Account creation is not available in this build. To sign out, open an Account and use Settings.")
                         .font(.caption).foregroundStyle(.secondary).padding()
                 }
             } else if let entry {
