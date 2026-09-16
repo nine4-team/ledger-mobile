@@ -3138,11 +3138,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
             app.buttons["Confirm Return"].tap()
         }
-        #if os(macOS)
         let done = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "target-return-form", "Done")).firstMatch
-        #else
-        let done = app.buttons["Done"]
-        #endif
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Confirm Return"].isEnabled)
         XCTAssertTrue(waitUntil { self.displayedText(app.staticTexts["target-return-status"]).contains("saved on this device") })
@@ -3193,7 +3189,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(item, in: app, fullyInsideScrollView: true); item.tap()
         let scroll = app.scrollViews["target-item-detail-scroll"]
         XCTAssertTrue(scroll.waitForExistence(timeout: 5))
-        let link = app.staticTexts["target-item-return-link-return-ui-fact"]
+        let link = app.staticTexts.matching(NSPredicate(format:
+            "identifier == %@ AND (label == %@ OR value == %@)",
+            "target-item-history-returned-inventory",
+            "Returned before invoicing · original charge return-ui-charge",
+            "Returned before invoicing · original charge return-ui-charge")).firstMatch
         reveal(link, in: app, fullyInsideScrollView: true, within: scroll)
         XCTAssertEqual(displayedText(link), "Returned before invoicing · original charge return-ui-charge")
         XCTAssertTrue(app.staticTexts["target-item-history-partial"].exists)
